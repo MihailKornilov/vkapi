@@ -598,7 +598,7 @@ $.fn._check = function(o) {
     function _click(t, func) {
         var id = t.parent().attr('id');
         $(document).on('click', '#' + id, function() {
-            func(t.val());
+            func(t.val(), t.attr('id'));
         });
     }
     return t;
