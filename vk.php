@@ -1,20 +1,44 @@
 <?php
 /*
 CREATE TABLE IF NOT EXISTS `vk_comment` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
   `table_name` varchar(20) DEFAULT '',
-  `table_id` int(10) unsigned DEFAULT '0',
-  `parent_id` int(10) unsigned DEFAULT '0',
+  `table_id` int unsigned DEFAULT 0,
+  `parent_id` int unsigned DEFAULT 0,
   `txt` text,
-  `status` tinyint(3) unsigned DEFAULT '1',
-  `viewer_id_add` int(10) unsigned DEFAULT '0',
+  `status` tinyint unsigned DEFAULT 1,
+  `viewer_id_add` int unsigned DEFAULT 0,
   `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `viewer_id_del` int(10) unsigned DEFAULT '0',
+  `viewer_id_del` int unsigned DEFAULT 0,
   `dtime_del` datetime DEFAULT '0000-00-00 00:00:00',
   `child_del` text,
   KEY `i_table_id` (`table_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=cp1251;
+
+CREATE TABLE IF NOT EXISTS `vk_user` (
+  `viewer_id` int unsigned NOT NULL,
+  PRIMARY KEY (`viewer_id`)
+  `first_name` varchar(30) DEFAULT '',
+  `last_name` varchar(30) DEFAULT '',
+  `sex` tinyint(3) unsigned DEFAULT '0',
+  `photo` varchar(300) DEFAULT '',
+  `country_id` int unsigned DEFAULT 0,
+  `country_name` varchar(100) DEFAULT '',
+  `city_id` int unsigned DEFAULT 0,
+  `city_name` varchar(100) DEFAULT '',
+  `app_setup` tinyint unsigned DEFAULT 0,
+  `menu_left_set` tinyint unsigned DEFAULT 0,
+  `admin` tinyint unsigned DEFAULT 0,
+  `enter_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
+
+Необходимые константы:
+    NAMES
+    SECRET
+    VIEWER_ID
+    VIEWER_ADMIN
 */
 
 function _dbConnect() {
@@ -57,20 +81,20 @@ function query_ptpJson($sql) {//Ассоциативный массив
 
 function _check($id, $txt='', $value=0) {
     return
-        '<div class="check'.$value.'" id="'.$id.'_check">'.
+    '<div class="check'.$value.'" id="'.$id.'_check">'.
         '<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
         $txt.
-        '</div>';
+    '</div>';
 }//end of _check()
 function _radio($id, $list, $value=0, $light=false) {
     $spisok = '';
     foreach($list as $uid => $title)
         $spisok .= '<div class="'.($uid == $value ? 'on' : 'off').($light ? ' l' : '').'" val="'.$uid.'">'.$title.'</div>';
     return
-        '<div class="_radio" id="'.$id.'_radio">'.
+    '<div class="_radio" id="'.$id.'_radio">'.
         '<input type="hidden" id="'.$id.'" value="'.$value.'">'.
         $spisok.
-        '</div>';
+    '</div>';
 }//end of _radio()
 
 function _end($count, $o1, $o2, $o5=false) {
@@ -96,11 +120,97 @@ function _rightLink($id, $spisok, $val=0) {
     foreach($spisok as $uid => $title)
         $a .= '<a'.($val == $uid ? ' class="sel"' : '').' val="'.$uid.'">'.$title.'</a>';
     return
-        '<div class="rightLink" id="'.$id.'_rightLink">'.
+    '<div class="rightLink" id="'.$id.'_rightLink">'.
         '<input type="hidden" id="'.$id.'" value="'.$val.'">'.
         $a.
-        '</div>';
+    '</div>';
 }//end of _rightLink()
+
+function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
+    require_once('vkapi.class.php');
+    $VKAPI = new vkapi($_GET['api_id'], SECRET);
+    $res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
+    $u = $res['response'][0];
+    $u['first_name'] = win1251($u['first_name']);
+    $u['last_name'] = win1251($u['last_name']);
+    $u['country_id'] = isset($u['country']) ? $u['country'] : 0;
+    $u['city_id'] = isset($u['city']) ? $u['city'] : 0;
+    $u['menu_left_set'] = 0;
+
+    // установил ли приложение
+    $app = $VKAPI->api('isAppUser', array('uid'=>$uid));
+    $u['app_setup'] = $app['response'];
+
+    // поместил ли в левое меню
+    //$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
+    $u['menu_left_set'] = 0;//($mls['response']&256) > 0 ? 1 : 0;
+
+    $sql = 'INSERT INTO `vk_user` (
+                `viewer_id`,
+                `first_name`,
+                `last_name`,
+                `sex`,
+                `photo`,
+                `app_setup`,
+                `menu_left_set`,
+                `country_id`,
+                `city_id`
+            ) VALUES (
+                '.$uid.',
+                "'.$u['first_name'].'",
+                "'.$u['last_name'].'",
+                '.$u['sex'].',
+                "'.$u['photo'].'",
+                '.$u['app_setup'].',
+                '.$u['menu_left_set'].',
+                '.$u['country_id'].',
+                '.$u['city_id'].'
+            ) ON DUPLICATE KEY UPDATE
+                `first_name`="'.$u['first_name'].'",
+                `last_name`="'.$u['last_name'].'",
+                `sex`='.$u['sex'].',
+                `photo`="'.$u['photo'].'",
+                `app_setup`='.$u['app_setup'].',
+                `menu_left_set`='.$u['menu_left_set'].',
+                `country_id`='.$u['country_id'].',
+                `city_id`='.$u['city_id'];
+    query($sql);
+    $u['viewer_id'] = $uid;
+    return $u;
+}//end of _vkUserUpdate()
+function _viewer($id=VIEWER_ID, $val=false) {
+    if(is_array($id)) {
+        if(empty($id))
+            return array();
+        $sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', $id).")";
+        $q = query($sql);
+        $users = array();
+        while($u = mysql_fetch_assoc($q)) {
+            $u['id'] = $u['viewer_id'];
+            $u['name'] = $u['first_name'].' '.$u['last_name'];
+            $u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
+            $u['photo'] = '<img src="'.$u['photo'].'">';
+            $users[$u['viewer_id']] = $u;
+        }
+        return $users;
+    }
+
+    $key = CACHE_PREFIX.'viewer_'.$id;
+    $u = xcache_get($key);
+    if(empty($u)) {
+        $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
+        if(!$u = mysql_fetch_assoc(query($sql)))
+            $u = _vkUserUpdate();
+        $u['id'] = $u['viewer_id'];
+        $u['name'] = $u['first_name'].' '.$u['last_name'];
+        $u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
+        $u['photo'] = '<img src="'.$u['photo'].'">';
+        xcache_set($key, $u, 86400);
+    }
+    if($val)
+        return isset($u[$val]) ? $u[$val] : false;
+    return $u;
+}//end of _viewer()
 
 function _vkComment($table, $id=0) {
     $sql = "SELECT *
@@ -124,7 +234,7 @@ function _vkComment($table, $id=0) {
         }
         $count = count($comm);
         $count = 'Всего '.$count.' замет'._end($count, 'ка', 'ки','ок');
-        $v = _viewersInfo($v);
+        $v = _viewer($v);
         $comm = array_reverse($comm);
         foreach($comm as $n => $r) {
             $childs = array();
@@ -134,45 +244,50 @@ function _vkComment($table, $id=0) {
             $units .= _vkCommentUnit($r['id'], $v[$r['viewer_id_add']], $r['txt'], $r['dtime_add'], $childs, ($n+1));
         }
     }
-    return '<div class="vkComment" val="'.$table.'_'.$id.'">'.
-    '<div class=headBlue><div class="count">'.$count.'</div>Заметки</div>'.
-    '<div class="add">'.
-    '<textarea>Добавить заметку...</textarea>'.
-    '<div class="vkButton"><button>Добавить</button></div>'.
-    '</div>'.
-    $units.
+    return
+    '<div class="vkComment" val="'.$table.'_'.$id.'">'.
+        '<div class="headBlue"><div class="count">'.$count.'</div>Заметки</div>'.
+        '<div class="add">'.
+            '<textarea>Добавить заметку...</textarea>'.
+            '<div class="vkButton"><button>Добавить</button></div>'.
+        '</div>'.
+        $units.
     '</div>';
 }//end of _vkComment
 function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
-    return '<div class="cunit" val="'.$id.'">'.
-    '<table class="t">'.
-    '<tr><td class="ava">'.$viewer['photo'].
-    '<td class="i">'.$viewer['link'].
-    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
-    '<div class="ctxt">'.$txt.'</div>'.
-    '<div class="cdat">'.FullDataTime($dtime, 1).
-    '<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
-    '<a>'.(empty($childs) ? 'Комментировать' : 'Комментарии ('.count($childs).')').'</a>'.
-    '</SPAN>'.
-    '</div>'.
-    '<div class="cdop'.(empty($childs) ? ' empty' : '').($n == 1 && !empty($childs) ? '' : ' hide').'">'.
-    implode('', $childs).
-    '<div class="cadd">'.
-    '<textarea>Комментировать...</textarea>'.
-    '<div class="vkButton"><button>Добавить</button></div>'.
-    '</div>'.
-    '</div>'.
-    '</table></div>';
+    return
+    '<div class="cunit" val="'.$id.'">'.
+        '<table class="t">'.
+            '<tr><td class="ava">'.$viewer['photo'].
+                '<td class="i">'.str_replace('a href', 'a class="vlink" href', $viewer['link']).
+                    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
+                    '<div class="ctxt">'.$txt.'</div>'.
+                    '<div class="cdat">'.FullDataTime($dtime, 1).
+                        '<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
+                            '<a>'.(empty($childs) ? 'Комментировать' : 'Комментарии ('.count($childs).')').'</a>'.
+                        '</SPAN>'.
+                    '</div>'.
+                    '<div class="cdop'.(empty($childs) ? ' empty' : '').($n == 1 && !empty($childs) ? '' : ' hide').'">'.
+                        implode('', $childs).
+                        '<div class="cadd">'.
+                            '<textarea>Комментировать...</textarea>'.
+                            '<div class="vkButton"><button>Добавить</button></div>'.
+                        '</div>'.
+                    '</div>'.
+        '</table>'.
+    '</div>';
 }//end of _vkCommentUnit()
 function _vkCommentChild($id, $viewer, $txt, $dtime) {
-    return '<div class="child" val="'.$id.'">'.
-    '<table class="t">'.
-    '<tr><td class="dava">'.$viewer['photo'].
-    '<td class="di">'.$viewer['link'].
-    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
-    '<div class="dtxt">'.$txt.'</div>'.
-    '<div class="ddat">'.FullDataTime($dtime, 1).'</div>'.
-    '</table></div>';
+    return
+    '<div class="child" val="'.$id.'">'.
+        '<table class="t">'.
+            '<tr><td class="dava">'.$viewer['photo'].
+                '<td class="di">'.$viewer['link'].
+                    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
+                    '<div class="dtxt">'.$txt.'</div>'.
+                    '<div class="ddat">'.FullDataTime($dtime, 1).'</div>'.
+        '</table>'.
+    '</div>';
 }//end of _vkCommentChild()
 
 function _monthFull($n=0) {
