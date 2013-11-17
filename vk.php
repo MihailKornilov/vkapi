@@ -36,10 +36,20 @@ CREATE TABLE IF NOT EXISTS `vk_user` (
 
 Необходимые константы:
     NAMES
+    API_ID
     SECRET
     VIEWER_ID
     VIEWER_ADMIN
 */
+
+function _appAuth() {
+    if(LOCAL)
+        return;
+    if(@$_GET['auth_key'] != md5(@$_GET['api_id']."_".VIEWER_ID."_".SECRET)) {
+        echo 'Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">http://vk.com/app'.API_ID.'</a>.';
+        exit;
+    }
+}//end of _appAuth()
 
 function _dbConnect() {
     global $mysql, $sqlQuery;
@@ -128,7 +138,7 @@ function _rightLink($id, $spisok, $val=0) {
 
 function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
     require_once('vkapi.class.php');
-    $VKAPI = new vkapi($_GET['api_id'], SECRET);
+    $VKAPI = new vkapi(API_ID, SECRET);
     $res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
     $u = $res['response'][0];
     $u['first_name'] = win1251($u['first_name']);
@@ -200,7 +210,7 @@ function _viewer($id=VIEWER_ID, $val=false) {
     if(empty($u)) {
         $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
         if(!$u = mysql_fetch_assoc(query($sql)))
-            $u = _vkUserUpdate();
+            $u = _vkUserUpdate($id);
         $u['id'] = $u['viewer_id'];
         $u['name'] = $u['first_name'].' '.$u['last_name'];
         $u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
