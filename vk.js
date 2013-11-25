@@ -353,6 +353,145 @@ $(document)
 		p.find('div.on').removeClass('on').addClass('off');
 		t.removeClass('off').addClass('on');
 		p.find('input:first').val(v);
+	})
+
+	.ready(function() {
+		$('.pagehelp_create').click(function() {
+			var t = $(this),
+				page = t.attr('val'),
+				html =
+					'<TABLE class="pagehelp_tab">' +
+						'<TR><TD class="label">Страница:<TD><b>' + page + '</b>' +
+						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200">' +
+						'<TR><TD class="label">Содержание:<TD>' +
+						'<TR><td colspan="2"><textarea id="pagehelp_txt"></textarea>' +
+						'</TABLE>';
+			var dialog = _dialog({
+				top:10,
+				width:610,
+				head:'Создание новой подсказки',
+				content:html,
+				submit:submit
+			});
+			$('#name').focus();
+			$('#pagehelp_txt').autosize();
+			function submit() {
+				var send = {
+					op:'pagehelp_add',
+					page:page,
+					name:$('#name').val(),
+					txt:$('#pagehelp_txt').val()
+				};
+				if(!send.name) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">Не введено название</SPAN>',
+						remove:1,
+						indent:40,
+						show:1,
+						top:-48,
+						left:217
+					});
+					$('#name').focus();
+				} else {
+					dialog.process();
+					$.post(AJAX_MAIN, send, function (res) {
+						if(res.success) {
+							dialog.close();
+							_msg('Внесёно!');
+							document.location.reload();
+						} else
+							dialog.abort();
+					}, 'json');
+				}
+			}
+		});
+		$('#mainLinks .img_pagehelp').click(function() {
+			var t = $(this),
+				id = t.attr('val'),
+				dialog,
+				send = {
+					op:'pagehelp_get',
+					id:id
+				};
+			pagehelp_get();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.content
+						.html(html_create(res))
+						.find('.add').click(function() {
+							edit(res);
+						});
+				} else
+					$('.pagehelp_tab .load').html('<span class="red">Ошибка загрузки.</span>');
+			}, 'json');
+
+			function html_create(res) {
+				return '<div class="headName">' + res.name + res.edit + '</div>' +
+					'<div class="pagehelp_show_txt">' + res.txt + res.dtime + '</div>';
+			}
+			function pagehelp_get(html) {
+				dialog = _dialog({
+					top:10,
+					width:610,
+					head:'Информация о странице',
+					content:html || '<TABLE class="pagehelp_tab"><TR><TD class="load"><img src="/img/upload.gif"></TABLE>',
+					butSubmit:'',
+					butCancel:'Закрыть'
+				});
+			}
+			function edit(res) {
+				dialog.close();
+				var html =
+					'<TABLE class="pagehelp_tab">' +
+						'<TR><TD class="label">Страница:<TD><b>' + res.page + '</b>' +
+						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200" value="' + res.name + '">' +
+						'<TR><TD class="label">Содержание:<TD>' +
+						'<TR><td colspan="2"><textarea id="pagehelp_txt">' + res.txt + '</textarea>' +
+						'</TABLE>';
+				dialog = _dialog({
+					top:10,
+					width:610,
+					head:'Редактирование подсказки',
+					content:html,
+					butSubmit:'Сохранить',
+					submit:function() {
+						var send = {
+							op:'pagehelp_edit',
+							id:id,
+							name:$('#name').val(),
+							txt:$('#pagehelp_txt').val()
+						};
+						if(!send.name) {
+							dialog.bottom.vkHint({
+								msg:'<SPAN class="red">Не введено название</SPAN>',
+								remove:1,
+								indent:40,
+								show:1,
+								top:-48,
+								left:217
+							});
+							$('#name').focus();
+						} else {
+							dialog.process();
+							$.post(AJAX_MAIN, send, function() {
+								if(res.success) {
+									dialog.close();
+									res.name = send.name;
+									res.txt = send.txt;
+									pagehelp_get(html_create(res));
+									dialog.content.find('.add').click(function() {
+										edit(res);
+									});
+								} else
+									dialog.abort();
+							}, 'json');
+						}
+					}
+				});
+				$('#name').focus();
+				$('#pagehelp_txt').autosize();
+			}
+		});
 	});
 
 $.fn.fotoUpload = function(obj) {

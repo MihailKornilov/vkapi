@@ -154,6 +154,26 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 
 
+.img_pagehelp{
+	width:16px;
+	height:16px;
+	float:right;
+	background-image:url("data:image/gif;base64,R0lGODlhEAAiAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAQACIAAANWSKrSvpC0KEW0dGGZL7vbFzJj1VETiJYp1GpsjHLuiNm2dtLw2jmPnXDYGRiPxQHFGFGenAToUyGNVpVV6zKb3HqbWSb4CxGXo+MzunxdcN1pdvJYTQAAOw==");
+	cursor:pointer;
+	margin-top:4px;
+}
+.img_pagehelp:hover{background-position:0 16px}
+.pagehelp_create{float:right;margin:6px 5px 0 0;font-size:10px;color:#999;cursor:pointer}
+.pagehelp_create:hover{color:#336}
+.pagehelp_tab{border-spacing:8px;width:100%}
+.pagehelp_tab #name{width:482px}
+.pagehelp_tab #pagehelp_txt{width:558px;height:200px}
+.pagehelp_tab .load{height:200px;text-align:center;vertical-align:middle}
+.pagehelp_show_txt{margin:15px 20px}
+.pagehelp_show_dtime{margin-top:20px;color:#888;text-align:right}
+
+
+
 .dn{display:none}
 
 /* Кнопка создания */

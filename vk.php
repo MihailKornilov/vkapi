@@ -34,10 +34,20 @@ CREATE TABLE IF NOT EXISTS `vk_user` (
   `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
 
+CREATE TABLE IF NOT EXISTS `pagehelp` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  `page` varchar(50) DEFAULT '',
+  `name` varchar(200) DEFAULT '',
+  `txt` text default NULL,
+  `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
+
 Необходимые константы:
 	NAMES
 	API_ID
 	SECRET
+	SA
 	VIEWER_ID
 	VIEWER_ADMIN
 	REGEXP_NUMERIC
@@ -50,7 +60,7 @@ function _appAuth() {
 		echo 'Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">http://vk.com/app'.API_ID.'</a>.';
 		exit;
 	}
-}//end of _appAuth()
+}//_appAuth()
 
 function _dbConnect() {
 	global $mysql, $sqlQuery;
@@ -58,7 +68,7 @@ function _dbConnect() {
 	mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
 	$sqlQuery = 0;
 	query('SET NAMES `'.NAMES.'`', $dbConnect);
-}//end of _dbConnect()
+}//_dbConnect()
 function query($sql) {
 	global $sqlQuery, $sqlCount, $sqlTime;
 	$t = microtime(true);
@@ -90,13 +100,28 @@ function query_ptpJson($sql) {//Ассоциативный массив
 	return '{'.implode(',', $send).'}';
 }
 
+function pageHelpIcon() {
+	$page[] = $_GET['p'];
+	if(!empty($_GET['d']))
+		$page[] = $_GET['d'];
+	if(!empty($_GET['d1']))
+		$page[] = $_GET['d1'];
+	if(!empty($_GET['id']))
+		$page[] = 'id';
+	$page = implode('_', $page);
+	$id = query_value("SELECT `id` FROM `pagehelp` WHERE `page`='".$page."' LIMIT 1");
+	return
+		($id ? '<div class="img_pagehelp" val="'.$id.'"></div>' : '').
+		(SA && !$id ? '<div class="pagehelp_create" val="'.$page.'">Добавить подсказку</div>' : '');
+}
+
 function _check($id, $txt='', $value=0) {
 	return
 	'<div class="check'.$value.'" id="'.$id.'_check">'.
 		'<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
 		$txt.
 	'</div>';
-}//end of _check()
+}//_check()
 function _radio($id, $list, $value=0, $light=false) {
 	$spisok = '';
 	foreach($list as $uid => $title)
@@ -106,7 +131,7 @@ function _radio($id, $list, $value=0, $light=false) {
 		'<input type="hidden" id="'.$id.'" value="'.$value.'">'.
 		$spisok.
 	'</div>';
-}//end of _radio()
+}//_radio()
 
 function _end($count, $o1, $o2, $o5=false) {
 	if($o5 === false) $o5 = $o2;
@@ -120,7 +145,7 @@ function _end($count, $o1, $o2, $o5=false) {
 			case 4: return $o2;
 		}
 	return $o5;
-}//end of _end()
+}//_end()
 
 function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
 function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
@@ -135,7 +160,7 @@ function _rightLink($id, $spisok, $val=0) {
 		'<input type="hidden" id="'.$id.'" value="'.$val.'">'.
 		$a.
 	'</div>';
-}//end of _rightLink()
+}//_rightLink()
 
 function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 	require_once('vkapi.class.php');
@@ -188,7 +213,7 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 	query($sql);
 	$u['viewer_id'] = $uid;
 	return $u;
-}//end of _vkUserUpdate()
+}//_vkUserUpdate()
 function _viewer($id=VIEWER_ID, $val=false) {
 	if(is_array($id)) {
 		if(empty($id))
@@ -221,7 +246,7 @@ function _viewer($id=VIEWER_ID, $val=false) {
 	if($val)
 		return isset($u[$val]) ? $u[$val] : false;
 	return $u;
-}//end of _viewer()
+}//_viewer()
 
 function _vkComment($table, $id=0) {
 	$sql = "SELECT *
@@ -264,7 +289,7 @@ function _vkComment($table, $id=0) {
 		'</div>'.
 		$units.
 	'</div>';
-}//end of _vkComment
+}//_vkComment
 function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
 	return
 	'<div class="cunit" val="'.$id.'">'.
@@ -287,7 +312,7 @@ function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
 					'</div>'.
 		'</table>'.
 	'</div>';
-}//end of _vkCommentUnit()
+}//_vkCommentUnit()
 function _vkCommentChild($id, $viewer, $txt, $dtime) {
 	return
 	'<div class="child" val="'.$id.'">'.
@@ -299,7 +324,7 @@ function _vkCommentChild($id, $viewer, $txt, $dtime) {
 					'<div class="ddat">'.FullDataTime($dtime, 1).'</div>'.
 		'</table>'.
 	'</div>';
-}//end of _vkCommentChild()
+}//_vkCommentChild()
 
 function _monthFull($n=0) {
 	$mon = array(
@@ -317,7 +342,7 @@ function _monthFull($n=0) {
 		12 => 'декабря'
 	);
 	return $n ? $mon[intval($n)] : $mon;
-}//end of _monthFull
+}//_monthFull
 function _monthDef($n=0) {
 	$mon = array(
 		1 => 'январь',
@@ -334,7 +359,7 @@ function _monthDef($n=0) {
 		12 => 'декабрь'
 	);
 	return $n ? $mon[intval($n)] : $mon;
-}//end of _monthFull
+}//_monthFull
 function _monthCut($n) {
 	$mon = array(
 		0 => '',
@@ -352,14 +377,14 @@ function _monthCut($n) {
 		12 => 'дек'
 	);
 	return $mon[intval($n)];
-}//end of _monthCut
+}//_monthCut
 function FullData($value, $noyear=false) {//14 апреля 2010
 	$d = explode('-', $value);
 	return
 		abs($d[2]).' '.
 		_monthFull($d[1]).
 		(!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
-}//end of FullData()
+}//FullData()
 function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45
 	$arr = explode(' ',$value);
 	$d = explode('-',$arr[0]);
@@ -369,7 +394,7 @@ function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45
 		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
 		(date('Y') == $d[0] ? '' : ' '.$d[0]).
 		' в '.$t[0].':'.$t[1];
-}//end of FullDataTime()
+}//FullDataTime()
 function _curMonday() { //Понедельник в текущей неделе
 	// Номер текущего дня недели
 	$time = time();
@@ -378,7 +403,7 @@ function _curMonday() { //Понедельник в текущей неделе
 	// Приведение дня к понедельнику
 	$time -= 86400 * ($curDay - 1);
 	return strftime('%Y-%m-%d', $time);
-}//end of _curMonday()
+}//_curMonday()
 function _curSunday() { //Воскресенье в текущей неделе
 	$time = time();
 	$curDay = date("w", $time);
@@ -386,7 +411,7 @@ function _curSunday() { //Воскресенье в текущей неделе
 	$time += 86400 * (7 - $curDay);
 	return strftime('%Y-%m-%d', $time);
 
-}//end of _curSunday()
+}//_curSunday()
 
 function _engRusChar($word) { //Перевод символов раскладки с английского на русский
 	$char = array(
