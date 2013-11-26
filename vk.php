@@ -100,6 +100,13 @@ function query_ptpJson($sql) {//Ассоциативный массив
 	return '{'.implode(',', $send).'}';
 }
 
+function _selJson($arr) {
+	$send = array();
+	foreach($arr as $uid => $title)
+		$send[] = '{uid:'.$uid.',title:"'.$title.'"}';
+	return '['.implode(',',$send).']';
+}//end of _selJson()
+
 function pageHelpIcon() {
 	$page[] = $_GET['p'];
 	if(!empty($_GET['d']))
@@ -124,8 +131,11 @@ function _check($id, $txt='', $value=0) {
 }//_check()
 function _radio($id, $list, $value=0, $light=false) {
 	$spisok = '';
-	foreach($list as $uid => $title)
-		$spisok .= '<div class="'.($uid == $value ? 'on' : 'off').($light ? ' l' : '').'" val="'.$uid.'">'.$title.'</div>';
+	foreach($list as $uid => $title) {
+		$sel = $uid == $value ? 'on' : 'off';
+		$light = $light ? ' l' : '';
+		$spisok .= '<div class="'.$sel.$light.'" val="'.$uid.'"><s></s>'.$title.'</div>';
+	}
 	return
 	'<div class="_radio" id="'.$id.'_radio">'.
 		'<input type="hidden" id="'.$id.'" value="'.$value.'">'.

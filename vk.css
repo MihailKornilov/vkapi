@@ -240,7 +240,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 .zpzakaz.busy,
 #mainLinks.busy,
 #setup_workers .adm.busy,
-.path.busy{
+.path.busy,
+._dialog .load.busy{
 	background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
 	background-repeat:no-repeat;
 	background-position:center center;
@@ -481,19 +482,19 @@ input.money{font:bold 14px Tahoma;width:70px}
 .check1:hover{background-position:0 -42px}
 
 
-._radio .off,._radio .on{
-	display:block;
+._radio .off,._radio .on{display:block;cursor:pointer;margin:5px 0 6px}
+._radio s{
+	display:inline-block;
 	background-image:url("data:image/gif;base64,R0lGODlhDgA4AMQAAAAAAP///7fAy9/k6sDK1a22wMPL1M/W3rvJ19rh6F+DpZyyxq/B0sfT3tfg6LDBz9/l6u/y9Ozv8efq7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABQALAAAAAAOADgAAAX/ICVSEmES0jiWRBQEkZmK5fDewYCKhI3fOhLh90O1iLjYEIkzMZvHZ6z0DOx6zKDQh9PNhFHld3XaqcinMc3kgsnIXKAZiwxSXw4Gw3Ezth0KgQp8bksBDIIKDH2GiIIMEC9seIkNkVOGeQyWkil0LxCROQRrcS9eaG1iZ2BvrBQTBbIFE6yxBQcJCQeytSKxBrrCCQa0IgXBw8LFsAXKyrS4z8O8ztPDstfY0tq8sdoJxsjXzM3Jw8W+zdzV6iO3va/r8We3ubv05s/px+fKzN90IViwAIGwaPcQJDKIz1qCBYkWHHQIUdACAbpkJUz0AKM3hwMXdMxYa5wwARiJDxX4ZRKdMZbs8r2b9VJECAA7");
 	background-repeat:no-repeat;
+	width:18px;
 	height:14px;
-	cursor:pointer;
-	padding-left:18px;
-	margin:5px 0;
+	margin-bottom:-3px;
 }
-._radio .off{background-position:0 0}
-._radio .off:hover{background-position:0 -28px}
-._radio .on{background-position:0 -14px}
-._radio .on:hover{background-position:0 -42px}
+._radio .off s{background-position:0 0}
+._radio .off:hover s{background-position:0 -28px}
+._radio .on s{background-position:0 -14px}
+._radio .on:hover s{background-position:0 -42px}
 ._radio .off.l{color:#888}
 
 /* Задний фон при открытии поверхностных окон */
@@ -529,6 +530,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 	border-right:#999 solid 1px;
 	border-bottom:#dae1e8 solid 1px;
 }
+._dialog .ms{text-align:center;padding:80px 0;color:red}
+._dialog .load.busy .ms{visibility:hidden}
 ._dialog .bottom {
 	background-color:#f2f2f2;
 	border-left:#999 solid 1px;

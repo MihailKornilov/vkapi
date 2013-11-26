@@ -59,6 +59,7 @@ var VK_SCROLL = 0,
 			width:360,
 			top:100,
 			head:'head: Название заголовка',
+			load:0, // Показ процесса ожидания загрузки в центре диалога
 			content:'content: содержимое центрального поля',
 			submit:function() {},
 			cancel:function() {},
@@ -66,6 +67,8 @@ var VK_SCROLL = 0,
 			butCancel:'Отмена'
 		}, obj);
 
+		if(obj.load)
+			obj.content = '<div class="load busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
 		var html = '<DIV class="_dialog">' +
 			'<DIV class="head"><DIV><A class="img_del"></A>' + obj.head + '</DIV></DIV>' +
 			'<DIV class="content">' + obj.content + '</DIV>' +
@@ -83,8 +86,7 @@ var VK_SCROLL = 0,
 
 		_backfon();
 
-		dialog
-			.css({
+		dialog.css({
 				width:obj.width + 'px',
 				top:$(window).scrollTop() + VK_SCROLL + obj.top + 'px',
 				left:313 - Math.round(obj.width / 2) + 'px',
@@ -110,7 +112,10 @@ var VK_SCROLL = 0,
 			})(),
 			content:(function() {
 				return dialog.find('.content');
-			})()
+			})(),
+			loadError:function() {
+				dialog.find('.load').removeClass('busy');
+			}
 		};
 	};
 
@@ -775,11 +780,10 @@ $.fn._radio = function(o) {
 		list = '',
 		val = t.val();
 	for(n = 0; n < o.spisok.length; n++) {
-		var sp = o.spisok[n];
-		list += '<div class="' + (val == sp.uid ? 'on' : 'off') + (o.light ? ' l' : '') + '" ' +
-					 'val="' + sp.uid + '">' +
-						sp.title +
-				'</div>';
+		var sp = o.spisok[n],
+			sel = val == sp.uid ? 'on' : 'off',
+			l = o.light ? ' l' : '';
+		list += '<div class="' + sel + l + '" val="' + sp.uid + '"><s></s>' + sp.title + '</div>';
 	}
 	t.wrap('<div class="_radio" id="' + id + '_radio">');
 	t.after(list);
