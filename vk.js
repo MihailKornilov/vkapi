@@ -7,6 +7,62 @@
 var VK_SCROLL = 0,
 	ZINDEX = 0,
 	BC = 0,
+	REGEXP_NUMERIC = /^\d+$/,
+	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
+	URL = 'http://' + DOMAIN + '/index.php?' + VALUES,
+	AJAX_MAIN = 'http://' + DOMAIN + '/ajax/main.php?' + VALUES,
+	setCookie = function(name, value) {
+		var exdate = new Date();
+		exdate.setDate(exdate.getDate() + 1);
+		document.cookie = name + '=' + value + '; path=/; expires=' + exdate.toGMTString();
+	},
+	getCookie = function(name) {
+		var arr1 = document.cookie.split(name);
+		if(arr1.length > 1) {
+			var arr2 = arr1[1].split(/;/);
+			var arr3 = arr2[0].split(/=/);
+			return arr3[0] ? arr3[0] : arr3[1];
+		} else
+			return null;
+	},
+	delCookie = function(name) {
+		var exdate = new Date();
+		exdate.setDate(exdate.getDate()-1);
+		document.cookie = name + '=; path=/; expires=' + exdate.toGMTString();
+	},
+	sortable = function() {
+		$('._sort').sortable({
+			axis:'y',
+			update:function () {
+				var dds = $(this).find('dd'),
+					arr = [];
+				for(var n = 0; n < dds.length; n++)
+					arr.push(dds.eq(n).attr('val'));
+				var send = {
+					op:'sort',
+					table:$(this).attr('val'),
+					ids:arr.join()
+				};
+				$('#mainLinks').addClass('busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					$('#mainLinks').removeClass('busy');
+				}, 'json');
+			}
+		});
+	},
+	_end = function(count, arr) {
+		if(arr.length == 2)
+			arr.push(arr[1]);
+		var send = arr[2];
+		if(Math.floor(count / 10 % 10) != 1)
+			switch(count % 10) {
+				case 1: send = arr[0]; break;
+				case 2: send = arr[1]; break;
+				case 3: send = arr[1]; break;
+				case 4: send = arr[1]; break;
+			}
+		return send;
+	},
 	_fbhs = function(y) {
 		var FB = document.getElementById('frameBody');
 		if(!y)
@@ -120,6 +176,28 @@ var VK_SCROLL = 0,
 	};
 
 $(document)
+	.ajaxError(function(event, request, settings) {
+		if(!request.responseText)
+			return;
+		alert('Ошибка:\n\n' + request.responseText);
+		//var txt = request.responseText;
+		//throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
+	})
+	.on('click', '.debug_toggle', function() {
+		var d = getCookie('debug');
+		setCookie('debug', d == 1 ? 0 : 1);
+		_msg('Debug включен.');
+		document.location.reload();
+	})
+	.on('click', '#cache_clear', function() {
+		$.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
+			if(res.success) {
+				_msg('Кэш очищен.');
+				document.location.reload();
+			}
+		}, 'json');
+	})
+
 	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
 		var t = $(this),
 			but = t.next(),
@@ -361,6 +439,15 @@ $(document)
 	})
 
 	.ready(function() {
+		frameHidden.onresize = _fbhs;
+
+		VK.callMethod('scrollWindow', 0);
+		VK.callMethod('scrollSubscribe');
+		VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
+
+		sortable();
+		_fbhs();
+
 		$('.pagehelp_create').click(function() {
 			var t = $(this),
 				page = t.attr('val'),

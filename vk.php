@@ -335,6 +335,35 @@ function _vkCommentChild($id, $viewer, $txt, $dtime) {
 		'</table>'.
 	'</div>';
 }//_vkCommentChild()
+function _vkCommentAdd($table, $id, $txt) {
+	if(empty($txt))
+		return;
+	$parent_id = 0;
+	$sql = "SELECT `id`,`parent_id`
+				FROM `vk_comment`
+				WHERE `table_name`='".$table."'
+				  AND `table_id`=".$id."
+				  AND `status`=1
+				ORDER BY `id` DESC
+				LIMIT 1";
+	if($r = mysql_fetch_assoc(query($sql)))
+		$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
+	$sql = "INSERT INTO `vk_comment` (
+					`table_name`,
+					`table_id`,
+					`txt`,
+					`parent_id`,
+					`viewer_id_add`
+				) VALUES (
+					'".$table."',
+					".$id.",
+					'".addslashes($txt)."',
+					".$parent_id.",
+					".VIEWER_ID."
+				)";
+	query($sql);
+
+}//_vkCommentAdd()
 
 function _monthFull($n=0) {
 	$mon = array(
