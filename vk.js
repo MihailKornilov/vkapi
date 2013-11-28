@@ -7,6 +7,11 @@
 var VK_SCROLL = 0,
 	ZINDEX = 0,
 	BC = 0,
+	FB, // frameBody
+	FH, // frameHidden
+	FB_HEIGHT = 0,
+	DIALOG_MAXHEIGHT = 0,
+	FOTO_HEIGHT = 0,
 	REGEXP_NUMERIC = /^\d+$/,
 	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
 	URL = 'http://' + DOMAIN + '/index.php?' + VALUES,
@@ -63,16 +68,24 @@ var VK_SCROLL = 0,
 			}
 		return send;
 	},
-	_fbhs = function(y) {
-		var FB = document.getElementById('frameBody');
-		if(!y)
-			FB.style.height = 'auto';
-		var H = FB.offsetHeight - 1;
-		if(y && y > H) {
-			H = y;
-			FB.style.height = (H + 1) + 'px';
+	_fbhs = function() {
+		var h;
+		if(FOTO_HEIGHT > 0) {
+			h = FOTO_HEIGHT;
+			FB.height(h);
+		} else {
+			if(DIALOG_MAXHEIGHT == 0)
+				FB.height('auto');
+			h = FB.height();
+			if(h < DIALOG_MAXHEIGHT) {
+				h = DIALOG_MAXHEIGHT;
+				FB.height(h);
+			}
 		}
-		VK.callMethod('resizeWindow', 625, H);
+		if(FB_HEIGHT == h)
+			return;
+		FB_HEIGHT = h;
+		VK.callMethod('resizeWindow', 625, h);
 	},
 	_backfon = function(add) {
 		if(add === undefined)
@@ -100,7 +113,7 @@ var VK_SCROLL = 0,
 		var obj = $('#_msg');
 		if(obj.length > 0)
 			obj.remove();
-		$('body').append('<DIV id=_msg>' + txt + '</DIV>');
+		$('body').append('<div id=_msg>' + txt + '</div>');
 		$('#_msg')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL)
 			.delay(1200)
@@ -108,9 +121,9 @@ var VK_SCROLL = 0,
 				$(this).remove();
 			});
 	},
-	_dialog = function(obj) {// диалог 2013-09-25 21:03
-		var t = $(this);
-		var id = t.attr('id');
+	_dialog = function(obj) {
+		var t = $(this),
+			id = t.attr('id');
 		obj = $.extend({
 			width:360,
 			top:100,
@@ -125,18 +138,28 @@ var VK_SCROLL = 0,
 
 		if(obj.load)
 			obj.content = '<div class="load busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
-		var html = '<DIV class="_dialog">' +
-			'<DIV class="head"><DIV><A class="img_del"></A>' + obj.head + '</DIV></DIV>' +
-			'<DIV class="content">' + obj.content + '</DIV>' +
-			'<DIV class="bottom">' +
-			(obj.butSubmit ? '<DIV class="vkButton"><button>' + obj.butSubmit + '</button></DIV>' : '') +
-			(obj.butCancel ? '<DIV class="vkCancel"><button>' + obj.butCancel + '</button></DIV>' : '') +
-			'</DIV>' +
-		'</DIV>';
+		var frameNum = $('.dFrame').length,
+			html = '<div class="_dialog">' +
+			'<div class="head"><div><A class="img_del"></A>' + obj.head + '</div></div>' +
+			'<div class="dcntr">' +
+				'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
+				'<div class="content">' + obj.content + '</div>' +
+			'</div>' +
+			'<div class="bottom">' +
+			(obj.butSubmit ? '<div class="vkButton"><button>' + obj.butSubmit + '</button></div>' : '') +
+			(obj.butCancel ? '<div class="vkCancel"><button>' + obj.butCancel + '</button></div>' : '') +
+			'</div>' +
+		'</div>';
 
-		var dialog = $('body').append(html).find('._dialog:last');
+		// Если открывается первый диалог на странице, запоминается стартовая максимальная высота диалогов
+		if(frameNum == 0)
+			DIALOG_MAXHEIGHT = 0;
+
+		var dialog = $('body').append(html).find('._dialog:last'),
+			butSubmit = dialog.find('.vkButton:last'),
+			content = dialog.find('.content'),
+			frame = dialog.find('.dFrame');
 		dialog.find('.img_del').click(dialogClose);
-		var butSubmit = dialog.find('.vkButton:last');
 		butSubmit.find('button').click(obj.submit);
 		dialog.find('.vkCancel').click(function() { obj.cancel(); dialogClose(); });
 
@@ -149,10 +172,27 @@ var VK_SCROLL = 0,
 				'z-index':ZINDEX + 5
 			});
 
+		document['dFrame' + frameNum].onresize = function() {
+			var fr = $('.dFrame'),
+				max = 0;
+			for(var n = 0; n < fr.length; n++) {
+				var h = fr.eq(n).height();
+				if(h > max)
+					max = h;
+			}
+			var dh = max + VK_SCROLL + 80;
+			if(DIALOG_MAXHEIGHT != dh) {
+				DIALOG_MAXHEIGHT = dh;
+				_fbhs();
+			}
+		};
 
 		function dialogClose() {
 			dialog.remove();
 			_backfon(false);
+			if(frameNum == 0)
+				DIALOG_MAXHEIGHT = 0;
+			_fbhs();
 		}
 
 		return {
@@ -167,7 +207,7 @@ var VK_SCROLL = 0,
 				return dialog.find('.bottom');
 			})(),
 			content:(function() {
-				return dialog.find('.content');
+				return content;
 			})(),
 			loadError:function() {
 				dialog.find('.load').removeClass('busy');
@@ -352,13 +392,13 @@ $(document)
 	.on('click', '.fotoView', function() {
 		$('#foto_view').remove();
 		var t = $(this),
-			html ='<DIV id="foto_view">' +
-				'<DIV class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></DIV>' +
+			html ='<div id="foto_view">' +
+				'<div class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></div>' +
 				'<table class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
-				'<DIV class="about"><DIV class="dtime"></DIV></DIV>' +
-				'<DIV class="hide"></DIV>' +
-				'</DIV>';
-		$("#frameBody").append(html);
+				'<div class="about"><div class="dtime"></div></div>' +
+				'<div class="hide"></div>' +
+				'</div>';
+		FB.append(html);
 
 		var f = $('#foto_view');
 		fotoHeightSet();
@@ -413,12 +453,12 @@ $(document)
 		function fotoClose() {
 			window.fotoViewNum = 0;
 			f.remove();
+			FOTO_HEIGHT = 0;
 			_fbhs();
 		}
 		function fotoHeightSet() {
-			var h = f.height();
-			$("#frameBody").height(h);
-			_fbhs(h);
+			FOTO_HEIGHT = f.height();
+			_fbhs();
 		}
 	})
 
@@ -445,8 +485,10 @@ $(document)
 		VK.callMethod('scrollSubscribe');
 		VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
 
-		sortable();
+		FB = $('#frameBody');
+		FH = $('#frameHidden');
 		_fbhs();
+		sortable();
 
 		$('.pagehelp_create').click(function() {
 			var t = $(this),
@@ -514,7 +556,7 @@ $(document)
 							edit(res);
 						});
 				} else
-					$('.pagehelp_tab .load').html('<span class="red">Ошибка загрузки.</span>');
+					dialog.loadError();
 			}, 'json');
 
 			function html_create(res) {
@@ -526,7 +568,8 @@ $(document)
 					top:10,
 					width:610,
 					head:'Информация о странице',
-					content:html || '<TABLE class="pagehelp_tab"><TR><TD class="load"><img src="/img/upload.gif"></TABLE>',
+					load:html ? 0 : 1,
+					content:html,
 					butSubmit:'',
 					butCancel:'Закрыть'
 				});
@@ -629,18 +672,18 @@ $.fn.fotoUpload = function(obj) {
 		};
 
 	t.on('click', function() {
-		var html = '<DIV id="fotoUpload">' +
-			'<DIV class="info">Поддерживаются форматы JPG, PNG и GIF.</DIV>' +
+		var html = '<div id="fotoUpload">' +
+			'<div class="info">Поддерживаются форматы JPG, PNG и GIF.</div>' +
 			'<FORM method="post" action="' + IMAGE_UPLOAD_PATH + '" enctype="multipart/form-data" target="upload_frame">' +
 				'<INPUT type="file" id="file_name" name="file_name" />' +
 				'<INPUT type="hidden" name="op" value="file" />' +
 			'</FORM>' +
 
-			'<DIV id="choose_file">Выберите файл</DIV>' +
+			'<div id="choose_file">Выберите файл</div>' +
 			'<IFRAME name="upload_frame"></IFRAME>' +
-			'<DIV id="direct"><INPUT type="text" id="direct_input" placeholder="или укажите прямую ссылку на изображение.."><a><span>oтправить</span></a></DIV>' +
-			'<DIV class="webcam">Вы также можете <A>сделать фотографию с вебкамеры »</A></DIV>' +
-		'</DIV>';
+			'<div id="direct"><INPUT type="text" id="direct_input" placeholder="или укажите прямую ссылку на изображение.."><a><span>oтправить</span></a></div>' +
+			'<div class="webcam">Вы также можете <A>сделать фотографию с вебкамеры »</A></div>' +
+		'</div>';
 		dialog = _dialog({
 			top:80,
 			head:"Загрузка изображения",
@@ -725,7 +768,7 @@ $.fn.fotoUpload = function(obj) {
 		var cause = "не известна";
 		if(num == 1) cause = 'неверный формат файла';
 		if(num == 2) cause = 'слишком маленький размер изображения.<BR>Допустимый размер не менее 100x100 px';
-		$('#fotoUpload .webcam').after('<DIV id="error_msg">Не удалось загрузить изображение.<BR>Причина: ' + cause + '.</DIV>');
+		$('#fotoUpload .webcam').after('<div id="error_msg">Не удалось загрузить изображение.<BR>Причина: ' + cause + '.</div>');
 	}
 
 	function fotoLinkSend() {
@@ -753,7 +796,7 @@ $.fn.fotoUpload = function(obj) {
 			top:20,
 			width:610,
 			head:"Создание снимка с вебкамеры",
-			content:'<DIV id="screen"></DIV>',
+			content:'<div id="screen"></div>',
 			butSubmit:'Сделать снимок',
 			butCancel:'Закрыть',
 			submit:submit
@@ -896,10 +939,10 @@ $.fn.years = function(obj) {// перелистывание годов
 	var t = $(this);
 	var id = t.attr('id');
 
-	var html = "<DIV class=years id=years_" + id + ">" +
+	var html = "<div class=years id=years_" + id + ">" +
 		"<TABLE>" +
 		"<TR><TD class=but>&laquo;<TD id=ycenter><SPAN>" + obj.year + "</SPAN><TD class=but>&raquo;" +
-		"</TABLE></DIV>";
+		"</TABLE></div>";
 	t.after(html);
 	t.val(obj.year);
 
@@ -1097,14 +1140,14 @@ $.fn.rightLink = function(o) {
 			remove:0	 // удалить подсказку после показа
 		}, o);
 
-		var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';
+		var correct = o.correct == 1 ? "<div class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></div>" : '';
 
 		var html = "<TABLE class=cont_table>" +
-			"<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<DIV class=ugt></DIV>" : '') +
-			"<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') +
+			"<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<div class=ugt></div>" : '') +
+			"<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<div class=ugl></div>" : '') +
 			"<TD class=cont>" + correct + o.msg +
-			"<TD class=ugrtd>" + (o.ugol == 'right' ? "<DIV class=ugr></DIV>" : '') +
-			"<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<DIV class=ugb></DIV>" : '') +
+			"<TD class=ugrtd>" + (o.ugol == 'right' ? "<div class=ugr></div>" : '') +
+			"<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<div class=ugb></div>" : '') +
 			"</TABLE>";
 
 		html = "<TABLE>" +
@@ -1118,7 +1161,7 @@ $.fn.rightLink = function(o) {
 			"</TABLE>";
 
 		t.prev().remove('.hint'); // удаление предыдущей такой же подсказки
-		t.before("<DIV class=hint>" + html + "</DIV>"); // вставка перед элементом
+		t.before("<div class=hint>" + html + "</div>"); // вставка перед элементом
 
 		var hi = t.prev(); // поле absolute для подсказки
 		var hintTable = hi.find('.hint_table:first'); // сама подсказка
@@ -1294,11 +1337,6 @@ $.fn.rightLink = function(o) {
 
 
 
-
-
-
-
-
 $.fn.vkSel = function(obj) {
 	var t = $(this);
 	var id = t.attr('id');
@@ -1341,7 +1379,7 @@ $.fn.vkSel = function(obj) {
 
 
 
-	var html = "<DIV class=vkSel id=vkSel_" + id + " style=width:" + obj.width + "px;display:" + obj.display + ";>";
+	var html = "<div class=vkSel id=vkSel_" + id + " style=width:" + obj.width + "px;display:" + obj.display + ";>";
 
 	html += "<TABLE class=main style=width:" + obj.width + "px;>";
 	var sel_width = obj.width - 17 - 4;
@@ -1351,8 +1389,8 @@ $.fn.vkSel = function(obj) {
 	if (obj.funcAdd) { html += "<TD class=add val=add_>"; }
 	html += "<TD class=ugol val=ugol_>";
 	html += "</TABLE>";
-	html += "<DIV class=results style=width:" + obj.width + "px;></DIV>";
-	html += "</DIV>";
+	html += "<div class=results style=width:" + obj.width + "px;></div>";
+	html += "</div>";
 
 	$(this).after(html);
 
@@ -1392,7 +1430,7 @@ $.fn.vkSel = function(obj) {
 						if (keyup == 0 && keyup_val != val) {
 							keyup_val = val;
 							vksel.find(".process_inp").remove();
-							inp.before("<DIV class=process_inp style=width:" + (sel_width - 5) + "px;><IMG src=/img/upload.gif></DIV>");
+							inp.before("<div class=process_inp style=width:" + (sel_width - 5) + "px;><IMG src=/img/upload.gif></div>");
 							keyup = 1; // клавиша была нажата. Список раскрывать нужно.
 							obj.funcKeyup(val);
 						}
@@ -1674,7 +1712,7 @@ $.fn.vkSel = function(obj) {
 			inp.val('');
 			obj.spisok = [];
 			vksel.find(".process").remove();
-			inp.before("<DIV class=process><IMG src=/img/upload.gif></DIV>");
+			inp.before("<div class=process><IMG src=/img/upload.gif></div>");
 		},
 
 		remove:function () { vksel.remove(); return this; },
@@ -1724,10 +1762,10 @@ G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня'
 		this.func = obj.func || function () {}; // исполняемая функция при выборе дня
 		this.place = obj.place || 'right'; // расположение календаря относительно выбора
 
-		var html = "<DIV class=vk_calendar>" +
-			"<DIV class=cal_input val=cal_input>" + this.day + " " + G.months_sel_ass[this.mon] + " " + this.year + "</DIV>" +
-			"<DIV class=cal_abs id=calabs_" + this.id + "></DIV>" +
-			"</DIV>";
+		var html = "<div class=vk_calendar>" +
+			"<div class=cal_input val=cal_input>" + this.day + " " + G.months_sel_ass[this.mon] + " " + this.year + "</div>" +
+			"<div class=cal_abs id=calabs_" + this.id + "></div>" +
+			"</div>";
 
 		t.next().remove('.vk_calendar'); // удаление календаря, если был для этого элемента
 		t.after(html);
@@ -1784,11 +1822,11 @@ G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня'
 			});
 			this.year = this.curYear;
 			this.mon = this.curMon;
-			var html = "<DIV class=cal_calendar style=left:" + (this.place == 'right' ? 0 : -64) + "px;>" +
+			var html = "<div class=cal_calendar style=left:" + (this.place == 'right' ? 0 : -64) + "px;>" +
 				"<TABLE class=cal_head><TR><TD class=cal_back val=cal_back><TD class=cal_month><TD class=cal_next val=cal_next></TABLE>" +
 				"<TABLE class=cal_week_name><TR><TD>Пн<TD>Вт<TD>Ср<TD>Чт<TD>Пт<TD>Сб<TD>Вс</TABLE>" +
-				"<DIV class=cal_days></DIV>" +
-				"</DIV>";
+				"<div class=cal_days></div>" +
+				"</div>";
 			this.calAbs.html(html);
 			this.calMon = this.calAbs.find('.cal_month:first');
 			this.calDays = this.calAbs.find('.cal_days:first');
@@ -1931,10 +1969,10 @@ $.fn.linkMenu = function (obj) {
 	}
 
 	var attrId = "linkMenu_" + T.attr('id');
-	var html = "<DIV class=linkMenu id=" + attrId + ">";
+	var html = "<div class=linkMenu id=" + attrId + ">";
 	html += "<A href='javascript:'>" + selA + "</A>";
-	html += "<DIV class=fordl><DL><DT><EM>" + selA + "</EM>" + dl + "</DL></DIV>";
-	html += "</DIV>";
+	html += "<div class=fordl><DL><DT><EM>" + selA + "</EM>" + dl + "</DL></div>";
+	html += "</div>";
 
 	T.after(html);
 

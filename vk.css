@@ -23,7 +23,6 @@ table{border:0;border-spacing:0}
 	overflow:hidden;
 }
 #frameHidden{
-	background-color:#ffd;
 	border:0;
 	width:100%;
 	height:100%;
@@ -168,7 +167,6 @@ input.money{font:bold 14px Tahoma;width:70px}
 .pagehelp_tab{border-spacing:8px;width:100%}
 .pagehelp_tab #name{width:482px}
 .pagehelp_tab #pagehelp_txt{width:558px;height:200px}
-.pagehelp_tab .load{height:200px;text-align:center;vertical-align:middle}
 .pagehelp_show_txt{margin:15px 20px}
 .pagehelp_show_dtime{margin-top:20px;color:#888;text-align:right}
 
@@ -523,6 +521,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 ._dialog .head .img_del{float:right;background-position: 0 -15px;margin:2px 0}
 ._dialog .head A:hover{background-position:0 0}
+._dialog .dFrame{
+	border:0;
+	width:100%;
+	height:100%;
+	position:absolute;
+	z-index:-1;
+}
 ._dialog .content {
 	background-color:#FFF;
 	padding:10px;
