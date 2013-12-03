@@ -259,7 +259,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 /* Путь в верхней строке */
-.path {background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px  }
+.path{background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px}
 .path a{font-weight:bold}
 .path span{float:right}
 .path SPAN a{font-weight:normal}
@@ -320,8 +320,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 /* Календарь */
-.vk_calendar{display:inline-block}
-.vk_calendar .cal_input{
+._calendar{display:inline-block;position:relative}
+._calendar .calinp{
 	width:114px;
 	line-height:21px;
 	border:#c0cad5 solid 1px;
@@ -329,39 +329,41 @@ input.money{font:bold 14px Tahoma;width:70px}
 	cursor:pointer;
 	padding-left:4px;
 }
-.vk_calendar .cal_abs{position:absolute;height:0}
-.vk_calendar .cal_calendar{
+._calendar .calabs{}
+._calendar .calcal{
 	background-color:#FFF;
 	border:#597da3 solid 1px;
 	width:182px;
-	position:relative;
-	top:5px;
+	position:absolute;
+	top:28px;
+	z-index:1;
 }
-.vk_calendar .cal_head{
+._calendar .calhead{
 	border-top:#4c7097 solid 1px;
 	border-bottom:#4c7097 solid 1px;
 	background-color:#597da3;
 	width:100%;
 	height:25px;
 }
-.vk_calendar .cal_back,.vk_calendar .cal_next{
+._calendar .calback,._calendar .calnext{
 	background-image:url("data:image/gif;base64,R0lGODlhBAAeAJEAAAAAAP///////wAAACH5BAEAAAIALAAAAAAEAB4AAAIUlHMYy7ppBIq02ouz3lNO5jXOERUAOw==");
 	background-repeat:no-repeat;
 	width:25px;
 	cursor:pointer;
 }
-.vk_calendar .cal_back{background-position:10px 9px}
-.vk_calendar .cal_next{background-position:11px -14px}
-.vk_calendar .cal_month{color:#FFF;font-weight:bold;text-align:center;vertical-align:middle}
-.vk_calendar .cal_week_name{background-color:#F1F1F1;border-bottom:#EEE solid 1px;width:100%}
-.vk_calendar .cal_week_name TD{color:#777;text-align:center;line-height:23px}
-.vk_calendar .cal_days TABLE{width:100%}
-.vk_calendar .cal_days TD{line-height:23px;width:26px;text-align:center}
-.vk_calendar .lost{color:#777;cursor:default}
-.vk_calendar .cal_day{cursor:pointer}
-.vk_calendar .cal_day:hover{background-color:#e1e7ed}
-.vk_calendar .cal-day-cur{font-weight:bold}
-.vk_calendar .cal-day-set{background-color:#e1e7ed}
+._calendar .calback{background-position:10px 9px}
+._calendar .calnext{background-position:11px -14px}
+._calendar .calmon{color:#FFF;font-weight:bold;text-align:center;vertical-align:middle}
+._calendar .calweeks{background-color:#F1F1F1;border-bottom:#EEE solid 1px;width:100%}
+._calendar .calweeks td{color:#777;text-align:center;line-height:23px}
+._calendar .caldays{width:100%}
+._calendar .caldays td{line-height:23px;width:26px;text-align:center}
+._calendar .sel{cursor:pointer}
+._calendar .lost{color:#777}
+._calendar .b{font-weight:bold}
+._calendar .sel:hover,._calendar .set{background-color:#e1e7ed}
+
+
 
 
 /* Горизонтальное меню */

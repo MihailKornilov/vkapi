@@ -1,5 +1,4 @@
 /* Необходимо предварительно указывать:
- - путь к AJAX_MAIN для vkComment, fotoView
  - DOMAIN для fotoUpload
  - IMAGE_UPLOAD_PATH для fotoUpload
  - G (временно)
@@ -14,6 +13,35 @@ var VK_SCROLL = 0,
 	FOTO_HEIGHT = 0,
 	REGEXP_NUMERIC = /^\d+$/,
 	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
+	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
+	MONTH_DEF = {
+		1:'Январь',
+		2:'Февраль',
+		3:'Март',
+		4:'Апрель',
+		5:'Май',
+		6:'Июнь',
+		7:'Июль',
+		8:'Август',
+		9:'Сентябрь',
+		10:'Октябрь',
+		11:'Ноябрь',
+		12:'Декабрь'
+	},
+	MONTH_DAT = {
+		1:'января',
+		2:'февраля',
+		3:'марта',
+		4:'апреля',
+		5:'мая',
+		6:'июня',
+		7:'июля',
+		8:'августа',
+		9:'сентября',
+		10:'октября',
+		11:'ноября',
+		12:'декабря'
+	},
 	URL = 'http://' + DOMAIN + '/index.php?' + VALUES,
 	AJAX_MAIN = 'http://' + DOMAIN + '/ajax/main.php?' + VALUES,
 	setCookie = function(name, value) {
@@ -94,8 +122,7 @@ var VK_SCROLL = 0,
 		if(add) {
 			ZINDEX += 10;
 			if(BC == 0) {
-				body
-					.find('._backfon').remove().end()
+				body.find('._backfon').remove().end()
 					.append('<div class="_backfon"></div>');
 			}
 			body.find('._backfon').css({'z-index':ZINDEX});
@@ -166,13 +193,13 @@ var VK_SCROLL = 0,
 		_backfon();
 
 		dialog.css({
-				width:obj.width + 'px',
-				top:$(window).scrollTop() + VK_SCROLL + obj.top + 'px',
-				left:313 - Math.round(obj.width / 2) + 'px',
-				'z-index':ZINDEX + 5
-			});
+			width:obj.width + 'px',
+			top:$(window).scrollTop() + VK_SCROLL + obj.top + 'px',
+			left:313 - Math.round(obj.width / 2) + 'px',
+			'z-index':ZINDEX + 5
+		});
 
-		document['dFrame' + frameNum].onresize = function() {
+		window['dFrame' + frameNum].onresize = function() {
 			var fr = $('.dFrame'),
 				max = 0;
 			for(var n = 0; n < fr.length; n++) {
@@ -214,420 +241,6 @@ var VK_SCROLL = 0,
 			}
 		};
 	};
-
-$(document)
-	.ajaxError(function(event, request, settings) {
-		if(!request.responseText)
-			return;
-		alert('Ошибка:\n\n' + request.responseText);
-		//var txt = request.responseText;
-		//throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
-	})
-	.on('click', '.debug_toggle', function() {
-		var d = getCookie('debug');
-		setCookie('debug', d == 1 ? 0 : 1);
-		_msg('Debug включен.');
-		document.location.reload();
-	})
-	.on('click', '#cache_clear', function() {
-		$.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
-			if(res.success) {
-				_msg('Кэш очищен.');
-				document.location.reload();
-			}
-		}, 'json');
-	})
-
-	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
-		var t = $(this),
-			but = t.next(),
-			val = t.val();
-		if(but.is(':hidden')) {
-			t.val('')
-				.attr('val', val)
-				.css('color','#000')
-				.height(26)
-				.autosize();
-			but.show()
-				.css('display','inline-block');
-		}
-	})
-	.on('blur', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
-		var t = $(this);
-		if(!t.val()) {
-			if(t.parent().parent().hasClass('empty')) {
-				t.parent().parent().hide()
-					.parent().find('span').show();
-				return;
-			}
-			var val = t.attr('val');
-			t.val(val)
-				.css('color','#777')
-				.height(13)
-				.next().hide();
-		}
-	})
-	.on('click', '.vkComment span a', function() {
-		var t = $(this),
-			cdop = t.parent().parent().next();
-		t.parent().hide();
-		cdop.show();
-		if(cdop.hasClass('empty'))
-			cdop.find('textarea').focus()
-	})
-	.on('click', '.vkComment .add .vkButton', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
-		var val = t.parent().parent().attr('val').split('_'),
-			send = {
-				op:'vkcomment_add',
-				table:val[0],
-				id:val[1],
-				txt:$.trim(t.prev().val())
-			};
-		if(!send.txt)
-			return;
-		t.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('busy').hide();
-			var val = t.prev().attr('val');
-			t.prev()
-				.val(val)
-				.css('color', '#777')
-				.height(13);
-			t.parent().after(res.html);
-		}, 'json');
-	})
-	.on('click', '.vkComment .cadd .vkButton', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
-		var p = t.parent(),
-			pid,
-			val;
-		for(var n = 0; n < 10; n++) {
-			p = p.parent();
-			if(p.hasClass('cunit'))
-				pid = p.attr('val');
-			if(p.hasClass('vkComment')) {
-				val = p.attr('val').split('_');
-				break;
-			}
-		}
-		var send = {
-			op:'vkcomment_add_child',
-			table:val[0],
-			id:val[1],
-			txt:$.trim(t.prev().val()),
-			parent:pid
-		};
-		if(!send.txt)
-			return;
-		t.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('busy').hide();
-			var val = t.prev().attr('val');
-			t.prev()
-				.val(val)
-				.css('color', '#777')
-				.height(13);
-			t.parent().before(res.html)
-				.parent().removeClass('empty');
-		}, 'json');
-	})
-	.on('click', '.vkComment .unit_del', function() {
-		var u = $(this);
-		while(!u.hasClass('cunit'))
-			u = u.parent();
-		if(u.hasClass('busy'))
-			return;
-		var id = u.attr('val'),
-			send = {
-				op:'vkcomment_del',
-				id:id
-			};
-		u.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			u.removeClass('busy');
-			if(res.success)
-				u.find('table:first').hide()
-					.before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
-		}, 'json');
-	})
-	.on('click', '.vkComment .unit_rest,.vkComment .child_rest', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
-		var send = {
-			op:'vkcomment_rest',
-			id:t.attr('val')
-		};
-		t.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			t.parent().next().show();
-			t.parent().remove()
-		}, 'json');
-	})
-	.on('click', '.vkComment .child_del', function() {
-		var p = $(this);
-		while(!p.hasClass('child'))
-			p = p.parent();
-		if(p.hasClass('busy'))
-			return;
-		var id = p.attr('val'),
-			send = {
-				op:'vkcomment_del',
-				id:id
-			};
-		p.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			p.removeClass('busy');
-			if(res.success)
-				p.find('table:first').hide()
-					.before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
-		}, 'json');
-	})
-
-	.on('click', '.fotoView', function() {
-		$('#foto_view').remove();
-		var t = $(this),
-			html ='<div id="foto_view">' +
-				'<div class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></div>' +
-				'<table class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
-				'<div class="about"><div class="dtime"></div></div>' +
-				'<div class="hide"></div>' +
-				'</div>';
-		FB.append(html);
-
-		var f = $('#foto_view');
-		fotoHeightSet();
-		f.find('.head a').on('click', fotoClose);
-
-		var owner = t.attr('val'),
-			send = {
-				op:'foto_load',
-				owner:owner
-			};
-		if(!window.fotoViewImages || window.fotoViewOwner != owner) {
-			$.post(AJAX_MAIN, send, function(res) {
-				window.fotoViewImages = res.img;
-				window.fotoViewNum = 0;
-				window.fotoViewOwner = owner;
-				fotoShow();
-				fotoClick();
-			}, 'json');
-		} else {
-			fotoShow();
-			fotoClick();
-		}
-
-
-		function fotoShow() {
-			var len = window.fotoViewImages.length,
-				num = window.fotoViewNum,
-				nextNum = num + 1 >= len ? 0 : num + 1,
-				img = window.fotoViewImages[num];
-			f.find('.head em').html(len > 1 ? 'Фотография ' + (num + 1) + ' из ' + len : 'Просмотр фотографии');
-			f.find('.dtime').html('Добавлена ' + img.dtime);
-			f.find('.image img')
-				.attr('src', img.link)
-				.attr('width', img.x)
-				.attr('height', img.y)
-				.on('load', fotoHeightSet);
-			f.find('.hide').html('<img src="' + window.fotoViewImages[nextNum].link + '">');
-		}
-		function fotoClick() {
-			f.find('.image').on('click', function() {
-				var len = window.fotoViewImages.length;
-				if(len == 1)
-					fotoClose();
-				else {
-					window.fotoViewNum++;
-					if(window.fotoViewNum >= len)
-						window.fotoViewNum = 0;
-					fotoShow();
-				}
-			});
-		}
-		function fotoClose() {
-			window.fotoViewNum = 0;
-			f.remove();
-			FOTO_HEIGHT = 0;
-			_fbhs();
-		}
-		function fotoHeightSet() {
-			FOTO_HEIGHT = f.height();
-			_fbhs();
-		}
-	})
-
-	.on('click', '.check0,.check1', function() {
-		var t = $(this),
-			inp = t.find('input'),
-			v = inp.val() == 1 ? 0 : 1;
-		t.attr('class', 'check' + v);
-		inp.val(v);
-	})
-	.on('click', '._radio .on,._radio .off', function() {
-		var t = $(this),
-			p = t.parent(),
-			v = t.attr('val');
-		p.find('div.on').removeClass('on').addClass('off');
-		t.removeClass('off').addClass('on');
-		p.find('input:first').val(v);
-	})
-
-	.ready(function() {
-		frameHidden.onresize = _fbhs;
-
-		VK.callMethod('scrollWindow', 0);
-		VK.callMethod('scrollSubscribe');
-		VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
-
-		FB = $('#frameBody');
-		FH = $('#frameHidden');
-		_fbhs();
-		sortable();
-
-		$('.pagehelp_create').click(function() {
-			var t = $(this),
-				page = t.attr('val'),
-				html =
-					'<TABLE class="pagehelp_tab">' +
-						'<TR><TD class="label">Страница:<TD><b>' + page + '</b>' +
-						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200">' +
-						'<TR><TD class="label">Содержание:<TD>' +
-						'<TR><td colspan="2"><textarea id="pagehelp_txt"></textarea>' +
-						'</TABLE>';
-			var dialog = _dialog({
-				top:10,
-				width:610,
-				head:'Создание новой подсказки',
-				content:html,
-				submit:submit
-			});
-			$('#name').focus();
-			$('#pagehelp_txt').autosize();
-			function submit() {
-				var send = {
-					op:'pagehelp_add',
-					page:page,
-					name:$('#name').val(),
-					txt:$('#pagehelp_txt').val()
-				};
-				if(!send.name) {
-					dialog.bottom.vkHint({
-						msg:'<SPAN class="red">Не введено название</SPAN>',
-						remove:1,
-						indent:40,
-						show:1,
-						top:-48,
-						left:217
-					});
-					$('#name').focus();
-				} else {
-					dialog.process();
-					$.post(AJAX_MAIN, send, function (res) {
-						if(res.success) {
-							dialog.close();
-							_msg('Внесёно!');
-							document.location.reload();
-						} else
-							dialog.abort();
-					}, 'json');
-				}
-			}
-		});
-		$('#mainLinks .img_pagehelp').click(function() {
-			var t = $(this),
-				id = t.attr('val'),
-				dialog,
-				send = {
-					op:'pagehelp_get',
-					id:id
-				};
-			pagehelp_get();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.content
-						.html(html_create(res))
-						.find('.add').click(function() {
-							edit(res);
-						});
-				} else
-					dialog.loadError();
-			}, 'json');
-
-			function html_create(res) {
-				return '<div class="headName">' + res.name + res.edit + '</div>' +
-					'<div class="pagehelp_show_txt">' + res.txt + res.dtime + '</div>';
-			}
-			function pagehelp_get(html) {
-				dialog = _dialog({
-					top:10,
-					width:610,
-					head:'Информация о странице',
-					load:html ? 0 : 1,
-					content:html,
-					butSubmit:'',
-					butCancel:'Закрыть'
-				});
-			}
-			function edit(res) {
-				dialog.close();
-				var html =
-					'<TABLE class="pagehelp_tab">' +
-						'<TR><TD class="label">Страница:<TD><b>' + res.page + '</b>' +
-						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200" value="' + res.name + '">' +
-						'<TR><TD class="label">Содержание:<TD>' +
-						'<TR><td colspan="2"><textarea id="pagehelp_txt">' + res.txt + '</textarea>' +
-						'</TABLE>';
-				dialog = _dialog({
-					top:10,
-					width:610,
-					head:'Редактирование подсказки',
-					content:html,
-					butSubmit:'Сохранить',
-					submit:function() {
-						var send = {
-							op:'pagehelp_edit',
-							id:id,
-							name:$('#name').val(),
-							txt:$('#pagehelp_txt').val()
-						};
-						if(!send.name) {
-							dialog.bottom.vkHint({
-								msg:'<SPAN class="red">Не введено название</SPAN>',
-								remove:1,
-								indent:40,
-								show:1,
-								top:-48,
-								left:217
-							});
-							$('#name').focus();
-						} else {
-							dialog.process();
-							$.post(AJAX_MAIN, send, function() {
-								if(res.success) {
-									dialog.close();
-									res.name = send.name;
-									res.txt = send.txt;
-									pagehelp_get(html_create(res));
-									dialog.content.find('.add').click(function() {
-										edit(res);
-									});
-								} else
-									dialog.abort();
-							}, 'json');
-						}
-					}
-				});
-				$('#name').focus();
-				$('#pagehelp_txt').autosize();
-			}
-		});
-	});
 
 $.fn.fotoUpload = function(obj) {
 	obj = $.extend({
@@ -675,15 +288,15 @@ $.fn.fotoUpload = function(obj) {
 		var html = '<div id="fotoUpload">' +
 			'<div class="info">Поддерживаются форматы JPG, PNG и GIF.</div>' +
 			'<FORM method="post" action="' + IMAGE_UPLOAD_PATH + '" enctype="multipart/form-data" target="upload_frame">' +
-				'<INPUT type="file" id="file_name" name="file_name" />' +
-				'<INPUT type="hidden" name="op" value="file" />' +
+			'<INPUT type="file" id="file_name" name="file_name" />' +
+			'<INPUT type="hidden" name="op" value="file" />' +
 			'</FORM>' +
 
 			'<div id="choose_file">Выберите файл</div>' +
 			'<IFRAME name="upload_frame"></IFRAME>' +
 			'<div id="direct"><INPUT type="text" id="direct_input" placeholder="или укажите прямую ссылку на изображение.."><a><span>oтправить</span></a></div>' +
 			'<div class="webcam">Вы также можете <A>сделать фотографию с вебкамеры »</A></div>' +
-		'</div>';
+			'</div>';
 		dialog = _dialog({
 			top:80,
 			head:"Загрузка изображения",
@@ -929,6 +542,243 @@ $.fn._radio = function(o) {
 	return t;
 };
 
+$.fn._search = function(o) {
+	o = $.extend({
+		width:126,
+		focus:0,
+		txt:'',
+		func:function(){},
+		enter:0
+	}, o);
+	var t = $(this),
+		html = '<div class="_search" style="width:' + o.width + 'px">' +
+			'<div class="img_del dn"></div>' +
+			'<div class="hold">' + o.txt + '</div>' +
+			'<input type="text" style="width:' + (o.width - 45) + 'px" />' +
+			'</div>';
+	t.html(html);
+	var _s = t.find('._search'),
+		inp = t.find('input'),
+		hold = t.find('.hold'),
+		del = t.find('.img_del');
+
+	if(o.focus) {
+		inp.focus();
+		holdFocus()
+	}
+
+	inp .focus(holdFocus)
+		.blur(holdBlur)
+		.keyup(function() {
+			var c = $(this).val().length > 0;
+			hold[(c ? 'add' : 'remove') + 'Class']('dn');
+			del[(c ? 'remove' : 'add') + 'Class']('dn');
+			if(!o.enter)
+				o.func(inp.val());
+		});
+
+	if(o.enter)
+		inp.keydown(function(e) {
+			if(e.which == 13)
+				o.func($(this).val());
+		});
+
+	t.clear = function() {
+		inp.val('');
+		del.addClass('dn');
+		hold.removeClass('dn');
+	};
+
+	del.click(function() {
+		t.clear();
+		o.func('');
+	});
+
+	_s.click(function() {
+		inp.focus();
+		holdFocus();
+	});
+
+	function holdFocus() { hold.css('color', '#ccc'); }
+	function holdBlur() { hold.css('color', '#777'); }
+
+	t.inp = function(v) {
+		if(!v)
+			return $.trim(inp.val());
+		inp.val(v);
+		del.removeClass('dn');
+		hold.addClass('dn');
+		return $(this);
+	};
+	return t;
+};
+
+$.fn._calendar = function(o) {
+	var t = $(this),
+		id = t.attr('id'),
+		val = t.val(),
+		d = new Date();
+
+	// если input hidden содежит дату, применение её
+	if (REGEXP_DATE.test(val)) {
+		var r = val.split('-');
+		o.year = r[0];
+		o.mon = Math.abs(r[1]);
+		o.day = Math.abs(r[2]);
+	}
+
+	o = $.extend({
+		year:d.getFullYear(),	// если год не указан, то текущий год
+		mon:d.getMonth() + 1,   // если месяц не указан, то текущий месяц
+		day:d.getDate(),		// то же с днём
+		lost:0,                 // если не 0, то можно выбрать прошедшие дни
+		func:function () {},    // исполняемая функция при выборе дня
+		place:'right'           // расположение календаря относительно выбора
+	}, o);
+
+	t.wrap('<div class="_calendar" id="' + id + '_calendar">');
+	t.after('<div class="calinp">' + o.day + ' ' + MONTH_DAT[o.mon] + ' ' + o.year + '</div>' +
+		'<div class="calabs"></div>');
+
+	var	curYear = o.year,//дата,
+		curMon = o.mon,  //установленная
+		curDay = o.day,  //в input hidden
+		inp = t.next(),
+		calabs = inp.next(),//место для календаря
+		calmon,             //место для месяца и года
+		caldays;            //место для дней
+
+	t.val(dataForm());
+	inp.click(calPrint);
+
+	function calPrint(e) {
+		if(!calabs.html()) {
+			e.stopPropagation();
+
+			// если были открыты другие календари, то закрываются, кроме текущего
+			var cals = $('.calabs');
+			for(var n = 0; n < cals.length; n++) {
+				var sp = cals.eq(n);
+				if(sp.parent().attr('id').split('_calendar')[0] == id)
+					continue;
+				sp.html('');
+			}
+
+			// закрытие текущего календаря при нажатии на любое место экрана
+			$(document).on('click.calendar' + id, function () {
+				calabs.html('');
+				$(document).off('click.calendar' + id);
+			});
+
+			o.year = curYear;
+			o.mon = curMon;
+			o.day = curDay;
+
+			var html =
+				'<div class="calcal" style="left:' + (o.place == 'right' ? 0 : -64) + 'px">' +
+					'<table class="calhead">'+
+						'<tr><td class="calback">' +
+							'<td class="calmon">' + MONTH_DEF[curMon] + ' ' + curYear +
+							'<td class="calnext">' +
+					'</table>' +
+					'<table class="calweeks"><tr><td>Пн<td>Вт<td>Ср<td>Чт<td>Пт<td>Сб<td>Вс</table>' +
+					'<table class="caldays"></table>' +
+				'</div>';
+			calabs.html(html);
+			calabs.find('.calback').click(back);
+			calabs.find('.calnext').click(next);
+			calmon = calabs.find('.calmon');
+			caldays = calabs.find('.caldays');
+			daysPrint();
+		}
+	}
+	function daysPrint() {//вывод списка дней
+		var n,
+			html = '<tr>',
+			year = d.getFullYear(),
+			mon = d.getMonth() + 1,
+			today = d.getDate(),
+			df = dayFirst(o.year, o.mon),
+			cur = year == o.year && mon == o.mon,// выделение текущего дня, если показан текущий год и месяц
+			lost = o.lost == 0, // затемнение прошедших дней
+			st = o.year == curYear && o.mon == curMon, // выделение выбранного дня
+			dc = dayCount(o.year, o.mon);
+
+		//установка пустых ячеек
+		if(df > 1)
+			for(n = 0; n < df - 1; n++)
+				html += '<td>';
+
+		for(n = 1; n <= dc; n++) {
+			var l = '';
+			if(o.year < year) l = ' lost';
+			else if(o.year == year && o.mon < mon) l = ' lost';
+			else if(o.year == year && o.mon == mon && n < today) l = ' lost';
+			html +=
+				'<td class="' + (!l || l && !lost ? ' sel' : '') +
+								(cur && n == today ? ' b' : '') +
+								(st && n == curDay ? ' set' : '') +
+								l + '"' +
+							(!l || l && !lost ? ' val="' + n + '"' : '') +
+					'>' + n;
+			df++;
+			if(df == 8 && n != dc) {
+				html += "<tr>";
+				df = 1;
+			}
+		}
+		caldays
+			.html(html)
+			.find('.sel').click(daySel)
+	}
+	function daySel() {
+		curYear = o.year;
+		curMon = o.mon;
+		curDay = $(this).attr('val');
+		inp.html(curDay + ' ' + MONTH_DAT[curMon] + ' ' + curYear);
+		t.val(dataForm());
+		o.func(dataForm());
+	}
+	function dataForm() {//формирование даты в виде 2012-12-03
+		return curYear +
+			'-' + (curMon < 10 ? '0' : '') + curMon +
+			'-' + (curDay < 10 ? '0' : '') + curDay;
+	}
+	function dayFirst(year, mon) {//номер первой недели в месяце
+		var first = new Date(year, mon - 1, 1).getDay();
+		return first == 0 ? 7 : first;
+	}
+	function dayCount(year, mon) {//количество дней в месяце
+		mon--;
+		if(mon == 0) {
+			mon = 12;
+			year--;
+		}
+		return 32 - new Date(year, mon, 32).getDate();
+	}
+	function back(e) {//пролистывание календаря назад
+		e.stopPropagation();
+		o.mon--;
+		if(o.mon == 0) {
+			o.mon = 12;
+			o.year--;
+		}
+
+		calmon.html(MONTH_DEF[o.mon] + ' ' + o.year);
+		daysPrint();
+	}
+	function next(e) {//пролистывание календаря вперёд
+		e.stopPropagation();
+		o.mon++;
+		if(o.mon == 13) {
+			o.mon = 1;
+			o.year++;
+		}
+		calmon.html(MONTH_DEF[o.mon] + ' ' + o.year);
+		daysPrint();
+	}
+};
+
 $.fn.years = function(obj) {// перелистывание годов
 	obj = $.extend({
 		year:(new Date()).getFullYear(),
@@ -996,77 +846,6 @@ $.fn.keyEnter = function(func) {
 			func();
 	});
 	return $(this);
-};
-
-$.fn._search = function(o) {
-	o = $.extend({
-		width:126,
-		focus:0,
-		txt:'',
-		func:function(){},
-		enter:0
-	}, o);
-	var t = $(this),
-		html = '<div class="_search" style="width:' + o.width + 'px">' +
-			'<div class="img_del dn"></div>' +
-			'<div class="hold">' + o.txt + '</div>' +
-			'<input type="text" style="width:' + (o.width - 45) + 'px" />' +
-		'</div>';
-	t.html(html);
-	var _s = t.find('._search'),
-		inp = t.find('input'),
-		hold = t.find('.hold'),
-		del = t.find('.img_del');
-
-	if(o.focus) {
-		inp.focus();
-		holdFocus()
-	}
-
-	inp .focus(holdFocus)
-		.blur(holdBlur)
-		.keyup(function() {
-			var c = $(this).val().length > 0;
-			hold[(c ? 'add' : 'remove') + 'Class']('dn');
-			del[(c ? 'remove' : 'add') + 'Class']('dn');
-			if(!o.enter)
-				o.func(inp.val());
-		});
-
-	if(o.enter)
-		inp.keydown(function(e) {
-			if(e.which == 13)
-				o.func($(this).val());
-		});
-
-	t.clear = function() {
-		inp.val('');
-		del.addClass('dn');
-		hold.removeClass('dn');
-	};
-
-	del.click(function() {
-		t.clear();
-		o.func('');
-	});
-
-	_s.click(function() {
-		inp.focus();
-		holdFocus();
-	});
-
-	function holdFocus() { hold.css('color', '#ccc'); }
-	function holdBlur() { hold.css('color', '#777'); }
-
-	t.inp = function(v) {
-		if(!v)
-			return $.trim(inp.val());
-		inp.val(v);
-		del.removeClass('dn');
-		hold.addClass('dn');
-		return $(this);
-	};
-	return t;
 };
 
 $.fn.rightLink = function(o) {
@@ -1333,9 +1112,6 @@ $.fn.rightLink = function(o) {
 
 	$.fn.vkHint = function (obj) { return new Hint($(this), obj); };
 })();
-
-
-
 
 $.fn.vkSel = function(obj) {
 	var t = $(this);
@@ -1729,222 +1505,6 @@ $.fn.vkSel = function(obj) {
 	return t;
 };
 
-// Календарь
-G.months_ass = {1:'Январь',2:'Февраль',3:'Март',4:'Апрель',5:'Май',6:'Июнь',7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'};
-G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня',7:'июля',8:'августа',9:'сентября',10:'октября',11:'ноября',12:'декабря'};
-(function () {
-	var Calendar = function (obj, t) { this.create(obj, t); };
-
-	Calendar.prototype.create = function (obj, t) {
-		if (!obj) { var obj = {}; }
-
-		this.id = t.attr('id');
-
-		// если input hidden содежит дату, установка её
-		var val = t.val();
-		if (/^(\d{4})-(\d{1,2})-(\d{1,2})$/.test(val)) {
-			var arr = val.split('-');
-			obj.year = arr[0];
-			obj.mon = Math.abs(arr[1]);
-			obj.day = Math.abs(arr[2]);
-		}
-
-		var d = new Date();
-
-		this.year = obj.year || d.getFullYear();	 // если год не указан, то текущий год
-		this.mon = obj.mon || d.getMonth() + 1; // если месяц не указан, то текущий месяц
-		this.day = obj.day || d.getDate();		   // то же с днём
-		this.curYear = this.year;
-		this.curMon = this.mon;
-		this.curDay = this.day;
-
-		this.lost = obj.lost || 0; // если не 0, то можно выбрать прошедшие дни
-		this.func = obj.func || function () {}; // исполняемая функция при выборе дня
-		this.place = obj.place || 'right'; // расположение календаря относительно выбора
-
-		var html = "<div class=vk_calendar>" +
-			"<div class=cal_input val=cal_input>" + this.day + " " + G.months_sel_ass[this.mon] + " " + this.year + "</div>" +
-			"<div class=cal_abs id=calabs_" + this.id + "></div>" +
-			"</div>";
-
-		t.next().remove('.vk_calendar'); // удаление календаря, если был для этого элемента
-		t.after(html);
-
-		var cal = t.next();
-		this.cShow = 0; // показан календарь или нет
-		this.calAbs = cal.find('.cal_abs:first'); // размещение для календаря
-		this.calInput = cal.find('.cal_input:first'); // выбранная дата
-		this.t = t;
-		var thisCal = this;
-
-		this.setVal();
-
-		cal.on('click', function (e) {
-			var val = $(e.target).attr('val');
-			if (val) {
-				var arr = val.split('cal_');
-				switch (arr[1]) {
-					case 'input': thisCal.calPrint(e); break;
-					case 'back': thisCal.back(e); break;
-					case 'next': thisCal.next(e); break;
-					case 'lost': e.stopPropagation(); break; // нажатие на прожедший день, когда нельзя выбирать
-					default: thisCal.setDay(arr[1]);
-				}
-			}
-		});
-	};
-
-
-	// установка значения input hidden
-	Calendar.prototype.setVal = function () { this.t.val(this.dataForm()); };
-	// формирование даты в виде 2000-01-01
-	Calendar.prototype.dataForm = function () { return this.curYear + "-" + (this.curMon < 10 ? '0' : '') + this.curMon + "-" + (this.curDay < 10 ? '0' : '') + this.curDay; };
-
-	// открытие и скрытие календаря
-	Calendar.prototype.calPrint = function (e) {
-		if (this.cShow == 0) {
-			e.stopPropagation();
-			// если были открыты другие календари, то закрываются, кроме текущего
-			var calabs = $(".cal_abs");
-			for (var n = 0; n <calabs.length; n++) {
-				var sp = calabs.eq(n);
-				if (sp.attr('id').split('calabs_')[1] == this.id) continue;
-				sp.html('');
-			}
-			// закрытие текущаего календаря при нажатии на любое место экрана
-			var thisCal = this;
-			$(document).on('click.calendar' + this.id, function () {
-				if (thisCal.cShow == 1) {
-					thisCal.calAbs.html('');
-					thisCal.cShow = 0;
-					$(document).off('click.calendar' + thisCal.id);
-				}
-			});
-			this.year = this.curYear;
-			this.mon = this.curMon;
-			var html = "<div class=cal_calendar style=left:" + (this.place == 'right' ? 0 : -64) + "px;>" +
-				"<TABLE class=cal_head><TR><TD class=cal_back val=cal_back><TD class=cal_month><TD class=cal_next val=cal_next></TABLE>" +
-				"<TABLE class=cal_week_name><TR><TD>Пн<TD>Вт<TD>Ср<TD>Чт<TD>Пт<TD>Сб<TD>Вс</TABLE>" +
-				"<div class=cal_days></div>" +
-				"</div>";
-			this.calAbs.html(html);
-			this.calMon = this.calAbs.find('.cal_month:first');
-			this.calDays = this.calAbs.find('.cal_days:first');
-			this.daysPrint();
-			this.monPrint();
-			this.cShow = 1;
-		}
-	};
-
-
-	// пролистывание календаря назад
-	Calendar.prototype.back = function (e) {
-		e.stopPropagation();
-		this.mon--;
-		if (this.mon == 0) { this.mon = 12; this.year--; }
-		this.daysPrint();
-		this.monPrint();
-	};
-
-
-	// пролистывание календаря вперёд
-	Calendar.prototype.next = function (e) {
-		e.stopPropagation();
-		this.mon++;
-		if (this.mon == 13) { this.mon = 1; this.year++; }
-		this.daysPrint();
-		this.monPrint();
-	};
-
-
-	// установка дня
-	Calendar.prototype.setDay = function (day) {
-		this.curYear = this.year;
-		this.curMon = this.mon;
-		this.curDay = day;
-		this.calInput.html(day + " " + G.months_sel_ass[this.mon] + " " + this.year);
-		this.setVal();
-		this.func(this.dataForm());
-	};
-
-
-
-	// вывод названия месяца и года сверху календаря
-	Calendar.prototype.monPrint = function () {  this.calMon.html(G.months_ass[this.mon] + " " + this.year); };
-
-
-
-	// вывод списка дней
-	Calendar.prototype.daysPrint = function () {
-		var html = "<TABLE><TR>";
-
-		// установка пустых ячеек
-		dayFirst = getDayFirst(this.year, this.mon);
-		if (dayFirst > 1)
-			for(var n = 0; n < dayFirst - 1; n++)
-				html += "<TD>";
-
-		// выделение текущего дня
-		var d = new Date();
-		var cur = 0;
-		var year = d.getFullYear();
-		var mon = d.getMonth() + 1;
-		if (year == this.year && mon == this.mon)
-			cur = 1;
-		var today = d.getDate();
-
-		// выделение выбранного дня
-		var st = 0;
-		if(this.year == this.curYear && this.mon == this.curMon)
-			st = 1;
-
-		var dayCount = getDayCount(this.year, this.mon);
-		for (var n = 1; n <= dayCount; n++) {
-			var active = 'cal_day';
-			if (this.year < year) { active = this.lost == 1 ? active + ' lost' : 'lost'; }
-			else if (this.year == year && this.mon < mon) { active = this.lost == 1 ? active + ' lost' : 'lost'; }
-			else if (this.year == year && this.mon == mon && n < today) { active = this.lost == 1 ? active + ' lost' : 'lost'; }
-			var bold = (cur == 1 && n == today && active == 'cal_day' ? " cal-day-cur" : '');
-			var back = (st == 1 && n == this.curDay ? " cal-day-set" : '');
-			var val = " val=cal_" + (this.lost == 0 && active == 'lost' ? 'lost' : n); // если нельзя выбрать прошедший день, то окно закрываться не будет
-			html += "<TD class='" + active + bold + back + "'" + val + ">" + n;
-			dayFirst++;
-			if (dayFirst == 8 && n != dayCount) {
-				html += "<TR>";
-				dayFirst = 1;
-			}
-		}
-		html += "</TABLE>";
-		this.calDays.html(html);
-	};
-
-
-
-
-
-
-	// номер первой недели в месяце
-	function getDayFirst(year, mon) {
-		var first = new Date(year, mon - 1, 1).getDay();
-		if (first == 0)
-			return 7;
-		else
-			return first;
-	}
-
-
-
-	// количество дней в месяце
-	function getDayCount(year, mon) {
-		mon--;
-		if (mon == 0) { mon = 12; year--; }
-		return 32 - new Date(year, mon, 32).getDate();
-	}
-
-
-	$.fn.vkCalendar = function (obj) { new Calendar(obj, $(this)); };
-})();
-
 $.fn.linkMenu = function (obj) {
 	/* Выпадающее меню по ссылке
 	 * id указывается из INPUT hidden
@@ -2039,4 +1599,419 @@ $.fn.linkMenu = function (obj) {
 	}
 };
 
+$(document)
+	.ajaxError(function(event, request, settings) {
+		if(!request.responseText)
+			return;
+		alert('Ошибка:\n\n' + request.responseText);
+		//var txt = request.responseText;
+		//throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
+	})
+	.on('click', '.debug_toggle', function() {
+		var d = getCookie('debug');
+		setCookie('debug', d == 1 ? 0 : 1);
+		_msg('Debug включен.');
+		document.location.reload();
+	})
+	.on('click', '#cache_clear', function() {
+		$.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
+			if(res.success) {
+				_msg('Кэш очищен.');
+				document.location.reload();
+			}
+		}, 'json');
+	})
 
+	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
+		var t = $(this),
+			but = t.next(),
+			val = t.val();
+		if(but.is(':hidden')) {
+			t.val('')
+				.attr('val', val)
+				.css('color','#000')
+				.height(26)
+				.autosize();
+			but.show()
+				.css('display','inline-block');
+		}
+	})
+	.on('blur', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
+		var t = $(this);
+		if(!t.val()) {
+			if(t.parent().parent().hasClass('empty')) {
+				t.parent().parent().hide()
+					.parent().find('span').show();
+				return;
+			}
+			var val = t.attr('val');
+			t.val(val)
+				.css('color','#777')
+				.height(13)
+				.next().hide();
+		}
+	})
+	.on('click', '.vkComment span a', function() {
+		var t = $(this),
+			cdop = t.parent().parent().next();
+		t.parent().hide();
+		cdop.show();
+		if(cdop.hasClass('empty'))
+			cdop.find('textarea').focus()
+	})
+	.on('click', '.vkComment .add .vkButton', function() {
+		var t = $(this);
+		if(t.hasClass('busy'))
+			return;
+		var val = t.parent().parent().attr('val').split('_'),
+			send = {
+				op:'vkcomment_add',
+				table:val[0],
+				id:val[1],
+				txt:$.trim(t.prev().val())
+			};
+		if(!send.txt)
+			return;
+		t.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('busy').hide();
+			var val = t.prev().attr('val');
+			t.prev()
+				.val(val)
+				.css('color', '#777')
+				.height(13);
+			t.parent().after(res.html);
+		}, 'json');
+	})
+	.on('click', '.vkComment .cadd .vkButton', function() {
+		var t = $(this);
+		if(t.hasClass('busy'))
+			return;
+		var p = t.parent(),
+			pid,
+			val;
+		for(var n = 0; n < 10; n++) {
+			p = p.parent();
+			if(p.hasClass('cunit'))
+				pid = p.attr('val');
+			if(p.hasClass('vkComment')) {
+				val = p.attr('val').split('_');
+				break;
+			}
+		}
+		var send = {
+			op:'vkcomment_add_child',
+			table:val[0],
+			id:val[1],
+			txt:$.trim(t.prev().val()),
+			parent:pid
+		};
+		if(!send.txt)
+			return;
+		t.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('busy').hide();
+			var val = t.prev().attr('val');
+			t.prev()
+				.val(val)
+				.css('color', '#777')
+				.height(13);
+			t.parent().before(res.html)
+				.parent().removeClass('empty');
+		}, 'json');
+	})
+	.on('click', '.vkComment .unit_del', function() {
+		var u = $(this);
+		while(!u.hasClass('cunit'))
+			u = u.parent();
+		if(u.hasClass('busy'))
+			return;
+		var id = u.attr('val'),
+			send = {
+				op:'vkcomment_del',
+				id:id
+			};
+		u.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			u.removeClass('busy');
+			if(res.success)
+				u.find('table:first').hide()
+					.before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
+		}, 'json');
+	})
+	.on('click', '.vkComment .unit_rest,.vkComment .child_rest', function() {
+		var t = $(this);
+		if(t.hasClass('busy'))
+			return;
+		var send = {
+			op:'vkcomment_rest',
+			id:t.attr('val')
+		};
+		t.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.parent().next().show();
+			t.parent().remove()
+		}, 'json');
+	})
+	.on('click', '.vkComment .child_del', function() {
+		var p = $(this);
+		while(!p.hasClass('child'))
+			p = p.parent();
+		if(p.hasClass('busy'))
+			return;
+		var id = p.attr('val'),
+			send = {
+				op:'vkcomment_del',
+				id:id
+			};
+		p.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			p.removeClass('busy');
+			if(res.success)
+				p.find('table:first').hide()
+					.before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
+		}, 'json');
+	})
+
+	.on('click', '.fotoView', function() {
+		$('#foto_view').remove();
+		var t = $(this),
+			html ='<div id="foto_view">' +
+				'<div class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></div>' +
+				'<table class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
+				'<div class="about"><div class="dtime"></div></div>' +
+				'<div class="hide"></div>' +
+				'</div>';
+		FB.append(html);
+
+		var f = $('#foto_view');
+		fotoHeightSet();
+		f.find('.head a').on('click', fotoClose);
+
+		var owner = t.attr('val'),
+			send = {
+				op:'foto_load',
+				owner:owner
+			};
+		if(!window.fotoViewImages || window.fotoViewOwner != owner) {
+			$.post(AJAX_MAIN, send, function(res) {
+				window.fotoViewImages = res.img;
+				window.fotoViewNum = 0;
+				window.fotoViewOwner = owner;
+				fotoShow();
+				fotoClick();
+			}, 'json');
+		} else {
+			fotoShow();
+			fotoClick();
+		}
+
+
+		function fotoShow() {
+			var len = window.fotoViewImages.length,
+				num = window.fotoViewNum,
+				nextNum = num + 1 >= len ? 0 : num + 1,
+				img = window.fotoViewImages[num];
+			f.find('.head em').html(len > 1 ? 'Фотография ' + (num + 1) + ' из ' + len : 'Просмотр фотографии');
+			f.find('.dtime').html('Добавлена ' + img.dtime);
+			f.find('.image img')
+				.attr('src', img.link)
+				.attr('width', img.x)
+				.attr('height', img.y)
+				.on('load', fotoHeightSet);
+			f.find('.hide').html('<img src="' + window.fotoViewImages[nextNum].link + '">');
+		}
+		function fotoClick() {
+			f.find('.image').on('click', function() {
+				var len = window.fotoViewImages.length;
+				if(len == 1)
+					fotoClose();
+				else {
+					window.fotoViewNum++;
+					if(window.fotoViewNum >= len)
+						window.fotoViewNum = 0;
+					fotoShow();
+				}
+			});
+		}
+		function fotoClose() {
+			window.fotoViewNum = 0;
+			f.remove();
+			FOTO_HEIGHT = 0;
+			_fbhs();
+		}
+		function fotoHeightSet() {
+			FOTO_HEIGHT = f.height();
+			_fbhs();
+		}
+	})
+
+	.on('click', '.check0,.check1', function() {
+		var t = $(this),
+			inp = t.find('input'),
+			v = inp.val() == 1 ? 0 : 1;
+		t.attr('class', 'check' + v);
+		inp.val(v);
+	})
+	.on('click', '._radio .on,._radio .off', function() {
+		var t = $(this),
+			p = t.parent(),
+			v = t.attr('val');
+		p.find('div.on').removeClass('on').addClass('off');
+		t.removeClass('off').addClass('on');
+		p.find('input:first').val(v);
+	})
+
+	.ready(function() {
+		VK.callMethod('scrollWindow', 0);
+		VK.callMethod('scrollSubscribe');
+		VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
+
+		FB = $('#frameBody');
+		FH = $('#frameHidden');
+		_fbhs();
+		sortable();
+
+		$('.pagehelp_create').click(function() {
+			var t = $(this),
+				page = t.attr('val'),
+				html =
+					'<TABLE class="pagehelp_tab">' +
+						'<TR><TD class="label">Страница:<TD><b>' + page + '</b>' +
+						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200">' +
+						'<TR><TD class="label">Содержание:<TD>' +
+						'<TR><td colspan="2"><textarea id="pagehelp_txt"></textarea>' +
+						'</TABLE>';
+			var dialog = _dialog({
+				top:10,
+				width:610,
+				head:'Создание новой подсказки',
+				content:html,
+				submit:submit
+			});
+			$('#name').focus();
+			$('#pagehelp_txt').autosize();
+			function submit() {
+				var send = {
+					op:'pagehelp_add',
+					page:page,
+					name:$('#name').val(),
+					txt:$('#pagehelp_txt').val()
+				};
+				if(!send.name) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">Не введено название</SPAN>',
+						remove:1,
+						indent:40,
+						show:1,
+						top:-48,
+						left:217
+					});
+					$('#name').focus();
+				} else {
+					dialog.process();
+					$.post(AJAX_MAIN, send, function (res) {
+						if(res.success) {
+							dialog.close();
+							_msg('Внесёно!');
+							document.location.reload();
+						} else
+							dialog.abort();
+					}, 'json');
+				}
+			}
+		});
+		$('#mainLinks .img_pagehelp').click(function() {
+			var t = $(this),
+				id = t.attr('val'),
+				dialog,
+				send = {
+					op:'pagehelp_get',
+					id:id
+				};
+			pagehelp_get();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.content
+						.html(html_create(res))
+						.find('.add').click(function() {
+							edit(res);
+						});
+				} else
+					dialog.loadError();
+			}, 'json');
+
+			function html_create(res) {
+				return '<div class="headName">' + res.name + res.edit + '</div>' +
+					'<div class="pagehelp_show_txt">' + res.txt + res.dtime + '</div>';
+			}
+			function pagehelp_get(html) {
+				dialog = _dialog({
+					top:10,
+					width:610,
+					head:'Информация о странице',
+					load:html ? 0 : 1,
+					content:html,
+					butSubmit:'',
+					butCancel:'Закрыть'
+				});
+			}
+			function edit(res) {
+				dialog.close();
+				var html =
+					'<TABLE class="pagehelp_tab">' +
+						'<TR><TD class="label">Страница:<TD><b>' + res.page + '</b>' +
+						'<TR><TD class="label">Название:<TD><input type="text" id="name" maxlength="200" value="' + res.name + '">' +
+						'<TR><TD class="label">Содержание:<TD>' +
+						'<TR><td colspan="2"><textarea id="pagehelp_txt">' + res.txt + '</textarea>' +
+						'</TABLE>';
+				dialog = _dialog({
+					top:10,
+					width:610,
+					head:'Редактирование подсказки',
+					content:html,
+					butSubmit:'Сохранить',
+					submit:function() {
+						var send = {
+							op:'pagehelp_edit',
+							id:id,
+							name:$('#name').val(),
+							txt:$('#pagehelp_txt').val()
+						};
+						if(!send.name) {
+							dialog.bottom.vkHint({
+								msg:'<SPAN class="red">Не введено название</SPAN>',
+								remove:1,
+								indent:40,
+								show:1,
+								top:-48,
+								left:217
+							});
+							$('#name').focus();
+						} else {
+							dialog.process();
+							$.post(AJAX_MAIN, send, function() {
+								if(res.success) {
+									dialog.close();
+									res.name = send.name;
+									res.txt = send.txt;
+									pagehelp_get(html_create(res));
+									dialog.content.find('.add').click(function() {
+										edit(res);
+									});
+								} else
+									dialog.abort();
+							}, 'json');
+						}
+					}
+				});
+				$('#name').focus();
+				$('#pagehelp_txt').autosize();
+			}
+		});
+
+		window.frameHidden.onresize = _fbhs;
+
+		if($('#admin').length > 0)
+			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
+	});
