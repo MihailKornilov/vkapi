@@ -1,7 +1,6 @@
 /* Необходимо предварительно указывать:
  - DOMAIN для fotoUpload
  - IMAGE_UPLOAD_PATH для fotoUpload
- - G (временно)
 */
 var VK_SCROLL = 0,
 	ZINDEX = 0,
@@ -840,6 +839,7 @@ $.fn.years = function(obj) {// перелистывание годов
 	$("#years_" + id + " .but:first").mousedown(function () { allmon = 1; years.next(-1); });
 	$("#years_" + id + " .but:eq(1)").mousedown(function () { allmon = 1; years.next(1); });
 };
+
 $.fn.keyEnter = function(func) {
 	$(this).keydown(function(e) {
 		if(e.keyCode == 13)
@@ -898,6 +898,58 @@ $.fn.rightLink = function(o) {
 		});
 	}
 	return t;
+};
+$.fn.linkMenu = function(o) {
+	o = $.extend({
+		head:'',	// если указано, то ставится в название ссылки, а список из spisok
+		spisok:[],
+		func:function() {}
+	}, o);
+	var n,
+		t = $(this),
+		id = t.attr('id'),
+		val = t.val(),
+		head = o.head,
+		len = o.spisok.length,
+		spisok = '',
+		DELAY;
+	for(n = 0; n < len; n++) {
+		var sp = o.spisok[n];
+		spisok += '<div class="lmu' + (n == len - 1 ? ' last' : '') + '" val="' + sp.uid + '">' + sp.title + '</div>';
+		if(val == sp.uid)
+			head = sp.title;
+	}
+	t.wrap('<div class="linkMenu" id="' + id + '_linkMenu">');
+	t.after('<a class="lmhead">' + head + '</a>' +
+			'<div class="lmlist">' +
+				'<div class="lmsel">' + head + '</div>' +
+				spisok +
+			'</div>');
+	var list = t.next().next(),
+		sel = list.find('.lmsel');
+	t.next().click(function() {
+		list.show();
+	});
+	sel.click(function() {
+		list.hide();
+	});
+	list.find('.lmu').click(function() {
+		t.val($(this).attr('val'));
+		var html = $(this).html();
+		t.next().html(html);
+		sel.html(html);
+		list.hide();
+	});
+	list.on({
+		mouseleave:function () {
+			DELAY = setTimeout(function() {
+				list.fadeOut(150);
+			}, 500);
+		},
+		mouseenter:function () {
+			clearTimeout(DELAY);
+		}
+	});
 };
 
 (function () {// Подсказки vkHint 2013-02-14 14:43
@@ -1505,99 +1557,6 @@ $.fn.vkSel = function(obj) {
 	return t;
 };
 
-$.fn.linkMenu = function (obj) {
-	/* Выпадающее меню по ссылке
-	 * id указывается из INPUT hidden
-	 */
-	var obj = $.extend({
-		head:'',	// если указано, то ставится в название ссылки, а список из spisok
-		spisok:[],
-		func:null,
-		right:0	// прижимать вправо или нет
-	},obj);
-
-	var T = $(this);
-	var idSel = T.val(); // бранное значение в INPUT
-	var selA = obj.head;  // выбранное имя по id
-	var dl = '';
-	var len = obj.spisok.length;
-	for (var n = 0; n < len; n++) {
-		dl += "<DD" + (n == len -1 ? ' class=last' : '') + " val=" + obj.spisok[n].uid + ">" + obj.spisok[n].title;
-		if (idSel == obj.spisok[n].uid) {
-			selA = obj.spisok[n].title;
-		}
-	}
-
-	var attrId = "linkMenu_" + T.attr('id');
-	var html = "<div class=linkMenu id=" + attrId + ">";
-	html += "<A href='javascript:'>" + selA + "</A>";
-	html += "<div class=fordl><DL><DT><EM>" + selA + "</EM>" + dl + "</DL></div>";
-	html += "</div>";
-
-	T.after(html);
-
-	var ID = $("#" + attrId);
-	var leftDl =  parseInt(ID.find('DL:first').css('left').split('px')[0]);
-
-	ID.find("A:first").click(function () {
-		var dd = getDD(T.val());
-		if(dd) { dd.addClass('hover'); }
-		$(this).next().show();
-		if (obj.right) {
-			var wDt = parseInt(ID.find("DT:first").css('text-align','right').css('width').split('px')[0]);
-			var wEm = parseInt(ID.find('EM:first').css('width').split('px')[0]);
-			ID.find('DL').css('left', (wEm - wDt + leftDl) + 'px');
-		}
-	});
-
-	ID.find("DL").bind({
-		mouseleave:function () {
-			var forDL = $(this).parent();
-			if(forDL.is(':visible')) {
-				window.linkMenuDelay = window.setTimeout(function () { forDL.fadeOut(150); },500);
-			}
-		},
-		mouseenter:function () {
-			if (typeof window.linkMenuDelay == 'number') {
-				window.clearTimeout(window.linkMenuDelay);
-			}
-		}
-	});
-
-	ID.find("DT").click(dlHide);
-
-	ID.find("DD").bind({
-		mouseenter:function () {
-			ID.find(".hover").removeClass('hover');
-			$(this).addClass('hover');
-		},
-		mouseleave:function () { $(this).removeClass('hover'); },
-		click:function () {
-			dlHide();
-			var uid = $(this).attr('val');
-			if (obj.func) { obj.func(uid); }
-			// если head не указан, то можно менять имя при выборе
-			if(!obj.head) {
-				T.val(uid);
-				var name = getDD(uid).html();
-				ID.find("A:first").html(name);
-				ID.find("DT:first").html(name);
-			}
-		}
-	});
-
-	function dlHide() { ID.find(".fordl").hide(); }
-
-	function getDD (sel) {
-		var dd = ID.find("DD");
-		for (var n = 0; n < len; n++) {
-			if (sel == obj.spisok[n].uid) {
-				return dd.eq(n);
-			}
-		}
-		return false;
-	}
-};
 
 $(document)
 	.ajaxError(function(event, request, settings) {

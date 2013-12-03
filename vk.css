@@ -380,13 +380,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 #mainLinks .sel{color:#FFF;background-color:#31618C}
 #mainLinks.busy{background-position:right 18px}
 
-
+/* Меню справа */
 .rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
 .rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
 .rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
 .rightLink a.sel img{float:right;margin-top:3px}
 
-
+/* Дополнительное меню */
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
 #dopLinks .link{
 	text-decoration:none;
@@ -401,7 +401,31 @@ input.money{font:bold 14px Tahoma;width:70px}
 #dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
 #dopLinks .sel{background-color:#597da3;color:#FFF}
 
-
+/* Выпадающее меню по ссылке */
+.linkMenu{position:relative}
+.linkMenu .lmlist{
+	display:none;
+	position:absolute;
+	top:-3px;
+	left:-7px;
+	border-left:#EEE solid 1px;
+	border-right:#EEE solid 1px;
+	border-bottom:#EEE solid 1px;
+	background-color:#FFF;
+	cursor:pointer;
+	z-index:1;
+}
+.linkMenu .lmsel{
+	padding:2px 18px 3px 5px;
+	background:#EEF2F6 url("data:image/gif;base64,R0lGODlhEQAEAKIAAAAAAP///11xhXOLo+7y9v///wAAAAAAACH5BAEAAAUALAAAAAARAAQAAAMOWKrSLivGQam8quI9dgIAOw==") no-repeat right 7px;
+	color:#2C587D;
+	border-top:#96AABE solid 1px;
+	border-left:#96AABE solid 1px;
+	border-right:#96AABE solid 1px;
+}
+.linkMenu .lmu{padding:3px 5px 4px 5px;color:#2C587D;border-left:#96AABE solid 1px;border-right:#96AABE solid 1px}
+.linkMenu .last{border-bottom:#96AABE solid 1px;padding-bottom:3px}
+.linkMenu .lmu:hover{background-color:#6D8FB3;color:#FFF;padding:2px 5px 3px 5px;border:#476D96 solid 1px}
 
 /* таблица списком */
 ._spisok{border-collapse:collapse}
@@ -633,9 +657,6 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-
-
-
 /* Подсказки */
 .hint{position:absolute;height:0;z-index:999}
 .hint td{border:0;padding:0}
@@ -740,47 +761,3 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkComment .cadd .vkButton{margin-top:6px;display:none}
 .vkComment .deleted{color:#555;text-align:center}
 
-
-
-/* !!! Переделать !!! */
-
-/* Выпадающее меню по ссылке */
-.linkMenu .fordl {
-	position:absolute;
-	display:none;
-}
-.linkMenu DL {
-	position:relative;
-	top:-16px;
-	left:-7px;
-	border-left:#EEE solid 1px;
-	border-right:#EEE solid 1px;
-	border-bottom:#EEE solid 1px;
-	background-color:#FFF;
-	cursor:pointer;
-	z-index:1;
-}
-.linkMenu DT {
-	padding:2px 18px 3px 5px;
-	background:#EEF2F6 url("data:image/gif;base64,R0lGODlhEQAEAKIAAAAAAP///11xhXOLo+7y9v///wAAAAAAACH5BAEAAAUALAAAAAARAAQAAAMOWKrSLivGQam8quI9dgIAOw==") no-repeat right 7px;
-	color:#2C587D;
-	border-top:#96AABE solid 1px;
-	border-left:#96AABE solid 1px;
-	border-right:#96AABE solid 1px;
-}
-.linkMenu DD {
-	padding:3px 5px 4px 5px;
-	color:#2C587D;
-	border-left:#96AABE solid 1px;
-	border-right:#96AABE solid 1px;
-}
-.linkMenu .last {
-	border-bottom:#96AABE solid 1px;
-	padding-bottom:3px;
-}
-.linkMenu .hover {
-	background-color:#6D8FB3;
-	color:#FFF;
-	padding:2px 5px 3px 5px;
-	border:#476D96 solid 1px;
-}
