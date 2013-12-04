@@ -53,6 +53,18 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 	REGEXP_NUMERIC
 */
 
+define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
+define('REGEXP_CENA', '/^[0-9]{1,6}(.[0-9]{1,2})?$/i');
+define('REGEXP_BOOL', '/^[0-1]$/');
+define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
+define('REGEXP_YEAR', '/^[0-9]{4}$/');
+define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
+define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,20}$/i');
+define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,.;]{1,}$/i');
+
+//Включает работу куков в IE через фрейм
+header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
+
 function _appAuth() {
 	if(LOCAL)
 		return;
@@ -61,6 +73,9 @@ function _appAuth() {
 		exit;
 	}
 }//_appAuth()
+function _noauth($msg='Недостаточно прав.') {
+	return '<div class="noauth"><div>'.$msg.'</div></div>';
+}//_noauth()
 
 function _dbConnect() {
 	global $mysql, $sqlQuery;

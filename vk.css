@@ -70,6 +70,12 @@ table{border:0;border-spacing:0}
 
 
 
+.noauth{background-color:#F7F7F7;padding:25px}
+.noauth div{border:#ddd solid 1px;padding:70px 10px;background-color:#FFF;color:#888;text-align:center;font-size:12px}
+.norules{margin:10px;padding:15px;border:#ddd solid 1px;color:#900}
+
+
+
 
 td.label{line-height:16px;color:#888}
 td.label EM{font-size:10px;color:#bbb;display:block}

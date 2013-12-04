@@ -618,14 +618,6 @@ $.fn._calendar = function(o) {
 		val = t.val(),
 		d = new Date();
 
-	// если input hidden содежит дату, применение её
-	if (REGEXP_DATE.test(val)) {
-		var r = val.split('-');
-		o.year = r[0];
-		o.mon = Math.abs(r[1]);
-		o.day = Math.abs(r[2]);
-	}
-
 	o = $.extend({
 		year:d.getFullYear(),	// если год не указан, то текущий год
 		mon:d.getMonth() + 1,   // если месяц не указан, то текущий месяц
@@ -634,6 +626,14 @@ $.fn._calendar = function(o) {
 		func:function () {},    // исполняемая функция при выборе дня
 		place:'right'           // расположение календаря относительно выбора
 	}, o);
+
+	// если input hidden содежит дату, применение её
+	if (REGEXP_DATE.test(val)) {
+		var r = val.split('-');
+		o.year = r[0];
+		o.mon = Math.abs(r[1]);
+		o.day = Math.abs(r[2]);
+	}
 
 	t.wrap('<div class="_calendar" id="' + id + '_calendar">');
 	t.after('<div class="calinp">' + o.day + ' ' + MONTH_DAT[o.mon] + ' ' + o.year + '</div>' +
