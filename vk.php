@@ -59,7 +59,7 @@ define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');
 define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
-define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,20}$/i');
+define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,.;]{1,}$/i');
 
 //Включает работу куков в IE через фрейм
@@ -91,7 +91,7 @@ function query($sql) {
 	$t = microtime(true) - $t;
 	$sqlTime += $t;
 	$t = round($t, 3);
-	$sqlQuery .= $sql.' = <b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b><br /><br />';
+	$sqlQuery .= $sql.' <b style="color:#'.($t < 0.05 ? '999' : 'd22').';margin-left:10px">'.$t.'</b><br /><br />';
 	$sqlCount++;
 	return $res;
 }
@@ -114,6 +114,10 @@ function query_ptpJson($sql) {//Ассоциативный массив
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
 }
+
+function _maxSql($table, $pole) {
+	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
+}//getMaxSql()
 
 function _selJson($arr) {
 	$send = array();
@@ -314,7 +318,7 @@ function _vkComment($table, $id=0) {
 		'</div>'.
 		$units.
 	'</div>';
-}//_vkComment
+}//_vkComment()
 function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
 	return
 	'<div class="cunit" val="'.$id.'">'.
@@ -396,7 +400,7 @@ function _monthFull($n=0) {
 		12 => 'декабря'
 	);
 	return $n ? $mon[intval($n)] : $mon;
-}//_monthFull
+}//_monthFull()
 function _monthDef($n=0) {
 	$mon = array(
 		1 => 'январь',
@@ -413,7 +417,7 @@ function _monthDef($n=0) {
 		12 => 'декабрь'
 	);
 	return $n ? $mon[intval($n)] : $mon;
-}//_monthFull
+}//_monthFull()
 function _monthCut($n) {
 	$mon = array(
 		0 => '',
@@ -431,12 +435,25 @@ function _monthCut($n) {
 		12 => 'дек'
 	);
 	return $mon[intval($n)];
-}//_monthCut
-function FullData($value, $noyear=false) {//14 апреля 2010
+}//_monthCut()
+function _week($n) {
+	$week = array(
+		1 => 'пн',
+		2 => 'вт',
+		3 => 'ср',
+		4 => 'чт',
+		5 => 'пт',
+		6 => 'сб',
+		0 => 'вс'
+	);
+	return $week[intval($n)];
+}//_week()
+function FullData($value, $noyear=false, $cut=false, $week=false) {//пт. 14 апреля 2010
 	$d = explode('-', $value);
 	return
+		($week ? _week(date('w', strtotime($value))).'. ' : '').
 		abs($d[2]).' '.
-		_monthFull($d[1]).
+		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
 		(!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
 }//FullData()
 function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45

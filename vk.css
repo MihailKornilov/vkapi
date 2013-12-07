@@ -114,6 +114,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 .findHead{color:#555;font-weight:bold;margin:15px 0 4px 0}
 
 
+
+.ajaxNext{text-align:center;height:31px;color:#2B587A;cursor:pointer}
+.ajaxNext span{line-height:30px}
+.ajaxNext:hover,.ajaxNext.busy:hover{background-color:#e9edf1}
+.ajaxNext.busy span{display:none}
+
+
 /* Мини-картинки */
 .img_galka,.img_del,.img_edit,.img_minidel,.img_rest,.img_add,.img_word{
 	height:13px;
@@ -443,8 +450,10 @@ input.money{font:bold 14px Tahoma;width:70px}
 	padding:6px;
 }
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
+._spisok tr.ajaxNext td{padding:0}
 ._money{width:100%}
 ._money .sum{width:45px;text-align:right;font-weight:bold}
+._money .type{color:#770}
 ._money .dtime{
 	width:70px;
 	white-space:nowrap;
@@ -640,14 +649,6 @@ input.money{font:bold 14px Tahoma;width:70px}
 #webcam #screen{height:457px}
 
 
-
-
-
-.ajaxNext{text-align:center;height:31px;color:#2B587A;cursor:pointer}
-.ajaxNext span{line-height:30px}
-.ajaxNext td{border:0;padding:0}
-.ajaxNext:hover,.ajaxNext.busy:hover{background-color:#e9edf1}
-.ajaxNext.busy span{display:none}
 
 
 
