@@ -278,9 +278,10 @@ $.fn.fotoUpload = function(obj) {
 					'type="application/x-shockwave-flash" ' +
 					'pluginspage="http://www.macromedia.com/go/getflashplayer" ' +
 					'flashvars="' + flashvars + '" />';
-				this.screen.html(html);
+				//this.screen.html(html);
 			},
-			reset:function() { this.screen.html(''); }
+			reset:function() { //this.screen.html('');
+			}
 		};
 
 	t.on('click', function() {

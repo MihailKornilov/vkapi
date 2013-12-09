@@ -121,8 +121,15 @@ function _maxSql($table, $pole) {
 
 function _selJson($arr) {
 	$send = array();
-	foreach($arr as $uid => $title)
-		$send[] = '{uid:'.$uid.',title:"'.$title.'"}';
+	foreach($arr as $uid => $title) {
+		$content = '';
+		if(is_array($title)) {
+			$r = $title;
+			$title = $r['title'];
+			$content = $r['content'];
+		}
+		$send[] = '{uid:'.$uid.',title:"'.addslashes($title).'"'.($content ? ',content:"'.addslashes($content).'"' : '').'}';
+	}
 	return '['.implode(',',$send).']';
 }//end of _selJson()
 

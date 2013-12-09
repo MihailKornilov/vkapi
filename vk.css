@@ -9,12 +9,12 @@ a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
-INPUT,TEXTAREA{border:#CCC solid 1px;padding:3px 5px;outline:none}
-INPUT.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
+input,textarea{border:#CCC solid 1px;padding:3px 5px;outline:none}
+input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 img{border:none}
 table{border:0;border-spacing:0}
 
-/* РћСЃРЅРѕРІРЅРѕРµ РѕРєРЅРѕ С„СЂРµР№РјР° */
+/* Основное окно фрейма */
 #frameBody{
 	position:relative;
 	background-color:#FFF;
@@ -88,7 +88,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 ._sort dd{background-color:#fff}
 
-/* Р—Р°РіРѕР»РѕРІРєРё-РѕРїРёСЃР°РЅРёСЏ */
+/* Заголовки-описания */
 .headName {
 	color:#31618C;
 	font:bold 12px Tahoma;
@@ -121,7 +121,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .ajaxNext.busy span{display:none}
 
 
-/* РњРёРЅРё-РєР°СЂС‚РёРЅРєРё */
+/* Мини-картинки */
 .img_galka,.img_del,.img_edit,.img_minidel,.img_rest,.img_add,.img_word{
 	height:13px;
 	width:13px;
@@ -187,7 +187,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 .dn{display:none}
 
-/* РљРЅРѕРїРєР° СЃРѕР·РґР°РЅРёСЏ */
+/* Кнопка создания */
 #buttonCreate{border:#39659C solid 1px}
 #buttonCreate a{
 	display:block;
@@ -211,7 +211,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 
 
-/* РєРЅРѕРїРєР° РёР· РєРѕРЅС‚Р°РєС‚Р° */
+/* кнопка из контакта */
 .vkButton{border:#45688E solid 1px;background-color:#5D81A7}
 .vkButton,.vkCancel{
 	display:inline-block;
@@ -257,7 +257,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	background-repeat:no-repeat;
 	background-position:center center;
 }
-/* РєРЅРѕРїРєР° РѕС‚РјРµРЅР° */
+/* кнопка отмена */
 .vkCancel{border:#B3B3B3 solid 1px;background:#E0E0E0}
 .vkCancel button {
 	color: #444;
@@ -271,7 +271,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РџСѓС‚СЊ РІ РІРµСЂС…РЅРµР№ СЃС‚СЂРѕРєРµ */
+/* Путь в верхней строке */
 .path{background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px}
 .path a{font-weight:bold}
 .path span{float:right}
@@ -280,7 +280,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РєРѕРЅС‚Р°РєС‚РѕРІСЃРєРёР№ СЃРµР»РµРєС‚ */
+/* контактовский селект */
 .vkSel{display:inline-block;background-color:#fff}
 .vkSel .main{border:#c0cad5 solid 1px}
 .vkSel .selected{min-height:18px;padding:2px 0 0 2px}
@@ -312,9 +312,11 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkSel .title0{color:#888}
 .vkSel .title0.over{color:#ddd}
 .vkSel .out .pole2,.vkSel .over .pole2,.vkSel .out .pole2 EM,.vkSel .over .pole2 EM{font-size:10px}
-.vkSel .out .pole2,.vkSel .out .nosel{color:#888} /* РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРµ РїРѕР»Рµ, РЅР°РїСЂРёРјРµСЂ С‚РµР»РµС„РѕРЅ РёР»Рё СѓС‚РѕС‡РЅРµРЅРёРµ + РЅРµРІС‹Р±СЂР°РЅРЅРѕРµ РїРѕР»Рµ */
+/* дополнительное поле, например телефон или уточнение + невыбранное поле */
+.vkSel .out .pole2,.vkSel .out .nosel{color:#888}
 .vkSel .over .pole2,.vkSel .over .nosel{color:#BBE}
-.vkSel .out EM, .vkSel .over EM{font-weight:bold} /* РІС‹РґРµР»РµРЅРёРµ СЃРёРјРІРѕР»РѕРІ, СЃРѕРІРїР°РґР°СЋС‰РёС… РїСЂРё РЅР°Р±РѕСЂРµ */
+/* выделение символов, совпадающих при наборе */
+.vkSel .out EM, .vkSel .over EM{font-weight:bold}
 .vkSel .out EM{background-color:#DEE}
 .vkSel .over EM{background-color:#358}
 .vkSel .nofind {
@@ -332,7 +334,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkSel .process_inp img{position:relative;top:5px}
 
 
-/* РљР°Р»РµРЅРґР°СЂСЊ */
+/* Календарь */
 ._calendar{display:inline-block;position:relative}
 ._calendar .calinp{
 	width:114px;
@@ -379,7 +381,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРµ РјРµРЅСЋ */
+/* Горизонтальное меню */
 #mainLinks{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
 #mainLinks a{
 	display:inline-block;
@@ -393,13 +395,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 #mainLinks .sel{color:#FFF;background-color:#31618C}
 #mainLinks.busy{background-position:right 18px}
 
-/* РњРµРЅСЋ СЃРїСЂР°РІР° */
+/* Меню справа */
 .rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
 .rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
 .rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
 .rightLink a.sel img{float:right;margin-top:3px}
 
-/* Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРµ РјРµРЅСЋ */
+/* Дополнительное меню */
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
 #dopLinks .link{
 	text-decoration:none;
@@ -414,7 +416,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 #dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
 #dopLinks .sel{background-color:#597da3;color:#FFF}
 
-/* Р’С‹РїР°РґР°СЋС‰РµРµ РјРµРЅСЋ РїРѕ СЃСЃС‹Р»РєРµ */
+/* Выпадающее меню по ссылке */
 .linkMenu{position:relative}
 .linkMenu .lmlist{
 	display:none;
@@ -440,7 +442,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .linkMenu .last{border-bottom:#96AABE solid 1px;padding-bottom:3px}
 .linkMenu .lmu:hover{background-color:#6D8FB3;color:#FFF;padding:2px 5px 3px 5px;border:#476D96 solid 1px}
 
-/* С‚Р°Р±Р»РёС†Р° СЃРїРёСЃРєРѕРј */
+/* таблица списком */
 ._spisok{border-collapse:collapse}
 ._spisok th{
 	border:#dee4e8 solid 1px;
@@ -464,7 +466,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 
 
-/* РЎРѕРѕР±С‰РµРЅРёРµ РїСѓСЃС‚РѕРіРѕ Р·Р°РїСЂРѕСЃР° */
+/* Сообщение пустого запроса */
 ._empty{
 	font:12px Tahoma;
 	color:#777;
@@ -505,7 +507,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 ._search .hold{position:absolute;left:24px;top:6px;color:#777}
 
 
-/* С‡РµРєР±РѕРєСЃ */
+/* чекбокс */
 .check0,.check1{
 	display:inline-block;
 	height:14px;
@@ -536,7 +538,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 ._radio .on:hover s{background-position:0 -42px}
 ._radio .off.l{color:#888}
 
-/* Р—Р°РґРЅРёР№ С„РѕРЅ РїСЂРё РѕС‚РєСЂС‹С‚РёРё РїРѕРІРµСЂС…РЅРѕСЃС‚РЅС‹С… РѕРєРѕРЅ */
+/* Задний фон при открытии поверхностных окон */
 ._backfon {
 	position:absolute;
 	top:0;
@@ -550,7 +552,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РґРёР°Р»РѕРі */
+/* диалог */
 ._dialog{position:absolute;left:-1000px}
 ._dialog .head{border:#45688e solid 1px}
 ._dialog .head DIV {
@@ -592,7 +594,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РџСЂРѕСЃРјРѕС‚СЂ РёР·РѕР±СЂР°Р¶РµРЅРёР№ */
+/* Просмотр изображений */
 .fotoView{cursor:pointer}
 #foto_view{position:absolute;top:0;left:0;width:625px;background:#fff;z-index:1000}
 #foto_view .head em{display:inline-block;margin:11px 20px;color:#45688e;font-weight:bold}
@@ -604,7 +606,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 #foto_view .hide{display:none}
 
 
-/* Р—Р°РіСЂСѓР·РєР° Рё РїСЂРѕСЃРјРѕС‚СЂ РёР·РѕР±СЂР°Р¶РµРЅРёР№ */
+/* Загрузка и просмотр изображений */
 #fotoUpload .info{background-color:#f6f7f9;border:#dbe0ea 1px solid;padding:10px;margin-bottom:15px}
 #fotoUpload .about{color:#31618C;font-size:12px;font-weight:bold;margin:25px 0 2px 0}
 #fotoUpload #choose_file{
@@ -644,7 +646,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 #fotoUpload #direct a:hover{background-color:#e9edf1;text-decoration:none}
 #fotoUpload #direct a.busy span{visibility:hidden}
 #fotoUpload .webcam{margin:30px 0 10px 0}
-/* РЅР°СЃС‚СЂРѕР№РєРё РєР°РјРµСЂС‹ */
+/* настройки камеры */
 #webcam{padding:0;background-color:#B3B3B3}
 #webcam #screen{height:457px}
 
@@ -652,7 +654,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РџРµСЂРµР»РёСЃС‚С‹РІР°РЅРёРµ РіРѕРґРѕРІ */
+/* Перелистывание годов */
 .years{margin:6px 0;background-color:#E8E8E8;height:25px;cursor:pointer}
 .years TABLE{height:100%;width:100%}
 .years .but{color:#CCC;font:bold 20px Arial;width:18px;text-align:center;padding:0 5px}
@@ -664,7 +666,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РџРѕРґСЃРєР°Р·РєРё */
+/* Подсказки */
 .hint{position:absolute;height:0;z-index:999}
 .hint td{border:0;padding:0}
 .hint .hint_table{visibility:hidden;position:relative}
@@ -678,7 +680,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .hint .side012,.hint .side005{width:1px}
 .hint .b012,.hint .side012{opacity:0.12}
 .hint .b005,.hint .side005{opacity:0.05}
-/* СѓРіРѕР»РѕРє СЃРІРµСЂС…Сѓ */
+/* уголок сверху */
 .hint .ugttd{height:6px}
 .hint .ugt{
 	display:inline-block;
@@ -690,7 +692,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	margin:0 10px;
 	z-index:1000;
 }
-/* СѓРіРѕР»РѕРє СЃРЅРёР·Сѓ */
+/* уголок снизу */
 .hint .ugbtd{height:7px}
 .hint .ugb{
 	display:inline-block;
@@ -702,7 +704,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	margin:0 10px;
 	z-index:1000;
 }
-/* СѓРіРѕР»РѕРє СЃР»РµРІР° */
+/* уголок слева */
 .hint .ugltd{vertical-align:top;width:7px}
 .hint .ugl{
 	display:inline-block;
@@ -714,7 +716,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	margin:3px 0;
 	z-index:1000;
 }
-/* СѓРіРѕР»РѕРє СЃРїСЂР°РІР° */
+/* уголок справа */
 .hint .ugrtd{vertical-align:top;width:7px}
 .hint .ugr{
 	display:inline-block;
@@ -737,7 +739,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-/* РљРѕРјРјРµРЅС‚Р°СЂРёРё VK */
+/* Комментарии VK */
 .vkComment{margin-top:15px}
 .vkComment .headBlue{margin-top:0}
 .vkComment .count{float:right;color:#666}

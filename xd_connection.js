@@ -103,7 +103,7 @@ w.fastXDM = {
 	this.caller = window.parent;
 	handlers[this.key] = [applyMethod, this];
 	this.client = true;
-
+  
 	w.fastXDM.on('helper', function() {
 	  w.fastXDM.onClientStart(this);
 	}, this);
