@@ -163,7 +163,7 @@ var VK_SCROLL = 0,
 		}, obj);
 
 		if(obj.load)
-			obj.content = '<div class="load busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
+			obj.content = '<div class="load _busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
 		var frameNum = $('.dFrame').length,
 			html = '<div class="_dialog">' +
 			'<div class="head"><div><A class="img_del"></A>' + obj.head + '</div></div>' +
@@ -224,10 +224,10 @@ var VK_SCROLL = 0,
 		return {
 			close:dialogClose,
 			process:function() {
-				butSubmit.addClass('busy');
+				butSubmit.addClass('_busy');
 			},
 			abort:function() {
-				butSubmit.removeClass('busy');
+				butSubmit.removeClass('_busy');
 			},
 			bottom:(function() {
 				return dialog.find('.bottom');
@@ -236,7 +236,7 @@ var VK_SCROLL = 0,
 				return content;
 			})(),
 			loadError:function() {
-				dialog.find('.load').removeClass('busy');
+				dialog.find('.load').removeClass('_busy');
 			}
 		};
 	};

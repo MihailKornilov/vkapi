@@ -122,26 +122,37 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 /* Мини-картинки */
-.img_galka,.img_del,.img_edit,.img_minidel,.img_rest,.img_add,.img_word{
+.img_galka,
+.img_del,
+.img_edit,
+.img_minidel,
+.img_rest,
+.img_add,
+.img_word,
+.img_note,
+.img_doc{
 	height:13px;
 	width:13px;
 	background-position:0 0;
 	background-repeat:no-repeat;
 	display:inline-block;
 	cursor:pointer;
-	margin:0 3px;
+	margin:0 2px;
 }
 .img_galka:hover,
 .img_del:hover,
 .img_edit:hover,
 .img_minidel:hover,
 .img_rest:hover,
-.img_add:hover{background-position:0 -15px}
+.img_add:hover,
+.img_note:hover,
+.img_doc:hover
+{background-position:0 -15px}
 .img_galka{
 	background-image:url("data:image/gif;base64,R0lGODlhDQAaANUAAK7B1ZevyYCdvYaiwLnJ26q+0/v8/aO4z4Shv4Wgv6K4z8fU4uTr8fX4+sbU4uPp8ZauyMvX5Njh69rj66m80unu86G2zp+1zuDn73+cvHuZu5KqxoSfwHyZunyZu8TS4Ku+032au4Kevpuxy6W40KK2z6q/05atyKW50IahwK3A1J+1zePq8ZivyYiiwaS40M7Z5aW70YOevn6bvcXS4JWsyIKfvpyyzJuzy36bvH6cvLrCzIikwv///wAAAAAAACH5BAEAAD0ALAAAAAANABoAAAZFwJ5wSJRIiMie0ZgULpnJ51E5pS6dV+lQ+kRyq8Vu0zrels/otHrd02jObvc4Lk/S3218Pi6k7+t/d0h3gESCc4VNekhBADs=");
 }
 .img_del{
-	background-image:url("data:image/gif;base64,R0lGODlhCwAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAALABoAAAM7SCTarCI6GeuqDOu527WeJkEihX3m8zne0r5wLM/N0NrKoNe77hO+XjDIG96InuEupxT+jD8mDnhTJAAAOw==");
+	background-image:url("data:image/gif;base64,R0lGODlhDQAbAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAANABsAAAM/SLrcJA0yQReV70KNuY6ek12ihylmhX6cpY5RLM50bd9DkzNDv/Q7AtA3DBaHuqOouFTyjj4FkymNCq1S3SIBADs=");
 }
 .img_edit,.img_edit:hover{
 	background-image:url("data:image/gif;base64,R0lGODlhCwAaALMAAN/m7sDP3oumwqm80W2OsvDz93qYuePp8Nni63eWt2uNsf///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAALABoAAAQycMkpEaLUWrz0zh7mXaDGhVlFgpz6iWsrz3RtL4oi5znH95SfLvjDCH08owRI3CWRswgAOw==");
@@ -152,7 +163,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	width:12px;
 	background-position:3px 2px;
 }
-.img_minidel:hover{ background-position: 3px -21px}
+.img_minidel:hover{background-position: 3px -21px}
 .img_rest{
 	background-image:url("data:image/gif;base64,R0lGODlhDAAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAMABoAAAM2SKqyvqI9GCeL+OFdCf/X13nimIXOSGqs5b5wbA3wQLv2PeX5w/+KnzAo7BGLOiNBudQ1fb4EADs=");
 }
@@ -163,6 +174,11 @@ input.money{font:bold 14px Tahoma;width:70px}
 	background-image:url("data:image/dif;base64,R0lGODlhEAAQAPcAAAAAAP///6WZzz1Ho46ExpuVzqOaz39/wqeh1LWu3JaVy5CRx6KfysrH3EZXcUlZcUtbdU1cdk5cdk9deGBtn211n4OKxoWKs6an1Kir2Kus2K2u2OLk/khmqkpbdUtcdU5ddk9eeFFgeWBxn2N1n2d2om98o3F8pneGwoaMs9ve+ePn/uDf5VVmf1dof1ptiGV5omN3n2Z6omd5omh7ooeVyo6azt3h+eDk++Lm+/v9//j49lptg1xvg19zimuFw2Jwf2Z2hIiay4uby4ydy5Cfztnf9tvh+dvg9tzh+dvg9t/j+eHm++Dk+fX19fj4+WJ4i2Z6i3KNw2d7i2d6iHWQw3mUxoSYxomdyomeys3U6dDW7c7U6dPa8NXc8tTb8Nfe9djf9tje9dng9tvh9tzi+dzi9t3i9t7j9uDm+enp52p9iG2Aim+Dj26Bi3GEkHGEj3GDjHyZxoObypGmzsrS5cjQ4MzU587W7Nbe8tjg9tjf9dnh9tjf8tvi9ujq7Ozt7fHz9fHy8PPz8PDv6fj5+fj49vf39fb28vX18Pr8+22BinGFj5yswpyqv9DY7KKwwsnW7Nzm+efq7Ons7ejr7Onr6fL09fP19fP08PPz7dnk9ePm4/f49vn7+fT18Pv9+/P18P7//v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAKMALAAAAAAQABAAAAiNAEeNYkSwoEGBCNeAWshwISeCCEexAbWkosUlOgoidEPxYkVQB+WIzLBBjgYMMlA0ZCRQZBqRSxbM2GIRZMsGK2goWBIDwUWbo+QwgEHEwg8SHoHKKVKigA0TCZKyDDpjiYEaIzwuUVphyYETArTaFEmRAAWtW6cy6og2rcC1bT+qbUiX4dSBBvNCHBUQADs=");
 	height:16px;
 	width:16px;
+}
+.img_note{
+	background-image:url("data:image/gif;base64,R0lGODlhDQAaANUAAK7B1ZevyYCdvYaiwLnJ26q+0/v8/aO4z4Shv4Wgv6K4z8fU4uTr8fX4+sbU4uPp8ZauyMvX5Njh69rj66m80unu86G2zp+1zuDn73+cvHuZu5KqxoSfwHyZunyZu8TS4Ku+032au4Kevpuxy6W40KK2z6q/05atyKW50IahwK3A1J+1zePq8ZivyYiiwaS40M7Z5aW70YOevn6bvcXS4JWsyIKfvpyyzJuzy36bvH6cvLrCzIikwv///wAAAAAAACH5BAEAAD0ALAAAAAANABoAAAZQwF5PIhkSj8Jk8YhULpnF5NDIlBKpTSX26txGtdCv0Sudhq3PannNbrvfbx6vJ6/PpXO7HJ/Xl/t2fHR+eIOBSXt6d4iGdYKKf417iICOPUEAOw==");
+}.img_doc{
+	background-image:url("data:image/gif;base64,R0lGODlhDQAbANUAAK7B1ZevyYCdvYaiwLnJ26q+0/v8/aO4z4Shv4Wgv6K4z8fU4uTr8fX4+sbU4uPp8ZauyMvX5Njh69rj66m80unu86G2zp+1zuDn73+cvHuZu5KqxoSfwHyZunyZu8TS4Ku+032au4Kevpuxy6W40KK2z6q/05atyKW50IahwK3A1J+1zePq8ZivyYiiwaS40M7Z5aW70YOevn6bvcXS4JWsyIKfvpyyzJuzy36bvH6cvLrCzIikwv///wAAAAAAACH5BAEAAD0ALAAAAAANABsAAAZPwJ5kOBT2jkhisYgUKp2SpjL6PE6b0mkVqo1au0yuNgn2iq9fMHbNbrvZvHi8x1vL5/PmvS7X3+l9R3tte4OChYGAiHWHi0iLeYqIj5BHQQA7");
 }
 
 
@@ -240,7 +256,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 .vkButton button:hover{background-position:0 -8px}
 .vkButton button:active{background:#5e80a5;border:1px solid #5e80a5}
-.vkButton.busy button{visibility:hidden}
+.vkButton.busy button,.vkButton._busy button{visibility:hidden}
 .vkButton.busy,
 .ajaxNext.busy,
 .tooltip.empty,
@@ -252,7 +268,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 #mainLinks.busy,
 #setup_workers .adm.busy,
 .path.busy,
-._dialog .load.busy{
+._busy{
 	background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
 	background-repeat:no-repeat;
 	background-position:center center;
@@ -464,7 +480,11 @@ input.money{font:bold 14px Tahoma;width:70px}
 	color:#777;
 	cursor:help
 }
-
+._money .ed{padding:2px;width:17px;white-space:nowrap}
+._money tr.deleting *{background-color:#eee;color:#888}
+._money tr.deleted div{text-align:right;margin-right:5px}
+._money ._busy{background-position:right center}
+._money ._busy a{visibility:hidden}
 
 /* Сообщение пустого запроса */
 ._empty{
@@ -562,7 +582,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	padding:7px 7px 7px 10px;
 	font:bold 12px Tahoma;
 }
-._dialog .head .img_del{float:right;background-position: 0 -15px;margin:2px 0}
+._dialog .head .img_del{float:right;background-position: 0 -15px;margin:1px 0}
 ._dialog .head A:hover{background-position:0 0}
 ._dialog .dFrame{
 	border:0;
@@ -579,7 +599,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	border-bottom:#dae1e8 solid 1px;
 }
 ._dialog .ms{text-align:center;padding:80px 0;color:red}
-._dialog .load.busy .ms{visibility:hidden}
+._dialog .load._busy .ms{visibility:hidden}
 ._dialog .bottom {
 	background-color:#f2f2f2;
 	border-left:#999 solid 1px;
