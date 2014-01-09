@@ -9,7 +9,7 @@ a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
-input,textarea{border:#CCC solid 1px;padding:3px 5px;outline:none}
+input,textarea{border:#CCC solid 1px;padding:3px;outline:none}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 img{border:none}
 table{border:0;border-spacing:0}
@@ -78,8 +78,9 @@ table{border:0;border-spacing:0}
 
 
 td.label{line-height:16px;color:#888}
-td.label EM{font-size:10px;color:#bbb;display:block}
-td.top{vertical-align:top;padding-top:3px}
+td.label em{font-size:10px;color:#bbb;display:block}
+td.top,td.topi{vertical-align:top}
+td.topi{padding-top:3px}
 td.r{text-align:right}
 
 input.money{font:bold 14px Tahoma;width:70px}
@@ -154,8 +155,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 .img_del{
 	background-image:url("data:image/gif;base64,R0lGODlhDQAbAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAANABsAAAM/SLrcJA0yQReV70KNuY6ek12ihylmhX6cpY5RLM50bd9DkzNDv/Q7AtA3DBaHuqOouFTyjj4FkymNCq1S3SIBADs=");
 }
+/*
 .img_edit,.img_edit:hover{
 	background-image:url("data:image/gif;base64,R0lGODlhCwAaALMAAN/m7sDP3oumwqm80W2OsvDz93qYuePp8Nni63eWt2uNsf///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAALABoAAAQycMkpEaLUWrz0zh7mXaDGhVlFgpz6iWsrz3RtL4oi5znH95SfLvjDCH08owRI3CWRswgAOw==");
+}
+*/
+.img_edit,.img_edit:hover{
+	background-image:url("data:image/gif;base64,R0lGODlhCwAbALMAAN/m7sDP3oumwqm80W2OsvDz93qYuePp8Nni63eWt2uNsf///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAALABsAAAQxcMlJK0XISowt79dXfVnIeee1laG2iKgrz3RNK4qL49bOU74c0FcJ9nZFyW+oQx5lEQA7");
 }
 .img_minidel{
 	background-image:url("data:image/gif;base64,R0lGODlhBwAeAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHAB4AAAMmSEO88wq+yeJq00lZb/1gKI5kaZ5oWgoVK7zE68osI7d0DN91TCQAOw==");
@@ -197,6 +203,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .pagehelp_tab #name{width:482px}
 .pagehelp_tab #pagehelp_txt{width:558px;height:200px}
 .pagehelp_show_txt{margin:15px 20px}
+.pagehelp_show_txt p{text-align:justify}
 .pagehelp_show_dtime{margin-top:20px;color:#888;text-align:right}
 
 
@@ -296,20 +303,26 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
+
+
+
+
+
+
 /* контактовский селект */
 .vkSel{display:inline-block;background-color:#fff}
 .vkSel .main{border:#c0cad5 solid 1px}
-.vkSel .selected{min-height:18px;padding:2px 0 0 2px}
-.vkSel .inp{border:none;height:16px;padding:0 0 0 3px;margin:0 2px 2px 0}
+.vkSel .selected{min-height:17px;padding:2px 0 0 2px}
+.vkSel .inp{border:none;height:15px;padding:0 0 0 3px;margin:0 2px 2px 0}
 .vkSel .ugol{
 	width:16px;
 	border-left:#FFF solid 1px;
-	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
+	background:#FFF no-repeat 5px 8px url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
 }
 .vkSel .add{
 	width:16px;
 	border-left:#FFF solid 1px;
-	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
+	background:#FFF no-repeat 5px 6px url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
 	cursor:pointer;
 }
 .vkSel .add:hover{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
@@ -348,6 +361,58 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkSel .process img{position:relative;top:5px;left:2px}
 .vkSel .process_inp{position:absolute;text-align:right}
 .vkSel .process_inp img{position:relative;top:5px}
+
+
+
+
+
+._select{background-color:#fff}
+._select .seltab{border:#c0cad5 solid 1px;height:21px;width:100%}
+._select .selinp{border:none;padding:1px 0 1px 3px;margin:2px}
+._select .selug{
+	width:16px;
+	border-left:#FFF solid 1px;
+	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
+}
+._select .seladd{
+	width:17px;
+	border-left:#FFF solid 1px;
+	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
+	cursor:pointer;
+}
+._select:hover .selug,._select .seladd:hover{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
+._select .selres{
+	display:none;
+	background-color:#fff;
+	opacity:.95;
+	cursor:pointer;
+	position:absolute;
+	z-index:10;
+	max-height:250px;
+	overflow:auto;
+}
+._select .selun{
+	padding:3px 5px 4px 10px;
+	border-left:#CCC solid 1px;
+	border-right:#CCC solid 1px
+}
+._select .selun:hover{
+	padding:2px 5px 3px 10px;
+	border:#2a5883 solid 1px;
+	background-color:#587da1;
+	color:#FFF;
+}
+._select .last{border-bottom:#CCC solid 1px}
+._select .last:hover{padding-bottom:4px}
+
+
+
+
+
+
+
+
+
 
 
 /* Календарь */
@@ -523,7 +588,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	position:relative;
 }
 ._search input{border:0;margin-left:22px;padding:6px 0 5px 0}
-._search .img_del{float:right;margin:7px 4px 0 0}
+._search .img_del{float:right;margin:6px 4px 0 0}
 ._search .hold{position:absolute;left:24px;top:6px;color:#777}
 
 

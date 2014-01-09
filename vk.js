@@ -172,8 +172,8 @@ var VK_SCROLL = 0,
 				'<div class="content">' + obj.content + '</div>' +
 			'</div>' +
 			'<div class="bottom">' +
-			(obj.butSubmit ? '<div class="vkButton"><button>' + obj.butSubmit + '</button></div>' : '') +
-			(obj.butCancel ? '<div class="vkCancel"><button>' + obj.butCancel + '</button></div>' : '') +
+				(obj.butSubmit ? '<div class="vkButton"><button>' + obj.butSubmit + '</button></div>' : '') +
+				(obj.butCancel ? '<div class="vkCancel"><button>' + obj.butCancel + '</button></div>' : '') +
 			'</div>' +
 		'</div>';
 
@@ -182,12 +182,15 @@ var VK_SCROLL = 0,
 			DIALOG_MAXHEIGHT = 0;
 
 		var dialog = $('body').append(html).find('._dialog:last'),
-			butSubmit = dialog.find('.vkButton:last'),
 			content = dialog.find('.content'),
-			frame = dialog.find('.dFrame');
-		dialog.find('.img_del').click(dialogClose);
+			bottom = dialog.find('.bottom'),
+			butSubmit = bottom.find('.vkButton');
+		dialog.find('.head .img_del').click(dialogClose);
 		butSubmit.find('button').click(obj.submit);
-		dialog.find('.vkCancel').click(function() { obj.cancel(); dialogClose(); });
+		bottom.find('.vkCancel').click(function() {
+			obj.cancel();
+			dialogClose();
+		});
 
 		_backfon();
 
@@ -230,7 +233,7 @@ var VK_SCROLL = 0,
 				butSubmit.removeClass('_busy');
 			},
 			bottom:(function() {
-				return dialog.find('.bottom');
+				return bottom;
 			})(),
 			content:(function() {
 				return content;
@@ -902,9 +905,10 @@ $.fn.rightLink = function(o) {
 };
 $.fn.linkMenu = function(o) {
 	o = $.extend({
-		head:'',	// если указано, то ставится в название ссылки, а список из spisok
+		head:'',    // если указано, то ставится в название ссылки, а список из spisok
 		spisok:[],
-		func:function() {}
+		func:function() {},
+		nosel:false // не вставлять название при выборе значения
 	}, o);
 	var n,
 		t = $(this),
@@ -935,11 +939,16 @@ $.fn.linkMenu = function(o) {
 		list.hide();
 	});
 	list.find('.lmu').click(function() {
-		t.val($(this).attr('val'));
-		var html = $(this).html();
-		t.next().html(html);
-		sel.html(html);
+		var th = $(this),
+			val = th.attr('val'),
+			html = th.html();
+		if(!o.nosel) {
+			t.val(val);
+			t.next().html(html);
+			sel.html(html);
+		}
 		list.hide();
+		o.func(val);
 	});
 	list.on({
 		mouseleave:function () {
@@ -1165,6 +1174,80 @@ $.fn.linkMenu = function(o) {
 
 	$.fn.vkHint = function (obj) { return new Hint($(this), obj); };
 })();
+
+$.fn._select = function(o) {
+	var t = $(this),
+		n,
+		id = t.attr('id'),
+		val = t.val() || 0;
+	t.val(val);
+
+	o = $.extend({
+		width:150,			// ширина
+		display:'block',	// расположение селекта
+		title0:'',			// поле с нулевым значением
+		spisok:[],			// результаты в формате json
+		func:function() {},	// функция, выполняемая при выборе элемента
+		funcAdd:null		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
+	}, o);
+	t.wrap('<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px">');
+
+	var inpWidth = o.width - 17 - 5 - 2;
+	if(o.funcAdd)
+		inpWidth -= 18;
+	var html =
+		'<table class="seltab">' +
+			'<tr><td class="selected">' +
+					'<input type="text" class="selinp" style="width:' + inpWidth + 'px;cursor:default" readonly />' +
+					(o.funcAdd ? '<td class="seladd">' : '') +
+				'<td class="selug">' +
+		'</table>' +
+		'<div class="selres" style="width:' + o.width + 'px">' + spisokGet() + '</div>';
+	t.after(html);
+
+	var select = t.parent(),
+		selres = select.find('.selres'),
+		selinp = select.find('.selinp'),
+		ass = assСreate();
+
+	$(document)
+		.on('click', '#' + id + '_select', function() {
+			if(selres.is(':hidden')) {
+				selres.show();
+				$(document).on('click.' + id + '_select', function() {
+					selres.hide();
+					$(document).off('click.' + id + '_select');
+				});
+			}
+		})
+		.on('click', '#' + id + '_select .selun', function() {
+			var v = $(this).attr('val');
+			t.val(v);
+			selinp.val(ass[v]);
+		});
+
+	function spisokGet() {
+		var spisok = '',
+			len = o.spisok.length;
+		for(n = 0; n < len; n++) {
+			var sp = o.spisok[n];
+			spisok +=
+				'<div class="selun' + (n == len - 1 ? ' last' : '') + '" val="' + sp.uid + '">' +
+					sp.title +
+				'</div>';
+		}
+		return spisok;
+	}
+	function assСreate() {//Создание ассоциативного массива
+		var arr = [];
+		for (var n = 0; n < o.spisok.length; n++) {
+			var sp = o.spisok[n];
+			arr[sp.uid] = sp.title;
+		}
+		return arr;
+	}
+	return t;
+};
 
 $.fn.vkSel = function(obj) {
 	var t = $(this);

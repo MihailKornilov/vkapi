@@ -62,7 +62,7 @@
  *
  */
 
-error_reporting(E_ALL);
+//error_reporting(E_ALL);
  
 class clsMsDocGenerator{
 	var $appName = 'MsDocGenerator';
@@ -223,8 +223,8 @@ class clsMsDocGenerator{
 				die("ERROR: INVALID PAGE ORIENTATION ($pageOrientation)");
 		}
 		$pageSize = "{$this->atualPageWidth}pt {$this->atualPageHeight}pt";
-		$pageMargins = "{$topMargin}cm {$rightMargin}cm {$bottomMargin}cm {$leftMargin}cm";
-		
+		$pageMargins = $topMargin."cm ".$rightMargin."cm {$bottomMargin}cm {$leftMargin}cm";
+
 		$sessionName = "Section" . $this->lastSessionNumber;
 		
 		$this->formatBuffer .= "@page $sessionName\n";
@@ -553,7 +553,7 @@ class clsMsDocGenerator{
 		$header .= "<meta name=\"ProgId\" content=\"Word.Document\">\n";
 		$header .= "<meta name=\"Generator\" content=\"$this->appName $this->appVersion\">\n";
 		$header .= "<meta name=\"Originator\" content=\"$this->appName $this->appVersion\">\n";
-		$header .= "<TITLE>пїЅпїЅпїЅпїЅпїЅпїЅпїЅ</TITLE>";
+		$header .= "<TITLE>Договор</TITLE>";
 
 		$header .= "<!--[if gte mso 9]>\n";
 		$header .= "<xml>\n";

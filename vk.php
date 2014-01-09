@@ -62,6 +62,8 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,.;]{1,}$/i');
 
+define('VIEWER_MAX', 2147000001);
+
 //Включает работу куков в IE через фрейм
 header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 
@@ -100,6 +102,11 @@ function query_value($sql) {
 		return false;
 	return $r[0];
 }
+function query_assoc($sql) {
+	if(!$r = mysql_fetch_assoc(query($sql)))
+		return array();
+	return $r;
+}
 function query_selJson($sql) {
 	$send = array();
 	$q = query($sql);
@@ -113,6 +120,13 @@ function query_ptpJson($sql) {//Ассоциативный массив
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
+}
+function query_ids($sql) {//Список идентификаторов
+	$q = query($sql);
+	$send = array();
+	while($sp = mysql_fetch_row($q))
+		$send[] = $sp[0];
+	return empty($send) ? 0 : implode(',', $send);
 }
 
 function _maxSql($table, $pole) {
@@ -252,19 +266,37 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 }//_vkUserUpdate()
 function _viewer($id=VIEWER_ID, $val=false) {
 	if(is_array($id)) {
-		if(empty($id))
-			return array();
-		$sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', $id).")";
-		$q = query($sql);
-		$users = array();
-		while($u = mysql_fetch_assoc($q)) {
-			$u['id'] = $u['viewer_id'];
-			$u['name'] = $u['first_name'].' '.$u['last_name'];
-			$u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
-			$u['photo'] = '<img src="'.$u['photo'].'">';
-			$users[$u['viewer_id']] = $u;
+		$arr = $id;
+		$ids = array();
+		$ass = array();
+		$assDel = array(); // Сбор id для удалённых элементов
+		foreach($arr as $r) {
+			$ids[$r['viewer_id_add']] = 1;
+			if($r['viewer_id_add'])
+				$ass[$r['viewer_id_add']][] = $r['id'];
+			if(isset($r['viewer_id_del'])) {
+				$ids[$r['viewer_id_del']] = 1;
+				$assDel[$r['viewer_id_del']][] = $r['id'];
+			}
 		}
-		return $users;
+		unset($ids[0]);
+		if(!empty($ids)) {
+			$sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', array_keys($ids)).")";
+			$q = query($sql);
+			while($u = mysql_fetch_assoc($q)) {
+				$name = $u['first_name'].' '.$u['last_name'];
+				if(isset($ass[$u['viewer_id']]))
+					foreach($ass[$u['viewer_id']] as $id) {
+						$arr[$id]['viewer_name'] = $name;
+						$arr[$id]['viewer_link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$name.'</a>';
+						$arr[$id]['viewer_photo'] = '<img src="'.$u['photo'].'">';
+					}
+				if(isset($assDel[$u['viewer_id']]))
+					foreach($assDel[$u['viewer_id']] as $id)
+						$arr[$id]['viewer_del'] = $name;
+			}
+		}
+		return $arr;
 	}
 
 	$key = CACHE_PREFIX.'viewer_'.$id;
@@ -277,6 +309,9 @@ function _viewer($id=VIEWER_ID, $val=false) {
 		$u['name'] = $u['first_name'].' '.$u['last_name'];
 		$u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
 		$u['photo'] = '<img src="'.$u['photo'].'">';
+		$u['viewer_name'] = $u['name'];
+		$u['viewer_link'] = $u['link'];
+		$u['viewer_photo'] = $u['photo'];
 		xcache_set($key, $u, 86400);
 	}
 	if($val)
@@ -295,25 +330,27 @@ function _vkComment($table, $id=0) {
 	$units = '';
 	$q = query($sql);
 	if(mysql_num_rows($q)) {
+		$arr = array();
+		while($r = mysql_fetch_assoc($q))
+			$arr[$r['id']] = $r;
+		$arr = _viewer($arr);
+
 		$comm = array();
-		$v = array();
-		while($r = mysql_fetch_assoc($q)) {
+		foreach($arr as $r)
 			if(!$r['parent_id'])
 				$comm[$r['id']] = $r;
 			elseif(isset($comm[$r['parent_id']]))
 				$comm[$r['parent_id']]['childs'][] = $r;
-			$v[$r['viewer_id_add']] = $r['viewer_id_add'];
-		}
+
 		$count = count($comm);
 		$count = 'Всего '.$count.' замет'._end($count, 'ка', 'ки','ок');
-		$v = _viewer($v);
 		$comm = array_reverse($comm);
 		foreach($comm as $n => $r) {
 			$childs = array();
 			if(!empty($r['childs']))
 				foreach($r['childs'] as $c)
-					$childs[] = _vkCommentChild($c['id'], $v[$c['viewer_id_add']], $c['txt'], $c['dtime_add']);
-			$units .= _vkCommentUnit($r['id'], $v[$r['viewer_id_add']], $r['txt'], $r['dtime_add'], $childs, ($n+1));
+					$childs[] = _vkCommentChild($c);
+			$units .= _vkCommentUnit($r, $childs, ($n+1));
 		}
 	}
 	return
@@ -326,15 +363,15 @@ function _vkComment($table, $id=0) {
 		$units.
 	'</div>';
 }//_vkComment()
-function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
+function _vkCommentUnit($r, $childs=array(), $n=0) {
 	return
-	'<div class="cunit" val="'.$id.'">'.
+	'<div class="cunit" val="'.$r['id'].'">'.
 		'<table class="t">'.
-			'<tr><td class="ava">'.$viewer['photo'].
-				'<td class="i">'.str_replace('a href', 'a class="vlink" href', $viewer['link']).
-					($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
-					'<div class="ctxt">'.$txt.'</div>'.
-					'<div class="cdat">'.FullDataTime($dtime, 1).
+			'<tr><td class="ava">'.$r['viewer_photo'].
+				'<td class="i">'.str_replace('a href', 'a class="vlink" href', $r['viewer_link']).
+					($r['viewer_id_add'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
+					'<div class="ctxt">'.$r['txt'].'</div>'.
+					'<div class="cdat">'.FullDataTime($r['dtime_add'], 1).
 						'<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
 							'<a>'.(empty($childs) ? 'Комментировать' : 'Комментарии ('.count($childs).')').'</a>'.
 						'</SPAN>'.
@@ -349,15 +386,15 @@ function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
 		'</table>'.
 	'</div>';
 }//_vkCommentUnit()
-function _vkCommentChild($id, $viewer, $txt, $dtime) {
+function _vkCommentChild($r) {
 	return
-	'<div class="child" val="'.$id.'">'.
+	'<div class="child" val="'.$r['id'].'">'.
 		'<table class="t">'.
-			'<tr><td class="dava">'.$viewer['photo'].
-				'<td class="di">'.$viewer['link'].
-					($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
-					'<div class="dtxt">'.$txt.'</div>'.
-					'<div class="ddat">'.FullDataTime($dtime, 1).'</div>'.
+			'<tr><td class="dava">'.$r['viewer_photo'].
+				'<td class="di">'.$r['viewer_link'].
+					($r['viewer_id_add'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
+					'<div class="dtxt">'.$r['txt'].'</div>'.
+					'<div class="ddat">'.FullDataTime($r['dtime_add'], 1).'</div>'.
 		'</table>'.
 	'</div>';
 }//_vkCommentChild()
@@ -408,7 +445,7 @@ function _monthFull($n=0) {
 	);
 	return $n ? $mon[intval($n)] : $mon;
 }//_monthFull()
-function _monthDef($n=0) {
+function _monthDef($n=0, $firstUp=false) {
 	$mon = array(
 		1 => 'январь',
 		2 => 'февраль',
@@ -423,7 +460,12 @@ function _monthDef($n=0) {
 		11 => 'ноябрь',
 		12 => 'декабрь'
 	);
-	return $n ? $mon[intval($n)] : $mon;
+	if(!$n)
+		return $mon;
+	$send = $mon[intval($n)];
+	if($firstUp)
+		$send[0] = strtoupper($send[0]);
+	return $send;
 }//_monthFull()
 function _monthCut($n) {
 	$mon = array(
