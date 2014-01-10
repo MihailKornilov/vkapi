@@ -9,7 +9,7 @@ a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
-input,textarea{border:#CCC solid 1px;padding:3px;outline:none}
+input,textarea{border:#CCC solid 1px;padding:4px 3px 3px 3px;outline:none}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 img{border:none}
 table{border:0;border-spacing:0}
@@ -366,9 +366,10 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
-._select{background-color:#fff}
-._select .seltab{border:#c0cad5 solid 1px;height:21px;width:100%}
-._select .selinp{border:none;padding:1px 0 1px 3px;margin:2px}
+._select{background-color:#fff;display:inline-block}
+._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
+._select .selsel{vertical-align:top;padding-bottom:2px}
+._select .selinp{border:none;padding:1px 0 1px 3px;margin:2px 2px 0}
 ._select .selug{
 	width:16px;
 	border-left:#FFF solid 1px;
@@ -388,9 +389,9 @@ input.money{font:bold 14px Tahoma;width:70px}
 	cursor:pointer;
 	position:absolute;
 	z-index:10;
-	max-height:250px;
 	overflow:auto;
 }
+._select .title0{color:#888}
 ._select .selun{
 	padding:3px 5px 4px 10px;
 	border-left:#CCC solid 1px;
@@ -402,11 +403,25 @@ input.money{font:bold 14px Tahoma;width:70px}
 	background-color:#587da1;
 	color:#FFF;
 }
+._select .selun.title0:hover{color:#ddd}
 ._select .last{border-bottom:#CCC solid 1px}
-._select .last:hover{padding-bottom:4px}
-
-
-
+._select .last:hover{padding-bottom:4px;border:#2a5883 solid 1px;}
+._select .multi{
+	display:inline-block;
+	background-color:#DAE2E8;
+	margin:2px 0 0 2px;
+	padding:1px 2px 2px 3px ;
+}
+._select .multi:hover{background-color:#587DA1;color:#fff}
+._select .x{
+	display:inline-block;
+	width:11px;
+	height:11px;
+	background:transparent no-repeat 2px 4px url("data:image/gif;base64,R0lGODlhBwAHAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHAAcAAAMOSEK88gq+yeJq00lZVwIAOw==");
+	cursor:pointer;
+	margin-left:3px;
+}
+._select .multiTitle0{position:absolute;color:#888;margin:3px 0 0 5px}
 
 
 
@@ -419,9 +434,9 @@ input.money{font:bold 14px Tahoma;width:70px}
 ._calendar{display:inline-block;position:relative}
 ._calendar .calinp{
 	width:114px;
-	line-height:21px;
+	line-height:20px;
 	border:#c0cad5 solid 1px;
-	background:#FFF no-repeat 101px 3px url("data:image/gif;base64,R0lGODlhDwAQALMAAAAAAP///3mWuNTd6IeiwZOrx6G51J+1zavA2M7Z5QAAAAAAAAAAAAAAAAAAAAAAACwAAAAADwAQAAAEPDBIIaSltpBDD/mc4GmGQZXoaXwlgqDtuxJwDbO2/Vl8H+w+HzDIGxIlxmOSuAw2hZ+odEoYJK7YLHYQAQA7");
+	background:#FFF no-repeat 101px 2px url("data:image/gif;base64,R0lGODlhDwAQALMAAAAAAP///3mWuNTd6IeiwZOrx6G51J+1zavA2M7Z5QAAAAAAAAAAAAAAAAAAAAAAACwAAAAADwAQAAAEPDBIIaSltpBDD/mc4GmGQZXoaXwlgqDtuxJwDbO2/Vl8H+w+HzDIGxIlxmOSuAw2hZ+odEoYJK7YLHYQAQA7");
 	cursor:pointer;
 	padding-left:4px;
 }
@@ -431,7 +446,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	border:#597da3 solid 1px;
 	width:182px;
 	position:absolute;
-	top:28px;
+	top:25px;
 	z-index:1;
 }
 ._calendar .calhead{

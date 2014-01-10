@@ -1180,71 +1180,158 @@ $.fn._select = function(o) {
 		n,
 		id = t.attr('id'),
 		val = t.val() || 0;
-	t.val(val);
+
+	if(typeof o == 'number' || typeof o == 'string') {
+		switch(o) {
+			case 'remove': t.next().remove('._select'); break;
+		}
+		return t;
+	}
 
 	o = $.extend({
 		width:150,			// ширина
-		display:'block',	// расположение селекта
+		block:false,       	// расположение селекта
 		title0:'',			// поле с нулевым значением
 		spisok:[],			// результаты в формате json
+		write:false,        // возможность вводить значения
+		multiselect:0,      // возможность выбирать несколько значений. Идентификаторы перечисляются через запятую
 		func:function() {},	// функция, выполняемая при выборе элемента
 		funcAdd:null		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
 	}, o);
-	t.wrap('<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px">');
 
-	var inpWidth = o.width - 17 - 5 - 2;
+	if(o.multiselect)
+		o.write = true;
+
+	var inpWidth = o.width - 17 - 5 - 4;
 	if(o.funcAdd)
 		inpWidth -= 18;
 	var html =
-		'<table class="seltab">' +
-			'<tr><td class="selected">' +
-					'<input type="text" class="selinp" style="width:' + inpWidth + 'px;cursor:default" readonly />' +
-					(o.funcAdd ? '<td class="seladd">' : '') +
-				'<td class="selug">' +
-		'</table>' +
-		'<div class="selres" style="width:' + o.width + 'px">' + spisokGet() + '</div>';
+		'<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px' + (o.block ? ';display:block' : '') + '">' +
+			'<table class="seltab">' +
+				'<tr><td class="selsel">' +
+						(o.multiselect ? '<div class="multiTitle0">' + o.title0 + '</div>' : '') +
+						'<input type="text" class="selinp" style="width:' + inpWidth + 'px;cursor:default"' + (o.write ? '' : ' readonly') + ' />' +
+	   (o.funcAdd ? '<td class="seladd">' : '') +
+					'<td class="selug">' +
+			'</table>' +
+			'<div class="selres" style="width:' + o.width + 'px"></div>' +
+		'</div>';
 	t.after(html);
 
-	var select = t.parent(),
-		selres = select.find('.selres'),
-		selinp = select.find('.selinp'),
-		ass = assСreate();
+	var select = t.next(),
+		res = select.find('.selres'),
+		inp = select.find('.selinp'),
+		sel = select.find('.selsel'),
+		ass = assСreate(),
+		multiCount = 0; //Количество выбранных мульти-значений
+
+	if(o.multiselect) {
+		var multiTitle0 = select.find('.multiTitle0');
+		multiTitle0.click(function() {
+			$(this).css('color', '#bbb');
+			inp.focus();
+		});
+	}
+
+	spisokPrint();
+	setVal(val);
 
 	$(document)
 		.on('click', '#' + id + '_select', function() {
-			if(selres.is(':hidden')) {
-				selres.show();
+			if(res.is(':hidden')) {
+				res.show();
 				$(document).on('click.' + id + '_select', function() {
-					selres.hide();
+					res.hide();
 					$(document).off('click.' + id + '_select');
 				});
 			}
 		})
 		.on('click', '#' + id + '_select .selun', function() {
 			var v = $(this).attr('val');
-			t.val(v);
-			selinp.val(ass[v]);
+			setVal(v);
+			o.func(v);
+		})
+		.on('click', '#' + id + '_select .x', function(e) {
+			e.stopPropagation();
+			var v = $(this).attr('val');
+			$(this).parent().remove();
+			multiCorrect(v, false);
+			o.func(v);
 		});
 
-	function spisokGet() {
-		var spisok = '',
+	inp.on({
+		focus:function() {
+			if(o.multiselect)
+				multiTitle0.css('color', '#bbb');
+		},
+		blur:function() {
+			if(o.multiselect)
+				multiTitle0.css('color', '#888');
+		},
+		keyup:function() {
+			if(o.multiselect)
+				multiTitle0[inp.val() || multiCount ? 'hide' : 'show']();
+		}
+	});
+
+	function spisokPrint() {
+		var spisok = o.title0 && !o.multiselect ? '<div class="selun title0" val="0">' + o.title0 + '</div>' : '',
 			len = o.spisok.length;
 		for(n = 0; n < len; n++) {
 			var sp = o.spisok[n];
+			if(sp.hide)
+				continue;
 			spisok +=
 				'<div class="selun' + (n == len - 1 ? ' last' : '') + '" val="' + sp.uid + '">' +
 					sp.title +
 				'</div>';
 		}
-		return spisok;
+		res.html(spisok);
+		if(res.height() > 250)
+			res.css('border-bottom', '#CCC solid 1px')
+			   .height(250)
+			   .find('.last').css('border-bottom', 0);
 	}
 	function assСreate() {//Создание ассоциативного массива
-		var arr = [];
+		var arr = o.title0 ? {0:o.title0} : {};
 		for (var n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
 			arr[sp.uid] = sp.title;
 		}
 		return arr;
+	}
+	function setVal(v) {
+		if(o.multiselect) {
+			if(!o.title0 && v == 0 || v > 0)
+				inp.before('<div class="multi">' + ass[v] + '<span class="x" val="'+ v +'"></span></div>');
+			multiCorrect(v, true);
+		} else {
+			t.val(v);
+			inp.val(ass[v]);
+			inp[(v == 0 && o.title0 ? 'add' : 'remove') + 'Class']('title0');
+		}
+	}
+	function multiCorrect(v, ch) {//Выравнивание значений списка multi
+		var multi = sel.find('.multi'),
+			w = 0;
+		multiCount = multi.length;
+		for(n = 0; n < multiCount; n++) {
+			var mw = multi.eq(n).width();
+			if(w + mw > inpWidth + 4)
+				w = 0;
+			w += mw + 5 + 2;
+		}
+		w = inpWidth - w;
+		inp.width(w < 25 ? inpWidth : w);
+		for(n = 0; n < o.spisok.length; n++)
+			if(o.spisok[n].uid == v) {
+				o.spisok[n].hide = ch;
+				break;
+			}
+		spisokPrint();
+		if(!o.title0 && v == 0 || v > 0)
+			inp.val('').focus();
+		multiTitle0[multiCount ? 'hide' : 'show']();
 	}
 	return t;
 };
@@ -1258,7 +1345,7 @@ $.fn.vkSel = function(obj) {
 	$(document).off('click.results_hide').on('click.results_hide', function () {
 		$(".vkSel")
 			.find(".results").html('').end()
-			.find(".ugol").css({'border-left':'#FFF solid 1px', 'background-color':'#FFF'});
+			.find(".ugol").css({'border-left':'#fff solid 1px', 'background-color':'#fff'});
 		$(this)
 			.off('keyup.vksel_esc')
 			.off('keydown.vksel');
