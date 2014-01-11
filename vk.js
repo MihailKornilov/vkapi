@@ -1222,8 +1222,9 @@ $.fn._select = function(o) {
 		res = select.find('.selres'),
 		inp = select.find('.selinp'),
 		sel = select.find('.selsel'),
-		ass = assСreate(),
-		multiCount = 0; //Количество выбранных мульти-значений
+		assTitle = assСreate(), //Ассоциативный массив с названиями
+		assHide = {},           //Ассоциативный массив с отображением в списке
+		multiCount = 0;         //Количество выбранных мульти-значений
 
 	if(o.multiselect) {
 		var multiTitle0 = select.find('.multiTitle0');
@@ -1231,6 +1232,14 @@ $.fn._select = function(o) {
 			$(this).css('color', '#bbb');
 			inp.focus();
 		});
+		if(val != 0) {
+			var arr = val.split(',');
+			for(n = 0; n < arr.length; n++) {
+				assHide[arr[n]] = true;
+				inp.before('<div class="multi">' + assTitle[arr[n]] + '<span class="x" val="' + arr[n] + '"></span></div>');
+			}
+		}
+		multiCorrect();
 	}
 
 	spisokPrint();
@@ -1248,6 +1257,11 @@ $.fn._select = function(o) {
 		})
 		.on('click', '#' + id + '_select .selun', function() {
 			var v = $(this).attr('val');
+			if(o.multiselect) {
+				if(!o.title0 && v == 0 || v > 0)
+					inp.before('<div class="multi">' + assTitle[v] + '<span class="x" val="' + v + '"></span></div>');
+				multiCorrect(v, true);
+			}
 			setVal(v);
 			o.func(v);
 		})
@@ -1256,6 +1270,7 @@ $.fn._select = function(o) {
 			var v = $(this).attr('val');
 			$(this).parent().remove();
 			multiCorrect(v, false);
+			setVal(v);
 			o.func(v);
 		});
 
@@ -1275,18 +1290,18 @@ $.fn._select = function(o) {
 	});
 
 	function spisokPrint() {
-		var spisok = o.title0 && !o.multiselect ? '<div class="selun title0" val="0">' + o.title0 + '</div>' : '',
-			len = o.spisok.length;
-		for(n = 0; n < len; n++) {
+		var spisok = o.title0 && !o.multiselect ? '<div class="selun title0" val="0">' + o.title0 + '</div>' : '';
+		for(n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
-			if(sp.hide)
+			if(assHide[sp.uid])
 				continue;
 			spisok +=
-				'<div class="selun' + (n == len - 1 ? ' last' : '') + '" val="' + sp.uid + '">' +
+				'<div class="selun" val="' + sp.uid + '">' +
 					sp.title +
 				'</div>';
 		}
-		res.html(spisok);
+		res.html(spisok)
+		   .find('.selun:last').addClass('last');
 		if(res.height() > 250)
 			res.css('border-bottom', '#CCC solid 1px')
 			   .height(250)
@@ -1302,12 +1317,18 @@ $.fn._select = function(o) {
 	}
 	function setVal(v) {
 		if(o.multiselect) {
-			if(!o.title0 && v == 0 || v > 0)
-				inp.before('<div class="multi">' + ass[v] + '<span class="x" val="'+ v +'"></span></div>');
-			multiCorrect(v, true);
+			if(!multiCount) {
+				t.val(0);
+				return;
+			}
+			var x = sel.find('.x'),
+				arr = [];
+			for(n = 0; n < x.length; n++)
+				arr.push(x.eq(n).attr('val'));
+			t.val(arr.join());
 		} else {
 			t.val(v);
-			inp.val(ass[v]);
+			inp.val(assTitle[v]);
 			inp[(v == 0 && o.title0 ? 'add' : 'remove') + 'Class']('title0');
 		}
 	}
@@ -1323,14 +1344,12 @@ $.fn._select = function(o) {
 		}
 		w = inpWidth - w;
 		inp.width(w < 25 ? inpWidth : w);
-		for(n = 0; n < o.spisok.length; n++)
-			if(o.spisok[n].uid == v) {
-				o.spisok[n].hide = ch;
-				break;
-			}
-		spisokPrint();
-		if(!o.title0 && v == 0 || v > 0)
-			inp.val('').focus();
+		if(v !== undefined) {
+			assHide[v] = ch;
+			spisokPrint();
+			if(!o.title0 && v == 0 || v > 0)
+				inp.val('').focus();
+		}
 		multiTitle0[multiCount ? 'hide' : 'show']();
 	}
 	return t;
