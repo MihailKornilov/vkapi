@@ -1184,6 +1184,7 @@ $.fn._select = function(o) {
 	if(typeof o == 'number' || typeof o == 'string') {
 		switch(o) {
 			case 'remove': t.next().remove('._select'); break;
+			default:;
 		}
 		return t;
 	}
@@ -1216,6 +1217,7 @@ $.fn._select = function(o) {
 			'</table>' +
 			'<div class="selres" style="width:' + o.width + 'px"></div>' +
 		'</div>';
+	t.next().remove('._select');
 	t.after(html);
 
 	var select = t.next(),
@@ -1297,7 +1299,7 @@ $.fn._select = function(o) {
 				continue;
 			spisok +=
 				'<div class="selun" val="' + sp.uid + '">' +
-					sp.title +
+					(sp.content || sp.title) +
 				'</div>';
 		}
 		res.html(spisok)

@@ -550,7 +550,12 @@ input.money{font:bold 14px Tahoma;width:70px}
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
 ._spisok tr.ajaxNext td{padding:0}
 ._money{width:100%}
-._money .sum{width:45px;text-align:right;font-weight:bold}
+._money .sum{
+	width:45px;
+	text-align:right;
+	font-weight:bold;
+	white-space:nowrap;
+}
 ._money .type{color:#770}
 ._money .dtime{
 	width:70px;
@@ -841,7 +846,14 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 /* Комментарии VK */
 .vkComment{margin-top:15px}
-.vkComment .headBlue{margin-top:0}
+.vkComment .hb{
+	background-color:#E1E7ED;
+	border-top:#D3DAE0 solid 1px;
+	border-bottom:#D8DFE5 solid 1px;
+	font-weight:bold;
+	color:#45688E;
+	padding:3px 8px;
+}
 .vkComment .count{float:right;color:#666}
 .vkComment TEXTAREA{resize:none;overflow:hidden;width:100%;height:13px;color:#777;border:#CCD solid 1px}
 .vkComment .add{background-color:#F7F7F7;padding:8px 20px 8px 8px}

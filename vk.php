@@ -197,6 +197,23 @@ function _end($count, $o1, $o2, $o5=false) {
 	return $o5;
 }//_end()
 
+function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
+	$send = '';
+	$drob = round($sum, 2) * 100 % 100;
+	$sum = floor($sum);
+	while($sum > 0) {
+		$del = $sum % 1000;
+		$sum = floor($sum / 1000);
+		if(!$del) $send = ' 000'.$send;
+		elseif($del < 10) $send = ($sum ? ' 00' : '').$del.$send;
+		elseif($del < 100) $send = ($sum ? ' 0' : '').$del.$send;
+		else $send = ' '.$del.$send;
+	}
+	$send = $send ? $send : 0;
+	$send = $drob ? trim($send).'.'.$drob : $send;
+	return $send;
+}//_sumSpace()
+
 function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
 function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S',time()); }
@@ -355,7 +372,7 @@ function _vkComment($table, $id=0) {
 	}
 	return
 	'<div class="vkComment" val="'.$table.'_'.$id.'">'.
-		'<div class="headBlue"><div class="count">'.$count.'</div>Заметки</div>'.
+		'<div class="hb"><div class="count">'.$count.'</div>Заметки</div>'.
 		'<div class="add">'.
 			'<textarea>Добавить заметку...</textarea>'.
 			'<div class="vkButton"><button>Добавить</button></div>'.
