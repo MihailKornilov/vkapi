@@ -58,6 +58,7 @@ define('REGEXP_CENA', '/^[0-9]{1,6}(.[0-9]{1,2})?$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');
+define('REGEXP_YEARMONTH', '/^[0-9]{4}-[0-9]{2}$/');
 define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,.;]{1,}$/i');
@@ -140,12 +141,12 @@ function _selJson($arr) {
 		if(is_array($title)) {
 			$r = $title;
 			$title = $r['title'];
-			$content = $r['content'];
+			$content = isset($r['content']) ? $r['content'] : '';
 		}
 		$send[] = '{uid:'.$uid.',title:"'.addslashes($title).'"'.($content ? ',content:"'.addslashes($content).'"' : '').'}';
 	}
 	return '['.implode(',',$send).']';
-}//end of _selJson()
+}//_selJson()
 
 function pageHelpIcon() {
 	$page[] = $_GET['p'];
@@ -614,3 +615,185 @@ function unescape($str){
 	$new_word = str_replace('%20', ' ', $new_word);
 	return implode($new_word);
 }
+function translit($str) {
+	$list = array(
+		'А' => 'A',
+		'Б' => 'B',
+		'В' => 'V',
+		'Г' => 'G',
+		'Д' => 'D',
+		'Е' => 'E',
+		'Ж' => 'J',
+		'З' => 'Z',
+		'И' => 'I',
+		'Й' => 'Y',
+		'К' => 'K',
+		'Л' => 'L',
+		'М' => 'M',
+		'Н' => 'N',
+		'О' => 'O',
+		'П' => 'P',
+		'Р' => 'R',
+		'С' => 'S',
+		'Т' => 'T',
+		'У' => 'U',
+		'Ф' => 'F',
+		'Х' => 'H',
+		'Ц' => 'TS',
+		'Ч' => 'CH',
+		'Ш' => 'SH',
+		'Щ' => 'SCH',
+		'Ъ' => '',
+		'Ы' => 'YI',
+		'Ь' => '',
+		'Э' => 'E',
+		'Ю' => 'YU',
+		'Я' => 'YA',
+		'а' => 'a',
+		'б' => 'b',
+		'в' => 'v',
+		'г' => 'g',
+		'д' => 'd',
+		'е' => 'e',
+		'ж' => 'j',
+		'з' => 'z',
+		'и' => 'i',
+		'й' => 'y',
+		'к' => 'k',
+		'л' => 'l',
+		'м' => 'm',
+		'н' => 'n',
+		'о' => 'o',
+		'п' => 'p',
+		'р' => 'r',
+		'с' => 's',
+		'т' => 't',
+		'у' => 'u',
+		'ф' => 'f',
+		'х' => 'h',
+		'ц' => 'ts',
+		'ч' => 'ch',
+		'ш' => 'sh',
+		'щ' => 'sch',
+		'ъ' => 'y',
+		'ы' => 'yi',
+		'ь' => '',
+		'э' => 'e',
+		'ю' => 'yu',
+		'я' => 'ya',
+		' ' => '_',
+		'№' => 'N'
+	);
+	return strtr($str, $list);
+}
+
+function _calendarFilter($data=array()) {
+	$data = array(
+		'upd' => empty($data['upd']), // Обновлять существующий календать? (при перемотке масяцев)
+		'month' => empty($data['month']) ? strftime('%Y-%m') : $data['month'],
+		'sel' => empty($data['sel']) ? '' : $data['sel'],
+		'days' => empty($data['days']) ? array() : $data['days'],
+		'func' => empty($data['func']) ? '' : $data['func'],
+		'noweek' => empty($data['noweek']) ? 0 : 1,
+		'norewind' => !empty($data['norewind'])
+	);
+	$ex = explode('-', $data['month']);
+	$SHOW_YEAR = $ex[0];
+	$SHOW_MON = $ex[1];
+	$days = $data['days'];
+
+	$back = $SHOW_MON - 1;
+	$back = !$back ? ($SHOW_YEAR - 1).'-12' : $SHOW_YEAR.'-'.($back < 10 ? 0 : '').$back;
+	$next = $SHOW_MON + 1;
+	$next = $next > 12 ? ($SHOW_YEAR + 1).'-01' : $SHOW_YEAR.'-'.($next < 10 ? 0 : '').$next;
+
+	$send =
+	($data['upd'] ?
+		'<div class="_calendarFilter">'.
+			'<input type="hidden" class="func" value="'.$data['func'].'" />'.
+			'<input type="hidden" class="noweek" value="'.$data['noweek'].'" />'.
+			'<input type="hidden" class="selected" value="'.$data['sel'].'" />'.
+		'<div class="content">'
+	: '').
+		'<table class="data">'.
+			'<tr>'.($data['norewind'] ? '' : '<td class="ch" val="'.$back.'">&laquo;').
+				'<td><a val="'.$data['month'].'"'.($data['month'] == $data['sel'] ? ' class="sel"' : '').'>'._monthDef($SHOW_MON).'</a> '.
+					($data['norewind'] ? '' :
+						'<a val="'.$SHOW_YEAR.'"'.($SHOW_YEAR == $data['sel'] ? ' class="sel"' : '').'>'.$SHOW_YEAR.'</a>'.
+					'<td class="ch" val="'.$next.'">&raquo;').
+		'</table>'.
+		'<table class="month">'.
+			'<tr class="week-name">'.
+				($data['noweek'] ? '' :'<th>&nbsp;').
+				'<td>пн<td>вт<td>ср<td>чт<td>пт<td>сб<td>вс';
+
+	$unix = strtotime($data['month'].'-01');
+	$dayCount = date('t', $unix);   // Количество дней в месяце
+	$week = date('w', $unix);       // Номер первого дня недели
+	if(!$week)
+		$week = 7;
+
+	$curDay = strftime('%Y-%m-%d');
+	$curUnix = strtotime($curDay); // Текущий день для выделения прошедших дней
+
+	$weekNum = intval(date('W', $unix));    // Номер недели с начала месяца
+	// Формирование периода для первой денели
+	$dayEnd = 8 - $week;
+	$end = $data['month'].'-0'.$dayEnd; // Последний день
+	$dayStart = $dayEnd - 6;
+	$start = $dayStart <= 0 ? $back.'-'.(date('t', strtotime($back.'-01')) + $dayStart) : $data['month'].'-0'.$dayStart;
+	$range = $start.':'.$end;
+	$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
+		($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.$weekNum);
+	for($n = $week; $n > 1; $n--, $send .= '<td>'); // Вставка пустых полей, если первый день недели не понедельник
+	for($n = 1; $n <= $dayCount; $n++) {
+		$day = $data['month'].'-'.($n < 10 ? '0' : '').$n;
+		$cur = $curDay == $day ? ' cur' : '';
+		$on = empty($days[$day]) ? '' : ' on';
+		$old = $unix + $n * 86400 <= $curUnix ? ' old' : '';
+		$sel = $day == $data['sel'] ? ' sel' : '';
+		$val = $on ? ' val="'.$day.'"' : '';
+		$send .= '<td class="d '.$cur.$on.$old.$sel.'"'.$val.'>'.$n;
+		$week++;
+		if($week > 7)
+			$week = 1;
+		if($week == 1 && $n < $dayCount) {
+			// Формирование периода для последующих недель
+			$start = $n + 1;
+			$end = $start + 6;
+			$start = $data['month'].'-'.($start < 10 ? '0' : '').$start;
+			$m = $end > $dayCount ? $next : $data['month'];
+			$end = $end > $dayCount ? $end - $dayCount : $end;
+			$end = $m.'-'.($end < 10 ? '0' : '').$end;
+			$range = $start.':'.$end;
+			$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
+				($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.(++$weekNum));
+		}
+	}
+	if($week > 1)
+		for($n = $week; $n <= 7; $n++, $send .= '<td>'); // Вставка пустых полей, если день заканчивается не воскресеньем
+	$send .= '</table>'.($data['upd'] ? '</div></div>' : '');
+
+	return $send;
+}//_calendarFilter()
+function _calendarDataCheck($data) {
+	if(empty($data))
+		return false;
+	if(preg_match(REGEXP_DATE, $data) || preg_match(REGEXP_YEARMONTH, $data) || preg_match(REGEXP_YEAR, $data))
+		return true;
+	$ex = explode(':', $data);
+	if(preg_match(REGEXP_DATE, $ex[0]) && preg_match(REGEXP_DATE, @$ex[1]))
+		return true;
+	return false;
+}//_calendarDataCheck()
+function _calendarPeriod($data) {// Формирование периода для элементов массива запросившего фильтра
+	if(!_calendarDataCheck($data))
+		return array();
+	$ex = explode(':', $data);
+	if(empty($ex[1]))
+		return array('day'=>$ex[0]);
+	return array(
+		'from' => $ex[0],
+		'to' => $ex[1]
+	);
+}//_calendarPeriod()

@@ -488,11 +488,12 @@ $.fn._check = function(o) {
 	function _click(t, func) {
 		var id = t.parent().attr('id');
 		$(document).on('click', '#' + id, function() {
-			func(t.val(), t.attr('id'));
+			func(parseInt(t.val()), t.attr('id'));
 		});
 	}
 	return t;
 };
+
 $.fn._radio = function(o) {
 	var t = $(this), n;
 	if(typeof o == 'number' || typeof o == 'string') {
@@ -960,6 +961,7 @@ $.fn.linkMenu = function(o) {
 			clearTimeout(DELAY);
 		}
 	});
+	return t;
 };
 
 (function () {// Подсказки vkHint 2013-02-14 14:43
@@ -1184,7 +1186,7 @@ $.fn._select = function(o) {
 	if(typeof o == 'number' || typeof o == 'string') {
 		switch(o) {
 			case 'remove': t.next().remove('._select'); break;
-			default:;
+			default: window[id + '_select'].value(o);
 		}
 		return t;
 	}
@@ -1258,9 +1260,9 @@ $.fn._select = function(o) {
 			}
 		})
 		.on('click', '#' + id + '_select .selun', function() {
-			var v = $(this).attr('val');
+			var v = parseInt($(this).attr('val'));
 			if(o.multiselect) {
-				if(!o.title0 && v == 0 || v > 0)
+				if(!o.title0 && !v || v > 0)
 					inp.before('<div class="multi">' + assTitle[v] + '<span class="x" val="' + v + '"></span></div>');
 				multiCorrect(v, true);
 			}
@@ -1354,6 +1356,9 @@ $.fn._select = function(o) {
 		}
 		multiTitle0[multiCount ? 'hide' : 'show']();
 	}
+
+	t.value = setVal;
+	window[id + '_select'] = t;
 	return t;
 };
 
@@ -1749,7 +1754,6 @@ $.fn.vkSel = function(obj) {
 	return t;
 };
 
-
 $(document)
 	.ajaxError(function(event, request, settings) {
 		if(!request.responseText)
@@ -2012,6 +2016,43 @@ $(document)
 		t.removeClass('off').addClass('on');
 		p.find('input:first').val(v);
 	})
+
+	.on('click', '._calendarFilter .week-num,._calendarFilter .on,._calendarFilter .data a', function() {
+		var t = $(this),
+			p = t.hasClass('week-num') ? t.parent() : t,
+			sel = p.hasClass('sel'),
+			cal = p,
+			val = t.attr('val');
+		while(!cal.hasClass('_calendarFilter'))
+			cal = cal.parent();
+		if(!sel)
+			cal.find('.sel').removeClass('sel');
+		p[(sel ? 'remove' : 'add') + 'Class']('sel');
+		cal.find('.selected').val(sel ? '' : val);
+		if(window._calendarFilter)
+			_calendarFilter(sel ? '' : val);
+	})
+	.on('click', '._calendarFilter .ch', function() {
+		var t = $(this),
+			send = {
+				op:'calendar_filter_rewind',
+				month:t.attr('val')
+			};
+		while(!t.hasClass('_calendarFilter'))
+			t = t.parent();
+		if(t.hasClass('busy'))
+			return;
+		t.addClass('busy');
+		send.func = t.find('.func').val();
+		send.sel = t.find('.selected').val();
+		send.noweek = t.find('.noweek').val();
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('busy');
+			if(res.success)
+				t.find('.content').html(res.html);
+		}, 'json');
+	})
+
 
 	.ready(function() {
 		VK.callMethod('scrollWindow', 0);

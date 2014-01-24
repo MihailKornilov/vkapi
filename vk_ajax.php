@@ -211,4 +211,24 @@ switch(@$_POST['op']) {
 		query($sql);
 		jsonSuccess();
 		break;
+
+	case 'calendar_filter_rewind':
+		if(!preg_match(REGEXP_YEARMONTH, $_POST['month']))
+			jsonError();
+		if(!preg_match(REGEXP_BOOL, $_POST['noweek']))
+			jsonError();
+
+		$days = array();
+		if(!empty($_POST['func']) && preg_match(REGEXP_MYSQLTABLE, $_POST['func']) && function_exists($_POST['func']))
+			$days = $_POST['func']($_POST['month']);
+
+		$send['html'] = utf8(_calendarFilter(array(
+			'upd' => 1,
+			'month' => $_POST['month'],
+			'days' => $days,
+			'sel' => $_POST['sel'],
+			'noweek' => $_POST['noweek']
+		)));
+		jsonSuccess($send);
+		break;
 }
