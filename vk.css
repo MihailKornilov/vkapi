@@ -577,10 +577,9 @@ input.money{font:bold 14px Tahoma;width:70px}
 	cursor:help
 }
 ._money .ed{padding:2px;width:17px;white-space:nowrap}
-._money tr.deleting *{background-color:#eee;color:#888}
-._money tr.deleted div{text-align:right;margin-right:5px}
-._money ._busy{background-position:right center}
-._money ._busy a{visibility:hidden}
+._money tr:not(.deleted) .img_rest,._money tr.deleted .img_del{display:none}
+._money tr.deleting *,._money tr.deleted{background-color:#eee;color:#888}
+
 
 /* Сообщение пустого запроса */
 ._empty{

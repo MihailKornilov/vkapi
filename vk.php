@@ -217,7 +217,7 @@ function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 
 function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
 function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
-function curTime() { return strftime('%Y-%m-%d %H:%M:%S',time()); }
+function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
 
 function _rightLink($id, $spisok, $val=0) {
 	$a = '';
@@ -735,14 +735,9 @@ function _calendarFilter($data=array()) {
 
 	$curDay = strftime('%Y-%m-%d');
 	$curUnix = strtotime($curDay); // Текущий день для выделения прошедших дней
-
 	$weekNum = intval(date('W', $unix));    // Номер недели с начала месяца
-	// Формирование периода для первой денели
-	$dayEnd = 8 - $week;
-	$end = $data['month'].'-0'.$dayEnd; // Последний день
-	$dayStart = $dayEnd - 6;
-	$start = $dayStart <= 0 ? $back.'-'.(date('t', strtotime($back.'-01')) + $dayStart) : $data['month'].'-0'.$dayStart;
-	$range = $start.':'.$end;
+
+	$range = _calendarWeek($data['month'].'-01');
 	$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
 		($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.$weekNum);
 	for($n = $week; $n > 1; $n--, $send .= '<td>'); // Вставка пустых полей, если первый день недели не понедельник
@@ -758,14 +753,7 @@ function _calendarFilter($data=array()) {
 		if($week > 7)
 			$week = 1;
 		if($week == 1 && $n < $dayCount) {
-			// Формирование периода для последующих недель
-			$start = $n + 1;
-			$end = $start + 6;
-			$start = $data['month'].'-'.($start < 10 ? '0' : '').$start;
-			$m = $end > $dayCount ? $next : $data['month'];
-			$end = $end > $dayCount ? $end - $dayCount : $end;
-			$end = $m.'-'.($end < 10 ? '0' : '').$end;
-			$range = $start.':'.$end;
+			$range = _calendarWeek($data['month'].'-'.($n + 1 < 10 ? 0 : '').($n + 1));
 			$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
 				($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.(++$weekNum));
 		}
@@ -787,13 +775,44 @@ function _calendarDataCheck($data) {
 	return false;
 }//_calendarDataCheck()
 function _calendarPeriod($data) {// Формирование периода для элементов массива запросившего фильтра
+	$send['period'] = $data;
 	if(!_calendarDataCheck($data))
-		return array();
+		return $send;
 	$ex = explode(':', $data);
 	if(empty($ex[1]))
-		return array('day'=>$ex[0]);
-	return array(
+		return $send + array('day'=>$ex[0]);
+	return $send + array(
 		'from' => $ex[0],
 		'to' => $ex[1]
 	);
+}//_calendarPeriod()
+function _calendarWeek($day=0) {// Формирование периода за неделю недели
+	if(!$day)
+		$day = strftime('%Y-%m-%d');
+	$d = explode('-', $day);
+	$month = $d[0].'-'.$d[1];
+
+	$unix = strtotime($day);
+	$dayCount = date('t', $unix);   // Количество дней в месяце
+	$week = date('w', $unix);
+	if(!$week)
+		$week = 7;
+
+	$dayStart = $d[2] - $week + 1; // Номер первого дня недели
+	if($dayStart < 1) {
+		$back = $d[1] - 1;
+		$back = !$back ? ($d[0] - 1).'-12' : $d[0].'-'.($back < 10 ? 0 : '').$back;
+		$start = $back.'-'.(date('t', strtotime($back.'-01')) + $dayStart);
+	} else
+		$start = $month.'-'.($dayStart < 10 ? 0 : '').$dayStart;
+
+	$dayEnd = 7 - $week + $d[2]; // Номер последнего дня недели
+	if($dayEnd > $dayCount) {
+		$next = $d[1] + 1;
+		$next = $next > 12 ? ($d[0] + 1).'-01' : $d[0].'-'.($next < 10 ? 0 : '').$next;
+		$end = $next.'-0'.($dayEnd - $dayCount);
+	} else
+		$end = $month.'-'.($dayEnd < 10 ? 0 : '').$dayEnd;
+
+	return $start.':'.$end;
 }//_calendarPeriod()
