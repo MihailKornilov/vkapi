@@ -525,8 +525,12 @@ function FullData($value, $noyear=false, $cut=false, $week=false) {//пт. 14 апре
 }//FullData()
 function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45
 	$arr = explode(' ',$value);
-	$d = explode('-',$arr[0]);
+	$d = explode('-', $arr[0]);
+	if(empty($arr[1]) || empty($d[1]) || empty($d[2]))
+		return '';
 	$t = explode(':',$arr[1]);
+	if(empty($t[1]) || empty($t[2]))
+		return '';
 	return
 		abs($d[2]).' '.
 		($cut ? _monthCut($d[1]) : _monthFull($d[1])).

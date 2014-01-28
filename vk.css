@@ -78,7 +78,7 @@ table{border:0;border-spacing:0}
 
 
 
-td.label{line-height:16px;color:#888}
+td.label{color:#777}
 td.label em{font-size:10px;color:#bbb;display:block}
 td.top,td.topi{vertical-align:top}
 td.topi{padding-top:3px}
@@ -125,10 +125,13 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 ._info p{margin:5px 0}
 
-.ajaxNext{text-align:center;height:31px;color:#2B587A;cursor:pointer}
-.ajaxNext span{line-height:30px}
-.ajaxNext:hover,.ajaxNext.busy:hover{background-color:#e9edf1}
-.ajaxNext.busy span{display:none}
+.ajaxNext,._next{text-align:center;height:31px;color:#2B587A;cursor:pointer}
+.ajaxNext span,._next span{line-height:30px}
+.ajaxNext:hover,
+._next:hover,
+.ajaxNext.busy:hover,
+._next.busy:hover{background-color:#e9edf1}
+.ajaxNext.busy span,._next.busy span{display:none}
 
 
 /* Мини-картинки */
@@ -275,6 +278,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkButton.busy button,.vkButton._busy button{visibility:hidden}
 .vkButton.busy,
 .ajaxNext.busy,
+._next.busy,
 .tooltip.empty,
 #device_image.busy,
 #fotoUpload #direct a.busy,
@@ -523,9 +527,11 @@ input.money{font:bold 14px Tahoma;width:70px}
 #dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
 #dopLinks .sel{background-color:#597da3;color:#FFF}
 
+
 /* Выпадающее меню по ссылке */
-.linkMenu{position:relative}
-.linkMenu .lmlist{
+._dropdown{position:relative}
+._dropdown .ddhead{white-space:nowrap}
+._dropdown .ddlist{
 	display:none;
 	position:absolute;
 	top:-3px;
@@ -537,17 +543,31 @@ input.money{font:bold 14px Tahoma;width:70px}
 	cursor:pointer;
 	z-index:1;
 }
-.linkMenu .lmsel{
+._dropdown .ddsel{
 	padding:2px 18px 3px 5px;
 	background:#EEF2F6 url("data:image/gif;base64,R0lGODlhEQAEAKIAAAAAAP///11xhXOLo+7y9v///wAAAAAAACH5BAEAAAUALAAAAAARAAQAAAMOWKrSLivGQam8quI9dgIAOw==") no-repeat right 7px;
 	color:#2C587D;
 	border-top:#96AABE solid 1px;
 	border-left:#96AABE solid 1px;
 	border-right:#96AABE solid 1px;
+	white-space:nowrap;
 }
-.linkMenu .lmu{padding:3px 5px 4px 5px;color:#2C587D;border-left:#96AABE solid 1px;border-right:#96AABE solid 1px}
-.linkMenu .last{border-bottom:#96AABE solid 1px;padding-bottom:3px}
-.linkMenu .lmu:hover{background-color:#6D8FB3;color:#FFF;padding:2px 5px 3px 5px;border:#476D96 solid 1px}
+._dropdown .ddu{
+	display:block;
+	text-decoration:none;
+	padding:3px 5px 4px 5px;
+	border-left:#96AABE solid 1px;
+	border-right:#96AABE solid 1px;
+	white-space:nowrap;
+}
+._dropdown .last{border-bottom:#96AABE solid 1px;padding-bottom:3px}
+._dropdown .ddu:hover,._dropdown .seld{
+	background-color:#6D8FB3;
+	color:#FFF;
+	padding:2px 5px 3px 5px;
+	border:#476D96 solid 1px;
+}
+
 
 /* таблица списком */
 ._spisok{border-collapse:collapse}
@@ -559,7 +579,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 	padding:6px;
 }
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
-._spisok tr.ajaxNext td{padding:0}
+._spisok tr.ajaxNext td,._spisok tr._next td{padding:0}
 ._money{width:100%}
 ._money .sum{
 	width:45px;
@@ -577,7 +597,10 @@ input.money{font:bold 14px Tahoma;width:70px}
 	cursor:help
 }
 ._money .ed{padding:2px;width:17px;white-space:nowrap}
-._money tr:not(.deleted) .img_rest,._money tr.deleted .img_del{display:none}
+._money tr:not(.deleted) .img_rest,
+._money tr.deleted .img_edit,
+._money tr.deleted .img_del
+{display:none}
 ._money tr.deleting *,._money tr.deleted{background-color:#eee;color:#888}
 
 

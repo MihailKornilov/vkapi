@@ -854,13 +854,13 @@ $.fn.keyEnter = function(func) {
 };
 
 $.fn.rightLink = function(o) {
-	var t = $(this), p;
+	var t = $(this), p, n;
 	if(typeof o == 'number' || typeof o == 'string') {
 		p = t.parent();
 		if(p.hasClass('rightLink')) {
 			p.find('.sel').removeClass('sel');
 			var a = p.find('a');
-			for(var n = 0; n < a.length; n++) {
+			for(n = 0; n < a.length; n++) {
 				var eq = a.eq(n);
 				if(o == eq.attr('val')) {
 					eq.addClass('sel');
@@ -884,7 +884,7 @@ $.fn.rightLink = function(o) {
 	var id = t.attr('id'),
 		list = '',
 		val = t.val();
-	for(var n = 0; n < o.spisok.length; n++) {
+	for(n = 0; n < o.spisok.length; n++) {
 		var sp = o.spisok[n];
 		list += '<a ' + (val == sp.uid ? 'class="sel"' : '') + ' val="' + sp.uid + '">' + sp.title + '</a>';
 	}
@@ -904,63 +904,119 @@ $.fn.rightLink = function(o) {
 	}
 	return t;
 };
-$.fn.linkMenu = function(o) {
+
+$.fn._dropdown = function(o) {
+	var t = $(this),
+		id = t.attr('id');
+
+	if(typeof o == 'number' || typeof o == 'string') {
+		switch(o) {
+			case 'remove':t.next().remove('._dropdown'); break;
+			default: window[id + '_dropdown'].value(o);
+		}
+		return t;
+	}
+
 	o = $.extend({
 		head:'',    // если указано, то ставится в название ссылки, а список из spisok
+		headgrey:0,
+		title0:'',
 		spisok:[],
 		func:function() {},
-		nosel:false // не вставлять название при выборе значения
+		nosel:0 // не вставлять название при выборе значения
 	}, o);
 	var n,
-		t = $(this),
-		id = t.attr('id'),
-		val = t.val(),
-		head = o.head,
+		val = t.val() * 1 || 0,
+		ass = assСreate(),
+		head = o.head || o.title0,
 		len = o.spisok.length,
-		spisok = '',
-		DELAY;
+		spisok = o.title0 ? '<a class="ddu grey' + (!len ? ' last' : '') + (!val ? ' seld' : '') + '" val="0">' + o.title0 + '</a>' : '',
+		delay = 0;
+	t.val(val);
 	for(n = 0; n < len; n++) {
 		var sp = o.spisok[n];
-		spisok += '<div class="lmu' + (n == len - 1 ? ' last' : '') + '" val="' + sp.uid + '">' + sp.title + '</div>';
+		spisok += '<a class="ddu' + (n == len - 1 ? ' last' : '') + (val == sp.uid ? ' seld' : '') + '" val="' + sp.uid + '">' + sp.title + '</a>';
 		if(val == sp.uid)
 			head = sp.title;
 	}
-	t.wrap('<div class="linkMenu" id="' + id + '_linkMenu">');
-	t.after('<a class="lmhead">' + head + '</a>' +
-			'<div class="lmlist">' +
-				'<div class="lmsel">' + head + '</div>' +
+	t.next().remove('._dropdown');
+	t.after(
+		'<div class="_dropdown" id="' + id + '_dropdown">' +
+			'<a class="ddhead' + (o.headgrey || o.title0 ? ' grey' : '') + '">' + head + '</a>' +
+			'<div class="ddlist">' +
+				'<div class="ddsel">' + head + '</div>' +
 				spisok +
-			'</div>');
-	var list = t.next().next(),
-		sel = list.find('.lmsel');
-	t.next().click(function() {
+			'</div>' +
+		'</div>');
+	var dropdown = t.next(),
+		aHead = dropdown.find('.ddhead'),
+		list = dropdown.find('.ddlist'),
+		ddsel = list.find('.ddsel'),
+		ddu = list.find('.ddu');
+	aHead.click(function() {
+		delayClear();
 		list.show();
 	});
-	sel.click(function() {
+	ddsel.click(function() {
+		delayClear();
 		list.hide();
 	});
-	list.find('.lmu').click(function() {
+	ddu.click(function() {
 		var th = $(this),
-			val = th.attr('val'),
-			html = th.html();
-		if(!o.nosel) {
-			t.val(val);
-			t.next().html(html);
-			sel.html(html);
-		}
+			v = parseInt(th.attr('val'));
+		setVal(v);
+		if(!o.nosel)
+			th.addClass('seld');
 		list.hide();
-		o.func(val);
-	});
+		o.func(v);
+	})
+	   .mouseenter(function() {
+			ddu.removeClass('seld');
+	   });
 	list.on({
 		mouseleave:function () {
-			DELAY = setTimeout(function() {
-				list.fadeOut(150);
+			delay = setTimeout(function() {
+				list.fadeOut(200);
 			}, 500);
 		},
-		mouseenter:function () {
-			clearTimeout(DELAY);
-		}
+		mouseenter:delayClear
 	});
+
+	function assСreate() {//Создание ассоциативного массива
+		var arr = o.title0 ? {0:o.title0} : {};
+		for (var n = 0; n < o.spisok.length; n++) {
+			var sp = o.spisok[n];
+			arr[sp.uid] = sp.title;
+		}
+		return arr;
+	}
+	function setVal(v) {
+		delayClear();
+		if(!o.nosel) {
+			t.val(v);
+			aHead.html(ass[v])[(o.title0 && !v ? 'add' : 'remove') + 'Class']('grey');
+			ddsel.html(ass[v]);
+		}
+	}
+	function delayClear() {
+		if(delay) {
+			clearTimeout(delay);
+			delay = 0;
+		}
+	}
+
+	t.value = function(v) {
+		setVal(v);
+		list.find('.seld').removeClass('seld');
+		for(n = 0; n < ddu.length; n++) {
+			var eq = ddu.eq(n);
+			if(eq.attr('val') == v) {
+				eq.addClass('seld');
+				break;
+			}
+		}
+	};
+	window[id + '_dropdown'] = t;
 	return t;
 };
 
