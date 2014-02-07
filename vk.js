@@ -11,7 +11,7 @@ var VK_SCROLL = 0,
 	DIALOG_MAXHEIGHT = 0,
 	FOTO_HEIGHT = 0,
 	REGEXP_NUMERIC = /^\d+$/,
-	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
+	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
 		1:'Январь',
@@ -463,8 +463,15 @@ $.fn.fotoUpload = function(obj) {
 
 $.fn._check = function(o) {
 	var t = $(this);
-	if(typeof o == 'number' || typeof o == 'string') {
-		t.val(o).parent().attr('class', 'check' + o);
+	if(typeof o == 'number' || typeof o == 'string' || typeof o == 'boolean') {
+		o = o ? 1 : 0;
+		if(t.val() == o)
+			return t;
+		var prev = o == 1 ? 0 : 1;
+		t.val(o);
+		t.parent()
+			.removeClass('check' + prev)
+			.addClass('check' + o);
 		return t;
 	}
 
@@ -787,30 +794,35 @@ $.fn.years = function(obj) {// перелистывание годов
 	obj = $.extend({
 		year:(new Date()).getFullYear(),
 		start:function () {},
-		func:function () {}
+		func:function () {},
+		center:function () {}
 	}, obj);
 
 	var t = $(this);
 	var id = t.attr('id');
 
-	var html = "<div class=years id=years_" + id + ">" +
-		"<TABLE>" +
-		"<TR><TD class=but>&laquo;<TD id=ycenter><SPAN>" + obj.year + "</SPAN><TD class=but>&raquo;" +
-		"</TABLE></div>";
+	var html =
+		'<div class="years" id="years_' + id + '">' +
+			'<TABLE>' +
+				'<TR><TD class="but">&laquo;' +
+					'<TD id="ycenter"><SPAN>' + obj.year + '</SPAN>' +
+					'<TD class="but">&raquo;' +
+			'</TABLE>' +
+		'</div>';
 	t.after(html);
 	t.val(obj.year);
 
 	var years = {
 		left:0,
 		speed:2,
-		span:$("#years_" + id + " #ycenter SPAN"),
-		width:Math.round($("#years_" + id + " #ycenter").css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
+		span:$('#years_' + id + ' #ycenter SPAN'),
+		width:Math.round($('#years_' + id + ' #ycenter').css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
 		ismove:0
-	};
-	years.next = function (side) {
+	}
+	years.next = function(side) {
 		obj.start();
 		var y = years;
-		if (y.ismove == 0) {
+		if(y.ismove == 0) {
 			y.ismove = 1;
 			var changed = 0;
 			var timer = setInterval(function () {
@@ -841,8 +853,10 @@ $.fn.years = function(obj) {// перелистывание годов
 		}
 	};
 
-	$("#years_" + id + " .but:first").mousedown(function () { allmon = 1; years.next(-1); });
-	$("#years_" + id + " .but:eq(1)").mousedown(function () { allmon = 1; years.next(1); });
+	$('#years_' + id + ' #ycenter').click(obj.center);
+
+	$('#years_' + id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
+	$('#years_' + id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
 };
 
 $.fn.keyEnter = function(func) {
@@ -2060,8 +2074,10 @@ $(document)
 	.on('click', '.check0,.check1', function() {
 		var t = $(this),
 			inp = t.find('input'),
-			v = inp.val() == 1 ? 0 : 1;
-		t.attr('class', 'check' + v);
+			prev = inp.val(),
+			v = prev == 1 ? 0 : 1;
+		t.removeClass('check' + prev);
+		t.addClass('check' + v);
 		inp.val(v);
 	})
 	.on('click', '._radio .on,._radio .off', function() {

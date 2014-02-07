@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 */
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
-define('REGEXP_CENA', '/^[0-9]{1,6}(.[0-9]{1,2})?$/i');
+define('REGEXP_CENA', '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');
@@ -112,7 +112,7 @@ function query_selJson($sql) {
 	$send = array();
 	$q = query($sql);
 	while($sp = mysql_fetch_row($q))
-		$send[] = '{uid:'.$sp[0].',title:"'.$sp[1].'"}';
+		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
 	return '['.implode(',',$send).']';
 }
 function query_ptpJson($sql) {//Ассоциативный массив
@@ -163,10 +163,11 @@ function pageHelpIcon() {
 		(SA && !$id ? '<div class="pagehelp_create" val="'.$page.'">Добавить подсказку</div>' : '');
 }
 
-function _check($id, $txt='', $value=0) {
+function _check($id, $txt='', $v=0, $light=false) {
+	$v = $v ? 1 : 0;
 	return
-	'<div class="check'.$value.'" id="'.$id.'_check">'.
-		'<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
+	'<div class="check'.$v.($light ? ' l' : '').'" id="'.$id.'_check">'.
+		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
 		$txt.
 	'</div>';
 }//_check()
@@ -199,20 +200,22 @@ function _end($count, $o1, $o2, $o5=false) {
 }//_end()
 
 function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
+	$znak = $sum < 0 ? -1 : 1;
+	$sum *= $znak;
 	$send = '';
-	$drob = round($sum, 2) * 100 % 100;
-	$sum = floor($sum);
-	while($sum > 0) {
-		$del = $sum % 1000;
-		$sum = floor($sum / 1000);
+	$floor = floor($sum);
+	$drob = round($sum - $floor, 2) * 100;
+	while($floor > 0) {
+		$del = $floor % 1000;
+		$floor = floor($floor / 1000);
 		if(!$del) $send = ' 000'.$send;
-		elseif($del < 10) $send = ($sum ? ' 00' : '').$del.$send;
-		elseif($del < 100) $send = ($sum ? ' 0' : '').$del.$send;
+		elseif($del < 10) $send = ($floor ? ' 00' : '').$del.$send;
+		elseif($del < 100) $send = ($floor ? ' 0' : '').$del.$send;
 		else $send = ' '.$del.$send;
 	}
 	$send = $send ? $send : 0;
 	$send = $drob ? trim($send).'.'.$drob : $send;
-	return $send;
+	return ($znak < 0 ? '-' : '').$send;
 }//_sumSpace()
 
 function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
@@ -249,7 +252,7 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 	//$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
 	$u['menu_left_set'] = 0;//($mls['response']&256) > 0 ? 1 : 0;
 
-	$sql = 'INSERT INTO `vk_user` (
+	$sql = "INSERT INTO `vk_user` (
 				`viewer_id`,
 				`first_name`,
 				`last_name`,
@@ -260,24 +263,24 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 				`country_id`,
 				`city_id`
 			) VALUES (
-				'.$uid.',
-				"'.$u['first_name'].'",
-				"'.$u['last_name'].'",
-				'.$u['sex'].',
-				"'.$u['photo'].'",
-				'.$u['app_setup'].',
-				'.$u['menu_left_set'].',
-				'.$u['country_id'].',
-				'.$u['city_id'].'
+				".$uid.",
+				'".$u['first_name']."',
+				'".$u['last_name']."',
+				".$u['sex'].",
+				'".$u['photo']."',
+				".$u['app_setup'].",
+				".$u['menu_left_set'].",
+				".$u['country_id'].",
+				".$u['city_id']."
 			) ON DUPLICATE KEY UPDATE
-				`first_name`="'.$u['first_name'].'",
-				`last_name`="'.$u['last_name'].'",
-				`sex`='.$u['sex'].',
-				`photo`="'.$u['photo'].'",
-				`app_setup`='.$u['app_setup'].',
-				`menu_left_set`='.$u['menu_left_set'].',
-				`country_id`='.$u['country_id'].',
-				`city_id`='.$u['city_id'];
+				`first_name`=VALUES(`first_name`),
+				`last_name`=VALUES(`last_name`),
+				`sex`=VALUES(`sex`),
+				`photo`=VALUES(`photo`),
+				`app_setup`=VALUES(`app_setup`),
+				`menu_left_set`=VALUES(`menu_left_set`),
+				`country_id`=VALUES(`country_id`),
+				`city_id`=VALUES(`city_id`)";
 	query($sql);
 	$u['viewer_id'] = $uid;
 	return $u;
@@ -334,6 +337,12 @@ function _viewer($id=VIEWER_ID, $val=false) {
 	}
 	if($val)
 		return isset($u[$val]) ? $u[$val] : false;
+
+	if($id == VIEWER_ID && !defined('ENTER_LAST_UPDATE')) {
+		query("UPDATE `vk_user` SET `enter_last`=CURRENT_TIMESTAMP WHERE `viewer_id`=".VIEWER_ID);
+		define('ENTER_LAST_UPDATE', true);
+	}
+
 	return $u;
 }//_viewer()
 
@@ -526,7 +535,7 @@ function FullData($value, $noyear=false, $cut=false, $week=false) {//пт. 14 апре
 function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45
 	$arr = explode(' ',$value);
 	$d = explode('-', $arr[0]);
-	if(empty($arr[1]) || empty($d[1]) || empty($d[2]))
+	if(!intval($arr[0]) || empty($arr[1]) || empty($d[1]) || empty($d[2]))
 		return '';
 	$t = explode(':',$arr[1]);
 	if(empty($t[1]) || empty($t[2]))
