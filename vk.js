@@ -500,7 +500,6 @@ $.fn._check = function(o) {
 	}
 	return t;
 };
-
 $.fn._radio = function(o) {
 	var t = $(this), n;
 	if(typeof o == 'number' || typeof o == 'string') {
@@ -552,7 +551,6 @@ $.fn._radio = function(o) {
 
 	return t;
 };
-
 $.fn._search = function(o) {
 	o = $.extend({
 		width:126,
@@ -623,7 +621,6 @@ $.fn._search = function(o) {
 	};
 	return t;
 };
-
 $.fn._calendar = function(o) {
 	var t = $(this),
 		id = t.attr('id'),
@@ -1250,15 +1247,33 @@ $.fn._dropdown = function(o) {
 $.fn._select = function(o) {
 	var t = $(this),
 		n,
+		s,
 		id = t.attr('id'),
 		val = t.val() || 0;
 
-	if(typeof o == 'number' || typeof o == 'string') {
-		switch(o) {
-			case 'remove': t.next().remove('._select'); break;
-			default: window[id + '_select'].value(o);
-		}
-		return t;
+	switch(typeof o) {
+		default:
+		case 'undefined': return t;
+		case 'number':
+		case 'string':
+			s = window[id + '_select'];
+			switch(o) {
+				case 'process': s.process(); break;
+				case 'cancel': s.cancel(); break;
+				case 'remove': t.next().remove('._select'); break;
+				default:
+					if(REGEXP_NUMERIC.test(o))
+						s.value(o);
+			}
+			return t;
+		case 'object':
+			if('length' in o) {
+				s = window[id + '_select'];
+				s.spisok(o);
+				return t;
+			}
+			if(!('spisok' in o))
+				return t;
 	}
 
 	o = $.extend({
@@ -1267,9 +1282,11 @@ $.fn._select = function(o) {
 		title0:'',			// поле с нулевым значением
 		spisok:[],			// результаты в формате json
 		write:false,        // возможность вводить значения
+		nofind:'Данных не найдено',
 		multiselect:0,      // возможность выбирать несколько значений. Идентификаторы перечисляются через запятую
 		func:function() {},	// функция, выполняемая при выборе элемента
-		funcAdd:null		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
+		funcAdd:null,		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
+		funcKeyup:function() {}	// функция, выполняемая при вводе в INPUT в селекте. Нужна для вывода списка из вне, например, Ajax-запроса, либо из vk api.
 	}, o);
 
 	if(o.multiselect)
@@ -1280,10 +1297,10 @@ $.fn._select = function(o) {
 		inpWidth -= 18;
 	var html =
 		'<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px' + (o.block ? ';display:block' : '') + '">' +
+			'<div class="title0bg">' + o.title0 + '</div>' +
 			'<table class="seltab">' +
 				'<tr><td class="selsel">' +
-						(o.multiselect ? '<div class="multiTitle0">' + o.title0 + '</div>' : '') +
-						'<input type="text" class="selinp" style="width:' + inpWidth + 'px;cursor:default"' + (o.write ? '' : ' readonly') + ' />' +
+						'<input type="text" class="selinp" style="width:' + inpWidth + 'px' + (o.write ? '' : ';cursor:default') + '"' + (o.write ? '' : ' readonly') + ' />' +
 	   (o.funcAdd ? '<td class="seladd">' : '') +
 					'<td class="selug">' +
 			'</table>' +
@@ -1296,48 +1313,45 @@ $.fn._select = function(o) {
 		res = select.find('.selres'),
 		inp = select.find('.selinp'),
 		sel = select.find('.selsel'),
-		assTitle = assСreate(), //Ассоциативный массив с названиями
-		assHide = {},           //Ассоциативный массив с отображением в списке
-		multiCount = 0;         //Количество выбранных мульти-значений
+		title0bg = select.find('.title0bg'),
+		ass,            //Ассоциативный массив с названиями
+		assHide = {},   //Ассоциативный массив с отображением в списке
+		multiCount = 0, //Количество выбранных мульти-значений
+		blur = 1,       //Разрешено ли выполнение blur
+		keyVal = '';    //Вводимое значение из inp
+
+	assСreate();
 
 	if(o.multiselect) {
-		var multiTitle0 = select.find('.multiTitle0');
-		multiTitle0.click(function() {
-			$(this).css('color', '#bbb');
-			inp.focus();
-		});
 		if(val != 0) {
 			var arr = val.split(',');
 			for(n = 0; n < arr.length; n++) {
 				assHide[arr[n]] = true;
-				inp.before('<div class="multi">' + assTitle[arr[n]] + '<span class="x" val="' + arr[n] + '"></span></div>');
+				inp.before('<div class="multi">' + ass[arr[n]] + '<span class="x" val="' + arr[n] + '"></span></div>');
 			}
 		}
 		multiCorrect();
 	}
+	if(o.funcAdd)
+		select.find('.seladd').click(o.funcAdd);
 
 	spisokPrint();
 	setVal(val);
 
 	$(document)
-		.on('click', '#' + id + '_select', function() {
-			if(res.is(':hidden')) {
-				res.show();
-				$(document).on('click.' + id + '_select', function() {
-					res.hide();
-					$(document).off('click.' + id + '_select');
-				});
-			}
-		})
+		.on('click', '#' + id + '_select .selug', hideOn)
+		.on('click', '#' + id + '_select .selsel', hideOn)
 		.on('click', '#' + id + '_select .selun', function() {
+			console.log('selun');
 			var v = parseInt($(this).attr('val'));
 			if(o.multiselect) {
 				if(!o.title0 && !v || v > 0)
-					inp.before('<div class="multi">' + assTitle[v] + '<span class="x" val="' + v + '"></span></div>');
+					inp.before('<div class="multi">' + ass[v] + '<span class="x" val="' + v + '"></span></div>');
 				multiCorrect(v, true);
 			}
 			setVal(v);
-			o.func(v);
+			o.func(v, id);
+			keyVal = inp.val();
 		})
 		.on('click', '#' + id + '_select .x', function(e) {
 			e.stopPropagation();
@@ -1345,26 +1359,44 @@ $.fn._select = function(o) {
 			$(this).parent().remove();
 			multiCorrect(v, false);
 			setVal(v);
-			o.func(v);
+			o.func(v, id);
 		});
 
-	inp.on({
-		focus:function() {
-			if(o.multiselect)
-				multiTitle0.css('color', '#bbb');
-		},
-		blur:function() {
-			if(o.multiselect)
-				multiTitle0.css('color', '#888');
-		},
-		keyup:function() {
-			if(o.multiselect)
-				multiTitle0[inp.val() || multiCount ? 'hide' : 'show']();
-		}
-	});
+	inp
+		.click(function(e) {
+			console.log('inp_click');
+			e.stopPropagation();
+			hideOn();
+		})
+		.blur(function() {
+			console.log('blur');
+			if(o.write)
+				title0bg.css('color', '#888');
+		})
+		.focus(function() {
+			console.log('focus');
+			if(o.write)
+				title0bg.css('color', '#ccc');
+		})
+		.keyup(function() {
+			console.log('keyup');
+			title0bg[inp.val() || multiCount ? 'hide' : 'show']();
+			if(keyVal != inp.val()) {
+				keyVal = inp.val();
+				o.funcKeyup(keyVal);
+				t.val(0);
+			}
+		});
 
 	function spisokPrint() {
-		var spisok = o.title0 && !o.multiselect ? '<div class="selun title0" val="0">' + o.title0 + '</div>' : '';
+		console.log('print');
+		if(!o.spisok.length) {
+			res.html('<div class="nofind">' + o.nofind + '</div>');
+			return;
+		}
+		if(o.write)
+			findEm();
+		var spisok = o.title0 && !o.write ? '<div class="selun title0" val="0">' + o.title0 + '</div>' : '';
 		for(n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
 			if(assHide[sp.uid])
@@ -1374,22 +1406,23 @@ $.fn._select = function(o) {
 					(sp.content || sp.title) +
 				'</div>';
 		}
-		res.html(spisok)
+		res.removeClass('h250')
+		   .html(spisok)
 		   .find('.selun:last').addClass('last');
 		if(res.height() > 250)
-			res.css('border-bottom', '#CCC solid 1px')
-			   .height(250)
-			   .find('.last').css('border-bottom', 0);
+			res.addClass('h250');
 	}
 	function assСreate() {//Создание ассоциативного массива
-		var arr = o.title0 ? {0:o.title0} : {};
-		for (var n = 0; n < o.spisok.length; n++) {
+		ass = o.title0 ? {0:''} : {};
+		for (n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
-			arr[sp.uid] = sp.title;
+			ass[sp.uid] = sp.title;
+			if(!sp.content)
+				sp.content = sp.title;
 		}
-		return arr;
 	}
 	function setVal(v) {
+		console.log('val');
 		if(o.multiselect) {
 			if(!multiCount) {
 				t.val(0);
@@ -1402,8 +1435,8 @@ $.fn._select = function(o) {
 			t.val(arr.join());
 		} else {
 			t.val(v);
-			inp.val(assTitle[v]);
-			inp[(v == 0 && o.title0 ? 'add' : 'remove') + 'Class']('title0');
+			inp.val(ass[v]);
+			title0bg[v == 0 ? 'show' : 'hide']();
 		}
 	}
 	function multiCorrect(v, ch) {//Выравнивание значений списка multi
@@ -1424,10 +1457,63 @@ $.fn._select = function(o) {
 			if(!o.title0 && v == 0 || v > 0)
 				inp.val('').focus();
 		}
-		multiTitle0[multiCount ? 'hide' : 'show']();
+		title0bg[multiCount ? 'hide' : 'show']();
+	}
+	function findEm() {
+		var v = inp.val();
+		if(v.length) {
+			var tag = /(<[\/]?[_a-zA-Z0-9=\"' ]*>)/i, // поиск всех тегов
+				reg = new RegExp(v, 'i'); // для замены найденного значения
+			for (n = 0; n < o.spisok.length; n++) {
+				var sp = o.spisok[n],
+					arr = sp.content.split(tag); // разбивка на массив согласно тегам
+				for(var k = 0; k < arr.length; k++) {
+					var r = arr[k];
+					if(r.length) // если строка не пустая
+						if(!tag.test(r)) // если это не тег
+							if(reg.test(r)) { // если есть совпадение
+								arr[k] = r.replace(reg, '<em>$&</em>'); // производится замена
+								sp.content = arr.join('');
+								break; // и сразу выход из массива
+							}
+				}
+			}
+		}
+	}
+	function hideOn() {
+		if(!select.hasClass('rs')) {
+			console.log('on');
+			select.addClass('rs');
+			$(document).on('click.' + id + '_select', hideOff);
+		}
+	}
+	function hideOff() {
+		console.log('off')
+		select.removeClass('rs');
+		if(o.write && t.val() == 0) {
+			if(inp.val()) {
+				inp.val('');
+				o.funcKeyup('');
+			}
+			title0bg.show();
+		}
+		$(document).off('click.' + id + '_select');
 	}
 
 	t.value = setVal;
+	t.process = function() {//Показ ожидания загрузки в selinp
+		inp.addClass('_busy');
+	};
+	t.cancel = function() {//Отмена ожидания загрузки в selinp
+		inp.removeClass('_busy');
+	};
+	t.spisok = function(v) {
+		o.spisok = v;
+		assСreate();
+		spisokPrint();
+		t.cancel();
+	};
+
 	window[id + '_select'] = t;
 	return t;
 };

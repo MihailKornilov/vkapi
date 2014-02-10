@@ -383,10 +383,18 @@ td.r{text-align:right}
 
 
 
-._select{background-color:#fff;display:inline-block}
+._select{background-color:#fff;display:inline-block;position:relative}
+._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
 ._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
 ._select .selsel{vertical-align:top;padding-bottom:2px}
-._select .selinp{border:none;padding:1px 0 1px 3px;margin:2px 2px 0}
+._select .selinp{
+	position:relative;
+	border:none;
+	padding:1px 0 1px 3px;
+	margin:2px 2px 0;
+	background-color:transparent;
+}
+._select .selinp._busy{background-position:right center}
 ._select .selug{
 	width:16px;
 	border-left:#FFF solid 1px;
@@ -398,9 +406,12 @@ td.r{text-align:right}
 	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
 	cursor:pointer;
 }
-._select:hover .selug,._select .seladd:hover{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
+._select:hover .selug,
+._select.rs .selug,
+._select .seladd:hover
+{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
+._select:not(.rs) .selres{display:none}
 ._select .selres{
-	display:none;
 	background-color:#fff;
 	opacity:.95;
 	cursor:pointer;
@@ -408,6 +419,8 @@ td.r{text-align:right}
 	z-index:10;
 	overflow:auto;
 }
+._select .selres.h250{height:250px;border-bottom:#CCC solid 1px}
+._select .selres.h250 .last{border-bottom:0}
 ._select .title0{color:#888}
 ._select .selun{
 	padding:3px 5px 4px 10px;
@@ -421,8 +434,11 @@ td.r{text-align:right}
 	color:#FFF;
 }
 ._select .selun.title0:hover{color:#ddd}
-._select .selun span{display:block;font-size:10px;color:#888}
+._select .selun span{display:block;margin-top:1px;font-size:10px;color:#888}
 ._select .selun:hover span{color:#bbe}
+._select .selun em{background-color:#dee}
+._select .selun span em{font-size:10px}
+._select .selun:hover em{background-color:#358}
 ._select .last{border-bottom:#CCC solid 1px}
 ._select .last:hover{padding-bottom:4px;border:#2a5883 solid 1px;}
 ._select .multi{
@@ -440,8 +456,14 @@ td.r{text-align:right}
 	cursor:pointer;
 	margin-left:3px;
 }
-._select .multiTitle0{position:absolute;color:#888;margin:3px 0 0 5px}
-
+._select .nofind {
+	background-color:#EEE;
+	border-left:#CCC solid 1px;
+	border-right:#CCC solid 1px;
+	border-bottom:#CCC solid 1px;
+	padding:4px 6px;
+	cursor:default;
+}
 
 
 

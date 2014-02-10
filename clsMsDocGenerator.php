@@ -261,33 +261,32 @@ class clsMsDocGenerator{
 	function output($fileName = '', $saveInPath = ''){
 		$this->endSession();
 		
-		$outputCode = '';
-		$outputCode .= "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\"\n";
-		$outputCode .= "   xmlns:w=\"urn:schemas-microsoft-com:office:word\"\n";
-		$outputCode .= "   xmlns=\"http://www.w3.org/TR/REC-html40\">\n";
-		
-		$outputCode .= $this->getHeader();
-		
-		$outputCode .= $this->getBody();
-		
-		$outputCode .= "</html>\n";
-		
-		$fileName = $fileName != '' ? $fileName : basename($_SERVER['PHP_SELF'], '.php') . '.doc';
+		$outputCode =
+			"<html xmlns:o=\"urn:schemas-microsoft-com:office:office\"\n".
+			"   xmlns:w=\"urn:schemas-microsoft-com:office:word\"\n".
+			"   xmlns=\"http://www.w3.org/TR/REC-html40\">\n".
+			$this->getHeader().
+			$this->getBody().
+			"</html>\n";
 
-		if($saveInPath == ''){
+		if(!$fileName)
+			$fileName = basename($_SERVER['PHP_SELF'], '.php').'.doc';
+
+		if(!preg_match('/.doc$/', $fileName))
+			$fileName .= '.doc';
+
+		if(!$saveInPath){
 			if($this->isDebugging){
 				echo nl2br(htmlentities($outputCode));
 			}else{
 				header("Content-Type: application/msword; charset=\$this->documentCharset\"");
-				
 				header("Content-Disposition: attachment; filename=\"$fileName\"");
-				
-				echo $outputCode;	
+				echo $outputCode;
 			}
 		}else{
 			if(substr($saveInPath,-1) <> "/")
 				$saveInPath = $saveInPath."/";
-			file_put_contents($saveInPath . $fileName.'.doc', $outputCode);
+			file_put_contents($saveInPath . $fileName, $outputCode);
 		}
 	}//end output()
 	
