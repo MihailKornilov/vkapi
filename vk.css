@@ -326,63 +326,6 @@ td.r{text-align:right}
 
 
 
-/* контактовский селект */
-.vkSel{display:inline-block;background-color:#fff}
-.vkSel .main{border:#c0cad5 solid 1px}
-.vkSel .selected{min-height:17px;padding:2px 0 0 2px}
-.vkSel .inp{border:none;height:15px;padding:0 0 0 3px;margin:0 2px 2px 0}
-.vkSel .ugol{
-	width:16px;
-	border-left:#FFF solid 1px;
-	background:#FFF no-repeat 5px 8px url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
-}
-.vkSel .add{
-	width:16px;
-	border-left:#FFF solid 1px;
-	background:#FFF no-repeat 5px 6px url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
-	cursor:pointer;
-}
-.vkSel .add:hover{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
-.vkSel .results{background-color:#FFF;cursor:pointer;position:absolute;z-index:10}
-.vkSel dl{overflow:auto}
-.vkSel dd{padding-left:10px}
-.vkSel .out{padding-top:3px;padding-bottom:4px;border-left:#CCC solid 1px;border-right:#CCC solid 1px}
-.vkSel .last{border-bottom:#CCC solid 1px}
-.vkSel .over{
-	padding-top:2px;
-	padding-bottom:3px;
-	border:#2a5883 solid 1px;
-	background-color:#587da1;
-	color:#FFF;
-}
-.vkSel .title0{color:#888}
-.vkSel .title0.over{color:#ddd}
-.vkSel .out .pole2,.vkSel .over .pole2,.vkSel .out .pole2 EM,.vkSel .over .pole2 EM{font-size:10px}
-/* дополнительное поле, например телефон или уточнение + невыбранное поле */
-.vkSel .out .pole2,.vkSel .out .nosel{color:#888}
-.vkSel .over .pole2,.vkSel .over .nosel{color:#BBE}
-/* выделение символов, совпадающих при наборе */
-.vkSel .out EM, .vkSel .over EM{font-weight:bold}
-.vkSel .out EM{background-color:#DEE}
-.vkSel .over EM{background-color:#358}
-.vkSel .nofind {
-	background-color:#EEE;
-	border-left:#CCC solid 1px;
-	border-right:#CCC solid 1px;
-	border-bottom:#CCC solid 1px;
-	color:#444;
-	padding:3px 6px;
-	cursor:default;
-}
-.vkSel .process{position:absolute}
-.vkSel .process img{position:relative;top:5px;left:2px}
-.vkSel .process_inp{position:absolute;text-align:right}
-.vkSel .process_inp img{position:relative;top:5px}
-
-
-
-
-
 ._select{background-color:#fff;display:inline-block;position:relative}
 ._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
 ._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}

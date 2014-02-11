@@ -1260,6 +1260,7 @@ $.fn._select = function(o) {
 			switch(o) {
 				case 'process': s.process(); break;
 				case 'cancel': s.cancel(); break;
+				case 'title': return s.title();
 				case 'remove': t.next().remove('._select'); break;
 				default:
 					if(REGEXP_NUMERIC.test(o))
@@ -1279,10 +1280,11 @@ $.fn._select = function(o) {
 	o = $.extend({
 		width:150,			// ширина
 		block:false,       	// расположение селекта
+		bottom:0,
 		title0:'',			// поле с нулевым значением
 		spisok:[],			// результаты в формате json
 		write:false,        // возможность вводить значения
-		nofind:'Данных не найдено',
+		nofind:'Список пуст',
 		multiselect:0,      // возможность выбирать несколько значений. Идентификаторы перечисляются через запятую
 		func:function() {},	// функция, выполняемая при выборе элемента
 		funcAdd:null,		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
@@ -1296,7 +1298,7 @@ $.fn._select = function(o) {
 	if(o.funcAdd)
 		inpWidth -= 18;
 	var html =
-		'<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px' + (o.block ? ';display:block' : '') + '">' +
+		'<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px' + (o.block ? ';display:block' : '') + (o.bottom ? ';margin-bottom:' + o.bottom + 'px' : '') + '">' +
 			'<div class="title0bg">' + o.title0 + '</div>' +
 			'<table class="seltab">' +
 				'<tr><td class="selsel">' +
@@ -1342,15 +1344,22 @@ $.fn._select = function(o) {
 		.on('click', '#' + id + '_select .selug', hideOn)
 		.on('click', '#' + id + '_select .selsel', hideOn)
 		.on('click', '#' + id + '_select .selun', function() {
-			console.log('selun');
-			var v = parseInt($(this).attr('val'));
+			var v = parseInt($(this).attr('val')),
+				item;
 			if(o.multiselect) {
 				if(!o.title0 && !v || v > 0)
 					inp.before('<div class="multi">' + ass[v] + '<span class="x" val="' + v + '"></span></div>');
 				multiCorrect(v, true);
 			}
 			setVal(v);
-			o.func(v, id);
+			for(n = 0; n < o.spisok.length; n++) {
+				var sp = o.spisok[n];
+				if(sp.uid == v) {
+					item = sp;
+					break;
+				}
+			}
+			o.func(v, id, item);
 			keyVal = inp.val();
 		})
 		.on('click', '#' + id + '_select .x', function(e) {
@@ -1362,24 +1371,20 @@ $.fn._select = function(o) {
 			o.func(v, id);
 		});
 
-	inp
-		.click(function(e) {
-			console.log('inp_click');
+
+	inp	.click(function(e) {
 			e.stopPropagation();
 			hideOn();
 		})
 		.blur(function() {
-			console.log('blur');
 			if(o.write)
 				title0bg.css('color', '#888');
 		})
 		.focus(function() {
-			console.log('focus');
 			if(o.write)
 				title0bg.css('color', '#ccc');
 		})
 		.keyup(function() {
-			console.log('keyup');
 			title0bg[inp.val() || multiCount ? 'hide' : 'show']();
 			if(keyVal != inp.val()) {
 				keyVal = inp.val();
@@ -1389,7 +1394,6 @@ $.fn._select = function(o) {
 		});
 
 	function spisokPrint() {
-		console.log('print');
 		if(!o.spisok.length) {
 			res.html('<div class="nofind">' + o.nofind + '</div>');
 			return;
@@ -1414,7 +1418,7 @@ $.fn._select = function(o) {
 	}
 	function assСreate() {//Создание ассоциативного массива
 		ass = o.title0 ? {0:''} : {};
-		for (n = 0; n < o.spisok.length; n++) {
+		for(n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
 			ass[sp.uid] = sp.title;
 			if(!sp.content)
@@ -1422,7 +1426,6 @@ $.fn._select = function(o) {
 		}
 	}
 	function setVal(v) {
-		console.log('val');
 		if(o.multiselect) {
 			if(!multiCount) {
 				t.val(0);
@@ -1482,13 +1485,11 @@ $.fn._select = function(o) {
 	}
 	function hideOn() {
 		if(!select.hasClass('rs')) {
-			console.log('on');
 			select.addClass('rs');
 			$(document).on('click.' + id + '_select', hideOff);
 		}
 	}
 	function hideOff() {
-		console.log('off')
 		select.removeClass('rs');
 		if(o.write && t.val() == 0) {
 			if(inp.val()) {
@@ -1513,400 +1514,11 @@ $.fn._select = function(o) {
 		spisokPrint();
 		t.cancel();
 	};
+	t.title = function() {//Получение наименования установленного значения
+		return ass[t.val()];
+	};
 
 	window[id + '_select'] = t;
-	return t;
-};
-
-$.fn.vkSel = function(obj) {
-	var t = $(this);
-	var id = t.attr('id');
-
-	$("#vkSel_" + id).remove();	// удаление select если существует
-
-	$(document).off('click.results_hide').on('click.results_hide', function () {
-		$(".vkSel")
-			.find(".results").html('').end()
-			.find(".ugol").css({'border-left':'#fff solid 1px', 'background-color':'#fff'});
-		$(this)
-			.off('keyup.vksel_esc')
-			.off('keydown.vksel');
-	});
-
-
-
-	var obj = $.extend({
-		width:150,			// ширина
-		bottom:0,			 // отступ снизу
-		display:'block',	 // расположение селекта
-		title0:'',				 // поле с нулевым значением
-		spisok:[],			 // результаты в формате json
-		spisok_new:null, // составление нового списка, если производится поиск в основном
-		limit:0,				  // ограничение на вывод количества записей. Если 0 - нет ограничений
-		value:$(this).val() || 0, // текущее значение
-		ro:1,					 // запрет ввода в поле INPUT
-		nofind:'Не найдено',  // сообщение, выводимое при пустом поиске
-		func:null,			  // функция, выполняемая при выборе элемента
-		funcAdd:null,		// функция добавления нового значения. Если не пустая, то выводится плюсик. Функция передаёт список всех элементов, чтобы можно было добавить новый
-		funcKeyup:null	 // функция, выполняемая при вводе в INPUT в селекте. Нужна для вывода списка из вне, например, Ajax-запроса, либо из vk api. При этом ro должен быть = 0.
-	}, obj);
-
-
-
-
-	// ассоциативный массив полученного списка
-	var ass; ass_create();
-
-
-
-
-	var html = "<div class=vkSel id=vkSel_" + id + " style=width:" + obj.width + "px;display:" + obj.display + ";>";
-
-	html += "<TABLE class=main style=width:" + obj.width + "px;>";
-	var sel_width = obj.width - 17 - 4;
-	if (obj.funcAdd) { sel_width -= 17; }
-	html += "<TD class=selected style=width:" + sel_width + "px; val=inp_>";
-	html += "<INPUT type=text class=inp style=width:" + (sel_width - 5) + "px;" + (obj.ro ? "cursor:default; readonly" : '') + " val=inp_>";
-	if (obj.funcAdd) { html += "<TD class=add val=add_>"; }
-	html += "<TD class=ugol val=ugol_>";
-	html += "</TABLE>";
-	html += "<div class=results style=width:" + obj.width + "px;></div>";
-	html += "</div>";
-
-	$(this).after(html);
-
-
-
-	var vksel = $("#vkSel_" + id);	   // сохранение текущего селекта
-	var results = vksel.find(".results"); // сохранение ссылки на результат
-	var inp = vksel.find('.inp');			  // сохранение ссылки на поле для ввода
-	var keyup = 0;							   // отслеживание нажатия клавиши (нужно, чтобы не раскрывался список при его замене без нажатия) для keyupFunc
-	var keyup_val;							  // значение предыдущего ввода. Если изменилось, то список обновляется.
-
-	// отступ снизу, если необходимо
-	if (obj.bottom > 0) { vksel.css('margin-bottom', obj.bottom + 'px'); }
-
-	// установка значения в INPUT
-	var inp_set = function (val) {
-		if (val !== undefined) { obj.value = val }
-		if (obj.title0 && obj.value == 0) {
-			inp.val(obj.title0).css('color', '#888');
-		} else {
-			inp.val(ass[obj.value]).css('color', '#000');
-		}
-		t.val(obj.value);
-		return this;
-	};
-
-	// установка значения в INPUT
-	inp_set();
-
-	// если разрешён ввод в INPUT, разрешается поиск по списку
-	if (!obj.ro) {
-		inp
-			.on('keyup', function (e) {
-				if(e.keyCode != 38 && e.keyCode != 40 && e.keyCode != 13) {
-					if (obj.funcKeyup) {
-						var val = inp.val();
-						if (keyup == 0 && keyup_val != val) {
-							keyup_val = val;
-							vksel.find(".process_inp").remove();
-							inp.before("<div class=process_inp style=width:" + (sel_width - 5) + "px;><IMG src=/img/upload.gif></div>");
-							keyup = 1; // клавиша была нажата. Список раскрывать нужно.
-							obj.funcKeyup(val);
-						}
-					} else { inp_write(); }
-				}
-			})
-			.on('blur', function () { inp_set(); });
-	}
-
-
-	// манипуляции с самим селектом
-	vksel.on({
-		mouseenter:function () { $(this).find('.ugol:first').css({'border-left':'#d2dbe0 solid 1px', 'background-color':'#e1e8ed'}); }, // подсветка треугольничка
-		mouseleave:function () { if (results.find('DL').length == 0) { $(this).find('.ugol:first').css({'border-left':'#FFF solid 1px', 'background-color':'#FFF'}); } },
-		click:function (e) {
-			var val = $(e.target).attr('val');
-			if (val) {
-				var arr = val.split('_');
-				switch (arr[0]) {
-					case 'ugol': // клик по уголку
-						$(document).off('keyup.vksel_esc').off('keydown.vksel'); // отключение действия всех клавиш в любом случае
-						vksels_hide(e);
-						if (!results.find('DL').length) {
-							if (obj.spisok_new != null && obj.spisok_new.length == 0) { obj.spisok_new = null; } // если поиск по символам вернул пустой список и результаты тыби закрыты, то показывается весь список
-							dd_create();
-						} else { results.html(''); } // если список уже открыт, то закрытие
-						break;
-
-					case 'add': // клик по плюсику.
-						obj.spisok_new = null; // очистка списка, если производился поиск по буквам
-						obj.funcAdd(obj.spisok, t.o);
-						break;
-
-					case 'inp': // клик по инпуту
-						vksels_hide(e);
-						if (obj.ro != 1 && obj.title0 && obj.value == 0) { inp.val('').css('color', '#000'); }
-						if (results.find('DL:first').length == 0) {
-							if (obj.spisok_new != null && obj.spisok_new.length == 0) { obj.spisok_new = null; } // если поиск по символам вернул пустой список и результаты тыби закрыты, то показывается весь список
-							dd_create();
-						} else if (obj.ro != 1) { inp_write(); }
-						break;
-
-					case 'title0':
-						inp_set(0);
-						if (obj.func) { obj.func(obj.value); }
-						break;
-
-					case 'dd':
-						inp_set(arr[1]);
-						if (obj.func) { obj.func(obj.value); }
-						break;
-				}
-			}
-		}
-	});
-
-
-
-
-
-
-	// создание списка и вывод в результат
-	function dd_create() {
-		var spisok = obj.spisok_new != null ? obj.spisok_new : obj.spisok;
-		var dd = "<DL>";
-		var len = (obj.limit > 0 && spisok.length > obj.limit) ? obj.limit : spisok.length;
-		if (obj.title0 && obj.ro == 1) { dd += "<DD class='" + (obj.value == 0 ? 'over' : 'out') + " title0' val=title0_0>" + obj.title0; }
-		if (len > 0) {
-			var reg = new RegExp(">", "ig");
-			for (var n = 0; n < len; n++) {
-				var sp = spisok[n];
-				var c = sp.uid == obj.value ? 'over' : 'out'; // подсветка выбранного элемента
-				var cont = null; // вставка val в дополнительные поля описания
-				if (sp.content) { cont = sp.content.replace(reg," val=dd_" + sp.uid + ">"); }
-				dd += "<DD class=" + c + " val=dd_" + sp.uid + ">" + (cont ? cont : sp.title);
-			}
-		} else if (obj.ro != 1) { dd += "<DT class=nofind>" + obj.nofind; }
-		dd += "</DL>";
-		results.html(dd);
-
-		dd = results.find("DD");
-		len = dd.length;
-		if (len > 0) {
-			// вычисление высоты выпадающего списка
-			var dl = results.find("DL");
-			var over;
-			var results_h = results.css('height').split(/px/)[0]; // высота списка результатов до скрытия лишней видимости
-			if (results_h > 250) {
-				dl.css({height:250 + 'px', 'border-bottom':'#CCC solid 1px'});
-				// выставление выбранного поля в зоне видимости
-				over = results.find('.over:first')[0];
-				if (over) {
-					var top = over.offsetTop + over.offsetHeight;
-					if(top > 170) {
-						var dl_h = 250;
-						if (results_h > top) { dl_h -= results_h - top > 120 ? 120 : results_h - top; }
-						dl[0].scrollTop = top - dl_h;
-					}
-				}
-			} else { results.find("DD:last").addClass('last'); }
-
-			// установка изменения цвета элемента при наведении мыши
-			dd.on('mouseenter', function () {
-				$(this).parent().find('.over:first').removeClass('over').addClass('out');
-				$(this).addClass('over');
-			});
-
-			// если результаты открыты, то включение ESC для скрытия результатов
-			$(document).on('keyup.vksel_esc', function (ev) {
-				if (ev.keyCode == 27) {
-					$(document).off('keyup.vksel_esc').off('keydown.vksel');
-					results.html('');
-				}
-			});
-
-			dl = dl[0];
-			$(document).on('keydown.vksel',function (e) {
-				for (var n = 0; n < len; n++) { if(dd.eq(n).hasClass('over')) break; }
-				switch (e.keyCode) {
-					case 38: // перемещение вверх
-						e.preventDefault();
-						if (n == len) { n = 1; }
-						if (n > 0) {
-							if (len > 1) { dd.eq(n).removeClass('over').addClass('out'); } // если в списке больше одого элемента
-							over = dd.eq(n-1);
-						} else { over = dd.eq(0); }
-						over.removeClass('out').addClass('over');
-						over = over[0];
-						if (dl.scrollTop > over.offsetTop) { dl.scrollTop = over.offsetTop; } // если элемент ушёл вверх выше видимости, ставится в самый верх
-						if (over.offsetTop - 250 - dl.scrollTop + over.offsetHeight > 0) { dl.scrollTop = over.offsetTop - 250 + over.offsetHeight; } // если ниже, то вниз
-						break;
-
-					case 40: // перемещение вниз
-						e.preventDefault();
-						if (n == len) { dd.eq(0).removeClass('out').addClass('over'); dl.scrollTop = 0; }
-						if (n < len - 1) {
-							dd.eq(n).removeClass('over').addClass('out');
-							over = dd.eq(n+1);
-							over.removeClass('out').addClass('over');
-							over = over[0];
-							if (over.offsetTop + over.offsetHeight - dl.scrollTop > 250) { dl.scrollTop = over.offsetTop + over.offsetHeight - 250; } // если элемент ниже видимости, ставится в нижнюю позицию
-							if (over.offsetTop < dl.scrollTop) { dl.scrollTop = over.offsetTop; } // если выше, то в верхнюю
-						}
-						break;
-
-					case 13: // ентер
-						e.preventDefault();
-						if (n < len) {
-							inp_set(dd.eq(n).attr('val').split('_')[1]);
-							results.html('');
-							if (obj.func) { obj.func(obj.value); }
-						}
-						break;
-				}
-			}); // end keydown.vksel
-		} // end len > 0
-	}
-
-
-
-
-
-
-
-
-
-
-	// создание ассоциативного массива
-	function ass_create() {
-		var arr = [];
-		for (var n = 0; n < obj.spisok.length; n++) {
-			var sp = obj.spisok[n];
-			arr[sp.uid] = sp.title;
-		}
-		ass = arr;
-	}
-
-
-
-
-
-
-
-	// скрытие результатов всех селектов кроме текущего
-	function vksels_hide(e) {
-		e.stopPropagation();
-		var s = $(".vkSel");
-		for (var n = 0; n < s.length; n++) {
-			var sp = s.eq(n);
-			if (sp.attr('id').split('vkSel_')[1] != id) {
-				sp
-					.find('.results').html('').end()
-					.find(".ugol").css({'border-left':'#FFF solid 1px', 'background-color':'#FFF'});
-			}
-		}
-	}
-
-	// создание списка по регулярному выражению при вводе в INPUT
-	function inp_write() {
-		obj.value = 0;
-		var val = inp.val();
-		if (val.length > 0) {
-			obj.spisok_new = [];
-			var tag = new RegExp("(<[\/]?[_a-zA-Z0-9=\"' ]*>)", 'i'); // поиск всех тегов
-			var reg = new RegExp(val, 'i'); // для замены найденного значения
-			for (var n = 0; n < obj.spisok.length; n++) {
-				var sp = obj.spisok[n];
-				var replaced = 0; // изначально в элементе не производилась замена
-				var find = sp.content || sp.title; // где будет производиться поиск
-				var arr = find.split(tag); // разбивка на массив согласно тегам
-				for (var k = 0; k < arr.length; k++) {
-					var r = arr[k];
-					if(r.length > 0) { // если строка не пустая
-						if (!tag.test(r)) { // если это не тег
-							if (reg.test(r)) { // если есть совпадение
-								arr[k] = r.replace(reg, "<EM>$&</EM>"); // производится замена
-								replaced = 1; // пометка о замене
-								break; // и сразу выход из массива
-							}
-						}
-					}
-				}
-				if (replaced == 1) { // если замена была, то пополнается новый массив
-					obj.spisok_new.push({
-						uid:sp.uid,
-						title:sp.title,
-						content:arr.join('')
-					});
-				}
-				if (obj.limit > 0 && obj.spisok_new.length >= obj.limit) break;
-			}
-		} else { obj.spisok_new = null; }
-		dd_create();
-	}
-
-
-
-
-	// внесение в список нового элемента. (для внешнего использования)
-	var item_add = function (item) {
-		obj.spisok.unshift(item);
-		ass[item.uid] = item.title;
-		return this;
-	};
-
-	// возвращается объект для дальнейших манипуляций с селектом
-	t.o = {
-		spisok:function (spisok) { // установка либо получение списка
-			if (spisok != undefined) {
-				obj.spisok = spisok;
-				ass_create();
-				vksel.find(".process:first").remove();
-				if (obj.funcKeyup) { // обновление списка, если включена функция при вводе в inp
-					vksel.find(".process_inp:first").remove();
-					if (keyup == 1) {
-						inp_write();
-						keyup = 0;
-					} else { inp_set(0); }
-				} else { inp_set(0); }
-				return this;
-			} else { return obj.spisok; }
-		},
-
-		val:function(val) { // установка либо получение значения
-			if(val != undefined) {
-				inp_set(val);
-				return this;
-			} else { return obj.value; }
-		},
-
-		title:function() {
-			return inp.val();
-		},
-
-		add:item_add, // добавление нового элемента
-
-		process:function () { // установка в селект процесса ожидания получения нового списка. При этом старый список удаляется. Значение ставится = 0.
-			inp_set(0);
-			inp.val('');
-			obj.spisok = [];
-			vksel.find(".process").remove();
-			inp.before("<div class=process><IMG src=/img/upload.gif></div>");
-		},
-
-		remove:function () { vksel.remove(); return this; },
-		item:function(uid) {
-			for(var n = 0; n < obj.spisok.length; n++) {
-				var i = obj.spisok[n];
-				if(i.uid == uid)
-					return i;
-			}
-			return false;
-		}
-	};
-
 	return t;
 };
 
