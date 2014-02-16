@@ -464,13 +464,12 @@ $.fn.fotoUpload = function(obj) {
 $.fn._check = function(o) {
 	var t = $(this);
 	if(typeof o == 'number' || typeof o == 'string' || typeof o == 'boolean') {
-		o = o ? 1 : 0;
+		o = o == 1 ? 1 : 0;
 		if(t.val() == o)
 			return t;
-		var prev = o == 1 ? 0 : 1;
 		t.val(o);
 		t.parent()
-			.removeClass('check' + prev)
+			.removeClass('check' + (o == 1 ? 0 : 1))
 			.addClass('check' + o);
 		return t;
 	}
@@ -488,7 +487,7 @@ $.fn._check = function(o) {
 	var id = t.attr('id'),
 		val = t.val() == 1 ? 1 : 0;
 	t.val(val);
-	t.wrap('<div class="check' + val + '" id="' + id + '_check">');
+	t.wrap('<div class="_check check' + val + '" id="' + id + '_check">');
 	t.after(o.name);
 	_click(t, o.func);
 
@@ -1526,9 +1525,15 @@ $(document)
 	.ajaxError(function(event, request, settings) {
 		if(!request.responseText)
 			return;
-		alert('Ошибка:\n\n' + request.responseText);
-		//var txt = request.responseText;
-		//throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
+		var d = _dialog({
+			width:600,
+			top:10,
+			head:'Ошибка AJAX-запроса',
+			content:'<textarea style="width:570px;background-color:#fdd">' + request.responseText + '</textarea>',
+			butSubmit:'',
+			butCancel:'Закрыть'
+		});
+		d.content.find('textarea').autosize();
 	})
 	.on('click', '.debug_toggle', function() {
 		var d = getCookie('debug');

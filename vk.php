@@ -166,7 +166,7 @@ function pageHelpIcon() {
 function _check($id, $txt='', $v=0, $light=false) {
 	$v = $v ? 1 : 0;
 	return
-	'<div class="check'.$v.($light ? ' l' : '').'" id="'.$id.'_check">'.
+	'<div class="_check check'.$v.($light ? ' l' : '').($txt ? '' : ' e').'" id="'.$id.'_check">'.
 		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
 		$txt.
 	'</div>';
@@ -213,10 +213,19 @@ function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 		elseif($del < 100) $send = ($floor ? ' 0' : '').$del.$send;
 		else $send = ' '.$del.$send;
 	}
-	$send = $send ? $send : 0;
-	$send = $drob ? trim($send).'.'.$drob : $send;
+	$send = $send ? trim($send) : 0;
+	$send = $drob ? $send.'.'.$drob : $send;
 	return ($znak < 0 ? '-' : '').$send;
 }//_sumSpace()
+
+function _tooltip($msg, $left=0, $ugolSide='') {
+	return
+		' _tooltip">'.
+		'<div class="ttdiv"'.($left ? ' style="left:'.$left.'px"' : '').'>'.
+			'<div class="ttmsg">'.$msg.'</div>'.
+			'<div class="ttug'.($ugolSide ? ' '.$ugolSide : '').'"></div>'.
+		'</div>';
+}//_tooltip()
 
 function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
 function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }

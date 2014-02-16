@@ -205,6 +205,10 @@ td.r{text-align:right}
 }
 
 
+
+
+
+
 .img_pagehelp{
 	width:16px;
 	height:16px;
@@ -550,6 +554,7 @@ td.r{text-align:right}
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
 ._spisok tr._next td{padding:0}
 ._money{width:100%}
+._money .choice{width:14px;text-align:center}
 ._money .sum{
 	width:45px;
 	text-align:right;
@@ -563,7 +568,7 @@ td.r{text-align:right}
 	text-align:right;
 	font-size:10px;
 	color:#777;
-	cursor:help
+	cursor:default
 }
 ._money .ed{padding:2px;width:17px;white-space:nowrap}
 ._money tr:not(.deleted) .img_rest,
@@ -620,7 +625,6 @@ td.r{text-align:right}
 	display:inline-block;
 	height:14px;
 	min-width:14px;
-	padding-left:18px;
 	color:#333;
 	cursor:pointer;
 	background:no-repeat url("data:image/gif;base64,R0lGODlhDwA4AKIHANrh6P///8DK1a22wF+DpbfAy9/l6v///yH5BAEAAAcALAAAAAAPADgAAAOzKLrMJyHKGcWjOFiY5+7eBVbi+I1aCZ6m2rGrm21NrTx2LWMEwYE93yho+PF6gmKHyCJIiEVRMABNcQzBnsFAumK13K5kS9iGjNuwBPbC5RyDuHw+PwwA+LweP7Dv/wB9d4B6goSFfod8iYqGioGMh46NkYSTkpWAgnSccXadnJl/PYOHQaWAQQWoe6qrhK6MBHmujkEArpCDBVkEBQWLu7w9v3mTv77AxpG/ysusmp+gdQkAOw==")
@@ -630,6 +634,7 @@ td.r{text-align:right}
 .check1{background-position:0 -14px}
 .check1:hover{background-position:0 -42px}
 .check0.l{color:#888}
+._check:not(.e){padding-left:18px}
 
 
 ._radio .off,._radio .on{display:block;cursor:pointer;margin:5px 0 6px}
@@ -909,3 +914,30 @@ td.r{text-align:right}
 ._calendarFilter .d.sel{background-color:#BCCEE2}
 /*._calendarFilter .old.on{color:#e44}*/
 ._calendarFilter.busy{opacity:.5}
+
+
+
+/* Подсказка на тёмном фоне */
+._tooltip{position:relative}
+._tooltip .ttdiv{
+	position:absolute;
+	display:inline-block;
+	top:-29px;
+	opacity:.85;
+	z-index:1000;
+}
+._tooltip:not(:hover) .ttdiv,._tooltip .ttdiv:hover{display:none}
+._tooltip .ttmsg{
+	color:#fff;
+	padding:5px 10px;
+	font-weight:bold;
+	border-radius:3px;
+	background-color:#222;
+	white-space:nowrap;
+}
+._tooltip .ttug{
+	background:center 0 no-repeat url("data:image/dif;base64,R0lGODlhJQAEAJEAAAAAAP///yIiIv///yH5BAEAAAMALAAAAAAlAAQAAAIQnI8py5IPo2qy2sOurm6fAgA7");
+	height:4px;
+}
+._tooltip .ttug.r{background-position:right 0}
+._tooltip .ttug.l{background-position:left 0}
