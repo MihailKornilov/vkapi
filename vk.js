@@ -462,21 +462,22 @@ $.fn.fotoUpload = function(obj) {
 };
 
 $.fn._check = function(o) {
-	var t = $(this);
-	if(typeof o == 'number' || typeof o == 'string' || typeof o == 'boolean') {
-		o = o == 1 ? 1 : 0;
-		if(t.val() == o)
-			return t;
-		t.val(o);
-		t.parent()
-			.removeClass('check' + (o == 1 ? 0 : 1))
-			.addClass('check' + o);
-		return t;
-	}
+	var t = $(this),
+		id = t.attr('id');
 
-	if(typeof o == 'function') {
-		_click(t, o);
-		return t;
+	switch(typeof o){
+		case 'number':
+		case 'string':
+		case 'boolean':
+			o = o == 1 ? 1 : 0;
+			if(t.val() == o)
+				return t;
+			t.val(o);
+			t.parent()
+				.removeClass('check' + (o == 1 ? 0 : 1))
+				.addClass('check' + o);
+			return t;
+		case 'function': _click(o);	return t;
 	}
 
 	o = $.extend({
@@ -484,43 +485,42 @@ $.fn._check = function(o) {
 		func:function() {}
 	}, o);
 
-	var id = t.attr('id'),
-		val = t.val() == 1 ? 1 : 0;
+	var val = t.val() == 1 ? 1 : 0;
 	t.val(val);
 	t.wrap('<div class="_check check' + val + '" id="' + id + '_check">');
 	t.after(o.name);
-	_click(t, o.func);
+	_click(o.func);
 
-	function _click(t, func) {
-		var id = t.parent().attr('id');
-		$(document).on('click', '#' + id, function() {
-			func(parseInt(t.val()), t.attr('id'));
+	function _click(func) {
+		$(document).on('click', '#' + id + '_check', function() {
+			func(parseInt(t.val()), id);
 		});
 	}
 	return t;
 };
 $.fn._radio = function(o) {
-	var t = $(this), n;
-	if(typeof o == 'number' || typeof o == 'string') {
-		var p = t.parent();
-		if(p.hasClass('_radio')) {
-			p.find('div.on').attr('class', 'off');
-			var div = p.find('div');
-			for(n = 0; n < div.length; n++) {
-				var eq = div.eq(n);
-				if(o == eq.attr('val')) {
-					eq.addClass('on');
-					break;
-				}
-			}
-			t.val(o);
-		}
-		return t;
-	}
+	var t = $(this),
+		n,
+		id = t.attr('id');
 
-	if(typeof o == 'function') {
-		_click(t, o);
-		return t;
+	switch(typeof o){
+		case 'number':
+		case 'string':
+			var p = t.parent();
+			if(p.hasClass('_radio')) {
+				p.find('div.on').attr('class', 'off');
+				var div = p.find('div');
+				for(n = 0; n < div.length; n++) {
+					var eq = div.eq(n);
+					if(o == eq.attr('val')) {
+						eq.addClass('on');
+						break;
+					}
+				}
+				t.val(o);
+			}
+			return t;
+		case 'function': _click(o);	return t;
 	}
 
 	o = $.extend({
@@ -528,8 +528,7 @@ $.fn._radio = function(o) {
 		light:0,
 		func:function() {}
 	}, o);
-	var id = t.attr('id'),
-		list = '',
+	var list = '',
 		val = t.val();
 	for(n = 0; n < o.spisok.length; n++) {
 		var sp = o.spisok[n],
@@ -539,12 +538,11 @@ $.fn._radio = function(o) {
 	}
 	t.wrap('<div class="_radio" id="' + id + '_radio">');
 	t.after(list);
-	_click(t, o.func);
+	_click(o.func);
 
-	function _click(t, func) {
-		var id = t.parent().attr('id');
-		$(document).on('click', '#' + id, function() {
-			func(t.val(), t.attr('id'));
+	function _click(func) {
+		$(document).on('click', '#' + id + '_radio', function() {
+			func(parseInt(t.val()), id);
 		});
 	}
 
@@ -978,7 +976,7 @@ $.fn._dropdown = function(o) {
 		if(!o.nosel)
 			th.addClass('seld');
 		list.hide();
-		o.func(v);
+		o.func(v, id);
 	})
 	   .mouseenter(function() {
 			ddu.removeClass('seld');

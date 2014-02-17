@@ -108,6 +108,13 @@ function query_assoc($sql) {
 		return array();
 	return $r;
 }
+function query_ass($sql) {//Ассоциативный массив
+	$send = array();
+	$q = query($sql);
+	while($r = mysql_fetch_row($q))
+		$send[$r[0]] = $r[1];
+	return $send;
+}
 function query_selJson($sql) {
 	$send = array();
 	$q = query($sql);
