@@ -221,7 +221,7 @@ function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 		else $send = ' '.$del.$send;
 	}
 	$send = $send ? trim($send) : 0;
-	$send = $drob ? $send.'.'.$drob : $send;
+	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
 	return ($znak < 0 ? '-' : '').$send;
 }//_sumSpace()
 
