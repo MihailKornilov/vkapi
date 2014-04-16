@@ -387,7 +387,7 @@ td.r{text-align:right}
 ._select .selun span em{font-size:10px}
 ._select .selun.ov em{background-color:#358}
 ._select .last{border-bottom:#CCC solid 1px}
-._select .last:hover{padding-bottom:4px;border:#2a5883 solid 1px;}
+._select .last.ov{padding-bottom:4px;border:#2a5883 solid 1px;}
 ._select .multi{
 	display:inline-block;
 	background-color:#DAE2E8;
@@ -502,7 +502,7 @@ td.r{text-align:right}
 
 
 /* Выпадающее меню по ссылке */
-._dropdown{position:relative}
+._dropdown{position:relative;display:inline-block}
 ._dropdown .ddhead{white-space:nowrap}
 ._dropdown .ddlist{
 	display:none;
@@ -653,7 +653,7 @@ td.r{text-align:right}
 ._radio .off.l{color:#888}
 
 /* Задний фон при открытии поверхностных окон */
-._backfon {
+._backfon{
 	position:absolute;
 	top:0;
 	left:0;
@@ -661,7 +661,6 @@ td.r{text-align:right}
 	height:100%;
 	background-color:#FFF;
 	opacity:0.7;
-	filter:alpha(opacity=70);
 }
 
 
@@ -704,6 +703,10 @@ td.r{text-align:right}
 }
 ._dialog .vkButton{margin-right:8px}
 
+/* Таблица в диалоге */
+._dialog-tab{border-spacing:10px}
+._dialog-tab input[type="text"]:not(.money){width:210px}
+._dialog-tab .label{text-align:right}
 
 
 
@@ -766,7 +769,36 @@ td.r{text-align:right}
 
 
 
+._image-spisok{width:345px}
+._image-spisok a{display:inline-block;margin:0 5px 5px 0}
 
+._image-add{
+	display:inline-block;
+	position:relative;
+	background:transparent no-repeat 10px center url("data:image/gif;base64,R0lGODlhEAANAMQAAAAAAP///2F7omJ7omV/pWeApmyFq2uFqmuEqXSNsXmStnCKrm+JrXSOsnWPsnqTtnuUt////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABEALAAAAAAQAA0AAAU2YCSKQmmOqIgoUAs9RioMh2tDxiBERPPct4ej0AAaIQmj6HhDMV3OJ2QXEUghjNLiyuVGupEQADs=");
+	color:#2B587A;
+	padding:10px 10px 10px 32px;
+	cursor:pointer;
+	overflow:hidden;
+}
+._image-add:hover{background-color:#e9edf1}
+._image-add form{display:inline-block}
+._image-add input{
+	position:absolute;
+	top:2px;
+	left:0;
+	width:63px;
+	overflow:hidden;
+	z-index:2;
+	opacity:0;
+	cursor:pointer;
+}
+._image-add .f2{left:62px}
+._image-add .f3{left:124px}
+._image-add ._busy{position:absolute;width:30px}
+._image-add iframe{display:none}
+._image-add.busy span,._image-add.busy form{visibility:hidden}
+._image-add:not(.busy) ._busy{display:none}
 
 /* Перелистывание годов */
 .years{margin:6px 0;background-color:#E8E8E8;height:25px;cursor:pointer}

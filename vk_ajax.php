@@ -231,4 +231,71 @@ switch(@$_POST['op']) {
 		)));
 		jsonSuccess($send);
 		break;
+
+	case 'file_add'://добавление изображения
+		/*
+		Коды ошибок:
+			0 - неизвестная ошибка (или некорректный owner)
+			1 - неверный формат файла
+			2 - слишком маленькое изображение
+		*/
+		if(empty($_POST['owner']) || !preg_match(REGEXP_WORD, $_POST['owner']))
+			_imageCookie(array('error'=>0));
+
+		$owner = trim($_POST['owner']);
+		$fileName = $owner.'-'._imageNameCreate();
+
+		ini_set('memory_limit', '120M');
+
+		$f = $_FILES['f1']['name'] ? $_FILES['f1'] :
+			($_FILES['f2']['name'] ? $_FILES['f2'] : $_FILES['f3']);
+		$im = null;
+		switch ($f['type']) {
+			case 'image/jpeg': $im = @imagecreatefromjpeg($f['tmp_name']); break;
+			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
+			case 'image/gif': $im = @imagecreatefromgif($f['tmp_name']); break;
+		}
+
+		if(!$im)
+			_imageCookie(array('error'=>1));
+
+		$x = imagesx($im);
+		$y = imagesy($im);
+		if($x < 100 || $y < 100)
+			_imageCookie(array('error'=>2));
+
+		$small = _imageImCreate($im, $x, $y, 80, 80, PATH.'files/images/'.$fileName.'-s.jpg');
+		$big = _imageImCreate($im, $x, $y, 610, 610, PATH.'files/images/'.$fileName.'-b.jpg');
+
+		$sort = query_value("SELECT COUNT(`id`) FROM `images` WHERE `owner`='".$owner."' LIMIT 1");
+		$link = '/files/images/'.$fileName;
+		$sql = "INSERT INTO `images` (
+				  `path`,
+				  `small_name`,
+				  `small_x`,
+				  `small_y`,
+				  `big_name`,
+				  `big_x`,
+				  `big_y`,
+				  `owner`,
+				  `sort`,
+				  `viewer_id_add`
+			  ) VALUES (
+				  '".addslashes(SITE.'/files/images/')."',
+				  '".$fileName."-s.jpg',
+				  ".$small['x'].",
+				  ".$small['y'].",
+				  '".$fileName."-b.jpg',
+				  ".$big['x'].",
+				  ".$big['y'].",
+				  '".$owner."',
+				  ".$sort.",
+				  ".VIEWER_ID."
+			  )";
+		query($sql);
+
+		_imageCookie(array(
+			'id' => mysql_insert_id(),
+			'link' => SITE.'/files/images/'.$fileName.'-s.jpg'
+		));
 }

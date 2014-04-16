@@ -41,8 +41,9 @@ var VK_SCROLL = 0,
 		11:'ноября',
 		12:'декабря'
 	},
-	URL = 'http://' + DOMAIN + '/index.php?' + VALUES,
-	AJAX_MAIN = 'http://' + DOMAIN + '/ajax/main.php?' + VALUES,
+	SITE = 'http://' + DOMAIN,
+	URL = SITE + '/index.php?' + VALUES,
+	AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
 	setCookie = function(name, value) {
 		var exdate = new Date();
 		exdate.setDate(exdate.getDate() + 1);
@@ -494,7 +495,7 @@ $.fn._check = function(o) {
 
 	var val = t.val() == 1 ? 1 : 0;
 	t.val(val);
-	t.wrap('<div class="_check check' + val + '" id="' + id + '_check">');
+	t.wrap('<div class="_check check' + val + (o.name ? '' : ' e') + '" id="' + id + '_check">');
 	t.after(o.name);
 	_click(o.func);
 
@@ -515,12 +516,12 @@ $.fn._radio = function(o) {
 		case 'string':
 			var p = t.parent();
 			if(p.hasClass('_radio')) {
-				p.find('div.on').attr('class', 'off');
+				p.find('.on').removeClass('on').addClass('off');
 				var div = p.find('div');
 				for(n = 0; n < div.length; n++) {
 					var eq = div.eq(n);
 					if(o == eq.attr('val')) {
-						eq.addClass('on');
+						eq.addClass('on').removeClass('off');
 						break;
 					}
 				}
@@ -531,14 +532,21 @@ $.fn._radio = function(o) {
 	}
 
 	o = $.extend({
+		title0:'',
 		spisok:[],
 		light:0,
 		func:function() {}
 	}, o);
 	var list = '',
-		val = t.val();
-	for(n = 0; n < o.spisok.length; n++) {
-		var sp = o.spisok[n],
+		val = t.val(),
+		spisok = [];
+
+	if(o.title0)
+		spisok = [{uid:0,title:o.title0}];
+	for(n = 0; n < o.spisok.length; n++)
+		spisok.push(o.spisok[n]);
+	for(n = 0; n < spisok.length; n++) {
+		var sp = spisok[n],
 			sel = val == sp.uid ? 'on' : 'off',
 			l = o.light ? ' l' : '';
 		list += '<div class="' + sel + l + '" val="' + sp.uid + '"><s></s>' + sp.title + '</div>';
@@ -556,18 +564,30 @@ $.fn._radio = function(o) {
 	return t;
 };
 $.fn._search = function(o) {
+	var t = $(this),
+		id = t.attr('id');
+
+	switch(typeof o) {
+		case 'number':
+		case 'string':
+			if(o == 'val')
+				return window[id + '_search'].inp();
+			if(o == 'clear')
+				window[id + '_search'].clear();
+			return t;
+	}
 	o = $.extend({
 		width:126,
 		focus:0,
 		txt:'',
-		func:function(){},
+		func:function() {},
 		enter:0
 	}, o);
-	var t = $(this),
-		html = '<div class="_search" style="width:' + o.width + 'px">' +
-			'<div class="img_del dn"></div>' +
-			'<div class="hold">' + o.txt + '</div>' +
-			'<input type="text" style="width:' + (o.width - 45) + 'px" />' +
+	var html =
+			'<div class="_search" style="width:' + o.width + 'px">' +
+				'<div class="img_del dn"></div>' +
+				'<div class="hold">' + o.txt + '</div>' +
+				'<input type="text" style="width:' + (o.width - 45) + 'px" />' +
 			'</div>';
 	t.html(html);
 	var _s = t.find('._search'),
@@ -587,13 +607,13 @@ $.fn._search = function(o) {
 			hold[(c ? 'add' : 'remove') + 'Class']('dn');
 			del[(c ? 'remove' : 'add') + 'Class']('dn');
 			if(!o.enter)
-				o.func(inp.val());
+				o.func(inp.val(), id);
 		});
 
 	if(o.enter)
 		inp.keydown(function(e) {
 			if(e.which == 13)
-				o.func($(this).val());
+				o.func($(this).val(), id);
 		});
 
 	t.clear = function() {
@@ -604,7 +624,7 @@ $.fn._search = function(o) {
 
 	del.click(function() {
 		t.clear();
-		o.func('');
+		o.func('', id);
 	});
 
 	_s.click(function() {
@@ -623,6 +643,12 @@ $.fn._search = function(o) {
 		hold.addClass('dn');
 		return $(this);
 	};
+	t.clear = function() {
+		inp.val('');
+		del.addClass('dn');
+		hold.removeClass('dn');
+	};
+	window[id + '_search'] = t;
 	return t;
 };
 $.fn._calendar = function(o) {
@@ -790,17 +816,20 @@ $.fn._calendar = function(o) {
 		daysPrint();
 	}
 };
-
 $.fn.years = function(obj) {// перелистывание годов
+	var t = $(this),
+		id = t.attr('id');
+
+	if(!id)
+		return;
+
 	obj = $.extend({
 		year:(new Date()).getFullYear(),
-		start:function () {},
-		func:function () {},
-		center:function () {}
+		start:function() {},
+		func:function() {},
+		center:function() {}
 	}, obj);
 
-	var t = $(this);
-	var id = t.attr('id');
 
 	var html =
 		'<div class="years" id="years_' + id + '">' +
@@ -848,7 +877,7 @@ $.fn.years = function(obj) {// перелистывание годов
 					span.html(obj.year);
 					y.left = y.width * side;
 					t.val(obj.year);
-					obj.func(obj.year);
+					obj.func(obj.year, id);
 				}
 			}, 25);
 		}
@@ -859,7 +888,6 @@ $.fn.years = function(obj) {// перелистывание годов
 	$('#years_' + id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
 	$('#years_' + id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
 };
-
 $.fn.keyEnter = function(func) {
 	$(this).keydown(function(e) {
 		if(e.keyCode == 13)
@@ -867,9 +895,11 @@ $.fn.keyEnter = function(func) {
 	});
 	return $(this);
 };
-
 $.fn.rightLink = function(o) {
-	var t = $(this), p, n;
+	var t = $(this),
+		id = t.attr('id'),
+		p,
+		n;
 	if(typeof o == 'number' || typeof o == 'string') {
 		p = t.parent();
 		if(p.hasClass('rightLink')) {
@@ -896,8 +926,7 @@ $.fn.rightLink = function(o) {
 		spisok:[],
 		func:function() {}
 	}, o);
-	var id = t.attr('id'),
-		list = '',
+	var list = '',
 		val = t.val();
 	for(n = 0; n < o.spisok.length; n++) {
 		var sp = o.spisok[n];
@@ -914,12 +943,11 @@ $.fn.rightLink = function(o) {
 			$(this).addClass('sel');
 			var v = $(this).attr('val');
 			t.val(v);
-			func(v);
+			func(v, id);
 		});
 	}
 	return t;
 };
-
 $.fn._dropdown = function(o) {
 	var t = $(this),
 		id = t.attr('id');
@@ -957,7 +985,7 @@ $.fn._dropdown = function(o) {
 	t.next().remove('._dropdown');
 	t.after(
 		'<div class="_dropdown" id="' + id + '_dropdown">' +
-			'<a class="ddhead' + (o.headgrey || o.title0 ? ' grey' : '') + '">' + head + '</a>' +
+			'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '</a>' +
 			'<div class="ddlist">' +
 				'<div class="ddsel">' + head + '</div>' +
 				spisok +
@@ -1257,7 +1285,6 @@ $.fn._select = function(o) {
 
 	switch(typeof o) {
 		default:
-		case 'undefined': return t;
 		case 'number':
 		case 'string':
 			s = window[id + '_select'];
@@ -1265,7 +1292,7 @@ $.fn._select = function(o) {
 				case 'process': s.process(); break;
 				case 'cancel': s.cancel(); break;
 				case 'title': return s.title();
-				case 'remove': t.next().remove('._select'); break;
+				case 'remove': $('#' + id + '_select').remove(); break;
 				default:
 					if(REGEXP_NUMERIC.test(o))
 						s.value(o);
@@ -1327,7 +1354,7 @@ $.fn._select = function(o) {
 		assHide = {},   //Ассоциативный массив с отображением в списке
 		multiCount = 0, //Количество выбранных мульти-значений
 		tag = /(<[\/]?[_a-zA-Z0-9=\"' ]*>)/i, // поиск всех тегов
-		keys = {38:1,40:1,13:1,27:1};
+		keys = {38:1,40:1,13:1,27:1,9:1};
 
 	assСreate();
 
@@ -1351,7 +1378,9 @@ $.fn._select = function(o) {
 
 	$(document)
 		.on('click', '#' + id + '_select .selug', hideOn)
-		.on('click', '#' + id + '_select .selsel', hideOn)
+		.on('click', '#' + id + '_select .selsel', function() {
+			inp.focus();
+		})
 		.on('click', '#' + id + '_select .selun', function() {
 			unitSel($(this));
 		})
@@ -1369,13 +1398,14 @@ $.fn._select = function(o) {
 		});
 
 
-	inp	.blur(function() {
-			if(o.write)
-				title0bg.css('color', '#888');
-		})
-		.focus(function() {
+	inp	.focus(function() {
+			hideOn();
 			if(o.write)
 				title0bg.css('color', '#ccc');
+		})
+		.blur(function() {
+			if(o.write)
+				title0bg.css('color', '#888');
 		})
 		.keyup(function(e) {
 			if(keys[e.keyCode])
@@ -1385,6 +1415,7 @@ $.fn._select = function(o) {
 				keyVal = inp.val();
 				o.funcKeyup(keyVal);
 				t.val(0);
+				val = 0;
 			}
 		});
 
@@ -1426,7 +1457,6 @@ $.fn._select = function(o) {
 				break;
 		switch(e.keyCode) {
 			case 38: //вверх
-				console.log('n=' + n + ', len=' + len);
 				if(n == len)
 					n = 1;
 				if(n > 0) {
@@ -1466,6 +1496,7 @@ $.fn._select = function(o) {
 				}
 				break;
 			case 27: //ESC
+			case 9: //Tab
 				inp.blur();
 				hideOff();
 		}
@@ -1569,7 +1600,7 @@ $.fn._select = function(o) {
 			assHide[v] = ch;
 			spisokPrint();
 			if(!o.title0 && v == 0 || v > 0)
-				inp.val('').focus();
+				inp.val('');
 		}
 		title0bg[multiCount ? 'hide' : 'show']();
 	}
@@ -1610,12 +1641,13 @@ $.fn._select = function(o) {
 	function hideOff() {
 		if(!inp.is(':focus')) {
 			select.removeClass('rs');
-			if(o.write && t.val() == 0) {
+			if(o.write && !val) {
 				if(inp.val()) {
 					inp.val('');
 					o.funcKeyup('');
 				}
-				title0bg.show();
+				setVal(0);
+				o.func(0, id);
 			}
 			$(document)
 				.off('click.' + id + '_select')
@@ -2097,6 +2129,35 @@ $(document)
 				});
 				$('#name').focus();
 				$('#pagehelp_txt').autosize();
+			}
+		});
+
+		$('._image-add input').change(function() {
+			var t = $(this),
+				timer,
+				form = t.parent(),
+				but = form.parent();
+			setCookie('_upload', 'process');
+			timer = setInterval(uploadStart, 500);
+			form.submit();
+			but.addClass('busy');
+
+			function uploadStart() {
+				var cookie = getCookie('_upload');
+				if(cookie != 'process') {
+					clearInterval(timer);
+					but.removeClass('busy');
+					var arr = cookie.split('_');
+					switch(arr[0]) {
+						case 'uploaded':
+							//var param = getCookie('fotoParam').split('_');
+							//uploaded(param[0].replace(/%3A/, ':').replace(/%2F/g, '/'), param[1], param[2]);
+							break;
+						case 'error':
+							//error_print(arr[1]);
+							break;
+					}
+				}
 			}
 		});
 

@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 	SA
 	VIEWER_ID
 	VIEWER_ADMIN
-	REGEXP_NUMERIC
+	SITE
+	VALUES
 */
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
@@ -63,13 +64,16 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
-define('VIEWER_MAX', 2147000001);
+define('AJAX_MAIN', SITE.'/ajax/main.php?'.VALUES);
 
-//Включает работу куков в IE через фрейм
-header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
+define('VIEWER_MAX', 2147000001);
+define('CRON_MAIL', 'mihan_k@mail.ru');
+
+if(!defined('CRON')) //Включает работу куков в IE через фрейм
+	header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 
 function _appAuth() {
-	if(LOCAL)
+	if(LOCAL || defined('CRON'))
 		return;
 	if(@$_GET['auth_key'] != md5(@$_GET['api_id']."_".VIEWER_ID."_".SECRET)) {
 		echo 'Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">http://vk.com/app'.API_ID.'</a>.';
@@ -90,7 +94,7 @@ function _dbConnect() {
 function query($sql) {
 	global $sqlQuery, $sqlCount, $sqlTime;
 	$t = microtime(true);
-	$res = mysql_query($sql) or die($sql);
+	$res = mysql_query($sql) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
 	$sqlTime += $t;
 	$t = round($t, 3);
@@ -137,7 +141,7 @@ function query_ids($sql) {//Список идентификаторов
 	return empty($send) ? 0 : implode(',', $send);
 }
 
-function _maxSql($table, $pole) {
+function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
 }//getMaxSql()
 
@@ -182,8 +186,8 @@ function _radio($id, $list, $value=0, $light=false) {
 	$spisok = '';
 	foreach($list as $uid => $title) {
 		$sel = $uid == $value ? 'on' : 'off';
-		$light = $light ? ' l' : '';
-		$spisok .= '<div class="'.$sel.$light.'" val="'.$uid.'"><s></s>'.$title.'</div>';
+		$l = $light ? ' l' : '';
+		$spisok .= '<div class="'.$sel.$l.'" val="'.$uid.'"><s></s>'.$title.'</div>';
 	}
 	return
 	'<div class="_radio" id="'.$id.'_radio">'.
@@ -234,8 +238,8 @@ function _tooltip($msg, $left=0, $ugolSide='') {
 		'</div>';
 }//_tooltip()
 
-function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
-function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
+function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251', $txt); }
+function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
 
 function _rightLink($id, $spisok, $val=0) {
@@ -261,8 +265,8 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 	$u['menu_left_set'] = 0;
 
 	// установил ли приложение
-	$app = $VKAPI->api('isAppUser', array('uid'=>$uid));
-	$u['app_setup'] = $app['response'];
+	//$app = $VKAPI->api('isAppUser', array('uid'=>$uid));
+	$u['app_setup'] = 0;//$app['response'];
 
 	// поместил ли в левое меню
 	//$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
@@ -344,6 +348,10 @@ function _viewer($id=VIEWER_ID, $val=false) {
 			$u = _vkUserUpdate($id);
 		$u['id'] = $u['viewer_id'];
 		$u['name'] = $u['first_name'].' '.$u['last_name'];
+		$u['name_init'] = $u['last_name'].
+						 ($u['first_name'] ? ' '.strtoupper($u['first_name'][0]).'.' : '');
+						 (!empty($u['middle_name']) ? ' '.strtoupper($u['middle_name'][0]).'.' : '');
+		$u['name_full'] = $u['last_name'].' '.$u['first_name'].(!empty($u['middle_name']) ? ' '.$u['middle_name'] : '');
 		$u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
 		$u['photo'] = '<img src="'.$u['photo'].'">';
 		$u['viewer_name'] = $u['name'];
@@ -503,8 +511,12 @@ function _monthDef($n=0, $firstUp=false) {
 		11 => 'ноябрь',
 		12 => 'декабрь'
 	);
-	if(!$n)
+	if(!$n) {
+		if($firstUp)
+			foreach($mon as $k => $m)
+				$mon[$k][0] = strtoupper($m);
 		return $mon;
+	}
 	$send = $mon[intval($n)];
 	if($firstUp)
 		$send[0] = strtoupper($send[0]);
@@ -582,6 +594,8 @@ function _curSunday() { //Воскресенье в текущей неделе
 
 function _engRusChar($word) { //Перевод символов раскладки с английского на русский
 	$char = array(
+		'`' => 'ё',
+		'ё' => 'е',
 		'q' => 'й',
 		'w' => 'ц',
 		'e' => 'у',
@@ -593,7 +607,9 @@ function _engRusChar($word) { //Перевод символов раскладки с английского на русс
 		'o' => 'щ',
 		'p' => 'з',
 		'[' => 'х',
+		'{' => 'х',
 		']' => 'ъ',
+		'}' => 'ъ',
 		'a' => 'ф',
 		's' => 'ы',
 		'd' => 'в',
@@ -845,3 +861,84 @@ function _calendarWeek($day=0) {// Формирование периода за неделю недели
 
 	return $start.':'.$end;
 }//_calendarPeriod()
+
+function _imageAdd($v=array()) {
+	$v = array(
+		'txt' => empty($v['txt']) ? 'Добавить изображение' : $v['txt'],
+		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner']
+	);
+	return
+		'<div class="_image-spisok">'.
+			'<a><img src="http://kupez/files/images/982006-xoip1m97r3-s.jpg" /></a>'.
+			'<a><img src="http://kupez/files/images/982006-699yxtrusu-s.jpg" /></a>'.
+			'<a><img src="http://kupez/files/images/982006-h3b2p6lmb2-s.jpg" /></a>'.
+			'<a><img src="http://kupez/files/images/982006-2ygz7mp5hz-s.jpg" /></a>'.
+		'</div>'.
+		'<div class="_image-add">'.
+			'<div class="_busy">&nbsp;</div>'.
+			'<form method="post" action="'.AJAX_MAIN.'" enctype="multipart/form-data" target="_image-frame">'.
+				'<input type="file" name="f1" />'.
+				'<input type="file" name="f2" class="f2" />'.
+				'<input type="file" name="f3" class="f3" />'.
+				'<input type="hidden" name="op" value="file_add" />'.
+				'<input type="hidden" name="owner" value="'.$v['owner'].'" />'.
+			'</form>'.
+			'<span>'.$v['txt'].'</span>'.
+			'<iframe name="_image-frame"></iframe>'.
+		'</div>';
+}//_imageAdd()
+function _imageCookie($v) {//Установка cookie после загрузки изображения и выход
+	if(isset($v['error']))
+		$cookie = 'error_'.$v['error'];
+	else {
+		$cookie = 'uploaded_';
+		setcookie('_param', $v['link'], time() + 3600, '/');
+	}
+	setcookie('_upload', $cookie, time() + 3600, '/');
+	exit;
+}//_imageCookie()
+function _imageNameCreate() {
+	$arr = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0');
+	$name = '';
+	for($i = 0; $i < 10; $i++)
+		$name .= $arr[rand(0,35)];
+	return $name;
+}//_imageNameCreate()
+function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изображения с сохранением пропорций
+	$x = $x_new;
+	$y = $y_new;
+	// если ширина больше или равна высоте
+	if ($x_cur >= $y_cur) {
+		if ($x > $x_cur) { $x = $x_cur; } // если новая ширина больше, чем исходная, то X остаётся исходным
+		$y = round($y_cur / $x_cur * $x);
+		if ($y > $y_new) { // если новая высота в итоге осталась меньше исходной, то подравнивание по Y
+			$y = $y_new;
+			$x = round($x_cur / $y_cur * $y);
+		}
+	}
+
+	// если выстоа больше ширины
+	if ($y_cur > $x_cur) {
+		if ($y > $y_cur) { $y = $y_cur; } // если новая высота больше, чем исходная, то Y остаётся исходным
+		$x = round($x_cur / $y_cur * $y);
+		if ($x > $x_new) { // если новая ширина в итоге осталась меньше исходной, то подравнивание по X
+			$x = $x_new;
+			$y = round($y_cur / $x_cur * $x);
+		}
+	}
+
+	return array(
+		'x' => $x,
+		'y' => $y
+	);
+}//_imageResize()
+function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие изображения
+	$send = _imageResize($x_cur, $y_cur, $x_new, $y_new);
+
+	$im_new = imagecreatetruecolor($send['x'], $send['y']);
+	imagecopyresampled($im_new, $im, 0, 0, 0, 0, $send['x'], $send['y'], $x_cur, $y_cur);
+	imagejpeg($im_new, $name, 80);
+	imagedestroy($im_new);
+
+	return $send;
+}//_imageImCreate()
