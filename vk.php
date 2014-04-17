@@ -865,15 +865,19 @@ function _calendarWeek($day=0) {// ‘ормирование периода за неделю недели
 function _imageAdd($v=array()) {
 	$v = array(
 		'txt' => empty($v['txt']) ? 'ƒобавить изображение' : $v['txt'],
-		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner']
+		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner'],
+		'max' => empty($v['max']) || !preg_match(REGEXP_NUMERIC, $v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
 	);
 	return
 		'<div class="_image-spisok">'.
-			'<a><img src="http://kupez/files/images/982006-xoip1m97r3-s.jpg" /></a>'.
-			'<a><img src="http://kupez/files/images/982006-699yxtrusu-s.jpg" /></a>'.
-			'<a><img src="http://kupez/files/images/982006-h3b2p6lmb2-s.jpg" /></a>'.
-			'<a><img src="http://kupez/files/images/982006-2ygz7mp5hz-s.jpg" /></a>'.
+			'<a><div class="del'._tooltip('”далить', -29).'</div>'.
+				'<img src="http://kupez/files/images/982006-h3b2p6lmb2-s.jpg" />'.
+			'</a>'.
+			'<a><div class="del"></div>'.
+				'<img src="http://kupez/files/images/982006-9rnppll1ak-s.jpg" />'.
+			'</a>'.
 		'</div>'.
+		'<div class="_image-error">ѕревышено количество загружаемых изображений</div>'.
 		'<div class="_image-add">'.
 			'<div class="_busy">&nbsp;</div>'.
 			'<form method="post" action="'.AJAX_MAIN.'" enctype="multipart/form-data" target="_image-frame">'.
@@ -882,6 +886,7 @@ function _imageAdd($v=array()) {
 				'<input type="file" name="f3" class="f3" />'.
 				'<input type="hidden" name="op" value="file_add" />'.
 				'<input type="hidden" name="owner" value="'.$v['owner'].'" />'.
+				'<input type="hidden" name="max" value="'.$v['max'].'" />'.
 			'</form>'.
 			'<span>'.$v['txt'].'</span>'.
 			'<iframe name="_image-frame"></iframe>'.
@@ -892,7 +897,7 @@ function _imageCookie($v) {//”становка cookie после загрузки изображени€ и выход
 		$cookie = 'error_'.$v['error'];
 	else {
 		$cookie = 'uploaded_';
-		setcookie('_param', $v['link'], time() + 3600, '/');
+		setcookie('_param', $v['link'].'_'.$v['id'].'_'.$v['max'], time() + 3600, '/');
 	}
 	setcookie('_upload', $cookie, time() + 3600, '/');
 	exit;

@@ -238,11 +238,15 @@ switch(@$_POST['op']) {
 			0 - неизвестная ошибка (или некорректный owner)
 			1 - неверный формат файла
 			2 - слишком маленькое изображение
+			3 - превышено количество закружаемых изображений
 		*/
 		if(empty($_POST['owner']) || !preg_match(REGEXP_WORD, $_POST['owner']))
 			_imageCookie(array('error'=>0));
+		if(empty($_POST['max']) || !preg_match(REGEXP_NUMERIC, $_POST['max']))
+			_imageCookie(array('error'=>0));
 
 		$owner = trim($_POST['owner']);
+		$max = intval($_POST['max']);
 		$fileName = $owner.'-'._imageNameCreate();
 
 		ini_set('memory_limit', '120M');
@@ -267,7 +271,10 @@ switch(@$_POST['op']) {
 		$small = _imageImCreate($im, $x, $y, 80, 80, PATH.'files/images/'.$fileName.'-s.jpg');
 		$big = _imageImCreate($im, $x, $y, 610, 610, PATH.'files/images/'.$fileName.'-b.jpg');
 
-		$sort = query_value("SELECT COUNT(`id`) FROM `images` WHERE `owner`='".$owner."' LIMIT 1");
+		$sort = query_value("SELECT COUNT(`id`) FROM `images` WHERE !`deleted` AND `owner`='".$owner."' LIMIT 1");
+		if($sort + 1 > $max)
+			_imageCookie(array('error'=>3));
+
 		$link = '/files/images/'.$fileName;
 		$sql = "INSERT INTO `images` (
 				  `path`,
@@ -296,6 +303,7 @@ switch(@$_POST['op']) {
 
 		_imageCookie(array(
 			'id' => mysql_insert_id(),
-			'link' => SITE.'/files/images/'.$fileName.'-s.jpg'
+			'link' => SITE.'/files/images/'.$fileName.'-s.jpg',
+			'max' => $sort + 2 > $max ? 1 : 0
 		));
 }

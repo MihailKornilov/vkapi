@@ -2150,11 +2150,25 @@ $(document)
 					var arr = cookie.split('_');
 					switch(arr[0]) {
 						case 'uploaded':
-							//var param = getCookie('fotoParam').split('_');
-							//uploaded(param[0].replace(/%3A/, ':').replace(/%2F/g, '/'), param[1], param[2]);
+							var param = getCookie('_param').split('_');
+							if(param[2] == 1)
+								$('._image-add').addClass('dn');
+							$('._image-spisok').append('<a><img src="' + param[0].replace(/%3A/, ':').replace(/%2F/g, '/') + '" /></a>');
 							break;
 						case 'error':
-							//error_print(arr[1]);
+							var msg;
+							switch(arr[1]) {
+								default:
+								case '0': msg = 'Неизвестная ошибка'; break;
+								case '1': msg = 'Неверный формат файла'; break;
+								case '2': msg = 'Слишком маленькое изображение'; break;
+								case '3': msg = 'Превышено количество закружаемых изображений'; break;
+							}
+							$('._image-error')
+								.html(msg)
+								.show()
+								.delay(1000)
+								.fadeOut(2000);
 							break;
 					}
 				}

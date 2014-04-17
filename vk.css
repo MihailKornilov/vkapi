@@ -229,7 +229,6 @@ td.r{text-align:right}
 
 
 
-.dn{display:none}
 
 /* Кнопка создания */
 #buttonCreate{border:#39659C solid 1px}
@@ -770,8 +769,20 @@ td.r{text-align:right}
 
 
 ._image-spisok{width:345px}
-._image-spisok a{display:inline-block;margin:0 5px 5px 0}
-
+._image-spisok a{position:relative;display:inline-block;margin:0 5px 5px 0}
+._image-spisok a:not(:hover) .del{display:none}
+._image-spisok .del{
+	position:absolute;
+	right:0;
+	display:inline-block;
+	width:13px;
+	height:13px;
+	border-radius:3px;
+	background:#000 3px 3px url(http://kupez/img/image_del.gif) no-repeat;
+	opacity:.5;
+}
+._image-spisok .del:hover{background-position:3px -10px}
+._image-error{display:none;margin:5px 0;color:red}
 ._image-add{
 	display:inline-block;
 	position:relative;
@@ -973,3 +984,6 @@ td.r{text-align:right}
 }
 ._tooltip .ttug.r{background-position:right 0}
 ._tooltip .ttug.l{background-position:left 0}
+
+
+.dn{display:none}
