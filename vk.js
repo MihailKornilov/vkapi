@@ -1983,6 +1983,147 @@ $(document)
 		}, 'json');
 	})
 
+	.on('change', '._image-add input', function() {
+		var t = $(this),
+			timer,
+			form = t.parent(),
+			but = form.parent();
+		setCookie('_upload', 'process');
+		timer = setInterval(uploadStart, 500);
+		form.submit();
+		but.addClass('busy');
+
+		function uploadStart() {
+			var cookie = getCookie('_upload');
+			if(cookie != 'process') {
+				clearInterval(timer);
+				but.removeClass('busy');
+				form.find('input[type=file]').remove();
+				form.append('<input type="file" name="f1" />' +
+					'<input type="file" name="f2" class="f2" />' +
+					'<input type="file" name="f3" class="f3" />');
+				var arr = cookie.split('_');
+				switch(arr[0]) {
+					case 'uploaded':
+						var param = getCookie('_param').split('_');
+						if(param[2] == 1)
+							$('._image-add').addClass('dn');
+						$('._image-spisok')
+							.append('<a class="_iview" val="' + param[1] + '">' +
+										'<div class="del' + _tooltip('Удалить', -29) + '<em></em></div>' +
+										'<img src="' + param[0].replace(/%3A/, ':').replace(/%2F/g, '/') + '" />' +
+									'</a>')
+							.find('.del:last').click(del);
+						break;
+					case 'error':
+						var msg;
+						switch(arr[1]) {
+							default:
+							case '0': msg = 'Неизвестная ошибка'; break;
+							case '1': msg = 'Неверный формат файла'; break;
+							case '2': msg = 'Слишком маленькое изображение'; break;
+							case '3': msg = 'Превышено количество закружаемых изображений'; break;
+						}
+						$('._image-error')
+							.html(msg)
+							.show()
+							.delay(1000)
+							.fadeOut(2000);
+						break;
+				}
+			}
+		}
+		function del(e) {
+			e.stopPropagation();
+			var t = $(this);
+			while(t[0].tagName != 'A')
+				t = t.parent();
+			if(t.hasClass('deleting'))
+				return;
+			t.addClass('deleting');
+			var send = {
+				op:'image_del',
+				id:t.attr('val')
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success)
+					t.remove();
+				else
+					t.removeClass('deleting');
+			}, 'json');
+
+		}
+	})
+	.on('click', '._iview', function() {
+		$('#_image-view').remove();
+		var t = $(this),
+			id = t.attr('val');
+		if(t[0].tagName != 'IMG')
+			t = t.find('img');
+		var html = '<div id="_image-view">' +
+					'<div class="head"><em class="_busy">&nbsp;</em><a>Закрыть</a></div>' +
+					'<table class="image"><tr><td><img src="' + t.attr('src').replace('-s.', '-b.') + '"></table>' +
+					'<div class="about"><div class="dtime"></div></div>' +
+					'<div class="hide"></div>' +
+				'</div>';
+		FB.append(html);
+
+		var iv = $('#_image-view'),
+			spisok = [],
+			num = 1;
+		iHeightSet();
+		iv.find('.head a').click(iclose);
+		iv.find('img:first').on('load', iHeightSet);
+		var send = {
+			op:'image_view',
+			id:id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			iv.find('._busy').removeClass('_busy');
+			if(res.success) {
+				spisok = res.img;
+				num = res.n;
+				ishow();
+				iclick();
+			}
+		}, 'json');
+
+		function ishow() {
+			var len = spisok.length,
+				numNext = num + 1 >= len ? 0 : num + 1,
+				img = spisok[num];
+			iv.find('.head em').html(len > 1 ? 'Фотография ' + (num + 1) + ' из ' + len : 'Просмотр фотографии');
+			iv.find('.dtime').html('Добавлена ' + img.dtime);
+			iv.find('.image img')
+				.attr('src', img.link)
+				.attr('width', img.x)
+				.attr('height', img.y)
+				.on('load', iHeightSet);
+			iv.find('.hide').html('<img src="' + spisok[numNext].link + '">');
+		}
+		function iclick() {
+			iv.find('.image').on('click', function() {
+				var len = spisok.length;
+				if(len == 1)
+					iclose();
+				else {
+					num++;
+					if(num >= len)
+						num = 0;
+					ishow();
+				}
+			});
+		}
+		function iclose() {
+			iv.remove();
+			FOTO_HEIGHT = 0;
+			_fbhs();
+		}
+		function iHeightSet() {
+			FOTO_HEIGHT = iv.height();
+			_fbhs();
+		}
+	})
 
 	.ready(function() {
 		VK.callMethod('scrollWindow', 0);
@@ -2132,46 +2273,17 @@ $(document)
 			}
 		});
 
-		$('._image-add input').change(function() {
-			var t = $(this),
-				timer,
-				form = t.parent(),
-				but = form.parent();
-			setCookie('_upload', 'process');
-			timer = setInterval(uploadStart, 500);
-			form.submit();
-			but.addClass('busy');
-
-			function uploadStart() {
-				var cookie = getCookie('_upload');
-				if(cookie != 'process') {
-					clearInterval(timer);
-					but.removeClass('busy');
-					var arr = cookie.split('_');
-					switch(arr[0]) {
-						case 'uploaded':
-							var param = getCookie('_param').split('_');
-							if(param[2] == 1)
-								$('._image-add').addClass('dn');
-							$('._image-spisok').append('<a><img src="' + param[0].replace(/%3A/, ':').replace(/%2F/g, '/') + '" /></a>');
-							break;
-						case 'error':
-							var msg;
-							switch(arr[1]) {
-								default:
-								case '0': msg = 'Неизвестная ошибка'; break;
-								case '1': msg = 'Неверный формат файла'; break;
-								case '2': msg = 'Слишком маленькое изображение'; break;
-								case '3': msg = 'Превышено количество закружаемых изображений'; break;
-							}
-							$('._image-error')
-								.html(msg)
-								.show()
-								.delay(1000)
-								.fadeOut(2000);
-							break;
-					}
-				}
+		$('._image-spisok').sortable({
+			update:function () {
+				var a = $(this).find('a'),
+					arr = [];
+				for(var n = 0; n < a.length; n++)
+					arr.push(a.eq(n).attr('val'));
+				var send = {
+					op:'image_sort',
+					ids:arr.join()
+				};
+				$.post(AJAX_MAIN, send, function() {}, 'json');
 			}
 		});
 

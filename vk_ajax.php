@@ -232,7 +232,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'file_add'://добавление изображени€
+	case 'image_add'://добавление изображени€
 		/*
 		 оды ошибок:
 			0 - неизвестна€ ошибка (или некорректный owner)
@@ -306,4 +306,54 @@ switch(@$_POST['op']) {
 			'link' => SITE.'/files/images/'.$fileName.'-s.jpg',
 			'max' => $sort + 2 > $max ? 1 : 0
 		));
+		break;
+	case 'image_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+			jsonError();
+		$id = intval($_POST['id']);
+		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `viewer_id_add`=".VIEWER_ID." AND `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+		query("UPDATE `images` SET `deleted`=1 WHERE `id`=".$id);
+		jsonSuccess();
+		break;
+	case 'image_sort':
+		if(empty($_POST['ids']))
+			jsonError();
+
+		$sort = explode(',', $_POST['ids']);
+		foreach($sort as $id)
+			if(!preg_match(REGEXP_NUMERIC, $id))
+				jsonError();
+
+		foreach($sort as $n => $id)
+			query("UPDATE `images` SET `sort`=".$n." WHERE `id`=".$id);
+
+		jsonSuccess();
+		break;
+	case 'image_view':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+			jsonError();
+		$id = intval($_POST['id']);
+		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `id`=".$id;
+		if(!$im = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$n = 0; //определение пор€дкового номера просматриваемого изображени€
+		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$im['owner']."' ORDER BY `sort`";
+		$q = query($sql);
+		$send['img'] = array();
+		while($r = mysql_fetch_assoc($q)) {
+			if($r['id'] == $im['id'])
+				$send['n'] = $n;
+			$send['img'][] = array(
+				'link' => $r['path'].$r['big_name'],
+				'x' => $r['big_x'],
+				'y' => $r['big_y'],
+				'dtime' => utf8(FullData($r['dtime_add'], 1))
+			);
+			$n++;
+		}
+		jsonSuccess($send);
+		break;
 }

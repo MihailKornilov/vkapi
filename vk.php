@@ -869,22 +869,20 @@ function _imageAdd($v=array()) {
 		'max' => empty($v['max']) || !preg_match(REGEXP_NUMERIC, $v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
 	);
 	return
-		'<div class="_image-spisok">'.
-			'<a><div class="del'._tooltip('”далить', -29).'</div>'.
-				'<img src="http://kupez/files/images/982006-h3b2p6lmb2-s.jpg" />'.
+		'<dl class="_image-spisok">'.
+/*			'<a class="_iview" val="70">'.
+				'<div class="del'._tooltip('”далить', -29).'<em></em></div>'.
+				'<img src="http://kupez/files/images/982006-pcwxyqfikn-s.jpg" />'.
 			'</a>'.
-			'<a><div class="del"></div>'.
-				'<img src="http://kupez/files/images/982006-9rnppll1ak-s.jpg" />'.
-			'</a>'.
-		'</div>'.
-		'<div class="_image-error">ѕревышено количество загружаемых изображений</div>'.
+*/		'</dl>'.
+		'<div class="_image-error"></div>'.
 		'<div class="_image-add">'.
 			'<div class="_busy">&nbsp;</div>'.
 			'<form method="post" action="'.AJAX_MAIN.'" enctype="multipart/form-data" target="_image-frame">'.
 				'<input type="file" name="f1" />'.
 				'<input type="file" name="f2" class="f2" />'.
 				'<input type="file" name="f3" class="f3" />'.
-				'<input type="hidden" name="op" value="file_add" />'.
+				'<input type="hidden" name="op" value="image_add" />'.
 				'<input type="hidden" name="owner" value="'.$v['owner'].'" />'.
 				'<input type="hidden" name="max" value="'.$v['max'].'" />'.
 			'</form>'.
