@@ -869,12 +869,7 @@ function _imageAdd($v=array()) {
 		'max' => empty($v['max']) || !preg_match(REGEXP_NUMERIC, $v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
 	);
 	return
-		'<dl class="_image-spisok">'.
-/*			'<a class="_iview" val="70">'.
-				'<div class="del'._tooltip('Удалить', -29).'<em></em></div>'.
-				'<img src="http://kupez/files/images/982006-pcwxyqfikn-s.jpg" />'.
-			'</a>'.
-*/		'</dl>'.
+		'<div class="_image-spisok">'._imageSpisok($v['owner']).'</div>'.
 		'<div class="_image-error"></div>'.
 		'<div class="_image-add">'.
 			'<div class="_busy">&nbsp;</div>'.
@@ -890,6 +885,19 @@ function _imageAdd($v=array()) {
 			'<iframe name="_image-frame"></iframe>'.
 		'</div>';
 }//_imageAdd()
+function _imageSpisok($owner) {
+	if(!$owner)
+		return '';
+	$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$owner."' ORDER BY `sort`";
+	$q = query($sql);
+	$send = '';
+	while($r = mysql_fetch_assoc($q))
+		$send .= '<a class="_iview" val="'.$r['id'].'">'.
+					'<div class="del'._tooltip('Удалить', -29).'<em></em></div>'.
+					'<img src="'.$r['path'].$r['small_name'].'" />'.
+				'</a>';
+	return $send;
+}
 function _imageCookie($v) {//Установка cookie после загрузки изображения и выход
 	if(isset($v['error']))
 		$cookie = 'error_'.$v['error'];

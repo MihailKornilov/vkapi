@@ -83,6 +83,21 @@ var VK_SCROLL = 0,
 			}
 		});
 	},
+	imageSortable = function() {
+		$('._image-spisok').sortable({
+			update:function () {
+				var a = $(this).find('a'),
+					arr = [];
+				for(var n = 0; n < a.length; n++)
+					arr.push(a.eq(n).attr('val'));
+				var send = {
+					op:'image_sort',
+					ids:arr.join()
+				};
+				$.post(AJAX_MAIN, send);
+			}
+		});
+	},
 	_end = function(count, arr) {
 		if(arr.length == 2)
 			arr.push(arr[1]);
@@ -2057,7 +2072,8 @@ $(document)
 	.on('click', '._iview', function() {
 		$('#_image-view').remove();
 		var t = $(this),
-			id = t.attr('val');
+			id = t.attr('val'),
+			scroll = VK_SCROLL;
 		if(t[0].tagName != 'IMG')
 			t = t.find('img');
 		var html = '<div id="_image-view">' +
@@ -2118,6 +2134,7 @@ $(document)
 			iv.remove();
 			FOTO_HEIGHT = 0;
 			_fbhs();
+			VK.callMethod('scrollWindow', scroll);
 		}
 		function iHeightSet() {
 			FOTO_HEIGHT = iv.height();
@@ -2273,19 +2290,7 @@ $(document)
 			}
 		});
 
-		$('._image-spisok').sortable({
-			update:function () {
-				var a = $(this).find('a'),
-					arr = [];
-				for(var n = 0; n < a.length; n++)
-					arr.push(a.eq(n).attr('val'));
-				var send = {
-					op:'image_sort',
-					ids:arr.join()
-				};
-				$.post(AJAX_MAIN, send, function() {}, 'json');
-			}
-		});
+		imageSortable();
 
 		window.frameHidden.onresize = _fbhs;
 

@@ -779,7 +779,7 @@ td.r{text-align:right}
 	width:13px;
 	height:13px;
 	border-radius:3px;
-	background:#000 3px 3px url(http://kupez/img/image_del.gif) no-repeat;
+	background:#000 3px 3px no-repeat url("data:image/gif;base64,R0lGODlhBwAUAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHABQAAAMfKEKsTs8pBmeTdcl1qf9gKI5BQJUokaLl2TKsubJuAgA7");
 	opacity:.5;
 }
 ._image-spisok .del em:hover{background-position:3px -10px}
