@@ -1,7 +1,3 @@
-/* Необходимо предварительно указывать:
- - DOMAIN для fotoUpload
- - IMAGE_UPLOAD_PATH для fotoUpload
-*/
 var VK_SCROLL = 0,
 	ZINDEX = 0,
 	BC = 0,
@@ -2027,8 +2023,7 @@ $(document)
 							.append('<a class="_iview" val="' + param[1] + '">' +
 										'<div class="del' + _tooltip('Удалить', -29) + '<em></em></div>' +
 										'<img src="' + param[0].replace(/%3A/, ':').replace(/%2F/g, '/') + '" />' +
-									'</a>')
-							.find('.del:last').click(del);
+									'</a>');
 						break;
 					case 'error':
 						var msg;
@@ -2037,7 +2032,7 @@ $(document)
 							case '0': msg = 'Неизвестная ошибка'; break;
 							case '1': msg = 'Неверный формат файла'; break;
 							case '2': msg = 'Слишком маленькое изображение'; break;
-							case '3': msg = 'Превышено количество закружаемых изображений'; break;
+							case '3': msg = 'Превышено количество загружаемых изображений'; break;
 						}
 						$('._image-error')
 							.html(msg)
@@ -2048,26 +2043,26 @@ $(document)
 				}
 			}
 		}
-		function del(e) {
-			e.stopPropagation();
-			var t = $(this);
-			while(t[0].tagName != 'A')
-				t = t.parent();
-			if(t.hasClass('deleting'))
-				return;
-			t.addClass('deleting');
-			var send = {
-				op:'image_del',
-				id:t.attr('val')
-			};
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success)
-					t.remove();
-				else
-					t.removeClass('deleting');
-			}, 'json');
-
-		}
+	})
+	.on('click', '._image-spisok .del', function(e) {
+		e.stopPropagation();
+		var t = $(this);
+		while(t[0].tagName != 'A')
+			t = t.parent();
+		if(t.hasClass('deleting'))
+			return;
+		t.addClass('deleting');
+		var send = {
+			op:'image_del',
+			id:t.attr('val')
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				t.remove();
+				$('._image-add').removeClass('dn');
+			} else
+				t.removeClass('deleting');
+		}, 'json');
 	})
 	.on('click', '._iview', function() {
 		$('#_image-view').remove();

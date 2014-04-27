@@ -483,6 +483,8 @@ td.r{text-align:right}
 .rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
 .rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
 .rightLink a.sel img{float:right;margin-top:3px}
+.rightLink a.off{color:#888}
+.rightLink a.off:hover{border:#eee solid 1px;background:#eee}
 
 /* Дополнительное меню */
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}

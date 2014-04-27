@@ -240,6 +240,7 @@ switch(@$_POST['op']) {
 			2 - слишком маленькое изображение
 			3 - превышено количество закружаемых изображений
 		*/
+
 		if(empty($_POST['owner']) || !preg_match(REGEXP_WORD, $_POST['owner']))
 			_imageCookie(array('error'=>0));
 		if(empty($_POST['max']) || !preg_match(REGEXP_NUMERIC, $_POST['max']))
@@ -249,8 +250,6 @@ switch(@$_POST['op']) {
 		$max = intval($_POST['max']);
 		$fileName = $owner.'-'._imageNameCreate();
 
-		ini_set('memory_limit', '120M');
-
 		$f = $_FILES['f1']['name'] ? $_FILES['f1'] :
 			($_FILES['f2']['name'] ? $_FILES['f2'] : $_FILES['f3']);
 		$im = null;
@@ -258,6 +257,17 @@ switch(@$_POST['op']) {
 			case 'image/jpeg': $im = @imagecreatefromjpeg($f['tmp_name']); break;
 			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
 			case 'image/gif': $im = @imagecreatefromgif($f['tmp_name']); break;
+			case 'image/tiff':
+				$tmp = PATH.'files/tmp'.VIEWER_ID.'.jpg';
+				$image = NewMagickWand(); // magickwand.org
+				MagickReadImage($image, $f['tmp_name']);
+				MagickSetImageFormat($image, 'jpg');
+				MagickWriteImage($image, $tmp); //Сохраняем результат
+				ClearMagickWand($image); //Удаляем и выгружаем полученное изображение из памяти
+				DestroyMagickWand($image);
+				$im = @imagecreatefromjpeg($tmp);
+				unlink($tmp);
+				break;
 		}
 
 		if(!$im)
