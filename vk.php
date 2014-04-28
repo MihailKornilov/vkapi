@@ -953,3 +953,55 @@ function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие из
 
 	return $send;
 }//_imageImCreate()
+function _imageGet($v) {
+	$v = array(
+		'owner' => $v['owner'],
+		'size' => isset($v['size']) ? $v['size'] : 's',
+		'x' => isset($v['x']) ? $v['x'] : 10000,
+		'y' => isset($v['y']) ? $v['y'] : 10000,
+		'view' => isset($v['view']),
+		'class' => isset($v['class']) ? $v['class'] : ''
+	);
+
+	$ownerArray = is_array($v['owner']);
+	if(!$ownerArray)
+		$v['owner'] = array($v['owner']);
+
+	$v['owner'] = array_unique($v['owner']);
+	$owner = array();
+	foreach($v['owner'] as $val)
+		$owner[] = preg_replace('/(\w+)/', '"$1"', $val, 1);
+
+	$size = $v['size'] == 's' ? 'small' : 'big';
+	$sql = "SELECT *
+			FROM `images`
+			WHERE !`deleted`
+			  AND !`sort`
+			  AND `owner` IN (".implode(',', $owner).")";
+	$q = query($sql);
+	$img = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$s = 0;
+		if($v['x'] != 10000 || $v['y'] != 10000)
+			$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $v['x'], $v['y']);
+		$img[$r['owner']] = array(
+			'id' => $r['id'],
+			'img' => '<img src="'.$r['path'].$r[$size.'_name'].'" '.
+						($v['view'] ? 'class="_iview" val="'.$r['id'].'" ' : '').
+						($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').
+					 '/>'
+		);
+	}
+	foreach($v['owner'] as $val)
+		if(empty($img[$val]))
+			$img[$val] = array(
+				'id' => 0,
+				'img' => '<img src="/img/nofoto-'.$v['size'].'.gif">'
+			);
+
+	if($ownerArray)
+		return $img;
+
+	$img = array_shift($img);
+	return $img['img'];
+}//_imageGet()

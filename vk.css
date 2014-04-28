@@ -712,63 +712,6 @@ td.r{text-align:right}
 
 
 
-/* Просмотр изображений */
-.fotoView{cursor:pointer}
-#foto_view{position:absolute;top:0;left:0;width:625px;background:#fff;z-index:1000}
-#foto_view .head em{display:inline-block;margin:11px 20px;color:#45688e;font-weight:bold}
-#foto_view .head a {float:right;display:block;padding:12px 25px}
-#foto_view .image{width:100%;min-height:400px;cursor:pointer}
-#foto_view .image td{text-align:center;vertical-align:middle}
-#foto_view .about{padding:20px 0}
-#foto_view .dtime{color:#777;margin-left:20px}
-#foto_view .hide{display:none}
-
-
-/* Загрузка и просмотр изображений */
-#fotoUpload .info{background-color:#f6f7f9;border:#dbe0ea 1px solid;padding:10px;margin-bottom:15px}
-#fotoUpload .about{color:#31618C;font-size:12px;font-weight:bold;margin:25px 0 2px 0}
-#fotoUpload #choose_file{
-	background:#eff1f3 url("data:image/gif;base64,R0lGODlhGgAWALMAAAAAAP///6OzxqKyxaGxxKCww6CxxKOzxaW1x6S0xqO0xqKzxaGyxKCxw////wAAACH5BAEAAA4ALAAAAAAaABYAAAQ+0Mkpkb2Y6o373ZwnWuBodtOpfmurhu5XxkgqO7Gd4W4l+isgihckDnvGXS5ZY550TedzRiNBq9gsSruTIiMAOw==") no-repeat 110px center;
-	padding-left:145px;
-	margin-bottom:30px;
-	line-height:44px;
-	color:#738392;
-	font-size:12px;
-}
-#fotoUpload #choose_file.no_msie:hover{background-color:#e9edf1;cursor:pointer}
-#fotoUpload form{
-	position:absolute;
-	margin:11px 0 0 110px;
-	height:22px;
-	width:63px;
-	overflow:hidden;
-	z-index:2;
-	opacity:0;
-}
-#fotoUpload #file_name{
-	position:relative;
-	width:178px;
-	left:-115px;
-	cursor:pointer;
-}
-#fotoUpload iframe{display:none}
-#fotoUpload #error_msg{
-	border:#e6a393 solid 1px;
-	background-color:#fdefea;
-	padding:10px;
-	text-align:center;
-	color:#533;
-}
-#fotoUpload #direct_input{width:242px}
-#fotoUpload #direct a{margin-left:5px;display:inline-block;padding:4px 12px}
-#fotoUpload #direct a:hover{background-color:#e9edf1;text-decoration:none}
-#fotoUpload #direct a.busy span{visibility:hidden}
-#fotoUpload .webcam{margin:30px 0 10px 0}
-/* настройки камеры */
-#webcam{padding:0;background-color:#B3B3B3}
-#webcam #screen{height:457px}
-
-
 
 ._image-spisok{width:345px}
 ._image-spisok a{position:relative;display:inline-block;margin:0 5px 5px 0}
