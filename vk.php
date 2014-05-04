@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 */
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
+define('REGEXP_INTEGER', '/^-?[0-9]{1,20}$/i');
 define('REGEXP_CENA', '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
@@ -98,7 +99,8 @@ function query($sql) {
 	$t = microtime(true) - $t;
 	$sqlTime += $t;
 	$t = round($t, 3);
-	$sqlQuery .= $sql.' <b style="color:#'.($t < 0.05 ? '999' : 'd22').';margin-left:10px">'.$t.'</b><br /><br />';
+	if(DEBUG)
+		$sqlQuery .= $sql.' <b style="color:#'.($t < 0.05 ? '999' : 'd22').';margin-left:10px">'.$t.'</b><br /><br />';
 	$sqlCount++;
 	return $res;
 }
@@ -992,11 +994,14 @@ function _imageGet($v) {
 					 '/>'
 		);
 	}
+	$s = 0;
+	if($v['x'] != 10000 || $v['y'] != 10000)
+		$s = _imageResize(!$size ? 80 : 200, !$size ? 80 : 200, $v['x'], $v['y']);
 	foreach($v['owner'] as $val)
 		if(empty($img[$val]))
 			$img[$val] = array(
 				'id' => 0,
-				'img' => '<img src="/img/nofoto-'.$v['size'].'.gif">'
+				'img' => '<img src="/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
 			);
 
 	if($ownerArray)

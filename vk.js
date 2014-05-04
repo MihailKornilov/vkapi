@@ -284,17 +284,19 @@ $.fn._check = function(o) {
 
 	o = $.extend({
 		name:'',
+		disabled:0,
 		func:function() {}
 	}, o);
 
 	var val = t.val() == 1 ? 1 : 0;
 	t.val(val);
-	t.wrap('<div class="_check check' + val + (o.name ? '' : ' e') + '" id="' + id + '_check">');
+	t.wrap('<div class="_check' + (o.disabled ? ' disabled' : '') + ' check' + val + (o.name ? '' : ' e') + '" id="' + id + '_check">');
 	t.after(o.name);
 	_click(o.func);
 
 	function _click(func) {
-		$(document).on('click', '#' + id + '_check', function() {
+		if(!$('#' + id + '_check').hasClass('disabled'))
+			$(document).on('click', '#' + id + '_check', function() {
 			func(parseInt(t.val()), id);
 		});
 	}
@@ -757,6 +759,7 @@ $.fn._dropdown = function(o) {
 	o = $.extend({
 		head:'',    // если указано, то ставится в название ссылки, а список из spisok
 		headgrey:0,
+		disabled:0,
 		title0:'',
 		spisok:[],
 		func:function() {},
@@ -767,7 +770,7 @@ $.fn._dropdown = function(o) {
 		ass = assСreate(),
 		head = o.head || o.title0,
 		len = o.spisok.length,
-		spisok = o.title0 ? '<a class="ddu grey' + (!len ? ' last' : '') + (!val ? ' seld' : '') + '" val="0">' + o.title0 + '</a>' : '',
+		spisok = o.title0 && !o.disabled ? '<a class="ddu grey' + (!len ? ' last' : '') + (!val ? ' seld' : '') + '" val="0">' + o.title0 + '</a>' : '',
 		delay = 0;
 	t.val(val);
 	for(n = 0; n < len; n++) {
@@ -778,46 +781,53 @@ $.fn._dropdown = function(o) {
 	}
 	t.next().remove('._dropdown');
 	t.after(
-		'<div class="_dropdown" id="' + id + '_dropdown">' +
-			'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '</a>' +
+		'<div class="_dropdown' + (o.disabled ? ' disabled' : '') + '" id="' + id + '_dropdown">' +
+			(o.disabled ?
+				'<span>' + head + '</span>'
+				:
+				'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '</a>'
+			) +
 			'<div class="ddlist">' +
 				'<div class="ddsel">' + head + '</div>' +
 				spisok +
 			'</div>' +
 		'</div>');
-	var dropdown = t.next(),
-		aHead = dropdown.find('.ddhead'),
-		list = dropdown.find('.ddlist'),
-		ddsel = list.find('.ddsel'),
-		ddu = list.find('.ddu');
-	aHead.click(function() {
-		delayClear();
-		list.show();
-	});
-	ddsel.click(function() {
-		delayClear();
-		list.hide();
-	});
-	ddu.click(function() {
-		var th = $(this),
-			v = parseInt(th.attr('val'));
-		setVal(v);
-		if(!o.nosel)
-			th.addClass('seld');
-		list.hide();
-		o.func(v, id);
-	})
-	   .mouseenter(function() {
-			ddu.removeClass('seld');
-	   });
-	list.on({
-		mouseleave:function () {
-			delay = setTimeout(function() {
-				list.fadeOut(200);
-			}, 500);
-		},
-		mouseenter:delayClear
-	});
+
+	if(!o.disabled) {
+		var dropdown = t.next(),
+			aHead = dropdown.find('.ddhead'),
+			list = dropdown.find('.ddlist'),
+			ddsel = list.find('.ddsel'),
+			ddu = list.find('.ddu');
+		aHead.click(function() {
+			delayClear();
+			list.show();
+		});
+		ddsel.click(function() {
+			delayClear();
+			list.hide();
+		});
+		ddu.click(function() {
+			var th = $(this),
+				v = parseInt(th.attr('val'));
+			setVal(v);
+			if(!o.nosel)
+				th.addClass('seld');
+			list.hide();
+			o.func(v, id);
+		})
+		   .mouseenter(function() {
+				ddu.removeClass('seld');
+		   });
+		list.on({
+			mouseleave:function () {
+				delay = setTimeout(function() {
+					list.fadeOut(200);
+				}, 500);
+			},
+			mouseenter:delayClear
+		});
+	}
 
 	function assСreate() {//Создание ассоциативного массива
 		var arr = o.title0 ? {0:o.title0} : {};
@@ -1104,6 +1114,7 @@ $.fn._select = function(o) {
 
 	o = $.extend({
 		width:150,			// ширина
+		disabled:0,
 		block:false,       	// расположение селекта
 		bottom:0,           // отступ снизу
 		title0:'',			// поле с нулевым значением
@@ -1124,11 +1135,20 @@ $.fn._select = function(o) {
 	if(o.funcAdd)
 		inpWidth -= 18;
 	var html =
-		'<div class="_select" id="' + id + '_select" style="width:' + o.width + 'px' + (o.block ? ';display:block' : '') + (o.bottom ? ';margin-bottom:' + o.bottom + 'px' : '') + '">' +
+		'<div class="_select' + (o.disabled ? ' disabled' : '') + '" ' +
+			 'id="' + id + '_select" ' +
+			 'style="width:' + o.width + 'px' +
+				(o.block ? ';display:block' : '') +
+				(o.bottom ? ';margin-bottom:' + o.bottom + 'px' : '') +
+		'">' +
 			'<div class="title0bg">' + o.title0 + '</div>' +
 			'<table class="seltab">' +
 				'<tr><td class="selsel">' +
-						'<input type="text" class="selinp" style="width:' + inpWidth + 'px' + (o.write ? '' : ';cursor:default') + '"' + (o.write ? '' : ' readonly') + ' />' +
+						'<input type="text" ' +
+							   'class="selinp" ' +
+							   'style="width:' + inpWidth + 'px' +
+									(o.write && !o.disabled? '' : ';cursor:default') + '"' +
+									(o.write && !o.disabled? '' : ' readonly') + ' />' +
 	   (o.funcAdd ? '<td class="seladd">' : '') +
 					'<td class="selug">' +
 			'</table>' +
@@ -1162,7 +1182,7 @@ $.fn._select = function(o) {
 		}
 		multiCorrect();
 	}
-	if(o.funcAdd)
+	if(o.funcAdd && !o.disabled)
 		select.find('.seladd').click(o.funcAdd);
 
 	spisokPrint();
@@ -1170,48 +1190,49 @@ $.fn._select = function(o) {
 
 	var keyVal = inp.val();//Вводимое значение из inp
 
-	$(document)
-		.on('click', '#' + id + '_select .selug', hideOn)
-		.on('click', '#' + id + '_select .selsel', function() {
-			inp.focus();
-		})
-		.on('click', '#' + id + '_select .selun', function() {
-			unitSel($(this));
-		})
-		.on('mouseenter', '#' + id + '_select .selun', function() {
-			res.find('.ov').removeClass('ov');
-			$(this).addClass('ov');
-		})
-		.on('click', '#' + id + '_select .x', function(e) {
-			e.stopPropagation();
-			var v = $(this).attr('val');
-			$(this).parent().remove();
-			multiCorrect(v, false);
-			setVal(v);
-			o.func(v, id);
-		});
+	if(!o.disabled) {
+		$(document)
+			.on('click', '#' + id + '_select .selug', hideOn)
+			.on('click', '#' + id + '_select .selsel', function() {
+				inp.focus();
+			})
+			.on('click', '#' + id + '_select .selun', function() {
+				unitSel($(this));
+			})
+			.on('mouseenter', '#' + id + '_select .selun', function() {
+				res.find('.ov').removeClass('ov');
+				$(this).addClass('ov');
+			})
+			.on('click', '#' + id + '_select .x', function(e) {
+				e.stopPropagation();
+				var v = $(this).attr('val');
+				$(this).parent().remove();
+				multiCorrect(v, false);
+				setVal(v);
+				o.func(v, id);
+			});
 
-
-	inp	.focus(function() {
-			hideOn();
-			if(o.write)
-				title0bg.css('color', '#ccc');
-		})
-		.blur(function() {
-			if(o.write)
-				title0bg.css('color', '#888');
-		})
-		.keyup(function(e) {
-			if(keys[e.keyCode])
-				return;
-			title0bg[inp.val() || multiCount ? 'hide' : 'show']();
-			if(keyVal != inp.val()) {
-				keyVal = inp.val();
-				o.funcKeyup(keyVal);
-				t.val(0);
-				val = 0;
-			}
-		});
+		inp	.focus(function() {
+				hideOn();
+				if(o.write)
+					title0bg.css('color', '#ccc');
+			})
+			.blur(function() {
+				if(o.write)
+					title0bg.css('color', '#888');
+			})
+			.keyup(function(e) {
+				if(keys[e.keyCode])
+					return;
+				title0bg[inp.val() || multiCount ? 'hide' : 'show']();
+				if(keyVal != inp.val()) {
+					keyVal = inp.val();
+					o.funcKeyup(keyVal);
+					t.val(0);
+					val = 0;
+				}
+			});
+	}
 
 	function spisokPrint() {
 		if(!o.spisok.length) {
@@ -1490,6 +1511,14 @@ $(document)
 		_msg('Debug включен.');
 		document.location.reload();
 	})
+	.on('click', '#cookie_clear', function() {
+		$.post(AJAX_MAIN, {'op':'cookie_clear'}, function(res) {
+			if(res.success) {
+				_msg('Cookie очищены.');
+				document.location.reload();
+			}
+		}, 'json');
+	})
 	.on('click', '#cache_clear', function() {
 		$.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
 			if(res.success) {
@@ -1650,7 +1679,7 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '.check0,.check1', function() {
+	.on('click', '._check:not(.disabled)', function() {
 		var t = $(this),
 			inp = t.find('input'),
 			prev = inp.val(),

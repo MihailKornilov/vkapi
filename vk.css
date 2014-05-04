@@ -9,7 +9,8 @@ a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
-input,textarea{border:#CCC solid 1px;padding:3px 3px 4px 3px;outline:none}
+input,textarea{border:#ccc solid 1px;padding:3px 3px 4px 3px;outline:none}
+input[type="text"]:disabled{color:#777;background-color:#f0f0f0;border-color:#ccc}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
 textarea{resize:none}
@@ -332,6 +333,7 @@ td.r{text-align:right}
 ._select{background-color:#fff;display:inline-block;position:relative}
 ._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
 ._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
+._select.disabled .seltab{border-color:#ccc;background-color:#f0f0f0}
 ._select .selsel{vertical-align:top;padding-bottom:2px}
 ._select .selinp{
 	position:relative;
@@ -341,20 +343,26 @@ td.r{text-align:right}
 	background-color:transparent;
 }
 ._select .selinp._busy{background-position:right center}
+._select.disabled .selinp{color:#777}
 ._select .selug{
 	width:16px;
-	border-left:#FFF solid 1px;
-	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
+	border-left:#fff solid 1px;
+	background:transparent no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
+}
+._select.disabled .selug{
+	border-left:#f0f0f0 solid 1px;
+	background:transparent no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAJEAAAAAAP///3d3d////yH5BAEAAAMALAAAAAAHAAQAAAIIlC+DOWoN2SgAOw==");
 }
 ._select .seladd{
 	width:17px;
 	border-left:#FFF solid 1px;
-	background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
+	background:transparent no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
 	cursor:pointer;
 }
-._select:hover .selug,
+._select.disabled .seladd{border-left:#f0f0f0 solid 1px;cursor:default}
+._select:not(.disabled):hover .selug,
 ._select.rs .selug,
-._select .seladd:hover
+._select:not(.disabled) .seladd:hover
 {border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
 ._select:not(.rs) .selres{display:none}
 ._select .selres{
@@ -505,6 +513,7 @@ td.r{text-align:right}
 /* Выпадающее меню по ссылке */
 ._dropdown{position:relative;display:inline-block}
 ._dropdown .ddhead{white-space:nowrap}
+._dropdown span{color:#777}
 ._dropdown .ddlist{
 	display:none;
 	position:absolute;
@@ -603,12 +612,11 @@ td.r{text-align:right}
 	font:bold 12px Tahoma;
 	color:#FFF;
 	opacity:0.9;
-	filter:alpha(opacity=90);
 	border-radius:5px;
 	z-index:99999
 }
-#_msg A{color:#b1daff;font:bold 12px Tahoma}
-#_msg B{font-size:12px}
+#_msg a{color:#b1daff;font:bold 12px Tahoma}
+#_msg b{font-size:12px}
 
 
 ._search{
@@ -628,12 +636,14 @@ td.r{text-align:right}
 	min-width:14px;
 	color:#333;
 	cursor:pointer;
-	background:no-repeat url("data:image/gif;base64,R0lGODlhDwA4AKIHANrh6P///8DK1a22wF+DpbfAy9/l6v///yH5BAEAAAcALAAAAAAPADgAAAOzKLrMJyHKGcWjOFiY5+7eBVbi+I1aCZ6m2rGrm21NrTx2LWMEwYE93yho+PF6gmKHyCJIiEVRMABNcQzBnsFAumK13K5kS9iGjNuwBPbC5RyDuHw+PwwA+LweP7Dv/wB9d4B6goSFfod8iYqGioGMh46NkYSTkpWAgnSccXadnJl/PYOHQaWAQQWoe6qrhK6MBHmujkEArpCDBVkEBQWLu7w9v3mTv77AxpG/ysusmp+gdQkAOw==")
+	background:no-repeat url("data:image/gif;base64,R0lGODlhDwBUALMAAAAAAP///7fAy8DK1a22wNrh6F+Dpd/l6vDw8MzMzIiIiP///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAAPAFQAAAT/cMhJ6Roh653H5WDgYeE2luaHdup6rmKLvq5c0rMdjlUvXb6eDmQwkFBF4yp5OBKLg2aJSTNomE1VMoCNkQ7J4uHA+oLF5LJmbBinnOO0BncDBi2EvH6/XxAKgIGCgAR+g4cFhX+IgoqMjYaPhJGSjpKJlI+WlZmMm5qdiIp8pHl+paShh0WLj0mtiEkCsIOys4y2lAaBtpZJBbaYiwJhBgICk8PERceBm8fGyM6Zx9LTtKKnqH0J3d7f3wsJCOTl5uQJ4ufrCOnj7Obu8PHq8+j19vL27fjz+vn94P3zF5CdO3AIu4lLiLDgOgUK3s2DGNEexW4TIXqDd/GfgnIdHvVRRNCR37sEFDWerNet5D2JLTGWG7iRnkSCDBtGAAA7")
 }
 .check0{background-position:0 0}
-.check0:hover{background-position:0 -28px}
+.check0:not(.disabled):hover{background-position:0 -28px}
 .check1{background-position:0 -14px}
-.check1:hover{background-position:0 -42px}
+.check1:not(.disabled):hover{background-position:0 -42px}
+.check0.disabled{background-position:0 -56px;cursor:default}
+.check1.disabled{background-position:0 -70px;cursor:default}
 .check0.l{color:#888}
 ._check:not(.e){padding-left:18px}
 

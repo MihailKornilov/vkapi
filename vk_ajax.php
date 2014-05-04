@@ -1,5 +1,12 @@
 <?php
 switch(@$_POST['op']) {
+	case 'cookie_clear':
+		if(!empty($_COOKIE))
+			foreach($_COOKIE as $key => $val)
+				setcookie($key, '', time() - 3600, '/');
+		jsonSuccess();
+		break;
+
 	case 'sort':
 		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
 			jsonError();
@@ -321,10 +328,18 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
 			jsonError();
 		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `viewer_id_add`=".VIEWER_ID." AND `id`=".$id;
+
+		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `id`=".$id;
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
+
 		query("UPDATE `images` SET `deleted`=1 WHERE `id`=".$id);
+
+		$ids = query_ids("SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$r['owner']."' ORDER BY `sort`");
+		if($ids)
+			foreach(explode(',', $ids) as $n => $id)
+				query("UPDATE `images` SET `sort`=".$n." WHERE `id`=".$id);
+
 		jsonSuccess();
 		break;
 	case 'image_sort':
