@@ -46,17 +46,12 @@ var VK_SCROLL = 0,
 		document.cookie = name + '=' + value + '; path=/; expires=' + exdate.toGMTString();
 	},
 	getCookie = function(name) {
-		var arr1 = document.cookie.split(name);
-		if(arr1.length > 1) {
-			var arr2 = arr1[1].split(/;/);
-			var arr3 = arr2[0].split(/=/);
-			return arr3[0] ? arr3[0] : arr3[1];
-		} else
-			return null;
+		var arr1 = document.cookie.split(' ' + name + '=');
+		return arr1[1] ? arr1[1].split(';')[0] : '';
 	},
 	delCookie = function(name) {
 		var exdate = new Date();
-		exdate.setDate(exdate.getDate()-1);
+		exdate.setDate(exdate.getDate() - 1);
 		document.cookie = name + '=; path=/; expires=' + exdate.toGMTString();
 	},
 	sortable = function() {
@@ -612,31 +607,34 @@ $.fn._calendar = function(o) {
 		daysPrint();
 	}
 };
-$.fn.years = function(obj) {// перелистывание годов
+$.fn.years = function(o) {// перелистывание годов
 	var t = $(this),
-		id = t.attr('id');
+		id = t.attr('id'),
+		val = t.val();
 
 	if(!id)
 		return;
 
-	obj = $.extend({
+	o = $.extend({
 		year:(new Date()).getFullYear(),
 		start:function() {},
 		func:function() {},
 		center:function() {}
-	}, obj);
+	}, o);
 
+	if(val)
+		o.year = val * 1;
 
 	var html =
 		'<div class="years" id="years_' + id + '">' +
 			'<TABLE>' +
 				'<TR><TD class="but">&laquo;' +
-					'<TD id="ycenter"><SPAN>' + obj.year + '</SPAN>' +
+					'<TD id="ycenter"><SPAN>' + o.year + '</SPAN>' +
 					'<TD class="but">&raquo;' +
 			'</TABLE>' +
 		'</div>';
 	t.after(html);
-	t.val(obj.year);
+	t.val(o.year);
 
 	var years = {
 		left:0,
@@ -646,7 +644,7 @@ $.fn.years = function(obj) {// перелистывание годов
 		ismove:0
 	}
 	years.next = function(side) {
-		obj.start();
+		o.start();
 		var y = years;
 		if(y.ismove == 0) {
 			y.ismove = 1;
@@ -669,17 +667,17 @@ $.fn.years = function(obj) {// перелистывание годов
 				if (y.left > y.width && changed == 0 && side == -1 ||
 					y.left < -y.width && changed == 0 && side == 1) {
 					changed = 1;
-					obj.year += side;
-					span.html(obj.year);
+					o.year += side;
+					span.html(o.year);
 					y.left = y.width * side;
-					t.val(obj.year);
-					obj.func(obj.year, id);
+					t.val(o.year);
+					o.func(o.year, id);
 				}
 			}, 25);
 		}
 	};
 
-	$('#years_' + id + ' #ycenter').click(obj.center);
+	$('#years_' + id + ' #ycenter').click(o.center);
 
 	$('#years_' + id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
 	$('#years_' + id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
@@ -1077,7 +1075,7 @@ $.fn._dropdown = function(o) {
 		} // end hide
 	};// end Hint.prototype.create
 
-	$.fn.vkHint = function (obj) { return new Hint($(this), obj); };
+	$.fn.vkHint = function (o) { return new Hint($(this), o); };
 })();
 
 $.fn._select = function(o) {
@@ -1509,7 +1507,7 @@ $(document)
 		var d = getCookie('debug');
 		setCookie('debug', d == 1 ? 0 : 1);
 		_msg('Debug включен.');
-		document.location.reload();
+		location.reload();
 	})
 	.on('click', '#cookie_clear', function() {
 		$.post(AJAX_MAIN, {'op':'cookie_clear'}, function(res) {
