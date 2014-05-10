@@ -102,46 +102,59 @@ function query($sql) {
 	if(DEBUG)
 		$sqlQuery .= $sql.' <b style="color:#'.($t < 0.05 ? '999' : 'd22').';margin-left:10px">'.$t.'</b><br /><br />';
 	$sqlCount++;
+	if(mysql_insert_id())
+		return mysql_insert_id();
 	return $res;
-}
+}//query()
 function query_value($sql) {
 	if(!$r = mysql_fetch_row(query($sql)))
 		return false;
 	return $r[0];
-}
+}//query_value()
 function query_assoc($sql) {
 	if(!$r = mysql_fetch_assoc(query($sql)))
 		return array();
 	return $r;
-}
+}//query_assoc()
 function query_ass($sql) {//Ассоциативный массив
 	$send = array();
 	$q = query($sql);
 	while($r = mysql_fetch_row($q))
 		$send[$r[0]] = $r[1];
 	return $send;
-}
+}//query_ass()
 function query_selJson($sql) {
 	$send = array();
 	$q = query($sql);
 	while($sp = mysql_fetch_row($q))
 		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
 	return '['.implode(',',$send).']';
-}
+}//query_selJson()
 function query_ptpJson($sql) {//Ассоциативный массив
 	$q = query($sql);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
-}
+}//query_ptpJson()
 function query_ids($sql) {//Список идентификаторов
 	$q = query($sql);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0];
 	return empty($send) ? 0 : implode(',', $send);
-}
+}//query_ids()
+
+function _isnum($v) {//проверка на целое число
+	if(empty($v) || !preg_match(REGEXP_NUMERIC, $v))
+		return 0;
+	return intval($v);
+}//_isnum()
+function _isbool($v) {//проверка на булево число
+	if(empty($v) || !preg_match(REGEXP_BOOL, $v))
+		return 0;
+	return intval($v);
+}//_isbool()
 
 function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
@@ -554,16 +567,20 @@ function _week($n) {
 	);
 	return $week[intval($n)];
 }//_week()
-function FullData($value, $noyear=false, $cut=false, $week=false) {//пт. 14 апреля 2010
-	$d = explode('-', $value);
+function FullData($v=0, $noyear=0, $cut=0, $week=0) {//пт. 14 апреля 2010
+	if(!$v)
+		$v = curTime();
+	$d = explode('-', $v);
 	return
-		($week ? _week(date('w', strtotime($value))).'. ' : '').
+		($week ? _week(date('w', strtotime($v))).'. ' : '').
 		abs($d[2]).' '.
 		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
 		(!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
 }//FullData()
-function FullDataTime($value, $cut=false) {//14 апреля 2010 в 12:45
-	$arr = explode(' ',$value);
+function FullDataTime($v=0, $cut=0) {//14 апреля 2010 в 12:45
+	if(!$v)
+		$v = curTime();
+	$arr = explode(' ', $v);
 	$d = explode('-', $arr[0]);
 	if(!intval($arr[0]) || empty($arr[1]) || empty($d[1]) || empty($d[2]))
 		return '';
