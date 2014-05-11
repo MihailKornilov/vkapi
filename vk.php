@@ -65,6 +65,7 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zà-ÿÀ-ß0-9,\.; ]{1,}$/i');
 
+define('GSITE', 'http://nyandoma'.(LOCAL ? '' : '.ru'));
 define('AJAX_MAIN', SITE.'/ajax/main.php?'.VALUES);
 
 define('VIEWER_MAX', 2147000001);
@@ -1018,7 +1019,7 @@ function _imageGet($v) {
 		if(empty($img[$val]))
 			$img[$val] = array(
 				'id' => 0,
-				'img' => '<img src="/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
+				'img' => '<img src="'.GSITE.'/vk/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
 			);
 
 	if($ownerArray)
