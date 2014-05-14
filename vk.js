@@ -40,19 +40,21 @@ var VK_SCROLL = 0,
 	SITE = 'http://' + DOMAIN,
 	URL = SITE + '/index.php?' + VALUES,
 	AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
-	setCookie = function(name, value) {
-		var exdate = new Date();
-		exdate.setDate(exdate.getDate() + 1);
-		document.cookie = name + '=' + value + '; path=/; expires=' + exdate.toGMTString();
-	},
-	getCookie = function(name) {
-		var arr1 = document.cookie.split(' ' + name + '=');
-		return arr1[1] ? arr1[1].split(';')[0] : '';
-	},
-	delCookie = function(name) {
-		var exdate = new Date();
-		exdate.setDate(exdate.getDate() - 1);
-		document.cookie = name + '=; path=/; expires=' + exdate.toGMTString();
+	_cookie = function(name, value) {
+		if(value !== undefined) {
+			var exdate = new Date();
+			exdate.setDate(exdate.getDate() + 1);
+			document.cookie = name + '=' + value + '; path=/; expires=' + exdate.toGMTString();
+			return;
+		}
+		var r = document.cookie.split('; ');
+		for(var i = 0; i < r.length; i++) {
+			var k = r[i].split('=');
+			if(k[0] == name)
+				return k[1];
+		}
+		return '';
+
 	},
 	sortable = function() {
 		$('._sort').sortable({
@@ -1504,8 +1506,7 @@ $(document)
 		d.content.find('textarea').autosize();
 	})
 	.on('click', '.debug_toggle', function() {
-		var d = getCookie('debug');
-		setCookie('debug', d == 1 ? 0 : 1);
+		_cookie('debug', _cookie('debug') == 1 ? 0 : 1);
 		_msg('Debug включен.');
 		location.reload();
 	})
@@ -1742,7 +1743,7 @@ $(document)
 		but.addClass('busy');
 
 		function uploadStart() {
-			var cookie = getCookie('_upload');
+			var cookie = _cookie('_upload');
 			if(cookie != 'process') {
 				clearInterval(timer);
 				but.removeClass('busy');
@@ -1753,7 +1754,7 @@ $(document)
 				var arr = cookie.split('_');
 				switch(arr[0]) {
 					case 'uploaded':
-						var param = getCookie('_param').split('_');
+						var param = _cookie('_param').split('_');
 						if(param[2] == 1)
 							$('._image-add').addClass('dn');
 						$('._image-spisok')
@@ -2029,4 +2030,13 @@ $(document)
 
 		if($('#admin').length > 0)
 			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
+
+		$('#_debug').click(function(e) {
+			if(e.target.tagName != 'H1')
+				return;
+			var t = $(this),
+				s = t.hasClass('show');
+			t[(s ? 'remove' : 'add') + 'Class']('show');
+			$(e.target).html(s ? '+' : '—');
+		});
 	});

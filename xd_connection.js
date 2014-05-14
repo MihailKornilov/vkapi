@@ -1,6 +1,5 @@
 (function(w) {
 if (w.fastXDM) return;
-
 var handlers = {};
 var onEnvLoad = [];
 var env = {};

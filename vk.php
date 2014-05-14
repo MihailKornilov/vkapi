@@ -54,6 +54,11 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 	VALUES
 */
 
+define('TIME', microtime(true));
+
+setlocale(LC_ALL, 'ru_RU.CP1251');
+setlocale(LC_NUMERIC, 'en_US');
+
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
 define('REGEXP_INTEGER', '/^-?[0-9]{1,20}$/i');
 define('REGEXP_CENA', '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
@@ -65,14 +70,114 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
+define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
+define('VALUES', 'viewer_id='.VIEWER_ID.
+				 '&api_id='.@$_GET['api_id'].
+				 '&auth_key='.@$_GET['auth_key'].
+				 '&sid='.@$_GET['sid']);
+define('SITE', 'http://'.DOMAIN);
+define('URL', SITE.'/index.php?'.VALUES);
+
 define('GSITE', 'http://nyandoma'.(LOCAL ? '' : '.ru'));
 define('AJAX_MAIN', SITE.'/ajax/main.php?'.VALUES);
+
+if(!defined('CRON'))
+	define('CRON', 0);
 
 define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
 
-if(!defined('CRON')) //Включает работу куков в IE через фрейм
+$SA[982006] = 1; // Корнилов Михаил
+define('SA', isset($SA[$_GET['viewer_id']]));
+
+if(SA || CRON) {
+	error_reporting(E_ALL);
+	ini_set('display_errors', true);
+	ini_set('display_startup_errors', true);
+}
+
+if(!CRON) //Включает работу куков в IE через фрейм
 	header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
+
+define('DEBUG', !empty($_COOKIE['debug']));
+
+function _debug() {
+	if(!SA)
+		return '';
+
+	global $sqlQuery, $sqlTime;
+
+	$pre = '&pre_p='.@$_GET['p'].
+			(empty($_GET['d']) ? '' : '&pre_d='.$_GET['d']).
+			(empty($_GET['d1']) ? '' : '&pre_d1='.$_GET['d1']).
+			(empty($_GET['id']) ? '' : '&pre_id='.$_GET['id']);
+
+	$send =
+		'<div id="admin">'.
+			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">Admin</a> :: ' : '').
+			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
+			'<a id="cookie_clear">Очисить cookie</a> :: '.
+			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
+			'<a href="'.SITE.'/_sxdump" target="_blank">sxd</a> :: '.
+			'sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).') :: '.
+			'php '.round(microtime(true) - TIME, 3).' :: '.
+			'js <em></em>'.
+		'</div>';
+	if(DEBUG) {
+		$cookie = '';
+		if(!empty($_COOKIE))
+			foreach($_COOKIE as $key => $val)
+				$cookie .= '&nbsp;<b>'.$key.'</b> '.$val.'<br />';
+		$send .=
+		'<div id="_debug">'.
+			'<h1>+</h1>'.
+			'<h2>'.
+				'<div class="dmenu">'.
+					'<a>sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
+					'<a>cookie <b>'.count($_COOKIE).'</b></a>'.
+					'<a>ajax</a>'.
+				'</div>'.
+				'<ul>'.implode('', $sqlQuery).'</ul>'.
+			'</h2>'.
+		'</div>';
+	}
+	return $send;
+}//_debug()
+function _footer() {
+	global $html;
+	$getArr = array(
+		'start' => 1,
+		'api_url' => 1,
+		'api_id' => 1,
+		'api_settings' => 1,
+		'viewer_id' => 1,
+		'viewer_type' => 1,
+		'sid' => 1,
+		'secret' => 1,
+		'access_token' => 1,
+		'user_id' => 1,
+		'group_id' => 1,
+		'is_app_user' => 1,
+		'auth_key' => 1,
+		'language' => 1,
+		'parent_language' => 1,
+		'ad_info' => 1,
+		'is_secure' => 1,
+		'referrer' => 1,
+		'lc_name' => 1,
+		'hash' => 1
+	);
+	$v = array();
+	foreach($_GET as $k => $val) {
+		if(isset($getArr[$k]) || empty($_GET[$k]))
+			continue;
+		$v[] = '"'.$k.'":"'.$val.'"';
+	}
+	$html .= _debug().
+			 '<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+		'</div></body></html>';
+}//_footer()
+
 
 function _appAuth() {
 	if(LOCAL || defined('CRON'))
@@ -90,20 +195,18 @@ function _dbConnect() {
 	global $mysql, $sqlQuery;
 	$dbConnect = mysql_connect($mysql['host'], $mysql['user'], $mysql['pass'], 1) or die("Can't connect to database");
 	mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
-	$sqlQuery = 0;
+	$sqlQuery = array();
 	query('SET NAMES `'.NAMES.'`', $dbConnect);
 }//_dbConnect()
 function query($sql) {
-	global $sqlQuery, $sqlCount, $sqlTime;
+	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
 	$res = mysql_query($sql) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
 	$sqlTime += $t;
 	$t = round($t, 3);
-	if(DEBUG)
-		$sqlQuery .= $sql.' <b style="color:#'.($t < 0.05 ? '999' : 'd22').';margin-left:10px">'.$t.'</b><br /><br />';
-	$sqlCount++;
-	if(mysql_insert_id())
+	$sqlQuery[] = '<li><span>'.$sql.'</span><b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b>';
+	if(mysql_insert_id() && strpos(strtoupper($sql), 'INSERT INTO') !== false)
 		return mysql_insert_id();
 	return $res;
 }//query()

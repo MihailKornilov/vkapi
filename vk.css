@@ -46,6 +46,52 @@ table{border:0;border-spacing:0}
 .ui-resizable-ne{cursor:ne-resize;width:9px;height:9px;right:-5px;top:-5px;}
 
 
+#_debug{
+	position:absolute;
+	right:10px;
+	top:10px;
+	border:#ddb solid 1px;
+	background-color:#ffd;
+	box-shadow: 0 0 8px rgba(0,0,0,0.5);
+}
+#_debug h1{
+	float:right;
+	width:21px;
+	height:18px;
+	text-align:center;
+	padding-top:3px;
+	cursor:pointer;
+}
+#_debug h1:hover{background-color:#afa}
+#_debug.show h1{border-left:#bdb solid 1px;border-bottom:#bdb solid 1px}
+#_debug:not(.show) h2,#_debug:not(.show) h3{display:none}
+#_debug h2{width:600px}
+
+#_debug .dmenu a{
+	display:inline-block;
+	padding:4px 10px;
+	border-right:#bdb solid 1px;
+	border-bottom:#bdb solid 1px;
+}
+#_debug .dmenu a:hover{background-color:#afa;text-decoration:none}
+
+
+#_debug ul{margin:10px 8px 5px 23px}
+#_debug li{margin-bottom:7px;word-wrap:break-word}
+#_debug li span,#_debug li b{font-size:10px;position:relative;top:1px;left:-5px}
+#_debug li b{left:15px}
+
+
+
+
+
+
+
+
+
+
+
+
 
 .tabLR{width:100%}
 .tabLR .left{vertical-align:top}
