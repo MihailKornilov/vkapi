@@ -40,12 +40,17 @@ var VK_SCROLL = 0,
 	SITE = 'http://' + DOMAIN,
 	URL = SITE + '/index.php?' + VALUES,
 	AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
+	debugHeight = function(s) {
+		var h = $('#_debug').height();
+		FOTO_HEIGHT = s || h < FBH ? 0 : h + 30;
+		_fbhs();
+	},
 	_cookie = function(name, value) {
 		if(value !== undefined) {
 			var exdate = new Date();
 			exdate.setDate(exdate.getDate() + 1);
 			document.cookie = name + '=' + value + '; path=/; expires=' + exdate.toGMTString();
-			return;
+			return '';
 		}
 		var r = document.cookie.split('; ');
 		for(var i = 0; i < r.length; i++) {
@@ -1492,6 +1497,52 @@ $.fn._select = function(o) {
 };
 
 $(document)
+	.ajaxSuccess(function(event, request, settings) {
+		if(!$('#_debug').length)
+			return;
+		var req = request.responseJSON;
+		if(!req.success)
+			return;
+		var html = '',
+			post = '<div class="hd"><b>post</b></div>',
+			sql = '<div class="hd">sql <b>' + req.sql_count + '</b> (' + req.sql_time + ') :: php ' + req.php_time + '</div>';
+		for(var i in req) {
+			switch(i) {
+				case 'success': break;
+				case 'php_time': break;
+				case 'sql_count': break;
+				case 'sql_time': break;
+				case 'post':
+					for(var k in req.post)
+						post += '<p><b>' + k + '</b>: ' + req.post[k];
+					break;
+				case 'sql':
+					sql += '<ul>' + req[i] + '</ul>';
+					break;
+				default:
+					var len = req[i].length ? '<tt>' + req[i].length + '</tt>' : '';
+					html += '<div class="hd"><b>' + i + '</b>' + len + '<em>' + typeof req[i] + '</em></div>';
+					if(typeof req[i] == 'object') {
+						html += obj(req[i]);
+						break;
+					}
+					html += '<textarea>' + req[i] + '</textarea>';
+			}
+		}
+		$('#_debug .ajax').html(post + sql + html);
+		$('#_debug .ajax textarea').autosize();
+		window.FBH = FB.height();
+		debugHeight();
+		function obj(v) {
+			var send = '<table>',
+				i;
+			for(i in v)
+				send += '<tr><td class="val"><b>' + i + '</b>: ' +
+							'<td>' + (typeof v[i] == 'object' ? obj(v[i]) : v[i]);
+			send += '</table>';
+			return send;
+		}
+	})
 	.ajaxError(function(event, request, settings) {
 		if(!request.responseText)
 			return;
@@ -2028,15 +2079,30 @@ $(document)
 
 		window.frameHidden.onresize = _fbhs;
 
-		if($('#admin').length > 0)
+		if($('#admin').length)
 			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
 
-		$('#_debug').click(function(e) {
-			if(e.target.tagName != 'H1')
-				return;
-			var t = $(this),
-				s = t.hasClass('show');
-			t[(s ? 'remove' : 'add') + 'Class']('show');
-			$(e.target).html(s ? '+' : '—');
-		});
+		if($('#_debug').length) {
+			window.FBH = FB.height();
+			debugHeight();
+			$('#_debug h1').click(function() {
+				var t = $(this).parent(),
+					s = t.hasClass('show');
+				t[(s ? 'remove' : 'add') + 'Class']('show');
+				$(this).html(s ? '+' : '—');
+				_cookie('debug_show', s ? 0 : 1);
+				debugHeight(s);
+			});
+			$('#_debug .dmenu a').click(function() {
+				var t = $(this),
+					sel = t.attr('val');
+				t.parent().find('.sel').removeClass('sel');
+				t.addClass('sel');
+				t.parent().parent()
+					.find('.pg').addClass('dn').end()
+					.find('.' + sel).removeClass('dn');
+				_cookie('debug_pg', sel);
+				debugHeight();
+			});
+		}
 	});

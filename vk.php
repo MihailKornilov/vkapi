@@ -125,19 +125,24 @@ function _debug() {
 		'</div>';
 	if(DEBUG) {
 		$cookie = '';
+		$cookieCount = 0;
 		if(!empty($_COOKIE))
 			foreach($_COOKIE as $key => $val)
-				$cookie .= '&nbsp;<b>'.$key.'</b> '.$val.'<br />';
+				if(strpos($key, 'debug') !== 0) {
+					$cookie .= '<p><b>'.$key.'</b> '.$val;
+					$cookieCount++;
+				}
 		$send .=
-		'<div id="_debug">'.
+		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
 			'<h1>+</h1>'.
-			'<h2>'.
-				'<div class="dmenu">'.
-					'<a>sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
-					'<a>cookie <b>'.count($_COOKIE).'</b></a>'.
-					'<a>ajax</a>'.
+			'<h2><div class="dmenu">'.
+					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
+					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'.$cookieCount.'</b></a>'.
+					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
 				'</div>'.
-				'<ul>'.implode('', $sqlQuery).'</ul>'.
+				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
+				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.$cookie.'</div>'.
+				'<div class="pg ajax'.(@$_COOKIE['debug_pg'] == 'ajax' ? '' : ' dn').'">&nbsp;</div>'.
 			'</h2>'.
 		'</div>';
 	}
@@ -178,6 +183,28 @@ function _footer() {
 		'</div></body></html>';
 }//_footer()
 
+function jsonError($values=null) {
+	$send['error'] = 1;
+	if(empty($values))
+		$send['text'] = utf8('Произошла неизвестная ошибка.');
+	elseif(is_array($values))
+		$send += $values;
+	else
+		$send['text'] = utf8($values);
+	die(json_encode($send));
+}//jsonError()
+function jsonSuccess($send=array()) {
+	$send['success'] = 1;
+	if(SA && DEBUG) {
+		global $sqlQuery, $sqlTime;
+		$send['post'] = $_POST;
+		$send['php_time'] = round(microtime(true) - TIME, 3);
+		$send['sql_count'] = count($sqlQuery);
+		$send['sql_time'] = round($sqlTime, 3);
+		$send['sql'] = implode('', $sqlQuery);
+	}
+	die(json_encode($send));
+}//jsonSuccess()
 
 function _appAuth() {
 	if(LOCAL || defined('CRON'))
@@ -205,7 +232,7 @@ function query($sql) {
 	$t = microtime(true) - $t;
 	$sqlTime += $t;
 	$t = round($t, 3);
-	$sqlQuery[] = '<li><span>'.$sql.'</span><b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b>';
+	$sqlQuery[] = '<li><span>'.nl2br($sql).'</span><b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b>';
 	if(mysql_insert_id() && strpos(strtoupper($sql), 'INSERT INTO') !== false)
 		return mysql_insert_id();
 	return $res;
