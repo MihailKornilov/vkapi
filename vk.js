@@ -263,7 +263,8 @@ var VK_SCROLL = 0,
 			'<div class="ttmsg">' + msg + '</div>' +
 			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
 		'</div>';
-	};
+	},
+	_onScroll = [];
 
 $.fn._check = function(o) {
 	var t = $(this),
@@ -1930,7 +1931,11 @@ $(document)
 	.ready(function() {
 		VK.callMethod('scrollWindow', 0);
 		VK.callMethod('scrollSubscribe');
-		VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
+		VK.addCallback('onScroll', function(top) {
+			VK_SCROLL = top;
+			for(var i in _onScroll)
+				_onScroll[i](top);
+		});
 
 		FB = $('#frameBody');
 		FH = $('#frameHidden');
@@ -2079,9 +2084,6 @@ $(document)
 
 		window.frameHidden.onresize = _fbhs;
 
-		if($('#admin').length)
-			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
-
 		if($('#_debug').length) {
 			window.FBH = FB.height();
 			debugHeight();
@@ -2105,4 +2107,7 @@ $(document)
 				debugHeight();
 			});
 		}
+
+		if($('#admin').length)
+			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
 	});

@@ -67,7 +67,6 @@ table{border:0;border-spacing:0}
 #_debug.show h1{border-left:#bdb solid 1px;border-bottom:#bdb solid 1px}
 #_debug:not(.show) h2,#_debug:not(.show) h3{display:none}
 #_debug h2{width:600px}
-
 #_debug .dmenu a{
 	display:inline-block;
 	padding:4px 10px;
@@ -76,13 +75,10 @@ table{border:0;border-spacing:0}
 }
 #_debug .dmenu a:hover{background-color:#afa;text-decoration:none}
 #_debug .dmenu a.sel{background-color:#aea}
-
-
 #_debug ul{margin:10px 8px 5px 23px}
 #_debug li{margin-bottom:7px;word-wrap:break-word}
 #_debug li span,#_debug li b{font-size:10px;position:relative;top:1px;left:-5px}
 #_debug li b{left:15px}
-
 #_debug .cookie{margin:10px}
 #_debug .ajax{margin:10px}
 #_debug .ajax .hd{
@@ -96,9 +92,6 @@ table{border:0;border-spacing:0}
 #_debug .ajax table{border-spacing:1px;border:#ddd solid 1px;margin-bottom:5px}
 #_debug .ajax .val{text-align:right;vertical-align:top}
 #_debug .ajax textarea{width:570px;height:1px}
-
-
-
 
 
 

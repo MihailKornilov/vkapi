@@ -114,7 +114,7 @@ function _debug() {
 
 	$send =
 		'<div id="admin">'.
-			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">Admin</a> :: ' : '').
+			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">SA</a> :: ' : '').
 			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
 			'<a id="cookie_clear">Очисить cookie</a> :: '.
 			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
@@ -201,7 +201,7 @@ function jsonSuccess($send=array()) {
 		$send['php_time'] = round(microtime(true) - TIME, 3);
 		$send['sql_count'] = count($sqlQuery);
 		$send['sql_time'] = round($sqlTime, 3);
-		$send['sql'] = implode('', $sqlQuery);
+		$send['sql'] = utf8(implode('', $sqlQuery));
 	}
 	die(json_encode($send));
 }//jsonSuccess()
