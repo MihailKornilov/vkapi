@@ -70,11 +70,10 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
+
+define('APP_START', !empty($_GET['referrer'])); //первый запуск приложения
 define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
-define('VALUES', 'viewer_id='.VIEWER_ID.
-				 '&api_id='.@$_GET['api_id'].
-				 '&auth_key='.@$_GET['auth_key'].
-				 '&sid='.@$_GET['sid']);
+define('VALUES', 'viewer_id='.VIEWER_ID.'&auth_key='.@$_GET['auth_key']);
 define('SITE', 'http://'.DOMAIN);
 define('URL', SITE.'/index.php?'.VALUES);
 
@@ -132,16 +131,24 @@ function _debug() {
 					$cookie .= '<p><b>'.$key.'</b> '.$val;
 					$cookieCount++;
 				}
+
+		$get = '<a href="https://api.vk.com/method/users.isAppUser?user_id=982006&v=5.21&access_token='.@$_GET['access_token'].'" target="_blank">123</a><br />';
+		ksort($_GET);
+		foreach($_GET as $i => $v)
+			$get .= '<b>'.$i.'</b>='.$v.'<br />';
+
 		$send .=
 		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
 			'<h1>+</h1>'.
 			'<h2><div class="dmenu">'.
 					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'.$cookieCount.'</b></a>'.
+					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
 				'</div>'.
 				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
 				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.$cookie.'</div>'.
+				'<div class="pg get'.(@$_COOKIE['debug_pg'] == 'get' ? '' : ' dn').'">'.$get.'</div>'.
 				'<div class="pg ajax'.(@$_COOKIE['debug_pg'] == 'ajax' ? '' : ' dn').'">&nbsp;</div>'.
 			'</h2>'.
 		'</div>';
@@ -198,6 +205,7 @@ function jsonSuccess($send=array()) {
 	if(SA && DEBUG) {
 		global $sqlQuery, $sqlTime;
 		$send['post'] = $_POST;
+		$send['link'] = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
 		$send['php_time'] = round(microtime(true) - TIME, 3);
 		$send['sql_count'] = count($sqlQuery);
 		$send['sql_time'] = round($sqlTime, 3);
@@ -207,12 +215,10 @@ function jsonSuccess($send=array()) {
 }//jsonSuccess()
 
 function _appAuth() {
-	if(LOCAL || defined('CRON'))
+	if(LOCAL || CRON)
 		return;
-	if(@$_GET['auth_key'] != md5(@$_GET['api_id']."_".VIEWER_ID."_".SECRET)) {
-		echo 'Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">http://vk.com/app'.API_ID.'</a>.';
-		exit;
-	}
+	if(@$_GET['auth_key'] != md5(API_ID.'_'.VIEWER_ID.'_'.SECRET))
+		die('Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.');
 }//_appAuth()
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
@@ -399,24 +405,30 @@ function _rightLink($id, $spisok, $val=0) {
 	'</div>';
 }//_rightLink()
 
-function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
+function _vkUserUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Контакта
 	require_once('vkapi.class.php');
 	$VKAPI = new vkapi(API_ID, SECRET);
-	$res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
-	$u = $res['response'][0];
-	$u['first_name'] = win1251($u['first_name']);
-	$u['last_name'] = win1251($u['last_name']);
-	$u['country_id'] = isset($u['country']) ? $u['country'] : 0;
-	$u['city_id'] = isset($u['city']) ? $u['city'] : 0;
-	$u['menu_left_set'] = 0;
-
-	// установил ли приложение
-	//$app = $VKAPI->api('isAppUser', array('uid'=>$uid));
-	$u['app_setup'] = 0;//$app['response'];
-
-	// поместил ли в левое меню
-	//$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
-	$u['menu_left_set'] = 0;//($mls['response']&256) > 0 ? 1 : 0;
+	$res = $VKAPI->api('users.get', array(
+		'user_ids' => $viewer_id,
+		'fields' => 'photo,'.
+					'sex,'.
+					'country,'.
+					'city'
+	));
+	if(empty($res['response']))
+		return false;
+	$res = $res['response'][0];
+	$u = array(
+		'viewer_id' => $viewer_id,
+		'first_name' => win1251($res['first_name']),
+		'last_name' => win1251($res['last_name']),
+		'sex' => $res['sex'],
+		'photo' => $res['photo'],
+		'country_id' => empty($res['country']) ? 0 : $res['country']['id'],
+		'country_name' => empty($res['country']) ? '' : win1251($res['country']['title']),
+		'city_id' => empty($res['city']) ? 0 : $res['city']['id'],
+		'city_name' => empty($res['city']) ? '' : win1251($res['city']['title'])
+	);
 
 	$sql = "INSERT INTO `vk_user` (
 				`viewer_id`,
@@ -424,20 +436,20 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 				`last_name`,
 				`sex`,
 				`photo`,
-				`app_setup`,
-				`menu_left_set`,
 				`country_id`,
-				`city_id`
+				`country_name`,
+				`city_id`,
+				`city_name`
 			) VALUES (
-				".$uid.",
-				'".$u['first_name']."',
-				'".$u['last_name']."',
+				".$viewer_id.",
+				'".addslashes($u['first_name'])."',
+				'".addslashes($u['last_name'])."',
 				".$u['sex'].",
-				'".$u['photo']."',
-				".$u['app_setup'].",
-				".$u['menu_left_set'].",
+				'".addslashes($u['photo'])."',
 				".$u['country_id'].",
-				".$u['city_id']."
+				'".addslashes($u['country_name'])."',
+				".$u['city_id'].",
+				'".addslashes($u['city_name'])."'
 			) ON DUPLICATE KEY UPDATE
 				`first_name`=VALUES(`first_name`),
 				`last_name`=VALUES(`last_name`),
@@ -446,9 +458,10 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 				`app_setup`=VALUES(`app_setup`),
 				`menu_left_set`=VALUES(`menu_left_set`),
 				`country_id`=VALUES(`country_id`),
-				`city_id`=VALUES(`city_id`)";
+				`country_name`=VALUES(`country_name`),
+				`city_id`=VALUES(`city_id`),
+				`city_name`=VALUES(`city_name`)";
 	query($sql);
-	$u['viewer_id'] = $uid;
 	return $u;
 }//_vkUserUpdate()
 function _viewer($id=VIEWER_ID, $val=false) {
@@ -486,12 +499,16 @@ function _viewer($id=VIEWER_ID, $val=false) {
 		return $arr;
 	}
 
+	if(empty($id))
+		return false;
+
 	$key = CACHE_PREFIX.'viewer_'.$id;
 	$u = xcache_get($key);
 	if(empty($u)) {
 		$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
-		if(!$u = mysql_fetch_assoc(query($sql)))
-			$u = _vkUserUpdate($id);
+		if(!$u = query_assoc($sql))
+			if(!$u = _vkUserUpdate($id))
+				return false;
 		$u['id'] = $u['viewer_id'];
 		$u['name'] = $u['first_name'].' '.$u['last_name'];
 		$u['name_init'] = $u['last_name'].
@@ -508,8 +525,12 @@ function _viewer($id=VIEWER_ID, $val=false) {
 	if($val)
 		return isset($u[$val]) ? $u[$val] : false;
 
-	if($id == VIEWER_ID && !defined('ENTER_LAST_UPDATE')) {
-		query("UPDATE `vk_user` SET `enter_last`=CURRENT_TIMESTAMP WHERE `viewer_id`=".VIEWER_ID);
+	if(APP_START && $id == VIEWER_ID && !defined('ENTER_LAST_UPDATE')) {
+		query("UPDATE `vk_user`
+			   SET `enter_last`=CURRENT_TIMESTAMP,
+				   `app_setup`=".(empty($_GET['is_app_user']) ? 0 : 1).",
+				   `menu_left_set`=".(intval(@$_GET['api_settings'])&256 ? 1 : 0)."
+			   WHERE `viewer_id`=".VIEWER_ID);
 		define('ENTER_LAST_UPDATE', true);
 	}
 

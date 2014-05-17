@@ -7,13 +7,13 @@ class vkapi {
 	function vkapi($app_id, $api_secret, $api_url = 'api.vk.com/api.php') {
 		$this->app_id = $app_id;
 		$this->api_secret = $api_secret;
-		if (!strstr($api_url, 'http://')) $api_url = 'http://'.$api_url;
+		if (!strstr($api_url, 'http://')) $api_url = 'https://'.$api_url;
 		$this->api_url = $api_url;
 	}
 	function api($method,$params=false) {
 		if (!$params) $params = array(); 
 		$params['api_id'] = $this->app_id;
-		$params['v'] = '3.0';
+		$params['v'] = '5.21';
 		$params['method'] = $method;
 //		$params['timestamp'] = time();
 		$params['format'] = 'json';

@@ -92,7 +92,7 @@ var VK_SCROLL = 0,
 					op:'image_sort',
 					ids:arr.join()
 				};
-				$.post(AJAX_MAIN, send);
+				$.post(AJAX_MAIN, send, function() {}, 'json');
 			}
 		});
 	},
@@ -1505,7 +1505,7 @@ $(document)
 		if(!req.success)
 			return;
 		var html = '',
-			post = '<div class="hd"><b>post</b></div>',
+			post = '<div class="hd"><b>post</b><a class="repeat">повтор</a></div>',
 			sql = '<div class="hd">sql <b>' + req.sql_count + '</b> (' + req.sql_time + ') :: php ' + req.php_time + '</div>';
 		for(var i in req) {
 			switch(i) {
@@ -1513,6 +1513,7 @@ $(document)
 				case 'php_time': break;
 				case 'sql_count': break;
 				case 'sql_time': break;
+				case 'link': break;
 				case 'post':
 					for(var k in req.post)
 						post += '<p><b>' + k + '</b>: ' + req.post[k];
@@ -1532,6 +1533,13 @@ $(document)
 		}
 		$('#_debug .ajax').html(post + sql + html);
 		$('#_debug .ajax textarea').autosize();
+		$('#_debug .repeat').click(function() {
+			var t = $(this).parent();
+			if(t.hasClass('_busy'))
+				return;
+			t.addClass('_busy');
+			$.post(req.link, req.post, function() {}, 'json');
+		});
 		window.FBH = FB.height();
 		debugHeight();
 		function obj(v) {
@@ -1789,7 +1797,7 @@ $(document)
 			timer,
 			form = t.parent(),
 			but = form.parent();
-		setCookie('_upload', 'process');
+		_cookie('_upload', 'process');
 		timer = setInterval(uploadStart, 500);
 		form.submit();
 		but.addClass('busy');
