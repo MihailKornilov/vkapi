@@ -381,4 +381,15 @@ switch(@$_POST['op']) {
 		}
 		jsonSuccess($send);
 		break;
+
+	case 'history_spisok':
+		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
+			jsonError();
+		$table = $_POST['table'];
+		if(!function_exists($table))
+			jsonError();
+		$data = $table($_POST);
+		$send['html'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
 }

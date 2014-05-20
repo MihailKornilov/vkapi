@@ -264,7 +264,17 @@ var VK_SCROLL = 0,
 			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
 		'</div>';
 	},
-	_onScroll = [];
+	_onScroll = [],
+	_history = function(v, id) {
+		HIST[id] = v;
+		HIST.op = 'history_spisok';
+		$('#mainLinks').addClass('busy');
+		$.post(AJAX_MAIN, HIST, function(res) {
+			$('#mainLinks').removeClass('busy');
+			if(res.success)
+				$('.left').html(res.html);
+		}, 'json');
+	};
 
 $.fn._check = function(o) {
 	var t = $(this),
@@ -1934,6 +1944,21 @@ $(document)
 			FOTO_HEIGHT = iv.height();
 			_fbhs();
 		}
+	})
+
+	.on('click', '#_hist-next', function() {
+		var t = $(this);
+		if(t.hasClass('busy'))
+			return;
+		HIST.op = 'history_spisok';
+		HIST.page = $(this).attr('val');
+		t.addClass('busy');
+		$.post(AJAX_MAIN, HIST, function(res) {
+			if(res.success)
+				t.after(res.html).remove();
+			else
+				t.removeClass('busy');
+		}, 'json');
 	})
 
 	.ready(function() {
