@@ -81,6 +81,7 @@ table{border:0;border-spacing:0}
 #_debug li b{left:15px}
 #_debug .cookie{margin:10px}
 #_debug .get{margin:10px}
+#_debug .get textarea{width:570px;height:100px;margin-top:10px}
 #_debug .ajax{margin:10px}
 #_debug .ajax .hd{
 	margin:15px 0 3px;

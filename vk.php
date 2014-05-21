@@ -135,10 +135,11 @@ function _debug() {
 					$cookieCount++;
 				}
 
-		$get = '<a href="https://api.vk.com/method/users.isAppUser?user_id=982006&v=5.21&access_token='.@$_GET['access_token'].'" target="_blank">123</a><br />';
+		$get = '';
 		ksort($_GET);
 		foreach($_GET as $i => $v)
 			$get .= '<b>'.$i.'</b>='.$v.'<br />';
+		$get .= '<textarea>http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'].'</textarea>';
 
 		$send .=
 		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
@@ -196,14 +197,18 @@ function _footer() {
 function _vkapi($method, $param=array()) {
 	$param += array(
 		'v' => 5.21,
-		'access_token' => @$_GET['access_token']
+		'lang' => 'ru',
+		'access_token' => !empty($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
 	);
 	$values = array();
 	foreach($param as $k => $v)
 		$values[] = $k.'='.$v;
 	$url = 'https://api.vk.com/method/'.$method.'?'.implode('&', $values);
 	$res = file_get_contents($url);
-	return json_decode($res, true);
+	$res = json_decode($res, true);
+	if(SA && DEBUG)
+		$res['url'] = $url;
+	return $res;
 }
 
 function jsonError($values=null) {
@@ -406,7 +411,7 @@ function _tooltip($msg, $left=0, $ugolSide='') {
 		'</div>';
 }//_tooltip()
 
-function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251', $txt); }
+function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
 function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
 
@@ -448,7 +453,8 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 			   SET `enter_last`=CURRENT_TIMESTAMP,
 				   `is_app_user`=".(empty($_GET['is_app_user']) ? 0 : 1).",
 				   `rule_menu_left`=".(intval(@$_GET['api_settings'])&256 ? 1 : 0).",
-				   `rule_notify`=".(intval(@$_GET['api_settings'])&1 ? 1 : 0)."
+				   `rule_notify`=".(intval(@$_GET['api_settings'])&1 ? 1 : 0).",
+				   `access_token`='".$_GET['access_token']."'
 			   WHERE `viewer_id`=".VIEWER_ID);
 		define('ENTER_LAST_UPDATE', true);
 	}
@@ -460,9 +466,9 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 	$res = _vkapi('users.get', array(
 		'user_ids' => $viewer_id,
 		'fields' => 'photo,'.
-			'sex,'.
-			'country,'.
-			'city'
+					'sex,'.
+					'country,'.
+					'city'
 	));
 
 	if(empty($res['response']))
@@ -505,8 +511,6 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 				`last_name`=VALUES(`last_name`),
 				`sex`=VALUES(`sex`),
 				`photo`=VALUES(`photo`),
-				`is_app_user`=VALUES(`is_app_user`),
-				`rule_menu_left`=VALUES(`rule_menu_left`),
 				`country_id`=VALUES(`country_id`),
 				`country_name`=VALUES(`country_name`),
 				`city_id`=VALUES(`city_id`),
