@@ -660,19 +660,19 @@ $.fn.years = function(o) {// перелистывание годов
 		span:$('#years_' + id + ' #ycenter SPAN'),
 		width:Math.round($('#years_' + id + ' #ycenter').css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
 		ismove:0
-	}
+	};
 	years.next = function(side) {
 		o.start();
 		var y = years;
-		if(y.ismove == 0) {
+		if(!y.ismove) {
 			y.ismove = 1;
-			var changed = 0;
-			var timer = setInterval(function () {
+			var changed = 0,
+				timer = setInterval(function () {
 				var span = y.span;
 				y.left -= y.speed * side;
 
-				if (y.left > 0 && changed == 1 && side == -1 ||
-					y.left < 0 && changed == 1 && side == 1) {
+				if (y.left > 0 && changed && side == -1 ||
+					y.left < 0 && changed && side == 1) {
 					y.left = 0;
 					y.ismove = 0;
 					y.speed = 0;
@@ -682,8 +682,8 @@ $.fn.years = function(o) {// перелистывание годов
 				span[0].style.left = y.left + 'px';
 				y.speed += 2;
 
-				if (y.left > y.width && changed == 0 && side == -1 ||
-					y.left < -y.width && changed == 0 && side == 1) {
+				if (y.left > y.width && !changed && side == -1 ||
+					y.left < -y.width && !changed && side == 1) {
 					changed = 1;
 					o.year += side;
 					span.html(o.year);
@@ -695,7 +695,9 @@ $.fn.years = function(o) {// перелистывание годов
 		}
 	};
 
-	$('#years_' + id + ' #ycenter').click(o.center);
+	$('#years_' + id + ' #ycenter').click(function() {
+		o.center(o.year, id);
+	});
 
 	$('#years_' + id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
 	$('#years_' + id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
