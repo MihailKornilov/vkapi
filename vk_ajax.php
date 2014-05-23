@@ -7,6 +7,43 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'debug_sql':
+		if(!SA && !DEBUG)
+			jsonError();
+
+		$nocache = _isbool($_POST['nocache']);
+		$explain = _isbool($_POST['explain']);
+
+		$sql = ($explain ? 'EXPLAIN ' : '').trim($_POST['query']);
+		$q = query($sql, 1);
+
+		if($nocache)
+			$sql = preg_replace('/SELECT/', 'SELECT NO_SQL_CACHE', $sql);
+
+		if($explain) {
+			$exp = '<table>';
+			$n = 1;
+			while($r = mysql_fetch_assoc($q['res'])) {
+				$exp .= '<tr>';
+				if($n++ == 1) {
+					foreach($r as $i => $v)
+						$exp .= '<th>'.$i;
+					$exp .= '<tr>';
+				}
+				foreach($r as $v)
+					$exp .= '<td>'.$v;
+			}
+			$exp .= '<table>';
+			$send['exp'] = $exp;
+		}
+
+		$send['query'] = $sql;
+		$send['html'] =
+			//'rows: <b>'.$q['rows'].'</b>, '.
+			'time: '.$q['time'];
+		jsonSuccess($send);
+		break;
+
 	case 'sort':
 		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
 			jsonError();

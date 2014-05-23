@@ -77,8 +77,31 @@ table{border:0;border-spacing:0}
 #_debug .dmenu a.sel{background-color:#aea}
 #_debug ul{margin:10px 8px 5px 23px}
 #_debug li{margin-bottom:7px;word-wrap:break-word}
-#_debug li span,#_debug li b{font-size:10px;position:relative;top:1px;left:-5px}
-#_debug li b{left:15px}
+#_debug li .sql-un,#_debug li b{
+	color:#000;
+	font-size:10px;
+	position:relative;
+	top:1px;
+	left:-5px;
+	white-space:pre-line;
+}
+#_debug li .t{left:15px;color:#999}
+#_debug li .t.long{color:#d22}
+#_debug li textarea{width:550px;border-top:none}
+#_debug .sql-hd{
+	width:546px;
+	border:#ccc solid 1px;
+	padding:3px 5px;
+	background-color:#ccc;
+}
+#_debug .sql-hd a{margin-left:20px}
+#_debug .sql-hd._busy{background-position:518px center}
+#_debug .sql-hd h3{float:right}
+#_debug .exp{width:558px;margin-top:-1px}
+#_debug .exp *{font-size:10px}
+#_debug .exp table{width:100%;border-collapse:collapse;background-color:#f8f8f8}
+#_debug .exp td,#_debug .exp th{border:#ccc solid 1px;padding:2px 4px}
+#_debug .exp th{font-weight:bold}
 #_debug .cookie{margin:10px}
 #_debug .get{margin:10px}
 #_debug .get textarea{width:570px;height:100px;margin-top:10px}

@@ -42,7 +42,7 @@ var VK_SCROLL = 0,
 	AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
-		FOTO_HEIGHT = s || h < FBH ? 0 : h + 30;
+		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;
 		_fbhs();
 	},
 	_cookie = function(name, value) {
@@ -1581,6 +1581,45 @@ $(document)
 		_cookie('debug', _cookie('debug') == 1 ? 0 : 1);
 		_msg('Debug включен.');
 		location.reload();
+	})
+	.on('click', '#_debug .sql-un', function() {
+		var t = $(this),
+			txt = '<div class="sql-hd">' +
+					'time: ' + t.next().html() +
+					'<a>Обновить</a>' +
+					'<a>NOCACHE</a>' +
+					'<a>EXPLAIN</a>' +
+					'<h3></h3>' +
+				  '</div>' +
+				  '<textarea>' + t.html() + '</textarea>' +
+				  '<div class="exp"></div>';
+		t.parent()
+		 .html(txt)
+		 .find('textarea').select().autosize({callback:function() { debugHeight(); }});
+		debugHeight();
+	})
+	.on('click', '#_debug .sql-hd a', function() {
+		var t = $(this),
+			p = t.parent(),
+			h3 = p.find('h3'),
+			send = {
+				op:'debug_sql',
+				query:p.next().val(),
+				nocache:t.html() == 'NOCACHE' ? 1 : 0,
+				explain:t.html() == 'EXPLAIN' ? 1 : 0
+			};
+		if(p.hasClass('_busy'))
+			return;
+		h3.html('');
+		p.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			p.removeClass('_busy');
+			if(res.success) {
+				h3.html(res.html);
+				if(res.exp)
+					p.next().next().html(res.exp);
+			}
+		}, 'json');
 	})
 	.on('click', '#cookie_clear', function() {
 		$.post(AJAX_MAIN, {'op':'cookie_clear'}, function(res) {

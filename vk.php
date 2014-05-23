@@ -198,8 +198,9 @@ function _vkapi($method, $param=array()) {
 	$param += array(
 		'v' => 5.21,
 		'lang' => 'ru',
-		'access_token' => !empty($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
+		'access_token' => isset($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
 	);
+
 	$values = array();
 	foreach($param as $k => $v)
 		$values[] = $k.'='.$v;
@@ -252,14 +253,20 @@ function _dbConnect() {
 	$sqlQuery = array();
 	query('SET NAMES `'.NAMES.'`', $dbConnect);
 }//_dbConnect()
-function query($sql) {
+function query($sql, $debug=0) {
 	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
 	$res = mysql_query($sql) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
+	if($debug)
+		return array(
+			'time' => round($t, 3),
+			'res' => $res
+			//'rows' => mysql_num_rows($res)
+		);
 	$sqlTime += $t;
 	$t = round($t, 3);
-	$sqlQuery[] = '<li><span>'.nl2br($sql).'</span><b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b>';
+	$sqlQuery[] = '<li><a class="sql-un">'.trim(str_replace ('	', '',  $sql)).'</a><b class="t'.($t > 0.05 ? ' long' : '').'">'.$t.'</b>';
 	if(mysql_insert_id() && strpos(strtoupper($sql), 'INSERT INTO') !== false)
 		return mysql_insert_id();
 	return $res;
@@ -331,6 +338,14 @@ function _selJson($arr) {
 	}
 	return '['.implode(',',$send).']';
 }//_selJson()
+function _assJson($arr) {//Ассоциативный массив
+	foreach($arr as $id => $v)
+		$send[] =
+			(preg_match(REGEXP_NUMERIC, $id) ? $id : '"'.$id.'"').
+			':'.
+			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
+	return '{'.implode(',', $send).'}';
+}//_assJson()
 
 function pageHelpIcon() {
 	$page[] = $_GET['p'];
@@ -465,14 +480,17 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Контакта
 	$res = _vkapi('users.get', array(
 		'user_ids' => $viewer_id,
+		'access_token' => '',
 		'fields' => 'photo,'.
 					'sex,'.
 					'country,'.
 					'city'
 	));
 
-	if(empty($res['response']))
+	if(empty($res['response'])) {
+		print_r($res);
 		die('Do not get user from VK: '.$viewer_id);
+	}
 	$res = $res['response'][0];
 	$u = array(
 		'viewer_id' => $viewer_id,
