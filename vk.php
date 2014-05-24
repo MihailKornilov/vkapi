@@ -464,13 +464,23 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 		return isset($u[$val]) ? $u[$val] : false;
 
 	if(APP_START && $viewer_id == VIEWER_ID && !defined('ENTER_LAST_UPDATE')) {
+		$nu = array(
+			'id' => VIEWER_ID,
+			'is_app_user' => empty($_GET['is_app_user']) ? 0 : 1,
+			'rule_menu_left' => intval(@$_GET['api_settings'])&256 ? 1 : 0,
+			'rule_notify' => intval(@$_GET['api_settings'])&1 ? 1 : 0
+		);
 		query("UPDATE `vk_user`
 			   SET `enter_last`=CURRENT_TIMESTAMP,
-				   `is_app_user`=".(empty($_GET['is_app_user']) ? 0 : 1).",
-				   `rule_menu_left`=".(intval(@$_GET['api_settings'])&256 ? 1 : 0).",
-				   `rule_notify`=".(intval(@$_GET['api_settings'])&1 ? 1 : 0).",
+				   `is_app_user`=".$nu['is_app_user'].",
+				   `rule_menu_left`=".$nu['rule_menu_left'].",
+				   `rule_notify`=".$nu['rule_notify'].",
 				   `access_token`='".$_GET['access_token']."'
 			   WHERE `viewer_id`=".VIEWER_ID);
+		if(!$new && function_exists('viewerSettingsHistory')) {
+			viewerSettingsHistory($u, $nu);
+			xcache_unset($key);
+		}
 		define('ENTER_LAST_UPDATE', true);
 	}
 
@@ -705,9 +715,10 @@ function _history($types, $functions=array(), $v=array(), $filter_dop) {
 			$send['spisok'] .=
 				'<div class="_hist-un">'.
 					'<table><tr>'.
-						'<td class="hist-img">'.$r['photo'].
-						'<td><h5>'.$r['viewer_name'].'</h5>'.
-							'<h6>'.FullDataTime($r['dtime_add']).'</h6>'.
+		  ($viewer_id ? '<td class="hist-img">'.$r['photo'] : '').
+						'<td>'.
+			  ($viewer_id ? '<h5>'.$r['viewer_name'].'</h5>' : '').
+							'<h6>'.FullDataTime($r['dtime_add']).(!$viewer_id ? '<span>cron</span>' : '').'</h6>'.
 					'</table>'.
 					'<ul>'.$txt.'</ul>'.
 				'</div>';
