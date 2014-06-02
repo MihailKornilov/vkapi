@@ -699,6 +699,20 @@ td.r{text-align:right}
 #_msg b{font-size:12px}
 
 
+
+#_wait{
+	padding:15px 20px;
+	position:absolute;
+	width:40px;
+	left:260px;
+	top:100px;
+	background-color:#333;
+	opacity:0.7;
+	border-radius:5px;
+	z-index:99999
+}
+
+
 ._search{
 	border:#CCC solid 1px;
 	background:#fff no-repeat 6px 7px url("data:image/gif;base64,R0lGODlhCwALANUAAAAAAP////z8/ert8+ns8vj5+/f4+unt8+Xp7+Pn7ejr7+ru8+nt8tPb5Nrh6dng6Njf59fe5t/l7N3j6tjg6Nbe5tXd5dTc5N3k69vi6eXq7+Tp7uLn7OHm6/Hz9fr7/Pn6+/j5+s3X4NTd5dPc5NLb49Ha4tnh6Njg59be5d7l687Y4NXe5dTd5N3l6+7y9dLc49jh5+Dn7N/m693l6urv8v3///z9/f39/fv7+wAAAAAAAAAAAAAAAAAAAAAAACwAAAAACwALAAAGWsCA8DM4ORwZRU54Y1xasg6LdBCGGpaX0JOqCA0rmVCYMH1Fs3GAYw6AKK6a8MXyulWVCU3VuiwCCCgRGBgPJxAEHxsjMDEFIJAgAgESJS0aakI4AhIbNplCQQA7");

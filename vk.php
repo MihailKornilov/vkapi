@@ -201,10 +201,7 @@ function _vkapi($method, $param=array()) {
 		'access_token' => isset($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
 	);
 
-	$values = array();
-	foreach($param as $k => $v)
-		$values[] = $k.'='.$v;
-	$url = 'https://api.vk.com/method/'.$method.'?'.implode('&', $values);
+	$url = 'https://api.vk.com/method/'.$method.'?'.http_build_query($param);
 	$res = file_get_contents($url);
 	$res = json_decode($res, true);
 	if(SA && DEBUG)
@@ -446,7 +443,7 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 		return _viewerArray($viewer_id);
 
 	if(!_isnum($viewer_id))
-		die('Viewer is not correct.');
+		die('Viewer: '.$viewer_id.' is not correct.');
 
 	$new = false;
 	$key = CACHE_PREFIX.'viewer_'.$viewer_id;

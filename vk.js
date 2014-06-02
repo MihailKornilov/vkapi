@@ -134,32 +134,53 @@ var VK_SCROLL = 0,
 		var body = $('body');
 		if(add) {
 			ZINDEX += 10;
-			if(BC == 0) {
+			if(!BC) {
 				body.find('._backfon').remove().end()
 					.append('<div class="_backfon"></div>');
 			}
-			body.find('._backfon').css({'z-index':ZINDEX});
+			var backfon = body.find('._backfon');
+			backfon.css({'z-index':ZINDEX});
+			if(typeof add == 'object')
+				backfon.click(function() {
+					del();
+					add.remove();
+				});
 			BC++;
-		} else {
+		} else
+			del();
+
+		function del() {
 			BC--;
 			ZINDEX -= 10;
-			if(BC == 0)
-				body.find('._backfon').remove();
+			var backfon = body.find('._backfon');
+			if(!BC)
+				backfon.remove();
 			else
-				body.find('._backfon').css({'z-index':ZINDEX});
+				backfon.css({'z-index':ZINDEX});
 		}
 	},
-	_msg = function(txt) {//Сообщение о результе выполненных действий
-		var obj = $('#_msg');
-		if(obj.length > 0)
-			obj.remove();
-		$('body').append('<div id=_msg>' + txt + '</div>');
+	_msg = function(txt, func) {//Сообщение о результате выполненных действий
+		$('#_msg').remove();
+		$('body').append('<div id="_msg">' + txt + '</div>');
 		$('#_msg')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL)
 			.delay(1200)
 			.fadeOut(400, function() {
 				$(this).remove();
+				if(typeof func == 'function')
+					func();
 			});
+	},
+	_wait = function(v) {//Ожидание выполнения действия
+		$('#_wait').remove();
+		if(v === false) {
+			_backfon(false);
+			return;
+		}
+		$('body').append('<div id="_wait" class="_busy"></div>');
+		_backfon($('#_wait'));
+		$('#_wait')
+			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
 	_dialog = function(obj) {
 		var t = $(this),
@@ -1860,8 +1881,8 @@ $(document)
 				but.removeClass('busy');
 				form.find('input[type=file]').remove();
 				form.append('<input type="file" name="f1" />' +
-					'<input type="file" name="f2" class="f2" />' +
-					'<input type="file" name="f3" class="f3" />');
+							'<input type="file" name="f2" class="f2" />' +
+							'<input type="file" name="f3" class="f3" />');
 				var arr = cookie.split('_');
 				switch(arr[0]) {
 					case 'uploaded':
