@@ -78,10 +78,10 @@ define('VALUES', 'viewer_id='.VIEWER_ID.
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
 define('SITE', 'http://'.DOMAIN);
-define('URL', SITE.'/index.php?'.VALUES);
+define('URL', '/index.php?'.VALUES);
 
 define('GSITE', 'http://nyandoma'.(LOCAL ? '' : '.ru'));
-define('AJAX_MAIN', SITE.'/ajax/main.php?'.VALUES);
+define('AJAX_MAIN', '/ajax/main.php?'.VALUES);
 
 if(!defined('CRON'))
 	define('CRON', 0);

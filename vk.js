@@ -38,8 +38,8 @@ var VK_SCROLL = 0,
 		12:'декабря'
 	},
 	SITE = 'http://' + DOMAIN,
-	URL = SITE + '/index.php?' + VALUES,
-	AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
+	URL = '/index.php?' + VALUES,
+	AJAX_MAIN = '/ajax/main.php?' + VALUES,
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
 		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;
