@@ -116,6 +116,7 @@ function _debug() {
 
 	$send =
 		'<div id="admin">'.
+			(defined('PIN_TIME') ? (PIN_TIME + 10800 - time()).' :: ' : '').
 			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">SA</a> :: ' : '').
 			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'ќт' : '¬').'ключить Debug</a> :: '.
 			'<a id="cookie_clear">ќчисить cookie</a> :: '.
@@ -126,15 +127,6 @@ function _debug() {
 			'js <em></em>'.
 		'</div>';
 	if(DEBUG) {
-		$cookie = '';
-		$cookieCount = 0;
-		if(!empty($_COOKIE))
-			foreach($_COOKIE as $key => $val)
-				if(strpos($key, 'debug') !== 0) {
-					$cookie .= '<p><b>'.$key.'</b> '.$val;
-					$cookieCount++;
-				}
-
 		$get = '';
 		ksort($_GET);
 		foreach($_GET as $i => $v)
@@ -146,12 +138,15 @@ function _debug() {
 			'<h1>+</h1>'.
 			'<h2><div class="dmenu">'.
 					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
-					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'.$cookieCount.'</b></a>'.
+					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'._debug_cookie_count().'</b></a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
 				'</div>'.
 				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
-				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.$cookie.'</div>'.
+				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.
+					'<a id="cookie_update">ќбновить</a>'.
+					'<div id="cookie_spisok">'._debug_cookie().'</div>'.
+				'</div>'.
 				'<div class="pg get'.(@$_COOKIE['debug_pg'] == 'get' ? '' : ' dn').'">'.$get.'</div>'.
 				'<div class="pg ajax'.(@$_COOKIE['debug_pg'] == 'ajax' ? '' : ' dn').'">&nbsp;</div>'.
 			'</h2>'.
@@ -159,6 +154,22 @@ function _debug() {
 	}
 	return $send;
 }//_debug()
+function _debug_cookie_count() {
+	$count = 0;
+	if(!empty($_COOKIE))
+		foreach($_COOKIE as $key => $val)
+			if(strpos($key, 'debug') !== 0)
+				$count++;
+	return $count ? $count : '';
+}
+function _debug_cookie() {
+	$cookie = '';
+	if(!empty($_COOKIE))
+		foreach($_COOKIE as $key => $val)
+			if(strpos($key, 'debug') !== 0)
+				$cookie .= '<p><b>'.$key.'</b> '.$val;
+	return $cookie;
+}
 function _footer() {
 	global $html;
 	$getArr = array(
@@ -317,6 +328,12 @@ function _isbool($v) {//проверка на булево число
 		return 0;
 	return intval($v);
 }//_isbool()
+function _cena($v) {//проверка на цену
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_CENA, $v))
+		return 0;
+	$v = str_replace(',', '.', $v);
+	return round($v, 2);
+}//_cena()
 
 function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
@@ -331,7 +348,11 @@ function _selJson($arr) {
 			$title = $r['title'];
 			$content = isset($r['content']) ? $r['content'] : '';
 		}
-		$send[] = '{uid:'.$uid.',title:"'.addslashes($title).'"'.($content ? ',content:"'.addslashes($content).'"' : '').'}';
+		$send[] = '{'.
+			'uid:'.$uid.','.
+			'title:"'.addslashes($title).'"'.
+			($content ? ',content:"'.addslashes($content).'"' : '').
+		'}';
 	}
 	return '['.implode(',',$send).']';
 }//_selJson()
@@ -569,7 +590,8 @@ function _viewerFormat($u) {
 					(!empty($u['middle_name']) ? ' '.strtoupper($u['middle_name'][0]).'.' : '');
 	$u['name_full'] = $u['last_name'].' '.$u['first_name'].(!empty($u['middle_name']) ? ' '.$u['middle_name'] : '');
 	$u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
-	$u['photo'] = '<img src="'.$u['photo'].'">';
+	$u['photo'] = '<img src="'.$u['photo'].'" />';
+	$u['photo_link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['photo'].'</a>';
 	$u['viewer_name'] = $u['name'];
 	$u['viewer_link'] = $u['link'];
 	$u['viewer_photo'] = $u['photo'];
@@ -1008,7 +1030,39 @@ function _engRusChar($word) { //ѕеревод символов раскладки с английского на русс
 		'6' => '6',
 		'7' => '7',
 		'8' => '8',
-		'9' => '9'
+		'9' => '9',
+		'а' => 'а',
+		'б' => 'б',
+		'в' => 'в',
+		'г' => 'г',
+		'д' => 'д',
+		'е' => 'Є',
+		'ж' => 'ж',
+		'з' => 'з',
+		'и' => 'и',
+		'й' => 'й',
+		'к' => 'к',
+		'л' => 'л',
+		'м' => 'м',
+		'н' => 'н',
+		'о' => 'о',
+		'п' => 'п',
+		'р' => 'р',
+		'с' => 'с',
+		'т' => 'т',
+		'у' => 'у',
+		'ф' => 'ф',
+		'х' => 'х',
+		'ч' => 'ч',
+		'ц' => 'ц',
+		'ы' => 'ы',
+		'ш' => 'ш',
+		'щ' => 'щ',
+		'ъ' => 'ъ',
+		'ь' => 'ь',
+		'э' => 'э',
+		'ю' => 'ю',
+		'€' => '€'
 	);
 	$send = '';
 	for($n = 0; $n < strlen($word); $n++)

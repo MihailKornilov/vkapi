@@ -43,6 +43,12 @@ switch(@$_POST['op']) {
 			'time: '.$q['time'];
 		jsonSuccess($send);
 		break;
+	case 'debug_cookie':
+		if(!SA && !DEBUG)
+			jsonError();
+		$send['html'] = _debug_cookie();
+		jsonSuccess($send);
+		break;
 
 	case 'sort':
 		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))

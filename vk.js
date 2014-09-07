@@ -109,6 +109,11 @@ var VK_SCROLL = 0,
 			}
 		return send;
 	},
+	_cena = function(v) {
+		if(typeof v == 'string')
+			v = v.replace(',', '.');
+		return !REGEXP_CENA.test(v) || v == 0 ? 0 : v * 1;
+	},
 	_fbhs = function() {
 		var h;
 		if(FOTO_HEIGHT > 0) {
@@ -1460,7 +1465,7 @@ $.fn._select = function(o) {
 	}
 	function findEm() {
 		var v = inp.val();
-		if(v.length) {
+		if(v && v.length) {
 			var find = [];
 				reg = new RegExp(v, 'i'); // для замены найденного значения
 			for(n = 0; n < o.spisok.length; n++) {
@@ -2200,6 +2205,15 @@ $(document)
 					.find('.' + sel).removeClass('dn');
 				_cookie('debug_pg', sel);
 				debugHeight();
+			});
+			$('#cookie_update').click(function() {
+				var t = $(this);
+				t.addClass('_busy');
+				$.post(AJAX_MAIN, {op:'debug_cookie'}, function(res) {
+					t.removeClass('_busy');
+					if(res.success)
+						$('#cookie_spisok').html(res.html);
+				}, 'json');
 			});
 		}
 
