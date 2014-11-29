@@ -37,9 +37,8 @@ var VK_SCROLL = 0,
 		11:'но€бр€',
 		12:'декабр€'
 	},
-	SITE = 'http://' + DOMAIN,
-	URL = '/index.php?' + VALUES,
-	AJAX_MAIN = '/ajax/main.php?' + VALUES,
+	URL = APP_PATH + '/index.php?' + VALUES,
+	AJAX_MAIN = APP_PATH + '/ajax/main.php?' + VALUES,
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
 		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;

@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 	SA
 	VIEWER_ID
 	VIEWER_ADMIN
-	SITE
 	VALUES
 */
 
@@ -72,16 +71,17 @@ define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
 
+define('DOMAIN', $_SERVER['SERVER_NAME']);
+define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_START', !empty($_GET['referrer'])); //первый запуск приложения
 define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
-define('VALUES', 'viewer_id='.VIEWER_ID.
+define('VALUES', TIME.
+				 '&viewer_id='.VIEWER_ID.
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
-define('SITE', 'http://'.DOMAIN);
-define('URL', '/index.php?'.VALUES);
+define('URL', APP_PATH.'/index.php?'.VALUES);
 
-define('GSITE', 'http://nyandoma'.(LOCAL ? '' : '.ru'));
-define('AJAX_MAIN', '/ajax/main.php?'.VALUES);
+define('AJAX_MAIN', APP_PATH.'/ajax/main.php?'.VALUES);
 
 if(!defined('CRON'))
 	define('CRON', 0);
@@ -103,6 +103,37 @@ if(!CRON) //Включает работу куков в IE через фрейм
 
 define('DEBUG', !empty($_COOKIE['debug']));
 
+function _pre($v) {
+	echo '<pre>';
+	print_r($v);
+	echo '</pre>';
+}
+function _api_scripts() {//скрипты и стили, которые вставляются в html
+	$test = defined('TEST') ? 'test' : '';
+	return
+		//Отслеживание ошибок в скриптах
+		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js?'.VERSION.'"></script>' : '').
+
+		//Стороние скрипты
+		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.api/xd_connection.min.js?20"></script>'.
+
+		//Установка начального значения таймера.
+		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
+
+		//Установка стандартных значений для JS
+		'<script type="text/javascript">'.
+			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
+			'var VIEWER_ID='.VIEWER_ID.','.
+				'APP_PATH="'.APP_PATH.'",'.
+				'VALUES="'.VALUES.'";'.
+		'</script>'.
+
+		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
+		'<link href="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+		'<script type="text/javascript" src="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
+}//_api_scripts()
+
 function _debug() {
 	if(!SA)
 		return '';
@@ -116,12 +147,11 @@ function _debug() {
 
 	$send =
 		'<div id="admin">'.
-			(defined('PIN_TIME') ? (PIN_TIME + 10800 - time()).' :: ' : '').
 			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">SA</a> :: ' : '').
 			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
 			'<a id="cookie_clear">Очисить cookie</a> :: '.
 			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
-			'<a href="'.SITE.'/_sxdump" target="_blank">sxd</a> :: '.
+			'<a href="http://'.DOMAIN.APP_PATH.'/_sxdump" target="_blank">sxd</a> :: '.
 			'sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).') :: '.
 			'php '.round(microtime(true) - TIME, 3).' :: '.
 			'js <em></em>'.
@@ -248,7 +278,10 @@ function _appAuth() {
 	if(LOCAL || CRON)
 		return;
 	if(@$_GET['auth_key'] != md5(API_ID.'_'.VIEWER_ID.'_'.SECRET))
-		die('Ошибка авторизации. Попробуйте снова: <a href="http://vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.');
+		die(@$_GET['auth_key'].'Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.'.
+			'<br />'.API_ID.'_'.VIEWER_ID.'_'.SECRET.
+			'<br />'.md5(API_ID.'_'.VIEWER_ID.'_'.SECRET)
+		);
 }//_appAuth()
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
@@ -589,9 +622,9 @@ function _viewerFormat($u) {
 					 ($u['first_name'] ? ' '.strtoupper($u['first_name'][0]).'.' : '').
 					(!empty($u['middle_name']) ? ' '.strtoupper($u['middle_name'][0]).'.' : '');
 	$u['name_full'] = $u['last_name'].' '.$u['first_name'].(!empty($u['middle_name']) ? ' '.$u['middle_name'] : '');
-	$u['link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
+	$u['link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
 	$u['photo'] = '<img src="'.$u['photo'].'" />';
-	$u['photo_link'] = '<a href="http://vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['photo'].'</a>';
+	$u['photo_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['photo'].'</a>';
 	$u['viewer_name'] = $u['name'];
 	$u['viewer_link'] = $u['link'];
 	$u['viewer_photo'] = $u['photo'];
@@ -1422,7 +1455,7 @@ function _imageGet($v) {
 		if(empty($img[$val]))
 			$img[$val] = array(
 				'id' => 0,
-				'img' => '<img src="'.GSITE.'/vk/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
+				'img' => '<img src="//'.API_PATH.'/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
 			);
 
 	if($ownerArray)

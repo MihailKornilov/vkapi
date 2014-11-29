@@ -303,6 +303,7 @@ switch(@$_POST['op']) {
 		$f = $_FILES['f1']['name'] ? $_FILES['f1'] :
 			($_FILES['f2']['name'] ? $_FILES['f2'] : $_FILES['f3']);
 		$im = null;
+//		echo $f['type'];
 		switch ($f['type']) {
 			case 'image/jpeg': $im = @imagecreatefromjpeg($f['tmp_name']); break;
 			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
@@ -348,7 +349,7 @@ switch(@$_POST['op']) {
 				  `sort`,
 				  `viewer_id_add`
 			  ) VALUES (
-				  '".addslashes(SITE.'/files/images/')."',
+				  '".addslashes('//'.DOMAIN.APP_PATH.'/files/images/')."',
 				  '".$fileName."-s.jpg',
 				  ".$small['x'].",
 				  ".$small['y'].",
@@ -363,7 +364,7 @@ switch(@$_POST['op']) {
 
 		_imageCookie(array(
 			'id' => mysql_insert_id(),
-			'link' => SITE.'/files/images/'.$fileName.'-s.jpg',
+			'link' => '//'.DOMAIN.APP_PATH.'/files/images/'.$fileName.'-s.jpg',
 			'max' => $sort + 2 > $max ? 1 : 0
 		));
 		break;
