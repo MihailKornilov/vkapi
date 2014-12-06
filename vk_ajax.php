@@ -309,7 +309,7 @@ switch(@$_POST['op']) {
 			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
 			case 'image/gif': $im = @imagecreatefromgif($f['tmp_name']); break;
 			case 'image/tiff':
-				$tmp = PATH.'files/tmp'.VIEWER_ID.'.jpg';
+				$tmp = APP_PATH.'/files/tmp'.VIEWER_ID.'.jpg';
 				$image = NewMagickWand(); // magickwand.org
 				MagickReadImage($image, $f['tmp_name']);
 				MagickSetImageFormat($image, 'jpg');
@@ -329,8 +329,8 @@ switch(@$_POST['op']) {
 		if($x < 100 || $y < 100)
 			_imageCookie(array('error'=>2));
 
-		$small = _imageImCreate($im, $x, $y, 80, 80, PATH.'files/images/'.$fileName.'-s.jpg');
-		$big = _imageImCreate($im, $x, $y, 610, 610, PATH.'files/images/'.$fileName.'-b.jpg');
+		$small = _imageImCreate($im, $x, $y, 80, 80, APP_PATH.'/files/images/'.$fileName.'-s.jpg');
+		$big = _imageImCreate($im, $x, $y, 610, 610, APP_PATH.'/files/images/'.$fileName.'-b.jpg');
 
 		$sort = query_value("SELECT COUNT(`id`) FROM `images` WHERE !`deleted` AND `owner`='".$owner."' LIMIT 1");
 		if($sort + 1 > $max)
@@ -349,7 +349,7 @@ switch(@$_POST['op']) {
 				  `sort`,
 				  `viewer_id_add`
 			  ) VALUES (
-				  '".addslashes('//'.DOMAIN.APP_PATH.'/files/images/')."',
+				  '".addslashes('//'.DOMAIN.APP_HTML.'/files/images/')."',
 				  '".$fileName."-s.jpg',
 				  ".$small['x'].",
 				  ".$small['y'].",
@@ -364,7 +364,7 @@ switch(@$_POST['op']) {
 
 		_imageCookie(array(
 			'id' => mysql_insert_id(),
-			'link' => '//'.DOMAIN.APP_PATH.'/files/images/'.$fileName.'-s.jpg',
+			'link' => '//'.DOMAIN.APP_HTML.'/files/images/'.$fileName.'-s.jpg',
 			'max' => $sort + 2 > $max ? 1 : 0
 		));
 		break;

@@ -70,7 +70,6 @@ define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
 define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
-
 define('DOMAIN', $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_START', !empty($_GET['referrer'])); //первый запуск приложения
@@ -79,9 +78,9 @@ define('VALUES', TIME.
 				 '&viewer_id='.VIEWER_ID.
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
-define('URL', APP_PATH.'/index.php?'.VALUES);
+define('URL', APP_HTML.'/index.php?'.VALUES);
 
-define('AJAX_MAIN', APP_PATH.'/ajax/main.php?'.VALUES);
+define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES);
 
 if(!defined('CRON'))
 	define('CRON', 0);
@@ -125,12 +124,12 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
-				'APP_PATH="'.APP_PATH.'",'.
+				'APP_HTML="'.APP_HTML.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link href="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
 }//_api_scripts()
 
@@ -151,7 +150,7 @@ function _debug() {
 			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
 			'<a id="cookie_clear">Очисить cookie</a> :: '.
 			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
-			'<a href="http://'.DOMAIN.APP_PATH.'/_sxdump" target="_blank">sxd</a> :: '.
+			'<a href="http://'.DOMAIN.APP_HTML.'/_sxdump" target="_blank">sxd</a> :: '.
 			'sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).') :: '.
 			'php '.round(microtime(true) - TIME, 3).' :: '.
 			'js <em></em>'.
@@ -278,10 +277,7 @@ function _appAuth() {
 	if(LOCAL || CRON)
 		return;
 	if(@$_GET['auth_key'] != md5(API_ID.'_'.VIEWER_ID.'_'.SECRET))
-		die(@$_GET['auth_key'].'Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.'.
-			'<br />'.API_ID.'_'.VIEWER_ID.'_'.SECRET.
-			'<br />'.md5(API_ID.'_'.VIEWER_ID.'_'.SECRET)
-		);
+		die('Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.');
 }//_appAuth()
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
@@ -1455,7 +1451,7 @@ function _imageGet($v) {
 		if(empty($img[$val]))
 			$img[$val] = array(
 				'id' => 0,
-				'img' => '<img src="//'.API_PATH.'/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
+				'img' => '<img src="'.API_HTML.'/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
 			);
 
 	if($ownerArray)
