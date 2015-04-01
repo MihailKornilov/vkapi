@@ -39,6 +39,7 @@ var VK_SCROLL = 0,
 	},
 	URL = APP_HTML + '/index.php?' + VALUES,
 	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES,
+	_onScroll = [],
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
 		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;
@@ -174,6 +175,16 @@ var VK_SCROLL = 0,
 				if(typeof func == 'function')
 					func();
 			});
+	}
+	_err = function(msg) {
+		dialog.bottom.vkHint({
+			msg:'<SPAN class="red">' + msg + '</SPAN>',
+			top:-48,
+			left:126,
+			indent:40,
+			show:1,
+			remove:1
+		});
 	},
 	_wait = function(v) {//Ожидание выполнения действия
 		$('#_wait').remove();
@@ -211,7 +222,7 @@ var VK_SCROLL = 0,
 				'<div class="content">' + obj.content + '</div>' +
 			'</div>' +
 			'<div class="bottom">' +
-				(obj.butSubmit ? '<div class="vkButton"><button>' + obj.butSubmit + '</button></div>' : '') +
+				'<div class="vkButton' + (obj.butSubmit ? '' : ' dn') + '"><button>' + obj.butSubmit + '</button></div>' +
 				(obj.butCancel ? '<div class="vkCancel"><button>' + obj.butCancel + '</button></div>' : '') +
 			'</div>' +
 		'</div>';
@@ -223,7 +234,8 @@ var VK_SCROLL = 0,
 		var dialog = $('body').append(html).find('._dialog:last'),
 			content = dialog.find('.content'),
 			bottom = dialog.find('.bottom'),
-			butSubmit = bottom.find('.vkButton');
+			butSubmit = bottom.find('.vkButton'),
+			w2 = Math.round(obj.width / 2); // ширина/2. Для определения положения по центру
 		dialog.find('.head .img_del').click(dialogClose);
 		butSubmit.find('button').click(obj.submit);
 		bottom.find('.vkCancel').click(function() {
@@ -236,7 +248,7 @@ var VK_SCROLL = 0,
 		dialog.css({
 			width:obj.width + 'px',
 			top:$(window).scrollTop() + VK_SCROLL + obj.top + 'px',
-			left:313 - Math.round(obj.width / 2) + 'px',
+			left:313 - w2 + 'px',
 			'z-index':ZINDEX + 5
 		});
 
@@ -277,8 +289,22 @@ var VK_SCROLL = 0,
 			content:(function() {
 				return content;
 			})(),
+			err:function(msg) {
+				bottom.vkHint({
+					msg:'<span class="red">' + msg + '</span>',
+					top:-48,
+					left:w2 - 85,
+					indent:40,
+					show:1,
+					remove:1
+				});
+			},
 			loadError:function() {
 				dialog.find('.load').removeClass('_busy');
+			},
+			butSubmit:function(name) {
+				butSubmit[(name ? 'remove' : 'add') + 'Class']('dn');
+				butSubmit.find('button').html(name);
 			}
 		};
 	},
@@ -289,7 +315,6 @@ var VK_SCROLL = 0,
 			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
 		'</div>';
 	},
-	_onScroll = [],
 	_history = function(v, id) {
 		HIST[id] = v;
 		HIST.op = 'history_spisok';
@@ -1139,6 +1164,7 @@ $.fn._select = function(o) {
 				case 'process': s.process(); break;
 				case 'cancel': s.cancel(); break;
 				case 'title': return s.title();
+				case 'inp': return s.inp();
 				case 'remove': $('#' + id + '_select').remove(); break;
 				default:
 					if(REGEXP_NUMERIC.test(o))
@@ -1526,8 +1552,11 @@ $.fn._select = function(o) {
 		spisokPrint();
 		t.cancel();
 	};
-	t.title = function() {//Получение наименования установленного значения
+	t.title = function() {//Получение содержимого установленного значения
 		return ass[t.val()];
+	};
+	t.inp = function() {//Получение содержимого введённого значения
+		return inp.val();
 	};
 
 	window[id + '_select'] = t;

@@ -1,4 +1,6 @@
 <?php
+require_once 'remind.php';
+
 switch(@$_POST['op']) {
 	case 'cookie_clear':
 		if(!empty($_COOKIE))

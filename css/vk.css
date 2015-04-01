@@ -584,11 +584,20 @@ td.r{text-align:right}
 	color:#45688e;
 	margin-right:10px;
 	font-weight:bold;
-	padding:3px 8px 4px 8px;
+	padding:3px 8px 0;
 	border-radius:2px;
+	height:17px;
 }
 #dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
 #dopLinks .sel{background-color:#597da3;color:#FFF}
+#dopLinks .count{
+	padding:2px 5px 0;
+	margin:-2px 0 0 2px;
+	float:right;
+	display:inline-block;
+	height:16px;
+}
+#dopLinks :not(.sel) .count{background-color:#D5DDE5;border-radius:2px}
 
 
 /* Выпадающее меню по ссылке */
@@ -678,7 +687,6 @@ td.r{text-align:right}
 	border:#ccc solid 1px;
 	text-align:center;
 	padding:130px 10px;
-	margin:10px;
 }
 
 
@@ -969,7 +977,6 @@ td.r{text-align:right}
 	border:#CC9 solid 1px;
 }
 .correct span{margin-right:10px}
-
 
 
 

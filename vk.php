@@ -56,19 +56,22 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 
 define('TIME', microtime(true));
 
+require_once(dirname(__FILE__).'/syncro.php');
+require_once('view/remind.php');
+
 setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
 
-define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
-define('REGEXP_INTEGER', '/^-?[0-9]{1,20}$/i');
-define('REGEXP_CENA', '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
-define('REGEXP_BOOL', '/^[0-1]$/');
-define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
-define('REGEXP_YEAR', '/^[0-9]{4}$/');
-define('REGEXP_YEARMONTH', '/^[0-9]{4}-[0-9]{2}$/');
-define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
+define('REGEXP_NUMERIC',    '/^[0-9]{1,20}$/i');
+define('REGEXP_INTEGER',    '/^-?[0-9]{1,20}$/i');
+define('REGEXP_CENA',       '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
+define('REGEXP_BOOL',       '/^[0-1]$/');
+define('REGEXP_DATE',       '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
+define('REGEXP_YEAR',       '/^[0-9]{4}$/');
+define('REGEXP_YEARMONTH',  '/^[0-9]{4}-[0-9]{2}$/');
+define('REGEXP_WORD',       '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
-define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
+define('REGEXP_WORDFIND',   '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
 define('DOMAIN', $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN != 'nyandoma.ru');
@@ -79,8 +82,11 @@ define('VALUES', TIME.
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
 define('URL', APP_HTML.'/index.php?'.VALUES);
+define('TODAY', strftime('%Y-%m-%d'));
+define('TODAY_UNIXTIME', strtotime(TODAY));
 
 define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES);
+define('APP_URL', 'http://vk.com/app'.APP_ID);
 
 if(!defined('CRON'))
 	define('CRON', 0);
@@ -89,6 +95,7 @@ define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
 
 $SA[982006] = 1; // Корнилов Михаил
+$SA[166424274] = 1; // тестовая запись
 define('SA', isset($SA[$_GET['viewer_id']]));
 
 if(SA || CRON) {
@@ -101,6 +108,10 @@ if(!CRON) //Включает работу куков в IE через фрейм
 	header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 
 define('DEBUG', !empty($_COOKIE['debug']));
+
+
+_dbConnect('GLOBAL_');
+_dbConnect();
 
 function _pre($v) {
 	echo '<pre>';
@@ -115,7 +126,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
-		'<script type="text/javascript" src="/.vkapp/.api/xd_connection.min.js?20"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.api/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
@@ -124,13 +135,18 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
+				(defined('WS_ID') ? 'WS_ID='.WS_ID.',' : '').
 				'APP_HTML="'.APP_HTML.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+
+		//Напоминания
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
 }//_api_scripts()
 
 function _debug() {
@@ -276,31 +292,32 @@ function jsonSuccess($send=array()) {
 function _appAuth() {
 	if(LOCAL || CRON)
 		return;
-	if(@$_GET['auth_key'] != md5(API_ID.'_'.VIEWER_ID.'_'.SECRET))
-		die('Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.API_ID.'">vk.com/app'.API_ID.'</a>.');
+	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
+		die('Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
 }//_appAuth()
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
 }//_noauth()
 
-function _dbConnect() {
-	global $mysql, $sqlQuery;
-	$dbConnect = mysql_connect($mysql['host'], $mysql['user'], $mysql['pass'], 1) or die("Can't connect to database");
-	mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
+function _dbConnect($prefix='') {
+	global $sqlQuery;
 	$sqlQuery = array();
-	query('SET NAMES `'.NAMES.'`', $dbConnect);
+	$conn = mysql_connect(
+				constant($prefix.'MYSQL_HOST'),
+				constant($prefix.'MYSQL_USER'),
+				constant($prefix.'MYSQL_PASS'),
+				1
+			) or die("Can't connect to database");
+	mysql_select_db(constant($prefix.'MYSQL_DATABASE'), $conn) or die("Can't select database");
+	query('SET NAMES `'.constant($prefix.'MYSQL_NAMES').'`', $conn);
+	define($prefix.'MYSQL_CONNECT', $conn);
 }//_dbConnect()
-function query($sql, $debug=0) {
+function query($sql, $resource_id=MYSQL_CONNECT) {
 	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
-	$res = mysql_query($sql) or die($sql.'<br />'.mysql_error());
+	$res = mysql_query($sql, $resource_id) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
-	if($debug)
-		return array(
-			'time' => round($t, 3),
-			'res' => $res
-			//'rows' => mysql_num_rows($res)
-		);
+
 	$sqlTime += $t;
 	$t = round($t, 3);
 	$sqlQuery[] = '<li><a class="sql-un">'.trim(str_replace ('	', '',  $sql)).'</a><b class="t'.($t > 0.05 ? ' long' : '').'">'.$t.'</b>';
@@ -308,13 +325,15 @@ function query($sql, $debug=0) {
 		return mysql_insert_id();
 	return $res;
 }//query()
-function query_value($sql) {
-	if(!$r = mysql_fetch_row(query($sql)))
+function query_value($sql, $resource_id=MYSQL_CONNECT) {
+	$q = query($sql, $resource_id);
+	if(!$r = mysql_fetch_row($q))
 		return false;
 	return $r[0];
 }//query_value()
-function query_assoc($sql) {
-	if(!$r = mysql_fetch_assoc(query($sql)))
+function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
+	$q = query($sql, $resource_id);
+	if(!$r = mysql_fetch_assoc($q))
 		return array();
 	return $r;
 }//query_assoc()
@@ -325,13 +344,23 @@ function query_ass($sql) {//Ассоциативный массив
 		$send[$r[0]] = $r[1];
 	return $send;
 }//query_ass()
-function query_selJson($sql) {
+function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 	$send = array();
-	$q = query($sql);
+	$q = query($sql, $resource_id);
 	while($sp = mysql_fetch_row($q))
 		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
 	return '['.implode(',',$send).']';
 }//query_selJson()
+function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select при отправке через ajax
+	$send = array();
+	$q = query($sql, $resource_id);
+	while($sp = mysql_fetch_row($q))
+		$send[] = array(
+			'uid' => $sp[0],
+			'title' => utf8(addslashes(htmlspecialchars_decode($sp[1])))
+		);
+	return $send;
+}//query_selArray()
 function query_ptpJson($sql) {//Ассоциативный массив
 	$q = query($sql);
 	$send = array();
@@ -344,7 +373,7 @@ function query_ids($sql) {//Список идентификаторов
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0];
-	return empty($send) ? 0 : implode(',', $send);
+	return empty($send) ? 0 : implode(',', array_unique($send));
 }//query_ids()
 
 function _isnum($v) {//проверка на целое число
@@ -363,7 +392,9 @@ function _cena($v) {//проверка на цену
 	$v = str_replace(',', '.', $v);
 	return round($v, 2);
 }//_cena()
-
+function _txt($v) {
+	return win1251(htmlspecialchars(trim($v)));
+}//_txt
 function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
 }//getMaxSql()
