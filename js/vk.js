@@ -109,6 +109,9 @@ var VK_SCROLL = 0,
 			}
 		return send;
 	},
+	_num = function(v) {
+		return !REGEXP_NUMERIC.test(v) ? 0 : v * 1;
+	},
 	_cena = function(v) {
 		if(typeof v == 'string')
 			v = v.replace(',', '.');
@@ -175,7 +178,7 @@ var VK_SCROLL = 0,
 				if(typeof func == 'function')
 					func();
 			});
-	}
+	},
 	_err = function(msg) {
 		dialog.bottom.vkHint({
 			msg:'<SPAN class="red">' + msg + '</SPAN>',

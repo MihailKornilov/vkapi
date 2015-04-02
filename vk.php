@@ -381,6 +381,11 @@ function _isnum($v) {//проверка на целое число
 		return 0;
 	return intval($v);
 }//_isnum()
+function _num($v) {
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
+		return 0;
+	return intval($v);
+}//_num()
 function _isbool($v) {//проверка на булево число
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_BOOL, $v))
 		return 0;
