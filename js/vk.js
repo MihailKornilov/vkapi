@@ -1255,7 +1255,9 @@ $.fn._select = function(o) {
 		multiCorrect();
 	}
 	if(o.funcAdd && !o.disabled)
-		select.find('.seladd').click(o.funcAdd);
+		select.find('.seladd').click(function() {
+			o.funcAdd(id);
+		});
 
 	spisokPrint();
 	setVal(val);
