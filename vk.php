@@ -76,9 +76,19 @@ define('REGEXP_WORDFIND',   '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 define('DOMAIN', $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_START', !empty($_GET['referrer'])); //первый запуск приложения
-define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
+
+$SA[982006] = 1; // Корнилов Михаил
+//$SA[166424274] = 1; // тестовая запись
+define('SA', isset($SA[$_GET['viewer_id']]));
+
+//setcookie('sa_viewer_id', '', time() - 3600, '/');
+//вход из админа в другую мастерскую от имени другого пользователя
+define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
+define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : intval(@$_GET['viewer_id']));
+//define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
+
 define('VALUES', TIME.
-				 '&viewer_id='.VIEWER_ID.
+				 '&viewer_id='.$_GET['viewer_id'].
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
 define('URL', APP_HTML.'/index.php?'.VALUES);
@@ -93,10 +103,6 @@ if(!defined('CRON'))
 
 define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
-
-$SA[982006] = 1; // Корнилов Михаил
-$SA[166424274] = 1; // тестовая запись
-define('SA', isset($SA[$_GET['viewer_id']]));
 
 if(SA || CRON) {
 	error_reporting(E_ALL);
@@ -290,7 +296,7 @@ function jsonSuccess($send=array()) {
 }//jsonSuccess()
 
 function _appAuth() {
-	if(LOCAL || CRON)
+	if(LOCAL || CRON || SA_VIEWER_ID)
 		return;
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
 		die('Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
@@ -391,6 +397,11 @@ function _isbool($v) {//проверка на булево число
 		return 0;
 	return intval($v);
 }//_isbool()
+function _bool($v) {//проверка на булево число
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_BOOL, $v))
+		return 0;
+	return intval($v);
+}//_bool()
 function _cena($v) {//проверка на цену
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_CENA, $v))
 		return 0;
@@ -400,6 +411,87 @@ function _cena($v) {//проверка на цену
 function _txt($v) {
 	return win1251(htmlspecialchars(trim($v)));
 }//_txt
+function _numToWord($num, $firstSymbolUp=false) {
+	$num = intval($num);
+	$one = array(
+		0 => 'ноль',
+		1 => 'один',
+		2 => 'два',
+		3 => 'три',
+		4 => 'четыре',
+		5 => 'пять',
+		6 => 'шесть',
+		7 => 'семь',
+		8 => 'восемь',
+		9 => 'девять',
+		10 => 'деcять',
+		11 => 'одиннадцать',
+		12 => 'двенадцать',
+		13 => 'тринадцать',
+		14 => 'четырнадцать',
+		15 => 'пятнадцать',
+		16 => 'шестнадцать',
+		17 => 'семнадцать',
+		18 => 'восемнадцать',
+		19 => 'девятнадцать'
+	);
+	$ten = array(
+		2 => 'двадцать',
+		3 => 'тридцать',
+		4 => 'сорок',
+		5 => 'пятьдесят',
+		6 => 'шестьдесят',
+		7 => 'семьдесят',
+		8 => 'восемьдесят',
+		9 => 'девяносто'
+	);
+	$hundred = array(
+		1 => 'сто',
+		2 => 'двести',
+		3 => 'триста',
+		4 => 'четыреста',
+		5 => 'пятьсот',
+		6 => 'шестьсот',
+		7 => 'семьсот',
+		8 => 'восемьсот',
+		9 => 'девятьсот'
+	);
+
+	if($num < 20)
+		return $one[$num];
+
+	$word = '';
+	if($num % 100 > 0)
+		if($num % 100 < 20)
+			$word = $one[$num % 100];
+		else
+			$word = $ten[floor($num / 10) % 10].($num % 10 > 0 ? ' '.$one[$num % 10] : '');
+
+	if($num % 1000 >= 100)
+		$word = $hundred[floor($num / 100) % 10].' '.$word;
+
+	if($num >= 1000) {
+		$t = floor($num / 1000) % 1000;
+		$word = ' тысяч'._end($t, 'а', 'и', '').' '.$word;
+		if($t % 100 > 2 && $t % 100 < 20)
+			$word = $one[$t % 100].$word;
+		else {
+			if($t % 10 == 1)
+				$word = 'одна'.$word;
+			elseif($t % 10 == 2)
+				$word = 'две'.$word;
+			elseif($t % 10 != 0)
+				$word = $one[$t % 10].' '.$word;
+			if($t % 100 >= 20)
+				$word = $ten[floor($t / 10) % 10].' '.$word;
+		}
+		if($t >= 100)
+			$word = $hundred[floor($t / 100) % 10].' '.$word;
+	}
+	if($firstSymbolUp)
+		$word[0] = strtoupper($word[0]);
+	return $word;
+}//_numToWord()
 function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
 }//getMaxSql()
@@ -1215,10 +1307,12 @@ function translit($str) {
 		'ю' => 'yu',
 		'я' => 'ya',
 		' ' => '_',
-		'№' => 'N'
+		'№' => 'N',
+		'¦' => ''
 	);
 	return strtr($str, $list);
 }
+
 
 function _calendarFilter($data=array()) {
 	$data = array(

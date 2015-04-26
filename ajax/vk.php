@@ -2,6 +2,12 @@
 require_once 'remind.php';
 
 switch(@$_POST['op']) {
+	case 'cache_clear':
+		if(!SA)
+			jsonError();
+		_cacheClear();
+		jsonSuccess();
+		break;
 	case 'cookie_clear':
 		if(!empty($_COOKIE))
 			foreach($_COOKIE as $key => $val)

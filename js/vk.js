@@ -206,6 +206,7 @@ var VK_SCROLL = 0,
 		obj = $.extend({
 			width:360,
 			top:100,
+			padding:10,//отступ для content
 			head:'head: Название заголовка',
 			load:0, // Показ процесса ожидания загрузки в центре диалога
 			content:'content: содержимое центрального поля',
@@ -222,7 +223,7 @@ var VK_SCROLL = 0,
 			'<div class="head"><div><A class="img_del"></A>' + obj.head + '</div></div>' +
 			'<div class="dcntr">' +
 				'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
-				'<div class="content">' + obj.content + '</div>' +
+				'<div class="content"' + (obj.padding ? ' style="padding:' + obj.padding + 'px"' : '') + '>' + obj.content + '</div>' +
 			'</div>' +
 			'<div class="bottom">' +
 				'<div class="vkButton' + (obj.butSubmit ? '' : ' dn') + '"><button>' + obj.butSubmit + '</button></div>' +
