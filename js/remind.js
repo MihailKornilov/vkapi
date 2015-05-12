@@ -54,6 +54,8 @@ $(document)
 						dialog.close();
 						_msg('Напоминание внесено');
 						$(send.from ? '#remind-spisok' : 'td.left').html(res.html);
+						if(send.from == 'zayav' && window.REMIND)
+							REMIND.active++;
 					} else
 						dialog.abort();
 				}, 'json');
@@ -202,6 +204,10 @@ $(document)
 			else
 				next.removeClass('busy');
 		}, 'json');
+	})
+	.on('click', '#_remind-show-all', function() {
+		$('._remind-unit').slideDown(200);
+		$(this).remove();
 	})
 
 	.ready(function() {

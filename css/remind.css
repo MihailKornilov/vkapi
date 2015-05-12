@@ -49,3 +49,9 @@
 
 #_remind-head-edit{border-spacing:10px}
 #_remind-head-edit #hdtxt{width:360px}
+
+#_remind-show-all{
+	float:right;
+	margin-right:10px;
+	color:#88C;
+}

@@ -938,8 +938,19 @@ $.fn._dropdown = function(o) {
 	window[id + '_dropdown'] = t;
 	return t;
 };
+$.fn._tooltip = function(msg, left, ugolSide) {
+	var t = $(this);
 
-(function () {// Подсказки vkHint 2013-02-14 14:43
+	t.addClass('_tooltip');
+	t.append(
+		'<div class="ttdiv"' + (left ? ' style="left:' + left + 'px"' : '') + '>' +
+			'<div class="ttmsg">' + msg + '</div>' +
+			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
+		'</div>'
+	);
+};
+
+	(function () {// Подсказки vkHint 2013-02-14 14:43
 	var Hint = function (t, o) { this.create(t, o); return t; };
 
 	Hint.prototype.create = function (t, o) {

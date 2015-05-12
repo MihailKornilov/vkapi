@@ -161,31 +161,25 @@ function _remind_spisok($v=array(), $i='all') {
 	if($filter['zayav_id'])
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
 
-	$all = query_value("SELECT COUNT(`id`) AS `all` FROM `remind` WHERE ".$cond, GLOBAL_MYSQL_CONNECT);
-	if(!$all) {
-		$send = array(
-			'all' => 0,
-			'spisok' => ($filter['zayav_id'] ? '&nbsp;&nbsp;Напоминаний нет.' : '<div class="_empty">Напоминаний не найдено.</div>'),
-			'filter' => $filter
+
+	$send = array(
+		'spisok' => '',
+		'filter' => $filter,
+		'active' => 0,
+		'hidden' => 0
+	);
+
+	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `remind` WHERE ".$cond, GLOBAL_MYSQL_CONNECT);
+	if(!$send['all']) {
+		$send += array(
+			'spisok' => ($filter['zayav_id'] ? '&nbsp;&nbsp;Напоминаний нет.' : '<div class="_empty">Напоминаний не найдено.</div>')
 		);
 		if($i == 'all')
 			return $send;
 		return $send[$i];
 	}
 
-	$send = array(
-		'all' => $all,
-		'spisok' => '',
-		'filter' => $filter
-	);
-
-	if($page == 1) {
-		$send['spisok'] .=
-			'<input type="hidden" id="remind_filter_status" value="'.$filter['status'].'" />'.
-			'<input type="hidden" id="remind_filter_zayav_id" value="'.$filter['zayav_id'].'" />';
-		if(!$filter['zayav_id'])
-			$send['spisok'] .= '<div id="_remind-head">Показано '.$all.' напоминани'._end($all, 'е', 'я', 'й').'</div>';
-	}
+	$all = $send['all'];
 
 	$sql = "SELECT *
 			FROM `remind`
@@ -214,8 +208,10 @@ function _remind_spisok($v=array(), $i='all') {
 		$remind[$r['remind_id']]['history'][] = $r;
 
 	foreach($remind as $r) {
+		if($r['status'] == 1)
+			$send['active']++;
 		$send['spisok'] .=
-			'<div class="_remind-unit" val="'.$r['id'].'">'.
+			'<div class="_remind-unit'.(($filter['zayav_id'] || $filter['client_id']) && $r['status'] != 1 ? ' dn' : '').'" val="'.$r['id'].'">'.
 				'<input type="hidden" class="ruday" value="'.$r['day'].'" />'.
 				'<div class="head" style="background-color:#'._remindDayLeftBg($r['status'], $r['day']).'">'.
 					'<span class="hdtxt">'.$r['txt'].'</span>'.
@@ -236,6 +232,22 @@ function _remind_spisok($v=array(), $i='all') {
 				'</div>'.
 				'<div class="hist">'._remind_history_show($r).'</div>'.
 			'</div>';
+	}
+
+	$send['hidden'] = $send['all'] - $send['active'];//скрытые напоминания
+
+	if($page == 1) {
+		$send['spisok'] .=
+			'<input type="hidden" id="remind_filter_status" value="'.$filter['status'].'" />'.
+			'<input type="hidden" id="remind_filter_zayav_id" value="'.$filter['zayav_id'].'" />';
+		if(!$filter['zayav_id']) {
+			$c = $filter['client_id'] ? $send['active'] : $all;
+			$send['spisok'] =
+				'<div id="_remind-head">' .
+					($c ? 'Показано '.$c.' напоминани'._end($c, 'е', 'я', 'й') : 'Активных напоминаний нет.').
+					($filter['client_id'] && $send['hidden'] ? '<a id="_remind-show-all">Показать скрытые: '.$send['hidden'].'</a>' : '').
+				'</div>'.$send['spisok'];
+		}
 	}
 
 	if($start + $limit < $all) {
@@ -323,3 +335,31 @@ function _remind_add($v) {
 		'day' => $v['day']
 	));
 }//_remind_add()
+function _remind_zayav($zayav_id, $link_values='&p=remind') {//вывод напоминаний в заявке
+	$data = _remind_spisok(array('zayav_id'=>$zayav_id));
+	return
+		'<script type="text/javascript">'.
+			'var REMIND={'.
+				'active:'.$data['active'].
+			'};'.
+		'</script>'.
+		'<div class="headBlue">'.
+			'<a href="'.URL.$link_values.'"><b>Напоминания</b></a>'.
+			'<div class="img_add _remind-add'._tooltip('Новое напоминание', -60).'</div>'.
+			($data['hidden'] ? '<a id="_remind-show-all">Показать все: '.$data['hidden'].'</a>' : '').
+		'</div>'.
+		'<div id="remind-spisok">'.$data['spisok'].'</div>';
+}//_remind_zayav()
+function _remind_active_to_ready_in_zayav($zayav_id) {//отметка активных напоминаний выполненными в заявках
+	$sql = "SELECT * FROM `remind` WHERE `app_id`=".APP_ID." AND `status`=1 AND `zayav_id`=".$zayav_id;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		$sql = "UPDATE `remind` SET `status`=2 WHERE `id`=".$r['id'];
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_remind_history_add(array(
+			'remind_id' => $r['id'],
+			'status' => 2
+		));
+	}
+}//_remind_active_to_ready_in_zayav()
