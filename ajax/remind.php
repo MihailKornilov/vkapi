@@ -7,6 +7,7 @@ switch(@$_POST['op']) {
 		$_POST['client_id'] = _isnum($_POST['client_id']);
 		$_POST['zayav_id'] = _isnum($_POST['zayav_id']);
 		$_POST['txt'] = _txt($_POST['txt']);
+		$_POST['about'] = _txt($_POST['about']);
 
 		if(!$_POST['txt'])
 			jsonError();
@@ -111,6 +112,8 @@ switch(@$_POST['op']) {
 		if(!$txt = _txt($_POST['txt']))
 			jsonError();
 
+		$about = _txt($_POST['about']);
+
 		$sql = "SELECT *
 				FROM `remind`
 				WHERE `app_id`=".APP_ID."
@@ -120,11 +123,12 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		if($txt == $r['txt'])
+		if($txt == $r['txt'] && $about == $r['about'])
 			jsonError();
 
 		$sql = "UPDATE `remind`
-				SET `txt`='".addslashes($txt)."'
+				SET `txt`='".addslashes($txt)."',
+					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

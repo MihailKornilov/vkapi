@@ -213,9 +213,10 @@ function _remind_spisok($v=array(), $i='all') {
 		$send['spisok'] .=
 			'<div class="_remind-unit'.(($filter['zayav_id'] || $filter['client_id']) && $r['status'] != 1 ? ' dn' : '').'" val="'.$r['id'].'">'.
 				'<input type="hidden" class="ruday" value="'.$r['day'].'" />'.
-				'<div class="head" style="background-color:#'._remindDayLeftBg($r['status'], $r['day']).'">'.
-					'<span class="hdtxt">'.$r['txt'].'</span>'.
-					($r['status'] == 1 ? '<div class="img_edit'._tooltip('Редактировать', -50).'</div>' : '').
+				'<div class="head'.($r['status'] == 1 ? ' hd-edit' : '').'" style="background-color:#'._remindDayLeftBg($r['status'], $r['day']).'">'.
+					'<div class="hdtxt">'.$r['txt'].'</div>'.
+					'<div class="hd-about">'.nl2br($r['about']).'</div>'.
+//					($r['status'] == 1 ? '<div class="img_edit'._tooltip('Редактировать', -50).'</div>' : '').
 				'</div>'.
 				'<table class="to">'.
 					($r['client_id'] && !$filter['client_id'] && !$filter['zayav_id'] ?
@@ -312,6 +313,7 @@ function _remind_add($v) {
 					`client_id`,
 					`zayav_id`,
 					`txt`,
+					`about`,
 					`day`,
 					`money_cut`,
 					`viewer_id_add`
@@ -321,6 +323,7 @@ function _remind_add($v) {
 					".$v['client_id'].",
 					".$v['zayav_id'].",
 					'".addslashes($v['txt'])."',
+					'".addslashes(@$v['about'])."',
 					'".$v['day']."',
 					".(empty($v['money_cut']) ? 0 : 1).",
 					".VIEWER_ID."

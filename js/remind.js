@@ -19,20 +19,22 @@ $(document)
 				'<table class="_remind-add-tab">' +
 					(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
 					(window.CLIENT ? '<tr><td class="label">Клиент:<td>' + CLIENT.fio : '') +
-					'<tr><td class="label top">Описание:<td><textarea id="txt"></textarea>' +
+					'<tr><td class="label">Задача:<td><input type="text" id="txt" />' +
+					'<tr><td class="label top">Подробно:<td><textarea id="about"></textarea>' +
 					'<tr><td class="label">День выполнения:<td><input type="hidden" id="day" />' +
 				'</table>' +
 				'<input type="hidden" id="client_id" value="' + (window.CLIENT ? CLIENT.id : 0) + '">' +
 				'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '">',
 			dialog = _dialog({
 				top:40,
-				width:420,
+				width:480,
 				head:'Внесение нового напоминания',
 				content:html,
 				submit:submit
 			});
 
-		$('#txt').autosize().focus();
+		$('#txt').focus();
+		$('#about').autosize();
 		$('#day')._calendar();
 
 		function submit() {
@@ -42,10 +44,11 @@ $(document)
 				client_id:$('#client_id').val(),
 				zayav_id:$('#zayav_id').val(),
 				txt:$.trim($('#txt').val()),
+				about:$('#about').val(),
 				day:$('#day').val()
 			};
 			if(!send.txt) {
-				dialog.err('Не указано описание');
+				dialog.err('Не указано содержание задачи');
 				$('#txt').focus();
 			} else {
 				dialog.process();
@@ -148,39 +151,43 @@ $(document)
 				}, 'json');
 		}
 	})
-	.on('click', '._remind-unit .img_edit', function() {
+	.on('click', '._remind-unit .hd-edit', function() {
 		var t = $(this),
 			p = t;
 		while(!p.hasClass('_remind-unit'))
 			p = p.parent();
 		var id = p.attr('val'),
 			head = p.find('.hdtxt').html(),
+			about = p.find('.hd-about').html().replace(/<br>/g, ''),
 			html =
 				'<table id="_remind-head-edit">' +
-					'<tr><td class="label">Текст:<td><input type="text" id="hdtxt" value="' + head + '" />' +
+					'<tr><td class="label">Задача:<td><input type="text" id="hdtxt" value="' + head + '" />' +
+					'<tr><td class="label top">Подробно:<td><textarea id="hd-about">' + about + '</textarea>' +
 				'</table>',
 			dialog = _dialog({
-				width:460,
+				width:420,
 				head:'Редактирование содержания напоминания',
 				content:html,
-				butSubmit:'Применить',
+				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#hdtxt').keyEnter(submit);
-		function submit(status) {
+		$('#hdtxt').focus().keyEnter(submit);
+		$('#hd-about').autosize();
+		function submit() {
 			var send = {
 				op:'remind_head_edit',
 				from:window.ZAYAV ? 'zayav' : (window.CLIENT ? 'client' : ''),
 				id:id,
-				txt:$('#hdtxt').val()
+				txt:$('#hdtxt').val(),
+				about:$('#hd-about').val()
 			};
-			if(!send.txt) dialog.err('Не указан текст');
+			if(!send.txt) dialog.err('Не указано содержание задачи');
 			else {
 				dialog.process();
 				$.post(AJAX_MAIN, send, function(res) {
 					if (res.success) {
 						dialog.close();
-						_msg('Данные изменены!');
+						_msg('Данные изменены');
 						$(send.from ? '#remind-spisok' : 'td.left').html(res.html);
 					} else
 						dialog.abort();
