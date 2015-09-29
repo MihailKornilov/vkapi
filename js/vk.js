@@ -950,7 +950,7 @@ $.fn._tooltip = function(msg, left, ugolSide) {
 	);
 };
 
-	(function () {// Подсказки vkHint 2013-02-14 14:43
+(function () {// Подсказки vkHint 2013-02-14 14:43
 	var Hint = function (t, o) { this.create(t, o); return t; };
 
 	Hint.prototype.create = function (t, o) {

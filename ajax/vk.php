@@ -1,10 +1,11 @@
 <?php
+require_once 'client.php';
 require_once 'remind.php';
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
-		if(!SA)
-			jsonError();
+//		if(!SA)
+//			jsonError();
 		_cacheClear();
 		jsonSuccess();
 		break;

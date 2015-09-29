@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 define('TIME', microtime(true));
 
 require_once(dirname(__FILE__).'/syncro.php');
+require_once('view/client.php');
 require_once('view/remind.php');
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
@@ -119,10 +120,20 @@ define('DEBUG', !empty($_COOKIE['debug']));
 _dbConnect('GLOBAL_');
 _dbConnect();
 
-function _pre($v) {
-	echo '<pre>';
-	print_r($v);
-	echo '</pre>';
+function _pre($v) {// вывод в debug разобранного массива
+	$pre = '';
+	foreach($v as $k => $r)
+		$pre .= '<div class="un"><b>'.$k.':</b>'._pre_arr($r).'</div>';
+	define('ARRAY_PRE', $pre);
+}
+function _pre_arr($v) {// проверка, является ли переменная массивом. Если да, то обработка массива.
+	if(is_array($v)) {
+		$send = '';
+		foreach($v as $k => $r)
+			$send .= '<div class="el"><b>'.$k.':</b>'._pre_arr($r).'</div>';
+		return $send;
+	}
+	return $v;
 }
 function _api_scripts() {//скрипты и стили, которые вставляются в html
 	$test = defined('TEST') ? 'test' : '';
@@ -150,6 +161,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
+		//Клиенты
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/client'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/client'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+
 		//Напоминания
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
@@ -159,7 +174,7 @@ function _debug() {
 	if(!SA)
 		return '';
 
-	global $sqlQuery, $sqlTime;
+	global $sqlQuery, $sqlTime, $_pre;
 
 	$pre = '&pre_p='.@$_GET['p'].
 			(empty($_GET['d']) ? '' : '&pre_d='.$_GET['d']).
@@ -192,6 +207,7 @@ function _debug() {
 					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'._debug_cookie_count().'</b></a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
+					(defined('ARRAY_PRE') ? '<a'.(@$_COOKIE['debug_pg'] == 'pre' ? ' class="sel"' : '').' val="pre">pre</a>' : '').
 				'</div>'.
 				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
 				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.
@@ -200,6 +216,7 @@ function _debug() {
 				'</div>'.
 				'<div class="pg get'.(@$_COOKIE['debug_pg'] == 'get' ? '' : ' dn').'">'.$get.'</div>'.
 				'<div class="pg ajax'.(@$_COOKIE['debug_pg'] == 'ajax' ? '' : ' dn').'">&nbsp;</div>'.
+				(defined('ARRAY_PRE') ? '<div class="pg pre'.(@$_COOKIE['debug_pg'] == 'pre' ? '' : ' dn').'">'.ARRAY_PRE.'</div>' : '').
 			'</h2>'.
 		'</div>';
 	}
@@ -496,6 +513,36 @@ function _maxSql($table, $pole='sort') {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
 }//getMaxSql()
 
+function _start($v) {//вычисление первой позиции в базе данных
+	return ($v['page'] - 1) * $v['limit'];
+}//_start()
+function _next($v) {//вывод ссылки на догрузку списка
+	$start = _start($v);
+	if($start + $v['limit'] < $v['all']) {
+		$c = $v['all'] - $start - $v['limit'];
+		$c = $c > $v['limit'] ? $v['limit'] : $c;
+
+		$type = ' запис'._end($c, 'ь', 'и', 'ей');
+		switch(@$v['type']) {
+			case 1: break; //клиенты
+			case 2: break; //заявки
+			case 3: break; //платежи
+			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;
+		}
+
+		$show = '<span>Показать ещё '.$c.$type.'</span>';
+		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
+		return
+			empty($v['tr']) ?
+				'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
+				:
+				'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
+					'<td colspan="10">'.$show.
+				($v['page'] == 1 ? '</table>' : '');
+	}
+	return '';
+}//_next()
+
 function _selJson($arr) {
 	$send = array();
 	foreach($arr as $uid => $title) {
@@ -521,6 +568,25 @@ function _assJson($arr) {//Ассоциативный массив
 			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
 	return '{'.implode(',', $send).'}';
 }//_assJson()
+
+function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоциативный список подкатегорий
+	$sql = "SELECT * FROM `".$table."` ORDER BY ".$sort;
+	$q = query($sql);
+	$sub = array();
+	while($r = mysql_fetch_assoc($q)) {
+		if(!isset($sub[$r[$category_id]]))
+			$sub[$r[$category_id]] = array();
+		$sub[$r[$category_id]][] = '{'.
+				'uid:'.$r['id'].','.
+				'title:"'.$r['name'].'"'.
+				(!empty($r['bold']) ? ','.'content:"<b>'.$r['name'].'</b>"' : '').
+			'}';
+	}
+	$v = array();
+	foreach($sub as $n => $sp)
+		$v[] = $n.':['.implode(',', $sp).']';
+	return '{'.implode(',', $v).'}';
+}
 
 function pageHelpIcon() {
 	$page[] = $_GET['p'];
@@ -767,7 +833,8 @@ function _historyInsert($type, $v=array(), $table='history') {
 		if($key == 'value' ||
 		   $key == 'value1' ||
 		   $key == 'value2' ||
-		   $key == 'value3')
+		   $key == 'value3' ||
+		   $key == 'viewer_id')
 			continue;
 		$keys .= '`'.$key.'`,';
 		$values .= intval($value).',';
@@ -783,11 +850,11 @@ function _historyInsert($type, $v=array(), $table='history') {
 			) VALUES (
 				".$type.",
 				".$values."
-				'".(!empty($v['value']) ? addslashes($v['value']) : '')."',
-				'".(!empty($v['value1']) ? addslashes($v['value1']) : '')."',
-				'".(!empty($v['value2']) ? addslashes($v['value2']) : '')."',
-				'".(!empty($v['value3']) ? addslashes($v['value3']) : '')."',
-				".VIEWER_ID."
+				'".(isset($v['value']) ? addslashes($v['value']) : '')."',
+				'".(isset($v['value1']) ? addslashes($v['value1']) : '')."',
+				'".(isset($v['value2']) ? addslashes($v['value2']) : '')."',
+				'".(isset($v['value3']) ? addslashes($v['value3']) : '')."',
+				".(_num(@$v['viewer_id']) ? $v['viewer_id'] : VIEWER_ID)."
 			)";
 	query($sql);
 }//_historyInsert()
@@ -1020,7 +1087,6 @@ function _vkCommentAdd($table, $id, $txt) {
 					".VIEWER_ID."
 				)";
 	query($sql);
-
 }//_vkCommentAdd()
 
 function _monthFull($n=0) {

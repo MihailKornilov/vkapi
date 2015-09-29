@@ -1,0 +1,103 @@
+#client-add-tab .ca-table{border-spacing:8px;margin:10px}
+#client-add-tab .label{width:120px;text-align:right}
+#client-add-tab input{width:250px}
+#client-add-tab #info_people{width:250px;height:40px}
+#client-add-tab #info_org{width:250px;height:40px}
+#client-add-tab #dopLinks{padding:20px 0 10px 20px}
+#client-add-tab #post-add{
+	display:block;
+	padding:10px;
+	text-align:center;
+	text-decoration:none;
+	margin:0 20px 20px 20px;
+}
+#client-add-tab #post-add:hover{background-color:#e9edf1}
+#client-add-tab #tr_join{display:none}
+
+
+/* Список клиентов */
+#client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
+#client .result.busy{background-position:585px center}
+#client .result em{color:#999;margin-left:10px;font-size:10px}
+#client #filter_clear{float:right}
+#client #dolg_check{margin-top:20px}
+#client ._check{margin-top:10px}
+#client .left{padding-bottom:10px}
+#client .unit{margin:5px 10px 0 10px;border-bottom:#dae1e8 solid 1px;padding:5px}
+#client .g-tab{width:100%}
+#client .l-tab{border-spacing:2px;width:340px}
+#client .r-td{vertical-align:top;text-align:right}
+#client .label{width:75px}
+#client .z-wait,
+#client .z-ready,
+#client .z-fail{
+	display:inline-block;
+	font-weight:bold;
+	padding:3px 7px;
+	color:#555;
+	cursor:default;
+}
+#client .z-wait{background-color:#E8E8FF}
+#client .z-ready{background-color:#CCFFCC}
+#client .z-fail{background-color:#FFDDDD}
+#client .balans{font-weight:bold;margin-top:2px;cursor:default}
+#client .post{margin-left:4px;font-size:10px;color:#777}
+#client .unit em{background-color:#FFC;border-bottom:#FE2 solid 1px}
+#client .unit .post em{font-size:10px}
+#client .comm{
+	display:inline-block;
+	width:14px;
+	height:14px;
+	margin-right:4px;
+	position:relative;
+	top:3px;
+	background-image:url("data:image/gif;base64,R0lGODlhDgAOAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAOAA4AAAMiSLoi+681CKWjyk68d+0eA17iSBJWJpVairraC7d0K9dOAgA7");
+	background-repeat:no-repeat;
+	background-position:0 0;
+}
+#client ._next{margin:0 10px}
+#client ._empty{margin:10px}
+
+
+/* Информация о клиенте */
+#clientInfo .left{padding-bottom:10px}
+#clientInfo .fio{
+	color:#31618C;
+	font-size:12px;
+	font-weight:bold;
+	margin:15px 5px 5px 20px;
+}
+#clientInfo .ci-balans{
+	float:right;
+	margin:11px 8px 0 0;
+	font-size:12px;
+	font-weight:bold;
+	cursor:default;
+	background-color:#ffa;
+	border:#e8e8aa solid 1px;
+	padding:3px 8px;
+}
+#clientInfo #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
+#clientInfo .post{margin-left:4px;font-size:10px;color:#777}
+#clientInfo .dtime{
+	font-size:10px;
+	color:#999;
+	text-align:right;
+	margin:10px 10px 0 0;
+}
+#clientInfo #dopLinks{border-top:#dae1e8 solid 1px}
+#clientInfo #dopLinks a{font-weight:normal}
+#clientInfo #dopLinks.busy{background-position:right center}
+#clientInfo #zayav_result{color:#777;text-align:center}
+#clientInfo #zayav_spisok ._empty{margin:10px}
+#clientInfo #zayav_spisok ._next{margin:5px 10px 0 10px}
+#clientInfo .zayav_unit{margin-right:10px}
+#clientInfo #schet_spisok{margin:10px;display:none}
+#clientInfo #schet_spisok #result{margin-bottom:10px}
+#clientInfo #money_spisok{margin:10px}
+#clientInfo #money_spisok,#clientInfo #histories{display:none}
+#clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
+#clientInfo #comments,#clientInfo #remind-spisok{margin:0 10px;display:none}
+#clientInfo #remind-spisok ._empty{margin:10px 0;padding:60px 10px}
+#clientInfo .right{width:145px;height:auto}
+#clientInfo #diff_check{margin-top:15px}
