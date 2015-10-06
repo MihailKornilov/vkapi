@@ -1,19 +1,38 @@
 #client-add-tab .ca-table{border-spacing:8px;margin:10px}
-#client-add-tab .label{width:120px;text-align:right}
+#client-add-tab .label{width:150px;text-align:right}
 #client-add-tab input{width:250px}
 #client-add-tab #info_people{width:250px;height:40px}
 #client-add-tab #info_org{width:250px;height:40px}
-#client-add-tab #dopLinks{padding:20px 0 10px 20px}
-#client-add-tab #post-add{
+#client-add-tab #info_dop{width:250px;height:40px}
+#client-add-tab #org_adres{width:250px;height:40px}
+#client-add-tab #dopLinks{padding:20px 0 10px 176px}
+#client-add-tab #person-head{
+	margin:15px 0 10px 50px;
+	color:#555;
+	font-weight:bold;
+}
+#client-add-tab #person-list{margin:0 0 5px 50px}
+
+/* добавление доверенного лица при внесении нового клиента и в информации о клиенте*/
+#person-add {
+	padding: 10px;
+	text-align: center;
+}
+a#person-add{
 	display:block;
-	padding:10px;
-	text-align:center;
 	text-decoration:none;
 	margin:0 20px 20px 20px;
 }
-#client-add-tab #post-add:hover{background-color:#e9edf1}
+#client-info #person-add{
+	cursor:pointer;
+	color:#2B587A;
+}
+#person-add:hover{background-color:#e9edf1}
+
 #client-add-tab #tr_join{display:none}
 
+#client-person-add{border-spacing:10px}
+#client-person-add input{width:220px}
 
 /* Список клиентов */
 #client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
@@ -38,8 +57,8 @@
 	cursor:default;
 }
 #client .z-wait{background-color:#E8E8FF}
-#client .z-ready{background-color:#CCFFCC}
-#client .z-fail{background-color:#FFDDDD}
+#client .z-ready{background-color:#CFC}
+#client .z-fail{background-color:#FDD}
 #client .balans{font-weight:bold;margin-top:2px;cursor:default}
 #client .post{margin-left:4px;font-size:10px;color:#777}
 #client .unit em{background-color:#FFC;border-bottom:#FE2 solid 1px}
@@ -60,14 +79,14 @@
 
 
 /* Информация о клиенте */
-#clientInfo .left{padding-bottom:10px}
-#clientInfo .fio{
+#client-info .left{padding-bottom:10px}
+#client-info #ci-name{
 	color:#31618C;
 	font-size:12px;
 	font-weight:bold;
 	margin:15px 5px 5px 20px;
 }
-#clientInfo .ci-balans{
+#client-info .ci-balans{
 	float:right;
 	margin:11px 8px 0 0;
 	font-size:12px;
@@ -77,27 +96,34 @@
 	border:#e8e8aa solid 1px;
 	padding:3px 8px;
 }
-#clientInfo #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
-#clientInfo .post{margin-left:4px;font-size:10px;color:#777}
-#clientInfo .dtime{
+#client-info #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
+
+#client-info #ci-person{margin:15px 0 0 20px}
+#client-info #ci-person h1{font-weight:bold;margin-bottom:5px}
+#client-info #ci-person table{width:400px;margin-left:10px}
+#client-info #ci-person .n{width:15px;text-align:right;color:#777}
+#client-info #ci-person .td-person-ed{width:35px}
+
+#client-info .post{margin-left:4px;font-size:10px;color:#777}
+#client-info .dtime{
 	font-size:10px;
 	color:#999;
 	text-align:right;
-	margin:10px 10px 0 0;
+	margin:20px 10px 0 0;
 }
-#clientInfo #dopLinks{border-top:#dae1e8 solid 1px}
-#clientInfo #dopLinks a{font-weight:normal}
-#clientInfo #dopLinks.busy{background-position:right center}
-#clientInfo #zayav_result{color:#777;text-align:center}
-#clientInfo #zayav_spisok ._empty{margin:10px}
-#clientInfo #zayav_spisok ._next{margin:5px 10px 0 10px}
-#clientInfo .zayav_unit{margin-right:10px}
-#clientInfo #schet_spisok{margin:10px;display:none}
-#clientInfo #schet_spisok #result{margin-bottom:10px}
-#clientInfo #money_spisok{margin:10px}
-#clientInfo #money_spisok,#clientInfo #histories{display:none}
-#clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
-#clientInfo #comments,#clientInfo #remind-spisok{margin:0 10px;display:none}
-#clientInfo #remind-spisok ._empty{margin:10px 0;padding:60px 10px}
-#clientInfo .right{width:145px;height:auto}
-#clientInfo #diff_check{margin-top:15px}
+#client-info #dopLinks{border-top:#dae1e8 solid 1px}
+#client-info #dopLinks a{font-weight:normal}
+#client-info #dopLinks.busy{background-position:right center}
+#client-info #zayav_result{color:#777;text-align:center}
+#client-info #zayav_spisok ._empty{margin:10px}
+#client-info #zayav_spisok ._next{margin:5px 10px 0 10px}
+#client-info .zayav_unit{margin-right:10px}
+#client-info #schet_spisok{margin:10px;display:none}
+#client-info #schet_spisok #result{margin-bottom:10px}
+#client-info #money_spisok{margin:10px}
+#client-info #money_spisok,#client-info #histories{display:none}
+#client-info #money_spisok ._empty{margin:0;padding:60px 10px}
+#client-info #comments,#client-info #remind-spisok{margin:0 10px;display:none}
+#client-info #remind-spisok ._empty{margin:10px 0;padding:60px 10px}
+#client-info .right{width:145px;height:auto}
+#client-info #diff_check{margin-top:15px}
