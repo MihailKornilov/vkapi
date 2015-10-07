@@ -14,6 +14,7 @@
 #client-add-tab #person-list{margin:0 0 5px 50px}
 
 /* добавление доверенного лица при внесении нового клиента и в информации о клиенте*/
+/*
 #person-add {
 	padding: 10px;
 	text-align: center;
@@ -28,11 +29,18 @@ a#person-add{
 	color:#2B587A;
 }
 #person-add:hover{background-color:#e9edf1}
+*/
+#client-add-tab #person-add {
+	padding:10px;
+	text-align: center;
+	display:block;
+	text-decoration:none;
+	margin:0 20px 20px 20px;
+}
+#client-add-tab #person-add:hover{background-color:#e9edf1}
 
-#client-add-tab #tr_join{display:none}
-
-#client-person-add{border-spacing:10px}
-#client-person-add input{width:220px}
+#client-person-tab{border-spacing:10px}
+#client-person-tab input{width:220px}
 
 /* Список клиентов */
 #client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
@@ -99,7 +107,8 @@ a#person-add{
 #client-info #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
 
 #client-info #ci-person{margin:15px 0 0 20px}
-#client-info #ci-person h1{font-weight:bold;margin-bottom:5px}
+#client-info #ci-person h1{color:#555;margin:0 35px 5px 10px}
+#client-info #ci-person h1 a{float:right}
 #client-info #ci-person table{width:400px;margin-left:10px}
 #client-info #ci-person .n{width:15px;text-align:right;color:#777}
 #client-info #ci-person .td-person-ed{width:35px}

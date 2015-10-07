@@ -115,10 +115,9 @@ var clientAdd = function(callback) {
 					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_dop">' + $('#info-dop').val() + '</textarea>' +
 				'</table>'
 			: '') +
-//				'<a id="post-add">Добавить доверенное лицо</a>' +
 				'<table class="ca-table">' +
 					'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
-					'<tr id="tr_join"><td class="label">с клиентом:<td><input type="hidden" id="client2" />' +
+					'<tr id="tr_join" class="dn"><td class="label">с клиентом:<td><input type="hidden" id="client2" />' +
 				'</table>' +
 			'</div>',
 			dialog = _dialog({
@@ -131,11 +130,15 @@ var clientAdd = function(callback) {
 			});
 		$('#' + (org ? 'org_name' : 'fio')).focus();
 		$('#info_dop,#org_adres').autosize();
-//		$('#client2').clientSel({width:258});
+		$('#client2').clientSel({
+			width:258,
+			category_id:CLIENT.category_id,
+			not_client_id:CLIENT.id
+		});
 		$('#join')
 			._check()
-			._check(function() {
-				$('#tr_join').toggle();
+			._check(function(v) {
+				$('#tr_join')[(v ? 'remove' : 'add') + 'Class']('dn');
 			});
 		$('#join_check').vkHint({
 			msg:'<b>Объединение клиентов.</b><br />' +
@@ -153,9 +156,9 @@ var clientAdd = function(callback) {
 			var send = {
 				op:'client_edit',
 				id:CLIENT.id,
-				info_dop:$('#info_dop').val()
-//				join:_num($('#join').val()),
-//				client2:_num($('#client2').val())
+				info_dop:$('#info_dop').val(),
+				join:_num($('#join').val()),
+				client2:_num($('#client2').val())
 			};
 
 			if(!org) {
@@ -182,10 +185,10 @@ var clientAdd = function(callback) {
 			} else if(org && !send.org_name) {
 				dialog.err('Не указано название организации');
 				$('#org_name').focus();
-			}// else if(send.join && !send.client2)
-//				dialog.err('Укажите второго клиента');
-//			else if(send.join && send.client2 == CLIENT.id)
-//				dialog.err('Выберите другого клиента');
+			} else if(send.join && !send.client2)
+				dialog.err('Укажите второго клиента');
+			else if(send.join && send.client2 == CLIENT.id)
+				dialog.err('Выберите другого клиента');
 			else {
 				dialog.process();
 				$.post(AJAX_MAIN, send, function(res) {
@@ -201,16 +204,16 @@ var clientAdd = function(callback) {
 	},
 
 	clientPersonAdd = function(person) {
-		var txt =
-			'<table id="client-person-add">' +
+		var html =
+			'<table id="client-person-tab">' +
 				'<tr><td class="label r">Ф.И.О.:<td><input type="text" id="person-fio" />' +
 				'<tr><td class="label r">Телефон:<td><input type="text" id="person-phone" />' +
 				'<tr><td class="label r">Должность:<td><input type="text" id="person-post" />' +
 			'</table>',
 			dialog = _dialog({
-				top:120,
+				top:80,
 				head:'Нoвое доверенное лицо',
-				content:txt,
+				content:html,
 				butSubmit:'Добавить',
 				submit:submit
 			});
@@ -233,6 +236,7 @@ var clientAdd = function(callback) {
 					$.post(AJAX_MAIN, send, function(res) {
 						if(res.success) {
 							$('#person-spisok').html(res.html);
+							CLIENT.person = res.array;
 							dialog.close();
 							_msg('Новое доверенное лицо внесено');
 						} else
@@ -243,16 +247,26 @@ var clientAdd = function(callback) {
 
 				dialog.close();
 				person.push(send);
-				var html = '';
-				for (var i in person)
-					html +=
-						(i * 1 + 1) + '. ' +
-						(person[i].post ? '<u>' + person[i].post + ':</u> ' : '') +
-						person[i].fio +
-						(person[i].phone ? ', ' + person[i].phone : '') +
-						'<br />';
-				$('#person-list').html(html);
+				personPrint(person);
 			}
+		}
+		function personPrint(person) {
+			var html = '<table class="_spisok">';
+			for(var i in person)
+				html += '<tr>' +
+				'<td>' + (i * 1 + 1) +
+				'<td>' + person[i].fio + (person[i].phone ? ', ' + person[i].phone : '') +
+				'<td>' + (person[i].post ? '<u>' + person[i].post + '</u> ' : '') +
+				'<td><div val="' + i + '" class="img_del' + _tooltip('Удалить', -29) + '</div>';
+			html += '</table>';
+			$('#person-list')
+				.html(html)
+				.find('.img_del').click(function() {
+					var v = $(this).attr('val');
+					person.splice(v, 1);
+					personPrint(person);
+				});
+
 		}
 	},
 
@@ -324,6 +338,8 @@ $.fn.clientSel = function(o) {
 		width:260,
 		add:null,
 		client_id:t.val() || 0,
+		not_client_id:0,
+		category_id:0,
 		func:function() {}
 	}, o);
 
@@ -353,7 +369,9 @@ $.fn.clientSel = function(o) {
 		var send = {
 			op:'client_sel',
 			val:val || '',
-			client_id:o.client_id
+			client_id:o.client_id,
+			not_client_id:o.not_client_id,
+			category_id:o.category_id
 		};
 		t._select('process');
 		$.post(AJAX_MAIN, send, function(res) {
@@ -427,6 +445,47 @@ $(document)
 	})
 
 	.on('click', '#client-info #person-add', clientPersonAdd)
+	.on('click', '#client-info .person-edit', function() {
+		var id = $(this).attr('val'),
+			html =
+				'<table id="client-person-tab">' +
+					'<tr><td class="label r">Ф.И.О.:<td><input type="text" id="person-fio" value="' + CLIENT.person[id].fio + '" />' +
+					'<tr><td class="label r">Телефон:<td><input type="text" id="person-phone" value="' + CLIENT.person[id].phone + '" />' +
+					'<tr><td class="label r">Должность:<td><input type="text" id="person-post" value="' + CLIENT.person[id].post + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Редактирование доверенного лица',
+				content:html,
+				butSubmit:'Изменить',
+				submit:submit
+			});
+		$('#person-fio').focus();
+
+		function submit() {
+			var send = {
+				op:'client_person_edit',
+				person_id:id,
+				fio:$.trim($('#person-fio').val()),
+				phone:$.trim($('#person-phone').val()),
+				post:$.trim($('#person-post').val())
+			};
+			if(!send.fio) {
+				dialog.err('Не указано ФИО');
+				$('#person-fio').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#person-spisok').html(res.html);
+						CLIENT.person = res.array;
+						dialog.close();
+						_msg('Изменено');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
 	.on('click', '#client-info .person-del', function() {
 		var t = $(this),
 			dialog = _dialog({
@@ -446,6 +505,7 @@ $(document)
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#person-spisok').html(res.html);
+					CLIENT.person = res.array;
 					dialog.close();
 					_msg('Удалено!');
 				} else

@@ -392,8 +392,8 @@ function query_ptpJson($sql) {//Ассоциативный массив
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
 }//query_ptpJson()
-function query_ids($sql) {//Список идентификаторов
-	$q = query($sql);
+function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
+	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0];
