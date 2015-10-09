@@ -1,35 +1,30 @@
 #client-add-tab .ca-table{border-spacing:8px;margin:10px}
-#client-add-tab .label{width:150px;text-align:right}
-#client-add-tab input{width:250px}
-#client-add-tab #info_people{width:250px;height:40px}
-#client-add-tab #info_org{width:250px;height:40px}
-#client-add-tab #info_dop{width:250px;height:40px}
-#client-add-tab #org_adres{width:250px;height:40px}
 #client-add-tab #dopLinks{padding:20px 0 10px 176px}
-#client-add-tab #person-head{
-	margin:15px 0 10px 50px;
-	color:#555;
-	font-weight:bold;
-}
+#client-add-tab .label{width:150px;text-align:right}
+#client-add-tab input,
+#client-add-tab textarea
+	{width:250px}
+#client-add-tab #adres,
+#client-add-tab #person-adres,
+#client-add-tab #org_adres,
+#client-add-tab #person-org_adres
+	{height:30px}
+
+#client-add-tab span.label{color:#777;margin:0 8px 0 30px}
+#client-add-tab #pasp_seria,
+#client-add-tab #person-pasp_seria
+	{width:55px}
+#client-add-tab #pasp_nomer,
+#client-add-tab #person-pasp_nomer
+	{width:114px}
+#client-add-tab #pasp_data,
+#client-add-tab #person-pasp_data
+	{width:180px}
+
+#client-add-tab #person-head{margin:15px 0 10px 50px;color:#555;font-weight:bold}
 #client-add-tab #person-list{margin:0 0 5px 50px}
 
-/* добавление доверенного лица при внесении нового клиента и в информации о клиенте*/
-/*
-#person-add {
-	padding: 10px;
-	text-align: center;
-}
-a#person-add{
-	display:block;
-	text-decoration:none;
-	margin:0 20px 20px 20px;
-}
-#client-info #person-add{
-	cursor:pointer;
-	color:#2B587A;
-}
-#person-add:hover{background-color:#e9edf1}
-*/
+/* добавление доверенного лица при внесении нового клиента и в информации о клиенте */
 #client-add-tab #person-add {
 	padding:10px;
 	text-align: center;
@@ -40,7 +35,9 @@ a#person-add{
 #client-add-tab #person-add:hover{background-color:#e9edf1}
 
 #client-person-tab{border-spacing:10px}
+#client-person-tab .label{text-align:right}
 #client-person-tab input{width:220px}
+#client-person-tab textarea{width:220px;height:30px}
 
 /* Список клиентов */
 #client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
@@ -106,11 +103,17 @@ a#person-add{
 }
 #client-info #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
 
+#client-info #pasp-head{margin:8px 0 3px 20px;color:#31618C}
+#client-info #pasp-tab{border-spacing:2px;margin-left:28px}
+#client-info #pasp-tab .label{width:85px}
+
 #client-info #ci-person{margin:15px 0 0 20px}
-#client-info #ci-person h1{color:#555;margin:0 35px 5px 10px}
+#client-info #ci-person h1{color:#31618C;margin:0 35px 5px 0px}
 #client-info #ci-person h1 a{float:right}
 #client-info #ci-person table{width:400px;margin-left:10px}
 #client-info #ci-person .n{width:15px;text-align:right;color:#777}
+#client-info #ci-person .adres{font-size:10px}
+#client-info #ci-person .adres tt{font-size:10px;color:#777}
 #client-info #ci-person .td-person-ed{width:35px}
 
 #client-info .post{margin-left:4px;font-size:10px;color:#777}

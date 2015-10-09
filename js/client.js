@@ -1,17 +1,43 @@
-var clientAdd = function(callback) {
+var clientPeopleTab = function(v, p) {// таблица: частное лицо
+		v = v || {
+			fio:'',
+			phone:'',
+			adres:'',
+			post:'',
+			pasp_seria:'',
+			pasp_nomer:'',
+			pasp_adres:'',
+			pasp_ovd:'',
+			pasp_data:''
+		};
+		// отображать ли паспортные данные
+		var pasp = v.pasp_seria || v.pasp_nomer || v.pasp_adres || v.pasp_ovd || v.pasp_data ? '' : ' class="dn"',
+			prefix = p ? 'person-' : '';
+		return '' +
+		'<table class="ca-table" id="people">' +
+			'<tr><td class="label"><b>Ф.И.О.:</b><td><input type="text" id="' + prefix + 'fio" value="' + v.fio + '" />' +
+			'<tr><td class="label">Телефон:      <td><input type="text" id="' + prefix + 'phone" value="' + v.phone + '" />' +
+			'<tr><td class="label topi">Адрес:   <td><textarea id="' + prefix + 'adres">' + v.adres + '</textarea>' +
+	   (p ? '<tr><td class="label">Должность:<td><input type="text" id="person-post" value="' + v.post + '" />' : '') +
+
+	(pasp ? '<tr><td><td><a class="client-pasp-show">Заполнить паспортные данные</a>' : '') +
+			'<tr' + pasp + '><td><td><b>Паспортные данные:</b>' +
+			'<tr' + pasp + '><td class="label">Серия:' +
+				'<td><input type="text" class="focus" id="' + prefix + 'pasp_seria" value="' + v.pasp_seria + '" />' +
+					'<span class="label">Номер:</span><input type="text" id="' + prefix + 'pasp_nomer" value="' + v.pasp_nomer + '" />' +
+			'<tr' + pasp + '><td class="label">Прописка:<td><input type="text" id="' + prefix + 'pasp_adres" value="' + v.pasp_adres + '" />' +
+			'<tr' + pasp + '><td class="label">Кем выдан:<td><input type="text" id="' + prefix + 'pasp_ovd" value="' + v.pasp_ovd + '" />' +
+			'<tr' + pasp + '><td class="label">Когда выдан:<td><input type="text" id="' + prefix + 'pasp_data" value="' + v.pasp_data + '" />' +
+		'</table>';
+	},
+	clientAdd = function(callback) {
 		var html =
 			'<div id="client-add-tab">' +
 				'<div id="dopLinks">';
-//					'<a class="link sel" val="1">Частное лицо</a>' +
-//					'<a class="link" val="2">Организация</a><br />' +
 		for(var i in CLIENT_CATEGORY_ASS)
 			html += '<a class="link' + (i == 1 ? ' sel' : '') + '" val="' + i + '">' + CLIENT_CATEGORY_ASS[i] + '</a>';
 		html += '</div>' +
-				'<table class="ca-table" id="people">' +
-					'<tr><td class="label"><b>Ф.И.О.:</b><td><input type="text" id="fio" />' +
-					'<tr><td class="label">Телефон:<td><input type="text" id="phone" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_people"></textarea>' +
-				'</table>' +
+				clientPeopleTab() +
 				'<table class="ca-table dn" id="org">' +
 					'<tr><td class="label"><b>Название организации:</b><td><input type="text" id="org_name" />' +
 					'<tr><td class="label">Телефон:<td><input type="text" id="org_phone" />' +
@@ -19,7 +45,6 @@ var clientAdd = function(callback) {
 					'<tr><td class="label topi">Адрес:<td><textarea id="org_adres"></textarea>' +
 					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" />' +
 					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org"></textarea>' +
 				'</table>' +
 				'<div id="person-head">Доверенные лица:</div>' +
 				'<div id="person-list"></div>' +
@@ -36,7 +61,7 @@ var clientAdd = function(callback) {
 				submit:submit
 			});
 		$('#fio').focus();
-		$('#info_people,#info_org,#org_adres').autosize();
+		$('#adres,#org_adres').autosize();
 		$('#person-add').click(function() {
 			clientPersonAdd(person);
 		});
@@ -52,7 +77,6 @@ var clientAdd = function(callback) {
 		});
 		function submit() {
 			var fio = $('#fio').val(),
-				phone = $('#phone').val(),
 				send = {
 					op:'client_add',
 					category_id:category_id,
@@ -62,7 +86,6 @@ var clientAdd = function(callback) {
 					org_adres:$('#org_adres').val(),
 					org_inn:$('#org_inn').val(),
 					org_kpp:$('#org_kpp').val(),
-					info_dop:$(category_id == 1 ? '#info_people' : '#info_org').val(),
 					person:person
 				};
 
@@ -76,8 +99,14 @@ var clientAdd = function(callback) {
 				if(category_id == 1) // если выбрано частное лицо, то помещается в доверенные лица на первое место
 					send.person.unshift({
 						fio:fio,
-						phone:phone,
-						post:''
+						phone:$('#phone').val(),
+						adres:$('#adres').val(),
+						post:'',
+						pasp_seria:$('#pasp_seria').val(),
+						pasp_nomer:$('#pasp_nomer').val(),
+						pasp_adres:$('#pasp_adres').val(),
+						pasp_ovd:$('#pasp_ovd').val(),
+						pasp_data:$('#pasp_data').val()
 					});
 				dialog.process();
 				$.post(AJAX_MAIN, send, function(res) {
@@ -97,13 +126,7 @@ var clientAdd = function(callback) {
 		var org = CLIENT.category_id > 1,
 			html =
 			'<div id="client-add-tab">' +
-			(!org ?
-				'<table class="ca-table">' +
-					'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio" value="' + CLIENT.fio + '" />' +
-					'<tr><td class="label">Телефон:<td><input type="text" id="phone" value="' + CLIENT.phone + '" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_dop">' + $('#info-dop').val() + '</textarea>' +
-				'</table>'
-			: '') +
+			(!org ? clientPeopleTab(CLIENT) : '') +
 			(org ?
 				'<table class="ca-table">' +
 					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="' + CLIENT.org_name + '" />' +
@@ -112,7 +135,6 @@ var clientAdd = function(callback) {
 					'<tr><td class="label top">Адрес:<td><textarea id="org_adres">' + CLIENT.org_adres + '</textarea>' +
 					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + CLIENT.org_inn + '" />' +
 					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" value="' + CLIENT.org_kpp + '" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_dop">' + $('#info-dop').val() + '</textarea>' +
 				'</table>'
 			: '') +
 				'<table class="ca-table">' +
@@ -129,7 +151,7 @@ var clientAdd = function(callback) {
 				submit:submit
 			});
 		$('#' + (org ? 'org_name' : 'fio')).focus();
-		$('#info_dop,#org_adres').autosize();
+		$('#adres,#org_adres').autosize();
 		$('#client2').clientSel({
 			width:258,
 			category_id:CLIENT.category_id,
@@ -144,19 +166,18 @@ var clientAdd = function(callback) {
 			msg:'<b>Объединение клиентов.</b><br />' +
 				'Необходимо, если один клиент был внесён в базу дважды.<br /><br />' +
 				'Текущий клиент будет получателем.<br />Выберите второго клиента.<br />' +
-				'Все заявки, начисления и платежи станут общими после<br />объединения.<br /><br />' +
+				'Все заявки, начисления, платежи и доверенные лица<br />станут общими после объединения.<br /><br />' +
 				'Внимание, операция необратима!',
 			width:330,
 			delayShow:1500,
 			top:-162,
-			left:-81,
+			left:-80,
 			indent:80
 		});
 		function submit() {
 			var send = {
 				op:'client_edit',
 				id:CLIENT.id,
-				info_dop:$('#info_dop').val(),
 				join:_num($('#join').val()),
 				client2:_num($('#client2').val())
 			};
@@ -165,6 +186,12 @@ var clientAdd = function(callback) {
 				send.person_id = CLIENT.person_id;
 				send.fio = $.trim($('#fio').val());
 				send.phone = $.trim($('#phone').val());
+				send.adres = $.trim($('#adres').val());
+				send.pasp_seria = $.trim($('#pasp_seria').val());
+				send.pasp_nomer = $.trim($('#pasp_nomer').val());
+				send.pasp_adres = $.trim($('#pasp_adres').val());
+				send.pasp_ovd = $.trim($('#pasp_ovd').val());
+				send.pasp_data = $.trim($('#pasp_data').val());
 			}
 
 			if(org) {
@@ -203,34 +230,40 @@ var clientAdd = function(callback) {
 		}
 	},
 
+	clientPersonVal = function() {
+		return {
+			op:'client_person_add',
+			fio:$('#person-fio').val(),
+			phone:$('#person-phone').val(),
+			adres:$('#person-adres').val(),
+			post:$('#person-post').val(),
+			pasp_seria:$('#person-pasp_seria').val(),
+			pasp_nomer:$('#person-pasp_nomer').val(),
+			pasp_adres:$('#person-pasp_adres').val(),
+			pasp_ovd:$('#person-pasp_ovd').val(),
+			pasp_data:$('#person-pasp_data').val()
+		};
+	},
 	clientPersonAdd = function(person) {
-		var html =
-			'<table id="client-person-tab">' +
-				'<tr><td class="label r">Ф.И.О.:<td><input type="text" id="person-fio" />' +
-				'<tr><td class="label r">Телефон:<td><input type="text" id="person-phone" />' +
-				'<tr><td class="label r">Должность:<td><input type="text" id="person-post" />' +
-			'</table>',
+		var html = '<div id="client-add-tab">' + clientPeopleTab(0, 1) + '</div>',
 			dialog = _dialog({
 				top:80,
+				width:400,
 				head:'Нoвое доверенное лицо',
 				content:html,
 				butSubmit:'Добавить',
 				submit:submit
 			});
 		$('#person-fio').focus();
+		$('#person-adres').autosize();
 
 		function submit() {
-			var send = {
-				fio:$.trim($('#person-fio').val()),
-				phone:$.trim($('#person-phone').val()),
-				post:$.trim($('#person-post').val())
-			};
+			var send = clientPersonVal();
 			if(!send.fio) {
 				dialog.err('Не указано ФИО');
 				$('#person-fio').focus();
 			} else {
 				if($('#client-info').length) {
-					send.op = 'client_person_add';
 					send.client_id = CLIENT.id;
 					dialog.process();
 					$.post(AJAX_MAIN, send, function(res) {
@@ -424,6 +457,12 @@ $(document)
 			show:1
 		})
 	})
+	.on('click', '.client-pasp-show', function() {//показ полей для заполнения паспортных данных
+		var p = $(this).parent().parent();
+		p.parent().find('.dn').removeClass('dn');
+		p.parent().find('.focus').focus();
+		p.remove();
+	})
 
 	.on('click', '#clientInfo #zayav_spisok ._next', function() {
 		if($(this).hasClass('busy'))
@@ -447,28 +486,20 @@ $(document)
 	.on('click', '#client-info #person-add', clientPersonAdd)
 	.on('click', '#client-info .person-edit', function() {
 		var id = $(this).attr('val'),
-			html =
-				'<table id="client-person-tab">' +
-					'<tr><td class="label r">Ф.И.О.:<td><input type="text" id="person-fio" value="' + CLIENT.person[id].fio + '" />' +
-					'<tr><td class="label r">Телефон:<td><input type="text" id="person-phone" value="' + CLIENT.person[id].phone + '" />' +
-					'<tr><td class="label r">Должность:<td><input type="text" id="person-post" value="' + CLIENT.person[id].post + '" />' +
-				'</table>',
+			html = '<div id="client-add-tab">' + clientPeopleTab(CLIENT.person[id], 1) + '</div>',
 			dialog = _dialog({
+				width:400,
 				head:'Редактирование доверенного лица',
 				content:html,
 				butSubmit:'Изменить',
 				submit:submit
 			});
 		$('#person-fio').focus();
+		$('#person-adres').autosize();
 
 		function submit() {
-			var send = {
-				op:'client_person_edit',
-				person_id:id,
-				fio:$.trim($('#person-fio').val()),
-				phone:$.trim($('#person-phone').val()),
-				post:$.trim($('#person-post').val())
-			};
+			var send = clientPersonVal();
+			send.person_id = id;
 			if(!send.fio) {
 				dialog.err('Не указано ФИО');
 				$('#person-fio').focus();

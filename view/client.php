@@ -156,17 +156,20 @@ function client_data($v=array()) {// список клиентов
 			$k = 0;
 		}
 
-		$regOk = FIND && (_findRegular($filter['find'], $r['fio'], 1) || _findRegular($filter['find'], $r['phone'], 1));// совпало ли регулярное выражение в условии быстрого поиска
+		// совпало ли регулярное выражение в условии быстрого поиска
+		$regOk = FIND && (_findRegular($filter['find'], $r['fio'], 1) || _findRegular($filter['find'], $r['phone'], 1) || _findRegular($filter['find'], $r['adres'], 1));
 
 		if(!$k) {
 			$spisok[$r['client_id']]['fio'] = (FIND ? _findRegular($filter['find'], $r['fio']) : $r['fio']);
 			$spisok[$r['client_id']]['phone'] = (FIND ? _findRegular($filter['find'], $r['phone']) : $r['phone']);
+			$spisok[$r['client_id']]['adres'] = (FIND ? _findRegular($filter['find'], $r['adres'], 1) : $r['adres']);
 			$spisok[$r['client_id']]['post'] = $r['post'];
 		} else {
 			if($regOk) // дополнительные доверенные лица отображаются только при совпадении в быстром поиске
 				$spisok[$r['client_id']]['person'][] = array(
 					'fio' => _findRegular($filter['find'], $r['fio']),
-					'phone' => _findRegular($filter['find'], $r['phone']),
+					'phone' => _findRegular($filter['find'], $r['phone'], 1),
+					'adres' => _findRegular($filter['find'], $r['adres'], 1),
 					'post' => $r['post']
 				);
 		}
@@ -244,7 +247,11 @@ function client_data($v=array()) {// список клиентов
 		$person = '';
 		if(FIND)
 			foreach($r['person'] as $p)
-				$person .= '<tr><td class="label top">'.($p['post'] ? $p['post'] : 'Дов. лицо').':<td>'.$p['fio'].'<br />'.$p['phone'];
+				$person .=
+					'<tr><td class="label top">'.($p['post'] ? $p['post'] : 'Дов. лицо').':'.
+						'<td>'.$p['fio'].
+							($p['phone'] ? '<br />'.$p['phone'] : '').
+							($p['adres'] ? '<br />'.$p['adres'] : '');
 
 		$phone = $org ? $r['org_phone'] : $r['phone'];
 
@@ -253,13 +260,16 @@ function client_data($v=array()) {// список клиентов
 				'<tr><td class="label top">'._clientCategory($r['category_id']).':'.
 					'<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.($org ? $r['org_name'] : $r['fio']).'</a>'.
 	  ($phone ? '<tr><td class="label top">Телефоны:<td>'.$phone : '').
+		   (FIND && $r['adres'] ? '<tr><td class="label top">Адрес:<td>'.$r['adres'] : '').
 		 (FIND && $r['org_fax'] ? '<tr><td class="label">Факс:<td>'.$r['org_fax'] : '').
 	   (FIND && $r['org_adres'] ? '<tr><td class="label top">Адрес:<td>'.$r['org_adres'] : '').
 		 (FIND && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
 		 (FIND && $r['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$r['org_kpp'] : '').
-		     ($org && $r['fio'] ?
+		     ($org && $r['fio'] ? // отображение первого доверенного лица в организации
 				'<tr><td class="label top">'.($r['post'] ? $r['post'] : 'Дов. лицо').':'.
-					'<td>'.$r['fio'].($r['phone'] ? '<br />'.$r['phone'] : '')
+					'<td>'.$r['fio'].
+						($r['phone'] ? '<br />'.$r['phone'] : '').
+						($r['adres'] ? '<br />'.$r['adres'] : '')
 			 : '').
 						$person.
 			'</table>';
@@ -425,18 +435,36 @@ function _clientVal($client_id, $i=0) {//получение данных клиенте из базы
 		$person_id = empty($c['person']) ? 0 : $c['person'][0]['id'];// id первого доверенного лица (или частного лица)
 
 		define($prefix.'LOADED', 1);
-		define($prefix.'FIO', !$person_id ? '' : $c['person'][0]['fio']);
-		define($prefix.'NAME', $org ? $c['org_name'] : constant($prefix.'FIO'));
-		define($prefix.'PHONE', $c['category_id'] != 1 ? $c['org_phone'] : $c['person'][0]['phone']);
+		define($prefix.'ORG', $org);
 		define($prefix.'PERSON_ID', $person_id);
+		define($prefix.'FIO', $person_id ? $c['person'][0]['fio'] : '');
+
+		define($prefix.'PASP_SERIA', $person_id ? $c['person'][0]['pasp_seria'] : '');
+		define($prefix.'PASP_NOMER', $person_id ? $c['person'][0]['pasp_nomer'] : '');
+		define($prefix.'PASP_ADRES', $person_id ? $c['person'][0]['pasp_adres'] : '');
+		define($prefix.'PASP_OVD', $person_id ? $c['person'][0]['pasp_ovd'] : '');
+		define($prefix.'PASP_DATA', $person_id ? $c['person'][0]['pasp_data'] : '');
+
+		define($prefix.'NAME', $org ? $c['org_name'] : constant($prefix.'FIO'));
+		define($prefix.'PHONE', $org ? $c['org_phone'] : $c['person'][0]['phone']);
+		define($prefix.'ADRES', $org ? $c['org_adres'] : $c['person'][0]['adres']);
 		define($prefix.'LINK', '<a href="'.URL.'&p=client&d=info&id='.$client_id.'">'.constant($prefix.'NAME').'</a>');
 	}
 
 	$send = array(
+		'org' => constant($prefix.'ORG'),
 		'name' => constant($prefix.'NAME'),
-		'fio' => constant($prefix.'FIO'),
-		'phone' => constant($prefix.'PHONE'),
 		'person_id' => constant($prefix.'PERSON_ID'),
+		'fio' => constant($prefix.'FIO'),
+
+		'pasp_seria' => constant($prefix.'PASP_SERIA'),
+		'pasp_nomer' => constant($prefix.'PASP_NOMER'),
+		'pasp_adres' => constant($prefix.'PASP_ADRES'),
+		'pasp_ovd' => constant($prefix.'PASP_OVD'),
+		'pasp_data' => constant($prefix.'PASP_DATA'),
+
+		'phone' => constant($prefix.'PHONE'),
+		'adres' => constant($prefix.'ADRES'),
 		'link' => constant($prefix.'LINK')
 	);
 
@@ -476,14 +504,17 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 	return $send;
 }//_findRegular()
 
-
-function _clientInfo($client_id) {
+function _clientQuery($client_id, $withDeleted=0) {
 	$sql = "SELECT *
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND `ws_id`=".WS_ID.
+			  ($withDeleted ? '' : " AND !`deleted`")."
 			  AND `id`=".$client_id;
-	if(!$c = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}//_clientSql()
+function _clientInfo($client_id) {
+	if(!$c = _clientQuery($client_id, 1))
 		return _noauth('Клиента не существует');
 
 	if($c['deleted'])
@@ -561,30 +592,37 @@ function _clientInfo($client_id) {
 			'var CLIENT={'.
 				'id:'.$client_id.','.
 				'category_id:'.$c['category_id'].','.
+
 				'person_id:'._clientVal($client_id, 'person_id').','.
 				'fio:"'.addslashes(_clientVal($client_id, 'fio')).'",'.
 				'phone:"'.addslashes(_clientVal($client_id, 'phone')).'",'.
+				'adres:"'.addslashes(_clientVal($client_id, 'adres')).'",'.
+				'pasp_seria:"'.addslashes(_clientVal($client_id, 'pasp_seria')).'",'.
+				'pasp_nomer:"'.addslashes(_clientVal($client_id, 'pasp_nomer')).'",'.
+				'pasp_adres:"'.addslashes(_clientVal($client_id, 'pasp_adres')).'",'.
+				'pasp_ovd:"'.addslashes(_clientVal($client_id, 'pasp_ovd')).'",'.
+				'pasp_data:"'.addslashes(_clientVal($client_id, 'pasp_data')).'",'.
+
 				'org_name:"'.addslashes($c['org_name']).'",'.
 				'org_phone:"'.addslashes($c['org_phone']).'",'.
 				'org_fax:"'.addslashes($c['org_fax']).'",'.
 				'org_adres:"'.addslashes($c['org_adres']).'",'.
 				'org_inn:"'.addslashes($c['org_inn']).'",'.
 				'org_kpp:"'.addslashes($c['org_kpp']).'",'.
-				'person:'._clientInfoPerson($client_id, $c['category_id'], 'json').
+				'person:'._clientInfoPerson($client_id, 'json').
 			'};'.
 	//		'DEVICE_IDS=['._zayavBaseDeviceIds($client_id).'],'.
 	//		'VENDOR_IDS=['._zayavBaseVendorIds($client_id).'],'.
 	//		'MODEL_IDS=['._zayavBaseModelIds($client_id).'];'.
 		'</script>'.
 
-		'<input type="hidden" id="info-dop" value="'.addslashes($c['info_dop']).'" />'.
-
 		'<div id="client-info">'.
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
 						_clientInfoBalans($c).
 						_clientInfoContent($c).
-						'<div id="person-spisok">'._clientInfoPerson($client_id, $c['category_id']).'</div>'.
+						_clientInfoPasp($client_id).
+						'<div id="person-spisok">'._clientInfoPerson($client_id).'</div>'.
 						'<div class="dtime">'.
 							'Клиента вн'.(_viewer($c['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '.
 							_viewer($c['viewer_id_add'], 'name').' '.
@@ -646,6 +684,7 @@ function _clientInfoContent($r) {// основная информация о клиенте
 		'<div id="ci-name">'._clientVal($r['id'], 'name').'</div>'.
 		'<table id="ci-tab">'.
 			(_clientVal($r['id'], 'phone') ? '<tr><td class="label">Телефон:<td>'._clientVal($r['id'], 'phone') : '').
+			(_clientVal($r['id'], 'adres') ? '<tr><td class="label">Адрес:<td>'._clientVal($r['id'], 'adres') : '').
 			(ORG && $r['org_fax'] ? '<tr><td class="label">Факс:<td>'.$r['org_fax'] : '').
 			(ORG && $r['org_adres'] ? '<tr><td class="label top">Адрес:<td>'.$r['org_adres'] : '').
 			(ORG && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
@@ -653,14 +692,14 @@ function _clientInfoContent($r) {// основная информация о клиенте
 			($r['info_dop'] ? '<tr><td class="label top">Дополнительно:<td>'.nl2br($r['info_dop']) : '').
 		'</table>';
 }//_clientInfoContent()
-function _clientInfoPerson($client_id, $category_id, $type='html') {// формирование списка доверенных лиц
+function _clientInfoPerson($client_id, $type='html') {// формирование списка доверенных лиц
 	$sql = "SELECT * FROM `_client_person` WHERE `client_id`=".$client_id." ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$person = array();
 	while($r = mysql_fetch_assoc($q))
 		$person[] = $r;
 
-	if($category_id == 1)
+	if(!_clientVal($client_id, 'org'))
 		array_shift($person);
 
 	$html = '<table class="_spisok">';
@@ -669,7 +708,9 @@ function _clientInfoPerson($client_id, $category_id, $type='html') {// формирова
 	foreach($person as $n => $r) {
 		$html .=
 			'<tr><td class="n">'.($n + 1).
-				'<td>'.$r['fio'].($r['phone'] ? ', '.$r['phone'] : '').
+				'<td>'.$r['fio'].
+					  ($r['phone'] ? ', '.$r['phone'] : '').
+					  ($r['adres'] ? '<br /><span class="adres"><tt>Адрес:</tt> '.$r['adres'].'</span>' : '').
 				'<td>'.($r['post'] ? '<u>'.$r['post'].'</u>' : '').
 				'<td class="td-person-ed">'.
 					'<div val="'.$r['id'].'" class="person-edit img_edit'._tooltip('Изменить', -33).'</div>'.
@@ -678,12 +719,24 @@ function _clientInfoPerson($client_id, $category_id, $type='html') {// формирова
 			$r['id'].':{'.
 				'fio:"'.addslashes($r['fio']).'",'.
 				'phone:"'.addslashes($r['phone']).'",'.
-				'post:"'.addslashes($r['post']).'"'.
+				'adres:"'.addslashes($r['adres']).'",'.
+				'post:"'.addslashes($r['post']).'",'.
+				'pasp_seria:"'.addslashes($r['pasp_seria']).'",'.
+				'pasp_nomer:"'.addslashes($r['pasp_nomer']).'",'.
+				'pasp_adres:"'.addslashes($r['pasp_adres']).'",'.
+				'pasp_ovd:"'.addslashes($r['pasp_ovd']).'",'.
+				'pasp_data:"'.addslashes($r['pasp_data']).'"'.
 			'}';
 		$array[$r['id']] = array(
 			'fio' => utf8($r['fio']),
 			'phone' => utf8($r['phone']),
-			'post' => utf8($r['post'])
+			'adres' => utf8($r['adres']),
+			'post' => utf8($r['post']),
+			'pasp_seria' => utf8($r['pasp_seria']),
+			'pasp_nomer' => utf8($r['pasp_nomer']),
+			'pasp_adres' => utf8($r['pasp_adres']),
+			'pasp_ovd' => utf8($r['pasp_ovd']),
+			'pasp_data' => utf8($r['pasp_data'])
 		);
 	}
 	$html .= '</table>';
@@ -700,6 +753,20 @@ function _clientInfoPerson($client_id, $category_id, $type='html') {// формирова
 		case 'array': return $array;
 	}
 }//_clientInfoPerson()
+function _clientInfoPasp($client_id) {
+	$r = _clientVal($client_id);
+
+	if($r['org'] || !$r['pasp_seria'] && !$r['pasp_nomer'] && !$r['pasp_adres'] && !$r['pasp_ovd'] && !$r['pasp_data'])
+		return '';
+
+	return
+		'<div id="pasp-head">Паспортные данные:</div>'.
+		'<table id="pasp-tab">'.
+			'<tr><td class="label">Серия и номер:<td>'.$r['pasp_seria'].' '.$r['pasp_nomer'].
+			'<tr><td class="label">Прописка:<td>'.$r['pasp_adres'].
+			'<tr><td class="label">Выдан:<td>'.$r['pasp_ovd'].', '.$r['pasp_data'].
+		'</table>';
+}//_clientInfoPasp()
 
 function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
 	if(!$client_id)
