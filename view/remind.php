@@ -1,50 +1,4 @@
 <?php
-/*
-DROP TABLE IF EXISTS `remind`;
-CREATE TABLE `remind` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `app_id` int unsigned DEFAULT 0,
-  `ws_id` int unsigned DEFAULT 0,
-  `client_id` int unsigned DEFAULT 0,
-  `zayav_id` int unsigned DEFAULT 0,
-  `money_cut` tinyint unsigned DEFAULT 0,
-  `txt` text,
-  `day` date DEFAULT '0000-00-00',
-  `status` tinyint unsigned DEFAULT 1,
-  `viewer_id_add` int unsigned DEFAULT 0,
-  `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `i_app_id` (`app_id`),
-  KEY `i_zayav_id` (`zayav_id`),
-  KEY `i_client_id` (`client_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
-
-DROP TABLE IF EXISTS `remind_history`;
-CREATE TABLE `remind_history` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `remind_id` int unsigned DEFAULT 0,
-  `status` tinyint unsigned DEFAULT 0,
-  `day` date DEFAULT '0000-00-00',
-  `txt` text,
-  `txt_old` text,
-  `viewer_id_add` int unsigned DEFAULT 0,
-  `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `i_remind_id` (`remind_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
-
-DROP TABLE IF EXISTS `remind_reason`;
-CREATE TABLE `remind_reason` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `app_id` int unsigned DEFAULT 0,
-  `ws_id` int unsigned DEFAULT 0,
-  `txt` text,
-  `count` int unsigned DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `i_app_id` (`app_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
-*/
-
 function _remind() {
 	$data = _remind_spisok();
 	return array(
@@ -196,7 +150,7 @@ function _remind_spisok($v=array(), $i='all') {
 	}
 
 	$remind = _zayavValues($remind);
-	$remind = _clientValues($remind);
+	$remind = _clientValToList($remind);
 
 	//внесение истории
 	$sql = "SELECT *
@@ -220,7 +174,7 @@ function _remind_spisok($v=array(), $i='all') {
 				'</div>'.
 				'<table class="to">'.
 					($r['client_id'] && !$filter['client_id'] && !$filter['zayav_id'] ?
-						'<tr><td class="label">Клиент:<td>'.$r['client_link'].($r['client_telefon'] ? ', '.$r['client_telefon'] : '')
+						'<tr><td class="label">Клиент:<td>'.$r['client_link'].($r['client_phone'] ? ', '.$r['client_phone'] : '')
 					: '').
 					($r['zayav_id'] && !$filter['zayav_id'] ?
 						'<tr><td class="label">Заявка:<td>'.$r['zayav_link']

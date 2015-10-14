@@ -6,6 +6,7 @@ switch(@$_POST['op']) {
 	case 'cache_clear':
 //		if(!SA)
 //			jsonError();
+		_globalValuesJS();
 		_cacheClear();
 		jsonSuccess();
 		break;

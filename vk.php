@@ -102,6 +102,9 @@ define('APP_URL', 'http://vk.com/app'.APP_ID);
 if(!defined('CRON'))
 	define('CRON', 0);
 
+//if(!defined('WS_ID'))
+//	define('WS_ID', 0);
+
 define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
 
@@ -145,6 +148,9 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
 		'<script type="text/javascript" src="/.vkapp/.api/js/xd_connection.min.js?20"></script>'.
+
+		//Переменные _global для всех приложений
+		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js"></script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
@@ -587,7 +593,55 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоци
 	foreach($sub as $n => $sp)
 		$v[] = $n.':['.implode(',', $sp).']';
 	return '{'.implode(',', $v).'}';
-}
+}//Gvalues_obj()
+
+function _globalValuesJS() {//Составление файла global_values.js, используемый во всех приложениях
+	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
+		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
+		"\n".'COUNTRY_SPISOK=['.
+				'{uid:1,title:"Россия"},'.
+				'{uid:2,title:"Украина"},'.
+				'{uid:3,title:"Беларусь"},'.
+				'{uid:4,title:"Казахстан"},'.
+				'{uid:5,title:"Азербайджан"},'.
+				'{uid:6,title:"Армения"},'.
+				'{uid:7,title:"Грузия"},'.
+				'{uid:8,title:"Израиль"},'.
+				'{uid:11,title:"Кыргызстан"},'.
+				'{uid:12,title:"Латвия"},'.
+				'{uid:13,title:"Литва"},'.
+				'{uid:14,title:"Эстония"},'.
+				'{uid:15,title:"Молдова"},'.
+				'{uid:16,title:"Таджикистан"},'.
+				'{uid:17,title:"Туркмения"},'.
+				'{uid:18,title:"Узбекистан"}],'.
+		"\n".'COUNTRY_ASS=_toAss(COUNTRY_SPISOK),'.
+		"\n".'CITY_SPISOK=['.
+				'{uid:1,title:"Москва",content:"<b>Москва</b>"},'.
+				'{uid:2,title:"Санкт-Петербург",content:"<b>Санкт-Петербург</b>"},'.
+				'{uid:35,title:"Великий Новгород"},'.
+				'{uid:10,title:"Волгоград"},'.
+				'{uid:49,title:"Екатеринбург"},'.
+				'{uid:60,title:"Казань"},'.
+				'{uid:61,title:"Калининград"},'.
+				'{uid:72,title:"Краснодар"},'.
+				'{uid:73,title:"Красноярск"},'.
+				'{uid:87,title:"Мурманск"},'.
+				'{uid:95,title:"Нижний Новгород"},'.
+				'{uid:99,title:"Новосибирск"},'.
+				'{uid:104,title:"Омск"},'.
+				'{uid:110,title:"Пермь"},'.
+				'{uid:119,title:"Ростов-на-Дону"},'.
+				'{uid:123,title:"Самара"},'.
+				'{uid:125,title:"Саратов"},'.
+				'{uid:151,title:"Уфа"},'.
+				'{uid:158,title:"Челябинск"}];';
+
+	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
+	fwrite($fp, $save);
+	fclose($fp);
+}//_globalValuesJS()
+
 
 function pageHelpIcon() {
 	$page[] = $_GET['p'];

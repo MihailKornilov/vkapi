@@ -371,8 +371,8 @@ $.fn.clientSel = function(o) {
 		width:260,
 		add:null,
 		client_id:t.val() || 0,
-		not_client_id:0,
-		category_id:0,
+		not_client_id:0,    // исключать клиента с данным id
+		category_id:0,      // возвращать только данную категорию
 		func:function() {}
 	}, o);
 
@@ -549,7 +549,7 @@ $(document)
 	.ready(function() {
 		if($('#client').length) {
 			$('#find')._search({
-				width:602,
+				width:458,
 				focus:1,
 				enter:1,
 				txt:'Начните вводить данные клиента',
