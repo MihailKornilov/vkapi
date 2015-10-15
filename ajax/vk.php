@@ -1,6 +1,7 @@
 <?php
 require_once 'client.php';
 require_once 'remind.php';
+require_once 'history.php';
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
@@ -21,8 +22,8 @@ switch(@$_POST['op']) {
 		if(!SA && !DEBUG)
 			jsonError();
 
-		$nocache = _isbool($_POST['nocache']);
-		$explain = _isbool($_POST['explain']);
+		$nocache = _bool($_POST['nocache']);
+		$explain = _bool($_POST['explain']);
 
 		$sql = ($explain ? 'EXPLAIN ' : '').trim($_POST['query']);
 		$q = query($sql, 1);
@@ -433,17 +434,6 @@ switch(@$_POST['op']) {
 			);
 			$n++;
 		}
-		jsonSuccess($send);
-		break;
-
-	case 'history_spisok':
-		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
-			jsonError();
-		$table = $_POST['table'];
-		if(!function_exists($table))
-			jsonError();
-		$data = $table($_POST);
-		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 }

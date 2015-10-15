@@ -52,7 +52,7 @@
 #client .result.busy #filter_clear{display:none}
 #client #filter_clear{float:right}
 #client b#dolg{color:#922;font-size:10px}
-#client #dolg_check{margin-top:20px}
+#client #dolg_check{margin-top:0}
 #client ._check{margin-top:10px}
 #client .left{padding-bottom:10px}
 #client .unit{margin:5px 10px 0 10px;border-bottom:#dae1e8 solid 1px;padding:5px}

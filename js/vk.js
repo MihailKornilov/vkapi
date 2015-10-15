@@ -2058,21 +2058,6 @@ $(document)
 		}
 	})
 
-	.on('click', '#_hist-next', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
-		HIST.op = 'history_spisok';
-		HIST.page = $(this).attr('val');
-		t.addClass('busy');
-		$.post(AJAX_MAIN, HIST, function(res) {
-			if(res.success)
-				t.after(res.html).remove();
-			else
-				t.removeClass('busy');
-		}, 'json');
-	})
-
 	.ready(function() {
 		VK.callMethod('scrollWindow', 0);
 		VK.callMethod('scrollSubscribe');

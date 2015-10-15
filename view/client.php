@@ -1,5 +1,11 @@
 <?php
-function _clientCase() {//
+function _clientCase($v=array()) {//вывод информации с клиентами для приложения
+	$filterDef = $v + array(
+		'CLIENT_FILTER_DOLG' => 0,//галочка-фильтр "должники"
+		'CLIENT_FILTER_OPL' => 0  //галочка-фильтр "предоплата"
+	);
+	foreach($filterDef as $name => $key)
+		define($name, $key);
 	switch(@$_GET['d']) {
 		case 'info':
 			if(!_num($_GET['id']))
@@ -42,10 +48,10 @@ function client_list($v) {// страница со списком клиентов
 				'<tr><td class="left">'.$data['spisok'].
 					'<td class="right">'.
 						'<div class="filter'.($v['find'] ? ' dn' : '').'">'.
-							_check('dolg', 'Должники', $v['dolg']).
-							_check('active', 'С активными заявками', $v['active']).
-							_check('comm', 'Есть заметки', $v['comm']).
-							_check('opl', 'Внесена предоплата', $v['opl']).
+	  (CLIENT_FILTER_DOLG ? _check('dolg', 'Должники', $v['dolg']) : '').
+//							_check('active', 'С активными заявками', $v['active']).
+//							_check('comm', 'Есть заметки', $v['comm']).
+//							_check('opl', 'Внесена предоплата', $v['opl']).
 						'</div>'.
 			'</table>'.
 		'</div>'.
@@ -67,10 +73,10 @@ function clientFilter($v) {
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'find' => strtolower(trim(@$v['find'])),
-		'dolg' => _isbool(@$v['dolg']),
-		'active' => _isbool(@$v['active']),
-		'comm' => _isbool(@$v['comm']),
-		'opl' => _isbool(@$v['opl']),
+		'dolg' => _bool(@$v['dolg']),
+		'active' => _bool(@$v['active']),
+		'comm' => _bool(@$v['comm']),
+		'opl' => _bool(@$v['opl']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -538,7 +544,7 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 	return $send;
 }//_findRegular()
 
-function _clientQuery($client_id, $withDeleted=0) {
+function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клиенте
 	$sql = "SELECT *
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
@@ -547,7 +553,7 @@ function _clientQuery($client_id, $withDeleted=0) {
 			  AND `id`=".$client_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 }//_clientSql()
-function _clientInfo($client_id) {
+function _clientInfo($client_id) {//вывод информации о клиенте
 	if(!$c = _clientQuery($client_id, 1))
 		return _noauth('Клиента не существует');
 
@@ -713,7 +719,7 @@ function _clientInfoBalans($r) {//отображение текущего баланса клиента
 			round($r['balans'], 2).
 		'</div>';
 }//_clientInfoBalans()
-function _clientInfoContent($r) {// основная информация о клиенте
+function _clientInfoContent($r) {//основная информация о клиенте
 	return
 		'<div id="ci-name">'._clientVal($r['id'], 'name').'</div>'.
 		'<table id="ci-tab">'.
@@ -786,7 +792,7 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 		case 'array': return $array;
 	}
 }//_clientInfoPerson()
-function _clientInfoPasp($client_id) {
+function _clientInfoPasp($client_id) {//паспортные данные
 	$r = _clientVal($client_id);
 
 	if($r['org'] || !$r['pasp_seria'] && !$r['pasp_nomer'] && !$r['pasp_adres'] && !$r['pasp_ovd'] && !$r['pasp_data'])
@@ -801,7 +807,7 @@ function _clientInfoPasp($client_id) {
 		'</table>';
 }//_clientInfoPasp()
 
-function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
+function clientBalansUpdate($client_id, $ws_id=WS_ID) {//обновление баланса клиента
 	if(!$client_id)
 		return 0;
 	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)

@@ -1,6 +1,6 @@
 <?php
 switch(@$_POST['op']) {
-	case 'client_sel':
+	case 'client_sel'://список клиентов для select
 		$send['spisok'] = array();
 		if(!empty($_POST['val']) && !preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
 			jsonSuccess($send);
@@ -117,16 +117,12 @@ switch(@$_POST['op']) {
 
 		_clientFindUpdate($client_id);
 
-		$send = array(
-			'uid' => $client_id
-//			'title' => utf8($name),
-//			'content' => utf8($name.'<span>'.$telefon.'</span>')
-		);
-/*		history_insert(array(
-			'type' => 3,
-			'client_id' => $send['uid']
+		_history(array(
+			'type_id' => 1,
+			'client_id' => $client_id
 		));
-*/
+
+		$send['uid'] = $client_id;
 		jsonSuccess($send);
 		break;
 	case 'client_spisok':

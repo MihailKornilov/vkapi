@@ -55,10 +55,13 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 */
 
 define('TIME', microtime(true));
+define('GLOBAL_DIR', dirname(__FILE__));
 
-require_once(dirname(__FILE__).'/syncro.php');
-require_once('view/client.php');
-require_once('view/remind.php');
+require_once(GLOBAL_DIR.'/syncro.php');
+require_once(GLOBAL_DIR.'/view/sa.php');
+require_once(GLOBAL_DIR.'/view/client.php');
+require_once(GLOBAL_DIR.'/view/remind.php');
+require_once(GLOBAL_DIR.'/view/history.php');
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
@@ -174,7 +177,11 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		//Напоминания
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+
+		//История действий
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/history'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
 }//_api_scripts()
 
 function _debug() {
@@ -416,11 +423,6 @@ function _num($v) {
 		return 0;
 	return intval($v);
 }//_num()
-function _isbool($v) {//проверка на булево число
-	if(empty($v) || is_array($v) || !preg_match(REGEXP_BOOL, $v))
-		return 0;
-	return intval($v);
-}//_isbool()
 function _bool($v) {//проверка на булево число
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_BOOL, $v))
 		return 0;
@@ -534,7 +536,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 			case 1: break; //клиенты
 			case 2: break; //заявки
 			case 3: break; //платежи
-			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;
+			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;//счета
 		}
 
 		$show = '<span>Показать ещё '.$c.$type.'</span>';
@@ -877,24 +879,24 @@ function _viewerFormat($u) {
 }//_viewerFormat()
 
 
+/*
 function _historyInsert($type, $v=array(), $table='history') {
-	/*
-	Поля, которые отличные от обязательных, также вносятся. Их тип строго integer.
-	Необходимо не забывать, что имя таблицы может быть отличной.
-	*/
-	$keys = '';
-	$values = '';
-	foreach($v as $key => $value) {
-		if($key == 'value' ||
-		   $key == 'value1' ||
-		   $key == 'value2' ||
-		   $key == 'value3' ||
-		   $key == 'viewer_id')
-			continue;
-		$keys .= '`'.$key.'`,';
-		$values .= intval($value).',';
-	}
-	$sql = "INSERT INTO `".$table."` (
+	//Поля, которые отличные от обязательных, также вносятся. Их тип строго integer.
+	//Необходимо не забывать, что имя таблицы может быть отличной.
+
+$keys = '';
+$values = '';
+foreach($v as $key => $value) {
+	if($key == 'value' ||
+		$key == 'value1' ||
+		$key == 'value2' ||
+		$key == 'value3' ||
+		$key == 'viewer_id')
+		continue;
+	$keys .= '`'.$key.'`,';
+	$values .= intval($value).',';
+}
+$sql = "INSERT INTO `".$table."` (
 			   `type`,
 			   ".$keys."
 			   `value`,
@@ -911,7 +913,7 @@ function _historyInsert($type, $v=array(), $table='history') {
 				'".(isset($v['value3']) ? addslashes($v['value3']) : '')."',
 				".(_num(@$v['viewer_id']) ? $v['viewer_id'] : VIEWER_ID)."
 			)";
-	query($sql);
+query($sql);
 }//_historyInsert()
 function _historyFilter($v) {
 	return array(
@@ -1004,7 +1006,7 @@ function _history($types, $functions=array(), $v=array(), $filter_dop) {
 			$viewer_id = $r['viewer_id_add'];
 		}
 		$txt .= '<li>'.(SA ? '<h4>'.$r['type'].'</h4>' : '').
-					   '<div class="li">'.$types($r, $filter).'</div>';
+			'<div class="li">'.$types($r, $filter).'</div>';
 		$key = key($history);
 		if(!$key ||
 			$key == $keyEnd ||
@@ -1012,13 +1014,13 @@ function _history($types, $functions=array(), $v=array(), $filter_dop) {
 			$viewer_id != $history[$key]['viewer_id_add']) {
 			$send['spisok'] .=
 				'<div class="_hist-un">'.
-					'<table><tr>'.
-		  ($viewer_id ? '<td class="hist-img">'.$r['photo'] : '').
-						'<td>'.
-			  ($viewer_id ? '<h5>'.$r['viewer_name'].'</h5>' : '').
-							'<h6>'.FullDataTime($r['dtime_add']).(!$viewer_id ? '<span>cron</span>' : '').'</h6>'.
-					'</table>'.
-					'<ul>'.$txt.'</ul>'.
+				'<table><tr>'.
+				($viewer_id ? '<td class="hist-img">'.$r['photo'] : '').
+				'<td>'.
+				($viewer_id ? '<h5>'.$r['viewer_name'].'</h5>' : '').
+				'<h6>'.FullDataTime($r['dtime_add']).(!$viewer_id ? '<span>cron</span>' : '').'</h6>'.
+				'</table>'.
+				'<ul>'.$txt.'</ul>'.
 				'</div>';
 			$txt = '';
 		}
@@ -1029,11 +1031,12 @@ function _history($types, $functions=array(), $v=array(), $filter_dop) {
 		$c = $c > $limit ? $limit : $c;
 		$send['spisok'] .=
 			'<div class="_next" id="_hist-next" val="'.($page + 1).'">'.
-				'<span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span>'.
+			'<span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span>'.
 			'</div>';
 	}
 	return $send;
 }//_history_spisok()
+*/
 
 
 function _vkComment($table, $id=0) {
