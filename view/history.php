@@ -37,10 +37,10 @@ function _history_insert($v=array()) {//внесение истории действий
 				"._num(@$v['tovar_id']).",
 				"._num(@$v['worker_id']).",
 
-				'".addslashes(_txt(@$v['v1']))."',
-				'".addslashes(_txt(@$v['v2']))."',
-				'".addslashes(_txt(@$v['v3']))."',
-				'".addslashes(_txt(@$v['v4']))."',
+				'".addslashes(@$v['v1'])."',
+				'".addslashes(@$v['v2'])."',
+				'".addslashes(@$v['v3'])."',
+				'".addslashes(@$v['v4'])."',
 
 				".(_num(@$v['viewer_id']) ? $v['viewer_id'] : VIEWER_ID)."
 			)";
@@ -66,7 +66,7 @@ function _history_spisok($v=array()) {
 			'</script>';
 
 	$cond = "`app_id`=".APP_ID.
-	   " AND `type_id` IN (2)".//todo удалить
+	  // " AND `type_id` IN (2,3,4)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
@@ -159,6 +159,7 @@ function _history_types($history) {//перевод type_id в текст
 
 	$str = array(
 		'client_link',
+		'client_name',
 		'v1',
 		'v2',
 		'v3',
@@ -177,7 +178,11 @@ function _history_types($history) {//перевод type_id в текст
 }//_history_types()
 
 
-
+function _historyChange($name, $old, $new) {//возвращается элемент таблицы, если было изменение при редактировании данных
+	if($old != $new)
+		return '<tr><th>'.$name.':<td>'.$old.'<td>»<td>'.$new;
+	return '';
+}//_historyChange()
 
 
 
@@ -195,17 +200,35 @@ function sa_history_spisok() {
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$sql = "SELECT
+				`type_id`,
+				COUNT(`id`) `count`
+			FROM `_history`
+			WHERE `type_id`
+			  AND `app_id`=".APP_ID."
+			GROUP BY `type_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if(isset($spisok[$r['type_id']]))
+			$spisok[$r['type_id']]['count'] = $r['count'];
+
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th>type_id'.
 				'<th>Наименование'.
+				'<th>Кол-во'.
 				'<th>';
-	while($r = mysql_fetch_assoc($q))
+	foreach($spisok as $r)
 		$send .=
 			'<tr><td class="type_id">'.$r['id'].
-				'<td class="txt">'.$r['txt'].
+				'<td class="txt"><textarea readonly id="txt'.$r['id'].'">'.$r['txt'].'</textarea>'.
+				'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
 				'<td class="set">'.
-					'<div class="img_edit"></div>'.
+					'<div class="img_edit" val="'.$r['id'].'"></div>'.
 					'<div class="img_del"></div>';
 	$send .= '</table>';
 	return $send;

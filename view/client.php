@@ -169,7 +169,8 @@ function client_data($v=array()) {// список клиентов
 				   0 `zayav_fail`,
 				   '' `comm`,
 				   '' `fio`,
-				   '' `phone`
+				   '' `phone`,
+				   '' `adres`
 			FROM `_client`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
@@ -273,7 +274,7 @@ function client_data($v=array()) {// список клиентов
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']]['zayav_fail'] = $r['count'];
-*/
+
 	//комментарии по клиентам
 	$sql = "SELECT
 				`table_id` `id`,
@@ -286,7 +287,7 @@ function client_data($v=array()) {// список клиентов
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']]['comm'] = $r['txt'];
-
+*/
 	foreach($spisok as $r) {
 		$org = $r['category_id'] != 1;
 		// список доверенных лиц
@@ -297,7 +298,7 @@ function client_data($v=array()) {// список клиентов
 					'<tr><td class="label top">'.($p['post'] ? $p['post'] : 'Дов. лицо').':'.
 						'<td>'.$p['fio'].
 							($p['phone'] ? '<br />'.$p['phone'] : '').
-							($p['adres'] ? '<br />'.$p['adres'] : '');
+							(FIND && $p['adres'] ? '<br />'.$p['adres'] : '');
 
 		$phone = $org ? $r['org_phone'] : $r['phone'];
 
@@ -674,6 +675,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 							'<a id="zayav-add" val="client_'.$client_id.'"><b>Новая заявка</b></a>'.//'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'todo
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-edit">Редактировать</a>'.
+							'<a id="client-del">Удалить клиента</a>'.
 						'</div>'.
 			'</table>'.
 
@@ -726,7 +728,6 @@ function _clientInfoContent($r) {//основная информация о клиенте
 			(_clientVal($r['id'], 'phone') ? '<tr><td class="label">Телефон:<td>'._clientVal($r['id'], 'phone') : '').
 			(_clientVal($r['id'], 'adres') ? '<tr><td class="label">Адрес:<td>'._clientVal($r['id'], 'adres') : '').
 			(ORG && $r['org_fax'] ? '<tr><td class="label">Факс:<td>'.$r['org_fax'] : '').
-			(ORG && $r['org_adres'] ? '<tr><td class="label top">Адрес:<td>'.$r['org_adres'] : '').
 			(ORG && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
 			(ORG && $r['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$r['org_kpp'] : '').
 		'</table>';

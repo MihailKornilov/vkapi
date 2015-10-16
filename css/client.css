@@ -93,6 +93,7 @@
 
 /* Информация о клиенте */
 #client-info .left{padding-bottom:10px}
+#client-info #client-del{color:#e00}
 #client-info #ci-name{
 	color:#31618C;
 	font-size:12px;
@@ -116,7 +117,7 @@
 #client-info #pasp-tab .label{width:85px}
 
 #client-info #ci-person{margin:15px 0 0 20px}
-#client-info #ci-person h1{color:#31618C;margin:0 35px 5px 0px}
+#client-info #ci-person h1{color:#31618C;margin:0 35px 5px 0}
 #client-info #ci-person h1 a{float:right}
 #client-info #ci-person table{width:400px;margin-left:10px}
 #client-info #ci-person .n{width:15px;text-align:right;color:#777}

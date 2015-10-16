@@ -190,13 +190,7 @@ switch(@$_POST['op']) {
 				jsonError();
 			if($client_id == $client2)
 				jsonError();
-			$sql = "SELECT *
-					FROM `_client`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND !`deleted`
-					  AND `id`=".$client2;
-			if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(!_clientQuery($client2, 1))
 				jsonError();
 		}
 
@@ -232,40 +226,57 @@ switch(@$_POST['op']) {
 			}
 
 //			clientBalansUpdate($client_id);
-/*
-			history_insert(array(
-				'type' => 11,
+
+			_history_insert(array(
+				'type_id' => 3,
 				'client_id' => $client_id,
-				'value' => _clientLink($client2, 1)
+				'v1' => _clientVal($client2, 'name')
 			));
-*/
 		}
 
 		_clientFindUpdate($client_id);
 
-/*
-		$changes = '';
-		if($client['category_id'] != $category_id)
-			$changes .= '<tr><th>Категория:<td>'._clientCategory($client['category_id']).'<td>»<td>'._clientCategory($category_id);
-		if($client['org_name'] != $org_name)
-			$changes .= '<tr><th>Название организации:<td>'.$client['org_name'].'<td>»<td>'.$org_name;
-		if($client['org_telefon'] != $org_telefon)
-			$changes .= '<tr><th>Телефон:<td>'.$client['org_telefon'].'<td>»<td>'.$org_telefon;
-		if($client['org_fax'] != $org_fax)
-			$changes .= '<tr><th>Факс:<td>'.$client['org_fax'].'<td>»<td>'.$org_fax;
-		if($client['org_adres'] != $org_adres)
-			$changes .= '<tr><th>Адрес:<td>'.$client['org_adres'].'<td>»<td>'.$org_adres;
-		if($client['org_inn'] != $org_inn)
-			$changes .= '<tr><th>ИНН:<td>'.$client['org_inn'].'<td>»<td>'.$org_inn;
-		if($client['org_kpp'] != $org_kpp)
-			$changes .= '<tr><th>КПП:<td>'.$client['org_kpp'].'<td>»<td>'.$org_kpp;
+		$changes = !ORG ?
+					_historyChange('ФИО', $r['fio'], $fio).
+					_historyChange('Телефон', $r['phone'], $phone).
+					_historyChange('Адрес', $r['adres'], $adres).
+					_historyChange('Паспорт серия', $r['pasp_seria'], $pasp_seria).
+					_historyChange('Паспорт номер', $r['pasp_nomer'], $pasp_nomer).
+					_historyChange('Паспорт прописка', $r['pasp_adres'], $pasp_adres).
+					_historyChange('Паспорт кем выдан', $r['pasp_ovd'], $pasp_ovd).
+					_historyChange('Паспорт когда выдан', $r['pasp_data'], $pasp_data)
+					:
+					_historyChange('Название организации', $r['org_name'], $org_name).
+					_historyChange('Телефон', $r['org_phone'], $org_phone).
+					_historyChange('Факс', $r['org_fax'], $org_fax).
+					_historyChange('Адрес', $r['org_adres'], $org_adres).
+					_historyChange('ИНН', $r['org_inn'], $org_inn).
+					_historyChange('КПП', $r['org_kpp'], $org_kpp);
+
 		if($changes)
-			history_insert(array(
-				'type' => 10,
+			_history(array(
+				'type_id' => 2,
 				'client_id' => $client_id,
-				'value' => '<table>'.$changes.'</table>'
+				'v1' => '<table>'.$changes.'</table>'
 			));
-*/
+
+		jsonSuccess();
+		break;
+	case 'client_del':
+		jsonError();//todo доделать удаление клиента
+		if(!$client_id = _num($_POST['id']))
+			jsonError();
+
+		if(!$r = _clientQuery($client_id))
+			jsonError();
+
+		$sql = "UPDATE `_client` SET `deleted`=1 WHERE `id`=".$client_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 4,
+			'client_id' => $client_id
+		));
 		jsonSuccess();
 		break;
 	case 'client_person_add':
@@ -292,6 +303,12 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_clientFindUpdate($r['client_id']);
+
+		_history(array(
+			'type_id' => 7,
+			'client_id' => $r['client_id'],
+			'v1' => $r['fio']
+		));
 
 		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
 		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
@@ -394,6 +411,32 @@ function _clientPersonInsert($v) {//внесение или обновление доверенного лица
 				`pasp_ovd`=VALUES(`pasp_ovd`),
 				`pasp_data`=VALUES(`pasp_data`)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	if(!$person_id)
+		_history(array(
+			'type_id' => 5,
+			'client_id' => $client_id,
+			'v1' => $fio
+		));
+	else {
+		$changes =
+			_historyChange('ФИО', $r['fio'], $fio).
+			_historyChange('Телефон', $r['phone'], $phone).
+			_historyChange('Адрес', $r['adres'], $adres).
+			_historyChange('Должность', $r['post'], $post).
+			_historyChange('Паспорт серия', $r['pasp_seria'], $pasp_seria).
+			_historyChange('Паспорт номер', $r['pasp_nomer'], $pasp_nomer).
+			_historyChange('Паспорт прописка', $r['pasp_adres'], $pasp_adres).
+			_historyChange('Паспорт кем выдан', $r['pasp_ovd'], $pasp_ovd).
+			_historyChange('Паспорт когда выдан', $r['pasp_data'], $pasp_data);
+		if($changes)
+			_history(array(
+				'type_id' => 6,
+				'client_id' => $client_id,
+				'v1' => $fio,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+	}
 
 	$v['client_id'] = $client_id;
 

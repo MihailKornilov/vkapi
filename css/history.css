@@ -1,7 +1,9 @@
 #sa-history-tab #type_id{width:80px}
-#sa-history-tab #txt{width:480px}
+#sa-history-tab #txt{width:400px;height:13px}
 #sa-history ._spisok{margin:20px}
 #sa-history .type_id{text-align:right;color:#777}
+#sa-history textarea{width:400px;height:13px;border:0}
+#sa-history .count{text-align:center}
 
 
 ._hist-un{

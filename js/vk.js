@@ -40,6 +40,41 @@ var VK_SCROLL = 0,
 	URL = APP_HTML + '/index.php?' + VALUES,
 	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES,
 	_onScroll = [],
+	hashLoc,
+	hashSet = function(hash) {
+		if(!hash && !hash.p)
+			return;
+		hashLoc = hash.p;
+		var s = true;
+		switch(hash.p) {
+			case 'client':
+				if(hash.d == 'info')
+					hashLoc += '_' + hash.id;
+				break;
+			case 'zayav':
+				if(hash.d == 'info')
+					hashLoc += '_' + hash.id;
+				else if(hash.d == 'add')
+					hashLoc += '_add' + (_num(hash.id) ? '_' + hash.id : '');
+				else if(!hash.d)
+					s = false;
+				break;
+			case 'zp':
+				if(hash.d == 'info')
+					hashLoc += '_' + hash.id;
+				else
+					s = false;
+				break;
+			default:
+				if(hash.d) {
+					hashLoc += '_' + hash.d;
+					if(hash.d1)
+						hashLoc += '_' + hash.d1;
+				}
+		}
+		if(s)
+			VK.callMethod('setLocation', hashLoc);
+	},
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
 		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;

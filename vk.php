@@ -326,6 +326,69 @@ function jsonSuccess($send=array()) {
 	die(json_encode($send));
 }//jsonSuccess()
 
+function _hashRead() {
+	$_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
+	if(empty($_GET['hash'])) {
+		define('HASH_VALUES', false);
+		if(APP_START) {// восстановление последней посещённой страницы
+			$_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : $_GET['p'];
+			$_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
+			$_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';
+			$_GET['id'] = isset($_COOKIE['id']) ? $_COOKIE['id'] : '';
+		} else
+			_hashCookieSet();
+		return;
+	}
+	$ex = explode('.', $_GET['hash']);
+	$r = explode('_', $ex[0]);
+	unset($ex[0]);
+	define('HASH_VALUES', empty($ex) ? false : implode('.', $ex));
+	$_GET['p'] = $r[0];
+	unset($_GET['d']);
+	unset($_GET['d1']);
+	unset($_GET['id']);
+	switch($_GET['p']) {
+		case 'client':
+			if(isset($r[1]))
+				if(preg_match(REGEXP_NUMERIC, $r[1])) {
+					$_GET['d'] = 'info';
+					$_GET['id'] = intval($r[1]);
+				}
+			break;
+		case 'zayav':
+			if(isset($r[1]))
+				if(preg_match(REGEXP_NUMERIC, $r[1])) {
+					$_GET['d'] = 'info';
+					$_GET['id'] = intval($r[1]);
+				} else {
+					$_GET['d'] = $r[1];
+					if(isset($r[2]))
+						$_GET['id'] = intval($r[2]);
+				}
+			break;
+		case 'zp':
+			if(isset($r[1]))
+				if(preg_match(REGEXP_NUMERIC, $r[1])) {
+					$_GET['d'] = 'info';
+					$_GET['id'] = intval($r[1]);
+				}
+			break;
+		default:
+			if(isset($r[1])) {
+				$_GET['d'] = $r[1];
+				if(isset($r[2]))
+					$_GET['d1'] = $r[2];
+			}
+	}
+	_hashCookieSet();
+}//_hashRead()
+function _hashCookieSet() {
+	setcookie('p', $_GET['p'], time() + 2592000, '/');
+	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
+	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
+	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
+}//_hashCookieSet()
+
 function _appAuth() {
 	if(LOCAL || CRON || SA_VIEWER_ID)
 		return;

@@ -583,6 +583,31 @@ $(document)
 		}
 		if($('#client-info').length) {
 			$('#client-edit').click(clientEdit);
+			$('#client-del').click(function() {
+				var dialog = _dialog({
+						top:90,
+						width:300,
+						head:'Удаление клиента',
+						content:'<center><b>Подтвердите удаление клиента.</b></center>',
+						butSubmit:'Удалить',
+						submit:submit
+					});
+				function submit() {
+					var send = {
+						op:'client_del',
+						id:CLIENT.id
+					};
+					dialog.process();
+					$.post(AJAX_MAIN, send, function(res) {
+						if(res.success) {
+							dialog.close();
+							_msg('Клиент удалён');
+							location.href = URL + '&p=client';
+						} else
+							dialog.abort();
+					}, 'json');
+				}
+			});
 /*
 			$('#dopLinks .link').click(function() {
 				$('#dopLinks .link').removeClass('sel');
