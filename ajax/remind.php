@@ -4,8 +4,8 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
-		$_POST['client_id'] = _isnum($_POST['client_id']);
-		$_POST['zayav_id'] = _isnum($_POST['zayav_id']);
+		$_POST['client_id'] = _num($_POST['client_id']);
+		$_POST['zayav_id'] = _num($_POST['zayav_id']);
 		$_POST['txt'] = _txt($_POST['txt']);
 		$_POST['about'] = _txt($_POST['about']);
 
@@ -24,7 +24,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'remind_action':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
 			jsonError();
@@ -106,7 +106,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'remind_head_edit':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		if(!$txt = _txt($_POST['txt']))

@@ -665,8 +665,8 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 						_clientInfoPasp($client_id).
 						'<div id="person-spisok">'._clientInfoPerson($client_id).'</div>'.
 						'<div class="dtime">'.
-							'Клиента вн'.(_viewer($c['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '.
-							_viewer($c['viewer_id_add'], 'name').' '.
+							'Клиента вн'.(_viewer($c['viewer_id_add'], 'viewer_sex') == 1 ? 'есла' : 'ёс').' '.
+							_viewer($c['viewer_id_add'], 'viewer_name').' '.
 							FullData($c['dtime_add'], 1).
 						'</div>'.
 

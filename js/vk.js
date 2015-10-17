@@ -353,16 +353,6 @@ var VK_SCROLL = 0,
 			'<div class="ttmsg">' + msg + '</div>' +
 			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
 		'</div>';
-	},
-	_history = function(v, id) {
-		HIST[id] = v;
-		HIST.op = 'history_spisok';
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_MAIN, HIST, function(res) {
-			$('#mainLinks').removeClass('busy');
-			if(res.success)
-				$('.left').html(res.html);
-		}, 'json');
 	};
 
 $.fn._check = function(o) {

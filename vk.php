@@ -16,25 +16,6 @@ CREATE TABLE IF NOT EXISTS `vk_comment` (
   KEY `i_table_id` (`table_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=cp1251;
 
-CREATE TABLE IF NOT EXISTS `vk_user` (
-  `viewer_id` int unsigned NOT NULL,
-  PRIMARY KEY (`viewer_id`)
-  `first_name` varchar(30) DEFAULT '',
-  `last_name` varchar(30) DEFAULT '',
-  `sex` tinyint(3) unsigned DEFAULT '0',
-  `photo` varchar(300) DEFAULT '',
-  `country_id` int unsigned DEFAULT 0,
-  `country_name` varchar(100) DEFAULT '',
-  `city_id` int unsigned DEFAULT 0,
-  `city_name` varchar(100) DEFAULT '',
-  `is_app_user` tinyint unsigned DEFAULT 0,
-  `rule_menu_left` tinyint unsigned DEFAULT 0,
-  `rule_notify` tinyint unsigned DEFAULT 0,
-  `admin` tinyint unsigned DEFAULT 0,
-  `enter_last` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
-
 CREATE TABLE IF NOT EXISTS `pagehelp` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
@@ -43,25 +24,18 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
   `txt` text default NULL,
   `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
-
-Необходимые константы:
-	NAMES
-	API_ID
-	SECRET
-	SA
-	VIEWER_ID
-	VIEWER_ADMIN
-	VALUES
 */
 
 define('TIME', microtime(true));
 define('GLOBAL_DIR', dirname(__FILE__));
 
-require_once(GLOBAL_DIR.'/syncro.php');
-require_once(GLOBAL_DIR.'/view/sa.php');
-require_once(GLOBAL_DIR.'/view/client.php');
-require_once(GLOBAL_DIR.'/view/remind.php');
-require_once(GLOBAL_DIR.'/view/history.php');
+require_once GLOBAL_DIR.'/syncro.php';
+require_once GLOBAL_DIR.'/view/vkuser.php';
+require_once GLOBAL_DIR.'/view/setup.php';
+require_once GLOBAL_DIR.'/view/client.php';
+require_once GLOBAL_DIR.'/view/remind.php';
+require_once GLOBAL_DIR.'/view/history.php';
+require_once GLOBAL_DIR.'/view/sa.php';
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
@@ -79,7 +53,7 @@ define('REGEXP_WORDFIND',   '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
 
 define('DOMAIN', $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN != 'nyandoma.ru');
-define('APP_START', !empty($_GET['referrer'])); //первый запуск приложения
+define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
 $SA[982006] = 1; // Корнилов Михаил
 //$SA[166424274] = 1; // тестовая запись
@@ -87,9 +61,11 @@ define('SA', isset($SA[$_GET['viewer_id']]));
 
 //setcookie('sa_viewer_id', '', time() - 3600, '/');
 //вход из админа в другую мастерскую от имени другого пользователя
-define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
-define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : intval(@$_GET['viewer_id']));
-//define('VIEWER_ID', empty($_GET['viewer_id']) ? 0 : $_GET['viewer_id']);
+define('SA_VIEWER_ID', SA && _num(@$_COOKIE['sa_viewer_id']) ? $_COOKIE['sa_viewer_id'] : 0);
+define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : _num(@$_GET['viewer_id']));
+
+if(!VIEWER_ID)
+	die('Error: not correct viewer_id.');
 
 define('VALUES', TIME.
 				 '&viewer_id='.$_GET['viewer_id'].
@@ -105,9 +81,6 @@ define('APP_URL', 'http://vk.com/app'.APP_ID);
 if(!defined('CRON'))
 	define('CRON', 0);
 
-//if(!defined('WS_ID'))
-//	define('WS_ID', 0);
-
 define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
 
@@ -120,11 +93,14 @@ if(SA || CRON) {
 if(!CRON) //Включает работу куков в IE через фрейм
 	header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 
-define('DEBUG', !empty($_COOKIE['debug']));
+define('DEBUG', SA && !empty($_COOKIE['debug']));
 
 
+_appAuth();
 _dbConnect('GLOBAL_');
 _dbConnect();
+_getVkUser();
+_setupApp();
 
 function _pre($v) {// вывод в debug разобранного массива
 	$pre = '';
@@ -181,7 +157,13 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		//История действий
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/history'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>';
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+
+		//Настройки
+	($_GET['p'] == 'setup' ?
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+	: '');
 }//_api_scripts()
 
 function _debug() {
@@ -287,7 +269,7 @@ function _footer() {
 		'</div></body></html>';
 }//_footer()
 
-function _vkapi($method, $param=array()) {
+function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
 		'v' => 5.21,
 		'lang' => 'ru',
@@ -297,10 +279,10 @@ function _vkapi($method, $param=array()) {
 	$url = 'https://api.vk.com/method/'.$method.'?'.http_build_query($param);
 	$res = file_get_contents($url);
 	$res = json_decode($res, true);
-	if(SA && DEBUG)
+	if(DEBUG)
 		$res['url'] = $url;
 	return $res;
-}
+}//_vkapi()
 
 function jsonError($values=null) {
 	$send['error'] = 1;
@@ -314,7 +296,7 @@ function jsonError($values=null) {
 }//jsonError()
 function jsonSuccess($send=array()) {
 	$send['success'] = 1;
-	if(SA && DEBUG) {
+	if(DEBUG) {
 		global $sqlQuery, $sqlTime;
 		$send['post'] = $_POST;
 		$send['link'] = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
@@ -330,7 +312,7 @@ function _hashRead() {
 	$_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
 	if(empty($_GET['hash'])) {
 		define('HASH_VALUES', false);
-		if(APP_START) {// восстановление последней посещённой страницы
+		if(APP_FIRST_LOAD) {// восстановление последней посещённой страницы
 			$_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : $_GET['p'];
 			$_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
 			$_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';
@@ -389,7 +371,7 @@ function _hashCookieSet() {
 	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
 }//_hashCookieSet()
 
-function _appAuth() {
+function _appAuth() {//проверка авторизации в приложении
 	if(LOCAL || CRON || SA_VIEWER_ID)
 		return;
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
@@ -428,7 +410,7 @@ function query($sql, $resource_id=MYSQL_CONNECT) {
 function query_value($sql, $resource_id=MYSQL_CONNECT) {
 	$q = query($sql, $resource_id);
 	if(!$r = mysql_fetch_row($q))
-		return false;
+		return 0;
 	return $r[0];
 }//query_value()
 function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
@@ -476,11 +458,6 @@ function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
 	return empty($send) ? 0 : implode(',', array_unique($send));
 }//query_ids()
 
-function _isnum($v) {//проверка на целое число
-	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
-		return 0;
-	return intval($v);
-}//_isnum()
 function _num($v) {
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
 		return 0;
@@ -659,7 +636,6 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоци
 		$v[] = $n.':['.implode(',', $sp).']';
 	return '{'.implode(',', $v).'}';
 }//Gvalues_obj()
-
 function _globalValuesJS() {//Составление файла global_values.js, используемый во всех приложениях
 	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
 		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
@@ -758,7 +734,6 @@ function _end($count, $o1, $o2, $o5=false) {
 		}
 	return $o5;
 }//_end()
-
 function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 	$znak = $sum < 0 ? -1 : 1;
 	$sum *= $znak;
@@ -777,7 +752,6 @@ function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
 	return ($znak < 0 ? '-' : '').$send;
 }//_sumSpace()
-
 function _tooltip($msg, $left=0, $ugolSide='') {
 	return
 		' _tooltip">'.
@@ -801,146 +775,6 @@ function _rightLink($id, $spisok, $val=0) {
 		$a.
 	'</div>';
 }//_rightLink()
-
-function _viewer($viewer_id=VIEWER_ID, $val=false) {
-	if(is_array($viewer_id))
-		return _viewerArray($viewer_id);
-
-	if(!_isnum($viewer_id))
-		die('Viewer: '.$viewer_id.' is not correct.');
-
-	$new = false;
-	$key = CACHE_PREFIX.'viewer_'.$viewer_id;
-	$u = xcache_get($key);
-	if(empty($u)) {
-		$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$viewer_id;
-		if(!$u = query_assoc($sql)) {
-			$u = _viewerUpdate($viewer_id);
-			$new = true;
-		}
-		$u = _viewerFormat($u);
-		xcache_set($key, $u, 86400);
-	}
-	if($val)
-		return isset($u[$val]) ? $u[$val] : false;
-
-	if(APP_START && $viewer_id == VIEWER_ID && !defined('ENTER_LAST_UPDATE')) {
-		$nu = array(
-			'id' => VIEWER_ID,
-			'is_app_user' => empty($_GET['is_app_user']) ? 0 : 1,
-			'rule_menu_left' => intval(@$_GET['api_settings'])&256 ? 1 : 0,
-			'rule_notify' => intval(@$_GET['api_settings'])&1 ? 1 : 0
-		);
-		query("UPDATE `vk_user`
-			   SET `enter_last`=CURRENT_TIMESTAMP,
-				   `is_app_user`=".$nu['is_app_user'].",
-				   `rule_menu_left`=".$nu['rule_menu_left'].",
-				   `rule_notify`=".$nu['rule_notify'].",
-				   `access_token`='".$_GET['access_token']."'
-			   WHERE `viewer_id`=".VIEWER_ID);
-		if(!$new && function_exists('viewerSettingsHistory')) {
-			viewerSettingsHistory($u, $nu);
-			xcache_unset($key);
-		}
-		define('ENTER_LAST_UPDATE', true);
-	}
-
-	$u['new'] = $new;
-	return $u;
-}//_viewer()
-function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Контакта
-	$res = _vkapi('users.get', array(
-		'user_ids' => $viewer_id,
-		'access_token' => '',
-		'fields' => 'photo,'.
-					'sex,'.
-					'country,'.
-					'city'
-	));
-
-	if(empty($res['response'])) {
-		print_r($res);
-		die('Do not get user from VK: '.$viewer_id);
-	}
-	$res = $res['response'][0];
-	$u = array(
-		'viewer_id' => $viewer_id,
-		'first_name' => win1251($res['first_name']),
-		'last_name' => win1251($res['last_name']),
-		'sex' => $res['sex'],
-		'photo' => $res['photo'],
-		'country_id' => empty($res['country']) ? 0 : $res['country']['id'],
-		'country_name' => empty($res['country']) ? '' : win1251($res['country']['title']),
-		'city_id' => empty($res['city']) ? 0 : $res['city']['id'],
-		'city_name' => empty($res['city']) ? '' : win1251($res['city']['title'])
-	);
-
-	$sql = "INSERT INTO `vk_user` (
-				`viewer_id`,
-				`first_name`,
-				`last_name`,
-				`sex`,
-				`photo`,
-				`country_id`,
-				`country_name`,
-				`city_id`,
-				`city_name`
-			) VALUES (
-				".$viewer_id.",
-				'".addslashes($u['first_name'])."',
-				'".addslashes($u['last_name'])."',
-				".$u['sex'].",
-				'".addslashes($u['photo'])."',
-				".$u['country_id'].",
-				'".addslashes($u['country_name'])."',
-				".$u['city_id'].",
-				'".addslashes($u['city_name'])."'
-			) ON DUPLICATE KEY UPDATE
-				`first_name`=VALUES(`first_name`),
-				`last_name`=VALUES(`last_name`),
-				`sex`=VALUES(`sex`),
-				`photo`=VALUES(`photo`),
-				`country_id`=VALUES(`country_id`),
-				`country_name`=VALUES(`country_name`),
-				`city_id`=VALUES(`city_id`),
-				`city_name`=VALUES(`city_name`)";
-	query($sql);
-
-	return query_assoc("SELECT * FROM `vk_user` WHERE `viewer_id`=".$viewer_id);
-}//_viewerUpdate()
-function _viewerArray($arr) {
-	$viewer_ids = array();  //Сбор id пользователей
-	$ass = array();         //Присвоение каждому id пользователя списка элементов, которые относятся к нему
-	foreach($arr as $r) {
-		$viewer_ids[$r['viewer_id_add']] = 1;
-		$ass[$r['viewer_id_add']][] = $r['id'];
-	}
-	unset($viewer_ids[0]);
-	if(!empty($viewer_ids)) {
-		$sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', array_keys($viewer_ids)).")";
-		$q = query($sql);
-		while($u = mysql_fetch_assoc($q))
-			foreach($ass[$u['viewer_id']] as $id)
-				$arr[$id] += _viewerFormat($u);
-	}
-	return $arr;
-}//_viewerArray()
-function _viewerFormat($u) {
-	$u['id'] = $u['viewer_id'];
-	$u['name'] = $u['first_name'].' '.$u['last_name'];
-	$u['name_init'] = $u['last_name'].
-					 ($u['first_name'] ? ' '.strtoupper($u['first_name'][0]).'.' : '').
-					(!empty($u['middle_name']) ? ' '.strtoupper($u['middle_name'][0]).'.' : '');
-	$u['name_full'] = $u['last_name'].' '.$u['first_name'].(!empty($u['middle_name']) ? ' '.$u['middle_name'] : '');
-	$u['link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['name'].'</a>';
-	$u['photo'] = '<img src="'.$u['photo'].'" />';
-	$u['photo_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$u['photo'].'</a>';
-	$u['viewer_name'] = $u['name'];
-	$u['viewer_link'] = $u['link'];
-	$u['viewer_photo'] = $u['photo'];
-	return $u;
-}//_viewerFormat()
-
 
 /*
 function _historyInsert($type, $v=array(), $table='history') {
@@ -980,16 +814,16 @@ query($sql);
 }//_historyInsert()
 function _historyFilter($v) {
 	return array(
-		'page' => !empty($v['page']) && _isnum($v['page']) ? intval($v['page']) : 1,
-		'limit' => !empty($v['limit']) && _isnum($v['limit']) ? intval($v['limit']) : 30,
+		'page' => !empty($v['page']) && _num($v['page']) ? intval($v['page']) : 1,
+		'limit' => !empty($v['limit']) && _num($v['limit']) ? intval($v['limit']) : 30,
 		'table' => !empty($v['table']) ? $v['table'] : 'history',
-		'type' => !empty($v['type']) && _isnum($v['type']) ? intval($v['type']) : 0,
+		'type' => !empty($v['type']) && _num($v['type']) ? intval($v['type']) : 0,
 		'value' => !empty($v['value']) ? $v['value'] : '',
 		'value1' => !empty($v['value1']) ? $v['value1'] : '',
 		'value2' => !empty($v['value2']) ? $v['value2'] : '',
 		'value3' => !empty($v['value3']) ? $v['value3'] : '',
-		'viewer_id_add' => !empty($v['viewer_id_add']) && _isnum($v['viewer_id_add']) ? intval($v['viewer_id_add']) : 0,
-		'action' => !empty($v['action']) && _isnum($v['action']) ? intval($v['action']) : 0
+		'viewer_id_add' => !empty($v['viewer_id_add']) && _num($v['viewer_id_add']) ? intval($v['viewer_id_add']) : 0,
+		'action' => !empty($v['action']) && _num($v['action']) ? intval($v['action']) : 0
 	);
 }//_historyFilter()
 function _history($types, $functions=array(), $v=array(), $filter_dop) {

@@ -50,7 +50,8 @@ function _history_insert($v=array()) {//внесение истории действий
 function _historyFilter($v) {
 	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 30
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 30,
+		'viewer_id_add' => _num(@$v['viewer_id_add'])
 	);
 }//_historyFilter()
 function _history_spisok($v=array()) {
@@ -68,6 +69,9 @@ function _history_spisok($v=array()) {
 	$cond = "`app_id`=".APP_ID.
 	  // " AND `type_id` IN (2,3,4)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
+
+	if($filter['viewer_id_add'])
+		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
 	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -96,7 +100,7 @@ function _history_spisok($v=array()) {
 	while($r = mysql_fetch_assoc($q))
 		$history[$r['id']] = $r;
 
-	$history = _viewer($history);
+	$history = _viewerValToList($history);
 	$history = _clientValToList($history);
 	$history = _history_types($history);
 
@@ -109,7 +113,7 @@ function _history_spisok($v=array()) {
 			$time = strtotime($r['dtime_add']);
 			$viewer_id = $r['viewer_id_add'];
 		}
-		$txt .= '<li>'.(SA ? '<h4>'.$r['type_id'].'</h4>' : '').
+		$txt .= '<li class="light">'.(SA ? '<h4 val="'.$r['id'].'">'.$r['type_id'].'</h4>' : '').
 					'<div class="li">'.$r['txt'].'</div>';
 		$key = key($history);
 		if(!$key ||
@@ -119,7 +123,7 @@ function _history_spisok($v=array()) {
 			$send['spisok'] .=
 				'<div class="_hist-un">'.
 					'<table><tr>'.
-				  ($viewer_id ? '<td class="hist-img">'.$r['photo'] : '').
+				  ($viewer_id ? '<td class="hist-img">'.$r['viewer_photo'] : '').
 								'<td>'.
 					  ($viewer_id ? '<h5>'.$r['viewer_name'].'</h5>' : '').
 									'<h6>'.FullDataTime($r['dtime_add']).(!$viewer_id ? '<span>cron</span>' : '').'</h6>'.
@@ -135,16 +139,6 @@ function _history_spisok($v=array()) {
 			'all' => $all,
 			'id' => '_hist-next'
 		));
-/*
-	if($start + $limit < $all) {
-		$c = $all - $start - $limit;
-		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .=
-			'<div class="_next" id="_hist-next" val="'.($page + 1).'">'.
-				'<span>ѕоказать ещЄ '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span>'.
-			'</div>';
-	}
-*/
 	return $send;
 }//_history_spisok()
 function _history_types($history) {//перевод type_id в текст
@@ -177,13 +171,31 @@ function _history_types($history) {//перевод type_id в текст
 	return $history;
 }//_history_types()
 
-
 function _historyChange($name, $old, $new) {//возвращаетс€ элемент таблицы, если было изменение при редактировании данных
 	if($old != $new)
 		return '<tr><th>'.$name.':<td>'.$old.'<td>ї<td>'.$new;
 	return '';
 }//_historyChange()
 
+function _history_right() {//вывод условий поиска дл€ истории действий
+	$sql = "SELECT DISTINCT `viewer_id_add`
+			FROM `_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `viewer_id_add`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$worker = array();
+	while($r = mysql_fetch_assoc($q))
+		$worker[] = '{'.
+			'uid:'.$r['viewer_id_add'].','.
+			'title:"'._viewer($r['viewer_id_add'], 'viewer_name').'"'.
+		'}';
+	return
+		'<script type="text/javascript">var HIST_WORKER=['.implode(',', $worker).'];</script>'.
+		'<div class="findHead">ƒействи€ сотрудника</div>'.
+		'<input type="hidden" id="viewer_id_add">';
+		//'<div class="findHead">ƒействие</div><input type="hidden" id="action">';
+}//_history_right()
 
 
 function sa_history() {//управление историей действий

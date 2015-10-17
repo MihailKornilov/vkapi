@@ -87,10 +87,10 @@ function _remindDayLeftBg($status, $d) {//цвета для подсветки
 }//_remindDayLeftBg()
 function _remindFilter($v) {
 	return array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
-		'client_id' => _isnum(@$v['client_id']) ? $v['client_id'] : 0,
-		'zayav_id' => _isnum(@$v['zayav_id']),
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
+		'client_id' => _num(@$v['client_id']) ? $v['client_id'] : 0,
+		'zayav_id' => _num(@$v['zayav_id']),
 		'day' => !empty($v['day']) ? $v['day'] : '',
 		'status' => isset($v['status']) && preg_match(REGEXP_NUMERIC, $v['status']) ? intval($v['status']) : 1
 	);
@@ -247,7 +247,7 @@ function _remind_history_show($v) {//отображение истории напоминаний
 				$send .=
 					'<tr><td>' .
 					FullDataTime($r['dtime_add']) . ' ' .
-					_viewer($r['viewer_id_add'], 'name') . ' ' .
+					_viewer($r['viewer_id_add'], 'viewer_name') . ' ' .
 					$about . '.';
 			}
 		}

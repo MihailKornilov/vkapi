@@ -5,10 +5,29 @@ require_once 'history.php';
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
-//		if(!SA)
-//			jsonError();
+		if(!SA)
+			jsonError();
 		_globalValuesJS();
 		_cacheClear();
+
+		//очистка кеша сотрудников приложения
+		$sql = "SELECT `viewer_id`
+				FROM `_vkuser`
+				WHERE `app_id`=".APP_ID."
+				  AND `worker`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
+			xcache_unset(CACHE_PREFIX.'viewer_rules_'.$r['viewer_id']);
+		}
+
+		//обновление значения скриптов и стилей приложения
+		$sql = "UPDATE `_setup`
+				SET `value`=`value`+1
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='VERSION'";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 		jsonSuccess();
 		break;
 	case 'cookie_clear':
@@ -19,7 +38,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'debug_sql':
-		if(!SA && !DEBUG)
+		if(!DEBUG)
 			jsonError();
 
 		$nocache = _bool($_POST['nocache']);
@@ -55,7 +74,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'debug_cookie':
-		if(!SA && !DEBUG)
+		if(!DEBUG)
 			jsonError();
 		$send['html'] = _debug_cookie();
 		jsonSuccess($send);

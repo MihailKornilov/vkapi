@@ -13,19 +13,23 @@
 }
 ._hist-un .head{font-size:10px}
 ._hist-un .hist-img img{width:22px;height:22px}
-._hist-un h4{float:right;color:#ddd;font-size:10px}
-._hist-un h5,._hist-un h6{font-size:10px;margin-left:5px}
+._hist-un h4{float:right;color:#ddd;font-size:10px;cursor:pointer}
+._hist-un h4:hover{color:#005;font-weight:bold}
+._hist-un h5,
+._hist-un h6{font-size:10px;margin-left:5px}
 ._hist-un h6{color:#777}
 ._hist-un h6 span{color:#555;margin-left:15px}
 ._hist-un ul{margin:5px 0 7px 25px}
 ._hist-un li{margin:0 0 8px}
+._hist-un li.light:hover{background-color:#ffa;cursor:default}
 ._hist-un .li{margin-left:-4px}
 ._hist-un i{font:italic 11px Arial;color:#977}
 ._hist-un em{color:#707070}
 ._hist-un .changes *{font-size:10px;color:#777}
 ._hist-un .changes table{border-collapse:collapse;margin-top:3px}
 ._hist-un .changes th{text-align:right;font-weight:700}
-._hist-un .changes th,._hist-un .changes td{
+._hist-un .changes th,
+._hist-un .changes td{
 	border:#ddd solid 1px;
 	padding:2px 4px;
 	vertical-align:top;
