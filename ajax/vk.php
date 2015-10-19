@@ -13,6 +13,7 @@ require_once GLOBAL_DIR_AJAX.'/client.php';
 require_once GLOBAL_DIR_AJAX.'/remind.php';
 require_once GLOBAL_DIR_AJAX.'/history.php';
 require_once GLOBAL_DIR_AJAX.'/setup.php';
+require_once GLOBAL_DIR_AJAX.'/sa.php';
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
@@ -20,6 +21,9 @@ switch(@$_POST['op']) {
 			jsonError();
 		_globalValuesJS();
 		_cacheClear();
+
+		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
+		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 
 		//очистка кеша сотрудников приложения
 		$sql = "SELECT `viewer_id`

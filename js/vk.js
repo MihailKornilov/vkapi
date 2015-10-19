@@ -421,6 +421,12 @@ var VK_SCROLL = 0,
 			'<div class="ttmsg">' + msg + '</div>' +
 			'<div class="ttug' + (ugolSide ? ' ' + ugolSide : '') + '"></div>' +
 		'</div>';
+	},
+	_parent = function(t, tag) {//поиск нужного тега методом parent()
+		tag = tag || 'TR';
+		while(t[0].tagName != tag)
+			t = t.parent();
+		return t;
 	};
 
 $.fn._check = function(o) {

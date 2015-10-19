@@ -3,6 +3,7 @@ function _sa_global() {//вывод ссылок суперадминистратора для всех приложений
 	return
 		'<div><b>Global:</b></div>'.
 		'<a href="'.URL.'&p=sa&d=history">История действий</a><br />'.
+		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a><br />'.
 		'<br />';
 }//_sa_global()
 function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу после посещения суперадмина
@@ -29,4 +30,97 @@ function sa_path($v) {
 			$v.
 		'</div>';
 }//sa_path()
+
+
+
+
+function sa_history() {//управление историей действий
+	return
+		sa_path('История действий').
+		'<div id="sa-history">'.
+			'<div class="headName">Константы истории действий<a class="add">Добавить</a></div>'.
+			'<div id="spisok">'.sa_history_spisok().'</div>'.
+		'</div>';
+}//sa_history()
+function sa_history_spisok() {
+	$sql = "SELECT * FROM `_history_type` ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$sql = "SELECT
+				`type_id`,
+				COUNT(`id`) `count`
+			FROM `_history`
+			WHERE `type_id`
+			  AND `app_id`=".APP_ID."
+			GROUP BY `type_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if(isset($spisok[$r['type_id']]))
+			$spisok[$r['type_id']]['count'] = $r['count'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>type_id'.
+				'<th>Наименование'.
+				'<th>Кол-во'.
+				'<th>';
+	foreach($spisok as $r)
+		$send .=
+			'<tr><td class="type_id">'.$r['id'].
+				'<td class="txt"><textarea readonly id="txt'.$r['id'].'">'.$r['txt'].'</textarea>'.
+				'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
+				'<td class="set">'.
+					'<div class="img_edit" val="'.$r['id'].'"></div>';
+					//'<div class="img_del"></div>';
+	$send .= '</table>';
+	return $send;
+}//sa_history_spisok()
+
+
+
+function sa_rule() {//управление историей действий
+	return
+		sa_path('Права сотрудников').
+		'<div id="sa-rule">'.
+			'<div class="headName">Права сотрудников<a class="add">Добавить</a></div>'.
+			'<div id="spisok">'.sa_rule_spisok().'</div>'.
+		'</div>';
+}//sa_rule()
+function sa_rule_spisok() {
+	$sql = "SELECT * FROM `_vkuser_rule_default` ORDER BY `key`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Константа'.
+				'<th>Значение<br />для админа'.
+				'<th>Значение<br />для сотрудника'.
+				'<th>';
+	foreach($spisok as $r)
+		$send .=
+			'<tr val="'.$r['id'].'">'.
+				'<td class="key">'.
+					'<b>'.$r['key'].'</b>'.
+					'<div class="about">'.$r['about'].'</div>'.
+				'<td class="admin">'._check('admin'.$r['id'], '', $r['value_admin']).
+				'<td class="worker">'._check('worker'.$r['id'], '', $r['value_worker']).
+				'<td class="set">'.
+					'<div class="img_edit" val="'.$r['id'].'"></div>';
+	//'<div class="img_del"></div>';
+	$send .= '</table>';
+
+	return $send;
+}//sa_rule_spisok()
 

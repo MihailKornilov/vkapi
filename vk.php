@@ -109,6 +109,7 @@ _pinCheck();
 _hashRead();
 _header();
 
+//_pre(_viewerRuleDefault());
 
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))
@@ -197,6 +198,12 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 	(@$_GET['p'] == 'setup' ?
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+	: '').
+
+		//Суперадмин (SA)
+	(@$_GET['p'] == 'sa' ?
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
 	: '')
 );
 }//_api_scripts()
@@ -432,6 +439,34 @@ function _appAuth() {//проверка авторизации в приложении
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
 }//_noauth()
+function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
+	if(!PIN)
+		return;
+	if(AJAX)
+		return;
+	if(!PIN_ENTER) {
+		$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
+		return;
+	}
+
+	unset($_SESSION[PIN_TIME_KEY]);
+
+	global $html;
+
+	_header();
+
+	$html .=
+		'<div id="pin-enter">'.
+			'Пин: '.
+			'<input type="password" id="pin" maxlength="10"> '.
+			'<div class="vkButton"><button>Ok</button></div>'.
+			'<div class="red">&nbsp;</div>'.
+		'</div>';
+
+	_footer();
+	mysql_close();
+	die($html);
+}//_pinCheck()
 
 function _dbConnect($prefix='') {
 	global $sqlQuery;
@@ -471,9 +506,9 @@ function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
 		return array();
 	return $r;
 }//query_assoc()
-function query_ass($sql) {//Ассоциативный массив
+function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
 	$send = array();
-	$q = query($sql);
+	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_row($q))
 		$send[$r[0]] = $r[1];
 	return $send;
@@ -495,8 +530,8 @@ function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select 
 		);
 	return $send;
 }//query_selArray()
-function query_ptpJson($sql) {//Ассоциативный массив
-	$q = query($sql);
+function query_ptpJson($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
+	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');

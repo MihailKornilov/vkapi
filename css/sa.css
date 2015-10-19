@@ -1,0 +1,24 @@
+.sa-tab{border-spacing:10px}
+.sa-tab .label{text-align:right}
+.sa-tab #name{width:250px}
+
+
+/* история действий */
+#sa-history-tab #type_id{width:80px}
+#sa-history-tab #txt{width:400px;height:13px}
+#sa-history ._spisok{margin:20px}
+#sa-history .type_id{text-align:right;color:#777}
+#sa-history textarea{width:400px;height:13px;border:0}
+#sa-history .count{text-align:center}
+
+
+
+/* права сотрудников */
+#sa-rule-tab #key{width:250px;font-weight:bold}
+#sa-rule-tab textarea{width:250px}
+#sa-rule #spisok{margin:20px}
+#sa-rule .key{width:320px}
+#sa-rule .about{color:#777;margin-left:10px}
+#sa-rule .admin{text-align:center}
+#sa-rule .worker{text-align:center}
+#sa-rule td._busy ._check{visibility:hidden}

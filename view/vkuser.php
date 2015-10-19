@@ -194,6 +194,9 @@ function _viewerFormat($u) {//формирование данных пользовател€
 	return $send;
 }//_viewerFormat()
 
+function _viewerAdded($viewer_id) {//¬ывод сотрудника, который вносил запись с учЄтом пола
+	return '¬н'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'Єс').' '._viewer($viewer_id, 'name');
+}//_viewerAdded();
 
 
 
@@ -209,9 +212,12 @@ function _getVkUser() {//ѕолучение данных о пользователе при запуске приложени€
 
 	define('PIN', !empty($u['pin']));
 	define('PIN_TIME_KEY', APP_ID.'pin_time_'.VIEWER_ID);
-	define('PIN_TIME_LEN', 5); // длительность в секундах действи€ пинкода
+	define('PIN_TIME_LEN', 3600); // длительность в секундах действи€ пинкода
 	define('PIN_TIME', empty($_SESSION[PIN_TIME_KEY]) ? 0 : $_SESSION[PIN_TIME_KEY]);
 	define('PIN_ENTER', PIN && APP_FIRST_LOAD || PIN && (PIN_TIME - time() < 0));//требуетс€ ли ввод пин-кода
+
+	_viewerRule();//формирование констант прав
+	_viewerRule(2170788);//формирование констант прав
 
 /*
 					if(APP_FIRST_LOAD) { //учЄт посещений
@@ -238,30 +244,139 @@ function _getVkUser() {//ѕолучение данных о пользователе при запуске приложени€
 }//_getVkUser()
 
 
+/*
+	$rules = array(
+		'RULES_NOSALARY' => array(	// Ќе отображать в начислени€х з/п
+			'def' => 0
+		),
+		'RULES_ZPZAYAVAUTO' => array(	// Ќачисл€ть бонус по за€вке при отсутствии долга
+			'def' => 0
+		),
+		'RULES_APPENTER' => array(	// –азрешать вход в приложение
+			'def' => 0,
+			'admin' => 1,
+			'childs' => array(
+				'RULES_WORKER' => array(	// —отрудники
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_RULES' => array(	    // Ќастройка прав сотрудников
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_REKVISIT' => array(	// –еквизиты организации
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_PRODUCT' => array(	// ¬иды изделий
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_INVOICE' => array(	// —чета
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_ZAYAVRASHOD' => array(// –асходы по за€вке
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_HISTORYSHOW' => array(// ¬идит историю действий
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_MONEY' => array(	    // ћожет видеть платежи: только свои, все платежи
+					'def' => 0,
+					'admin' => 1
+				)
+			)
+		)
+	);
+	$ass = array();
+	foreach($rules as $i => $r) {
+		$ass[$i] = $admin && isset($r['admin']) ? $r['admin'] : (isset($rls[$i]) ? $rls[$i] : $r['def']);
+		//$parent = $ass[$i];
+		if(isset($r['childs']))
+			foreach($r['childs'] as $ci => $cr)
+				$ass[$ci] = $admin && isset($cr['admin']) ? $cr['admin'] : (isset($rls[$ci]) ? $rls[$ci] : $cr['def']);
+	}
+	return $ass;
+*/
+function _viewerRuleDefault($viewer_id=VIEWER_ID) {
+	// получение всех возможных значений прав пользовател€ (по умолчанию),
+	// с учЄтом того, €вл€етс€ пользователь админом или сотрудником
 
-function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуетс€
-	if(AJAX)
-		return;
-	if(!PIN_ENTER) {
-		$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
-		return;
+	// получение значений прав дл€ руководител€
+	$key = CACHE_PREFIX.'viewer_rule_default_admin';
+	$rule_admin = xcache_get($key);
+	if(empty($rule_admin)) {
+		$sql = "SELECT `key`,`value_admin` FROM `_vkuser_rule_default` ORDER BY `key`";
+		$rule_admin = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $rule_admin, 86400);
 	}
 
-	unset($_SESSION[PIN_TIME_KEY]);
+	// получение значений прав дл€ сотрудников
+	$key = CACHE_PREFIX.'viewer_rule_default_worker';
+	$rule_worker = xcache_get($key);
+	if(empty($rule_worker)) {
+		$sql = "SELECT `key`,`value_worker` FROM `_vkuser_rule_default` ORDER BY `key`";
+		$rule_worker = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $rule_worker, 86400);
+	}
 
-	global $html;
+	return _viewer($viewer_id, 'viewer_admin') ? $rule_admin : $rule_worker;
+}//_viewerRuleDefault()
+function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
+	// 1. ѕроверка на правильность внесЄнных прав в базе дл€ выбранного пользовател€
+	// 2. ‘ормирование констант прав, если это текущий пользователь
+	// 3.
 
-	_header();
+	$key = CACHE_PREFIX.'viewer_rule_'.$viewer_id;
+	$rule = xcache_get($key);
+	if(empty($rule)) {
+		$sql = "SELECT `key`,`value`
+				FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id."
+				ORDER BY `key`";
+		$rule = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $rule, 86400);
+	}
 
-	$html .=
-		'<div id="pin-enter">'.
-			'ѕин: '.
-			'<input type="password" id="pin" maxlength="10"> '.
-			'<div class="vkButton"><button>Ok</button></div>'.
-			'<div class="red">&nbsp;</div>'.
-		'</div>';
+	$def = _viewerRuleDefault($viewer_id);
+	$defKey = implode(' ', array_keys($def));
+	$ruleKey = implode(' ', array_keys($rule));
+	if($defKey != $ruleKey) {
+		$insert = array();
+		$defQ = array();//обведение ключей в кавычки
+		foreach($def as $k => $value) {
+			$defQ[] = "'".$k."'";
+			if(isset($rule[$k]))
+				continue;
+			$insert[] = "(".APP_ID.",".$viewer_id.",'".$k."','".$value."')";
+		}
+		if(!empty($insert)) {
+			$sql = "INSERT INTO `_vkuser_rule` (
+						`app_id`,`viewer_id`,`key`,`value`
+					) VALUES ".implode(',', $insert);
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
 
-	_footer();
-	mysql_close();
-	die($html);
-}//_pinCheck()
+		if(!empty($defQ)) {
+			$sql = "DELETE FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id."
+				  AND `key` NOT IN (".implode(',', $defQ).")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+		xcache_unset($key);
+		return _viewerRule($viewer_id, $i);
+	}
+
+	if(!defined('RULE_DEFINED')) {
+		foreach($rule as $k => $v)
+			define($k, $v);
+		define('RULE_DEFINED', true);
+	}
+
+	return $i && isset($rule[$i]) ? $rule[$i] : $rule;
+}//_viewerRule()
