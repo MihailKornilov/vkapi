@@ -65,7 +65,25 @@ function _setup($v) {
 }//_setup()
 
 function setup_my() {
-	return 'Мои настройки';
+	return
+	'<div id="setup_my">'.
+		'<div class="headName">Пин-код</div>'.
+		'<div class="_info">'.
+			'<p><b>Пин-код</b> необходим для дополнительного подтверждения вашей личности, '.
+			'если другой пользователь получит доступ к вашей странице ВКонтакте.'.
+			'<br />'.
+			'<p>Пин-код нужно будет вводить каждом новом входе в приложение, '.
+			'а также при отсутсвии действий в программе в течение <b>1-го часа</b>.'.
+			'<br />'.
+			'<p>Если вы забыли пин-код, обратитесь к руководителю, чтобы сбросить его.'.
+		'</div>'.
+	(PIN ?
+		'<div class="vkButton" id="pinchange"><button>Изменить пин-код</button></div>'.
+		'<div class="vkButton" id="pindel"><button>Удалить пин-код</button></div>'
+	:
+		'<div class="vkButton" id="pinset"><button>Установить пин-код</button></div>'
+	).
+	'</div>';
 }//setup_my()
 
 function setup_worker() {

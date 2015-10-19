@@ -4,6 +4,14 @@
 #setup .rightLink a.sel{border-color:#6B8EB5}
 #setup ._spisok{margin-bottom:1px}
 
+#setup-tab{border-spacing:10px}
+#setup-tab .label{text-align:right}
+#setup-tab #name{width:210px}
+#setup-tab textarea{width:210px;height:50px}
+
+#setup_my #pinset{margin-left:150px}
+#setup_my #pinchange{margin:0 10px 0 80px}
+
 #setup_worker .headName{margin-bottom:15px}
 #setup_worker .unit,#setup_worker_add table{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
 #setup_worker .unit td,#setup_worker_add td{vertical-align:top}

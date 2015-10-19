@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 
 define('TIME', microtime(true));
 define('GLOBAL_DIR', dirname(__FILE__));
+define('GLOBAL_DIR_AJAX', GLOBAL_DIR.'/ajax');
 
 require_once GLOBAL_DIR.'/syncro.php';
 require_once GLOBAL_DIR.'/view/vkuser.php';
@@ -75,7 +76,8 @@ define('URL', APP_HTML.'/index.php?'.VALUES);
 define('TODAY', strftime('%Y-%m-%d'));
 define('TODAY_UNIXTIME', strtotime(TODAY));
 
-define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES);
+//define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES.'&ajax=1');
+define('AJAX', !empty($_GET['ajax']));//производится ли запрос аjax
 define('APP_URL', 'http://vk.com/app'.APP_ID);
 
 if(!defined('CRON'))
@@ -95,14 +97,22 @@ if(!CRON) //Включает работу куков в IE через фрейм
 
 define('DEBUG', SA && !empty($_COOKIE['debug']));
 
+session_name('app'.APP_ID);
+session_start();
 
 _appAuth();
 _dbConnect('GLOBAL_');
 _dbConnect();
 _getVkUser();
 _setupApp();
+_pinCheck();
+_hashRead();
+_header();
+
 
 function _pre($v) {// вывод в debug разобранного массива
+	if(empty($v))
+		return '';
 	$pre = '';
 	foreach($v as $k => $r)
 		$pre .= '<div class="un"><b>'.$k.':</b>'._pre_arr($r).'</div>';
@@ -118,6 +128,28 @@ function _pre_arr($v) {// проверка, является ли переменная массивом. Если да, то
 	}
 	return $v;
 }
+
+function _header() {
+	if(AJAX)
+		return;
+	global $html;
+	$html =
+		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
+		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
+
+		'<head>'.
+			'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
+			'<title>'.APP_NAME.' - Приложение '.APP_ID.'</title>'.
+
+			_api_scripts().
+			(PIN_ENTER ? '' : _appScripts()).
+
+		'</head>'.
+		'<body>'.
+			'<div id="frameBody">'.
+				'<iframe id="frameHidden" name="frameHidden"></iframe>';
+//			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
+}//_header()
 function _api_scripts() {//скрипты и стили, которые вставляются в html
 	$test = defined('TEST') ? 'test' : '';
 	return
@@ -138,7 +170,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
-				(defined('WS_ID') ? 'WS_ID='.WS_ID.',' : '').
+//				(defined('WS_ID') ? 'WS_ID='.WS_ID.',' : '').
 				'APP_HTML="'.APP_HTML.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
@@ -146,6 +178,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+
+(PIN_ENTER ? '' :
 
 		//Клиенты
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/client'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
@@ -160,10 +194,11 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		//Настройки
-	($_GET['p'] == 'setup' ?
+	(@$_GET['p'] == 'setup' ?
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
-	: '');
+	: '')
+);
 }//_api_scripts()
 
 function _debug() {
@@ -266,6 +301,7 @@ function _footer() {
 	}
 	$html .= _debug().
 			 '<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+		//$_SESSION[PIN_TIME_KEY].
 		'</div></body></html>';
 }//_footer()
 
@@ -292,23 +328,39 @@ function jsonError($values=null) {
 		$send += $values;
 	else
 		$send['text'] = utf8($values);
-	die(json_encode($send));
+	die(json_encode($send + jsonDebugParam()));
 }//jsonError()
 function jsonSuccess($send=array()) {
 	$send['success'] = 1;
+	die(json_encode($send + jsonDebugParam()));
+}//jsonSuccess()
+function jsonDebugParam() {//возвращение дополнительных параметров json, если включен debug
 	if(DEBUG) {
 		global $sqlQuery, $sqlTime;
-		$send['post'] = $_POST;
-		$send['link'] = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-		$send['php_time'] = round(microtime(true) - TIME, 3);
-		$send['sql_count'] = count($sqlQuery);
-		$send['sql_time'] = round($sqlTime, 3);
-		$send['sql'] = utf8(implode('', $sqlQuery));
+		$d = debug_backtrace();
+		return array(
+			'post' => $_POST,
+			'link' => 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'],
+			'php_time' => round(microtime(true) - TIME, 3),
+			'sql_count' => count($sqlQuery),
+			'sql_time' => round($sqlTime, 3),
+			'sql' => utf8(implode('', $sqlQuery)),
+			'php_file' => $d[1]['file'],
+			'php_line' => $d[1]['line']
+		);
 	}
-	die(json_encode($send));
-}//jsonSuccess()
+	return array();
+}//jsonDebugParam()
 
 function _hashRead() {
+	if(AJAX)
+		return;
+
+	if(PIN_ENTER) { // Если требуется пин-код, hash сохраняется в cookie
+		setcookie('hash', empty($_GET['hash']) ? @$_COOKIE['hash'] : $_GET['hash'], time() + 2592000, '/');
+		return;
+	}
+
 	$_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
 	if(empty($_GET['hash'])) {
 		define('HASH_VALUES', false);
@@ -375,7 +427,7 @@ function _appAuth() {//проверка авторизации в приложении
 	if(LOCAL || CRON || SA_VIEWER_ID)
 		return;
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
-		die('Ошибка авторизации. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
+		die('Ошибка авторизации приложения. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
 }//_appAuth()
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';

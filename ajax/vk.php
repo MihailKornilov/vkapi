@@ -1,7 +1,18 @@
 <?php
-require_once 'client.php';
-require_once 'remind.php';
-require_once 'history.php';
+$nopin = array(
+	'pin_enter' => 1,
+	'cache_clear' => 1,
+	'cookie_clear' => 1
+);
+if(empty($nopin[$_POST['op']]) && PIN_ENTER)
+	jsonError(array('pin'=>1));
+
+$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
+
+require_once GLOBAL_DIR_AJAX.'/client.php';
+require_once GLOBAL_DIR_AJAX.'/remind.php';
+require_once GLOBAL_DIR_AJAX.'/history.php';
+require_once GLOBAL_DIR_AJAX.'/setup.php';
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
@@ -19,6 +30,7 @@ switch(@$_POST['op']) {
 		while($r = mysql_fetch_assoc($q)) {
 			xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
 			xcache_unset(CACHE_PREFIX.'viewer_rules_'.$r['viewer_id']);
+			xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 		}
 
 		//обновление значения скриптов и стилей приложения

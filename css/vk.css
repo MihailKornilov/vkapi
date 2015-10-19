@@ -46,6 +46,15 @@ table{border:0;border-spacing:0}
 .ui-resizable-ne{cursor:ne-resize;width:9px;height:9px;right:-5px;top:-5px;}
 
 
+
+
+#pin-enter{margin:80px;text-align:center}
+#pin-enter input{width:70px;padding:5px}
+#pin-enter .red{margin-top:10px}
+
+
+
+
 #_debug{
 	position:absolute;
 	right:10px;
@@ -110,9 +119,13 @@ table{border:0;border-spacing:0}
 #_debug .ajax .hd{
 	margin:15px 0 3px;
 	background-color:#eec;
-	padding:2px 7px
+	padding:4px 7px 5px;
 }
-#_debug .repeat{margin-left:20px}
+#_debug .ajax .hd.res1{background-color:#cec}
+#_debug .ajax .hd.res0{background-color:#ecc}
+#_debug #repeat{margin-left:20px}
+#_debug #res-success{float:right;color:#0a0;text-decoration:underline}
+#_debug #res-error{float:right;color:#a00;text-decoration:underline}
 #_debug .hd._busy{background-position:right center}
 #_debug .ajax .hd em{float:right;color:#777}
 #_debug .ajax .hd tt{margin-left:20px;font-weight:bold;color:#777}

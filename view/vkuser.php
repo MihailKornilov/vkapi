@@ -183,7 +183,9 @@ function _viewerFormat($u) {//формирование данных пользовател€
 		'viewer_worker' => $u['worker'],
 
 		'viewer_country_id' => $u['country_id'],
-		'viewer_city_id' => $u['city_id']
+		'viewer_city_id' => $u['city_id'],
+
+		'pin' => $u['pin']
 	);
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
@@ -205,26 +207,61 @@ function _getVkUser() {//ѕолучение данных о пользователе при запуске приложени€
 	define('VIEWER_COUNTRY_ID', $u['viewer_country_id']);
 	define('VIEWER_CITY_ID', $u['viewer_city_id']);
 
-	/*
-		if(APP_FIRST_LOAD) { //учЄт посещений
-			$day = strftime('%Y-%m-%d');
-			$sql = "SELECT `id` FROM `vk_visit` WHERE `viewer_id`=".VIEWER_ID." AND `day`='".$day."' LIMIT 1";
-			$id = query_value($sql);
-			$sql = "INSERT INTO `vk_visit` (
-					`id`,
-					`viewer_id`,
-					`day`,
-					`is_secure`
-				 ) VALUES (
-					".($id === false ? 0 : $id).",
-					".VIEWER_ID.",
-					'".$day."',
-					"._bool($_GET['is_secure'])."
-				 ) ON DUPLICATE KEY UPDATE
-					`count_day`=`count_day`+1,
-					`is_secure`="._bool($_GET['is_secure']);
-			query($sql);
-			query("UPDATE `vk_user` SET `count_day`=".($id === false ? 1 : "`count_day`+1")." WHERE `viewer_id`=".VIEWER_ID);
-		}
-	*/
+	define('PIN', !empty($u['pin']));
+	define('PIN_TIME_KEY', APP_ID.'pin_time_'.VIEWER_ID);
+	define('PIN_TIME_LEN', 5); // длительность в секундах действи€ пинкода
+	define('PIN_TIME', empty($_SESSION[PIN_TIME_KEY]) ? 0 : $_SESSION[PIN_TIME_KEY]);
+	define('PIN_ENTER', PIN && APP_FIRST_LOAD || PIN && (PIN_TIME - time() < 0));//требуетс€ ли ввод пин-кода
+
+/*
+					if(APP_FIRST_LOAD) { //учЄт посещений
+						$day = strftime('%Y-%m-%d');
+						$sql = "SELECT `id` FROM `vk_visit` WHERE `viewer_id`=".VIEWER_ID." AND `day`='".$day."' LIMIT 1";
+						$id = query_value($sql);
+						$sql = "INSERT INTO `vk_visit` (
+								`id`,
+								`viewer_id`,
+								`day`,
+								`is_secure`
+							 ) VALUES (
+								".($id === false ? 0 : $id).",
+								".VIEWER_ID.",
+								'".$day."',
+								"._bool($_GET['is_secure'])."
+							 ) ON DUPLICATE KEY UPDATE
+								`count_day`=`count_day`+1,
+								`is_secure`="._bool($_GET['is_secure']);
+						query($sql);
+						query("UPDATE `vk_user` SET `count_day`=".($id === false ? 1 : "`count_day`+1")." WHERE `viewer_id`=".VIEWER_ID);
+					}
+				*/
 }//_getVkUser()
+
+
+
+function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуетс€
+	if(AJAX)
+		return;
+	if(!PIN_ENTER) {
+		$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
+		return;
+	}
+
+	unset($_SESSION[PIN_TIME_KEY]);
+
+	global $html;
+
+	_header();
+
+	$html .=
+		'<div id="pin-enter">'.
+			'ѕин: '.
+			'<input type="password" id="pin" maxlength="10"> '.
+			'<div class="vkButton"><button>Ok</button></div>'.
+			'<div class="red">&nbsp;</div>'.
+		'</div>';
+
+	_footer();
+	mysql_close();
+	die($html);
+}//_pinCheck()

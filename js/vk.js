@@ -38,7 +38,7 @@ var VK_SCROLL = 0,
 		12:'декабря'
 	},
 	URL = APP_HTML + '/index.php?' + VALUES,
-	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES,
+	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES + '&ajax=1',
 	_onScroll = [],
 	hashLoc,
 	hashSet = function(hash) {
@@ -74,6 +74,74 @@ var VK_SCROLL = 0,
 		}
 		if(s)
 			VK.callMethod('setLocation', hashLoc);
+	},
+	pinEnter = function() {
+		var send = {
+			op:'pin_enter',
+			pin:$.trim($('#pin').val())
+		};
+		if(send.pin && send.pin.length > 2) {
+			$('.vkButton').addClass('busy');
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success)
+					location.href = URL +
+									'&p=' + _cookie('p') +
+									'&d=' + _cookie('d') +
+									'&id=' + _cookie('id');
+				else {
+					$('.vkButton').removeClass('busy');
+					$('#pin').val('').focus();
+					$('.red').html(res.text);
+				}
+			}, 'json');
+		}
+	},
+	pinConfirm = function(req) {//подтверждение пин-кода при ajax-запросе
+		if(!req.pin)
+			return false;
+
+		var html =
+				'<table id="setup-tab">' +
+					'<tr><td colspan="2"><div class="_info">Истекло время действия пин-кода. Требуется подтверждение.</div>' +
+					'<tr><td class="label">Пин-код:<td><input id="tpin" type="password" maxlength="10" />' +
+				'</table>',
+			dialog = _dialog({
+				width:250,
+				head:'Подтверждение пин-кода',
+				content:html,
+				butSubmit:'Подтвердить',
+				butCancel:'',
+				submit:submitPinConfirm
+			});
+		$('#tpin').focus().keyEnter(submitPinConfirm);
+		return true;
+
+		function submitPinConfirm() {
+			var send = {
+				op:'pin_enter',
+				pin:$.trim($('#tpin').val())
+			};
+			if(!send.pin) {
+				dialog.err('Не заполнено поле');
+				$('#tpin').focus();
+			} else if(send.pin.length < 3) {
+				dialog.err('Длина пин-кода от 3 до 10 символов');
+				$('#tpin').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success)
+						dialog.close();
+					else if(res.max)
+						location.reload();
+					else {
+						dialog.abort();
+						dialog.err(res.text);
+						$('#tpin').val('').focus();
+					}
+				}, 'json');
+			}
+		}
 	},
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
@@ -1607,17 +1675,29 @@ $.fn._select = function(o) {
 
 $(document)
 	.ajaxSuccess(function(event, request, settings) {
+		var req = request.responseJSON;
+
+		if(pinConfirm(req))
+			return;
+
 		if(!$('#_debug').length)
 			return;
-		var req = request.responseJSON;
-		if(!req.success)
-			return;
+
 		var html = '',
-			post = '<div class="hd"><b>post</b><a class="repeat">повтор</a></div>',
+			post =
+				'<div class="hd ' + (req.success ? 'res1' : '') + (req.error ? 'res0' : '') + '">' +
+					'<b>post</b>' +
+					'<a id="repeat">повтор</a>' +
+	 (req.success ? '<b id="res-success">success</b>' : '') +
+	   (req.error ? '<b id="res-error">error</b>' : '') +
+				'</div>',
+			link = '<div class="hd"><b>link</b></div><textarea>' + req.link + '</textarea>',
 			sql = '<div class="hd">sql <b>' + req.sql_count + '</b> (' + req.sql_time + ') :: php ' + req.php_time + '</div>';
+
 		for(var i in req) {
 			switch(i) {
 				case 'success': break;
+				case 'error': break;
 				case 'php_time': break;
 				case 'sql_count': break;
 				case 'sql_time': break;
@@ -1639,9 +1719,9 @@ $(document)
 					html += '<textarea>' + req[i] + '</textarea>';
 			}
 		}
-		$('#_debug .ajax').html(post + sql + html);
+		$('#_debug .ajax').html(post + link + sql + html);
 		$('#_debug .ajax textarea').autosize();
-		$('#_debug .repeat').click(function() {
+		$('#_debug #repeat').click(function() {
 			var t = $(this).parent();
 			if(t.hasClass('_busy'))
 				return;
@@ -2274,4 +2354,14 @@ $(document)
 
 		if($('#admin').length)
 			$('#admin em').html(((new Date().getTime()) - TIME) / 1000);
+
+		if($('#pin-enter').length) {
+			$('#pin')
+				.focus()
+				.keydown(function() {
+					$('.red').html('&nbsp;');
+				})
+				.keyEnter(pinEnter);
+			$('.vkButton').click(pinEnter);
+		}
 	});

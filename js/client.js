@@ -117,7 +117,10 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 //							callback(res);
 //						else
 							document.location.href = URL + '&p=client&d=info&id=' + res.uid;
-					} else dialog.abort();
+					} else {
+						dialog.abort();
+						send.person.shift();
+					}
 				}, 'json');
 			}
 		}
