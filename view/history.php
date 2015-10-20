@@ -152,8 +152,10 @@ function _history_types($history) {//перевод type_id в текст
 		$types[$r['id']] = $r['txt'];
 
 	$str = array(
-		'client_link',
 		'client_name',
+		'client_link',
+		'worker_name',
+		'worker_link',
 		'v1',
 		'v2',
 		'v3',

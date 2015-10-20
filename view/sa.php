@@ -22,12 +22,13 @@ function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу
 	$id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
 	return '<a href="'.URL.'&p='.$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
 }//sa_cookie_back()
-function sa_path($v) {
+function sa_path($v1, $v2='') {
 	return
 		'<div class="path">'.
 			sa_cookie_back().
 			'<a href="'.URL.'&p=sa">Администрирование</a> » '.
-			$v.
+			$v1.($v2 ? ' » ' : '').
+			$v2.
 		'</div>';
 }//sa_path()
 
@@ -38,7 +39,12 @@ function sa_history() {//управление историей действий
 	return
 		sa_path('История действий').
 		'<div id="sa-history">'.
-			'<div class="headName">Константы истории действий<a class="add">Добавить</a></div>'.
+			'<div class="headName">'.
+				'Константы истории действий'.
+				'<a class="add const">Добавить константу</a>'.
+				'<span> :: </span>'.
+				'<a class="add" href="'.URL.'&p=sa&d=historycat">Настроить категории</a>'.
+			'</div>'.
 			'<div id="spisok">'.sa_history_spisok().'</div>'.
 		'</div>';
 }//sa_history()
@@ -81,7 +87,46 @@ function sa_history_spisok() {
 	$send .= '</table>';
 	return $send;
 }//sa_history_spisok()
+function sa_history_cat() {//настройка категорий истории действий
+	return
+		sa_path('<a href="'.URL.'&p=sa&d=history">История действий</a>', 'Настройка категорий').
+		'<div id="sa-history-cat">'.
+			'<div class="headName">Категории истории действий<a class="add">Добавить</a></div>'.
+			'<div id="spisok">'.sa_history_cat_spisok().'</div>'.
+		'</div>';
+}//sa_history_cat()
+function sa_history_cat_spisok() {
+	$sql = "SELECT * FROM `_history_category` ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
 
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="js">use_js'.
+				'<th class="set">'.
+		'</table>'.
+		'<dl class="_sort" val="_history_category">';
+	foreach($spisok as $r)
+		$send .=
+			'<dd val="'.$r['id'].'">'.
+				'<table class="_spisok">'.
+					'<tr><td class="name">'.
+							'<b>'.$r['name'].'</b>'.
+							'<div class="about">'.$r['about'].'</div>'.
+						'<td class="js">'.($r['js_use'] ? '+' : '').
+						'<td class="set">'.
+							'<div class="img_edit"></div>'.
+							'<div class="img_del"></div>'.
+				'</table>';
+	$send .= '</dl>';
+	return $send;
+}//sa_history_cat_spisok()
 
 
 function sa_rule() {//управление историей действий

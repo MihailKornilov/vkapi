@@ -95,4 +95,126 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'setup_worker_save':
+		if(!RULE_SETUP_WORKER)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$u = _viewer($viewer_id);
+		if($u['viewer_ws_id'] != WS_ID)
+			jsonError();
+
+		$first_name = _txt($_POST['first_name']);
+		$last_name = _txt($_POST['last_name']);
+		$middle_name = _txt($_POST['middle_name']);
+		$post = _txt($_POST['post']);
+
+		if(!$first_name || !$last_name)
+			jsonError();
+
+		$sql = "UPDATE `_vkuser`
+				SET `first_name`='".addslashes($first_name)."',
+					`last_name`='".addslashes($last_name)."',
+					`middle_name`='".addslashes($middle_name)."',
+			        `post`='".addslashes($post)."'
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+//		GvaluesCreate();
+
+		$changes =
+			_historyChange('Имя', $u['viewer_first_name'], $first_name).
+			_historyChange('Фамилия', $u['viewer_last_name'], $last_name).
+			_historyChange('Отчество', $u['viewer_middle_name'], $middle_name).
+			_historyChange('Должность', $u['viewer_post'], $post);
+
+		if($changes)
+			_history(array(
+				'type_id' => 1001,
+				'worker_id' => $viewer_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+		jsonSuccess();
+		break;
+
+	case 'RULE_APP_ENTER'://разрешать сотруднику вход в приложение
+		$_POST['h1'] = 1002;
+		$_POST['h0'] = 1003;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_SETUP_WORKER'://разрешать сотруднику изменять данные сотрудника
+		$_POST['h1'] = 1004;
+		$_POST['h0'] = 1005;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		_workerRuleQuery($_POST['viewer_id'], 'RULE_SETUP_RULES', 0);
+
+		jsonSuccess();
+		break;
+	case 'RULE_SETUP_RULES'://разрешать сотруднику настраивать права других сотрудников
+		$_POST['h1'] = 1006;
+		$_POST['h0'] = 1007;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_SETUP_REKVISIT'://разрешать сотруднику изменять реквизиты организации
+		$_POST['h1'] = 1008;
+		$_POST['h0'] = 1009;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_SETUP_INVOICE'://разрешать сотруднику управлять расчётными счетами
+		$_POST['h1'] = 1010;
+		$_POST['h0'] = 1011;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_HISTORY_VIEW'://разрешать сотруднику просматривать историю действий
+		$_POST['h1'] = 1012;
+		$_POST['h0'] = 1013;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_INVOICE_TRANSFER'://разрешать сотруднику видеть историю переводов по расчётным счетам
+		$_POST['h1'] = 1014;
+		$_POST['h0'] = 1015;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'RULE_INCOME_VIEW'://разрешать сотруднику видеть историю платежей
+		$_POST['h1'] = 1016;
+		$_POST['h0'] = 1017;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
 }

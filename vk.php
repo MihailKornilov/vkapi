@@ -109,7 +109,7 @@ _pinCheck();
 _hashRead();
 _header();
 
-//_pre(_viewerRuleDefault());
+//_pre(array(MYSQL_CONNECT, GLOBAL_MYSQL_CONNECT));
 
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))
@@ -484,7 +484,7 @@ function _dbConnect($prefix='') {
 function query($sql, $resource_id=MYSQL_CONNECT) {
 	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
-	$res = mysql_query($sql, $resource_id) or die($sql.'<br />'.mysql_error());
+	$res = mysql_query($sql, $resource_id ? $resource_id : MYSQL_CONNECT) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
 
 	$sqlTime += $t;
@@ -645,8 +645,8 @@ function _numToWord($num, $firstSymbolUp=false) {
 		$word[0] = strtoupper($word[0]);
 	return $word;
 }//_numToWord()
-function _maxSql($table, $pole='sort') {
-	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`");
+function _maxSql($table, $pole='sort', $resource_id=0) {
+	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`", $resource_id);
 }//getMaxSql()
 
 function _start($v) {//вычисление первой позиции в базе данных

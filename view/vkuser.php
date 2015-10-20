@@ -143,30 +143,53 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//ќбновление пользовател€ из  онта
 
 	return _viewerCache($viewer_id);
 }//_viewerUpdate()
-function _viewerValToList($arr) {//вставка данных о пользовател€х контакта в массив по viewer_id_add
+function _viewerValToList($arr) {//вставка данных о пользовател€х контакта в массив по viewer_id_add и worker_id
 	$viewer_ids = array(); //—бор id пользователей
-	$ass = array();        //ѕрисвоение каждому id пользовател€ списка элементов, которые относ€тс€ к нему
+	$viewer_ass = array(); //ѕрисвоение каждому id пользовател€ списка элементов, которые относ€тс€ к нему
+	$worker_ids = array();
+	$worker_ass = array();
 	foreach($arr as $r) {
 		$viewer_ids[$r['viewer_id_add']] = 1;
-		$ass[$r['viewer_id_add']][] = $r['id'];
+		$viewer_ass[$r['viewer_id_add']][] = $r['id'];
+		if($r['worker_id']) {
+			$worker_ids[$r['worker_id']] = 1;
+			$worker_ass[$r['worker_id']][] = $r['id'];
+		}
 	}
+
 	unset($viewer_ids[0]);
-	if(!empty($viewer_ids)) {
+
+	$ids = $viewer_ids + $worker_ids;
+	if(!empty($ids)) {
 		$sql = "SELECT *
 				FROM `_vkuser`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND `viewer_id` IN (".implode(',', array_keys($viewer_ids)).")";
+				  AND `viewer_id` IN (".implode(',', array_unique(array_keys($ids))).")";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		while($u = mysql_fetch_assoc($q))
-			foreach($ass[$u['viewer_id']] as $id)
-				$arr[$id] += _viewerFormat($u);
+		while($u = mysql_fetch_assoc($q)) {
+			if(isset($viewer_ass[$u['viewer_id']]))
+				foreach($viewer_ass[$u['viewer_id']] as $id)
+					$arr[$id] += _viewerFormat($u);
+
+			if(isset($worker_ass[$u['viewer_id']]))
+				foreach($worker_ass[$u['viewer_id']] as $id) {
+					$w = _viewerFormat($u);
+					$arr[$id] += array(
+						'worker_name' => $w['viewer_name'],
+						'worker_link' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>'
+					);
+				}
+		}
 	}
+
 	return $arr;
 }//_viewerValToList()
 function _viewerFormat($u) {//формирование данных пользовател€
 	$send = array(
 		'viewer_ws_id' => $u['ws_id'],
+		'viewer_first_name' => $u['first_name'],
+		'viewer_last_name' => $u['last_name'],
+		'viewer_middle_name' => $u['middle_name'],
 		'viewer_name' => $u['first_name'].' '.$u['last_name'],
 		'viewer_name_full' => $u['last_name'].' '.$u['first_name'].(!empty($u['middle_name']) ? ' '.$u['middle_name'] : ''),
 		//‘амили€ ».ќ.
@@ -175,6 +198,7 @@ function _viewerFormat($u) {//формирование данных пользовател€
 			($u['first_name'] ? ' '.strtoupper($u['first_name'][0]).'.' : '').
 			(!empty($u['middle_name']) ? ' '.strtoupper($u['middle_name'][0]).'.' : ''),
 
+		'viewer_post' => $u['post'],
 		'viewer_sex' => $u['sex'],
 
 		'viewer_photo' => '<img src="'.$u['photo'].'" />',
@@ -217,7 +241,6 @@ function _getVkUser() {//ѕолучение данных о пользователе при запуске приложени€
 	define('PIN_ENTER', PIN && APP_FIRST_LOAD || PIN && (PIN_TIME - time() < 0));//требуетс€ ли ввод пин-кода
 
 	_viewerRule();//формирование констант прав
-	_viewerRule(2170788);//формирование констант прав
 
 /*
 					if(APP_FIRST_LOAD) { //учЄт посещений
@@ -328,7 +351,10 @@ function _viewerRuleDefault($viewer_id=VIEWER_ID) {
 function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	// 1. ѕроверка на правильность внесЄнных прав в базе дл€ выбранного пользовател€
 	// 2. ‘ормирование констант прав, если это текущий пользователь
-	// 3.
+	// 3. ѕолучение конкретной константы
+
+	if($viewer_id >= VIEWER_MAX)
+		return false;
 
 	$key = CACHE_PREFIX.'viewer_rule_'.$viewer_id;
 	$rule = xcache_get($key);

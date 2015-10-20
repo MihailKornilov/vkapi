@@ -33,7 +33,7 @@ switch(@$_POST['op']) {
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q)) {
 			xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
-			xcache_unset(CACHE_PREFIX.'viewer_rules_'.$r['viewer_id']);
+			xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
 			xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 		}
 
@@ -99,10 +99,16 @@ switch(@$_POST['op']) {
 	case 'sort':
 		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
 			jsonError();
+
 		$table = htmlspecialchars(trim($_POST['table']));
+		$conn = 0;
+
 		$sql = "SHOW TABLES LIKE '".$table."'";
 		if(!mysql_num_rows(query($sql)))
-			jsonError();
+			if(mysql_num_rows(query($sql, GLOBAL_MYSQL_CONNECT)))
+				$conn = GLOBAL_MYSQL_CONNECT;
+			else
+				jsonError();
 
 		$sort = explode(',', $_POST['ids']);
 		if(empty($sort))
@@ -111,8 +117,11 @@ switch(@$_POST['op']) {
 			if(!preg_match(REGEXP_NUMERIC, $sort[$n]))
 				jsonError();
 
-		for($n = 0; $n < count($sort); $n++)
-			query("UPDATE `".$table."` SET `sort`=".$n." WHERE `id`=".intval($sort[$n]));
+		for($n = 0; $n < count($sort); $n++) {
+			$sql = "UPDATE `".$table."` SET `sort`=".$n." WHERE `id`=".intval($sort[$n]);
+			query($sql, $conn);
+
+		}
 		_cacheClear();
 		jsonSuccess();
 		break;

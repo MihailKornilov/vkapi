@@ -43,7 +43,10 @@ $(document)
 				if(res.success) {
 					dialog.close();
 					_msg('Удалено');
+					var ul = t.parent().parent();
 					t.parent().remove();
+					if(!ul.html())
+						ul.parent().remove();
 				} else
 					dialog.abort();
 			}, 'json');

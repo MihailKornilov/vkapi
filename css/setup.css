@@ -24,3 +24,20 @@
 #setup_worker_add h1{font-weight:bold;color:#31618C}
 #setup_worker_add input{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
 #setup_worker_add .res{margin:10px 0 0 20px}
+
+#setup_rule{padding-bottom:30px}
+#setup_rule .utab td{padding-right:10px;vertical-align:top}
+#setup_rule .utab img{width:50px}
+#setup_rule .vklink{color:#777;display:block}
+#setup_rule .name{font-weight:bold;font-size:12px;color:#45688e;margin-bottom:10px}
+#setup_rule .headName{margin:20px 0 10px}
+#setup_rule .pin-clear{margin-left:97px}
+#setup_rule .rtab{border-spacing:8px}
+#setup_rule .lab{width:100px;text-align:right}
+#setup_rule .rtab input{width:230px}
+
+
+#RULE_APP_ENTER_check{margin:5px 0 10px 166px}
+#setup_rule #div-app-enter .label{width:150px;text-align:right}
+#setup_rule #td-rule-setup div{display:block;margin-bottom:5px;color:#555}
+

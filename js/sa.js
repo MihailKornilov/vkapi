@@ -45,6 +45,52 @@ $(document)
 			}
 		}
 	})
+	.on('click', '#sa-history-cat .img_edit', function() {
+		var t = _parent($(this), 'DD'),
+			html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Name:<td><input type="text" id="name" value="' + t.find('.name b').html() + '" />' +
+					'<tr><td class="label topi">About:<td><textarea id="about">' + t.find('.about').html() + '</textarea>' +
+					'<tr><td class="label topi">js_use:<td><input type="hidden" id="js_use"  value="' + (t.find('.js').html() ? 1 : 0) + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:360,
+				head:'Редактирование категории истории действий',
+				content:html,
+				butSubmit:'Изменить',
+				submit:submit
+			});
+
+		$('#name').focus();
+		$('#about').autosize();
+		$('#js_use')._check();
+
+		function submit() {
+			var send = {
+				op:'sa_history_cat_edit',
+				id:t.attr('val'),
+				name:$('#name').val(),
+				about:$('#about').val(),
+				js_use:$('#js_use').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Изменено');
+						$('#spisok').html(res.html);
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
 
 	.on('click', '#sa-rule .img_edit', function() {
 		var t = _parent($(this)),
@@ -114,7 +160,7 @@ $(document)
 	.ready(function() {
 		if($('#sa-history').length) {
 			$('textarea').autosize();
-			$('.add').click(function() {
+			$('.add.const').click(function() {
 				var html =
 						'<table class="sa-tab" id="sa-history-tab">' +
 							'<tr><td class="label">type_id:<td><input type="text" id="type_id" />' +
@@ -147,6 +193,51 @@ $(document)
 								_msg('Внесено');
 								$('#spisok').html(res.html);
 								$('textarea').autosize();
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+			});
+		}
+		if($('#sa-history-cat').length) {
+			$('.add').click(function() {
+				var html =
+						'<table class="sa-tab">' +
+							'<tr><td class="label">Name:<td><input type="text" id="name" />' +
+							'<tr><td class="label topi">About:<td><textarea id="about"></textarea>' +
+							'<tr><td class="label topi">js_use:<td><input type="hidden" id="js_use" />' +
+						'</table>',
+					dialog = _dialog({
+						top:30,
+						width:360,
+						head:'Внесение новой категории истории действий',
+						content:html,
+						submit:submit
+					});
+
+				$('#name').focus();
+				$('#about').autosize();
+				$('#js_use')._check();
+
+				function submit() {
+					var send = {
+						op:'sa_history_cat_add',
+						name:$('#name').val(),
+						about:$('#about').val(),
+						js_use:$('#js_use').val()
+					};
+					if(!send.name) {
+						dialog.err('Не указано наименование');
+						$('#name').focus();
+					} else {
+						dialog.process();
+						$.post(AJAX_MAIN, send, function(res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Внесено');
+								$('#spisok').html(res.html);
+								sortable();
 							} else
 								dialog.abort();
 						}, 'json');

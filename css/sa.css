@@ -1,15 +1,24 @@
 .sa-tab{border-spacing:10px}
 .sa-tab .label{text-align:right}
 .sa-tab #name{width:250px}
+.sa-tab textarea{width:250px}
 
 
 /* история действий */
 #sa-history-tab #type_id{width:80px}
 #sa-history-tab #txt{width:400px;height:13px}
+#sa-history .headName span{float:right;margin:0 5px}
 #sa-history ._spisok{margin:20px}
 #sa-history .type_id{text-align:right;color:#777}
 #sa-history textarea{width:400px;height:13px;border:0}
 #sa-history .count{text-align:center}
+
+#sa-history-cat #spisok{margin:20px}
+#sa-history-cat ._spisok{margin-top:1px}
+#sa-history-cat .name{width:300px;cursor:move}
+#sa-history-cat .about{color:#777;margin-left:10px}
+#sa-history-cat .js{width:40px;text-align:center}
+#sa-history-cat .set{width:40px;text-align:center}
 
 
 

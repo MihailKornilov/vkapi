@@ -67,6 +67,56 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'sa_history_cat_add':
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$js_use = _bool($_POST['js_use']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_history_category` (
+					`name`,
+					`about`,
+					`js_use`,
+					`sort`
+				) VALUES (
+					'".addslashes($name)."',
+					'".addslashes($about)."',
+					".$js_use.",
+					"._maxSql('_history_category', 'sort', GLOBAL_MYSQL_CONNECT)."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_history_cat_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_history_cat_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$js_use = _bool($_POST['js_use']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_history_category` WHERE `id`=".$id;
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_history_category`
+				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."',
+					`js_use`=".$js_use."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_history_cat_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'sa_rule_add':
 		$key = _txt($_POST['key']);
 		$about = _txt($_POST['about']);
@@ -123,7 +173,7 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_rule_spisok());
 		jsonSuccess($send);
 		break;
-	case 'sa_rule_flag':
+	case 'sa_rule_flag'://изменение параметра по умолчанию права сотрудника
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
