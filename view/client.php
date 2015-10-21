@@ -375,62 +375,6 @@ function _clientCategory($i=0, $menu=0) {//Категории клиентов
 	return $i ? $arr[$i] : $arr;
 }//_clientCategory()
 */
-/*
-function _clientTelefon($r, $post=0) {//правильное отображение телефона клиента
-	//$post - показывать доверенное лицо
-	$phone = $r['category_id'] == 1 ? $r['phone'] : $r['org_phone'];
-	if(!$phone && $r['category_id'] > 1 && $r['phone'])
-		$phone = $r['phone'].($r['fio'] && $post ? '<span class="post">('.$r['fio'].')</span>' : '');
-	return $phone;
-}//_clientTelefon()
-*/
-/*
-function _clientLink($arr, $fio=0, $tel=0) {//Добавление имени и ссылки клиента в массив или возврат по id
-	$clientArr = array(is_array($arr) ? 0 : $arr);
-	if(is_array($arr)) {
-		$ass = array();
-		foreach($arr as $r) {
-			$clientArr[$r['client_id']] = $r['client_id'];
-			if($r['client_id'])
-				$ass[$r['client_id']][] = $r['id'];
-		}
-		unset($clientArr[0]);
-	}
-	if(!empty($clientArr)) {
-		$sql = "SELECT *
-		        FROM `client`
-				WHERE `ws_id`=".WS_ID."
-				  AND `id` IN (".implode(',', $clientArr).")";
-		$q = query($sql);
-		if(!is_array($arr)) {
-			if($r = mysql_fetch_assoc($q)) {
-				$phone = _clientTelefon($r);
-				return
-					$fio ? _clientName($r)
-						:
-						'<a val="'.$r['id'].'" class="go-client-info' .
-						($r['deleted'] ? ' deleted' : '') .
-						($tel && $phone ? _tooltip($phone, -2, 'l') : '">') .
-						_clientName($r) .
-						'</a>';
-			}
-			return '';
-		}
-		while($r = mysql_fetch_assoc($q))
-			foreach($ass[$r['id']] as $id) {
-				$phone = _clientTelefon($r);
-				$arr[$id]['client_link'] =
-					'<a val="'.$r['id'].'" class="go-client-info'.
-					($r['deleted'] ? ' deleted' : '').
-					($tel && $phone ? _tooltip($phone, -2, 'l') : '">').
-					_clientName($r).
-					'</a>';
-				$arr[$id]['client_fio'] = _clientName($r);
-			}
-	}
-	return $arr;
-}//_clientLink()
-*/
 function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиенте
 	$prefix = 'CLIENT_'.$client_id.'_';
 	if(!defined($prefix.'LOADED')) {
@@ -554,6 +498,9 @@ function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клие
 			  AND `id`=".$client_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 }//_clientSql()
+function _clientDopLink($name, $count) {
+	return '<a class="link">'.$name.($count ? ' <b class="count">'.$count.'</b>' : '').'</a>';
+}//{}
 function _clientInfo($client_id) {//вывод информации о клиенте
 	if(!$c = _clientQuery($client_id, 1))
 		return _noauth('Клиента не существует');
@@ -625,8 +572,9 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 
 		$remind = _remind_spisok(array('client_id'=>$client_id));
 
-		$history = history(array('client_id'=>$client_id,'limit'=>15));
 	*/
+
+	$hist = _history(array('client_id'=>$client_id,'limit'=>20));
 
 	return
 		'<script type="text/javascript">'.
@@ -680,39 +628,43 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			'</table>'.
 
 			'<div id="dopLinks">'.
-				'<a class="link sel" val="zayav">Заявки</a>'.
-	/*			'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' <b class="count">'.$zayavData['all'].'</b>' : '').'</a>'.
-				'<a class="link" val="schet">Счета'.($schet['all'] ? ' <b class="count">'.$schet['all'].'</b>' : '').'</a>'.
-				'<a class="link" val="money">Платежи'.($moneyCount ? ' <b class="count">'.$moneyCount.'</b>' : '').'</a>'.
-				'<a class="link" val="remind">Напоминания'.($remind['all'] ? ' <b class="count">'.$remind['all'].'</b>' : '').'</a>'.
-				'<a class="link" val="comm">Заметки'.($commCount ? ' <b class="count">'.$commCount.'</b>' : '').'</a>'.
-				'<a class="link" val="hist">История'.($history['all'] ? ' <b class="count">'.$history['all'].'</b>' : '').'</a>'.
-	*/
+				_clientDopLink('Заявки', 0).
+				_clientDopLink('Счета', 0).
+				_clientDopLink('Платежи', 0).
+				_clientDopLink('Напоминания', 0).
+				_clientDopLink('История', $hist['all']).
 			'</div>'.
 
-/*
-		'<table class="tabLR">'.
-		'<tr><td class="left">'.
-		'<div id="zayav_spisok">'.
-		($zayavData['all'] ? $zayavData['spisok'] : '').
-		(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
-		($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
-		'</div>'.
-		'<div id="schet_spisok">'.$schet['spisok'].'</div>'.
-		'<div id="money_spisok">'.$money.'</div>'.
-		'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
-		'<div id="comments">'._vkComment('client', $client_id).'</div>'.
-		'<div id="histories">'.$history['spisok'].'</div>'.
-		'<td class="right">'.
-		'<div id="zayav_filter">'.
-		'<div id="zayav_result">'.$zayavData['result'].'</div>'.
-		'<div class="findHead">Статус заявки</div>'.
-		_rightLink('status', _zayavStatusName()).
-		_check('diff', 'Неоплаченные заявки').
-		'<div class="findHead">Устройство</div><div id="dev"></div>'.
-		'</div>'.
-		'</table>'.
-*/
+			'<table class="tabLR">'.
+				'<tr><td class="left">'.
+						'<div class="ci-cont" id="zayav-spisok">Заявки</div>'.
+						'<div class="ci-cont" id="schet-spisok">Счета</div>'.
+						'<div class="ci-cont" id="income-spisok">Платежи</div>'.
+						'<div class="ci-cont" id="remind-spisok">Напоминания</div>'.
+						'<div class="ci-cont" id="history-spisok">'.$hist['spisok'].'</div>'.
+//						($zayavData['all'] ? $zayavData['spisok'] : '').
+//						(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
+//						($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
+
+//						'<div id="schet_spisok">'.$schet['spisok'].'</div>'.
+//						'<div id="money_spisok">'.$money.'</div>'.
+//						'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
+//						'<div id="comments">'._vkComment('client', $client_id).'</div>'.
+					'<td class="right">'.
+//						'<div id="zayav_filter">'.
+//						'<div id="zayav_result">'.$zayavData['result'].'</div>'.
+//						'<div class="findHead">Статус заявки</div>'.
+//						_rightLink('status', _zayavStatusName()).
+//						_check('diff', 'Неоплаченные заявки').
+//						'<div class="findHead">Устройство</div><div id="dev"></div>'.
+						'<div class="ci-right" id="zayav-right">Заявки</div>'.
+						'<div class="ci-right" id="schet-right">Счета</div>'.
+						'<div class="ci-right" id="income-right">Платежи</div>'.
+						'<div class="ci-right" id="remind-right">Напоминания</div>'.
+						'<div class="ci-right" id="history-right">'._history_right().'</div>'.
+				'</div>'.
+			'</table>'.
+
 		'</div>';
 }//_clientInfo()
 function _clientInfoBalans($r) {//отображение текущего баланса клиента

@@ -109,7 +109,6 @@ _pinCheck();
 _hashRead();
 _header();
 
-//_pre(array(MYSQL_CONNECT, GLOBAL_MYSQL_CONNECT));
 
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))
@@ -564,6 +563,18 @@ function _cena($v) {//проверка на цену
 function _txt($v) {
 	return win1251(htmlspecialchars(trim($v)));
 }//_txt
+function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
+	$ids = trim($ids);
+	$arr = array();
+	if(!empty($ids)) {
+		$arr = explode(',', $ids);
+		if(!empty($arr))
+			foreach($arr as $i => $id)
+				if(!$arr[$i] = _num(trim($id)))
+					return false;
+	}
+	return $return_arr ? $arr : implode(',', $arr);
+}//_ids
 function _numToWord($num, $firstSymbolUp=false) {
 	$num = intval($num);
 	$one = array(

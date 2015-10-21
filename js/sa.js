@@ -6,6 +6,7 @@ $(document)
 					'<tr><td class="label">type_id:<td><input type="text" id="type_id" value="' + id + '" />' +
 					'<tr><td><td>Если изменяется <b>type_id</b>, все записи со предыдущим значением будут изменены на новое.' +
 					'<tr><td class="label topi">Текст:<td><textarea id="txt">' + $('#txt' + id).val() + '</textarea>' +
+					'<tr><td class="label">Категория:<td><input type="hidden" id="category_ids" value="' + $('#ids' + id).val() + '" />' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
@@ -17,13 +18,20 @@ $(document)
 			});
 
 		$('#txt').focus().autosize();
+		$('#category_ids')._select({
+			width:250,
+			title0:'Не указана',
+			spisok:CAT,
+			multiselect:1
+		});
 
 		function submit() {
 			var send = {
 				op:'sa_history_type_edit',
 				type_id_current:id,
 				type_id:_num($('#type_id').val()),
-				txt:$('#txt').val()
+				txt:$('#txt').val(),
+				category_ids:$('#category_ids').val()
 			};
 			if(!send.type_id) {
 				dialog.err('Некорректно указан type_id');
@@ -165,6 +173,7 @@ $(document)
 						'<table class="sa-tab" id="sa-history-tab">' +
 							'<tr><td class="label">type_id:<td><input type="text" id="type_id" />' +
 							'<tr><td class="label topi">Текст:<td><textarea id="txt"></textarea>' +
+							'<tr><td class="label">Категория:<td><input type="hidden" id="category_ids" />' +
 						'</table>',
 					dialog = _dialog({
 						top:30,
@@ -175,12 +184,19 @@ $(document)
 					});
 
 				$('#txt').focus().autosize();
+				$('#category_ids')._select({
+					width:250,
+					title0:'Не указана',
+					spisok:CAT,
+					multiselect:1
+				});
 
 				function submit() {
 					var send = {
 						op:'sa_history_type_add',
 						type_id:$('#type_id').val(),
-						txt:$('#txt').val()
+						txt:$('#txt').val(),
+						category_ids:$('#category_ids').val()
 					};
 					if(!send.txt) {
 						dialog.err('Не указан текст константы');

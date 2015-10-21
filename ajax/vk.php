@@ -25,6 +25,9 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 
+		//сброс времени действия введённого пинкода
+//		unset($_SESSION[PIN_TIME_KEY]);
+
 		//очистка кеша сотрудников приложения
 		$sql = "SELECT `viewer_id`
 				FROM `_vkuser`

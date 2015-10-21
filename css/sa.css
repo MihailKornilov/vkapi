@@ -8,10 +8,14 @@
 #sa-history-tab #type_id{width:80px}
 #sa-history-tab #txt{width:400px;height:13px}
 #sa-history .headName span{float:right;margin:0 5px}
-#sa-history ._spisok{margin:20px}
-#sa-history .type_id{text-align:right;color:#777}
-#sa-history textarea{width:400px;height:13px;border:0}
-#sa-history .count{text-align:center}
+#sa-history #spisok{margin:20px}
+#sa-history .cat-name{margin:20px 0 3px 5px;font-weight:bold}
+#sa-history .type_id{width:45px}
+#sa-history td.type_id{text-align:right;color:#777}
+#sa-history .txt{width:430px}
+#sa-history .cats{float:right;color:#c88;font-size:10px}
+#sa-history textarea{width:425px;height:13px;border:0}
+#sa-history .count{width:40px;text-align:center}
 
 #sa-history-cat #spisok{margin:20px}
 #sa-history-cat ._spisok{margin-top:1px}

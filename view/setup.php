@@ -159,30 +159,35 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td><td><div class="vkButton" id="w-save"><button>Сохранить</button></div>'.
 		'</table>'.
 
+
+	(!$u['viewer_admin'] && $u['pin'] ?
+		'<div class="headName">Пин-код</div>'.
+		'<div class="vkButton" id="pin-clear"><button>Сбросить пин-код</button></div>'
+	: '').
 /*		'<div class="headName">Дополнительно</div>'.
 			'<table class="rtab">'.
 				'<tr><td class="lab">Процент от платежей:<td><input type="text" id="rules_money_procent" value="'.$rule['RULES_MONEY_PROCENT'].'" maxlength="2" />'.
 				'<tr><td><td><div class="vkButton dop-save"><button>Сохранить</button></div>'.
 			'</table.
 */
-		(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
-			'<div class="headName">Права в приложении</div>'.
-				_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
-				'<table class="rtab'.($rule['RULE_APP_ENTER'] ? '' : ' dn').'" id="div-app-enter">'.
-					'<tr><td class="label top"><b>Доступ к настройкам:</b>'.
-						'<td id="td-rule-setup">'.
-							_check('RULE_SETUP_WORKER', 'Сотрудники', $rule['RULE_SETUP_WORKER']).
-							'<div id="div-w-rule"'.($rule['RULE_SETUP_WORKER'] ? '' : ' style="display:none"').'>'.
-								_check('RULE_SETUP_RULES', 'Права сотрудников', $rule['RULE_SETUP_RULES']).
-							'</div>'.
-							_check('RULE_SETUP_REKVISIT', 'Реквизиты организации', $rule['RULE_SETUP_REKVISIT']).
-							_check('RULE_SETUP_INVOICE', 'Расчётные счета', $rule['RULE_SETUP_INVOICE']).
-					'<tr><td class="label">Видит историю действий:<td>'._check('RULE_HISTORY_VIEW', '', $rule['RULE_HISTORY_VIEW']).
-					'<tr><td class="label">Видит историю переводов по расчётным счетам:<td>'._check('RULE_INVOICE_TRANSFER', '', $rule['RULE_INVOICE_TRANSFER']).
-					'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
-				'</table>'.
-			'</div>'
-		: '').
+	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
+		'<div class="headName">Права в приложении</div>'.
+			_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
+			'<table class="rtab'.($rule['RULE_APP_ENTER'] ? '' : ' dn').'" id="div-app-enter">'.
+				'<tr><td class="label top"><b>Доступ к настройкам:</b>'.
+					'<td id="td-rule-setup">'.
+						_check('RULE_SETUP_WORKER', 'Сотрудники', $rule['RULE_SETUP_WORKER']).
+						'<div id="div-w-rule"'.($rule['RULE_SETUP_WORKER'] ? '' : ' style="display:none"').'>'.
+							_check('RULE_SETUP_RULES', 'Права сотрудников', $rule['RULE_SETUP_RULES']).
+						'</div>'.
+						_check('RULE_SETUP_REKVISIT', 'Реквизиты организации', $rule['RULE_SETUP_REKVISIT']).
+						_check('RULE_SETUP_INVOICE', 'Расчётные счета', $rule['RULE_SETUP_INVOICE']).
+				'<tr><td class="label">Видит историю действий:<td>'._check('RULE_HISTORY_VIEW', '', $rule['RULE_HISTORY_VIEW']).
+				'<tr><td class="label">Видит историю переводов по расчётным счетам:<td>'._check('RULE_INVOICE_TRANSFER', '', $rule['RULE_INVOICE_TRANSFER']).
+				'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
+			'</table>'.
+		'</div>'
+	: '').
 
 	'</div>';
 

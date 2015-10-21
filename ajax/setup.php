@@ -142,6 +142,36 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_worker_pin_clear':
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!RULE_SETUP_WORKER)
+			jsonError();
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$u = _viewer($viewer_id);
+		if($u['viewer_ws_id'] != WS_ID)
+			jsonError();
+
+		if(!$u['pin'])
+			jsonError();
+
+		$sql = "UPDATE `_vkuser`
+				SET `pin`=''
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+
+		_history(array(
+			'type_id' => 1018,
+			'worker_id' => $viewer_id
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'RULE_APP_ENTER'://разрешать сотруднику вход в приложение
 		$_POST['h1'] = 1002;

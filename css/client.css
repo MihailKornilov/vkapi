@@ -91,6 +91,9 @@
 #client ._empty{margin:10px}
 
 
+
+
+
 /* Информация о клиенте */
 #client-info .left{padding-bottom:10px}
 #client-info #client-del{color:#e00}
@@ -132,19 +135,13 @@
 	text-align:right;
 	margin:20px 10px 0 0;
 }
+
+
+#client-info .right{width:140px;height:auto}
 #client-info #dopLinks{border-top:#dae1e8 solid 1px}
 #client-info #dopLinks a{font-weight:normal}
-#client-info #dopLinks.busy{background-position:right center}
-#client-info #zayav_result{color:#777;text-align:center}
-#client-info #zayav_spisok ._empty{margin:10px}
-#client-info #zayav_spisok ._next{margin:5px 10px 0 10px}
-#client-info .zayav_unit{margin-right:10px}
-#client-info #schet_spisok{margin:10px;display:none}
-#client-info #schet_spisok #result{margin-bottom:10px}
-#client-info #money_spisok{margin:10px}
-#client-info #money_spisok,#client-info #histories{display:none}
-#client-info #money_spisok ._empty{margin:0;padding:60px 10px}
-#client-info #comments,#client-info #remind-spisok{margin:0 10px;display:none}
-#client-info #remind-spisok ._empty{margin:10px 0;padding:60px 10px}
-#client-info .right{width:145px;height:auto}
-#client-info #diff_check{margin-top:15px}
+#client-info #dopLinks._busy{background-position:585px center}
+#client-info .ci-cont{display:none}
+#client-info ._empty{margin:10px}
+#client-info .ci-right{display:none}
+

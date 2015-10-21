@@ -548,7 +548,6 @@ $(document)
 		}
 	})
 
-
 	.ready(function() {
 		if($('#client').length) {
 			$('#find')._search({
@@ -585,6 +584,16 @@ $(document)
 			});
 		}
 		if($('#client-info').length) {
+			$('a.link:first').addClass('sel');
+			$('.ci-cont:first').show();
+			$('.ci-right:first').show();
+			$('.link').click(function() {
+				$('.link').removeClass('sel');
+				var i = $(this).addClass('sel').index();
+				$('.ci-cont').hide().eq(i).show();
+				$('.ci-right').hide().eq(i).show();
+			});
+
 			$('#client-edit').click(clientEdit);
 			$('#client-del').click(function() {
 				var dialog = _dialog({
@@ -612,20 +621,7 @@ $(document)
 				}
 			});
 /*
-			$('#dopLinks .link').click(function() {
-				$('#dopLinks .link').removeClass('sel');
-				$(this).addClass('sel');
-				var val = $(this).attr('val');
-				$('.res').css('display', val == 'zayav' ? 'block' : 'none');
-				$('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
-				$('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
-				$('#schet_spisok').css('display', val == 'schet' ? 'block' : 'none');
-				$('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
-				$('#remind-spisok').css('display', val == 'remind' ? 'block' : 'none');
-				//$('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
-				$('#comments').css('display', val == 'comm' ? 'block' : 'none');
-				$('#histories').css('display', val == 'hist' ? 'block' : 'none');
-			});
+
 			$('#status').rightLink(clientZayavSpisok);
 			$('#diff')._check(clientZayavSpisok);
 			$('#dev').device({

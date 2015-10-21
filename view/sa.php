@@ -36,7 +36,12 @@ function sa_path($v1, $v2='') {
 
 
 function sa_history() {//управление историей действий
+	$sql = "SELECT `id`,`name` FROM `_history_category` ORDER BY `sort`";
+	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 	return
+		'<script type="text/javascript">'.
+			'var CAT='.$category.
+		'</script>'.
 		sa_path('»стори€ действий').
 		'<div id="sa-history">'.
 			'<div class="headName">'.
@@ -55,9 +60,13 @@ function sa_history_spisok() {
 		return '—писок пуст.';
 
 	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
+		$r['ids'] = array(); //список id категорий дл€ _select
+		$r['cats'] = array();//список категорий в словах (не основные категории)
 		$spisok[$r['id']] = $r;
+	}
 
+	//количество внесенных записей дл€ каждого типа истории действий
 	$sql = "SELECT
 				`type_id`,
 				COUNT(`id`) `count`
@@ -70,23 +79,82 @@ function sa_history_spisok() {
 		if(isset($spisok[$r['type_id']]))
 			$spisok[$r['type_id']]['count'] = $r['count'];
 
+
+	//ассоциации дл€ категорий
+	$sql = "SELECT `id`,`name` FROM `_history_category`";
+	$cat = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+
+	//деление списка на категории
+	$sql = "SELECT `id`,`name`
+			FROM `_history_category`
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$category = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['type'] = array();//список элементов $spisok, которые прив€заны к категори€м
+		$category[$r['id']] = $r;
+	}
+
+	//внесение списка категорий
+	$sql = "SELECT *
+			FROM `_history_ids`
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		$spisok[$r['type_id']]['ids'][] = $r['category_id'];
+		if(!$r['main'])
+			$spisok[$r['type_id']]['cats'][] = $cat[$r['category_id']];
+	}
+
+	//выделение основых категорий
+	$sql = "SELECT *
+			FROM `_history_ids`
+			WHERE `main`
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		$category[$r['category_id']]['type'][$r['type_id']] = $spisok[$r['type_id']];
+		unset($spisok[$r['type_id']]);
+	}
+
 	$send =
 		'<table class="_spisok">'.
-			'<tr><th>type_id'.
-				'<th>Ќаименование'.
-				'<th> ол-во'.
-				'<th>';
+			'<tr><th class="type_id">type_id'.
+				'<th class="txt">Ќаименование'.
+				'<th class="count"> ол-во'.
+		'</table>';
+	foreach($category as $r)
+		$send .= sa_history_spisok_page($r['name'], $r['type']);
+
+	_pre($category);
+	$send .= sa_history_spisok_page('Ѕез категории', $spisok);
+
+	return $send;
+}//sa_history_spisok()
+function sa_history_spisok_page($name, $spisok) {//вывод списка конкретной категории
+	if(empty($spisok))
+		return '';
+
+	ksort($spisok);
+
+	$send =
+		'<div class="cat-name">'.$name.'</div>'.
+		'<table class="_spisok">';
+
 	foreach($spisok as $r)
 		$send .=
 			'<tr><td class="type_id">'.$r['id'].
-				'<td class="txt"><textarea readonly id="txt'.$r['id'].'">'.$r['txt'].'</textarea>'.
+				'<td class="txt">'.
+					'<textarea readonly id="txt'.$r['id'].'">'.$r['txt'].'</textarea>'.
+					(!empty($r['cats']) ? '<div class="cats">'.implode('&nbsp;&nbsp;&nbsp;', $r['cats']).'</div>' : '').
 				'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
 				'<td class="set">'.
-					'<div class="img_edit" val="'.$r['id'].'"></div>';
-					//'<div class="img_del"></div>';
+					'<div class="img_edit" val="'.$r['id'].'"></div>'.
+					//'<div class="img_del"></div>'.
+					'<input type="hidden" id="ids'.$r['id'].'" value="'.implode(',', $r['ids']).'" />';
 	$send .= '</table>';
 	return $send;
-}//sa_history_spisok()
+}//sa_history_spisok_page()
 function sa_history_cat() {//настройка категорий истории действий
 	return
 		sa_path('<a href="'.URL.'&p=sa&d=history">»стори€ действий</a>', 'Ќастройка категорий').

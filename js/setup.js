@@ -178,18 +178,10 @@ $(document)
 			$('#RULE_HISTORY_VIEW')._check(setupRuleCheck);
 			$('#RULE_INVOICE_TRANSFER')._check(setupRuleCheck);
 			$('#RULE_INCOME_VIEW')._check(setupRuleCheck);
-
-
-
-
-
-
-
-
-			$('.pin-clear').click(function() {
+			$('#pin-clear').click(function() {
 				var send = {
-						op:'setup_worker_pinclear',
-						viewer_id:RULES_VIEWER_ID
+						op:'setup_worker_pin_clear',
+						viewer_id:RULE_VIEWER_ID
 					},
 					but = $(this);
 				if(but.hasClass('busy'))
@@ -197,10 +189,12 @@ $(document)
 				but.addClass('busy');
 				$.post(AJAX_MAIN, send, function(res) {
 					but.removeClass('busy');
-					if(res.success)
-						_msg('Пин-код сброшен.');
+					if(res.success) {
+						_msg('Пин-код сброшен');
+						but.prev().remove();
+						but.remove();
+					}
 				}, 'json');
 			});
 		}
-
 	});

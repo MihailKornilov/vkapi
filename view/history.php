@@ -1,4 +1,148 @@
 <?php
+/*
+1
+Внесён новый клиент {client_link}.
+
+2
+Изменены данные клиента {client_link}:#v1#
+
+3
+Объединены клиенты <i>{v1}</i> и {client_link}.
+
+4
+Удалён клиент <i>{client_name}</i>.
+
+5
+Добавлено доверенное лицо <u>{v1}</u> для клиента {client_link}.
+
+6
+Клиент {client_link}: изменены данные доверенного лица <u>{v1}</u>:#v2#
+
+7
+Клиент {client_link}: удалено доверенное лицо <i>{v1}</i>.
+
+
+
+Заявки
+29
+Изменение местонахождения устройства по заявке {zayav_link}:#v1#
+
+30
+Изменение расходов {zayav_link}:<div class="changes z">{v1}</div>
+
+52
+Изменение срока выполнения заявки {zayav_link}:#v1#
+
+58
+Изменение исполнителя по заявке {zayav_link}:#v1#
+
+62
+Внесены результаты диагностики по заявке {zayav_link}.
+
+71
+Изменён статус заявки {zayav_link}<br />{v1} » {v2}
+
+72
+Отредактированы данные заявки {zayav_link}:#v1#
+
+73
+Создана новая заявка {zayav_link} для клиента {client_link}.
+
+74
+Произведено начисление на сумму <b>{v1}</b> руб. для заявки {zayav_link}.
+
+
+
+Деньги
+21
+Внесён расход на сумму <b>{v1}</b> руб.
+
+
+
+
+Запчасти
+13
+Произведена установка запчасти {zp_link} по заявке {zayav_link}.
+
+
+
+17
+Забракована запчасть {zp_link}.
+
+
+
+Настройки
+1001
+В настройках: изменение данных сотрудника {worker_link}:#v1#
+
+1002
+В настройках: сотруднику {worker_link} разрешён доступ в приложение.
+
+1003
+В настройках: сотруднику {worker_link} запрещён доступ в приложение.
+
+1004
+В настройках: сотруднику {worker_link} разрешено изменять данные других сотрудников.
+
+1005
+В настройках: сотруднику {worker_link} запрещено изменять данные других сотрудников.
+
+1006
+В настройках: сотруднику {worker_link} разрешено настраивать права других сотрудников.
+
+1007
+В настройках: сотруднику {worker_link} запрещено настраивать права других сотрудников.
+
+1008
+В настройках: сотруднику {worker_link} разрешено изменять реквизиты организации.
+
+1009
+В настройках: сотруднику {worker_link} запрещено изменять реквизиты организации.
+
+1010
+В настройках: сотруднику {worker_link} разрешено управлять расчётными счетами.
+
+1011
+В настройках: сотруднику {worker_link} запрещено управлять расчётными счетами.
+
+1012
+В настройках: сотруднику {worker_link} разрешено просматривать историю действий.
+
+1013
+В настройках: сотруднику {worker_link} запрещено просматривать историю действий.
+
+1014
+В настройках: сотруднику {worker_link} разрешено видеть историю переводов по расчётным счетам.
+
+1015
+В настройках: сотруднику {worker_link} запрещено видеть историю переводов по расчётным счетам.
+
+1016
+В настройках: сотруднику {worker_link} разрешено видеть историю платежей.
+
+1017
+В настройках: сотруднику {worker_link} запрещено видеть историю платежей.
+
+1018
+В настройках: сброшен пин-код у сотрудника {worker_link}.
+
+
+
+
+События
+999
+{v1}
+
+
+
+Без категории
+37
+Выдача з/п на сумму <b>{v1}</b> <em>({v2})</em> для сотрудника <u>{worker_name}</u>.
+
+45
+Установка баланса з/п в сумме <b>{v1}</b> руб. для сотрудника <u>{worker_name}</u>.
+
+*/
 function _history($v=array()) {
 	if(isset($v['type_id']))
 		return _history_insert($v);
@@ -51,42 +195,60 @@ function _historyFilter($v) {
 	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 30,
-		'viewer_id_add' => _num(@$v['viewer_id_add'])
+		'viewer_id_add' => _num(@$v['viewer_id_add']),
+		'category_id' => _num(@$v['category_id']),
+		'client_id' => _num(@$v['client_id'])
 	);
 }//_historyFilter()
 function _history_spisok($v=array()) {
 	$filter = _historyFilter($v);
 
-	$spisok = '';
-	if($filter['page'] == 1)
-		$spisok =
+	define('PAGE1', $filter['page'] == 1);
+	$spisok =
+		PAGE1 ?
 			'<script type="text/javascript">'.
 				'var HIST={'.
-						''.
+						'limit:'.$filter['limit'].','.
+						'viewer_id_add:'.$filter['viewer_id_add'].','.
+						'category_id:'.$filter['category_id'].','.
+						'client_id:'.$filter['client_id'].
 					'};'.
-			'</script>';
+			'</script>'
+		: '';
 
 	$cond = "`app_id`=".APP_ID.
-	  // " AND `type_id` IN (2,3,4)".//todo удалить
+	   " AND `type_id` IN (45)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
 		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
+	if($filter['category_id']) {
+		$sql = "SELECT `type_id` FROM `_history_ids` WHERE `category_id`=".$filter['category_id'];
+		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+		$cond .= " AND `type_id` IN (".$ids.")";
+	}
+	if($filter['client_id'])
+		$cond .= " AND `client_id`=".$filter['client_id'];
+
+	$add = $filter['client_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
 	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
 	if(!$all)
 		return array(
 			'all' => 0,
-			'result' => 'Истории по указанным условиям нет',
-			'spisok' => $spisok.'<div class="_empty">Истории по указанным условиям нет</div>',
+			'spisok' =>
+				$spisok.
+				(PAGE1 ? '<div class="result">Истории по указанным условиям нет'.$add.'</div>' : '').
+				'<div class="_empty">Истории по указанным условиям нет</div>',
 			'filter' => $filter
 		);
 
 	$send = array(
 		'all' => $all,
-		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запис'._end($all, 'ь', 'и', 'ей'),
-		'spisok' => $spisok,
+		'spisok' =>
+			(PAGE1 ? '<div class="result">Показан'._end($all, 'а ', 'о ').$all.' запис'._end($all, 'ь', 'и', 'ей').$add.'</div>' : '').
+			$spisok,
 		'filter' => $filter
 	);
 
@@ -113,7 +275,7 @@ function _history_spisok($v=array()) {
 			$time = strtotime($r['dtime_add']);
 			$viewer_id = $r['viewer_id_add'];
 		}
-		$txt .= '<li class="light">'.(SA ? '<h4 val="'.$r['id'].'">'.$r['type_id'].'</h4>' : '').
+		$txt .= '<li class="light">'.(SA ? '<h4 val="'.$r['id'].'">'.($r['type_id_old'] ? $r['type_id_old'].'-' : '').$r['type_id'].'</h4>' : '').//todo удалить type_id_old после перенесения
 					'<div class="li">'.$r['txt'].'</div>';
 		$key = key($history);
 		if(!$key ||
@@ -164,14 +326,19 @@ function _history_types($history) {//перевод type_id в текст
 
 	foreach($history as $id => $r) {
 		$txt = $types[$r['type_id']];
-		foreach($str as $v)
-			if(strpos($txt, '{'.$v.'}'))
+		foreach($str as $v) {
+			if(strpos($txt, '{'.$v.'}') !== false)
 				$txt = str_replace('{'.$v.'}', $r[$v], $txt);
+			if(strpos($txt, '#'.$v.'#') !== false)
+				$txt = str_replace('#'.$v.'#', '<div class="changes">'.$r[$v].'</div>', $txt);
+		}
 		$history[$id]['txt'] = $txt;
 	}
 
 	return $history;
 }//_history_types()
+
+
 
 function _historyChange($name, $old, $new) {//возвращается элемент таблицы, если было изменение при редактировании данных
 	if($old != $new)
@@ -192,10 +359,33 @@ function _history_right() {//вывод условий поиска для истории действий
 			'uid:'.$r['viewer_id_add'].','.
 			'title:"'._viewer($r['viewer_id_add'], 'viewer_name').'"'.
 		'}';
+
+	$sql = "SELECT
+	            `cat`.`id`,
+				`cat`.`name`
+			FROM
+			 	`_history_category` `cat`,
+				`_history_ids` `ids`,
+				`_history` `h`
+			WHERE `h`.`app_id`=".APP_ID."
+			  AND `h`.`ws_id`=".WS_ID."
+			  AND `cat`.`id`=`ids`.`category_id`
+			  AND `h`.`type_id`=`ids`.`type_id`
+			  AND `cat`.`js_use`
+			GROUP BY `cat`.`id`
+			ORDER BY `cat`.`sort`";
+	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 	return
-		'<script type="text/javascript">var HIST_WORKER=['.implode(',', $worker).'];</script>'.
 		'<div class="findHead">Действия сотрудника</div>'.
-		'<input type="hidden" id="viewer_id_add">';
-		//'<div class="findHead">Действие</div><input type="hidden" id="action">';
+		'<input type="hidden" id="viewer_id_add" />'.
+
+		(strlen($category) > 2 ? '<div class="findHead">Категория</div>' : '').
+		'<input type="hidden" id="category_id" />'.
+
+		'<script type="text/javascript">'.
+			'var HIST_WORKER=['.implode(',', $worker).'],'.
+				'HIST_CAT='.$category.';'.
+			'_historyRight();'.
+		'</script>';
 }//_history_right()
 

@@ -6,6 +6,8 @@ switch(@$_POST['op']) {
 
 		$type_id = _num($_POST['type_id']);
 		$txt = win1251(trim($_POST['txt']));
+		if(($ids = _ids($_POST['category_ids'], 1)) == false && $_POST['category_ids'] != 0)
+			jsonError();
 
 		if($type_id) {
 			$sql = "SELECT COUNT(`id`) FROM `_history_type` WHERE `id`=".$type_id;
@@ -25,6 +27,11 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		if(!$type_id)
+			$type_id = mysql_insert_id();
+
+		sa_history_ids_insert($type_id, $ids);
+
 		$send['html'] = utf8(sa_history_spisok());
 		jsonSuccess($send);
 		break;
@@ -32,6 +39,8 @@ switch(@$_POST['op']) {
 		if(!$type_id_current = _num($_POST['type_id_current']))
 			jsonError();
 		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+		if(($ids = _ids($_POST['category_ids'], 1)) == false && $_POST['category_ids'] != 0)
 			jsonError();
 
 		$txt = win1251(trim($_POST['txt']));
@@ -54,14 +63,22 @@ switch(@$_POST['op']) {
 					WHERE `type_id`=".$type_id_current;
 			query($sql, GLOBAL_MYSQL_CONNECT);
 
-			$type_id = $type_id_current;
+			//изменение на новый type_id ids-истории действий
+			$sql = "UPDATE `_history_ids`
+					SET `type_id`=".$type_id."
+					WHERE `type_id`=".$type_id_current;
+			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
-
 
 		$sql = "UPDATE `_history_type`
 				SET `txt`='".addslashes($txt)."'
 				WHERE `id`=".$type_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_history_ids` WHERE `type_id`=".$type_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		sa_history_ids_insert($type_id, $ids);
+
 
 		$send['html'] = utf8(sa_history_spisok());
 		jsonSuccess($send);
@@ -199,3 +216,20 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 }
+
+function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истории действий
+	if(empty($ids))
+		return;
+	foreach($ids as $i => $id) {
+		$sql = "INSERT INTO `_history_ids` (
+					`type_id`,
+					`category_id`,
+					`main`
+				) VALUES (
+					".$type_id.",
+					".$id.",
+					".(!$i ? 1 : 0)."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+	}
+}//sa_history_ids_insert()

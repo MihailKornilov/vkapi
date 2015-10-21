@@ -1,3 +1,9 @@
+#report.history ._empty{margin:10px}
+#history-add{float:right;margin:-2px 0 0 0}
+
+#history-add-tab{border-spacing:10px}
+#history-add-tab #txt{width:380px}
+
 ._hist-un{
 	margin:8px 8px 12px;
 	padding-bottom:8px;
@@ -31,3 +37,4 @@
 ._hist-un .zstatus{display:inline-block;padding:2px 5px}
 ._hist-un .prim{font:italic 11px Arial;color:#555}
 #_hist-next{margin:0 8px 10px}
+
