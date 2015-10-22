@@ -1098,4 +1098,19 @@ td.r{text-align:right}
 
 
 
+/* Начисления */
+#accrual-add-tab{border-spacing:10px}
+#accrual-add-tab .label{width:100px;text-align:right}
+#accrual-add-tab #about{width:230px}
+
+
+
+
+
+
+
+
+
+
+
 .dn{display:none}

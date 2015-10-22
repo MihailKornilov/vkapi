@@ -28,7 +28,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		if(!$type_id)
-			$type_id = mysql_insert_id();
+			$type_id = query_insert_id('_history_type', GLOBAL_MYSQL_CONNECT);
+
 
 		sa_history_ids_insert($type_id, $ids);
 

@@ -126,7 +126,6 @@ function sa_history_spisok() {
 	foreach($category as $r)
 		$send .= sa_history_spisok_page($r['name'], $r['type']);
 
-	_pre($category);
 	$send .= sa_history_spisok_page('Без категории', $spisok);
 
 	return $send;

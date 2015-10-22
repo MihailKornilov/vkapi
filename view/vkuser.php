@@ -54,7 +54,10 @@ function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате и
 	$u = _viewerCache($viewer_id);
 	$u = _viewerFormat($u);
 
-	return $i && isset($u[$i]) ? $u[$i] : $u;
+	if($i && !isset($u[$i]))
+		return 'viewer: неизвестный ключ <b>'.$i.'</b>';
+
+	return $i ? $u[$i] : $u;
 }//_viewer()
 function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из кеша
 	$key = CACHE_PREFIX.'viewer_'.$viewer_id;
@@ -151,7 +154,7 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 	foreach($arr as $r) {
 		$viewer_ids[$r['viewer_id_add']] = 1;
 		$viewer_ass[$r['viewer_id_add']][] = $r['id'];
-		if($r['worker_id']) {
+		if(!empty($r['worker_id'])) {
 			$worker_ids[$r['worker_id']] = 1;
 			$worker_ass[$r['worker_id']][] = $r['id'];
 		}
@@ -219,7 +222,7 @@ function _viewerFormat($u) {//формирование данных пользователя
 }//_viewerFormat()
 
 function _viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
-	return 'Вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'name');
+	return 'вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'viewer_name');
 }//_viewerAdded();
 
 

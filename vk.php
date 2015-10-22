@@ -76,7 +76,7 @@ define('URL', APP_HTML.'/index.php?'.VALUES);
 define('TODAY', strftime('%Y-%m-%d'));
 define('TODAY_UNIXTIME', strtotime(TODAY));
 
-//define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES.'&ajax=1');
+define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES.'&ajax=1');
 define('AJAX', !empty($_GET['ajax']));//производится ли запрос аjax
 define('APP_URL', 'http://vk.com/app'.APP_ID);
 
@@ -543,6 +543,10 @@ function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
 		$send[] = $sp[0];
 	return empty($send) ? 0 : implode(',', array_unique($send));
 }//query_ids()
+function query_insert_id($tab, $resource_id=MYSQL_CONNECT) {//id последнего внесённого элемента
+	$sql = "SELECT `id` FROM `".$tab."` ORDER BY `id` DESC LIMIT 1";
+	return query_value($sql, $resource_id);
+}//query_insert_id()
 
 function _num($v) {
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
@@ -1048,7 +1052,7 @@ function _vkComment($table, $id=0) {
 		$v = array();
 		while($r = mysql_fetch_assoc($q))
 			$arr[$r['id']] = $r;
-		$arr = _viewer($arr);
+		$arr = _viewerValToList($arr);
 
 		$comm = array();
 		foreach($arr as $r)
@@ -1567,7 +1571,7 @@ function _imageAdd($v=array()) {
 	$v = array(
 		'txt' => empty($v['txt']) ? 'Добавить изображение' : $v['txt'],
 		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner'],
-		'max' => empty($v['max']) || !preg_match(REGEXP_NUMERIC, $v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
+		'max' => empty($v['max']) || !_num($v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
 	);
 	return
 		'<div class="_image-spisok">'._imageSpisok($v['owner']).'</div>'.
