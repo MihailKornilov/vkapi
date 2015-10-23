@@ -697,14 +697,13 @@ a.add:hover{text-decoration:underline;color:#357}
 	cursor:default
 }
 ._spisok .ed{padding:2px;width:17px;white-space:nowrap}
-/*
-._money tr:not(.deleted) .img_rest,
-._money tr.deleted .img_edit,
-._money tr.deleted .img_del
+._spisok tr:not(.deleted) .img_rest,
+._spisok tr.deleted .img_edit,
+._spisok tr.deleted .img_del
 {display:none}
-._money tr.deleting,._money tr.deleted{background-color:#eee}
-._money tr.deleting *,._money tr.deleted *{color:#888}
-*/
+._spisok tr.deleting,._spisok tr.deleted{background-color:#eee}
+._spisok tr.deleting *,._spisok tr.deleted *{color:#888}
+
 
 /* Сообщение пустого запроса */
 ._empty{

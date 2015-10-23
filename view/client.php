@@ -451,6 +451,7 @@ function _clientValToList($arr) {//вставка данных клиентов в массив по client_id
 			$arr[$id] += array(
 				'client_name' => $c['name'],
 				'client_phone' => $c['phone'],
+				'client_balans' => round($r['balans'], 2),
 				'client_link' =>
 					'<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').
 						($c['phone'] ? _tooltip($c['phone'], -1, 'l') : '">').

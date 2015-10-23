@@ -121,6 +121,7 @@ function _history_spisok($v=array()) {
 
 	$history = _viewerValToList($history);
 	$history = _clientValToList($history);
+	$history = _zayavValToList($history);
 	$history = _history_types($history);
 
 	$txt = '';
@@ -173,6 +174,7 @@ function _history_types($history) {//перевод type_id в текст
 	$str = array(
 		'client_name',
 		'client_link',
+		'zayav_link',
 		'worker_name',
 		'worker_link',
 		'v1',

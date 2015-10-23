@@ -193,6 +193,7 @@ function income_spisok($filter=array()) {
 		$money[$r['id']] = $r;
 
 	//$money = _viewer($money);
+	$money = _clientValToList($money);
 	$money = _zayavValToList($money);
 	$money = _zpLink($money);
 //	$money = _schetValues($money);
