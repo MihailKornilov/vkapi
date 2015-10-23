@@ -10,6 +10,7 @@ if(empty($nopin[$_POST['op']]) && PIN_ENTER)
 $_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
 
 require_once GLOBAL_DIR_AJAX.'/client.php';
+require_once GLOBAL_DIR_AJAX.'/money.php';
 require_once GLOBAL_DIR_AJAX.'/remind.php';
 require_once GLOBAL_DIR_AJAX.'/history.php';
 require_once GLOBAL_DIR_AJAX.'/setup.php';
@@ -24,6 +25,8 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
+
 
 		//сброс времени действия введённого пинкода
 //		unset($_SESSION[PIN_TIME_KEY]);
@@ -481,160 +484,6 @@ switch(@$_POST['op']) {
 			);
 			$n++;
 		}
-		jsonSuccess($send);
-		break;
-
-	case 'accrual_add':
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-
-		$zayav_id = _num($_POST['zayav_id']);
-		$sum = intval($_POST['sum']);
-		$about = _txt($_POST['about']);
-		$client_id = 0;
-
-		if($zayav_id) {
-			$sql = "SELECT *
-					FROM `zayav`
-					WHERE `ws_id`=".WS_ID."
-					  AND !`deleted`
-					  AND `id`=".$zayav_id;
-			if(!$z = query_assoc($sql))
-				jsonError();
-
-			$client_id = $z['client_id'];
-		}
-
-		$sql = "INSERT INTO `_money_accrual` (
-					`app_id`,
-					`ws_id`,
-					`zayav_id`,
-					`client_id`,
-					`sum`,
-					`about`,
-					`viewer_id_add`
-				) VALUES (
-					".APP_ID.",
-					".WS_ID.",
-					".$zayav_id.",
-					".$client_id.",
-					".$sum.",
-					'".addslashes($about)."',
-					".VIEWER_ID."
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-/*
-		clientBalansUpdate($z['client_id']);
-		zayavBalansUpdate($zayav_id);
-
-		history_insert(array(
-			'type' => 5,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'value' => $sum
-		));
-
-		//Обновление статуса заявки, если изменялся
-		if($z['zayav_status'] != $status) {
-			$sql = "UPDATE `zayav`
-					SET `zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP
-					WHERE `id`=".$zayav_id;
-			query($sql);
-			history_insert(array(
-				'type' => 4,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'value' => $status,
-				'value1' => $z['zayav_status']
-			));
-			$send['status'] = _zayavStatus($status);
-			$send['status']['name'] = utf8($send['status']['name']);
-			$send['status']['dtime'] = utf8(FullDataTime(curTime()));
-		}
-
-		//Внесение напоминания, если есть
-		if($remind) {
-			_remind_add(array(
-				'zayav_id' => $zayav_id,
-				'txt' => $remind_txt,
-				'day' => $remind_day
-			));
-			$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$zayav_id), 'spisok'));
-		}
-
-		$send['html'] = utf8(zayav_info_money($zayav_id));
-*/
-
-		jsonSuccess();
-		break;
-	case 'accrual_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
-					`deleted`=1,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP
-				WHERE `id`=".$id;
-		query($sql);
-
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 8,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
-		));
-		jsonSuccess();
-		break;
-	case 'accrual_rest':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT
-		            *,
-					'acc' AS `type`
-				FROM `accrual`
-				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
-					`deleted`=0,
-					`viewer_id_del`=0,
-					`dtime_del`='0000-00-00 00:00:00'
-				WHERE `id`=".$id;
-		query($sql);
-
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 27,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
-		));
-		$send['html'] = utf8(zayav_accrual_unit($r));
 		jsonSuccess($send);
 		break;
 }

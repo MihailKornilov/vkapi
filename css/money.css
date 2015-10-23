@@ -1,0 +1,99 @@
+/* Начисления */
+#accrual-add-tab{border-spacing:10px}
+#accrual-add-tab .label{width:100px;text-align:right}
+#accrual-add-tab #about{width:230px}
+
+
+
+
+/* Платежи */
+#money-income #top{
+	background-color:#F7F7F7;
+	border-spacing:10px 5px;
+	width:100%;
+	border-bottom:#dae1e8 solid 1px;
+}
+#money-income #mi-l{width:200px;vertical-align:top}
+#money-income #mi-center{vertical-align:top}
+#money-income #mi-calendar{width:177px;vertical-align:top}
+#money-income #path{margin:10px}
+#money-income #summa{margin-bottom:7px}
+
+#money-income #spisok{margin:0 10px 10px}
+#money-income #deleted_check{margin-top:15px}
+
+#income-add-tab{border-spacing:10px}
+#income-add-tab .label{width:80px;text-align:right}
+#income-add-tab #prepay_check{margin:0 6px -3px 0}
+#income-add-tab #about{width:210px}
+
+
+
+/* Итоговая сумма для списка платежей */
+/*
+
+.income ._spisok:not(._money){margin:10px 10px 15px}
+.income ._empty{margin:0}
+.income .right{width:160px}
+.income ._calendarFilter{margin-top:20px}
+.income  #del_check{margin-top:20px}
+
+.expense .headName{margin:15px 10px}
+.expense #spisok{margin:10px}
+.expense ._spisok{margin-top:5px}
+.expense .years{margin-top:20px}
+.expense #monthList div{display:block;margin-bottom:5px}
+.expense #monthList .sum{float:right}
+#expense-add-tab{border-spacing:10px}
+#expense-add-tab .label{width:60px;text-align:right}
+#expense-add-tab #prim{width:250px}
+#expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
+
+
+.schet#report .headName{margin:15px 10px}
+.schet#report #spisok{margin:10px}
+.schet#report #result{margin-bottom:10px}
+.schet#report #find{margin-top:20px}
+.schet#report #paid_check{margin-top:20px}
+
+
+.invoice#report .headName{margin:15px 10px}
+.invoice#report .headName span{display:inline-block;float:right;margin:0 6px}
+.invoice#report .transfer{color:#d33}
+.invoice #invoice-spisok{margin:10px 10px 25px}
+.invoice #invoice-spisok .name{width:150px}
+.invoice #invoice-spisok .about{color:#777;font-size:10px;margin:3px 7px}
+.invoice .balans{text-align:right}
+.invoice .img_note{margin-bottom:-2px}
+.invoice .invoice_set{display:block;text-align:center}
+.invoice .transfer-spisok{margin:10px}
+.invoice-history{margin-top:10px}
+.invoice-history .action{width:80px}
+.invoice-history .balans{width:70px;text-align:right}
+
+.salary#report .headName{margin:10px}
+.salary#report .headName em{font-size:12px;font-weight:bold}
+.salary#report .headName._busy{background-position:right center}
+.salary #spisok{margin:10px}
+.salary .balans{text-align:right}
+.salary .uhead .a{float:right}
+.salary .uhead a{color:#68A;}
+.salary .uhead a:hover{color:#357}
+.salary h1{margin-bottom:5px}
+.salary .uhead span{color:#888;margin-left:8px}
+.salary a.rate-set{color:#d33;float:right}
+.salary a.rate-set:hover{color:#d33}
+.salary .years{margin-top:25px}
+.salary #monthList em{float:right;font-size:10px}
+.salary .show{background-color:#ffc}
+.salary .s-zayav{display:inline-block;padding:2px 5px}
+.salary .about tt{font-size:10px;color:#888;margin-left:7px}
+.salary .zp-head{margin:17px 0 3px}
+.salary .zp-head span{float:right}
+.salary-tab{border-spacing:8px}
+.salary-tab #about{width:230px}
+.salary-tab.set .label{width:100px}
+.salary-tab #day{width:30px}
+.salary-tab .img_edit{position:relative;top:-4px;left:4px}
+.i-expense{width:30px}
+*/

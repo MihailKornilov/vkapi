@@ -427,6 +427,16 @@ var VK_SCROLL = 0,
 		while(t[0].tagName != tag)
 			t = t.parent();
 		return t;
+	},
+	_busy = function(v) {//отображение прогресса ожидания в mainLinks
+		var ml = $('#mainLinks');
+		if(v === 0) {
+			ml.removeClass('busy');
+			return;
+		}
+		if(ml.hasClass('busy'))
+			return true;
+		ml.addClass('busy');
 	};
 
 $.fn._check = function(o) {
@@ -1806,7 +1816,7 @@ $(document)
 	.on('click', '#cookie_clear', function() {
 		$.post(AJAX_MAIN, {'op':'cookie_clear'}, function(res) {
 			if(res.success) {
-				_msg('Cookie очищены.');
+				_msg('Cookie очищены');
 				document.location.reload();
 			}
 		}, 'json');
@@ -1814,82 +1824,11 @@ $(document)
 	.on('click', '#cache_clear', function() {
 		$.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
 			if(res.success) {
-				_msg('Кэш очищен.');
+				_msg('Кэш очищен');
 				document.location.reload();
 			}
 		}, 'json');
 	})
-
-	.on('click', '.accrual-add', function() {
-		var html =
-			'<table id="accrual-add-tab">' +
-				(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
-//				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
-//				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-			'</table>';
-/*
-			'<table class="zayav_accrual_add remind">' +
-			'<tr><td class="label">Содержание:<td><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
-			'<tr><td class="label">Дата:<td><input type="hidden" id="reminder_day">' +
-			'</table>';
-*/
-		var dialog = _dialog({
-			width:420,
-			head:'Внесение начисления',
-			content:html,
-			submit:submit
-		});
-		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
-//		$('#acc_status')._dropdown({spisok:STATUS});
-//		$('#acc_remind')._check();
-//		$('#acc_remind_check').click(function(id) {
-//			$('.zayav_accrual_add.remind').toggle();
-//		});
-//		$('#reminder_day')._calendar();
-
-		function submit() {
-			var send = {
-					op:'accrual_add',
-					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
-					sum:$('#sum').val(),
-					about:$('#about').val()
-//					status:$('#acc_status').val(),
-//					remind:$('#acc_remind').val(),
-//					remind_txt:$('#reminder_txt').val(),
-//					remind_day:$('#reminder_day').val()
-				};
-			if(!_cena(send.sum)) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-			} //else if(send.remind == 1 && !send.remind_txt) { msg = 'Не указан текст напоминания'; $('#reminder_txt').focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Начисление успешно произведено');
-/*
-//						$('#money_spisok').html(res.html);
-//						zayavMoneyUpdate();
-						if(res.status) {
-							$('#status')
-								.html(res.status.name)
-								.css('background-color', '#' + res.status.color);
-							$('#status_dtime').html(res.status.dtime);
-						}
-						if(res.remind)
-							$('#remind-spisok').html(res.remind);
-*/
-					}
-				}, 'json');
-			}
-		}
-	})
-
 
 	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
 		var t = $(this),
@@ -2073,7 +2012,7 @@ $(document)
 		p[(sel ? 'remove' : 'add') + 'Class']('sel');
 		cal.find('.selected').val(sel ? '' : val);
 		if(window._calendarFilter)
-			_calendarFilter(sel ? '' : val);
+			_calendarFilter(sel ? '' : val, 'day');
 	})
 	.on('click', '._calendarFilter .ch', function() {
 		var t = $(this),

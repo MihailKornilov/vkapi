@@ -32,10 +32,11 @@ define('GLOBAL_DIR_AJAX', GLOBAL_DIR.'/ajax');
 
 require_once GLOBAL_DIR.'/syncro.php';
 require_once GLOBAL_DIR.'/view/vkuser.php';
-require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/client.php';
+require_once GLOBAL_DIR.'/view/money.php';
 require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/history.php';
+require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
@@ -152,6 +153,7 @@ function _header() {
 }//_header()
 function _api_scripts() {//скрипты и стили, которые вставляются в html
 	$test = defined('TEST') ? 'test' : '';
+	$min = DEBUG ? '' : '.min';
 	return
 		//Отслеживание ошибок в скриптах
 		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js?'.VERSION.'"></script>' : '').
@@ -170,39 +172,43 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
-//				(defined('WS_ID') ? 'WS_ID='.WS_ID.',' : '').
+//				'WS_ID='.WS_ID.','.
 				'APP_HTML="'.APP_HTML.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.$min.'.js?'.VERSION.'"></script>'.
 
 (PIN_ENTER ? '' :
 
 		//Клиенты
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/client'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/client'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/client'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/client'.$min.'.js?'.VERSION.'"></script>'.
+
+		//Деньги
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/money'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/money'.$min.'.js?'.VERSION.'"></script>'.
 
 		//Напоминания
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.$min.'.js?'.VERSION.'"></script>'.
 
 		//История действий
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/history'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/history'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.$min.'.js?'.VERSION.'"></script>'.
 
 		//Настройки
 	(@$_GET['p'] == 'setup' ?
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.$min.'.js?'.VERSION.'"></script>'
 	: '').
 
 		//Суперадмин (SA)
 	(@$_GET['p'] == 'sa' ?
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/sa'.$min.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/sa'.$min.'.js?'.VERSION.'"></script>'
 	: '')
 );
 }//_api_scripts()
@@ -519,6 +525,16 @@ function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
 	return '['.implode(',',$send).']';
 }//query_selJson()
+function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
+	$send = array();
+	$q = query($sql, $resource_id);
+	while($r = mysql_fetch_assoc($q))
+		$send[] = '{'.
+			'uid:'.$r['viewer_id_add'].','.
+			'title:"'._viewer($r['viewer_id_add'], 'viewer_name').'"'.
+		'}';
+	return '['.implode(',',$send).']';
+}//query_selJson()
 function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select при отправке через ajax
 	$send = array();
 	$q = query($sql, $resource_id);
@@ -668,6 +684,7 @@ function _start($v) {//вычисление первой позиции в базе данных
 	return ($v['page'] - 1) * $v['limit'];
 }//_start()
 function _next($v) {//вывод ссылки на догрузку списка
+	$send = '';
 	$start = _start($v);
 	if($start + $v['limit'] < $v['all']) {
 		$c = $v['all'] - $start - $v['limit'];
@@ -677,21 +694,19 @@ function _next($v) {//вывод ссылки на догрузку списка
 		switch(@$v['type']) {
 			case 1: break; //клиенты
 			case 2: break; //заявки
-			case 3: break; //платежи
+			case 3: $type = ' платеж'._end($c, '', 'а', 'ей'); break; //платежи
 			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;//счета
 		}
 
 		$show = '<span>Показать ещё '.$c.$type.'</span>';
 		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
-		return
-			empty($v['tr']) ?
-				'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
+		$send = empty($v['tr']) ?
+			'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
 				:
-				'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
-					'<td colspan="10">'.$show.
-				($v['page'] == 1 ? '</table>' : '');
+			'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
+				'<td colspan="10">'.$show;
 	}
-	return '';
+	return $send.($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
 }//_next()
 
 function _selJson($arr) {
@@ -778,7 +793,9 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 				'{uid:123,title:"Самара"},'.
 				'{uid:125,title:"Саратов"},'.
 				'{uid:151,title:"Уфа"},'.
-				'{uid:158,title:"Челябинск"}];';
+				'{uid:158,title:"Челябинск"}],'.
+		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_money_invoice` WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID." ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK);';
 
 	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
 	fwrite($fp, $save);
@@ -787,6 +804,7 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 
 
 function pageHelpIcon() {
+	return '';
 	$page[] = $_GET['p'];
 	if(!empty($_GET['d']))
 		$page[] = $_GET['d'];
@@ -1436,7 +1454,6 @@ function translit($str) {
 	return strtr($str, $list);
 }
 
-
 function _calendarFilter($data=array()) {
 	$data = array(
 		'upd' => empty($data['upd']), // Обновлять существующий календать? (при перемотке масяцев)
@@ -1525,16 +1542,21 @@ function _calendarDataCheck($data) {
 	return false;
 }//_calendarDataCheck()
 function _calendarPeriod($data) {// Формирование периода для элементов массива запросившего фильтра
-	$send['period'] = $data;
+	$send = array(
+		'period' => $data,
+		'day' => '',
+		'from' => '',
+		'to' => ''
+	);
 	if(!_calendarDataCheck($data))
 		return $send;
 	$ex = explode(':', $data);
 	if(empty($ex[1]))
-		return $send + array('day'=>$ex[0]);
-	return $send + array(
+		return array('day'=>$ex[0]) + $send;
+	return array(
 		'from' => $ex[0],
 		'to' => $ex[1]
-	);
+	) + $send;
 }//_calendarPeriod()
 function _calendarWeek($day=0) {// Формирование периода за неделю недели
 	if(!$day)

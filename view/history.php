@@ -209,14 +209,7 @@ function _history_right() {//вывод условий поиска для истории действий
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `viewer_id_add`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	$worker = array();
-	while($r = mysql_fetch_assoc($q))
-		$worker[] = '{'.
-			'uid:'.$r['viewer_id_add'].','.
-			'title:"'._viewer($r['viewer_id_add'], 'viewer_name').'"'.
-		'}';
-
+	$worker = query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
 
 /*
 	$sql = "
@@ -264,7 +257,7 @@ EXPLAIN
 		'<input type="hidden" id="category_id" />'.
 
 		'<script type="text/javascript">'.
-			'var HIST_WORKER=['.implode(',', $worker).'],'.
+			'var HIST_WORKER='.$worker.','.
 				'HIST_CAT='.$category.';'.
 			'_historyRight();'.
 		'</script>';

@@ -199,8 +199,8 @@ td.r{text-align:right}
 	padding:2px 0;
 	margin:5px 20px;
 }
-.headName .add{float:right;color:#68A;cursor:pointer}
-.headName .add:hover{text-decoration:underline;color:#357}
+a.add{float:right;color:#68A;cursor:pointer}
+a.add:hover{text-decoration:underline;color:#357}
 
 .headBlue{
 	background-color:#E1E7ED;
@@ -214,6 +214,8 @@ td.r{text-align:right}
 .headBlue a.add{float:right;color:#88C}
 .headBlue a.add:hover{color:#2B587A}
 
+/* заголовок фильтра справой стороны */
+.f-label{color:#555;font-weight:bold;margin-bottom:5px}
 .findHead{color:#555;font-weight:bold;margin:15px 0 4px 0}
 
 ._info{
@@ -601,7 +603,7 @@ td.r{text-align:right}
 .rightLink a.off:hover{border:#eee solid 1px;background:#eee}
 
 /* Дополнительное меню */
-#dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
+#dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 10px}
 #dopLinks .link{
 	text-decoration:none;
 	display:inline-block;
@@ -668,7 +670,7 @@ td.r{text-align:right}
 
 
 /* таблица списком */
-._spisok{border-collapse:collapse}
+._spisok{border-collapse:collapse;width:100%}
 ._spisok th{
 	border:#dee4e8 solid 1px;
 	background-color:#f5f7f8;
@@ -678,16 +680,15 @@ td.r{text-align:right}
 }
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
 ._spisok tr._next td{padding:0}
-._money{width:100%}
-._money .choice{width:14px;text-align:center}
-._money .sum{
+/*._money .choice{width:14px;text-align:center}*/
+._spisok .sum{
 	width:45px;
 	text-align:right;
 	font-weight:bold;
 	white-space:nowrap;
 }
-._money .type{color:#770}
-._money .dtime{
+._spisok .type{color:#770}
+._spisok .dtime{
 	width:70px;
 	white-space:nowrap;
 	text-align:right;
@@ -695,14 +696,15 @@ td.r{text-align:right}
 	color:#777;
 	cursor:default
 }
-._money .ed{padding:2px;width:17px;white-space:nowrap}
+._spisok .ed{padding:2px;width:17px;white-space:nowrap}
+/*
 ._money tr:not(.deleted) .img_rest,
 ._money tr.deleted .img_edit,
 ._money tr.deleted .img_del
 {display:none}
 ._money tr.deleting,._money tr.deleted{background-color:#eee}
 ._money tr.deleting *,._money tr.deleted *{color:#888}
-
+*/
 
 /* Сообщение пустого запроса */
 ._empty{
@@ -1046,7 +1048,7 @@ td.r{text-align:right}
 
 /* Календарь-фильтр */
 ._calendarFilter .week-name{border-spacing:5px}
-._calendarFilter .data{width:100%;text-align:center}
+._calendarFilter .data{width:177px;text-align:center}
 ._calendarFilter .ch{font-size:12px;cursor:pointer;color:#777;width:25px}
 ._calendarFilter .ch:hover{color:#333}
 ._calendarFilter .data a{display:inline-block;padding:3px 3px;text-decoration:none}
@@ -1092,20 +1094,6 @@ td.r{text-align:right}
 }
 ._tooltip .ttug.r{background-position:right 0}
 ._tooltip .ttug.l{background-position:left 0}
-
-
-
-
-
-
-/* Начисления */
-#accrual-add-tab{border-spacing:10px}
-#accrual-add-tab .label{width:100px;text-align:right}
-#accrual-add-tab #about{width:230px}
-
-
-
-
 
 
 
