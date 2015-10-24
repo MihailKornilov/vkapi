@@ -696,13 +696,14 @@ a.add:hover{text-decoration:underline;color:#357}
 	color:#777;
 	cursor:default
 }
+._spisok .dtime div:not(.ttmsg){font-size:10px}
+._spisok .ddel{color:#c33}
 ._spisok .ed{padding:2px;width:17px;white-space:nowrap}
 ._spisok tr:not(.deleted) .img_rest,
 ._spisok tr.deleted .img_edit,
 ._spisok tr.deleted .img_del
 {display:none}
 ._spisok tr.deleting,._spisok tr.deleted{background-color:#eee}
-._spisok tr.deleting *,._spisok tr.deleted *{color:#888}
 
 
 /* Сообщение пустого запроса */

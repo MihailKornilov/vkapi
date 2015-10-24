@@ -227,7 +227,7 @@ switch(@$_POST['op']) {
 
 //			clientBalansUpdate($client_id);
 
-			_history_insert(array(
+			_history(array(
 				'type_id' => 3,
 				'client_id' => $client_id,
 				'v1' => _clientVal($client2, 'name')

@@ -199,6 +199,18 @@ var VK_SCROLL = 0,
 			}
 		});
 	},
+	_toSpisok = function(s) {
+		var a=[];
+		for(k in s)
+			a.push({uid:k,title:s[k]});
+		return a
+	},
+	_toAss = function(s) {
+		var a=[];
+		for(var n = 0; n < s.length; n++)
+			a[s[n].uid] = s[n].title;
+		return a
+	},
 	_end = function(count, arr) {
 		if(arr.length == 2)
 			arr.push(arr[1]);
@@ -414,6 +426,37 @@ var VK_SCROLL = 0,
 				butSubmit.find('button').html(name);
 			}
 		};
+	},
+	_dialogDel = function(o) {//вывод диалога удалени€
+		o = $.extend({
+			id:0,               //id, который нужно удалить
+			head:'записи',      //заголовок диалога
+			op:'_del',          //переменна€ switch, по которой будет производитьс€ удаление
+			func:function() {}  //функци€, выполн€ема€ после успешного удалени€
+		}, o);
+		var dialog = _dialog({
+				width:300,
+				head:'”даление ' + o.head,
+				padding:50,
+				content:'<center class="red">ѕодтвердите удаление.</center>',
+				butSubmit:'”далить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:o.op,
+				id:o.id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('”далено');
+					o.func();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	},
 	_tooltip = function(msg, left, ugolSide) {
 		return ' _tooltip">' +

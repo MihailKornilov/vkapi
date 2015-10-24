@@ -481,7 +481,7 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
-	.on('click', '.go-client-info', function(e) {
+	.on('click', '.client-info-go', function(e) {
 		e.stopPropagation();
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
 	})

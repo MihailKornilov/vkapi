@@ -162,9 +162,6 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
 		'<script type="text/javascript" src="/.vkapp/.api/js/xd_connection.min.js?20"></script>'.
 
-		//Переменные _global для всех приложений
-		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js"></script>'.
-
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
 
@@ -180,6 +177,9 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
 		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.$min.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.$min.'.js?'.VERSION.'"></script>'.
+
+		//Переменные _global для всех приложений
+		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js"></script>'.
 
 (PIN_ENTER ? '' :
 
@@ -528,10 +528,10 @@ function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
 	$send = array();
 	$q = query($sql, $resource_id);
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_array($q))
 		$send[] = '{'.
-			'uid:'.$r['viewer_id_add'].','.
-			'title:"'._viewer($r['viewer_id_add'], 'viewer_name').'"'.
+			'uid:'.$r[0].','.
+			'title:"'._viewer($r[0], 'viewer_name').'"'.
 		'}';
 	return '['.implode(',',$send).']';
 }//query_selJson()
@@ -595,6 +595,16 @@ function _ids($ids, $return_arr=0) {//проверка корректности списка id, составлен
 	}
 	return $return_arr ? $arr : implode(',', $arr);
 }//_ids
+function _mon($v) {//проверка даты в формате 2015-10, если не соответствует, возврат текущей даты
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEARMONTH, $v))
+		return strftime('%Y-%m');
+	return $v;
+}//_num()
+function _year($v) {//проверка года, если не соответствует, возврат текущего года
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEAR, $v))
+		return strftime('%Y');
+	return intval($v);
+}//_num()
 function _numToWord($num, $firstSymbolUp=false) {
 	$num = intval($num);
 	$one = array(
@@ -754,8 +764,8 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоци
 	return '{'.implode(',', $v).'}';
 }//Gvalues_obj()
 function _globalValuesJS() {//Составление файла global_values.js, используемый во всех приложениях
-	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
+	$save =
+		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'COUNTRY_SPISOK=['.
 				'{uid:1,title:"Россия"},'.
 				'{uid:2,title:"Украина"},'.
@@ -794,8 +804,15 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 				'{uid:125,title:"Саратов"},'.
 				'{uid:151,title:"Уфа"},'.
 				'{uid:158,title:"Челябинск"}],'.
-		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_money_invoice` WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID." ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK);';
+		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
+											  FROM `_money_invoice`
+											  WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
+											  ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
+		"\n".'WORKER_ASS='.query_ptpJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
+											 FROM `_vkuser`
+											 WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
+											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).';';
 
 	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
 	fwrite($fp, $save);

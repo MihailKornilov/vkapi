@@ -48,6 +48,9 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 }//_viewer()
 */
 function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате из контакта
+	if(is_array($viewer_id))
+		return _viewerValToList($viewer_id);
+
 	if(!_num($viewer_id))
 		die('_viewer: '.$viewer_id.' is not correct.');
 
@@ -216,7 +219,8 @@ function _viewerFormat($u) {//формирование данных пользовател€
 	);
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
-	$send['viewer_photo_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_photo'].'</a>';
+	$send['viewer_link_photo'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_photo'].'</a>';
+	$send['viewer_link_zp'] = '<a href="'.URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
 
 	return $send;
 }//_viewerFormat()
@@ -224,6 +228,9 @@ function _viewerFormat($u) {//формирование данных пользовател€
 function _viewerAdded($viewer_id) {//¬ывод сотрудника, который вносил запись с учЄтом пола
 	return 'вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'Єс').' '._viewer($viewer_id, 'viewer_name');
 }//_viewerAdded();
+function _viewerDeleted($viewer_id) {//¬ывод сотрудника, который вносил запись с учЄтом пола
+	return 'удалил'.(_viewer($viewer_id, 'sex') == 1 ? 'а' : '').' '._viewer($viewer_id, 'viewer_name');
+}//_viewerDeleted();
 
 
 

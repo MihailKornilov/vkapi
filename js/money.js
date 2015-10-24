@@ -1,17 +1,4 @@
-var incomeSpisok = function(v, id) {
-		MONEY.op = 'income_spisok';
-		MONEY[id] = v;
-		if(_busy())
-			return;
-		$.post(AJAX_MAIN, MONEY, function(res) {
-			_busy(0);
-			if(res.success) {
-				$('#path').html(res.path);
-				$('#spisok').html(res.html);
-			}
-		}, 'json');
-	},
-	incomeTop = function() {
+var incomeLoad = function() {
 		window._calendarFilter = incomeSpisok;
 		$('#invoice_id')._radio({
 			light:1,
@@ -25,7 +12,176 @@ var incomeSpisok = function(v, id) {
 			spisok:INCOME_WORKER,
 			func:incomeSpisok
 		});
-		$('#deleted')._check(incomeSpisok);
+		$('#prepay')._check(incomeSpisok);
+		$('#deleted')._check(function(v, id) {
+			$('#deleted_only_check')[v ? 'show' : 'hide']();
+			MONEY.deleted_only = 0;
+			$('#deleted_only')._check(0);
+			incomeSpisok(v, id);
+		});
+		$('#deleted_only')._check(incomeSpisok);
+	},
+	incomeSpisok = function(v, id) {
+		MONEY.op = 'income_spisok';
+		MONEY.page = 1;
+		MONEY[id] = v;
+		if(_busy())
+			return;
+		$.post(AJAX_MAIN, MONEY, function(res) {
+			_busy(0);
+			if(res.success) {
+				$('#path').html(res.path);
+				$('#spisok').html(res.html);
+			}
+		}, 'json');
+	},
+
+	expenseLoad = function() {
+		$('.add').click(function() {
+			console.log(INVOICE_SPISOK);
+			var html =
+					'<table id="expense-add-tab">' +
+					'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" />' +
+					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
+					'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id-add" />' +
+					'<tr class="tr-work dn"><td class="label">Месяц:' +
+					'<td><input type="hidden" id="tabmon" value="' + ((new Date).getMonth() + 1) + '" /> ' +
+					'<input type="hidden" id="tabyear" value="' + (new Date).getFullYear() + '" />' +
+					'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="100">' +
+					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
+					'</table>',
+				dialog = _dialog({
+					width:380,
+					head:'Внесение расхода',
+					content:html,
+					submit:submit
+				});
+
+			$('#category_id-add')._select({
+				width:200,
+				title0:'Не указана',
+				spisok:EXPENSE_SPISOK,
+				func:function(id) {
+					$('#worker_id')._select(0);
+					$('.tr-work')[(EXPENSE_WORKER[id] ? 'remove' : 'add') + 'Class']('dn');
+				}
+			});
+			$('#worker_id-add')._select({
+				width:200,
+				title0:'Не выбран',
+				spisok:_toSpisok(WORKER_ASS)
+			});
+			$('#about').focus();
+			$('#invoice_id-add')._select({
+				width:200,
+				title0:'Не выбран',
+				spisok:INVOICE_SPISOK,
+				func:function() {
+					$('#sum').focus();
+				}
+			});
+			$('#tabmon')._select({
+				width:80,
+				spisok:_toSpisok(MONTH_DEF)
+			});
+			$('#tabyear')._select({
+				width:60,
+				spisok:YEAR_SPISOK
+			});
+
+			function submit() {
+				var send = {
+					op:'expense_add',
+					category_id:_num($('#category_id-add').val()),
+					worker_id:$('#worker_id-add').val(),
+					about:$('#about').val(),
+					invoice_id:_num($('#invoice_id-add').val()),
+					sum:_cena($('#sum').val()),
+					mon:$('#tabmon').val(),
+					year:$('#tabyear').val()
+				};
+				if(!send.about && !send.category_id) {
+					dialog.err('Выберите категорию или укажите описание.');
+					$('#about').focus();
+				} else if(!send.invoice_id)
+					dialog.err('Укажите с какого счёта производится оплата.');
+				else if(!send.sum) {
+					dialog.err('Некорректно указана сумма.');
+					$('#sum').focus();
+				} else {
+					dialog.process();
+					$.post(AJAX_MAIN, send, function (res) {
+						if(res.success) {
+							dialog.close();
+							_msg('Новый расход внесён');
+							expenseSpisok();
+						} else
+							dialog.abort();
+					}, 'json');
+				}
+			}
+		});
+		$('#invoice_id')._select({
+			width:140,
+			title0:'Все счета',
+			spisok:INVOICE_SPISOK,
+			func:expenseSpisok
+		});
+		$('#category_id')._select({
+			width:140,
+			title0:'Любая категория',
+			spisok:EXPENSE_SPISOK,
+			func:expenseSpisok
+		});
+		$('#worker_id')._select({
+			width:140,
+			title0:'Все сотрудники',
+			spisok:EXPENSE_WORKER,
+			func:expenseSpisok
+		});
+		$('#year').years({
+			func:expenseSpisok,
+			center:function() {
+				var inp = $('#mon-list input'),
+					all = 0;
+				for(var n = 1; n <= 12; n++)
+					if(inp.eq(n - 1).val() == 0) {
+						all = 1;
+						break;
+					}
+				for(n = 1; n <= 12; n++)
+					$('#c' + n)._check(all);
+				expenseSpisok();
+			}
+		});
+	},
+	expenseFilter = function() {
+		var arr = [],
+			inp = $('#monthList input');
+		for(var n = 1; n <= 12; n++)
+			if(inp.eq(n - 1).val() == 1)
+				arr.push(n);
+		return {
+			op:'expense_spisok',
+			category:$('#category').val(),
+			worker:$('#worker').val(),
+			year:$('#year').val(),
+			month:arr.join()
+		};
+	},
+	expenseSpisok = function(v, id) {
+		EXPENSE.op = 'expense_spisok';
+		EXPENSE.page = 1;
+		EXPENSE[id] = v;
+		_busy();
+		$.post(AJAX_MAIN, EXPENSE, function(res) {
+			_busy(0);
+			if(res.success) {
+				$('#spisok').html(res.html);
+				$('#mont-list').html(res.mon);
+			}
+		}, 'json');
 	};
 
 $(document)
@@ -100,17 +256,13 @@ $(document)
 	})
 
 	.on('click', '#income-next', function() {
-		var next = $(this),
-			send = {
-				op:'income_next',
-				page:next.attr('val'),
-				day:$('.selected').val(),
-				del:$('#del').val()
-			};
+		var next = $(this);
 		if(next.hasClass('busy'))
 			return;
 		next.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
+		MONEY.op = 'income_spisok';
+		MONEY.page = next.attr('val');
+		$.post(AJAX_MAIN, MONEY, function(res) {
 			if(res.success)
 				next.after(res.html).remove();
 			else
@@ -256,41 +408,38 @@ $(document)
 	})
 */
 	.on('click', '.income-del', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		if(t.hasClass('deleting'))
-			return;
-		t.addClass('deleting');
-		var send = {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'платежа',
 			op:'income_del',
-			id:t.attr('val')
-		};
-		$.post(AJAX_WS, send, function(res) {
-			t.removeClass('deleting');
-			if(res.success) {
-				t.addClass('deleted');
-				if(window.ZAYAV)
-					zayavMoneyUpdate();
-			}
-		}, 'json');
-	})
-	.on('click', '.income-rest', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		var send = {
-			op:'income_rest',
-			id:t.attr('val')
-		};
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				t.removeClass('deleted');
-				if(window.ZAYAV)
-					zayavMoneyUpdate();
-			}
-		}, 'json');
+			func:incomeSpisok
+		});
 	})
 
-	.ready(function() {
-	});
+	.on('click', '#money-expense ._next', function() {
+		var next = $(this);
+		if(next.hasClass('busy'))
+			return;
+		next.addClass('busy');
+		EXPENSE.op = 'expense_spisok';
+		EXPENSE.page = next.attr('val');
+		$.post(AJAX_MAIN, EXPENSE, function(res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
+		}, 'json');
+	})
+	.on('click', '#money-expense .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'расхода',
+			op:'expense_del',
+			func:expenseSpisok
+		});
+	})
+
+
+
+
+;

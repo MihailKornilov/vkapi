@@ -16,12 +16,14 @@
 #money-income #mi-l{width:200px;vertical-align:top}
 #money-income #mi-center{vertical-align:top}
 #money-income #mi-calendar{width:177px;vertical-align:top}
+#money-income #worker_id_select{margin-bottom:18px}
+#money-income #deleted_check{margin-top:15px}
+#money-income #deleted_only_check{margin-top:7px;display:none}
 #money-income #path{margin:10px}
 #money-income #summa{margin-bottom:7px}
-
 #money-income #spisok{margin:0 10px 10px}
-#money-income #deleted_check{margin-top:15px}
-
+#money-income .income-client{font-size:10px;color:#777}
+#money-income .income-client a{font-size:10px}
 #income-add-tab{border-spacing:10px}
 #income-add-tab .label{width:80px;text-align:right}
 #income-add-tab #prepay_check{margin:0 6px -3px 0}
@@ -29,25 +31,20 @@
 
 
 
-/* Итоговая сумма для списка платежей */
-/*
 
-.income ._spisok:not(._money){margin:10px 10px 15px}
-.income ._empty{margin:0}
-.income .right{width:160px}
-.income ._calendarFilter{margin-top:20px}
-.income  #del_check{margin-top:20px}
-
-.expense .headName{margin:15px 10px}
-.expense #spisok{margin:10px}
-.expense ._spisok{margin-top:5px}
-.expense .years{margin-top:20px}
-.expense #monthList div{display:block;margin-bottom:5px}
-.expense #monthList .sum{float:right}
+/* Расходы */
+#money-expense .headName{margin:15px 10px 5px}
+#money-expense #spisok{padding:10px}
+#money-expense ._spisok{margin-top:5px}
+#money-expense .years{margin-top:20px}
+#money-expense #mon-list div{display:block;margin-bottom:5px}
+#money-expense #mon-list .sum{float:right}
 #expense-add-tab{border-spacing:10px}
 #expense-add-tab .label{width:60px;text-align:right}
-#expense-add-tab #prim{width:250px}
+#expense-add-tab #about{width:250px}
 #expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
+
+/*
 
 
 .schet#report .headName{margin:15px 10px}

@@ -189,7 +189,7 @@ function client_data($v=array()) {// список клиентов
 		$spisok[$r['id']] = $r;
 	}
 
-	// фио и телефоны клиентов
+	// фио и телефоны клиентов (доверенных лиц)
 	$sql = "SELECT *
 			FROM `_client_person`
 			WHERE `client_id` IN (".implode(',', array_keys($spisok)).")
@@ -207,9 +207,9 @@ function client_data($v=array()) {// список клиентов
 		$regOk = FIND && (_findRegular($filter['find'], $r['fio'], 1) || _findRegular($filter['find'], $r['phone'], 1) || _findRegular($filter['find'], $r['adres'], 1));
 
 		if(!$k) {
-			$spisok[$r['client_id']]['fio'] = (FIND ? _findRegular($filter['find'], $r['fio']) : $r['fio']);
-			$spisok[$r['client_id']]['phone'] = (FIND ? _findRegular($filter['find'], $r['phone']) : $r['phone']);
-			$spisok[$r['client_id']]['adres'] = (FIND ? _findRegular($filter['find'], $r['adres'], 1) : $r['adres']);
+			$spisok[$r['client_id']]['fio'] =   FIND ? _findRegular($filter['find'], $r['fio']) : $r['fio'];
+			$spisok[$r['client_id']]['phone'] = FIND ? _findRegular($filter['find'], $r['phone']) : $r['phone'];
+			$spisok[$r['client_id']]['adres'] = FIND ? _findRegular($filter['find'], $r['adres'], 1) : $r['adres'];
 			$spisok[$r['client_id']]['post'] = $r['post'];
 		} else {
 			if($regOk) // дополнительные доверенные лица отображаются только при совпадении в быстром поиске
@@ -407,6 +407,12 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		define($prefix.'PHONE', $org ? $c['org_phone'] : $c['person'][0]['phone']);
 		define($prefix.'ADRES', $org ? $c['org_adres'] : $c['person'][0]['adres']);
 		define($prefix.'LINK', '<a href="'.URL.'&p=client&d=info&id='.$client_id.'">'.constant($prefix.'NAME').'</a>');
+		define($prefix.'GO',
+			'<a val="'.$c['id'].'" class="client-info-go'.($c['deleted'] ? ' deleted' : '').
+				(constant($prefix.'PHONE') ? _tooltip(constant($prefix.'PHONE'), -1, 'l') : '">').
+				constant($prefix.'NAME').
+			'</a>'
+		);
 	}
 
 	$send = array(
@@ -423,7 +429,8 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 
 		'phone' => constant($prefix.'PHONE'),
 		'adres' => constant($prefix.'ADRES'),
-		'link' => constant($prefix.'LINK')
+		'link' => constant($prefix.'LINK'),
+		'go' => constant($prefix.'GO')
 	);
 
 	return $i ? $send[$i] : $send;
@@ -445,17 +452,45 @@ function _clientValToList($arr) {//вставка данных клиентов в массив по client_id
 			  AND `ws_id`=".WS_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$client = array();
+	while($r = mysql_fetch_assoc($q))
+		$client[$r['id']] = $r;
+
+	// фио и телефоны клиентов (доверенных лиц)
+	$sql = "SELECT *
+			FROM `_client_person`
+			WHERE `client_id` IN (".implode(',', array_keys($ids)).")
+			ORDER BY `client_id`,`id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$k = 0;
+	$client_id = key($client);
 	while($r = mysql_fetch_assoc($q)) {
-		$c = _clientVal($r['id']);
+		if($client_id != $r['client_id']) {
+			$client_id = $r['client_id'];
+			$k = 0;
+		}
+
+		if(!$k) {
+			$client[$r['client_id']]['fio'] = $r['fio'];
+			$client[$r['client_id']]['phone'] = $r['phone'];
+		}
+		$k++;
+	}
+
+	foreach($client as $r) {
+		$org = $r['category_id'] != 1;
 		foreach($arrIds[$r['id']] as $id) {
+			$name = $org ? $r['org_name'] : $r['fio'];
+			$phone = $org ? $r['org_phone'] : $r['phone'];
 			$arr[$id] += array(
-				'client_name' => $c['name'],
-				'client_phone' => $c['phone'],
+				'client_name' => $name,
+				'client_phone' => $phone,
 				'client_balans' => round($r['balans'], 2),
-				'client_link' =>
-					'<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').
-						($c['phone'] ? _tooltip($c['phone'], -1, 'l') : '">').
-						$c['name'].
+				'client_link' => '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'"'.($r['deleted'] ? ' class="deleted"' : '').'>'.$name.'</a>',
+				'client_go' =>
+					'<a val="'.$r['id'].'" class="client-info-go'.($r['deleted'] ? ' deleted' : '').
+						($phone ? _tooltip($phone, -1, 'l') : '">').
+						$name.
 					'</a>'
 			);
 		}
@@ -501,10 +536,10 @@ function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клие
 			  ($withDeleted ? '' : " AND !`deleted`")."
 			  AND `id`=".$client_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
-}//_clientSql()
+}//_clientQuery()
 function _clientDopLink($name, $count) {
 	return '<a class="link">'.$name.($count ? ' <b class="count">'.$count.'</b>' : '').'</a>';
-}//{}
+}//_clientDopLink()
 function _clientInfo($client_id) {//вывод информации о клиенте
 	if(!$c = _clientQuery($client_id, 1))
 		return _noauth('Клиента не существует');
