@@ -36,8 +36,25 @@
 #setup_rule .lab{width:100px;text-align:right}
 #setup_rule .rtab input{width:230px}
 
-
 #RULE_APP_ENTER_check{margin:5px 0 10px 166px}
 #setup_rule #div-app-enter .label{width:150px;text-align:right}
 #setup_rule #td-rule-setup div{display:block;margin-bottom:5px;color:#555}
+
+
+
+/* Расчётные счета */
+#setup_invoice .name{width:110px;vertical-align:top}
+#setup_invoice .name div{font-weight:bold}
+#setup_invoice pre{color:#777;font-size:10px;margin:3px 7px}
+#setup_invoice .confirm{text-align:center}
+#setup_invoice .visible{width:130px}
+#setup_invoice .set{vertical-align:top}
+
+
+
+/* Категории расходов */
+#setup_expense td.name{cursor:move}
+#setup_expense .worker_use{width:80px;text-align:center}
+#setup_expense .count{width:55px;text-align:center}
+#setup_expense .ed{width:35px}
 

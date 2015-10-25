@@ -13,7 +13,8 @@ function _setupApp() {//применение настроек приложения и проверка на присутствие
 
 	// Проверка наличия обязательных настроек:
 	_setupValue('VERSION', 0, 'Версия скриптов и стилей');
-	_setupValue('G_VALUES', 0, 'Версия файла g_values.js');
+	_setupValue('GLOBAL_VALUES', 0, 'Версия файла global_values.js');
+	_setupValue('G_VALUES', 0, 'Версия файла G_values.js');
 }//_setupApp()
 function _setupValue($key, $v='', $about='') {//получение значения настройки и внесение, если её нет в таблице базы
 	if(defined($key))
@@ -62,7 +63,9 @@ function _setup($v, $sub=array()) {
 */
 	$page = array(
 		'my' => 'Мои настройки',
-		'worker' => 'Сотрудники'
+		'worker' => 'Сотрудники',
+		'invoice' => 'Расчётные счета',
+		'expense' => 'Категории расходов'
 	) + $v;
 
 	$sub += array(
@@ -243,3 +246,116 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 				  AND `key`='".$key."'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_workerRuleQuery()
+
+function setup_invoice() {
+	if(!RULE_SETUP_INVOICE)
+		return _norules('Настройки счетов или видов платежей');
+	return
+		'<div id="setup_invoice">'.
+			'<div class="headName">Управление счетами<a class="add">Новый счёт</a></div>'.
+			'<div class="spisok">'.setup_invoice_spisok().'</div>'.
+		'</div>';
+}//setup_invoice()
+function setup_invoice_spisok() {
+	$sql = "SELECT *
+			FROM `_money_invoice`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['worker'] = array();
+		if($r['visible'])
+			foreach(explode(',', $r['visible']) as $i)
+				$r['worker'][] = _viewer($i, 'name');
+		$spisok[$r['id']] = $r;
+	}
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Наименование'.
+			'<th>Подтверждение'.
+			'<th>Видимость<br />для сотрудников'.
+			'<th>';
+	foreach($spisok as $id => $r)
+		$send .=
+			'<tr val="'.$id.'">'.
+			'<td class="name">'.
+			'<div>'.$r['name'].'</div>'.
+			'<pre>'.$r['about'].'</pre>'.
+			'<td class="confirm">'.
+			($r['confirm_income'] ? 'поступления на счёт' : '').
+			($r['confirm_transfer'] ? ($r['confirm_income'] ? ',<br />' : '').'переводы' : '').
+			'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
+			'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
+			'<td class="visible">'.
+			implode('<br />', $r['worker']).
+			'<input type="hidden" class="visible_id" value="'.(empty($r['worker']) ? 0 : $r['visible']).'" />'.
+			'<td class="set">'.
+			'<div class="img_edit"></div>';
+	//'<div class="img_del"></div>'
+	$send .= '</table>';
+	return $send;
+}//setup_invoice_spisok()
+
+function setup_expense() {
+	return
+		'<div id="setup_expense">'.
+			'<div class="headName">Категории расходов организации<a class="add">Новая категория</a></div>'.
+			'<div id="spisok">'.setup_expense_spisok().'</div>'.
+		'</div>';
+}//setup_expense()
+function setup_expense_spisok() {
+	$sql = "SELECT *,
+				0 `count`
+			FROM `_money_expense_category`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$sql = "SELECT
+				DISTINCT `category_id`,
+				COUNT(`id`) `count`
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `category_id`
+			GROUP BY `category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['count'] = $r['count'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="worker_use">Показывать<br />список<br />сотрудников'.
+				'<th class="count">Кол-во<br />записей'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_money_expense_category">';
+
+	foreach($spisok as $r)
+		$send .='<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="worker_use">'.($r['worker_use'] ? 'да' : '').
+					'<td class="count">'.($r['count'] ? $r['count'] : '').
+					'<td class="ed">'.
+						'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
+						(!$r['count'] ? '<div class="img_del"></div>' : '').
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}//setup_expense_spisok()

@@ -305,10 +305,6 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 					'def' => 0,
 					'admin' => 1
 				),
-				'RULES_INVOICE' => array(	// Счета
-					'def' => 0,
-					'admin' => 1
-				),
 				'RULES_ZAYAVRASHOD' => array(// Расходы по заявке
 					'def' => 0,
 					'admin' => 1

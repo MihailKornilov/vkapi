@@ -283,54 +283,153 @@ switch(@$_POST['op']) {
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
-		$expense_id = _num($_POST['expense_id']);
-		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
-		if(!$expense_id && empty($prim))
+		//обязательно должна быть указана категория, либо описание расхода
+		$category_id = _num($_POST['category_id']);
+		$about = _txt($_POST['about']);
+		if(!$category_id && empty($about))
 			jsonError();
 
+		//
 		$worker_id = _num($_POST['worker_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
-		if($expense_id == 1 && (!$worker_id || !$year || !$mon))
+		if($category_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
-		$sql = "INSERT INTO `money` (
+		$mon = !$year || !$mon ? '0000-00-00' : $year.'-'.$mon.'-01';
+
+		$sql = "INSERT INTO `_money_expense` (
+					`app_id`,
 					`ws_id`,
 					`sum`,
-					`prim`,
+					`about`,
 					`invoice_id`,
-					`expense_id`,
+					`category_id`,
 					`worker_id`,
-					`year`,
 					`mon`,
 					`viewer_id_add`
 				) VALUES (
+					".APP_ID.",
 					".WS_ID.",
-					-".$sum.",
-					'".addslashes($prim)."',
+					".$sum.",
+					'".addslashes($about)."',
 					".$invoice_id.",
-					".$expense_id.",
+					".$category_id.",
 					".$worker_id.",
-					".$year.",
-					".$mon.",
+					'".$mon."',
 					".VIEWER_ID."
 				)";
-		query($sql);
-
+		query($sql, GLOBAL_MYSQL_CONNECT);
+/*
 		invoice_history_insert(array(
 			'action' => 6,
 			'table' => 'money',
 			'id' => mysql_insert_id()
 		));
-
-		history_insert(array(
-			'type' => 21,
-			'value' => abs($sum),
-			'value1' => $prim,
-			'value2' => $expense_id ? $expense_id : '',
-			'value3' => $worker_id ? $worker_id : ''
+*/
+		_history(array(
+			'type_id' => 21,
+			'invoice_id' => $invoice_id,
+			'worker_id' => $worker_id,
+			'v1' => $sum,
+			'v2' => $about,
+			'v3' => $category_id
 		));
+
 		jsonSuccess();
+		break;
+	case 'expense_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		//обязательно должна быть указана категория, либо описание расхода
+		$category_id = _num($_POST['category_id']);
+		$about = _txt($_POST['about']);
+		if(!$category_id && empty($about))
+			jsonError();
+
+		//
+		$worker_id = _num($_POST['worker_id']);
+		$mon = _num($_POST['mon']);
+		$year = _num($_POST['year']);
+		if($category_id == 1 && (!$worker_id || !$year || !$mon))
+			jsonError();
+
+		$mon = !$year || !$mon ? '0000-00-00' : $year.'-'.$mon.'-01';
+
+		$sql = "SELECT *
+				FROM `_money_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_expense`
+				SET `about`='".addslashes($about)."',
+					`category_id`=".$category_id.",
+					`worker_id`=".$worker_id.",
+					`mon`='".$mon."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+/*
+		invoice_history_insert(array(
+			'action' => 6,
+			'table' => 'money',
+			'id' => mysql_insert_id()
+		));
+*/
+
+		$mon_old = _monthDef(substr($r['mon'], 5, 2)).' '.substr($r['mon'], 0, 4);
+		$mon_new = _monthDef(substr($mon, 5, 2)).' '.$year;
+
+		$changes =
+			_historyChange('Категория', $r['category_id'] ? _expense($r['category_id']) : '', $category_id ? _expense($category_id) : '').
+			_historyChange('Описание', $r['about'], $about).
+			_historyChange('Сотрудник', $r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '', $worker_id ? _viewer($worker_id, 'viewer_name') : '').
+			_historyChange('Месяц', $mon_old, $mon_new);
+
+		if($changes)
+			_history(array(
+				'type_id' => 23,
+				'invoice_id' => $r['invoice_id'],
+				'worker_id' => $worker_id,
+				'v1' => $sum,
+				'v2' => '<table>'.$changes.'</table>',
+				'v3' => _invoice($r['invoice_id'])
+			));
+
+		jsonSuccess();
+		break;
+	case 'expense_load':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT
+					`category_id`,
+					`invoice_id`,
+					`worker_id`,
+					`sum`,
+					`about`,
+					`mon`
+				FROM `_money_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$r['sum'] = round($r['sum'], 2);
+		$r['about'] = utf8($r['about']);
+		$r['year'] = intval(substr($r['mon'], 0, 4));
+		$r['mon'] = intval(substr($r['mon'], 5, 2));
+		$send['arr'] = $r;
+
+		jsonSuccess($send);
 		break;
 	case 'expense_del':
 		if(!$id = _num($_POST['id']))

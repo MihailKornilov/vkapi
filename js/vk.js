@@ -315,10 +315,10 @@ var VK_SCROLL = 0,
 		$('#_wait')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
-	_dialog = function(obj) {
+	_dialog = function(o) {
 		var t = $(this),
 			id = t.attr('id');
-		obj = $.extend({
+		o = $.extend({
 			width:360,
 			top:100,
 			padding:10,//отступ для content
@@ -329,20 +329,20 @@ var VK_SCROLL = 0,
 			cancel:function() {},
 			butSubmit:'Внести',
 			butCancel:'Отмена'
-		}, obj);
+		}, o);
 
-		if(obj.load)
-			obj.content = '<div class="load _busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
+		if(o.load)
+			o.content = '<div class="load _busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
 		var frameNum = $('.dFrame').length,
 			html = '<div class="_dialog">' +
-			'<div class="head"><div><A class="img_del"></A>' + obj.head + '</div></div>' +
+			'<div class="head"><div><A class="img_del"></A>' + o.head + '</div></div>' +
 			'<div class="dcntr">' +
 				'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
-				'<div class="content"' + (obj.padding ? ' style="padding:' + obj.padding + 'px"' : '') + '>' + obj.content + '</div>' +
+				'<div class="content"' + (o.padding ? ' style="padding:' + o.padding + 'px"' : '') + '>' + o.content + '</div>' +
 			'</div>' +
 			'<div class="bottom">' +
-				'<div class="vkButton' + (obj.butSubmit ? '' : ' dn') + '"><button>' + obj.butSubmit + '</button></div>' +
-				(obj.butCancel ? '<div class="vkCancel"><button>' + obj.butCancel + '</button></div>' : '') +
+				'<div class="vkButton' + (o.butSubmit ? '' : ' dn') + '"><button>' + o.butSubmit + '</button></div>' +
+				(o.butCancel ? '<div class="vkCancel"><button>' + o.butCancel + '</button></div>' : '') +
 			'</div>' +
 		'</div>';
 
@@ -354,19 +354,21 @@ var VK_SCROLL = 0,
 			content = dialog.find('.content'),
 			bottom = dialog.find('.bottom'),
 			butSubmit = bottom.find('.vkButton'),
-			w2 = Math.round(obj.width / 2); // ширина/2. Для определения положения по центру
+			w2 = Math.round(o.width / 2); // ширина/2. Для определения положения по центру
 		dialog.find('.head .img_del').click(dialogClose);
-		butSubmit.find('button').click(obj.submit);
+		butSubmit.find('button').click(function() {
+			o.submit();
+		});
 		bottom.find('.vkCancel').click(function() {
-			obj.cancel();
+			o.cancel();
 			dialogClose();
 		});
 
 		_backfon();
 
 		dialog.css({
-			width:obj.width + 'px',
-			top:$(window).scrollTop() + VK_SCROLL + obj.top + 'px',
+			width:o.width + 'px',
+			top:$(window).scrollTop() + VK_SCROLL + o.top + 'px',
 			left:313 - w2 + 'px',
 			'z-index':ZINDEX + 5
 		});
@@ -424,6 +426,9 @@ var VK_SCROLL = 0,
 			butSubmit:function(name) {
 				butSubmit[(name ? 'remove' : 'add') + 'Class']('dn');
 				butSubmit.find('button').html(name);
+			},
+			submit:function(func) {
+				o.submit = func;
 			}
 		};
 	},
@@ -435,10 +440,9 @@ var VK_SCROLL = 0,
 			func:function() {}  //функция, выполняемая после успешного удаления
 		}, o);
 		var dialog = _dialog({
-				width:300,
 				head:'Удаление ' + o.head,
 				padding:50,
-				content:'<center class="red">Подтвердите удаление.</center>',
+				content:'<center class="red">Подтвердите удаление<br /><b>' + o.head + '</b>.</center>',
 				butSubmit:'Удалить',
 				submit:submit
 			});
@@ -452,7 +456,7 @@ var VK_SCROLL = 0,
 				if(res.success) {
 					dialog.close();
 					_msg('Удалено');
-					o.func();
+					o.func(res);
 				} else
 					dialog.abort();
 			}, 'json');
@@ -467,6 +471,7 @@ var VK_SCROLL = 0,
 	},
 	_parent = function(t, tag) {//поиск нужного тега методом parent()
 		tag = tag || 'TR';
+		console.log(t);
 		while(t[0].tagName != tag)
 			t = t.parent();
 		return t;

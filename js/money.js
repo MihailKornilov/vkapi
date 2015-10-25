@@ -36,91 +36,107 @@ var incomeLoad = function() {
 		}, 'json');
 	},
 
+	expenseTab = function(dialog, arr) {//таблица для внесения или редактирования расхода
+		arr = $.extend({
+			id:0,
+			category_id:0,
+			invoice_id:INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0,
+			worker_id:0,
+			sum:'',
+			about:'',
+			mon:(new Date).getMonth() + 1,
+			year:(new Date).getFullYear()
+		}, arr);
+		var html =
+			'<table id="expense-add-tab">' +
+				'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" value="' + arr.category_id + '" />' +
+						'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
+				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id-add" value="' + arr.worker_id + '" />' +
+				'<tr class="tr-work dn"><td class="label">Месяц:' +
+					'<td><input type="hidden" id="tabmon" value="' + arr.mon + '" /> ' +
+						'<input type="hidden" id="tabyear" value="' + arr.year + '" />' +
+				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + arr.about + '" />' +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + arr.invoice_id + '" />' +
+				'<tr><td class="label">Сумма:' +
+					'<td><input type="text" id="sum" class="money" value="' + arr.sum + '"' + (arr.id ? ' disabled' : '') + ' /> руб.' +
+			'</table>';
+		dialog.content.html(html);
+		dialog.submit(submit);
+
+		$('#category_id-add')._select({
+			width:200,
+			title0:'Не указана',
+			spisok:EXPENSE_SPISOK,
+			func:function(id) {
+				$('#worker_id')._select(0);
+				$('.tr-work')[(EXPENSE_WORKER_USE[id] ? 'remove' : 'add') + 'Class']('dn');
+			}
+		});
+		$('.tr-work')[(EXPENSE_WORKER_USE[arr.category_id] ? 'remove' : 'add') + 'Class']('dn');
+		$('#worker_id-add')._select({
+			width:200,
+			title0:'Не выбран',
+			spisok:_toSpisok(WORKER_ASS)
+		});
+		$('#about').focus();
+		$('#invoice_id-add')._select({
+			width:200,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			},
+			disabled:arr.id
+		});
+		$('#tabmon')._select({
+			width:80,
+			spisok:_toSpisok(MONTH_DEF)
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:YEAR_SPISOK
+		});
+
+		function submit() {
+			var send = {
+				id:arr.id,
+				op:arr.id ? 'expense_edit' : 'expense_add',
+				category_id:_num($('#category_id-add').val()),
+				worker_id:$('#worker_id-add').val(),
+				about:$('#about').val(),
+				invoice_id:_num($('#invoice_id-add').val()),
+				sum:_cena($('#sum').val()),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.about && !send.category_id) {
+				dialog.err('Выберите категорию или укажите описание');
+				$('#about').focus();
+			} else if(!send.invoice_id)
+				dialog.err('Укажите с какого счёта производится оплата');
+			else if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function (res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Выполнено');
+						expenseSpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
 	expenseLoad = function() {
 		$('.add').click(function() {
-			console.log(INVOICE_SPISOK);
-			var html =
-					'<table id="expense-add-tab">' +
-					'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" />' +
-					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
-					'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id-add" />' +
-					'<tr class="tr-work dn"><td class="label">Месяц:' +
-					'<td><input type="hidden" id="tabmon" value="' + ((new Date).getMonth() + 1) + '" /> ' +
-					'<input type="hidden" id="tabyear" value="' + (new Date).getFullYear() + '" />' +
-					'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="100">' +
-					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
-					'</table>',
-				dialog = _dialog({
-					width:380,
-					head:'Внесение расхода',
-					content:html,
-					submit:submit
-				});
-
-			$('#category_id-add')._select({
-				width:200,
-				title0:'Не указана',
-				spisok:EXPENSE_SPISOK,
-				func:function(id) {
-					$('#worker_id')._select(0);
-					$('.tr-work')[(EXPENSE_WORKER[id] ? 'remove' : 'add') + 'Class']('dn');
-				}
+			var dialog = _dialog({
+				width:380,
+				head:'Внесение расхода'
 			});
-			$('#worker_id-add')._select({
-				width:200,
-				title0:'Не выбран',
-				spisok:_toSpisok(WORKER_ASS)
-			});
-			$('#about').focus();
-			$('#invoice_id-add')._select({
-				width:200,
-				title0:'Не выбран',
-				spisok:INVOICE_SPISOK,
-				func:function() {
-					$('#sum').focus();
-				}
-			});
-			$('#tabmon')._select({
-				width:80,
-				spisok:_toSpisok(MONTH_DEF)
-			});
-			$('#tabyear')._select({
-				width:60,
-				spisok:YEAR_SPISOK
-			});
-
-			function submit() {
-				var send = {
-					op:'expense_add',
-					category_id:_num($('#category_id-add').val()),
-					worker_id:$('#worker_id-add').val(),
-					about:$('#about').val(),
-					invoice_id:_num($('#invoice_id-add').val()),
-					sum:_cena($('#sum').val()),
-					mon:$('#tabmon').val(),
-					year:$('#tabyear').val()
-				};
-				if(!send.about && !send.category_id) {
-					dialog.err('Выберите категорию или укажите описание.');
-					$('#about').focus();
-				} else if(!send.invoice_id)
-					dialog.err('Укажите с какого счёта производится оплата.');
-				else if(!send.sum) {
-					dialog.err('Некорректно указана сумма.');
-					$('#sum').focus();
-				} else {
-					dialog.process();
-					$.post(AJAX_MAIN, send, function (res) {
-						if(res.success) {
-							dialog.close();
-							_msg('Новый расход внесён');
-							expenseSpisok();
-						} else
-							dialog.abort();
-					}, 'json');
-				}
-			}
+		expenseTab(dialog);
 		});
 		$('#invoice_id')._select({
 			width:140,
@@ -429,6 +445,37 @@ $(document)
 			else
 				next.removeClass('busy');
 		}, 'json');
+	})
+	.on('click', '#money-expense .img_edit', function() {
+		var dialog = _dialog({
+				width:380,
+				head:'Редактирование расхода',
+				load:1,
+				butSubmit:'Сохранить',
+				submit:submit
+			}),
+			send = {
+				op:'expense_load',
+				id:$(this).attr('val')
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				res.arr.id = send.id;
+				send = expenseTab(dialog, res.arr);
+			} else
+				dialog.loadError();
+		}, 'json');
+		function submit() {
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Удалено');
+					o.func(res);
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 	.on('click', '#money-expense .img_del', function() {
 		_dialogDel({

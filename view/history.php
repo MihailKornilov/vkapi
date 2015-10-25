@@ -121,7 +121,8 @@ function _history_spisok($v=array()) {
 
 	$history = _viewerValToList($history);
 	$history = _clientValToList($history);
-	$history = _zayavValToList($history);
+	if(function_exists('_zayavValToList'))
+		$history = _zayavValToList($history);
 	$history = _history_types($history);
 
 	$txt = '';
@@ -190,6 +191,7 @@ function _history_types($history) {//перевод type_id в текст
 				$txt = str_replace('{'.$v.'}', $r[$v], $txt);
 			if(strpos($txt, '#'.$v.'#') !== false)
 				$txt = str_replace('#'.$v.'#', '<div class="changes">'.$r[$v].'</div>', $txt);
+			$txt = $txt = str_replace("\n", '<br />', $txt);
 		}
 		$history[$id]['txt'] = $txt;
 	}

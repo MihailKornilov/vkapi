@@ -257,6 +257,41 @@ function income_unit($r) {
 			: '');
 }//income_unit()
 
+
+function _expense($id=0, $i='name') {//Список категорий расходов
+		$key = CACHE_PREFIX.'expense'.WS_ID;
+		$arr = xcache_get($key);
+		if(empty($arr)) {
+			$sql = "SELECT * FROM `_money_expense_category` ORDER BY `sort`";
+			$q = query($sql, GLOBAL_MYSQL_CONNECT);
+			while($r = mysql_fetch_assoc($q))
+				$arr[$r['id']] = $r;
+			xcache_set($key, $arr, 86400);
+		}
+
+	//все категории
+	if(!$id)
+		return $arr;
+
+	//некорректный id категории
+	if(!_num($id))
+		die('Error: expense category_id <b>'.$id.'</b> not correct');
+
+	//неизвестный id категории
+	if(!isset($arr[$id]))
+		die('Error: no expense category_id <b>'.$id.'</b> in _invoice');
+
+	//массив всех категорий
+	if($i == 'all')
+		return $arr[$id];
+
+	//неизвестный ключ категории
+	if(!isset($arr[$id][$i]))
+		return '<span class="red">неизвестный ключ категории расхода: <b>'.$i.'</b></span>';
+
+	//возврат данных конкретной категории расхода
+	return $arr[$id][$i];
+}//_expense()
 function expense() {
 	$data = expense_spisok();
 	return
@@ -402,9 +437,9 @@ function expense_spisok($v=array()) {
 		'</div>'.
 		'<table class="_spisok">'.
 			'<tr><th>Сумма'.
-			'<th>Описание'.
-			'<th>Дата'.
-			'<th>';
+				'<th>Описание'.
+				'<th>Дата'.
+				'<th>';
 
 	foreach($expense as $r)
 		$send['spisok'] .=
@@ -757,49 +792,8 @@ function report_schet_spisok($v=array()) {
 	return $send;
 }//report_schet_spisok()
 
-function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
-	if($start === false)
-		$start = _invoice($invoice_id, 'start');
-	$income = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `money` WHERE !`deleted` AND `ws_id`=".WS_ID." AND `invoice_id`=".$invoice_id);
-	$from = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_from`=".$invoice_id);
-	$to = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_to`=".$invoice_id);
-	return round($income - $start - $from + $to, 2);
-}//_invoiceBalans()
-function invoice() {
-	return
-		'<div class="headName">'.
-		'Счета'.
-		'<a class="add transfer">Перевод между счетами</a>'.
-		'<span>::</span>'.
-		'<a href="'.URL.'&p=setup&d=invoice" class="add">Управление счетами</a>'.
-		'</div>'.
-		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
-		(RULES_HISTORYTRANSFER ? '<div class="headName">История переводов</div>' : '').
-		'<div class="transfer-spisok">'.transfer_spisok().'</div>';
-}//invoice()
-function invoice_spisok() {
-	$invoice = _invoice();
-	if(empty($invoice))
-		return 'Счета не определены.';
 
-	$send = '<table class="_spisok">';
-	foreach($invoice as $r)
-		$send .= '<tr>'.
-			'<td class="name">'.
-			'<b>'.$r['name'].'</b>'.
-			'<div class="about">'.$r['about'].'</div>'.
-			($r['start'] != -1 ?
-				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
-				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
-				: '').
-			//(VIEWER_ADMIN || $r['start'] != -1 ?
-			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
-			(VIEWER_ADMIN && $r['start'] != -1 ?
-				'<td><a class="invoice_reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
-				: '');
-	$send .= '</table>';
-	return $send;
-}//invoice_spisok()
+
 function transfer_spisok($v=array()) {
 	if(!RULES_HISTORYTRANSFER)
 		return  '';
@@ -1076,3 +1070,69 @@ function _invoice($id=0, $i='name') {//Список счетов
 
 	return $arr[$id][$i];
 }//_invoice()
+function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
+	if($start === false)
+		$start = _invoice($invoice_id, 'start');
+
+	//Платежи
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `invoice_id`=".$invoice_id;
+	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	//Расходы
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `invoice_id`=".$invoice_id;
+	$expense = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+
+
+
+//	$from = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_from`=".$invoice_id);
+//	$to = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_to`=".$invoice_id);
+	return round($income - $expense - $start, 2);
+}//_invoiceBalans()
+function invoice() {
+	return
+		'<div id="money-invoice">'.
+			'<div class="headName">'.
+				'Расчётные счета'.
+				'<a class="add" id="transfer">Перевод между счетами</a>'.
+				'<span>::</span>'.
+				'<a href="'.URL.'&p=setup&d=invoice" class="add">Управление счетами</a>'.
+			'</div>'.
+			'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
+//			(RULES_HISTORYTRANSFER ? '<div class="headName">История переводов</div>' : '').
+//			'<div class="transfer-spisok">'.transfer_spisok().'</div>'.
+		'</div>';
+}//invoice()
+function invoice_spisok() {
+	$invoice = _invoice();
+	if(empty($invoice))
+		return 'Счета не определены.';
+
+	$send = '<table class="_spisok">';
+	foreach($invoice as $r)
+		$send .= '<tr>'.
+			'<td class="name">'.
+			'<b>'.$r['name'].'</b>'.
+			'<div class="about">'.$r['about'].'</div>'.
+			($r['start'] != -1 ?
+				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
+				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
+				: '').
+			//(VIEWER_ADMIN || $r['start'] != -1 ?
+			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
+			(VIEWER_ADMIN && $r['start'] != -1 ?
+				'<td><a class="invoice_reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
+				: '');
+	$send .= '</table>';
+	return $send;
+}//invoice_spisok()

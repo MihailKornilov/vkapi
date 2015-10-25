@@ -27,6 +27,7 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
 
 
 		//сброс времени действия введённого пинкода
@@ -130,6 +131,8 @@ switch(@$_POST['op']) {
 
 		}
 		_cacheClear();
+		_globalValuesJS();
+
 		jsonSuccess();
 		break;
 

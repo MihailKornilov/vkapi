@@ -247,4 +247,113 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'expense_category_add':
+		$name = _txt($_POST['name']);
+		$worker_use = _bool($_POST['worker_use']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_money_expense_category` (
+					`app_id`,
+					`ws_id`,
+					`name`,
+					`worker_use`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					'".addslashes($name)."',
+					".$worker_use.",
+					"._maxSql('_money_expense_category', 'sort', GLOBAL_MYSQL_CONNECT)."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1019,
+			'v1' => $name
+		));
+
+		$send['html'] = utf8(setup_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'expense_category_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$worker_use = _bool($_POST['worker_use']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_expense_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_expense_category`
+				SET `name`='".addslashes($name)."',
+					`worker_use`=".$worker_use."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
+		_globalValuesJS();
+
+		$changes =
+			_historyChange('Наименование', $r['name'], $name).
+			_historyChange('Список сотрудников', $r['worker_use'] ? 'да' : 'нет', $worker_use ? 'да' : 'нет');
+
+		if($changes)
+			_history(array(
+				'type_id' => 1021,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'expense_category_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_expense_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_money_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `category_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_money_expense_category` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1020,
+			'v1' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_expense_spisok());
+		jsonSuccess($send);
+		break;
 }

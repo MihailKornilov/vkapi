@@ -179,7 +179,7 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.$min.'.js?'.VERSION.'"></script>'.
 
 		//ѕеременные _global дл€ всех приложений
-		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
 
 (PIN_ENTER ? '' :
 
@@ -545,13 +545,13 @@ function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список дл€ _select 
 		);
 	return $send;
 }//query_selArray()
-function query_ptpJson($sql, $resource_id=MYSQL_CONNECT) {//јссоциативный массив
+function query_assJson($sql, $resource_id=MYSQL_CONNECT) {//јссоциативный массив js
 	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
-}//query_ptpJson()
+}//query_assJson()
 function query_ids($sql, $resource_id=MYSQL_CONNECT) {//—писок идентификаторов
 	$q = query($sql, $resource_id);
 	$send = array();
@@ -764,6 +764,7 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоци
 	return '{'.implode(',', $v).'}';
 }//Gvalues_obj()
 function _globalValuesJS() {//—оставление файла global_values.js, используемый во всех приложени€х
+	//одинаковые дл€ всех приложений:
 	$save =
 		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'COUNTRY_SPISOK=['.
@@ -803,20 +804,43 @@ function _globalValuesJS() {//—оставление файла global_values.js, используемый в
 				'{uid:123,title:"—амара"},'.
 				'{uid:125,title:"—аратов"},'.
 				'{uid:151,title:"”фа"},'.
-				'{uid:158,title:"„ел€бинск"}],'.
+				'{uid:158,title:"„ел€бинск"}];';
+	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
+	fwrite($fp, $save);
+	fclose($fp);
+
+	//дл€ конкретного приложени€
+	$save = 'var'.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_invoice`
 											  WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
 											  ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
-		"\n".'WORKER_ASS='.query_ptpJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
+		"\n".'WORKER_ASS='.query_assJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
 											 FROM `_vkuser`
-											 WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
-											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).';';
+											 WHERE `app_id`=".APP_ID."
+											   AND `ws_id`=".WS_ID."
+											   AND `worker`
+											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
+										   FROM `_money_expense_category`
+										   WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
+										   ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'EXPENSE_WORKER_USE='.query_assJson("SELECT `id`,1
+												  FROM `_money_expense_category`
+												  WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND `worker_use`", GLOBAL_MYSQL_CONNECT).';';
 
-	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
+	$fp = fopen(APP_PATH.'/js/app_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
+
+
+	//обновление значени€ версии файлов global_values.js и app_values.js
+	$sql = "UPDATE `_setup`
+			SET `value`=`value`+1
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='GLOBAL_VALUES'";
+	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_globalValuesJS()
 
 

@@ -521,31 +521,14 @@ $(document)
 		}
 	})
 	.on('click', '#client-info .person-del', function() {
-		var t = $(this),
-			dialog = _dialog({
-				top:90,
-				width:300,
-				head:'Удаление доверенного лица',
-				content:'<center><br /><span class="red">Подтвердите удаление<br />доверенного лица.</span><br /><br /></center>',
-				butSubmit:'Удалить',
-				submit:submit
-			});
-		function submit() {
-			var send = {
-				op:'client_person_del',
-				id:t.attr('val')
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#person-spisok').html(res.html);
-					CLIENT.person = res.array;
-					dialog.close();
-					_msg('Удалено!');
-				} else
-					dialog.abort();
-			}, 'json');
-		}
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'доверенного лица',
+			op:'client_person_del',
+			func:function(res) {
+				$('#person-spisok').html(res.html);
+				CLIENT.person = res.array;			}
+		});
 	})
 
 	.ready(function() {
@@ -596,29 +579,14 @@ $(document)
 
 			$('#client-edit').click(clientEdit);
 			$('#client-del').click(function() {
-				var dialog = _dialog({
-						top:90,
-						width:300,
-						head:'Удаление клиента',
-						content:'<center><b>Подтвердите удаление клиента.</b></center>',
-						butSubmit:'Удалить',
-						submit:submit
-					});
-				function submit() {
-					var send = {
-						op:'client_del',
-						id:CLIENT.id
-					};
-					dialog.process();
-					$.post(AJAX_MAIN, send, function(res) {
-						if(res.success) {
-							dialog.close();
-							_msg('Клиент удалён');
-							location.href = URL + '&p=client';
-						} else
-							dialog.abort();
-					}, 'json');
-				}
+				_dialogDel({
+					id:CLIENT.id,
+					head:'клиента',
+					op:'client_del',
+					func:function() {
+						location.href = URL + '&p=client';
+					}
+				});
 			});
 /*
 

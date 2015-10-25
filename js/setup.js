@@ -11,6 +11,254 @@ var setupRuleCheck = function(v, id) {
 };
 
 $(document)
+	.on('click', '#setup_invoice .add', function() {
+		var t = $(this),
+			html = '<table id="setup-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" />' +
+				'<tr><td class="label topi">Описание:<td><textarea id="about"></textarea>' +
+				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" />' +
+				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" />' +
+				'<tr><td class="label topi">Видимость для сотрудников:<td><input type="hidden" id="visible" />' +
+				'</table>',
+			dialog = _dialog({
+				top:40,
+				width:430,
+				head:'Добавление нового счёта',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#about').autosize();
+		$('#income')._check();
+		$('#income_check').vkHint({
+			msg:'Возможность требовать подтверждение поступления средств на счёт',
+			width:180,
+			top:-84,
+			left:-85,
+			delayShow:500
+		});
+		$('#transfer')._check();
+		$('#visible')._select({
+			width:218,
+			title0:'Сотрудники не выбраны',
+			multiselect:1,
+			spisok:_toSpisok(WORKER_ASS)
+		});
+		function submit() {
+			var send = {
+				op:'setup_invoice_add',
+				name:$('#name').val(),
+				about:$('#about').val(),
+				income:$('#income').val(),
+				transfer:$('#transfer').val(),
+				visible:$('#visible').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else {
+						dialog.abort();
+						dialog.err(res.text);
+					}
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_invoice .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name div').html(),
+			about = t.find('.name pre').html(),
+			income = t.find('.confirm_income').val(),
+			transfer = t.find('.confirm_transfer').val(),
+			visible = t.find('.visible_id').val(),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + name + '" />' +
+				'<tr><td class="label topi">Описание:<td><textarea id="about">' + about + '</textarea>' +
+				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" value="' + income + '" />' +
+				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" value="' + transfer + '" />' +
+				'<tr><td class="label topi">Видимость<br />для сотрудников:<td><input type="hidden" id="visible" value="' + visible + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:480,
+				head:'Редактирование данных счёта',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#about').autosize();
+		$('#income')._check();
+		$('#income_check').vkHint({
+			msg:'Возможность требовать подтверждение поступления средств на счёт',
+			width:180,
+			top:-84,
+			left:-85,
+			delayShow:500
+		});
+		$('#transfer')._check();
+		$('#visible')._select({
+			width:218,
+			multiselect:1,
+			spisok:WORKER_SPISOK
+		});
+
+		function submit() {
+			var send = {
+				op:'setup_invoice_edit',
+				id:id,
+				name:$('#name').val(),
+				about:$('#about').val(),
+				income:$('#income').val(),
+				transfer:$('#transfer').val(),
+				visible:$('#visible').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+					} else {
+						dialog.abort();
+						dialog.err(res.text);
+					}
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_invoice .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление счёта',
+				content:'<center><b>Подтвердите удаление счёта.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'TR')
+				t = t.parent();
+			var send = {
+				op:'setup_invoice_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('.spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
+	.on('click', '#setup_expense .add', function() {
+		var t = $(this),
+			html = '<table id="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" />' +
+				'<tr><td class="label r">Список сотрудников:<td><input id="worker_use" type="hidden" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Добавление новой категории расхода организации',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#worker_use')._check();
+		function submit() {
+			var send = {
+				op:'expense_category_add',
+				name:$('#name').val(),
+				worker_use:$('#worker_use').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_expense .img_edit', function() {
+		var t = _parent($(this), 'DD'),
+			id = t.attr('val'),
+			name = t.find('.name').html(),
+			worker_use = t.find('.worker_use').html() ? 1 : 0,
+			html = '<table id="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + name + '" />' +
+				'<tr><td class="label r">Список сотрудников:<td><input id="worker_use" type="hidden" value="' + worker_use + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Редактирование категории расхода организации',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#worker_use')._check();
+		function submit() {
+			var send = {
+				op:'expense_category_edit',
+				id:id,
+				name:$('#name').val(),
+				worker_use:$('#worker_use').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_expense .img_del', function() {
+		_dialogDel({
+			id:_parent($(this), 'DD').attr('val'),
+			head:'категории расходов организации',
+			op:'expense_category_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
+				sortable();
+			}
+		});
+	})
 
 	.ready(function() {
 		if($('#setup_my').length) {

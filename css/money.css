@@ -44,7 +44,30 @@
 #expense-add-tab #about{width:250px}
 #expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
 
+
+
+/* Расчётные счета */
+#money-invoice .headName{margin:15px 10px}
+#money-invoice .headName span{display:inline-block;float:right;margin:0 6px}
+#money-invoice #transfer{color:#d33}
+
+#invoice-spisok{margin:10px 10px 25px}
+#invoice-spisok .name{width:250px}
+#invoice-spisok .about{color:#777;font-size:10px;margin:3px 7px}
+#invoice-spisok .balans{text-align:right}
+#invoice-spisok .img_note{margin-bottom:-2px}
+#invoice-spisok .invoice_set{display:block;text-align:center}
+
 /*
+.invoice .transfer-spisok{margin:10px}
+.invoice-history{margin-top:10px}
+.invoice-history .action{width:80px}
+.invoice-history .balans{width:70px;text-align:right}
+
+
+
+
+
 
 
 .schet#report .headName{margin:15px 10px}
@@ -53,20 +76,6 @@
 .schet#report #find{margin-top:20px}
 .schet#report #paid_check{margin-top:20px}
 
-
-.invoice#report .headName{margin:15px 10px}
-.invoice#report .headName span{display:inline-block;float:right;margin:0 6px}
-.invoice#report .transfer{color:#d33}
-.invoice #invoice-spisok{margin:10px 10px 25px}
-.invoice #invoice-spisok .name{width:150px}
-.invoice #invoice-spisok .about{color:#777;font-size:10px;margin:3px 7px}
-.invoice .balans{text-align:right}
-.invoice .img_note{margin-bottom:-2px}
-.invoice .invoice_set{display:block;text-align:center}
-.invoice .transfer-spisok{margin:10px}
-.invoice-history{margin-top:10px}
-.invoice-history .action{width:80px}
-.invoice-history .balans{width:70px;text-align:right}
 
 .salary#report .headName{margin:10px}
 .salary#report .headName em{font-size:12px;font-weight:bold}
