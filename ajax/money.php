@@ -189,6 +189,13 @@ switch(@$_POST['op']) {
 			)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 1,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum
+		));
+
 		jsonSuccess();
 		break;
 /*
@@ -259,6 +266,14 @@ switch(@$_POST['op']) {
 		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
 */
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 2,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum']
+		));
+
 		_history(array(
 			'type_id' => 9,
 			'client_id' => $r['client_id'],
@@ -468,5 +483,81 @@ switch(@$_POST['op']) {
 			'v2' => $r['about']
 		));
 		jsonSuccess();
+		break;
+
+	case 'invoice_set':
+		if(!RULE_SETUP_INVOICE)
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+		if(!preg_match(REGEXP_CENA, $_POST['sum']))
+			jsonError();
+
+		$sum = _cena($_POST['sum']);
+
+		$sql = "SELECT *
+				FROM `_money_invoice`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$invoice_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice`
+				SET `start`="._invoiceBalans($invoice_id, $sum)."
+				WHERE `id`=".$invoice_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 5,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum
+		));
+
+		_history(array(
+			'type_id' => 28,
+			'invoice_id' => $invoice_id,
+			'v1' => $sum
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_reset':
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$invoice_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if($r['start'] == -1)
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice`
+				SET `start`=-1
+				WHERE `id`=".$invoice_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+
+		_history(array(
+			'type_id' => 53,
+			'invoice_id' => $invoice_id
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
 		break;
 }

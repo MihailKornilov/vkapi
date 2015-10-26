@@ -451,8 +451,7 @@ $(document)
 				width:380,
 				head:'Редактирование расхода',
 				load:1,
-				butSubmit:'Сохранить',
-				submit:submit
+				butSubmit:'Сохранить'
 			}),
 			send = {
 				op:'expense_load',
@@ -461,21 +460,10 @@ $(document)
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				res.arr.id = send.id;
-				send = expenseTab(dialog, res.arr);
+				expenseTab(dialog, res.arr);
 			} else
 				dialog.loadError();
 		}, 'json');
-		function submit() {
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Удалено');
-					o.func(res);
-				} else
-					dialog.abort();
-			}, 'json');
-		}
 	})
 	.on('click', '#money-expense .img_del', function() {
 		_dialogDel({
@@ -485,6 +473,75 @@ $(document)
 			func:expenseSpisok
 		});
 	})
+
+	.on('click', '.invoice-set', function() {
+		var t = $(this),
+			invoice_id = t.attr('val'),
+			html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
+					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" /> руб.' +
+				'</table>';
+		var dialog = _dialog({
+			width:270,
+			head:'Установка текущей суммы счёта',
+			content:html,
+			butSubmit:'Установить',
+			submit:submit
+		});
+
+		$('#sum').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'invoice_set',
+				invoice_id:invoice_id,
+				sum:$('#sum').val()
+			};
+			if(send.sum != 0 && !_cena(send.sum)) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#invoice-spisok').html(res.html);
+						dialog.close();
+						_msg('Начальная сумма установлена');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '.invoice-reset', function() {
+		var t = $(this),
+			invoice_id = t.attr('val'),
+			html = 'Сумма на счёте <b>' + INVOICE_ASS[invoice_id] + '</b> будет сброшена.',
+			dialog = _dialog({
+				head:'Сброс суммы счёта',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'invoice_reset',
+				invoice_id:invoice_id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg('Сумма сброшена');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 
 
 

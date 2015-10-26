@@ -76,31 +76,16 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '._hist-un h4', function() {//удаление записи истории (для SA)
-		var t = $(this),
-			dialog = _dialog({
-				top:90,
-				width:300,
-				head:'Удаление записи в истории действий',
-				content:'<center class="red">Подтвердите удаление записи.</center>',
-				butSubmit:'Удалить',
-				submit:submit
-			});
-		function submit() {
-			var send = {
-				op:'history_del',
-				id:t.attr('val')
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Удалено');
-					var ul = t.parent().parent();
-					t.parent().remove();
-					if(!ul.html())
-						ul.parent().remove();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'записи в истории действий',
+			op:'history_del',
+			func:function(res) {
+				var ul = t.parent().parent();
+				t.parent().remove();
+				if(!ul.html())
+					ul.parent().remove();
+			}
+		});
 	});

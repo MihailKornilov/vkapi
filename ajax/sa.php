@@ -216,6 +216,39 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_rule_spisok());
 		jsonSuccess($send);
 		break;
+
+	case 'sa_balans_category_add':
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_balans_category` (
+					`name`
+				) VALUES (
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_balans_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_balans_action_add':
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_balans_action` (
+					`name`
+				) VALUES (
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_balans_action_spisok());
+		jsonSuccess($send);
+		break;
 }
 
 function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истории действий

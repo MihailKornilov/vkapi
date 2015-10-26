@@ -4,6 +4,7 @@ function _sa_global() {//вывод ссылок суперадминистратора для всех приложений
 		'<div><b>Global:</b></div>'.
 		'<a href="'.URL.'&p=sa&d=history">История действий</a><br />'.
 		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a><br />'.
+		'<a href="'.URL.'&p=sa&d=balans">Балансы</a><br />'.
 		'<br />';
 }//_sa_global()
 function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу после посещения суперадмина
@@ -236,3 +237,63 @@ function sa_rule_spisok() {
 	return $send;
 }//sa_rule_spisok()
 
+
+function sa_balans() {//управление балансами
+	return
+		sa_path('Балансы').
+		'<div id="sa-balans">'.
+			'<div class="headName">Управление балансами</div>'.
+			'<div id="dopLinks">'.
+				'<a class="link sel">Категории</a>'.
+				'<a class="link">Действия</a>'.
+				'<div id="category-add" class="img_add m30 div d0'._tooltip('Новая категория', -96, 'r').'</div>'.
+				'<div id="action-add"   class="img_add m30 div d1'._tooltip('Новое действие', -90, 'r').'</div>'.
+			'</div>'.
+			'<div id="category-spisok" class="div d0">'.sa_balans_category_spisok().'</div>'.
+			'<div id="action-spisok" class="div d1">'.sa_balans_action_spisok().'</div>'.
+		'</div>';
+}//sa_balans()
+function sa_balans_category_spisok() {
+	$sql = "SELECT * FROM `_balans_category` ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+		'<tr><th>id'.
+			'<th>Название'.
+			'<th>';
+	foreach($spisok as $r)
+		$send .=
+			'<tr val="'.$r['id'].'">'.
+				'<td class="id">'.$r['id'].
+				'<td class="name">'.$r['name'].
+				'<td class="ed">'.
+					'<div class="img_edit" val="'.$r['id'].'"></div>'.
+					'<div class="img_del"></div>';
+	$send .= '</table>';
+
+	return $send;
+}//sa_balans_category_spisok()
+function sa_balans_action_spisok() {
+	$sql = "SELECT * FROM `_balans_action` ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+		'<tr><th>id'.
+		'<th>Название'.
+		'<th>';
+	foreach($spisok as $r)
+		$send .=
+			'<tr val="'.$r['id'].'">'.
+			'<td class="id">'.$r['id'].
+			'<td class="name">'.$r['name'].
+			'<td class="ed">'.
+				'<div class="img_edit" val="'.$r['id'].'"></div>'.
+				'<div class="img_del"></div>';
+	$send .= '</table>';
+
+	return $send;
+}//sa_balans_action_spisok()

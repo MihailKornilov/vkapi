@@ -518,6 +518,13 @@ function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
 		$send[$r[0]] = $r[1];
 	return $send;
 }//query_ass()
+function query_arr($sql, $resource_id=MYSQL_CONNECT) {//Массив, где ключами является id
+	$send = array();
+	$q = query($sql, $resource_id);
+	while($r = mysql_fetch_assoc($q))
+		$send[$r['id']] = $r;
+	return $send;
+}//query_arr()
 function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 	$send = array();
 	$q = query($sql, $resource_id);
@@ -583,6 +590,13 @@ function _cena($v) {//проверка на цену
 function _txt($v) {
 	return win1251(htmlspecialchars(trim($v)));
 }//_txt
+function _br($v) {//вставка br в текст при нахождении enter
+	return str_replace("\n", '<br />', $v);
+}//_br
+function _daNet($v) {//перевод 1 -> да, 0 -> нет
+	return $v ? 'да' : 'нет';
+}//_daNet
+
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
 	$ids = trim($ids);
 	$arr = array();
@@ -813,9 +827,23 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 	$save = 'var'.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_invoice`
-											  WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
+											  WHERE `app_id`=".APP_ID."
+												AND `ws_id`=".WS_ID."
+												AND !`deleted`
 											  ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
+		"\n".'INVOICE_CONFIRM_INCOME='.query_assJson("SELECT `id`,1
+													  FROM `_money_invoice`
+													  WHERE `app_id`=".APP_ID."
+														AND `ws_id`=".WS_ID."
+														AND `confirm_income`
+														AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'INVOICE_CONFIRM_TRANSFER='.query_assJson("SELECT `id`,1
+														FROM `_money_invoice`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+												          AND `confirm_transfer`
+												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'WORKER_ASS='.query_assJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
 											 FROM `_vkuser`
 											 WHERE `app_id`=".APP_ID."
@@ -824,11 +852,14 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 										   FROM `_money_expense_category`
-										   WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID."
+										   WHERE `app_id`=".APP_ID."
+											 AND `ws_id`=".WS_ID."
 										   ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'EXPENSE_WORKER_USE='.query_assJson("SELECT `id`,1
 												  FROM `_money_expense_category`
-												  WHERE `app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND `worker_use`", GLOBAL_MYSQL_CONNECT).';';
+												  WHERE `app_id`=".APP_ID."
+													AND `ws_id`=".WS_ID."
+													AND `worker_use`", GLOBAL_MYSQL_CONNECT).';';
 
 	$fp = fopen(APP_PATH.'/js/app_values.js', 'w+');
 	fwrite($fp, $save);

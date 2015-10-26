@@ -272,34 +272,35 @@ function setup_invoice_spisok() {
 		$r['worker'] = array();
 		if($r['visible'])
 			foreach(explode(',', $r['visible']) as $i)
-				$r['worker'][] = _viewer($i, 'name');
+				$r['worker'][] = _viewer($i, 'viewer_name');
 		$spisok[$r['id']] = $r;
 	}
 
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th>Наименование'.
-			'<th>Подтверждение'.
 			'<th>Видимость<br />для сотрудников'.
 			'<th>';
 	foreach($spisok as $id => $r)
 		$send .=
 			'<tr val="'.$id.'">'.
-			'<td class="name">'.
-			'<div>'.$r['name'].'</div>'.
-			'<pre>'.$r['about'].'</pre>'.
-			'<td class="confirm">'.
-			($r['confirm_income'] ? 'поступления на счёт' : '').
-			($r['confirm_transfer'] ? ($r['confirm_income'] ? ',<br />' : '').'переводы' : '').
+				'<td class="name">'.
+					'<div>'.$r['name'].'</div>'.
+					'<pre>'.$r['about'].'</pre>'.
+					($r['confirm_income'] ? '<h6>Подтверждения поступления на счёт</h6>' : '').
+					($r['confirm_transfer'] ? '<h6>Требовать подтверждение переводов</h6>' : '').
+				'<td class="visible">'.
+					implode('<br />', $r['worker']).
+				'<td class="ed">'.
+					'<div class="img_edit"></div>'.
+					'<div class="img_del"></div>'.
+
 			'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
 			'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
-			'<td class="visible">'.
-			implode('<br />', $r['worker']).
-			'<input type="hidden" class="visible_id" value="'.(empty($r['worker']) ? 0 : $r['visible']).'" />'.
-			'<td class="set">'.
-			'<div class="img_edit"></div>';
-	//'<div class="img_del"></div>'
+			'<input type="hidden" class="visible_id" value="'.(empty($r['worker']) ? 0 : $r['visible']).'" />';
+
 	$send .= '</table>';
+
 	return $send;
 }//setup_invoice_spisok()
 

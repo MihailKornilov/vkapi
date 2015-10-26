@@ -199,8 +199,9 @@ function income_spisok($filter=array()) {
 
 	//$money = _viewer($money);
 	$money = _clientValToList($money);
-	$money = _zayavValToList($money);
-	$money = _zpLink($money);
+	if(function_exists('_zayavValToList'))
+		$money = _zayavValToList($money);
+//	$money = _zpLink($money);
 //	$money = _schetValues($money);
 
 	$send['spisok'] = !PAGE1 ? '' :
@@ -230,7 +231,7 @@ function income_spisok($filter=array()) {
 function income_unit($r) {
 	$about = '';
 	if($r['zayav_id'])
-		$about = 'Заявка '.$r['zayav_link'];
+		$about = 'Заявка '.@$r['zayav_link'];
 	if($r['zp_id'])
 		$about = 'Продажа запчасти '.$r['zp_link'];
 	if($r['schet_id'])
@@ -1092,11 +1093,9 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 			  AND `invoice_id`=".$invoice_id;
 	$expense = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-
-
-
 //	$from = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_from`=".$invoice_id);
 //	$to = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_to`=".$invoice_id);
+
 	return round($income - $expense - $start, 2);
 }//_invoiceBalans()
 function invoice() {
@@ -1120,19 +1119,59 @@ function invoice_spisok() {
 
 	$send = '<table class="_spisok">';
 	foreach($invoice as $r)
-		$send .= '<tr>'.
-			'<td class="name">'.
-			'<b>'.$r['name'].'</b>'.
-			'<div class="about">'.$r['about'].'</div>'.
+		$send .=
+			'<tr>'.
+				'<td class="name">'.
+					'<b>'.$r['name'].'</b>'.
+					'<div class="about">'.$r['about'].'</div>'.
 			($r['start'] != -1 ?
 				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
 				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
-				: '').
-			//(VIEWER_ADMIN || $r['start'] != -1 ?
-			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
+			: '').
+				//(VIEWER_ADMIN || $r['start'] != -1 ?
+				'<td><a class="invoice-set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
 			(VIEWER_ADMIN && $r['start'] != -1 ?
-				'<td><a class="invoice_reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
-				: '');
+				'<td><a class="invoice-reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
+			: '');
 	$send .= '</table>';
 	return $send;
 }//invoice_spisok()
+
+
+function _balans($v) {//внесение записи о балансе
+	$unit_id = 0;
+	$balans = 0;
+
+	if(!empty($v['invoice_id'])) {
+		$unit_id = _num($v['invoice_id']);
+		$balans = _invoiceBalans($unit_id);
+	}
+
+	$sql = "INSERT INTO `_balans` (
+				`app_id`,
+				`ws_id`,
+
+				`category_id`,
+				`unit_id`,
+				`action_id`,
+				`sum`,
+				`balans`,
+				`about`,
+
+				`viewer_id_add`
+			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
+
+				"._num(@$v['category_id']).",
+				".$unit_id.",
+				"._num(@$v['action_id']).",
+				"._cena(@$v['sum']).",
+				".$balans.",
+
+				'".addslashes(@$v['about'])."',
+
+				".VIEWER_ID."
+			)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+}//_balans()

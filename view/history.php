@@ -19,6 +19,7 @@ function _history_insert($v=array()) {//внесение истории действий
 				`zp_id`,
 				`tovar_id`,
 				`worker_id`,
+				`invoice_id`,
 
 				`v1`,
 				`v2`,
@@ -37,6 +38,7 @@ function _history_insert($v=array()) {//внесение истории действий
 				"._num(@$v['zp_id']).",
 				"._num(@$v['tovar_id']).",
 				"._num(@$v['worker_id']).",
+				"._num(@$v['invoice_id']).",
 
 				'".addslashes(@$v['v1'])."',
 				'".addslashes(@$v['v2'])."',
@@ -116,8 +118,11 @@ function _history_spisok($v=array()) {
 			LIMIT "._start($filter).",".$filter['limit'];
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$history = array();
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
+		if($r['invoice_id'])
+			$r['invoice_name'] = _invoice($r['invoice_id']);
 		$history[$r['id']] = $r;
+	}
 
 	$history = _viewerValToList($history);
 	$history = _clientValToList($history);
@@ -176,6 +181,7 @@ function _history_types($history) {//перевод type_id в текст
 		'client_name',
 		'client_link',
 		'zayav_link',
+		'invoice_name',
 		'worker_name',
 		'worker_link',
 		'v1',
@@ -201,9 +207,14 @@ function _history_types($history) {//перевод type_id в текст
 
 
 
-function _historyChange($name, $old, $new) {//возвращается элемент таблицы, если было изменение при редактировании данных
-	if($old != $new)
-		return '<tr><th>'.$name.':<td>'.$old.'<td>»<td>'.$new;
+function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элемент таблицы, если было изменение при редактировании данных
+	if($old != $new) {
+		if($v1 && $v2) {
+			$old = $v1;
+			$new = $v2;
+		}
+		return '<tr><th>' . $name . ':<td>' . $old . '<td>»<td>' . $new;
+	}
 	return '';
 }//_historyChange()
 

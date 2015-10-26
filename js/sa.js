@@ -305,4 +305,80 @@ $(document)
 				}
 			});
 		}
+		if($('#sa-balans').length) {
+			$('.link').click(function() {//переключение подразделов
+				$('.link.sel').removeClass('sel');
+				var i = $(this).addClass('sel').index();
+				$('.div').hide();
+				$('.d' + i).show();
+			});
+			$('#category-add').click(function() {
+				var html =
+						'<table class="sa-tab">' +
+							'<tr><td class="label">Название:<td><input type="text" id="name" />' +
+						'</table>',
+					dialog = _dialog({
+						head:'Внесение новой категории балансов',
+						content:html,
+						submit:submit
+					});
+
+				$('#name').focus().keyEnter(submit);
+
+				function submit() {
+					var send = {
+						op:'sa_balans_category_add',
+						name:$('#name').val()
+					};
+					if(!send.name) {
+						dialog.err('Не указано название');
+						$('#name').focus();
+					} else {
+						dialog.process();
+						$.post(AJAX_MAIN, send, function(res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Внесено');
+								$('#category-spisok').html(res.html);
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+			});
+			$('#action-add').click(function() {
+				var html =
+						'<table class="sa-tab">' +
+							'<tr><td class="label">Название:<td><input type="text" id="name" />' +
+						'</table>',
+					dialog = _dialog({
+						head:'Внесение нового действия',
+						content:html,
+						submit:submit
+					});
+
+				$('#name').focus().keyEnter(submit);
+
+				function submit() {
+					var send = {
+						op:'sa_balans_action_add',
+						name:$('#name').val()
+					};
+					if(!send.name) {
+						dialog.err('Не указано название');
+						$('#name').focus();
+					} else {
+						dialog.process();
+						$.post(AJAX_MAIN, send, function(res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Внесено');
+								$('#action-spisok').html(res.html);
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+			});
+		}
 	});

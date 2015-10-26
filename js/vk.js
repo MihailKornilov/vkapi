@@ -471,7 +471,6 @@ var VK_SCROLL = 0,
 	},
 	_parent = function(t, tag) {//поиск нужного тега методом parent()
 		tag = tag || 'TR';
-		console.log(t);
 		while(t[0].tagName != tag)
 			t = t.parent();
 		return t;

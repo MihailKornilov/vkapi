@@ -8,25 +8,29 @@ var setupRuleCheck = function(v, id) {
 		if(res.success)
 			_msg('Сохранено');
 	}, 'json');
-};
+},
+	setupInvouceTab = function(dialog, arr) {
+		arr = $.extend({
+			id:0,
+			name:'',
+			about:'',
+			income:0,
+			transfer:0,
+			visible:''
+		}, arr);
 
-$(document)
-	.on('click', '#setup_invoice .add', function() {
-		var t = $(this),
-			html = '<table id="setup-tab">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" />' +
-				'<tr><td class="label topi">Описание:<td><textarea id="about"></textarea>' +
-				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" />' +
-				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" />' +
-				'<tr><td class="label topi">Видимость для сотрудников:<td><input type="hidden" id="visible" />' +
-				'</table>',
-			dialog = _dialog({
-				top:40,
-				width:430,
-				head:'Добавление нового счёта',
-				content:html,
-				submit:submit
-			});
+		var html =
+			'<table id="setup-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + arr.name + '" />' +
+				'<tr><td class="label topi">Описание:<td><textarea id="about">' + arr.about + '</textarea>' +
+				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" value="' + arr.income + '" />' +
+				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" value="' + arr.transfer + '" />' +
+				'<tr><td class="label topi">Видимость для сотрудников:<td><input type="hidden" id="visible" value="' + arr.visible + '" />' +
+			'</table>';
+
+		dialog.content.html(html);
+		dialog.submit(submit);
+
 		$('#name').focus().keyEnter(submit);
 		$('#about').autosize();
 		$('#income')._check();
@@ -46,7 +50,8 @@ $(document)
 		});
 		function submit() {
 			var send = {
-				op:'setup_invoice_add',
+				op:arr.id ? 'setup_invoice_edit' : 'setup_invoice_add',
+				id:arr.id,
 				name:$('#name').val(),
 				about:$('#about').val(),
 				income:$('#income').val(),
@@ -62,7 +67,7 @@ $(document)
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
-						_msg('Внесено!');
+						_msg('Выполнено');
 					} else {
 						dialog.abort();
 						dialog.err(res.text);
@@ -70,75 +75,35 @@ $(document)
 				}, 'json');
 			}
 		}
+	};
+
+$(document)
+	.on('click', '#setup_invoice .add', function() {
+		var dialog = _dialog({
+			top:40,
+			width:430,
+			head:'Добавление нового счёта'
+		});
+		setupInvouceTab(dialog);
 	})
 	.on('click', '#setup_invoice .img_edit', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		var id = t.attr('val'),
-			name = t.find('.name div').html(),
-			about = t.find('.name pre').html(),
-			income = t.find('.confirm_income').val(),
-			transfer = t.find('.confirm_transfer').val(),
-			visible = t.find('.visible_id').val(),
-			html = '<table class="setup-tab">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + name + '" />' +
-				'<tr><td class="label topi">Описание:<td><textarea id="about">' + about + '</textarea>' +
-				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" value="' + income + '" />' +
-				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" value="' + transfer + '" />' +
-				'<tr><td class="label topi">Видимость<br />для сотрудников:<td><input type="hidden" id="visible" value="' + visible + '" />' +
-				'</table>',
+		var t = _parent($(this)),
 			dialog = _dialog({
-				width:480,
-				head:'Редактирование данных счёта',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		$('#about').autosize();
-		$('#income')._check();
-		$('#income_check').vkHint({
-			msg:'Возможность требовать подтверждение поступления средств на счёт',
-			width:180,
-			top:-84,
-			left:-85,
-			delayShow:500
-		});
-		$('#transfer')._check();
-		$('#visible')._select({
-			width:218,
-			multiselect:1,
-			spisok:WORKER_SPISOK
-		});
-
-		function submit() {
-			var send = {
-				op:'setup_invoice_edit',
-				id:id,
-				name:$('#name').val(),
-				about:$('#about').val(),
-				income:$('#income').val(),
-				transfer:$('#transfer').val(),
-				visible:$('#visible').val()
+				top:40,
+				width:430,
+				head:'Редактирование счёта',
+				butSubmit:'Сохранить'
+			}),
+			arr = {
+				id:t.attr('val'),
+				name:t.find('.name div').html(),
+				about:t.find('.name pre').html(),
+				income:t.find('.confirm_income').val(),
+				transfer:t.find('.confirm_transfer').val(),
+				visible:t.find('.visible_id').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Сохранено!');
-					} else {
-						dialog.abort();
-						dialog.err(res.text);
-					}
-				}, 'json');
-			}
-		}
+		console.log(arr);
+		setupInvouceTab(dialog, arr);
 	})
 	.on('click', '#setup_invoice .img_del', function() {
 		var t = $(this),
