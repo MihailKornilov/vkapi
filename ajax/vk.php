@@ -26,6 +26,7 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'setup'.APP_ID);//глобальные настройки приложения
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
+		xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
 		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
 

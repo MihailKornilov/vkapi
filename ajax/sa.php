@@ -233,6 +233,22 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_balans_category_spisok());
 		jsonSuccess($send);
 		break;
+	case 'sa_balans_category_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_balans_category`
+				WHERE `id`=".$id;
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_balans_category` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_balans_category_spisok());
+		jsonSuccess($send);
+		break;
 	case 'sa_balans_action_add':
 		$name = _txt($_POST['name']);
 
@@ -244,6 +260,22 @@ switch(@$_POST['op']) {
 				) VALUES (
 					'".addslashes($name)."'
 				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(sa_balans_action_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_balans_action_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_balans_action`
+				WHERE `id`=".$id;
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_balans_action` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$send['html'] = utf8(sa_balans_action_spisok());

@@ -1031,7 +1031,7 @@ function invoice_history_insert_sql($invoice_id, $v) {
 
 
 
-function _invoice($id=0, $i='name') {//Список счетов
+function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	$key = CACHE_PREFIX.'invoice'.WS_ID;
 	$arr = xcache_get($key);
 	if(empty($arr)) {
@@ -1098,7 +1098,10 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 
 	return round($income - $expense - $start, 2);
 }//_invoiceBalans()
-function invoice() {
+function invoice() {//страница со списком счетов и переводами между счетами
+	if(_num(@$_GET['id']))
+		return invoice_info();
+
 	return
 		'<div id="money-invoice">'.
 			'<div class="headName">'.
@@ -1122,21 +1125,105 @@ function invoice_spisok() {
 		$send .=
 			'<tr>'.
 				'<td class="name">'.
-					'<b>'.$r['name'].'</b>'.
+					'<a href="'.URL.'&p=money&d=invoice&id='.$r['id'].'">'.$r['name'].'</a>'.
 					'<div class="about">'.$r['about'].'</div>'.
 			($r['start'] != -1 ?
-				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
-				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
-			: '').
-				//(VIEWER_ADMIN || $r['start'] != -1 ?
-				'<td><a class="invoice-set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
-			(VIEWER_ADMIN && $r['start'] != -1 ?
-				'<td><a class="invoice-reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
-			: '');
+				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'
+//				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
+				:
+				'<td><a class="invoice-set" val="'.$r['id'].'">Установить<br />текущую сумму</a>'
+			);
+//			(VIEWER_ADMIN && $r['start'] != -1 ?
+//				'<td><a class="invoice-reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
+//			: '');
 	$send .= '</table>';
 	return $send;
 }//invoice_spisok()
 
+function invoice_info() {//информация о счёте
+	$invoice_id = _num($_GET['id']);
+	$sql = "SELECT *
+			FROM `_money_invoice`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `id`=".$invoice_id;
+	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return _err('Счёта не существует.');
+
+	$balans = invoice_info_balans(array(
+			'category_id' => 1,
+			'unit_id' => $invoice_id
+		));
+
+	return
+		'<div id="invoice-info">'.
+			'<div class="headName">Счёт '.$r['name'].'</div>'.
+			($r['about'] ? '<div class="_info">'.$r['about'].'</div>' : '').
+			'<div>Текущий баланс: <b>'._sumSpace(_invoiceBalans($invoice_id)).'</b> руб.</div>'.
+			'<div id="dopLinks">' .
+				'<span>История действий по счёту:</span>'.
+				'<a class="link sel">Подробно</a>' .
+				'<a class="link">По дням</a>' .
+			'</div>'.
+			'<div id="ih-data" class="dn">'.
+				'<input type="hidden" id="ih-year" value="'.strftime('%Y').'" />'.
+				'<input type="hidden" id="ih-mon" value="'.intval(strftime('%m')).'" />'.
+			'</div>'.
+			'<div id="ih-spisok">'.$balans['spisok'].'</div>'.
+		'</div>';
+}//invoice_info()
+function invoice_info_balans($v) {
+	$filter = array(
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
+		'category_id' => _num(@$v['category_id']),
+		'unit_id' => _num(@$v['unit_id'])
+//		'day' => !empty($v['day']) && preg_match(REGEXP_DATE, $v['day']) ? $v['day'] : TODAY
+	);
+
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID."
+		 AND `category_id`=".$filter['category_id']."
+		 AND `unit_id`=".$filter['unit_id'];
+
+	$send = array(
+		'all' => 0,
+		'spisok' => '<div class="_empty">Список пуст.</div>',
+		'filter' => $filter
+	);
+
+	$sql = "SELECT COUNT(`id`) FROM `_balans` WHERE ".$cond;
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return $send;
+
+
+	$sql = "SELECT *
+			FROM `_balans`
+			WHERE ".$cond."
+			ORDER BY `id` DESC";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$send['spisok'] =
+		'<table class="_spisok">'.
+			'<tr><th>Действие'.
+				'<th>Сумма'.
+				'<th>Баланс'.
+				'<th>Описание'.
+				'<th>Дата';
+
+	foreach($spisok as $r) {
+		$send['spisok'] .=
+			'<tr><td>'._balansAction($r['action_id']).
+				'<td class="sum">'.round($r['sum'], 2).
+				'<td class="balans">'.round($r['balans'], 2).
+				'<td>'.$r['about'].
+				'<td class="dtime">'.FullDataTime($r['dtime_add']);
+	}
+
+	$send['spisok'] .= '</table>';
+	return $send;
+}//invoice_info_balans()
 
 function _balans($v) {//внесение записи о балансе
 	$unit_id = 0;
@@ -1175,3 +1262,17 @@ function _balans($v) {//внесение записи о балансе
 			)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_balans()
+function _balansAction($id) {//получение списка названий действий по счетам из кеша
+	$key = CACHE_PREFIX.'balans_action';
+	$arr = xcache_get($key);
+	if(empty($arr)) {
+		$sql = "SELECT * FROM `_balans_action`";
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
+
+	if(!isset($arr[$id]))
+		return '<span class="red">неизвестное действие баланса: <b>'.$id.'</b></span>';
+
+	return $arr[$id]['name'];
+}//_balansAction()

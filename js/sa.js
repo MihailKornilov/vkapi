@@ -165,6 +165,27 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.balans-category-del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'категории балансов',
+			op:'sa_balans_category_del',
+			func:function(res) {
+				$('#category-spisok').html(res.html);
+			}
+		});
+	})
+	.on('click', '.balans-action-del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'действия для балансов',
+			op:'sa_balans_action_del',
+			func:function(res) {
+				$('#action-spisok').html(res.html);
+			}
+		});
+	})
+
 	.ready(function() {
 		if($('#sa-history').length) {
 			$('textarea').autosize();
@@ -305,6 +326,7 @@ $(document)
 				}
 			});
 		}
+
 		if($('#sa-balans').length) {
 			$('.link').click(function() {//переключение подразделов
 				$('.link.sel').removeClass('sel');

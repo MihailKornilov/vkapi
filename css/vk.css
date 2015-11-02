@@ -175,7 +175,14 @@ table{border:0;border-spacing:0}
 .noauth *{font-size:12px}
 .noauth div{border:#ddd solid 1px;padding:70px 10px;background-color:#FFF;color:#888;text-align:center}
 .norules{margin:10px;padding:15px;border:#ddd solid 1px;color:#900}
-
+._err{
+	margin:15px;
+	padding:40px;
+	text-align:center;
+	border:#edd solid 1px;
+	color:#d00;
+	background-color:#fff5f5;
+}
 
 
 

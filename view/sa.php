@@ -269,8 +269,8 @@ function sa_balans_category_spisok() {
 				'<td class="id">'.$r['id'].
 				'<td class="name">'.$r['name'].
 				'<td class="ed">'.
-					'<div class="img_edit" val="'.$r['id'].'"></div>'.
-					'<div class="img_del"></div>';
+					'<div class="img_edit balans-category-edit" val="'.$r['id'].'"></div>'.
+					'<div class="img_del balans-category-del" val="'.$r['id'].'"></div>';
 	$send .= '</table>';
 
 	return $send;
@@ -291,8 +291,8 @@ function sa_balans_action_spisok() {
 			'<td class="id">'.$r['id'].
 			'<td class="name">'.$r['name'].
 			'<td class="ed">'.
-				'<div class="img_edit" val="'.$r['id'].'"></div>'.
-				'<div class="img_del"></div>';
+				'<div class="img_edit balans-action-edit" val="'.$r['id'].'"></div>'.
+				'<div class="img_del balans-action-del" val="'.$r['id'].'"></div>';
 	$send .= '</table>';
 
 	return $send;

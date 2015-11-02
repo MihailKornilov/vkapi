@@ -444,6 +444,9 @@ function _appAuth() {//проверка авторизации в приложении
 function _noauth($msg='Недостаточно прав.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
 }//_noauth()
+function _err($msg='Ошибка') {
+	return '<div class="_err">'.$msg.'</div>';
+}//_err()
 function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 	if(!PIN)
 		return;
