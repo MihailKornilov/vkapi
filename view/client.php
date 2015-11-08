@@ -63,6 +63,7 @@ function client_list($v) {// страница со списком клиентов
 }//client_list()
 function clientFilter($v) {
 	$default = array(
+		'limit' => 20,
 		'page' => 1,
 		'find' => '',
 		'dolg' => 0,
@@ -71,6 +72,7 @@ function clientFilter($v) {
 		'opl' => 0
 	);
 	$filter = array(
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'find' => strtolower(trim(@$v['find'])),
 		'dolg' => _bool(@$v['dolg']),
@@ -88,7 +90,9 @@ function clientFilter($v) {
 }//clientFilter()
 function client_data($v=array()) {// список клиентов
 	$filter = clientFilter($v);
-	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND !`deleted`";
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID."
+		 AND !`deleted`";
 	$dolg = 0;
 	$plus = 0;
 
@@ -158,9 +162,6 @@ function client_data($v=array()) {// список клиентов
 	$send['filter'] = $filter;
 	$send['spisok'] = '';
 
-	$page = $filter['page'];
-	$limit = 20;
-	$start = ($page - 1) * $limit;
 	$spisok = array();
 	$sql = "SELECT *,
 				   0 `zayav_count`,
@@ -174,7 +175,7 @@ function client_data($v=array()) {// список клиентов
 			FROM `_client`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
-			LIMIT ".$start.",".$limit;
+			LIMIT "._start($filter).",".$filter['limit'];
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {
 		if(FIND) {
@@ -188,6 +189,8 @@ function client_data($v=array()) {// список клиентов
 		$r['person'] = array();
 		$spisok[$r['id']] = $r;
 	}
+
+	_pre($spisok);
 
 	// фио и телефоны клиентов (доверенных лиц)
 	$sql = "SELECT *
@@ -340,11 +343,12 @@ function client_data($v=array()) {// список клиентов
 				'</table>'.
 			'</div>';
 	}
-	if($start + $limit < $send['all']) {
-		$c = $send['all'] - $start - $limit;
-		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' клиент'._end($c, 'а', 'а', 'ов').'</span></div>';
-	}
+
+	 $send['spisok'] .= _next($filter + array(
+			'type' => 1,
+			'all' => $all
+		));
+
 	return $send;
 }//client_data()
 
@@ -799,23 +803,30 @@ function _clientInfoPasp($client_id) {//паспортные данные
 		'</table>';
 }//_clientInfoPasp()
 
-function clientBalansUpdate($client_id, $ws_id=WS_ID) {//обновление баланса клиента
-	if(!$client_id)
-		return 0;
-	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)
-						   FROM `money`
-						   WHERE `ws_id`=".$ws_id."
-							 AND !`deleted`
-							 AND `client_id`=".$client_id."
-							 AND !`zp_id`
-							 AND `sum`>0");
-	$acc = query_value("SELECT IFNULL(SUM(`sum`),0)
-						FROM `accrual`
-						WHERE `ws_id`=".$ws_id."
-						  AND !`deleted`
-						  AND `client_id`=".$client_id);
-	$balans = $prihod - $acc;
-	query("UPDATE `client` SET `balans`=".$balans." WHERE `id`=".$client_id);
+function clientBalansUpdate($client_id) {//обновление баланса клиента
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_accrual`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$client_id;
+	$accrual = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$client_id;
+	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$balans = $income - $accrual;
+
+	$sql = "UPDATE `_client`
+			SET `balans`=".$balans."
+			WHERE `id`=".$client_id;
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
 	return $balans;
 }//clientBalansUpdate()
 

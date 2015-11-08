@@ -596,9 +596,33 @@ function _txt($v) {
 function _br($v) {//вставка br в текст при нахождении enter
 	return str_replace("\n", '<br />', $v);
 }//_br
-function _daNet($v) {//перевод 1 -> да, 0 -> нет
+function _daNet($v) {//$v: 1 -> да, 0 -> нет
 	return $v ? 'да' : 'нет';
 }//_daNet
+function _iconEdit($v=array()) {//иконка редактирования записи в таблице
+	return '<div val="'.$v['id'].'" class="img_edit'._tooltip('Изменить', -52, 'r').'</div>';
+}//_iconEdit()
+function _iconDel($v=array()) {//иконка удаления записи в таблице
+	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
+	if(!empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
+		return '';
+
+	$v = array(
+		'id' => _num(@$v['id']) ? 'val="'.$v['id'].'" ' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+	);
+
+	return '<div '.$v['id'].'class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
+}//_iconDel()
+function _dtimeAdd($v=array()) {//дата и время внесения записи с подсказкой сотрудника, который вносил запись
+	return
+		'<div class="'._tooltip(_viewerAdded($v['viewer_id_add']), -40).FullDataTime($v['dtime_add']).'</div>'.
+	(@$v['viewer_id_del'] ?
+		'<div class="ddel '._tooltip(_viewerDeleted($v['viewer_id_del']), -40).
+			FullDataTime($v['dtime_del']).
+		'</div>'
+	: '');
+}//_dtimeAdd()
 
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
 	$ids = trim($ids);
@@ -612,6 +636,13 @@ function _ids($ids, $return_arr=0) {//проверка корректности списка id, составлен
 	}
 	return $return_arr ? $arr : implode(',', $arr);
 }//_ids
+function _idsGet($arr, $i='id') {//возвращение из массива списка id через запятую
+	$ids = array();
+	foreach($arr as $r)
+		if(!empty($r[$i]))
+			$ids[] = $r[$i];
+	return empty($ids) ? 0 : implode(',', array_unique($ids));
+}//_idsGet()
 function _mon($v) {//проверка даты в формате 2015-10, если не соответствует, возврат текущей даты
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEARMONTH, $v))
 		return strftime('%Y-%m');
@@ -719,7 +750,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 
 		$type = ' запис'._end($c, 'ь', 'и', 'ей');
 		switch(@$v['type']) {
-			case 1: break; //клиенты
+			case 1: $type = ' клиент'._end($c, 'а', 'а', 'ов'); break; //клиенты
 			case 2: break; //заявки
 			case 3: $type = ' платеж'._end($c, '', 'а', 'ей'); break; //платежи
 			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;//счета
@@ -853,6 +884,7 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 											   AND `ws_id`=".WS_ID."
 											   AND `worker`
 											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'WORKER_SPISOK=_toSpisok(WORKER_ASS),'.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 										   FROM `_money_expense_category`
 										   WHERE `app_id`=".APP_ID."

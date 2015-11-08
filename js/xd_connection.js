@@ -4,7 +4,6 @@
 	var handlers = {};
 	var onEnvLoad = [];
 	var env = {};
-
 // Key generation
 	function genKey() {
 		var key = '';

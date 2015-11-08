@@ -9,7 +9,7 @@ var setupRuleCheck = function(v, id) {
 			_msg('Сохранено');
 	}, 'json');
 },
-	setupInvouceTab = function(dialog, arr) {
+	setupInvoiceTab = function(dialog, arr) {
 		arr = $.extend({
 			id:0,
 			name:'',
@@ -84,7 +84,7 @@ $(document)
 			width:430,
 			head:'Добавление нового счёта'
 		});
-		setupInvouceTab(dialog);
+		setupInvoiceTab(dialog);
 	})
 	.on('click', '#setup_invoice .img_edit', function() {
 		var t = _parent($(this)),
@@ -102,8 +102,7 @@ $(document)
 				transfer:t.find('.confirm_transfer').val(),
 				visible:t.find('.visible_id').val()
 			};
-		console.log(arr);
-		setupInvouceTab(dialog, arr);
+		setupInvoiceTab(dialog, arr);
 	})
 	.on('click', '#setup_invoice .img_del', function() {
 		var t = $(this),

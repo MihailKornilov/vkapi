@@ -97,6 +97,8 @@ var incomeLoad = function() {
 			spisok:YEAR_SPISOK
 		});
 
+		$('#sum').keyEnter(submit);
+
 		function submit() {
 			var send = {
 				id:arr.id,
@@ -541,9 +543,114 @@ $(document)
 			}, 'json');
 		}
 	})
+	.on('click', '#transfer-spisok ._next', function() {
+		var next = $(this),
+			send = {
+				op:'invoice_transfer_spisok',
+				page:next.attr('val')
+			};
+		if(next.hasClass('busy'))
+			return;
+		next.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
+		}, 'json');
+	})
+	.on('click', '#transfer-spisok .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'перевода между счетами',
+			op:'invoice_transfer_del',
+			func:function(res) {
+				$('#invoice-spisok').html(res.i);
+				$('#transfer-spisok').html(res.t);
+			}
+		});
+	})
 
+	.on('click', '#_balans_next', function() {
+		var next = $(this);
+		if(next.hasClass('busy'))
+			return;
+		next.addClass('busy');
+		BALANS.op = 'balans_spisok';
+		BALANS.page = next.attr('val');
+		$.post(AJAX_MAIN, BALANS, function(res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
+		}, 'json');
+	})
 
-
-
-
-;
+	.ready(function() {
+		if($('#money-invoice').length) {
+			$('#transfer-add').click(function() {
+				var t = $(this),
+					from = INVOICE_SPISOK[0] ? INVOICE_SPISOK[0].uid : 0,
+					to = INVOICE_SPISOK[1] ? INVOICE_SPISOK[1].uid : 0,
+					html = '<table class="_dialog-tab">' +
+							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + from + '" />' +
+							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="' + to + '" />' +
+							'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
+							'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+						'</table>',
+					dialog = _dialog({
+						width:350,
+						head:'Перевод между счетами',
+						content:html,
+						butSubmit:'Применить',
+						submit:submit
+					});
+				$('#from')._select({
+					width:218,
+					title0:'Не выбран',
+					spisok:INVOICE_SPISOK
+				});
+				$('#to')._select({
+					width:218,
+					title0:'Не выбран',
+					spisok:INVOICE_SPISOK
+				});
+				$('#sum').focus();
+				$('#sum,#about').keyEnter(submit);
+				function submit() {
+					var send = {
+						op:'invoice_transfer_add',
+						from:_num($('#from').val()),
+						to:_num($('#to').val()),
+						sum:_cena($('#sum').val()),
+						about:$('#about').val()
+					};
+					if(!send.from) dialog.err('Выберите счёт-отправитель');
+					else if(!send.to) dialog.err('Выберите счёт-получатель');
+					else if(send.from == send.to) dialog.err('Выберите другой счёт');
+					else if(!send.sum) {
+						dialog.err('Некорректно введена сумма');
+						$('#sum').focus();
+					} else {
+						dialog.process();
+						$.post(AJAX_MAIN, send, function(res) {
+							if(res.success) {
+								$('#invoice-spisok').html(res.i);
+								$('#transfer-spisok').html(res.t);
+								dialog.close();
+								_msg('Перевод произведён');
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+			});
+		}
+		if($('#invoice-info').length) {
+			$('#invoice-info .link').click(function() {
+				$('#invoice-info .link').removeClass('sel');
+				var i = $(this).addClass('sel').index() - 1;
+				$('.ih-cont').hide().eq(i).show();
+			});
+		}
+	});

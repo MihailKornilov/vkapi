@@ -1,3 +1,90 @@
+var balansCategory = function(arr) {
+			arr = $.extend({
+				id:0,
+				name:''
+			}, arr);
+
+			var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + arr.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(arr.id ? 'Редактирование' : 'Внесение новой' ) + ' категории балансов',
+				content:html,
+				butSubmit:arr.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'sa_balans_category_' + (arr.id ? 'edit' : 'add'),
+				id:arr.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Выполнено');
+						$('#category-spisok').html(res.html);
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+	balansAction = function(arr) {
+		arr = $.extend({
+			id:0,
+			name:'',
+			minus:0
+		}, arr);
+
+		var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + arr.name + '" />' +
+					'<tr><td class="label">Минус:<td><input type="hidden" id="minus" value="' + arr.minus + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(arr.id ? 'Редактирование' : 'Внесение нового' ) + ' действия',
+				content:html,
+				butSubmit:arr.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+		$('#minus')._check();
+
+		function submit() {
+			var send = {
+				op:'sa_balans_action_' + (arr.id ? 'edit' : 'add'),
+				id:arr.id,
+				name:$('#name').val(),
+				minus:$('#minus').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Выполнено');
+						$('#action-spisok').html(res.html);
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	};
+
 $(document)
 	.on('click', '#sa-history .img_edit', function() {
 		var id = _num($(this).attr('val')),
@@ -165,9 +252,16 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.balans-category-edit', function() {
+		var t = _parent($(this));
+		balansCategory({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
+	})
 	.on('click', '.balans-category-del', function() {
 		_dialogDel({
-			id:$(this).attr('val'),
+			id:_parent($(this)).attr('val'),
 			head:'категории балансов',
 			op:'sa_balans_category_del',
 			func:function(res) {
@@ -175,9 +269,16 @@ $(document)
 			}
 		});
 	})
+	.on('click', '.balans-action-edit', function() {
+		var t = _parent($(this));
+		balansAction({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
+	})
 	.on('click', '.balans-action-del', function() {
 		_dialogDel({
-			id:$(this).attr('val'),
+			id:_parent($(this)).attr('val'),
 			head:'действия для балансов',
 			op:'sa_balans_action_del',
 			func:function(res) {
@@ -334,73 +435,7 @@ $(document)
 				$('.div').hide();
 				$('.d' + i).show();
 			});
-			$('#category-add').click(function() {
-				var html =
-						'<table class="sa-tab">' +
-							'<tr><td class="label">Название:<td><input type="text" id="name" />' +
-						'</table>',
-					dialog = _dialog({
-						head:'Внесение новой категории балансов',
-						content:html,
-						submit:submit
-					});
-
-				$('#name').focus().keyEnter(submit);
-
-				function submit() {
-					var send = {
-						op:'sa_balans_category_add',
-						name:$('#name').val()
-					};
-					if(!send.name) {
-						dialog.err('Не указано название');
-						$('#name').focus();
-					} else {
-						dialog.process();
-						$.post(AJAX_MAIN, send, function(res) {
-							if(res.success) {
-								dialog.close();
-								_msg('Внесено');
-								$('#category-spisok').html(res.html);
-							} else
-								dialog.abort();
-						}, 'json');
-					}
-				}
-			});
-			$('#action-add').click(function() {
-				var html =
-						'<table class="sa-tab">' +
-							'<tr><td class="label">Название:<td><input type="text" id="name" />' +
-						'</table>',
-					dialog = _dialog({
-						head:'Внесение нового действия',
-						content:html,
-						submit:submit
-					});
-
-				$('#name').focus().keyEnter(submit);
-
-				function submit() {
-					var send = {
-						op:'sa_balans_action_add',
-						name:$('#name').val()
-					};
-					if(!send.name) {
-						dialog.err('Не указано название');
-						$('#name').focus();
-					} else {
-						dialog.process();
-						$.post(AJAX_MAIN, send, function(res) {
-							if(res.success) {
-								dialog.close();
-								_msg('Внесено');
-								$('#action-spisok').html(res.html);
-							} else
-								dialog.abort();
-						}, 'json');
-					}
-				}
-			});
+			$('#category-add').click(balansCategory);
+			$('#action-add').click(balansAction);
 		}
 	});

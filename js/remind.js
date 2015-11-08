@@ -13,6 +13,7 @@ var remindFilter = function(v, id) {
 		}, 'json');
 	};
 
+
 $(document)
 	.on('click', '._remind-add', function() {
 		var html =

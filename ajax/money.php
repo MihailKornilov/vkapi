@@ -40,16 +40,25 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		//внесение баланса для клиента
+		_balans(array(
+			'category_id' => 2,
+			'action_id' => 19,
+			'client_id' => $client_id,
+			'sum' => $sum
+		));
+
+		_history(array(
+			'type_id' => 74,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
+			'v1' => $sum
+		));
+
 /*
-		clientBalansUpdate($z['client_id']);
 		zayavBalansUpdate($zayav_id);
 
-		history_insert(array(
-			'type' => 5,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'value' => $sum
-		));
+
 
 		//Обновление статуса заявки, если изменялся
 		if($z['zayav_status'] != $status) {
@@ -189,11 +198,14 @@ switch(@$_POST['op']) {
 			)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		$insert_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
+
 		_balans(array(
 			'category_id' => 1,
 			'action_id' => 1,
 			'invoice_id' => $invoice_id,
-			'sum' => $sum
+			'sum' => $sum,
+			'income_id' => $insert_id
 		));
 
 		jsonSuccess();
@@ -258,11 +270,6 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 /*
-		invoice_history_insert(array(
-			'action' => 2,
-			'table' => 'money',
-			'id' => $id
-		));
 		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
 */
@@ -271,7 +278,8 @@ switch(@$_POST['op']) {
 			'category_id' => 1,
 			'action_id' => 2,
 			'invoice_id' => $r['invoice_id'],
-			'sum' => $r['sum']
+			'sum' => $r['sum'],
+			'income_id' => $r['id']
 		));
 
 		_history(array(
@@ -335,13 +343,17 @@ switch(@$_POST['op']) {
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
-/*
-		invoice_history_insert(array(
-			'action' => 6,
-			'table' => 'money',
-			'id' => mysql_insert_id()
+
+		$insert_id = query_insert_id('_money_expense', GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 6,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum,
+			'expense_id' => $insert_id
 		));
-*/
+
 		_history(array(
 			'type_id' => 21,
 			'invoice_id' => $invoice_id,
@@ -365,7 +377,6 @@ switch(@$_POST['op']) {
 		if(!$category_id && empty($about))
 			jsonError();
 
-		//
 		$worker_id = _num($_POST['worker_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
@@ -390,13 +401,6 @@ switch(@$_POST['op']) {
 					`mon`='".$mon."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
-/*
-		invoice_history_insert(array(
-			'action' => 6,
-			'table' => 'money',
-			'id' => mysql_insert_id()
-		));
-*/
 
 		$mon_old = _monthDef(substr($r['mon'], 5, 2)).' '.substr($r['mon'], 0, 4);
 		$mon_new = _monthDef(substr($mon, 5, 2)).' '.$year;
@@ -468,13 +472,15 @@ switch(@$_POST['op']) {
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
-/*
-		invoice_history_insert(array(
-			'action' => 7,
-			'table' => 'money',
-			'id' => $id
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 7,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum'],
+			'expense_id' => $r['id']
 		));
-*/
+
 		_history(array(
 			'type_id' => 22,
 			'invoice_id' => $r['invoice_id'],
@@ -482,6 +488,7 @@ switch(@$_POST['op']) {
 			'v1' => round($r['sum'], 2),
 			'v2' => $r['about']
 		));
+
 		jsonSuccess();
 		break;
 
@@ -558,6 +565,123 @@ switch(@$_POST['op']) {
 		));
 
 		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_transfer_spisok':
+		$send['html'] = utf8(invoice_transfer_spisok($_POST));
+		jsonSuccess($send);
+		break;
+	case 'invoice_transfer_add':
+		if(!$from = _num($_POST['from']))
+			jsonError();
+		if(!$to = _num($_POST['to']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		if($from == $to)
+			jsonError();
+
+		$sql = "INSERT INTO `_money_invoice_transfer` (
+					`app_id`,
+					`ws_id`,
+					`invoice_id_from`,
+					`invoice_id_to`,
+					`sum`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$from.",
+					".$to.",
+					".$sum.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = query_insert_id('_money_invoice_transfer', GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 4,
+			'invoice_id' => $from,
+			'sum' => $sum,
+			'invoice_transfer_id' => $insert_id
+		));
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 4,
+			'invoice_id' => $to,
+			'sum' => $sum,
+			'invoice_transfer_id' => $insert_id
+		));
+
+		_history(array(
+			'type_id' => 39,
+			'v1' => _sumSpace($sum),
+			'v2' => _invoice($from),
+			'v3' => _invoice($to),
+			'v4' => $about
+		));
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['t'] = utf8(invoice_transfer_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_transfer_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice_transfer`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice_transfer` SET `deleted`=1 WHERE `id`=".$id;
+
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 12,
+			'invoice_id' => $r['invoice_id_from'],
+			'sum' => $r['sum'],
+			'invoice_transfer_id' => $r['id']
+		));
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 12,
+			'invoice_id' => $r['invoice_id_to'],
+			'sum' => $r['sum'],
+			'invoice_transfer_id' => $r['id']
+		));
+
+		_history(array(
+			'type_id' => 40,
+			'v1' => _sumSpace($r['sum']),
+			'v2' => _invoice($r['invoice_id_from']),
+			'v3' => _invoice($r['invoice_id_to']),
+			'v4' => $r['about']
+		));
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['t'] = utf8(invoice_transfer_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'balans_spisok':
+		$data = invoice_info_balans($_POST);
+		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 }

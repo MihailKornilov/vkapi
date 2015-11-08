@@ -46,3 +46,5 @@
 #sa-balans #action-spisok{margin:15px}
 #sa-balans .id{text-align:right;color:#555;width:30px}
 #sa-balans .d1{display:none}
+#sa-balans .minus{width:30px;text-align:center}
+#sa-balans .count{width:30px;text-align:center}

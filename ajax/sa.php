@@ -230,6 +230,33 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		xcache_unset(CACHE_PREFIX.'balans_category');
+
+		$send['html'] = utf8(sa_balans_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_balans_category_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_balans_category`
+				WHERE `id`=".$id;
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_balans_category`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'balans_category');
+
 		$send['html'] = utf8(sa_balans_category_spisok());
 		jsonSuccess($send);
 		break;
@@ -246,21 +273,55 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_balans_category` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		xcache_unset(CACHE_PREFIX.'balans_category');
+
 		$send['html'] = utf8(sa_balans_category_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_action_add':
 		$name = _txt($_POST['name']);
+		$minus = _bool($_POST['minus']);
 
 		if(!$name)
 			jsonError();
 
 		$sql = "INSERT INTO `_balans_action` (
-					`name`
+					`name`,
+					`minus`
 				) VALUES (
-					'".addslashes($name)."'
+					'".addslashes($name)."',
+					".$minus."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'balans_action');
+
+		$send['html'] = utf8(sa_balans_action_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_balans_action_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$minus = _bool($_POST['minus']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_balans_action`
+				WHERE `id`=".$id;
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_balans_action`
+				SET `name`='".addslashes($name)."',
+					`minus`=".$minus."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'balans_action');
 
 		$send['html'] = utf8(sa_balans_action_spisok());
 		jsonSuccess($send);
@@ -277,6 +338,8 @@ switch(@$_POST['op']) {
 
 		$sql = "DELETE FROM `_balans_action` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'balans_action');
 
 		$send['html'] = utf8(sa_balans_action_spisok());
 		jsonSuccess($send);

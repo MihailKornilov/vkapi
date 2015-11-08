@@ -475,7 +475,7 @@ var VK_SCROLL = 0,
 			t = t.parent();
 		return t;
 	},
-	_busy = function(v) {//отображение прогресса ожидания в mainLinks
+		_busy = function(v) {//отображение прогресса ожидания в mainLinks
 		var ml = $('#mainLinks');
 		if(v === 0) {
 			ml.removeClass('busy');
@@ -485,6 +485,7 @@ var VK_SCROLL = 0,
 			return true;
 		ml.addClass('busy');
 	};
+
 
 $.fn._check = function(o) {
 	var t = $(this),

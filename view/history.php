@@ -76,7 +76,7 @@ function _history_spisok($v=array()) {
 		: '';
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (45)".//todo удалить
+//	   " AND `type_id` IN (39)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
@@ -193,13 +193,22 @@ function _history_types($history) {//перевод type_id в текст
 	foreach($history as $id => $r) {
 		$txt = $types[$r['type_id']];
 		foreach($str as $v) {
+			// проверка условия: ?{v1}, если v1 пустая, то не выводится строка, заключённая меду пробелами с этой переменной.
+			// например: <em>?{v1}</em>.
+			if(strpos($txt, '?{'.$v.'}') !== false) {
+				$ex = explode(' ', $txt);
+				foreach($ex as $i => $e)
+					if(strpos($e, '?{'.$v.'}') !== false && empty($r[$v]))
+						$ex[$i] = '';
+					else $ex[$i] = str_replace('?', '', $ex[$i]);
+				$txt = implode(' ', $ex);
+			}
 			if(strpos($txt, '{'.$v.'}') !== false)
 				$txt = str_replace('{'.$v.'}', $r[$v], $txt);
 			if(strpos($txt, '#'.$v.'#') !== false)
 				$txt = str_replace('#'.$v.'#', '<div class="changes">'.$r[$v].'</div>', $txt);
-			$txt = $txt = str_replace("\n", '<br />', $txt);
 		}
-		$history[$id]['txt'] = $txt;
+		$history[$id]['txt'] = _br($txt);
 	}
 
 	return $history;

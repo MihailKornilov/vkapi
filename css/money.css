@@ -49,7 +49,7 @@
 /* Расчётные счета */
 #money-invoice .headName{margin:15px 10px}
 #money-invoice .headName span{display:inline-block;float:right;margin:0 6px}
-#money-invoice #transfer{color:#d33}
+#money-invoice #transfer-add{color:#d33}
 
 #invoice-spisok{margin:10px 10px 25px}
 #invoice-spisok ._spisok{width:500px}
@@ -60,13 +60,32 @@
 #invoice-spisok .img_note{margin-bottom:-2px}
 #invoice-spisok .invoice-set{display:block;text-align:center}
 
+#transfer-spisok{margin:-10px 10px 10px}
+
+/* Информация о расчётном счёте */
 #invoice-info{margin:10px}
 #invoice-info .headName{margin:15px 0}
 #invoice-info #dopLinks{margin:25px 0 10px}
 #invoice-info #dopLinks span{margin-right:15px}
 
+
+
+
+#balans-history .action{width:100px}
+#balans-history .balans{width:70px;text-align:right}
+
+
+#balans-day{width:500px}
+#balans-day td{text-align:right}
+#balans-day .day{width:60px}
+#balans-day .start{width:90px;color:#777}
+#balans-day .inc{color:#2a2}
+#balans-day .dec{color:#a22}
+#balans-day .ost{font-weight:bold}
+
+
+
 /*
-.invoice .transfer-spisok{margin:10px}
 .invoice-history{margin-top:10px}
 .invoice-history .action{width:80px}
 .invoice-history .balans{width:70px;text-align:right}

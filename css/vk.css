@@ -687,6 +687,8 @@ a.add:hover{text-decoration:underline;color:#357}
 }
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
 ._spisok tr._next td{padding:0}
+._spisok.l tr:hover{background-color:#ffb}/* подсветка строк при наведении */
+
 /*._money .choice{width:14px;text-align:center}*/
 ._spisok .sum{
 	width:45px;

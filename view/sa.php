@@ -269,8 +269,8 @@ function sa_balans_category_spisok() {
 				'<td class="id">'.$r['id'].
 				'<td class="name">'.$r['name'].
 				'<td class="ed">'.
-					'<div class="img_edit balans-category-edit" val="'.$r['id'].'"></div>'.
-					'<div class="img_del balans-category-del" val="'.$r['id'].'"></div>';
+					'<div class="img_edit balans-category-edit"></div>'.
+					'<div class="img_del balans-category-del"></div>';
 	$send .= '</table>';
 
 	return $send;
@@ -280,19 +280,34 @@ function sa_balans_action_spisok() {
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
 
+	//количество внесенных записей для каждого действия
+	$sql = "SELECT
+				`action_id`,
+				COUNT(`id`) `count`
+			FROM `_balans`
+			WHERE `app_id`=".APP_ID."
+			GROUP BY `action_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['action_id']]['count'] = $r['count'];
+
 	$send =
 		'<table class="_spisok">'.
-		'<tr><th>id'.
-		'<th>Название'.
-		'<th>';
+			'<tr><th>id'.
+				'<th>Название'.
+				'<th>Минус'.
+				'<th>Записи'.
+				'<th>';
 	foreach($spisok as $r)
 		$send .=
 			'<tr val="'.$r['id'].'">'.
 			'<td class="id">'.$r['id'].
 			'<td class="name">'.$r['name'].
+			'<td class="minus">'.($r['minus'] ? 'да' : '').
+			'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
 			'<td class="ed">'.
-				'<div class="img_edit balans-action-edit" val="'.$r['id'].'"></div>'.
-				'<div class="img_del balans-action-del" val="'.$r['id'].'"></div>';
+				'<div class="img_edit balans-action-edit"></div>'.
+				'<div class="img_del balans-action-del"></div>';
 	$send .= '</table>';
 
 	return $send;
