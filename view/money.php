@@ -246,7 +246,7 @@ function incomeAbout($r) {
 		$about .= '<br />—чЄт є —÷'.$r['schet_nomer'].'. ƒень оплаты: '.FullData($r['schet_paid_day'], 1);
 
 	$about .=
-		($r['about'] ? ', ' : '').$r['about'].
+		($r['about'] && $about ? ', ' : '').$r['about'].
 		($r['client_id'] ? '<div class="income-client"> лиент: '.$r['client_link'].'</div>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).':</span> '.$about;
@@ -298,17 +298,16 @@ function expense() {
 		'</table>';
 }//expense()
 function expenseFilter($v) {
-	$send = array(
+	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'invoice_id' => _num(@$v['invoice_id']),
 		'category_id' => _num(@$v['category_id']),
 		'worker_id' => _num(@$v['worker_id']),
 		'year' => _year(@$v['year']),
-		'month' => _ids(@$v['month']) //список выбранных мес€цев
+		'month' => isset($v['month']) ? _ids(@$v['month']) : intval(strftime('%m')) //список выбранных мес€цев
 		//'del' => isset($v['del']) && preg_match(REGEXP_BOOL, $v['del']) ? $v['del'] : 0
 	);
-	return $send;
 }//expenseFilter()
 function expense_right() {
 	$sql_worker = "SELECT DISTINCT `worker_id`
@@ -343,6 +342,8 @@ function expense_right() {
 function expenseMonthSum($v=array()) {//список чекбоксов с мес€цами и суммами расходов по каждому мес€цу
 	$filter = expenseFilter($v);
 
+	$mon = _ids($filter['month'], 1);
+
 	$sql = "SELECT
 				DISTINCT(DATE_FORMAT(`dtime_add`,'%m')) AS `month`,
 				SUM(`sum`) AS `sum`
@@ -365,27 +366,25 @@ function expenseMonthSum($v=array()) {//список чекбоксов с мес€цами и суммами ра
 		$send .= _check(
 			'c'.$n,
 			_monthDef($n).(isset($res[$n]) ? '<span class="sum">'._sumSpace($res[$n]).'</span>' : ''),
-			isset($filter['month'][$n]),
+			in_array($n, $mon),
 			1
 		);
 	return $send;
 }//expenseMonthSum()
 function expense_spisok($v=array()) {
 	$filter = expenseFilter($v);
-/*
-	$dtime = array();
-	foreach($filter['month'] as $mon => $k)
-		$dtime[] = "`dtime_add` LIKE '".$filter['year']."-".($mon < 10 ? 0 : '').$mon."%'";
-*/
 
 	define('PAGE1', $filter['page'] == 1);
+
 	$js = !PAGE1 ? '' :
 		'<script type="text/javascript">'.
 			'var EXPENSE={'.
 				'limit:'.$filter['limit'].','.
 				'invoice_id:'.$filter['invoice_id'].','.
 				'worker_id:'.$filter['worker_id'].','.
-				'category_id:'.$filter['category_id'].
+				'category_id:'.$filter['category_id'].','.
+				'year:'.$filter['year'].','.
+				'month:"'.$filter['month'].'"'.
 			'};'.
 		'</script>';
 
@@ -397,6 +396,12 @@ function expense_spisok($v=array()) {
 		$cond .= " AND `worker_id`=".$filter['worker_id'];
 	if($filter['category_id'])
 		$cond .= " AND `category_id`=".$filter['category_id'];
+	if($filter['month']) {
+		$dtime = array();
+		foreach(_ids($filter['month'], 1) as $mon)
+			$dtime[] = "`dtime_add` LIKE '" . $filter['year'] . "-" . ($mon < 10 ? 0 : '') . $mon . "%'";
+		$cond .= " AND (".implode(' OR ', $dtime).")";
+	}
 
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
@@ -465,7 +470,6 @@ function expenseAbout($r) {//описание дл€ расходов
 
 
 /*
-
 function income_all() {//—уммы платежей по годам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,
 				   SUM(`sum`) AS `sum`

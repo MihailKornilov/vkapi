@@ -297,7 +297,7 @@ switch(@$_POST['op']) {
 	case 'expense_spisok':
 		$data = expense_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
-//		$send['mon'] = utf8(expenseMonthSum($_POST));
+		$send['mon'] = utf8(expenseMonthSum($_POST));
 		jsonSuccess($send);
 		break;
 	case 'expense_add':

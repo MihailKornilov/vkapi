@@ -170,7 +170,7 @@ var incomeLoad = function() {
 					}
 				for(n = 1; n <= 12; n++)
 					$('#c' + n)._check(all);
-				expenseSpisok();
+				expenseSpisok(all ? '1,2,3,4,5,6,7,8,9,10,11,12' : '', 'month');
 			}
 		});
 	},
@@ -192,12 +192,10 @@ var incomeLoad = function() {
 		EXPENSE.op = 'expense_spisok';
 		EXPENSE.page = 1;
 		EXPENSE[id] = v;
-		_busy();
 		$.post(AJAX_MAIN, EXPENSE, function(res) {
-			_busy(0);
 			if(res.success) {
 				$('#spisok').html(res.html);
-				$('#mont-list').html(res.mon);
+				$('#mon-list').html(res.mon);
 			}
 		}, 'json');
 	};
@@ -434,6 +432,14 @@ $(document)
 		});
 	})
 
+	.on('click', '#money-expense #mon-list div', function() {
+		var arr = [],
+			inp = $('#mon-list input');
+		for(var n = 1; n <= 12; n++)
+			if(inp.eq(n - 1).val() == 1)
+				arr.push(n);
+		expenseSpisok(arr.join(), 'month');
+	})
 	.on('click', '#money-expense ._next', function() {
 		var next = $(this);
 		if(next.hasClass('busy'))

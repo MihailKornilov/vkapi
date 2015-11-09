@@ -56,7 +56,8 @@ function _historyFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 30,
 		'viewer_id_add' => _num(@$v['viewer_id_add']),
 		'category_id' => _num(@$v['category_id']),
-		'client_id' => _num(@$v['client_id'])
+		'client_id' => _num(@$v['client_id']),
+		'zayav_id' => _num(@$v['zayav_id'])
 	);
 }//_historyFilter()
 function _history_spisok($v=array()) {
@@ -70,7 +71,8 @@ function _history_spisok($v=array()) {
 						'limit:'.$filter['limit'].','.
 						'viewer_id_add:'.$filter['viewer_id_add'].','.
 						'category_id:'.$filter['category_id'].','.
-						'client_id:'.$filter['client_id'].
+						'client_id:'.$filter['client_id'].','.
+						'zayav_id:'.$filter['zayav_id'].
 					'};'.
 			'</script>'
 		: '';
@@ -88,8 +90,10 @@ function _history_spisok($v=array()) {
 	}
 	if($filter['client_id'])
 		$cond .= " AND `client_id`=".$filter['client_id'];
+	if($filter['zayav_id'])
+		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
 
-	$add = $filter['client_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
+	$add = $filter['client_id'] || $filter['zayav_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
 	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);

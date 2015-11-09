@@ -336,14 +336,9 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		return v;
 	},
 	clientSpisok = function() {
-		var result = $('.result');
-		if(result.hasClass('busy'))
-			return;
-		result.addClass('busy');
 		$.post(AJAX_MAIN, clientFilter(), function (res) {
-			result.removeClass('busy');
 			if(res.success) {
-				result.html(res.all);
+				$('.result').html(res.all);
 				$('.left').html(res.spisok);
 			}
 		}, 'json');

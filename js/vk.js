@@ -475,7 +475,7 @@ var VK_SCROLL = 0,
 			t = t.parent();
 		return t;
 	},
-		_busy = function(v) {//отображение прогресса ожидания в mainLinks
+	_busy = function(v) {//отображение прогресса ожидания в mainLinks
 		var ml = $('#mainLinks');
 		if(v === 0) {
 			ml.removeClass('busy');
@@ -1738,7 +1738,9 @@ $.fn._select = function(o) {
 };
 
 $(document)
+	.ajaxStart(_busy)
 	.ajaxSuccess(function(event, request, settings) {
+		_busy(0);
 		var req = request.responseJSON;
 
 		if(pinConfirm(req))
@@ -1805,6 +1807,7 @@ $(document)
 		}
 	})
 	.ajaxError(function(event, request, settings) {
+		_busy(0);
 		if(!request.responseText)
 			return;
 		var d = _dialog({
