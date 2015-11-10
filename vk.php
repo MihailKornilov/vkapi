@@ -152,15 +152,14 @@ function _header() {
 //			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
 }//_header()
 function _api_scripts() {//скрипты и стили, которые вставляются в html
-	$test = defined('TEST') ? 'test' : '';
-	$min = DEBUG ? '' : '.min';
+	define('MIN', DEBUG ? '' : '.min');
 	return
 		//Отслеживание ошибок в скриптах
 		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js?'.VERSION.'"></script>' : '').
 
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
-		'<script type="text/javascript" src="/.vkapp/.api/js/xd_connection.min.js?20"></script>'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
@@ -175,40 +174,46 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/vk'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/vk'.$min.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Переменные _global для всех приложений
-		'<script type="text/javascript" src="/.vkapp/.api/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
 
 (PIN_ENTER ? '' :
 
 		//Клиенты
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/client'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/client'.$min.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/client'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/client'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Деньги
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/money'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/money'.$min.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/money'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Напоминания
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/remind'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/remind'.$min.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/remind'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/remind'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//История действий
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/history'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/history'.$min.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/history'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/history'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Настройки
 	(@$_GET['p'] == 'setup' ?
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/setup'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/setup'.$min.'.js?'.VERSION.'"></script>'
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/setup'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
 	: '').
 
 		//Суперадмин (SA)
 	(@$_GET['p'] == 'sa' ?
-		'<link rel="stylesheet" type="text/css" href="/.vkapp/.api'.$test.'/css/sa'.$min.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/.vkapp/.api'.$test.'/js/sa'.$min.'.js?'.VERSION.'"></script>'
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/sa'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/sa'.MIN.'.js?'.VERSION.'"></script>'
+	: '').
+
+		//debug
+	(SA ?
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/debug'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
 	: '')
 );
 }//_api_scripts()

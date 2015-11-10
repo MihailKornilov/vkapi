@@ -400,6 +400,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		define($prefix.'ORG', $org);
 		define($prefix.'PERSON_ID', $person_id);
 		define($prefix.'FIO', $person_id ? $c['person'][0]['fio'] : '');
+		define($prefix.'BALANS', round($c['balans']), 2);
 
 		define($prefix.'PASP_SERIA', $person_id ? $c['person'][0]['pasp_seria'] : '');
 		define($prefix.'PASP_NOMER', $person_id ? $c['person'][0]['pasp_nomer'] : '');
@@ -424,6 +425,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		'name' => constant($prefix.'NAME'),
 		'person_id' => constant($prefix.'PERSON_ID'),
 		'fio' => constant($prefix.'FIO'),
+		'balans' => constant($prefix.'BALANS'),
 
 		'pasp_seria' => constant($prefix.'PASP_SERIA'),
 		'pasp_nomer' => constant($prefix.'PASP_NOMER'),
@@ -712,9 +714,11 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 }//_clientInfo()
 function _clientInfoBalans($r) {//отображение текущего баланса клиента
 	return
-		'<div style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'" class="ci-balans'._tooltip('Ѕаланс', -19).
+		'<a style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
+		  ' val="2:'.$r['id'].'"'.
+		  ' class="ci-balans _balans-show'._tooltip('Ѕаланс', -19).
 			round($r['balans'], 2).
-		'</div>';
+		'</a>';
 }//_clientInfoBalans()
 function _clientInfoContent($r) {//основна€ информаци€ о клиенте
 	return

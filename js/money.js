@@ -591,6 +591,28 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
+	.on('click', '._balans-show', function() {//вывод окна истории изменени€ балансов
+		var dialog = _dialog({
+				top:10,
+				width:600,
+				head:'ѕросмотр истории операций',
+				load:1,
+				butSubmit:'',
+				butCancel:'«акрыть'
+			}),
+			v = $(this).attr('val').split(':')
+			send = {
+				op:'balans_show',
+				category_id:v[0],
+				unit_id:_num(v[1])
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+			} else
+				dialog.loadError();
+		}, 'json');
+	})
 
 	.ready(function() {
 		if($('#money-invoice').length) {

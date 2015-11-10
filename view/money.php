@@ -902,8 +902,8 @@ function invoice_spisok() {
 					'<a href="'.URL.'&p=money&d=invoice&id='.$r['id'].'">'.$r['name'].'</a>'.
 					'<div class="about">'.$r['about'].'</div>'.
 			($r['start'] != -1 ?
-				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'
-//				'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
+				'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
+				'<td><div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
 				:
 				'<td><a class="invoice-set" val="'.$r['id'].'">Установить<br />текущую сумму</a>'
 			);
@@ -961,152 +961,6 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 	return $send;
 }//invoice_transfer_spisok()
 
-function invoice_info() {//информация о счёте
-	$invoice_id = _num($_GET['id']);
-	$sql = "SELECT *
-			FROM `_money_invoice`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
-			  AND `id`=".$invoice_id;
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-		return _err('Счёта не существует.');
-
-	$balans = invoice_info_balans(array(
-			'category_id' => 1,
-			'unit_id' => $invoice_id
-		));
-
-	return
-		'<div id="invoice-info">'.
-			'<div class="headName">Счёт '.$r['name'].'</div>'.
-			($r['about'] ? '<div class="_info">'.$r['about'].'</div>' : '').
-			'<div>Текущий баланс: <b>'._sumSpace(_invoiceBalans($invoice_id)).'</b> руб.</div>'.
-			'<div id="dopLinks">' .
-				'<span>История действий по счёту <u>'.$r['name'].'</u>:</span>'.
-				'<a class="link sel">Подробно</a>' .
-				'<a class="link">Ежедневно</a>' .
-			'</div>'.
-			'<div id="ih-spisok" class="ih-cont">'.$balans['spisok'].'</div>'.
-			'<div id="ih-day" class="ih-cont dn">'.
-				'<div id="ih-data">'.
-					'<input type="hidden" id="ih-year" value="'.strftime('%Y').'" />'.
-					'<input type="hidden" id="ih-mon" value="'.intval(strftime('%m')).'" />'.
-				'</div>'.
-				invoice_info_balans_day(array('invoice_id'=>$invoice_id)).
-			'</div>'.
-		'</div>';
-}//invoice_info()
-function invoice_info_balans($v) {
-	$filter = array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
-		'category_id' => _num(@$v['category_id']),
-		'unit_id' => _num(@$v['unit_id'])
-//		'day' => !empty($v['day']) && preg_match(REGEXP_DATE, $v['day']) ? $v['day'] : TODAY
-	);
-
-	define('PAGE1', $filter['page'] == 1);
-	$js = !PAGE1 ? '' :
-		'<script type="text/javascript">'.
-			'var BALANS={'.
-				'limit:'.$filter['limit'].','.
-				'category_id:'.$filter['category_id'].','.
-				'unit_id:'.$filter['unit_id'].
-			'};'.
-		'</script>';
-
-	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID."
-		 AND `category_id`=".$filter['category_id']."
-		 AND `unit_id`=".$filter['unit_id'];
-
-	$send = array(
-		'all' => 0,
-		'spisok' => $js.'<div class="_empty">Список пуст.</div>',
-		'filter' => $filter
-	);
-
-	$sql = "SELECT COUNT(`id`) FROM `_balans` WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
-		return $send;
-
-	$sql = "SELECT *
-			FROM `_balans`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT "._start($filter).",".$filter['limit'];
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-	$transfer = array();
-	if($transfer_ids = _idsGet($spisok, 'invoice_transfer_id')) {
-		$sql = "SELECT * FROM `_money_invoice_transfer` WHERE `id` IN (".$transfer_ids.")";
-		$transfer = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-	}
-
-	$income = array();
-	if($income_ids = _idsGet($spisok, 'income_id')) {
-		$sql = "SELECT * FROM `_money_income` WHERE `id` IN (".$income_ids.")";
-		$income = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-		$income = _clientValToList($income);
-		if(function_exists('_zayavValToList'))
-			$income = _zayavValToList($income);
-	}
-
-	$expense = array();
-	if($expense_ids = _idsGet($spisok, 'expense_id')) {
-		$sql = "SELECT * FROM `_money_expense` WHERE `id` IN (".$expense_ids.")";
-		$expense = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-		$expense = _viewer($expense);
-	}
-
-	$send['spisok'] = !PAGE1 ? '' :
-		$js.
-		'<table class="_spisok" id="balans-history">'.
-			'<tr><th>Действие'.
-				'<th>Сумма'.
-				'<th>Баланс'.
-				'<th>Описание'.
-				'<th>Дата';
-
-	foreach($spisok as $r) {
-		$about = $r['about'];
-
-		// описание для переводов между счетами
-		if($r['invoice_transfer_id']) {
-			$trans = $transfer[$r['invoice_transfer_id']];
-			if($trans['invoice_id_from'] != $r['unit_id'])
-				$about = 'Поступление со счёта <span class="type">'._invoice($trans['invoice_id_from']).'</span>.';
-			elseif($trans['invoice_id_to'] != $r['unit_id'])
-				$about = 'Отправление на счёт <span class="type">'._invoice($trans['invoice_id_to']).'</span>.';
-		}
-
-		// описание для платежей
-		if($r['income_id']) {
-			$income[$r['income_id']]['client_id'] = 0;
-			$about = incomeAbout($income[$r['income_id']]);
-		}
-
-		// описание для расходов
-		if($r['expense_id'])
-			$about = expenseAbout($expense[$r['expense_id']]);
-
-		$send['spisok'] .=
-			'<tr><td class="action">'._balansAction($r['action_id']).
-				'<td class="sum">'._sumSpace(round($r['sum'], 2)).
-				'<td class="balans">'._sumSpace(round($r['balans'], 2)).
-				'<td>'.$about.
-				'<td class="dtime">'._dtimeAdd($r);
-	}
-
-	$send['spisok'] .= _next($filter + array(
-			'all' => $all,
-			'tr' => 1,
-			'id' => '_balans_next'
-		));
-
-	return $send;
-}//invoice_info_balans()
 function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 	$v = array(
 		'invoice_id' => _num($v['invoice_id']),
@@ -1301,3 +1155,184 @@ function _balansAction($id, $i='name') {//получение списка названий действий по 
 
 	return $arr[$id][$i];
 }//_balansAction()
+
+function balansFilter($v) {
+	return array(
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
+		'category_id' => _num(@$v['category_id']),
+		'unit_id' => _num(@$v['unit_id'])
+//		'day' => !empty($v['day']) && preg_match(REGEXP_DATE, $v['day']) ? $v['day'] : TODAY
+	);
+}//balansFilter()
+function balans_show($v) {//вывод таблицы с балансами конкретного счёта
+	$filter = balansFilter($v);
+
+	$r = balans_show_category($filter);
+	if(!empty($r['error']))
+		return $r['about'];
+
+	$data = balans_show_spisok($filter);
+
+	return
+		'<div id="balans-show">'.
+			'<div class="headName">'.$r['head'].'</div>'.
+			(@$r['about'] ? '<div class="_info">'.$r['about'].'</div>' : '').
+			'<div>Текущий баланс: <b>'.$r['balans'].'</b> руб.</div>'.
+
+			'<div id="dopLinks">' .
+				'<span>История операций:</span>'.
+				'<a class="link sel">Подробно</a>' .
+				'<a class="link">Ежедневно</a>' .
+			'</div>'.
+			'<div id="ih-spisok" class="ih-cont">'.$data['spisok'].'</div>'.
+			'<div id="ih-day" class="ih-cont dn">'.
+				'<div id="ih-data">'.
+					'<input type="hidden" id="ih-year" value="'.strftime('%Y').'" />'.
+					'<input type="hidden" id="ih-mon" value="'.intval(strftime('%m')).'" />'.
+				'</div>'.
+//				invoice_info_balans_day(array('invoice_id'=>$invoice_id)).
+			'</div>'.
+		'</div>'.
+
+		'<script type="text/javascript">'.
+			'var BALANS={'.
+				'limit:'.$filter['limit'].','.
+				'category_id:'.$filter['category_id'].','.
+				'unit_id:'.$filter['unit_id'].
+			'};'.
+		'</script>';
+}//_balans_show()
+function balans_show_category($v) {
+	switch($v['category_id']) {
+		case 1: //расчётные счета
+			$sql = "SELECT *
+					FROM `_money_invoice`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND !`deleted`
+					  AND `id`=".$v['unit_id'];
+			if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+				return array(
+					'error' => 1,
+					'about' => _err('Счёта id:<b>'.$v['unit_id'].'</b> не существует.')
+				);
+			return array(
+				'head' => 'Счёт '.$r['name'],
+				'about' => $r['about'],
+				'balans' => _sumSpace(_invoiceBalans($v['unit_id']))
+			);
+			break;
+		case 2: //клиент
+			if(!_clientQuery($v['unit_id']))
+				return array(
+					'error' => 1,
+					'about' => _err('Клиента id:<b>'.$v['unit_id'].'</b> не существует.')
+				);
+			$r = _clientVal($v['unit_id']);
+			return array(
+				'head' => 'Клиент '._clientVal($v['unit_id'], 'name'),
+				'balans' => _clientVal($v['unit_id'], 'balans')
+			);
+			break;
+	}
+	return array(
+		'error' => 1,
+		'head' => 'Заголовок',
+		'about' => _err('Неизвестная категория балансов: <b>'.$v['category_id'].'</b>.'),
+		'balans' => 0
+	);
+}//balans_show_category
+function balans_show_spisok($filter) {
+	define('PAGE1', $filter['page'] == 1);
+
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID."
+		 AND `category_id`=".$filter['category_id']."
+		 AND `unit_id`=".$filter['unit_id'];
+
+	$send = array(
+		'all' => 0,
+		'spisok' => '<div class="_empty">Истории нет.</div>',
+		'filter' => $filter
+	);
+
+	$sql = "SELECT COUNT(`id`) FROM `_balans` WHERE ".$cond;
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return $send;
+
+	$sql = "SELECT *
+			FROM `_balans`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT "._start($filter).",".$filter['limit'];
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$transfer = array();
+	if($transfer_ids = _idsGet($spisok, 'invoice_transfer_id')) {
+		$sql = "SELECT * FROM `_money_invoice_transfer` WHERE `id` IN (".$transfer_ids.")";
+		$transfer = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	}
+
+	$income = array();
+	if($income_ids = _idsGet($spisok, 'income_id')) {
+		$sql = "SELECT * FROM `_money_income` WHERE `id` IN (".$income_ids.")";
+		$income = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$income = _clientValToList($income);
+		if(function_exists('_zayavValToList'))
+			$income = _zayavValToList($income);
+	}
+
+	$expense = array();
+	if($expense_ids = _idsGet($spisok, 'expense_id')) {
+		$sql = "SELECT * FROM `_money_expense` WHERE `id` IN (".$expense_ids.")";
+		$expense = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$expense = _viewer($expense);
+	}
+
+	$send['spisok'] = !PAGE1 ? '' :
+		'<table class="_spisok" id="balans-tab">'.
+			'<tr><th>Действие'.
+				'<th>Сумма'.
+				'<th>Баланс'.
+				'<th>Описание'.
+				'<th>Дата';
+
+	foreach($spisok as $r) {
+		$about = $r['about'];
+
+		// описание для переводов между счетами
+		if($r['invoice_transfer_id']) {
+			$trans = $transfer[$r['invoice_transfer_id']];
+			if($trans['invoice_id_from'] != $r['unit_id'])
+				$about = 'Поступление со счёта <span class="type">'._invoice($trans['invoice_id_from']).'</span>.';
+			elseif($trans['invoice_id_to'] != $r['unit_id'])
+				$about = 'Отправление на счёт <span class="type">'._invoice($trans['invoice_id_to']).'</span>.';
+		}
+
+		// описание для платежей
+		if($r['income_id']) {
+			$income[$r['income_id']]['client_id'] = 0;
+			$about = incomeAbout($income[$r['income_id']]);
+		}
+
+		// описание для расходов
+		if($r['expense_id'])
+			$about = expenseAbout($expense[$r['expense_id']]);
+
+		$send['spisok'] .=
+			'<tr><td class="action">'._balansAction($r['action_id']).
+				'<td class="sum">'._sumSpace(round($r['sum'], 2)).
+				'<td class="balans">'._sumSpace(round($r['balans'], 2)).
+				'<td>'.$about.
+				'<td class="dtime">'._dtimeAdd($r);
+	}
+
+	$send['spisok'] .= _next($filter + array(
+			'all' => $all,
+			'tr' => 1,
+			'id' => '_balans_next'
+		));
+
+	return $send;
+}//balans_show_spisok()

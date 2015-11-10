@@ -679,8 +679,12 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'balans_show':
+		$send['html'] = utf8(balans_show($_POST));
+		jsonSuccess($send);
+		break;
 	case 'balans_spisok':
-		$data = invoice_info_balans($_POST);
+		$data = balans_show_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
