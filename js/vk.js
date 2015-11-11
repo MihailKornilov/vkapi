@@ -476,14 +476,14 @@ var VK_SCROLL = 0,
 		return t;
 	},
 	_busy = function(v) {//отображение прогресса ожидания в mainLinks
-		var ml = $('#mainLinks');
+		var m = $('#_menu');
 		if(v === 0) {
-			ml.removeClass('busy');
+			m.removeClass('_busy');
 			return;
 		}
-		if(ml.hasClass('busy'))
+		if(m.hasClass('_busy'))
 			return true;
-		ml.addClass('busy');
+		m.addClass('_busy');
 	};
 
 

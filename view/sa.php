@@ -1,12 +1,17 @@
 <?php
-function _sa_global() {//вывод ссылок суперадминистратора для всех приложений
+function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
 	return
-		'<div><b>Global:</b></div>'.
-		'<a href="'.URL.'&p=sa&d=history">История действий</a><br />'.
-		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a><br />'.
-		'<a href="'.URL.'&p=sa&d=balans">Балансы</a><br />'.
-		'<br />';
-}//_sa_global()
+	'<div class="path">'.sa_cookie_back().'Администрирование</div>'.
+	'<div id="sa-index">'.
+		'<h1>Global:</h1>'.
+		'<a href="'.URL.'&p=sa&d=menu">Разделы главного меню</a>'.
+		'<a href="'.URL.'&p=sa&d=history">История действий</a>'.
+		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a>'.
+		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
+		'<br />'.
+		(function_exists('sa_index') ? sa_index() : '').
+	'</div>';
+}//sa_global_index()
 function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу после посещения суперадмина
 	if(!empty($_GET['pre_p'])) {
 		$_COOKIE['pre_p'] = $_GET['pre_p'];
@@ -34,6 +39,53 @@ function sa_path($v1, $v2='') {
 }//sa_path()
 
 
+function sa_menu() {//управление историей действий
+	return
+		sa_path('Разделы главного меню').
+		'<div id="sa-menu">'.
+			'<div class="headName">Разделы меню<a class="add">Добавить</a></div>'.
+			'<div id="spisok">'.sa_menu_spisok().'</div>'.
+		'</div>';
+}//sa_menu()
+function sa_menu_spisok() {
+	$sql = "SELECT
+				`ma`.`id`,
+				`m`.`name`,
+				`m`.`p`,
+				`ma`.`show`
+			FROM
+				`_menu` `m`,
+				`_menu_app` `ma`
+			WHERE `m`.`id`=`ma`.`menu_id`
+			  AND `ma`.`app_id`=".APP_ID."
+			ORDER BY `ma`.`sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Название'.
+				'<th class="p">Текст для ссылки'.
+				'<th class="show">Показывать<br />в приложении'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_menu_app">';
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+		'<table class="_spisok">'.
+			'<tr><td class="name">'.$r['name'].
+				'<td class="p">'.$r['p'].
+				'<td class="show">'._check('show'.$r['id'], '', $r['show']).
+				'<td class="ed">'._iconEdit($r).
+		'</table>';
+
+	return $send;
+}//sa_menu_spisok()
 
 
 function sa_history() {//управление историей действий

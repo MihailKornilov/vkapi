@@ -21,30 +21,8 @@ switch(@$_POST['op']) {
 		if(!SA)
 			jsonError();
 		_globalValuesJS();
+		_globalCacheClear();
 		_cacheClear();
-
-		xcache_unset(CACHE_PREFIX.'setup'.APP_ID);//глобальные настройки приложения
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
-		xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
-		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
-
-
-		//сброс времени действия введённого пинкода
-//		unset($_SESSION[PIN_TIME_KEY]);
-
-		//очистка кеша сотрудников приложения
-		$sql = "SELECT `viewer_id`
-				FROM `_vkuser`
-				WHERE `app_id`=".APP_ID."
-				  AND `worker`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		while($r = mysql_fetch_assoc($q)) {
-			xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
-			xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
-			xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
-		}
 
 		//обновление значения скриптов и стилей приложения
 		$sql = "UPDATE `_setup`
@@ -131,6 +109,8 @@ switch(@$_POST['op']) {
 			query($sql, $conn);
 
 		}
+
+		_globalCacheClear();
 		_cacheClear();
 		_globalValuesJS();
 

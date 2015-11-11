@@ -190,8 +190,6 @@ function client_data($v=array()) {// список клиентов
 		$spisok[$r['id']] = $r;
 	}
 
-	_pre($spisok);
-
 	// фио и телефоны клиентов (доверенных лиц)
 	$sql = "SELECT *
 			FROM `_client_person`

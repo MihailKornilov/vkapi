@@ -86,6 +86,57 @@ var balansCategory = function(arr) {
 	};
 
 $(document)
+	.on('click', '#sa-menu .add', function() {
+		var html =
+				'<table class="sa-tab" id="sa-menu-tab">' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" />' +
+					'<tr><td class="label">p:<td><input type="text" id="p" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Внесение нового раздела меню',
+				content:html,
+				submit:submit
+			});
+
+		$('#name').focus();
+		$('#name,#p').keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'sa_menu_add',
+				name:$('#name').val(),
+				p:$('#p').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Внесено');
+						$('#spisok').html(res.html);
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#sa-menu ._check', function() {//скрытие-показ разделов меню
+		var t = $(this),
+			send = {
+			op:'sa_menu_show',
+			id:_parent(t, 'DD').attr('val'),
+			v:t.find('input').val()
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg('Выполнено');
+		}, 'json');
+	})
+
 	.on('click', '#sa-history .img_edit', function() {
 		var id = _num($(this).attr('val')),
 			html =

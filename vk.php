@@ -108,7 +108,6 @@ _getVkUser();
 _setupApp();
 _pinCheck();
 _hashRead();
-_header();
 
 
 function _pre($v) {// вывод в debug разобранного массива
@@ -130,11 +129,11 @@ function _pre_arr($v) {// проверка, является ли переменная массивом. Если да, то
 	return $v;
 }
 
+
 function _header() {
 	if(AJAX)
-		return;
-	global $html;
-	$html =
+		return '';
+	return
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
 
@@ -208,21 +207,125 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 	(@$_GET['p'] == 'sa' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/sa'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/sa'.MIN.'.js?'.VERSION.'"></script>'
-	: '').
+	: '')
+).
 
-		//debug
+	//debug
 	(SA ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/debug'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
-	: '')
-);
+	: '');
 }//_api_scripts()
+function _global_index() {//пути переходов по ссылкам глобальных разделов
+	switch(@$_GET['p']) {
+		case 'client': return _clientCase();
+		case 'money': return _money();
+		case 'report': return report();
+		case 'setup': return setup();
+
+		case 'sa':
+			if(empty($_GET['d']))
+				return sa_global_index();
+			switch($_GET['d']) {
+				case 'menu':        return sa_menu();
+				case 'history':     return sa_history();
+				case 'historycat':  return sa_history_cat();
+				case 'rule':        return sa_rule();
+				case 'balans':      return sa_balans();
+			}
+	}
+
+	return '';
+}//_global_index()
+
+/* Разделы главного меню */
+function _menuCache() {//получение списка разделов меню из кеша
+	$key = CACHE_PREFIX.'menu';
+	if(!$menu = xcache_get($key)) {
+		$sql = "SELECT
+					*,
+					0 `show`
+				FROM `_menu`";
+		$menu = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $menu, 86400);
+	}
+
+	$key = CACHE_PREFIX.'menu_app'.APP_ID;
+	if(!$app = xcache_get($key)) {
+		$sql = "SELECT `menu_id` `id`
+				FROM `_menu_app`
+				WHERE `app_id`=".APP_ID;
+		$app = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $app, 86400);
+	}
+
+	$key = CACHE_PREFIX.'menu_sort'.APP_ID;
+	if(!$sort = xcache_get($key)) {
+		$sort = array();
+		$sql = "SELECT
+					`menu_id` `id`,
+					`show`
+				FROM `_menu_app`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `sort`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$sort[] = array('show'=>$r['show']) + $menu[$r['id']];
+		xcache_set($key, $sort, 86400);
+	}
+
+
+	foreach($menu as $id => $r) {
+		if(empty($app[$id])) {
+			$sql = "INSERT INTO `_menu_app` (
+					`app_id`,
+					`menu_id`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					'".$id."',
+					'"._maxSql('_menu_app', 'sort', GLOBAL_MYSQL_CONNECT)."'
+				)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
+			xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+
+			$sort[] = $menu[$id];
+		}
+	}
+
+	return $sort;
+}//_setupApp()
+function _menu() {//разделы основного меню
+	if(@$_GET['p'] == 'sa')
+		return '';
+
+	_remindActiveSet(); //REMIND_ACTIVE
+	_pre(_menuCache());
+	$link = '';
+	foreach(_menuCache() as $r)
+		if($r['show']) {
+			$sel = $r['p'] == $_GET['p'] ? ' class="sel"' : '';
+//			$cart = $r['p'] == 'zayav' && @$_GET['from'] == 'cartridge' ? '&d=cartridge' : '';//возврат на страницу с картриджами из заявки
+			$link .=
+				'<a href="'.URL.'&p='.$r['p'].'"'.$sel.'>'.
+					$r['name'].
+				'</a>';
+		}
+
+	return
+		'<div id="_menu">'.
+			$link.
+			pageHelpIcon().
+		'</div>';
+}//_menu()
 
 function _debug() {
 	if(!SA)
 		return '';
 
-	global $sqlQuery, $sqlTime, $_pre;
+	global $sqlQuery, $sqlTime;
 
 	$pre = '&pre_p='.@$_GET['p'].
 			(empty($_GET['d']) ? '' : '&pre_d='.$_GET['d']).
@@ -287,7 +390,6 @@ function _debug_cookie() {
 	return $cookie;
 }
 function _footer() {
-	global $html;
 	$getArr = array(
 		'start' => 1,
 		'api_url' => 1,
@@ -310,15 +412,20 @@ function _footer() {
 		'lc_name' => 1,
 		'hash' => 1
 	);
+
 	$v = array();
 	foreach($_GET as $k => $val) {
 		if(isset($getArr[$k]) || empty($_GET[$k]))
 			continue;
 		$v[] = '"'.$k.'":"'.$val.'"';
 	}
-	$html .= _debug().
-			 '<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
-		//$_SESSION[PIN_TIME_KEY].
+
+	mysql_close();
+
+	return
+		_debug().
+		'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+//		$_SESSION[PIN_TIME_KEY].
 		'</div></body></html>';
 }//_footer()
 
@@ -464,20 +571,16 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 
 	unset($_SESSION[PIN_TIME_KEY]);
 
-	global $html;
-
-	_header();
-
-	$html .=
+	$html =
+		_header().
 		'<div id="pin-enter">'.
 			'Пин: '.
 			'<input type="password" id="pin" maxlength="10"> '.
 			'<div class="vkButton"><button>Ok</button></div>'.
 			'<div class="red">&nbsp;</div>'.
-		'</div>';
+		'</div>'.
+		_footer();
 
-	_footer();
-	mysql_close();
 	die($html);
 }//_pinCheck()
 
@@ -914,6 +1017,33 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_globalValuesJS()
 
+function _globalCacheClear() {//очистка глобальных значений кеша
+	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
+	xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);//значения для разделов меню для конкретного приложения
+	xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);//отсортированный список разделов меню с настройками
+	xcache_unset(CACHE_PREFIX.'setup'.APP_ID);//глобальные настройки приложения
+	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
+	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
+	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
+	xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
+	xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
+
+
+	//сброс времени действия введённого пинкода
+//		unset($_SESSION[PIN_TIME_KEY]);
+
+	//очистка кеша сотрудников приложения
+	$sql = "SELECT `viewer_id`
+			FROM `_vkuser`
+			WHERE `app_id`=".APP_ID."
+			  AND `worker`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
+		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
+		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
+	}
+}//_globalCacheClear()
 
 function pageHelpIcon() {
 	return '';

@@ -3,6 +3,19 @@
 .sa-tab #name{width:250px}
 .sa-tab textarea{width:250px}
 
+#sa-index{padding:15px 0 100px 20px}
+#sa-index h1{font-weight:bold}
+#sa-index a{display:block;margin-left:20px}
+
+
+
+/* Разделы меню */
+#sa-menu #spisok{margin:20px}
+#sa-menu ._spisok{margin-bottom:1px}
+#sa-menu .name{cursor:move}
+#sa-menu .p{width:120px;text-align:center}
+#sa-menu .show{width:100px;text-align:center}
+
 
 /* история действий */
 #sa-history-tab #type_id{width:80px}

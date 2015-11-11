@@ -1,5 +1,49 @@
 <?php
 switch(@$_POST['op']) {
+	case 'sa_menu_add':
+		$name = _txt($_POST['name']);
+		$p = _txt($_POST['p']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_menu` (
+					`name`,
+					`p`
+				) VALUES (
+					'".addslashes($name)."',
+					'".strtolower(addslashes($p))."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'menu');
+		xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+
+		_menuCache();
+
+		$send['html'] = utf8(sa_menu_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_menu_show':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$v = _bool($_POST['v']);
+
+		$sql = "UPDATE `_menu_app`
+				SET `show`=".$v."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'menu');
+		xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+
+		_menuCache();
+		jsonSuccess();
+		break;
+
 	case 'sa_history_type_add':
 		if(!empty($_POST['type_id']) && !_num($_POST['type_id']))
 			jsonError();

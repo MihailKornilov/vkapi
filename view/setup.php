@@ -348,7 +348,7 @@ function setup_expense_spisok() {
 		'<dl class="_sort" val="_money_expense_category">';
 
 	foreach($spisok as $r)
-		$send .='<dd val="'.$r['id'].'">'.
+		$send .= '<dd val="'.$r['id'].'">'.
 			'<table class="_spisok">'.
 				'<tr><td class="name">'.$r['name'].
 					'<td class="worker_use">'.($r['worker_use'] ? 'да' : '').

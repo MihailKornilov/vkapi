@@ -322,7 +322,6 @@ a.add:hover{text-decoration:underline;color:#357}
 #client .result.busy,
 #clientInfo #dopLinks.busy,
 .zpzakaz.busy,
-#mainLinks.busy,
 #setup_workers .adm.busy,
 .path.busy,
 ._busy{
@@ -501,19 +500,25 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-/* Горизонтальное меню */
-#mainLinks{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
-#mainLinks a{
+
+/* Главное меню */
+#_menu{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
+#_menu a{
 	display:inline-block;
 	margin-left:5px;
 	padding:5px 10px;
 	color:#31618C;
 	border-radius:4px 4px 0 0;
 }
-#mainLinks a:hover{text-decoration:none}
-#mainLinks a:not(.sel):hover{background-color:#DEE3EF}
-#mainLinks .sel{color:#FFF;background-color:#31618C}
-#mainLinks.busy{background-position:right 18px}
+#_menu a:hover{text-decoration:none}
+#_menu a:not(.sel):hover{background-color:#DEE3EF}
+#_menu .sel{color:#FFF;background-color:#31618C}
+#_menu._busy{background-position:right 18px}
+
+
+
+
+
 
 /* Меню справа */
 .rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
