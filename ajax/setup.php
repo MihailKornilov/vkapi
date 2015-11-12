@@ -96,6 +96,120 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'setup_worker_add':
+		if(!RULE_SETUP_WORKER)
+			jsonError();
+
+		$viewer_id = _num($_POST['viewer_id']);
+
+		if($viewer_id) {
+			$sql = "SELECT *
+					FROM `_vkuser`
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".$viewer_id;
+			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+				if($r['worker'] && $r['ws_id'] == WS_ID)
+					jsonError('Этот пользователь уже является сотрудником Вашей организации');
+				if($r['worker'])
+					jsonError('Этот пользователь уже является сотрудником другой организации');
+			}
+
+			_viewer($viewer_id);
+			$sql = "UPDATE `_vkuser`
+					SET `ws_id`=".WS_ID.",
+						`worker`=1
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".$viewer_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		} else {
+			$first_name = _txt($_POST['first_name']);
+			$last_name = _txt($_POST['last_name']);
+			$sex = _num($_POST['sex']);
+			$post = _txt($_POST['post']);
+
+			if(!$first_name || !$last_name)
+				jsonError();
+
+			$viewer_id = _maxSql('_vkuser', 'viewer_id', GLOBAL_MYSQL_CONNECT);
+			if($viewer_id < VIEWER_MAX)
+				$viewer_id = VIEWER_MAX;
+
+			$sql = "INSERT INTO `_vkuser` (
+						`app_id`,
+						`ws_id`,
+						`viewer_id`,
+						`first_name`,
+						`last_name`,
+						`sex`,
+						`post`,
+						`photo`,
+						`worker`
+					) VALUES (
+						".APP_ID.",
+						".WS_ID.",
+						".$viewer_id.",
+						'".addslashes($first_name)."',
+						'".addslashes($last_name)."',
+						".$sex.",
+						'".addslashes($post)."',
+						'http://vk.com/images/camera_c.gif',
+						1
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1024,
+			'worker_id' => $viewer_id
+		));
+
+
+		$send['html'] = utf8(setup_worker_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_worker_del':
+		if(!RULE_SETUP_WORKER)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['id']))
+			jsonError();
+
+		$u = _viewer($viewer_id);
+		if($u['viewer_admin'])
+			jsonError('Сотрудник является руководителем');
+
+		if(!$u['viewer_worker'])
+			jsonError('Пользователь уже не является сотрудником');
+
+		if($u['viewer_ws_id'] != WS_ID)
+			jsonError('Сотрудник не из этой организации');
+
+		$sql = "UPDATE `_vkuser`
+				SET `ws_id`=0,
+					`worker`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1025,
+			'worker_id' => $viewer_id
+		));
+
+		jsonSuccess();
+		break;
 	case 'setup_worker_save':
 		if(!RULE_SETUP_WORKER)
 			jsonError();

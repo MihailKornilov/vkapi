@@ -149,8 +149,10 @@ function _remind_spisok($v=array(), $i='all') {
 		$remind[$r['id']] = $r;
 	}
 
-	$remind = _zayavValues($remind);
 	$remind = _clientValToList($remind);
+
+	if(function_exists('_zayavValues'))
+		$remind = _zayavValues($remind);
 
 	//внесение истории
 	$sql = "SELECT *

@@ -179,6 +179,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Переменные _global для всех приложений
 		'<script type="text/javascript" src="'.API_HTML.'/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
 
+		'<script type="text/javascript" src="'.APP_HTML.'/js/app_values.js?'.GLOBAL_VALUES.'"></script>'.
+
 (PIN_ENTER ? '' :
 
 		//Клиенты
@@ -220,8 +222,8 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 	switch(@$_GET['p']) {
 		case 'client': return _clientCase();
 		case 'money': return _money();
-		case 'report': return report();
-		case 'setup': return setup();
+		case 'report': return _report();
+		case 'setup': return _setup();
 
 		case 'sa':
 			if(empty($_GET['d']))
@@ -237,6 +239,7 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 
 	return '';
 }//_global_index()
+
 
 /* Разделы главного меню */
 function _menuCache() {//получение списка разделов меню из кеша
@@ -302,7 +305,7 @@ function _menu() {//разделы основного меню
 		return '';
 
 	_remindActiveSet(); //REMIND_ACTIVE
-	_pre(_menuCache());
+
 	$link = '';
 	foreach(_menuCache() as $r)
 		if($r['show']) {
@@ -320,6 +323,63 @@ function _menu() {//разделы основного меню
 			pageHelpIcon().
 		'</div>';
 }//_menu()
+
+
+/* Секция отчётов - report */
+function _report() {
+	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
+	$d1 = '';
+	$pages = array(
+		'history' => 'История действий',
+		'remind' => 'Напоминания'.REMIND_ACTIVE.'<div class="img_add _remind-add"></div>',
+		'salary' => 'З/п сотрудников'
+	);
+
+	$rightLink = '<div class="rightLink">';
+	if($pages)
+		foreach($pages as $p => $name)
+			$rightLink .= '<a href="'.URL.'&p=report&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
+	$rightLink .= '</div>';
+
+	$right = '';
+	switch($d) {
+		default: $d = 'history';
+		case 'histoty':
+			$data = _history();
+			$left = $data['spisok'];
+			$right .= _history_right();
+			break;
+		case 'remind':
+			$remind = _remind();
+			$left = $remind['spisok'];
+			$right .= $remind['right'];
+			break;
+		case 'salary':
+			if($worker_id = _num(@$_GET['id'])) {
+				$v = salaryFilter(array(
+					'worker_id' => $worker_id,
+					'mon' => intval(@$_GET['mon']),
+					'year' => intval(@$_GET['year']),
+					'acc_id' => intval(@$_GET['acc_id'])
+				));
+				$left = salary_worker($v);
+				if(defined('WORKER_OK'))
+					$right = '<input type="hidden" id="year" value="'.$v['year'].'" />'.
+						'<div id="monthList">'.salary_monthList($v).'</div>';
+			} else
+				$left = salary();
+			break;
+	}
+
+	return
+		'<table class="tabLR '.($d1 ? $d1 : $d).'" id="report">'.
+			'<tr><td class="left">'.$left.
+				'<td class="right">'.
+					$rightLink.
+					$right.
+		'</table>';
+}//_report()
+
 
 function _debug() {
 	if(!SA)

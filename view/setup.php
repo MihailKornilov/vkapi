@@ -51,7 +51,7 @@ function _setupValue($key, $v='', $about='') {//получение значения настройки и в
 
 
 // --- _setup --- раздел настроек приложения
-function _setup($v, $sub=array()) {
+function _setup() {
 /*
 	$sub:   подстраницы основых страниц настроек.
 			Передаётся в виде:
@@ -64,16 +64,20 @@ function _setup($v, $sub=array()) {
 	$page = array(
 		'my' => 'Мои настройки',
 		'worker' => 'Сотрудники',
+		'rekvisit' => 'Реквизиты организации',
 		'invoice' => 'Расчётные счета',
 		'expense' => 'Категории расходов'
-	) + $v;
+	) + (function_exists('setup') ? setup() : array());
 
-	$sub += array(
+	$sub = array(
 		'worker' => 'rule'
 	);
 
-	if(!RULE_SETUP_WORKER || !VIEWER_ADMIN)
+	if(!RULE_SETUP_WORKER)
 		unset($page['worker']);
+
+	if(!RULE_SETUP_INVOICE)
+		unset($page['invoice']);
 
 	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
 
@@ -117,6 +121,9 @@ function setup_my() {
 }//setup_my()
 
 function setup_worker() {
+	if(!RULE_SETUP_WORKER)
+		return _err('Недостаточно прав: управление сотрудниками');
+
 	return
 		'<div id="setup_worker">'.
 			'<div class="headName">Управление сотрудниками<a class="add">Новый сотрудник</a></div>'.
@@ -139,26 +146,31 @@ function setup_worker_spisok() {
 				'<tr><td class="photo"><img src="'.$r['photo'].'">'.
 					'<td>'.
 						'<a class="name" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.$r['first_name'].' '.$r['last_name'].'</a>'.
+						'<div>'.$r['post'].'</div>'.
 			'</table>';
 	}
 	return $send;
 }//setup_worker_spisok()
 function setup_worker_rule($viewer_id) {
-	if(!RULE_SETUP_WORKER || !VIEWER_ADMIN)
-		return '';
+	if(!RULE_SETUP_WORKER)
+		return _err('Недостаточно прав: управление сотрудниками.');
 
 	$u = _viewer($viewer_id);
 	if($u['viewer_ws_id'] != WS_ID)
-		return 'Сотрудника не существует.';
+		return _err('Сотрудника не существует.');
+
+	if(!$u['viewer_worker'])
+		return _err('Пользователь <b>'.$u['viewer_name'].'</b><br />уже не является сотрудником.');
 
 	$rule = _viewerRule($viewer_id);
 	return
 	'<script type="text/javascript">var RULE_VIEWER_ID='.$viewer_id.';</script>'.
 	'<div id="setup_rule">'.
-
+		(!$u['viewer_admin'] ? '<div class="img_del'._tooltip('Удалить сотрудника', -119, 'r').'</div>' : '').
 		'<table class="utab">'.
 			'<tr><td>'.$u['viewer_photo'].
-				'<td><div class="name">'.$u['viewer_name'].'</div>'.
+				'<td>'.
+					'<div class="name">'.$u['viewer_name'].'</div>'.
 					($viewer_id < VIEWER_MAX ? '<a href="http://vk.com/id'.$viewer_id.'" class="vklink" target="_blank">Перейти на страницу VK</a>' : '').
 					'<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="vklink">Страница з/п</a>'.
 		'</table>'.
@@ -247,9 +259,36 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_workerRuleQuery()
 
+function setup_rekvisit() {
+	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
+	$g = query_assoc($sql);
+	return
+		'<div id="setup_rekvisit">'.
+			'<div class="headName">Реквизиты организации</div>'.
+			'<table class="t">'.
+				'<tr><td class="label top">Название организации:<td><textarea id="org_name">'.$g['org_name'].'</textarea>'.
+				'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
+				'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
+				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
+				'<tr><td class="label top">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
+				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
+				'<tr><td class="label top">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
+				'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
+			'</table>'.
+			'<div class="headName">Банк получателя</div>'.
+			'<table class="t">'.
+				'<tr><td class="label top">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
+				'<tr><td class="label">БИК:<td><input type="text" id="bik" value="'.$g['bik'].'" />'.
+				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
+				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="kor_schet" value="'.$g['kor_schet'].'" />'.
+				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
+			'</table>'.
+		'</div>';
+}//setup_rekvisit()
+
 function setup_invoice() {
 	if(!RULE_SETUP_INVOICE)
-		return _norules('Настройки счетов или видов платежей');
+		return _err('Недостаточно прав: настройки счетов или видов платежей');
 	return
 		'<div id="setup_invoice">'.
 			'<div class="headName">Управление счетами<a class="add">Новый счёт</a></div>'.

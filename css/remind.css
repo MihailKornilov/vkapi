@@ -28,6 +28,12 @@
 ._remind-unit .hist table{width:100%;border-collapse:collapse}
 ._remind-unit .hist td{padding:2px 4px;border:#ddd solid 1px;text-align:left}
 
+
+/* плюсик добавления напоминания */
+.rightLink .img_add{float:right;margin:1px -7px 0 0}
+.rightLink a:not(.sel) .img_add{display:none}
+
+
 #_remind-action-tab{margin:10px}
 #_remind-action-tab #hd{margin-bottom:20px;font:bold 12px Tahoma;color:#444}
 #_remind-action-tab .st{
@@ -58,3 +64,11 @@
 	margin-right:10px;
 	color:#88C;
 }
+
+
+.remind#report .left{padding:0 8px}
+/*
+
+.remind ._empty{margin:8px 0}
+#_remind-next{margin-bottom:10px}
+*/

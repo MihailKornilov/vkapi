@@ -192,6 +192,7 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 }//_viewerValToList()
 function _viewerFormat($u) {//формирование данных пользователя
 	$send = array(
+		'viewer_app_id' => $u['app_id'],
 		'viewer_ws_id' => $u['ws_id'],
 		'viewer_first_name' => $u['first_name'],
 		'viewer_last_name' => $u['last_name'],

@@ -13,19 +13,26 @@
 #setup_my #pinchange{margin:0 10px 0 80px}
 
 #setup_worker .headName{margin-bottom:15px}
-#setup_worker .unit,#setup_worker_add table{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
-#setup_worker .unit td,#setup_worker_add td{vertical-align:top}
-#setup_worker .photo,#setup_worker_add .photo{width:50px}
-#setup_worker .photo img,#setup_worker_add .photo img{width:50px;height:50px}
-#setup_worker .img_del{float:right;margin-top:2px}
-#setup_worker .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
+#setup_worker .unit{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
+#setup_worker .unit td{vertical-align:top}
+#setup_worker .photo{width:50px}
+#setup_worker .photo img{width:50px;height:50px}
+#setup_worker .name{font-weight:bold;font-size:12px;color:#45688e}
 #setup_worker .rules_set{display:block;margin-top:5px}
-#setup_worker_add{margin:10px 0}
-#setup_worker_add h1{font-weight:bold;color:#31618C}
-#setup_worker_add input{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
-#setup_worker_add .res{margin:10px 0 0 20px}
+
+#worker-add h1{margin:10px 0;font-weight:bold;color:#31618C}
+#worker-add #viewer_id{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
+#worker-add #manual{margin-top:15px}
+#worker-add #manual-tab{display:none;margin-left:20px;border-spacing:10px}
+#worker-add #manual-tab input{width:220px}
+#worker-add #msg{padding:5px 0 0 7px;min-width:100px}
+#worker-add #msg span{color:red}
+#worker-add #msg._busy{background-position:center 15px}
+#worker-add #vkuser table{border-spacing:10px}
+#worker-add #vkuser td{vertical-align:top;font-weight:bold;font-size:12px;color:#45688e}
 
 #setup_rule{padding-bottom:30px}
+#setup_rule .img_del{float:right}
 #setup_rule .utab td{padding-right:10px;vertical-align:top}
 #setup_rule .utab img{width:50px}
 #setup_rule .vklink{color:#777;display:block}
@@ -40,6 +47,13 @@
 #setup_rule #div-app-enter .label{width:150px;text-align:right}
 #setup_rule #td-rule-setup div{display:block;margin-bottom:5px;color:#555}
 
+
+/* Реквизиты организации */
+#setup_rekvisit .headName{margin:0}
+#setup_rekvisit .t{border-spacing:10px;margin:0 0 20px 5px}
+#setup_rekvisit .label{width:135px}
+#setup_rekvisit input{width:240px}
+#setup_rekvisit textarea{width:240px;height:40px}
 
 
 /* Расчётные счета */

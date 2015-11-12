@@ -457,8 +457,10 @@ var VK_SCROLL = 0,
 					dialog.close();
 					_msg('Удалено');
 					o.func(res);
-				} else
+				} else {
 					dialog.abort();
+					dialog.err(res.text);
+				}
 			}, 'json');
 		}
 	},
@@ -555,6 +557,8 @@ $.fn._radio = function(o) {
 		title0:'',
 		spisok:[],
 		light:0,
+		right:15,
+		block:1,
 		func:function() {}
 	}, o);
 	var list = '',
@@ -569,9 +573,15 @@ $.fn._radio = function(o) {
 		var sp = spisok[n],
 			sel = val == sp.uid ? 'on' : 'off',
 			l = o.light ? ' l' : '';
-		list += '<div class="' + sel + l + '" val="' + sp.uid + '"><s></s>' + sp.title + '</div>';
+		list += '<div class="' + sel + l + '" ' +
+					 'val="' + sp.uid + '"' +
+					(o.right ? ' style="margin-right:' + o.right + 'px"' : '') +
+				'>' +
+						'<s></s>' +
+						sp.title +
+				'</div>';
 	}
-	t.wrap('<div class="_radio" id="' + id + '_radio">');
+	t.wrap('<div class="_radio' + (o.block ? ' block' : '') + '" id="' + id + '_radio">');
 	t.after(list);
 	_click(o.func);
 

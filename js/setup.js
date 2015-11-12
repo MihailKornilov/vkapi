@@ -78,6 +78,132 @@ var setupRuleCheck = function(v, id) {
 	};
 
 $(document)
+	.on('click', '#setup_worker .add', function() {
+		var html =
+			'<div id="worker-add">' +
+				'<h1>Укажите адрес страницы пользователя или его id ВКонтакте:</h1>' +
+				'<div class="_info">Формат адреса может быть следующих видов:<br />' +
+					'<u>http://vk.com/id12345</u>, <u>http://vk.com/durov</u>.<br />' +
+					'Либо используйте ID пользователя: <u>id12345</u>, <u>durov</u>, <u>12345</u>.' +
+				'</div>' +
+
+				'<table id="wa-find">' +
+					'<tr><td><input type="text" id="viewer_id" />' +
+						'<td id="msg"><span>Пользователь не найден</span>' +
+					'<tr><td colspan="2" id="vkuser">' +
+				'</table>' +
+
+				'<div id="manual"><a>Или заполните данные вручную..</a></div>' +
+				'<table id="manual-tab">' +
+					'<tr><td class="label r">Имя:<td><input type="text" id="first_name" />' +
+					'<tr><td class="label r">Фамилия:<td><input type="text" id="last_name" />' +
+					'<tr><td class="label r">Пол:<td><input type="hidden" id="sex" />' +
+					'<tr><td class="label r">Должность:<td><input type="text" id="post" />' +
+				'</table>' +
+			'</div>',
+			dialog = _dialog({
+				top:50,
+				width:440,
+				head:'Добавление нового сотрудника',
+				content:html,
+				butSubmit:'Добавить',
+				submit:submit
+			}),
+			viewer_id = 0;
+
+		$('#viewer_id')
+			.focus()
+			.keyEnter(user_find)
+			.keyup(user_find);
+		$('#manual').click(function() {
+			$(this)
+				.hide()
+				.next().show();
+			$('#wa-find').remove();
+			viewer_id = 0;
+			$('#viewer_id').val('');
+			$('#first_name').focus();
+		});
+		$('#sex')._radio({
+			light:1,
+			block:0,
+			spisok:[
+				{uid:2, title:'М'},
+				{uid:1, title:'Ж'}
+			],
+			func:function() {
+				$('#post').focus();
+			}
+		});
+
+		function user_find() {
+			if($('#msg').hasClass('_busy'))
+				return;
+
+			viewer_id = 0;
+			$('#vkuser').html('');
+
+			var send = {
+				user_ids:$.trim($('#viewer_id').val()),
+				fields:'photo_50',
+				v:5.2
+			};
+
+			if(!send.user_ids)
+				return;
+			if(/vk.com/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('vk.com/')[1];
+			if(/\?/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('?')[0];
+			if(/#/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('#')[0];
+
+			$('#msg')
+				.addClass('_busy')
+				.find('span').hide();
+
+			VK.api('users.get', send, function(data) {
+				$('#msg').removeClass('_busy');
+				if(data.response) {
+					var u = data.response[0],
+						html =
+							'<table>' +
+								'<tr><td><img src=' + u.photo_50 + '>' +
+									'<td>' + u.first_name + ' ' + u.last_name +
+							'</table>';
+					$('#vkuser').html(html);
+					viewer_id = u.id;
+				} else
+					$('#msg span').show();
+			});
+		}
+		function submit() {
+			var send = {
+				op:'setup_worker_add',
+				viewer_id:viewer_id,
+				first_name:$('#first_name').val(),
+				last_name:$('#last_name').val(),
+				sex:$('#sex').val(),
+				post:$('#post').val()
+			};
+			if(!send.viewer_id && !send.first_name && !send.last_name) dialog.err('Произведите поиск пользователя или укажите данные вручную');
+			else if(send.first_name && send.last_name && send.sex == 0) dialog.err('Не указан пол');
+			else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Новый сотрудник успешно добавлен.');
+						$('#spisok').html(res.html);
+					} else {
+						dialog.abort();
+						dialog.err(res.text);
+					}
+				}, 'json');
+			}
+		}
+	})
+
 	.on('click', '#setup_invoice .add', function() {
 		var dialog = _dialog({
 			top:40,
@@ -340,6 +466,16 @@ $(document)
 			});
 		}
 		if($('#setup_rule').length) {
+			$('.img_del').click(function() {
+				_dialogDel({
+					id:RULE_VIEWER_ID,
+					head:'сотрудника',
+					op:'setup_worker_del',
+					func:function() {
+						location.href = URL + '&p=setup&d=worker';
+					}
+				});
+			});
 			$('#w-save').click(function() {
 				var send = {
 						op:'setup_worker_save',
@@ -376,7 +512,7 @@ $(document)
 				}
 			});
 			$('#RULE_APP_ENTER')._check(function(v, id) {
-				$('#div-app-enter')[(v ? 'add' : 'remove') + 'Class']('dn');
+				$('#div-app-enter')[(v ? 'remove' : 'add') + 'Class']('dn');
 				setupRuleCheck(v, id);
 			});
 			$('#RULE_SETUP_WORKER')._check(function(v, id) {
