@@ -76,6 +76,9 @@ function _setup() {
 	if(!RULE_SETUP_WORKER)
 		unset($page['worker']);
 
+	if(!RULE_SETUP_REKVISIT)
+		unset($page['rekvisit']);
+
 	if(!RULE_SETUP_INVOICE)
 		unset($page['invoice']);
 
@@ -260,27 +263,35 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 }//_workerRuleQuery()
 
 function setup_rekvisit() {
-	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
-	$g = query_assoc($sql);
+	if(!RULE_SETUP_REKVISIT)
+		return _err('Недостаточно прав: Реквизиты организации');
+
+	$sql = "SELECT *
+			FROM `_ws`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".WS_ID;
+	$g = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 	return
 		'<div id="setup_rekvisit">'.
 			'<div class="headName">Реквизиты организации</div>'.
 			'<table class="t">'.
-				'<tr><td class="label top">Название организации:<td><textarea id="org_name">'.$g['org_name'].'</textarea>'.
+				'<tr><td class="label topi">Название организации:<td><textarea id="name">'.$g['name'].'</textarea>'.
+				'<tr><td class="label topi">Наименование юридического лица:<td><textarea id="name_yur">'.$g['name_yur'].'</textarea>'.
 				'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
 				'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
 				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
-				'<tr><td class="label top">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
-				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
-				'<tr><td class="label top">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
+				'<tr><td class="label">Контактные телефоны:<td><input type="text" id="phone" value="'.$g['phone'].'" />'.
+				'<tr><td class="label">Факс:<td><input type="text" id="fax" value="'.$g['fax'].'" />'.
+				'<tr><td class="label topi">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
+				'<tr><td class="label topi">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
 				'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
 			'</table>'.
 			'<div class="headName">Банк получателя</div>'.
 			'<table class="t">'.
-				'<tr><td class="label top">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
-				'<tr><td class="label">БИК:<td><input type="text" id="bik" value="'.$g['bik'].'" />'.
-				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
-				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="kor_schet" value="'.$g['kor_schet'].'" />'.
+				'<tr><td class="label topi">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
+				'<tr><td class="label">БИК:<td><input type="text" id="bank_bik" value="'.$g['bank_bik'].'" />'.
+				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="bank_account" value="'.$g['bank_account'].'" />'.
+				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="bank_account_corr" value="'.$g['bank_account_corr'].'" />'.
 				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
 			'</table>'.
 		'</div>';

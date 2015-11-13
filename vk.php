@@ -105,6 +105,7 @@ _appAuth();
 _dbConnect('GLOBAL_');
 _dbConnect();
 _getVkUser();
+_ws();
 _setupApp();
 _pinCheck();
 _hashRead();
@@ -239,6 +240,75 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 
 	return '';
 }//_global_index()
+
+function _ws() {//ѕолучение данных об организации
+	_wsOneCheck();
+
+	if(!WS_ID) {
+		define('WS_ACCESS', 0);
+		return false;
+	}
+
+	$key = CACHE_PREFIX.'ws_'.WS_ID;
+	$ws = xcache_get($key);
+	if(empty($ws)) {
+		$sql = "SELECT *
+				FROM `_ws`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".WS_ID."
+				  AND !`deleted`";
+		if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+			define('WS_ACCESS', 0);
+			return false;
+		}
+		xcache_set($key, $ws, 86400);
+	}
+//	define('WS_DEVS', $ws['devs']);
+//	define('WS_TYPE', $ws['type']);
+//	define('SERVIVE_CARTRIDGE', $ws['service_cartridge']);
+
+	define('WS_ACCESS', 1);
+	return true;
+}//_ws()
+function _wsOneCheck() {
+	// ѕроверка наличи€ в базе данных хот€ бы об одной организации.
+	// ≈сли нет и если пользователь €вл€етс€ суперадминистратором, то внесение организации.
+	// ѕрименение текущему пользователю id внесЄнной организации и назначение его администратором.
+	if(!WS_ID && SA) {
+		$sql = "SELECT COUNT(`id`)
+				FROM `_ws`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`";
+		if(!query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+			$sql = "INSERT INTO `_ws` (
+						`app_id`,
+						`admin_id`
+					) VALUES (
+						".APP_ID.",
+						".VIEWER_ID."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			$insert_id = query_insert_id('_ws', GLOBAL_MYSQL_CONNECT);
+
+			$sql = "UPDATE `_vkuser`
+					SET `ws_id`=".$insert_id.",
+						`admin`=1,
+						`worker`=1
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".VIEWER_ID;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+			xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
+
+			$sql = "DELETE FROM `_vkuser_rule`
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".VIEWER_ID;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+	}
+}//_wsOneCheck()
 
 
 /* –азделы главного меню */
@@ -613,7 +683,7 @@ function _appAuth() {//проверка авторизации в приложении
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
 		die('ќшибка авторизации приложени€. ѕопробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
 }//_appAuth()
-function _noauth($msg='Ќедостаточно прав.') {
+function _noauth($msg='Ќе удалось выполнить вход в приложение.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
 }//_noauth()
 function _err($msg='ќшибка') {
@@ -1085,12 +1155,17 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию дл€ руководител€
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию дл€ сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
+	xcache_unset(CACHE_PREFIX.'ws'.WS_ID);//данные организации
 	xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчЄтные счета
 	xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
 
 
 	//сброс времени действи€ введЄнного пинкода
 //		unset($_SESSION[PIN_TIME_KEY]);
+
+	//очистка кеша текущего пользовател€
+	xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+	xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
 
 	//очистка кеша сотрудников приложени€
 	$sql = "SELECT `viewer_id`

@@ -110,7 +110,7 @@ switch(@$_POST['op']) {
 			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
 				if($r['worker'] && $r['ws_id'] == WS_ID)
 					jsonError('Этот пользователь уже является сотрудником Вашей организации');
-				if($r['worker'])
+				if($r['worker'] && $r['ws_id'])
 					jsonError('Этот пользователь уже является сотрудником другой организации');
 			}
 
@@ -358,6 +358,75 @@ switch(@$_POST['op']) {
 
 		if(!setup_worker_rule_save($_POST))
 			jsonError();
+
+		jsonSuccess();
+		break;
+
+	case 'setup_rekvisit':
+		if(!RULE_SETUP_REKVISIT)
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$name_yur = _txt($_POST['name_yur']);
+		$ogrn = _txt($_POST['ogrn']);
+		$inn = _txt($_POST['inn']);
+		$kpp = _txt($_POST['kpp']);
+		$phone = _txt($_POST['phone']);
+		$fax = _txt($_POST['fax']);
+		$adres_yur = _txt($_POST['adres_yur']);
+		$adres_ofice = _txt($_POST['adres_ofice']);
+		$time_work = _txt($_POST['time_work']);
+		$bank_name = _txt($_POST['bank_name']);
+		$bank_bik = _txt($_POST['bank_bik']);
+		$bank_account = _txt($_POST['bank_account']);
+		$bank_account_corr = _txt($_POST['bank_account_corr']);
+
+		$sql = "SELECT *
+				FROM `_ws`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".WS_ID;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_ws`
+				SET `name`='".addslashes($name)."',
+					`name_yur`='".addslashes($name_yur)."',
+					`ogrn`='".addslashes($ogrn)."',
+					`inn`='".addslashes($inn)."',
+					`kpp`='".addslashes($kpp)."',
+					`phone`='".addslashes($phone)."',
+					`fax`='".addslashes($fax)."',
+					`adres_yur`='".addslashes($adres_yur)."',
+					`adres_ofice`='".addslashes($adres_ofice)."',
+					`time_work`='".addslashes($time_work)."',
+					`bank_name`='".addslashes($bank_name)."',
+					`bank_bik`='".addslashes($bank_bik)."',
+					`bank_account`='".addslashes($bank_account)."',
+					`bank_account_corr`='".addslashes($bank_account_corr)."'
+				WHERE `id`=".WS_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$changes =
+			_historyChange('Название организации', $r['name'], $name).
+			_historyChange('Наименование юридического лица', $r['name_yur'], $name_yur).
+			_historyChange('ОГРН', $r['ogrn'], $ogrn).
+			_historyChange('ИНН', $r['inn'], $inn).
+			_historyChange('КПП', $r['kpp'], $kpp).
+			_historyChange('Контактные телефоны', $r['phone'], $phone).
+			_historyChange('Факс', $r['fax'], $fax).
+			_historyChange('Юридический адрес', $r['adres_yur'], $adres_yur).
+			_historyChange('Адрес офиса', $r['adres_ofice'], $adres_ofice).
+			_historyChange('Режим работы', $r['time_work'], $time_work).
+			_historyChange('Наименование банка', $r['bank_name'], $bank_name).
+			_historyChange('БИК', $r['bank_bik'], $bank_bik).
+			_historyChange('Расчётный счёт', $r['bank_account'], $bank_account).
+			_historyChange('Корреспондентский счёт', $r['bank_account_corr'], $bank_account_corr);
+
+		if($changes)
+			_history(array(
+				'type_id' => 1026,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;

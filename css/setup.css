@@ -53,7 +53,7 @@
 #setup_rekvisit .t{border-spacing:10px;margin:0 0 20px 5px}
 #setup_rekvisit .label{width:135px}
 #setup_rekvisit input{width:240px}
-#setup_rekvisit textarea{width:240px;height:40px}
+#setup_rekvisit textarea{width:240px;height:20px}
 
 
 /* Расчётные счета */

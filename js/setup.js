@@ -545,4 +545,34 @@ $(document)
 				}, 'json');
 			});
 		}
+		if($('#setup_rekvisit').length) {
+			$('textarea').autosize();
+			$('.vkButton').click(function() {
+				var t = $(this),
+					send = {
+						op:'setup_rekvisit',
+						name:$('#name').val(),
+						name_yur:$('#name_yur').val(),
+						ogrn:$('#ogrn').val(),
+						inn:$('#inn').val(),
+						kpp:$('#kpp').val(),
+						phone:$('#phone').val(),
+						fax:$('#fax').val(),
+						adres_yur:$('#adres_yur').val(),
+						adres_ofice:$('#adres_ofice').val(),
+						time_work:$('#time_work').val(),
+						bank_name:$('#bank_name').val(),
+						bank_bik:$('#bank_bik').val(),
+						bank_account:$('#bank_account').val(),
+						bank_account_corr:$('#bank_account_corr').val()
+					};
+				t.addClass('busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					t.removeClass('busy');
+					if(res.success)
+						_msg('Информация сохранена.');
+				}, 'json');
+			});
+		}
+
 	});
