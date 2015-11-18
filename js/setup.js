@@ -75,6 +75,53 @@ var setupRuleCheck = function(v, id) {
 				}, 'json');
 			}
 		}
+	},
+	setupZayavExpense = function(arr) {
+		arr = $.extend({
+			id:0,
+			name:'',
+			dop:0
+		}, arr);
+
+		var html =
+				'<table id="setup-tab">' +
+					'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + arr.name + '" />' +
+					'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" value="' + arr.dop + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(arr.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода заявки',
+				content:html,
+				butSubmit:arr.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+		$('#dop')._radio({light:1,spisok:ZAYAV_EXPENSE_DOP});
+
+		function submit() {
+			var send = {
+				op:'setup_zayav_expense_' + (arr.id ? 'edit' : 'add'),
+				id:arr.id,
+				name:$('#name').val(),
+				dop:$('#dop').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	};
 
 $(document)
@@ -343,6 +390,27 @@ $(document)
 			id:_parent($(this), 'DD').attr('val'),
 			head:'категории расходов организации',
 			op:'expense_category_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
+				sortable();
+			}
+		});
+	})
+
+	.on('click', '#setup_zayav_expense .add', setupZayavExpense)
+	.on('click', '#setup_zayav_expense .img_edit', function() {
+		var t = _parent($(this), 'DD');
+		setupZayavExpense({
+			id:t.attr('val'),
+			name:t.find('.name').html(),
+			dop:t.find('.hdop').val()
+		});
+	})
+	.on('click', '#setup_zayav_expense .img_del', function() {
+		_dialogDel({
+			id:_parent($(this), 'DD').attr('val'),
+			head:'категории расхода заявки',
+			op:'setup_zayav_expense_del',
 			func:function(res) {
 				$('#spisok').html(res.html);
 				sortable();

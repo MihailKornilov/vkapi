@@ -102,11 +102,7 @@
 .schet#report #paid_check{margin-top:20px}
 
 
-.salary#report .headName{margin:10px}
-.salary#report .headName em{font-size:12px;font-weight:bold}
-.salary#report .headName._busy{background-position:right center}
-.salary #spisok{margin:10px}
-.salary .balans{text-align:right}
+
 .salary .uhead .a{float:right}
 .salary .uhead a{color:#68A;}
 .salary .uhead a:hover{color:#357}

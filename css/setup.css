@@ -48,12 +48,14 @@
 #setup_rule #td-rule-setup div{display:block;margin-bottom:5px;color:#555}
 
 
+
 /* Реквизиты организации */
 #setup_rekvisit .headName{margin:0}
 #setup_rekvisit .t{border-spacing:10px;margin:0 0 20px 5px}
 #setup_rekvisit .label{width:135px}
 #setup_rekvisit input{width:240px}
 #setup_rekvisit textarea{width:240px;height:20px}
+
 
 
 /* Расчётные счета */
@@ -78,4 +80,13 @@
 #setup_expense .worker_use{width:80px;text-align:center}
 #setup_expense .count{width:55px;text-align:center}
 #setup_expense .ed{width:35px}
+
+
+
+/* Расходы по заявкам */
+#setup_zayav_expense .name{width:130px}
+#setup_zayav_expense td.name{cursor:move}
+#setup_zayav_expense .dop{width:150px}
+#setup_zayav_expense .use{width:55px;text-align:center}
+#setup_zayav_expense .ed{width:35px}
 

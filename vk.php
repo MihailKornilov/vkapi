@@ -34,8 +34,9 @@ require_once GLOBAL_DIR.'/syncro.php';
 require_once GLOBAL_DIR.'/view/vkuser.php';
 require_once GLOBAL_DIR.'/view/client.php';
 require_once GLOBAL_DIR.'/view/money.php';
-require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/history.php';
+require_once GLOBAL_DIR.'/view/remind.php';
+require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
 
@@ -192,13 +193,17 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/money'.MIN.'.js?'.VERSION.'"></script>'.
 
+		//История действий
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/history'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/history'.MIN.'.js?'.VERSION.'"></script>'.
+
 		//Напоминания
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/remind'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/remind'.MIN.'.js?'.VERSION.'"></script>'.
 
-		//История действий
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/history'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/history'.MIN.'.js?'.VERSION.'"></script>'.
+		//З/п сотрудников
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/salary'.MIN.'.css?'.VERSION.'" />'.
+//		'<script type="text/javascript" src="'.API_HTML.'/js/salary'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Настройки
 	(@$_GET['p'] == 'setup' ?
@@ -263,9 +268,6 @@ function _ws() {//Получение данных об организации
 		}
 		xcache_set($key, $ws, 86400);
 	}
-//	define('WS_DEVS', $ws['devs']);
-//	define('WS_TYPE', $ws['type']);
-//	define('SERVIVE_CARTRIDGE', $ws['service_cartridge']);
 
 	define('WS_ACCESS', 1);
 	return true;
@@ -425,6 +427,8 @@ function _report() {
 			$right .= $remind['right'];
 			break;
 		case 'salary':
+			$left = _salary();
+			break;
 			if($worker_id = _num(@$_GET['id'])) {
 				$v = salaryFilter(array(
 					'worker_id' => $worker_id,
@@ -436,8 +440,7 @@ function _report() {
 				if(defined('WORKER_OK'))
 					$right = '<input type="hidden" id="year" value="'.$v['year'].'" />'.
 						'<div id="monthList">'.salary_monthList($v).'</div>';
-			} else
-				$left = salary();
+			}
 			break;
 	}
 
@@ -838,7 +841,11 @@ function _daNet($v) {//$v: 1 -> да, 0 -> нет
 	return $v ? 'да' : 'нет';
 }//_daNet
 function _iconEdit($v=array()) {//иконка редактирования записи в таблице
-	return '<div val="'.$v['id'].'" class="img_edit'._tooltip('Изменить', -52, 'r').'</div>';
+	$v = array(
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : ''//id записи
+	);
+
+	return '<div'.$v['id'].' class="img_edit'._tooltip('Изменить', -52, 'r').'</div>';
 }//_iconEdit()
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
@@ -1132,7 +1139,12 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 												  FROM `_money_expense_category`
 												  WHERE `app_id`=".APP_ID."
 													AND `ws_id`=".WS_ID."
-													AND `worker_use`", GLOBAL_MYSQL_CONNECT).';';
+													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
+		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=1", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=2", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=3", GLOBAL_MYSQL_CONNECT).';';
 
 	$fp = fopen(APP_PATH.'/js/app_values.js', 'w+');
 	fwrite($fp, $save);
@@ -1157,7 +1169,8 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
 	xcache_unset(CACHE_PREFIX.'ws'.WS_ID);//данные организации
 	xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
-	xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов
+	xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
 
 
 	//сброс времени действия введённого пинкода

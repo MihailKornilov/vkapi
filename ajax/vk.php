@@ -182,6 +182,129 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'zayav_expense_edit'://расходы по заявке
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		$expense = _txt($_POST['expense']);
+		if(!_zayav_expense_test($expense))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `zayav`
+				WHERE `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `zayav_id`=".$zayav_id."
+				ORDER BY `id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = array();
+		while($r = mysql_fetch_assoc($q)) {
+			$dop = '';
+			$ze = _zayavExpense($r['category_id'], 'all');
+			if($ze['txt'])
+				$dop = $r['txt'];
+			if($ze['worker'])
+				$dop = $r['worker_id'];
+			if($ze['zp'])
+				$dop = $r['zp_id'];
+			$arr[] =
+				$r['id'].':'.
+				$r['category_id'].':'.
+				$dop.':'.
+				$r['sum'];
+		}
+		$old = _zayav_expense_array(implode(',', $arr));
+		$new = _zayav_expense_array($expense);
+
+		if($old != $new) {
+			$toDelete = array();
+			foreach($old as $r)
+				$toDelete[$r[0]] = $r;
+
+			//получение старой html-таблицы для истории дейсвтий
+			$sql = "SELECT *
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					ORDER BY `id`";
+			$arrOld = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+			foreach($new as $r) {
+				$ze = _zayavExpense($r[1], 'all');
+				$sql = "INSERT INTO `_zayav_expense` (
+							`id`,
+							`app_id`,
+							`ws_id`,
+							`zayav_id`,
+							`category_id`,
+							`txt`,
+							`worker_id`,
+							`zp_id`,
+							`sum`,
+							`mon`,
+							`year`
+						) VALUES (
+							".$r[0].",
+							".APP_ID.",
+							".WS_ID.",
+							".$zayav_id.",
+							".$r[1].",
+							'".($ze['txt'] ? addslashes($r[2]) : '')."',
+							".($ze['worker'] ? intval($r[2]) : 0).",
+							".($ze['zp'] ? intval($r[2]) : 0).",
+							".$r[3].",
+							".intval(strftime('%m')).",
+							".strftime('%Y')."
+						) ON DUPLICATE KEY UPDATE
+							`category_id`=VALUES(`category_id`),
+							`txt`=VALUES(`txt`),
+							`worker_id`=VALUES(`worker_id`),
+							`zp_id`=VALUES(`zp_id`),
+							`sum`=VALUES(`sum`)";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+
+				unset($toDelete[$r[0]]);
+			}
+
+			//удаление расходов, которые были удалены
+			if(!empty($toDelete)) {
+				$sql = "DELETE FROM `_zayav_expense` WHERE `id` IN (".implode(',', array_keys($toDelete)).")";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			}
+
+		//	_zayavBalansUpdate($zayav_id);
+
+			//получение новой html-таблицы для истории дейсвтий
+			$sql = "SELECT *
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					ORDER BY `id`";
+			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+			$old = _zayav_expense_html($arrOld, false, $arrNew);
+			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
+//			$new = _zayav_expense_html($arrNew);
+
+			_history(array(
+				'type_id' => 30,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
+			));
+		}
+		jsonSuccess();
+		break;
+
 	case 'vkcomment_add':
 		$table = htmlspecialchars(trim($_POST['table']));
 		if(strlen($table) > 20)

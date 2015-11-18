@@ -66,7 +66,8 @@ function _setup() {
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
 		'invoice' => 'Расчётные счета',
-		'expense' => 'Категории расходов'
+		'expense' => 'Категории расходов',
+		'zayav_expense' => 'SA: Расходы по заявке'
 	) + (function_exists('setup') ? setup() : array());
 
 	$sub = array(
@@ -81,6 +82,9 @@ function _setup() {
 
 	if(!RULE_SETUP_INVOICE)
 		unset($page['invoice']);
+
+	if(!SA)
+		unset($page['zayavexpense']);
 
 	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
 
@@ -410,3 +414,62 @@ function setup_expense_spisok() {
 	$send .= '</dl>';
 	return $send;
 }//setup_expense_spisok()
+
+function setup_zayav_expense() {//категории расходов по заявке
+	if(!SA)
+		return '';
+
+	return
+	'<div id="setup_zayav_expense">'.
+		'<div class="headName">Настройки категорий расходов по заявке<a class="add">Добавить</a></div>'.
+		'<div id="spisok">'.setup_zayav_expense_spisok().'</div>'.
+	'</div>';
+}//setup_zayav_expense()
+function setup_zayav_expense_spisok() {
+	if(!SA)
+		return '';
+
+	$sql = "SELECT
+				*,
+				0 `use`
+			FROM `_zayav_expense_category`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$sql = "SELECT
+				DISTINCT `category_id`,
+				COUNT(`id`) `use`
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`
+			GROUP BY `category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['use'] = $r['use'];
+
+	$send =
+	'<table class="_spisok">'.
+		'<tr><th class="name">Наименование'.
+			'<th class="dop">Дополнительное поле'.
+			'<th class="use">Кол-во<br />записей'.
+			'<th class="ed">'.
+	'</table>'.
+	'<dl class="_sort" val="_zayav_expense_category">';
+	foreach($spisok as $id => $r)
+		$send .=
+		'<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="dop">'.
+						($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
+						'<input class="hdop" type="hidden" value="'.$r['dop'].'" />'.
+					'<td class="use">'.($r['use'] ? $r['use'] : '').
+					'<td class="ed">'.
+						_iconEdit().
+						(!$r['use'] ? _iconDel() : '').
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}//setup_zayav_expense_spisok()

@@ -39,3 +39,10 @@
 ._hist-un .prim{font:italic 11px Arial;color:#555}
 #_hist-next{margin:0 8px 10px}
 
+._hist-un .z td{border:none}
+._hist-un .z .ze-spisok td{border:#ddd solid 1px}
+._hist-un .z .ze-spisok tr.new{background-color:#e0ffe0}
+._hist-un .z .ze-spisok tr.del{background-color:#fee}
+._hist-un .z .ze-spisok tr.del *{color:#999}
+._hist-un .z .ze-spisok td.change{background-color:#ffc}
+._hist-un .z .ze-spisok td.sum{white-space:nowrap;text-align:right}

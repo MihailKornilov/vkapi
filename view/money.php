@@ -254,15 +254,17 @@ function incomeAbout($r) {
 
 
 function _expense($id=0, $i='name') {//Список категорий расходов
-		$key = CACHE_PREFIX.'expense'.WS_ID;
-		$arr = xcache_get($key);
-		if(empty($arr)) {
-			$sql = "SELECT * FROM `_money_expense_category` ORDER BY `sort`";
-			$q = query($sql, GLOBAL_MYSQL_CONNECT);
-			while($r = mysql_fetch_assoc($q))
-				$arr[$r['id']] = $r;
-			xcache_set($key, $arr, 86400);
-		}
+	$key = CACHE_PREFIX.'expense'.WS_ID;
+	$arr = xcache_get($key);
+	if(empty($arr)) {
+		$sql = "SELECT *
+				FROM `_money_expense_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				ORDER BY `sort`";
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
 
 	//все категории
 	if(!$id)
@@ -794,10 +796,10 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	if(empty($arr)) {
 		$arr = array();
 		$sql = "SELECT *
-					FROM `_money_invoice`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					ORDER BY `id`";
+				FROM `_money_invoice`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				ORDER BY `id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q)) {
 			$r['start'] = round($r['start'], 2);
@@ -818,7 +820,7 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	if(!isset($arr[$id]))
 		die('Error: no invoice_id <b>'.$id.'</b> in _invoice');
 
-	//возврат данных конкретного счёта
+	//возврат данных всех счетов
 	if($i == 'all')
 		return $arr[$id];
 

@@ -37,7 +37,7 @@ switch(@$_POST['op']) {
 
 		//Изменять можно только активные напоминания
 		$sql = "SELECT *
-				FROM `remind`
+				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
 				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
 				  AND `status`=1
@@ -46,7 +46,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		if($r['status'] != $status || $status == 1 && $r['day'] != $day) {
-			$sql = "UPDATE `remind`
+			$sql = "UPDATE `_remind`
 			        SET `status`=".$status.
 				($status == 1 ? ",`day`='".$day."'" : '')."
 			        WHERE `id`=".$id;
@@ -62,7 +62,7 @@ switch(@$_POST['op']) {
 			//Обновление списка причин
 			if($status == 1) {
 				$sql = "SELECT `id`
-				        FROM `remind_reason`
+				        FROM `_remind_reason`
 						WHERE `app_id`=".APP_ID."
 						  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
 						  AND `txt`='".addslashes($reason)."'";
@@ -71,7 +71,7 @@ switch(@$_POST['op']) {
 				if(!$reason_id)
 					$reason_id = 0;
 
-				$sql = "INSERT INTO `remind_reason` (
+				$sql = "INSERT INTO `_remind_reason` (
 							`id`,
 							`app_id`,
 							`ws_id`,
@@ -98,7 +98,7 @@ switch(@$_POST['op']) {
 		break;
 	case 'remind_reason_spisok':
 		$sql = "SELECT `id`,`txt`
-				FROM `remind_reason`
+				FROM `_remind_reason`
 				WHERE `app_id`=".APP_ID."
 				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
 				ORDER BY `count` DESC, `txt`";
@@ -115,7 +115,7 @@ switch(@$_POST['op']) {
 		$about = _txt($_POST['about']);
 
 		$sql = "SELECT *
-				FROM `remind`
+				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
 				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
 				  AND `status`=1
@@ -126,7 +126,7 @@ switch(@$_POST['op']) {
 		if($txt == $r['txt'] && $about == $r['about'])
 			jsonError();
 
-		$sql = "UPDATE `remind`
+		$sql = "UPDATE `_remind`
 				SET `txt`='".addslashes($txt)."',
 					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;

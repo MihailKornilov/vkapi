@@ -1,0 +1,48 @@
+.salary#report .headName{margin:15px 10px 10px}
+/*
+.salary#report .headName em{font-size:12px;font-weight:bold}
+.salary#report .headName._busy{background-position:right center}
+*/
+.salary#report #spisok{margin:10px}
+.salary#report #spisok ._spisok{width:auto}
+.salary#report #spisok .balans{text-align:right}
+
+
+
+
+
+
+
+/* расходы по заявке в информации о заявке */
+#_zayav-expense h1{
+	border-left:#e9edf1 solid 1px;
+	border-right:#e9edf1 solid 1px;
+	border-bottom:#e9edf1 solid 1px;
+	padding:5px 7px;
+}
+#_zayav-expense .img_edit{
+	float:right;
+	background-color:#fff;
+	width:16px;
+	height:16px;
+	margin:-2px -6px 0 0;
+	border:#ddd solid 1px;
+	background-position:2px 2px;
+}
+#_zayav-expense .img_edit:hover{background-position:2px -13px}
+#_zayav-expense table *{font-size:10px}
+#_zayav-expense table{width:100%;margin-top:-1px;border-collapse:collapse}
+#_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px}
+#_zayav-expense .name{width:100px}
+#_zayav-expense .sum{text-align:right;width:50px;white-space:nowrap;cursor:default}
+#_zayav-expense .itog{text-align:right}
+#_zayav-expense .plus{background-color:#dfd;color:#272}
+#_zayav-expense .minus{background-color:#fdd;color:#922}
+
+/* редактирование списка расходов в заявке */
+#zee-tab{border-spacing:10px}
+#zee-tab .label{width:100px;text-align:right}
+#zee-spisok .zee-tab{margin-bottom:6px}
+#zee-spisok .zee-txt{width:232px;margin-right:5px}
+#zee-spisok ._select{margin-right:5px}
+#zee-spisok .zee-sum{width:40px;margin-right:3px;text-align:right}

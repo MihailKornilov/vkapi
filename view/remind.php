@@ -30,7 +30,7 @@ function _remind_history_add($v) {
 		'day' => !empty($v['day']) ? $v['day'] : '0000-00-00',
 		'reason' => !empty($v['reason']) ? $v['reason'] : ''
 	);
-	$sql = "INSERT INTO `remind_history` (
+	$sql = "INSERT INTO `_remind_history` (
 				`remind_id`,
 				`status`,
 				`day`,
@@ -47,9 +47,9 @@ function _remind_history_add($v) {
 }//_remind_history_add()
 function _remindActiveSet() { //ѕолучение количества активных напоминаний
 	$sql = "SELECT COUNT(`id`)
-			FROM `remind`
+			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
+			  AND `ws_id`=".WS_ID."
 			  AND `status`=1
 			  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
 	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -105,7 +105,7 @@ function _remind_spisok($v=array(), $i='all') {
 	define('CLIENT_OR_ZAYAV', $filter['client_id'] || $filter['zayav_id']);
 
 	$cond = "`app_id`=".APP_ID.
-			(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '').
+			" AND `ws_id`=".WS_ID.
 			(CLIENT_OR_ZAYAV ? '' : " AND `status`=".$filter['status']);
 
 	if($filter['day'])
@@ -123,7 +123,7 @@ function _remind_spisok($v=array(), $i='all') {
 		'hidden' => 0
 	);
 
-	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `remind` WHERE ".$cond, GLOBAL_MYSQL_CONNECT);
+	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `_remind` WHERE ".$cond, GLOBAL_MYSQL_CONNECT);
 	if(!$send['all']) {
 		$send += array(
 			'spisok' => ($filter['zayav_id'] ? '&nbsp;&nbsp;Ќапоминаний нет.' : '<div class="_empty">Ќапоминаний не найдено.</div>')
@@ -136,7 +136,7 @@ function _remind_spisok($v=array(), $i='all') {
 	$all = $send['all'];
 
 	$sql = "SELECT *
-			FROM `remind`
+			FROM `_remind`
 			WHERE ".$cond."
 			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id` DESC' : '`day`')."
 			LIMIT ".$start.",".$limit;
@@ -156,7 +156,7 @@ function _remind_spisok($v=array(), $i='all') {
 
 	//внесение истории
 	$sql = "SELECT *
-			FROM `remind_history`
+			FROM `_remind_history`
 			WHERE `remind_id` IN (".implode(',', array_keys($remind)).")
 			ORDER BY `id` DESC";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -263,7 +263,7 @@ function _remind_add($v) {
 	if($v['zayav_id'] && !@$v['client_id'])
 		$v['client_id'] = query_value("SELECT `client_id` FROM `zayav` WHERE `id`=".$v['zayav_id']);
 
-	$sql = "INSERT INTO `remind` (
+	$sql = "INSERT INTO `_remind` (
 					`app_id`,
 					`ws_id`,
 					`client_id`,
@@ -275,7 +275,7 @@ function _remind_add($v) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".(defined('WS_ID') ? WS_ID : 0).",
+					".WS_ID.",
 					".$v['client_id'].",
 					".$v['zayav_id'].",
 					'".addslashes($v['txt'])."',
@@ -286,8 +286,7 @@ function _remind_add($v) {
 				)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	$sql = "SELECT `id` FROM `remind` WHERE `app_id`=".APP_ID." ORDER BY `id` DESC LIMIT 1";
-	$insert_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$insert_id = query_insert_id('_remind', GLOBAL_MYSQL_CONNECT);
 
 	_remind_history_add(array(
 		'remind_id' => $insert_id,
@@ -310,10 +309,10 @@ function _remind_zayav($zayav_id, $link_values='&p=remind') {//вывод напоминаний
 		'<div id="remind-spisok">'.$data['spisok'].'</div>';
 }//_remind_zayav()
 function _remind_active_to_ready_in_zayav($zayav_id) {//отметка активных напоминаний выполненными в за€вках
-	$sql = "SELECT * FROM `remind` WHERE `app_id`=".APP_ID." AND `status`=1 AND `zayav_id`=".$zayav_id;
+	$sql = "SELECT * FROM `_remind` WHERE `app_id`=".APP_ID." AND `status`=1 AND `zayav_id`=".$zayav_id;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {
-		$sql = "UPDATE `remind` SET `status`=2 WHERE `id`=".$r['id'];
+		$sql = "UPDATE `_remind` SET `status`=2 WHERE `id`=".$r['id'];
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_remind_history_add(array(
