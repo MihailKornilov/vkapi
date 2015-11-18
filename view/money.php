@@ -761,7 +761,7 @@ function report_schet_spisok($v=array()) {
 		$spisok[$r['id']] = $r;
 	}
 
-	$spisok = _zayavValues($spisok);
+	$spisok = _zayavValToList($spisok);
 
 
 	//список платежей по счетам

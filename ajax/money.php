@@ -319,8 +319,6 @@ switch(@$_POST['op']) {
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
-		$mon = !$year || !$mon ? '0000-00-00' : $year.'-'.$mon.'-01';
-
 		$sql = "INSERT INTO `_money_expense` (
 					`app_id`,
 					`ws_id`,
@@ -329,6 +327,7 @@ switch(@$_POST['op']) {
 					`invoice_id`,
 					`category_id`,
 					`worker_id`,
+					`year`,
 					`mon`,
 					`viewer_id_add`
 				) VALUES (
@@ -339,7 +338,8 @@ switch(@$_POST['op']) {
 					".$invoice_id.",
 					".$category_id.",
 					".$worker_id.",
-					'".$mon."',
+					".$year.",
+					".$mon.",
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -383,8 +383,6 @@ switch(@$_POST['op']) {
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
-		$mon = !$year || !$mon ? '0000-00-00' : $year.'-'.$mon.'-01';
-
 		$sql = "SELECT *
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
@@ -398,12 +396,13 @@ switch(@$_POST['op']) {
 				SET `about`='".addslashes($about)."',
 					`category_id`=".$category_id.",
 					`worker_id`=".$worker_id.",
-					`mon`='".$mon."'
+					`year`=".$year.",
+					`mon`=".$mon."
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$mon_old = _monthDef(substr($r['mon'], 5, 2)).' '.substr($r['mon'], 0, 4);
-		$mon_new = _monthDef(substr($mon, 5, 2)).' '.$year;
+		$mon_old = $r['mon'] ? _monthDef($r['mon']).' '.$r['year'] : '';
+		$mon_new = $mon ? _monthDef($mon).' '.$year : '';
 
 		$changes =
 			_historyChange('Категория', $r['category_id'] ? _expense($r['category_id']) : '', $category_id ? _expense($category_id) : '').
@@ -433,6 +432,7 @@ switch(@$_POST['op']) {
 					`worker_id`,
 					`sum`,
 					`about`,
+					`year`,
 					`mon`
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
@@ -444,8 +444,6 @@ switch(@$_POST['op']) {
 
 		$r['sum'] = round($r['sum'], 2);
 		$r['about'] = utf8($r['about']);
-		$r['year'] = intval(substr($r['mon'], 0, 4));
-		$r['mon'] = intval(substr($r['mon'], 5, 2));
 		$send['arr'] = $r;
 
 		jsonSuccess($send);

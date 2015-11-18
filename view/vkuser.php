@@ -216,7 +216,12 @@ function _viewerFormat($u) {//формирование данных пользователя
 		'viewer_country_id' => $u['country_id'],
 		'viewer_city_id' => $u['city_id'],
 
-		'pin' => $u['pin']
+		'pin' => $u['pin'],
+
+		'balans_start' => _cena($u['salary_balans_start']),
+		'rate_sum' => _cena($u['salary_rate_sum']),
+		'rate_period' => $u['salary_rate_period'],
+		'rate_day' => $u['salary_rate_day']
 	);
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';

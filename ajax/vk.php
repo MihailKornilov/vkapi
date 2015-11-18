@@ -250,7 +250,8 @@ switch(@$_POST['op']) {
 							`zp_id`,
 							`sum`,
 							`mon`,
-							`year`
+							`year`,
+							`viewer_id_add`
 						) VALUES (
 							".$r[0].",
 							".APP_ID.",
@@ -262,7 +263,8 @@ switch(@$_POST['op']) {
 							".($ze['zp'] ? intval($r[2]) : 0).",
 							".$r[3].",
 							".intval(strftime('%m')).",
-							".strftime('%Y')."
+							".strftime('%Y').",
+							".VIEWER_ID."
 						) ON DUPLICATE KEY UPDATE
 							`category_id`=VALUES(`category_id`),
 							`txt`=VALUES(`txt`),
@@ -293,7 +295,6 @@ switch(@$_POST['op']) {
 
 			$old = _zayav_expense_html($arrOld, false, $arrNew);
 			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
-//			$new = _zayav_expense_html($arrNew);
 
 			_history(array(
 				'type_id' => 30,

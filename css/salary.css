@@ -1,12 +1,48 @@
-.salary#report .headName{margin:15px 10px 10px}
-/*
-.salary#report .headName em{font-size:12px;font-weight:bold}
-.salary#report .headName._busy{background-position:right center}
-*/
-.salary#report #spisok{margin:10px}
-.salary#report #spisok ._spisok{width:auto}
-.salary#report #spisok .balans{text-align:right}
+#salary .headName{margin:15px 10px 10px}
+#salary #spisok{margin:10px}
+#salary ._spisok{width:auto}
+#salary .balans{text-align:right}
 
+
+
+#salary-worker{margin:15px 10px}
+#salary-worker .headName{margin:5px 0}
+#salary-worker .headName em{font-size:12px;font-weight:bold}
+#salary-worker h1{margin-top:5px}
+#salary-worker h1 span{color:#888;margin-left:8px}
+#salary-worker ._dropdown{float:right}
+#salary-worker h4{
+	margin-top:10px;
+	padding:2px 10px;
+	border-top:#e8e8e8 solid 1px;
+	border-left:#e8e8e8 solid 1px;
+	border-right:#e8e8e8 solid 1px;
+	background-color:#fafaf0;
+}
+#salary-worker h4 div{margin:5px 0}
+#salary-worker .type{width:65px}
+#salary-worker .show{background-color:#ffc}
+#salary-worker #spisok-zp{margin-top:20px}
+#salary-worker h3{margin-bottom:3px}
+#salary-worker h3 span{float:right}
+
+
+
+
+
+
+
+/*
+.salary .years{margin-top:25px}
+.salary #monthList em{float:right;font-size:10px}
+.salary .about tt{font-size:10px;color:#888;margin-left:7px}
+.salary-tab{border-spacing:8px}
+.salary-tab #about{width:230px}
+.salary-tab.set .label{width:100px}
+.salary-tab #day{width:30px}
+.salary-tab .img_edit{position:relative;top:-4px;left:4px}
+.i-expense{width:30px}
+*/
 
 
 
