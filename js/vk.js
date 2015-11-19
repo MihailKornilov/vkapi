@@ -8,6 +8,7 @@ var VK_SCROLL = 0,
 	FOTO_HEIGHT = 0,
 	REGEXP_NUMERIC = /^\d+$/,
 	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_CENA_MINUS = /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
 		1:'Январь',
@@ -227,10 +228,16 @@ var VK_SCROLL = 0,
 	_num = function(v) {
 		return !REGEXP_NUMERIC.test(v) ? 0 : v * 1;
 	},
-	_cena = function(v) {
+	_cena = function(v, minus) {
 		if(typeof v == 'string')
 			v = v.replace(',', '.');
-		return !REGEXP_CENA.test(v) || v == 0 ? 0 : v * 1;
+		if(v == 0)
+			return 0;
+		if(minus && REGEXP_CENA_MINUS.test(v))
+			return v * 1;
+		if(!REGEXP_CENA.test(v))
+			return 0;
+		return v * 1;
 	},
 	_fbhs = function() {
 		var h;
@@ -283,6 +290,8 @@ var VK_SCROLL = 0,
 		}
 	},
 	_msg = function(txt, func) {//Сообщение о результате выполненных действий
+		if(!txt)
+			txt = 'Выполнено';
 		$('#_msg').remove();
 		$('body').append('<div id="_msg">' + txt + '</div>');
 		$('#_msg')
@@ -486,9 +495,26 @@ var VK_SCROLL = 0,
 		if(m.hasClass('_busy'))
 			return true;
 		m.addClass('_busy');
+	},
+	_yearAss = function(start) {//получение списка годов
+		var d = new Date(),
+			yearStart = d.getFullYear(),//начальное значение года
+			yearEnd = yearStart + 1,    //конечное значение года
+			send = [];
+
+		//если начальне значение года более раннее, то применяется предложенное
+		start = _num(start);
+		if(start > 2000 && start < yearStart)
+			yearStart = start;
+
+		if(start > yearEnd)
+			yearEnd = start;
+
+		for(var n = yearStart; n <= yearEnd; n++)
+			send[n] = n;
+
+		return send;
 	};
-
-
 
 $.fn._check = function(o) {
 	var t = $(this),
@@ -587,7 +613,7 @@ $.fn._radio = function(o) {
 	_click(o.func);
 
 	function _click(func) {
-		$(document).on('click', '#' + id + '_radio', function() {
+		$(document).on('click', '#' + id + '_radio .on,#' + id + '_radio .off', function() {
 			func(parseInt(t.val()), id);
 		});
 	}

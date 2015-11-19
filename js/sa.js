@@ -31,7 +31,7 @@ var balansCategory = function(arr) {
 				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Выполнено');
+						_msg();
 						$('#category-spisok').html(res.html);
 					} else
 						dialog.abort();
@@ -76,7 +76,7 @@ var balansCategory = function(arr) {
 				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Выполнено');
+						_msg();
 						$('#action-spisok').html(res.html);
 					} else
 						dialog.abort();
@@ -133,7 +133,7 @@ $(document)
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
-				_msg('Выполнено');
+				_msg();
 		}, 'json');
 	})
 

@@ -318,10 +318,6 @@ function expense_right() {
 			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`";
 
-	$year = array();
-	for($n = 2014; $n <= strftime('%Y'); $n++)
-		$year[$n] = $n;
-
 	return
 		'<div class="f-label">Счёт</div>'.
 		'<input type="hidden" id="invoice_id">'.
@@ -332,12 +328,10 @@ function expense_right() {
 		'<div class="findHead">Сотрудник</div>'.
 		'<input type="hidden" id="worker_id">'.
 
-
 		'<input type="hidden" id="year">'.
 		'<div id="mon-list">'.expenseMonthSum().'</div>'.
 		'<script type="text/javascript">'.
-			'var EXPENSE_WORKER='.query_workerSelJson($sql_worker, GLOBAL_MYSQL_CONNECT).','.
-				'YEAR_SPISOK='._selJson($year).';'.
+			'var EXPENSE_WORKER='.query_workerSelJson($sql_worker, GLOBAL_MYSQL_CONNECT).';'.
 			'expenseLoad();'.
 		'</script>';
 }//expense_right()
@@ -1078,7 +1072,7 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 function _balans($v) {//внесение записи о балансе
 	$unit_id = 0;
 	$balans = 0;
-	$sum = _cena(@$v['sum']);
+	$sum = _cena(@$v['sum'], 1);
 	$invoice_transfer_id = _num(@$v['invoice_transfer_id']);
 
 	if(_balansAction($v['action_id'], 'minus'))
@@ -1102,6 +1096,12 @@ function _balans($v) {//внесение записи о балансе
 	if(!empty($v['client_id'])) {
 		$unit_id = _num($v['client_id']);
 		$balans = clientBalansUpdate($unit_id);
+	}
+
+	//сотрудник
+	if(!empty($v['worker_id'])) {
+		$unit_id = _num($v['worker_id']);
+		$balans = salaryWorkerBalans($unit_id);
 	}
 
 
@@ -1204,7 +1204,7 @@ function balans_show($v) {//вывод таблицы с балансами конкретного счёта
 				'unit_id:'.$filter['unit_id'].
 			'};'.
 		'</script>';
-}//_balans_show()
+}//balans_show()
 function balans_show_category($v) {
 	switch($v['category_id']) {
 		case 1: //расчётные счета
@@ -1233,8 +1233,19 @@ function balans_show_category($v) {
 				);
 			$r = _clientVal($v['unit_id']);
 			return array(
-				'head' => 'Клиент '._clientVal($v['unit_id'], 'name'),
-				'balans' => _clientVal($v['unit_id'], 'balans')
+				'head' => 'Клиент '.$r['name'],
+				'balans' => _sumSpace($r['balans'])
+			);
+			break;
+		case 5: //зп сотрудника
+			if(!_viewerWorkerQuery($v['unit_id']))
+				return array(
+					'error' => 1,
+					'about' => _err('Сотрудника id:<b>'.$v['unit_id'].'</b> не существует.')
+				);
+			return array(
+				'head' => 'Сотрудник '._viewer($v['unit_id'], 'viewer_name'),
+				'balans' => salaryWorkerBalans($v['unit_id'], 1)
 			);
 			break;
 	}
@@ -1244,7 +1255,7 @@ function balans_show_category($v) {
 		'about' => _err('Неизвестная категория балансов: <b>'.$v['category_id'].'</b>.'),
 		'balans' => 0
 	);
-}//balans_show_category
+}//balans_show_category()
 function balans_show_spisok($filter) {
 	define('PAGE1', $filter['page'] == 1);
 

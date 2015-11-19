@@ -231,6 +231,17 @@ function _viewerFormat($u) {//формирование данных пользователя
 	return $send;
 }//_viewerFormat()
 
+function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника конкретной организации, проверка на существование
+	$sql = "SELECT *
+			FROM `_vkuser`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker`
+			  AND `viewer_id`=".$viewer_id;
+	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}//_viewerWorkerQuery()
+
+
 function _viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
 	return 'вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'viewer_name');
 }//_viewerAdded();

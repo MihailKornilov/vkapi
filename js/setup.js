@@ -67,7 +67,7 @@ var setupRuleCheck = function(v, id) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
-						_msg('Выполнено');
+						_msg();
 					} else {
 						dialog.abort();
 						dialog.err(res.text);

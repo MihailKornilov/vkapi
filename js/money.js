@@ -76,7 +76,7 @@ var incomeLoad = function() {
 		$('#worker_id-add')._select({
 			width:200,
 			title0:'Не выбран',
-			spisok:_toSpisok(WORKER_ASS)
+			spisok:arr.id ? EXPENSE_WORKER : WORKER_SPISOK
 		});
 		$('#about').focus();
 		$('#invoice_id-add')._select({
@@ -94,7 +94,7 @@ var incomeLoad = function() {
 		});
 		$('#tabyear')._select({
 			width:60,
-			spisok:YEAR_SPISOK
+			spisok:_toSpisok(_yearAss(arr.year))
 		});
 
 		$('#sum').keyEnter(submit);
@@ -124,7 +124,7 @@ var incomeLoad = function() {
 				$.post(AJAX_MAIN, send, function (res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Выполнено');
+						_msg();
 						expenseSpisok();
 					} else
 						dialog.abort();
@@ -200,7 +200,7 @@ var incomeLoad = function() {
 		}, 'json');
 	},
 
-	_zayavExpense = function(v) {//редактирование расходов по заявке
+	_zayavExpense = function() {//редактирование расходов по заявке
 		var num = 0;
 
 		for(var n = 0; n < ZAYAV_EXPENSE.length; n++)
@@ -287,7 +287,7 @@ var incomeLoad = function() {
 			}
 		}
 	},
-	_zayavExpenseGet = function(v) {//получение значения списка расходов заявки при редактировании
+	_zayavExpenseGet = function() {//получение значения списка расходов заявки при редактировании
 		var tab = $('.zee-tab'),
 			send = [];
 		for(var n = 0; n < tab.length; n++) {
@@ -314,6 +314,309 @@ var incomeLoad = function() {
 					  sum);
 		}
 		return send.join();
+	},
+
+	_salarySpisok = function() {
+		var send = {
+			op:'salary_spisok',
+			id:SALARY.worker_id,
+			year:_num($('#year').val()),
+			mon:_num($('#salmon').val())
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				SALARY.mon = send.mon;
+				SALARY.year = send.year;
+				$('.headName em').html(MONTH_DEF[send.mon] + ' ' + send.year);
+				$('._balans-show').html(res.balans);
+				$('#spisok-acc').html(res.acc);
+				$('#spisok-zp').html(res.zp);
+				$('#month-list').html(res.month);
+			}
+		}, 'json');
+	},
+	_salaryWorkerBalansSet = function() {//установка баланса зп сотрудника
+		var html =
+		'<table class="_dialog-tab">' +
+			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
+		'</table>',
+		dialog = _dialog({
+			width:320,
+			head:'Установка суммы баланса з/п сотрудника',
+			content:html,
+			butSubmit:'Применить',
+			submit:submit
+		});
+
+		$('#sum').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'salary_balans_set',
+				worker_id:SALARY.worker_id,
+				sum:_cena($('#sum').val(), 1)
+			};
+			if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('._balans-show').html(res.balans);
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_salaryWorkerRateSet = function() {//установка ставки сотрудника
+		var html =
+			'<div class="_info">' +
+				'После установки ставки сотруднику указанная сумма будет автоматически начисляться ' +
+				'на его баланс в определённый день выбранной периодичностью. ' +
+			'</div>' +
+			'<table class="_dialog-tab" id="salary-rate-set-tab">' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + (SALARY.rate_sum ? SALARY.rate_sum : '') + '" /> руб.' +
+				'<tr><td class="label">Период:<td><input type="hidden" id="period" value="' + SALARY.rate_period + '" />' +
+				'<tr class="tr-day' + (SALARY.rate_period == 3 ? ' dn' : '') + '">' +
+					'<td class="label">День начисления:' +
+					'<td><div class="div-day' + (SALARY.rate_period != 1 ? ' dn' : '') + '"><input type="text" id="day" maxlength="2" value="' + SALARY.rate_day + '" /></div>' +
+						'<div class="div-week' + (SALARY.rate_period != 2 ? ' dn' : '') + '"><input type="hidden" id="day_week" value="' + SALARY.rate_day + '" /></div>' +
+			'</table>',
+			dialog = _dialog({
+				top:30,
+				width:320,
+				head:'Установка ставки з/п для сотрудника',
+				content:html,
+				butSubmit:'Установить',
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#day').keyEnter(submit);
+		$('#period')._select({
+			width:70,
+			spisok:SALARY_PERIOD_SPISOK,
+			func:function(id) {
+				$('#day_week')._select(1);
+				$('.tr-day')[(id == 3 ? 'add' : 'remove') + 'Class']('dn');
+				$('.div-day')[(id != 1 ? 'add' : 'remove') + 'Class']('dn');
+				$('.div-week')[(id != 2 ? 'add' : 'remove') + 'Class']('dn');
+			}
+		});
+		$('#day_week')._select({
+			spisok:[
+				{uid:1,title:'Понедельник'},
+				{uid:2,title:'Вторник'},
+				{uid:3,title:'Среда'},
+				{uid:4,title:'Четверг'},
+				{uid:5,title:'Пятница'},
+				{uid:6,title:'Суббота'},
+				{uid:7,title:'Воскресенье'}
+			]
+		});
+
+		function submit() {
+			var send = {
+				op:'salary_rate_set',
+				worker_id:SALARY.worker_id,
+				sum:_cena($('#sum').val()),
+				period:_num($('#period').val()),
+				day:_num($('#day').val())
+			};
+			if(send.period == 2)
+				send.day = _num($('#day_week').val());
+			if(send.period == 1 && (!send.day || send.day > 28)) {
+				dialog.err('Некорректно указан день');
+				$('#day').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						SALARY.rate_sum = send.sum;
+						SALARY.rate_period = send.period;
+						SALARY.rate_day = send.day;
+						dialog.close();
+						_msg();
+						$('h1 em').html(res.rate);
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+	_salaryWorkerAccAdd = function() {//внесение произвольного начисления зп сотрудника
+		var html =
+			'<table class="_dialog-tab">' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
+				'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="50">' +
+				'<tr><td class="label">Месяц:' +
+					'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
+						'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
+			'</table>',
+			dialog = _dialog({
+				head:'Внесение начисления для сотрудника',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:_toSpisok(MONTH_DEF)
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:_toSpisok(_yearAss(SALARY.year))
+		});
+		function submit() {
+			var send = {
+				op:'salary_accrual_add',
+				worker_id:SALARY.worker_id,
+				sum:_cena($('#sum').val()),
+				about:$.trim($('#about').val()),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else if(!send.about) {
+				dialog.err('Не указано описание');
+				$('#about').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Начисление произведено');
+						_salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+
+	},
+	_salaryWorkerDeductAdd = function() {//внесение вычета из зп сотрудника
+		var html =
+			'<table class="_dialog-tab">' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
+				'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="50">' +
+				'<tr><td class="label">Месяц:' +
+					'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
+						'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
+			'</table>',
+			dialog = _dialog({
+				head:'Внесение вычета из зарплаты',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:_toSpisok(MONTH_DEF)
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:_toSpisok(_yearAss(SALARY.year))
+		});
+		function submit() {
+			var send = {
+				op:'salary_deduct_add',
+				worker_id:SALARY.worker_id,
+				sum:_cena($('#sum').val()),
+				about:$.trim($('#about').val()),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else if(!send.about) {
+				dialog.err('Не указано описание');
+				$('#about').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Начисление произведено');
+						_salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+	_salaryWorkerZpAdd = function() {//внесение зп сотруднику
+		var html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
+					'<tr><td class="label">Месяц:' +
+						'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
+							'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
+					'<tr><td class="label">Описание:<td><input type="text" id="about">' +
+				'</table>',
+			dialog = _dialog({
+				head:'Выдача зарплаты сотруднику',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#invoice_id')._select({
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:_toSpisok(MONTH_DEF)
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:_toSpisok(_yearAss(SALARY.year))
+		});
+
+		function submit() {
+			var send = {
+				op:'expense_add',
+				category_id:1,
+				worker_id:SALARY.worker_id,
+				invoice_id:_num($('#invoice_id').val()),
+				sum:_cena($('#sum').val()),
+				about:$('#about').val(),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.invoice_id)
+				dialog.err('Укажите с какого счёта производится выдача');
+			else if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Выдача зарплаты произведена');
+						_salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	};
 
 $(document)
@@ -770,7 +1073,38 @@ $(document)
 		}
 	})
 
-
+	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
+		var v = $(this).attr('val').split(':');
+		location.href = URL + '&p=report&d=salary&id=' + v[0] + '&year=' + v[1] + '&mon=' + v[2] + '&acc_id=' + v[3];
+	})
+	.on('mouseenter', '.salary .show', function() {
+		$(this).removeClass('show');
+	})
+	.on('click', '.worker-acc-del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'начисления з/п',
+			op:'salary_accrual_del',
+			func:_salarySpisok
+		});
+	})
+	.on('click', '.worker-deduct-del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'вычета из з/п',
+			op:'salary_deduct_del',
+			func:_salarySpisok
+		});
+	})
+	.on('click', '.worker-zp-add', _salaryWorkerZpAdd)
+	.on('click', '.worker-zp-del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'зарплаты',
+			op:'expense_del',
+			func:_salarySpisok
+		});
+	})
 
 	.ready(function() {
 		if($('#money-invoice').length) {
@@ -849,7 +1183,18 @@ $(document)
 					{uid:3, title:'Начислить'},
 					{uid:4, title:'Внести вычет'},
 					{uid:5, title:'Выдать з/п'}
-				]
+				],
+				func:function(v) {
+					switch(v) {
+						case 1: _salaryWorkerBalansSet(); break;
+						case 2: _salaryWorkerRateSet(); break;
+						case 3: _salaryWorkerAccAdd(); break;
+						case 4: _salaryWorkerDeductAdd(); break;
+						case 5: _salaryWorkerZpAdd(); break;
+					}
+				}
 			});
+			$('#year').years({func:_salarySpisok});
+			$('#salmon')._radio({func:_salarySpisok});
 		}
 	});

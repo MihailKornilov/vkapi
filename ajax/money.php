@@ -346,16 +346,29 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('_money_expense', GLOBAL_MYSQL_CONNECT);
 
+		//истори€ баланса дл€ расчЄтного счЄта
 		_balans(array(
 			'category_id' => 1,
 			'action_id' => 6,
 			'invoice_id' => $invoice_id,
 			'sum' => $sum,
-			'expense_id' => $insert_id
+			'expense_id' => $insert_id,
+			'about' => $about
 		));
 
+		//истори€ баланса дл€ сотрудника
+		if($worker_id)
+			_balans(array(
+				'category_id' => 5,
+				'action_id' => 23,
+				'worker_id' => $worker_id,
+				'sum' => $sum,
+				'expense_id' => $insert_id,
+				'about' => $about
+			));
+
 		_history(array(
-			'type_id' => 21,
+			'type_id' => $worker_id ? 37 : 21,
 			'invoice_id' => $invoice_id,
 			'worker_id' => $worker_id,
 			'v1' => $sum,
@@ -476,15 +489,28 @@ switch(@$_POST['op']) {
 			'action_id' => 7,
 			'invoice_id' => $r['invoice_id'],
 			'sum' => $r['sum'],
-			'expense_id' => $r['id']
+			'expense_id' => $r['id'],
+			'about' => $r['about']
 		));
 
+		//истори€ баланса дл€ сотрудника
+		if($r['worker_id'])
+			_balans(array(
+				'category_id' => 5,
+				'action_id' => 24,
+				'invoice_id' => $r['invoice_id'],
+				'sum' => $r['sum'],
+				'expense_id' => $r['id'],
+				'about' => $r['about']
+			));
+
 		_history(array(
-			'type_id' => 22,
+			'type_id' => $r['worker_id'] ? 64 : 22,
 			'invoice_id' => $r['invoice_id'],
 			'worker_id' => $r['worker_id'],
 			'v1' => round($r['sum'], 2),
-			'v2' => $r['about']
+			'v2' => $r['about'],
+			'v3' => $r['category_id']
 		));
 
 		jsonSuccess();
@@ -686,4 +712,444 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
+
+	case 'zayav_expense_edit'://изменение расходов по за€вке
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		$expense = _txt($_POST['expense']);
+		if(!_zayav_expense_test($expense))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `zayav`
+				WHERE `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `zayav_id`=".$zayav_id."
+				ORDER BY `id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = array();
+		while($r = mysql_fetch_assoc($q)) {
+			$dop = '';
+			$ze = _zayavExpense($r['category_id'], 'all');
+			if($ze['txt'])
+				$dop = $r['txt'];
+			if($ze['worker'])
+				$dop = $r['worker_id'];
+			if($ze['zp'])
+				$dop = $r['zp_id'];
+			$arr[] =
+				$r['id'].':'.
+				$r['category_id'].':'.
+				$dop.':'.
+				$r['sum'];
+		}
+		$old = _zayav_expense_array(implode(',', $arr));
+		$new = _zayav_expense_array($expense);
+
+		if($old != $new) {
+			$toDelete = array();
+			foreach($old as $r)
+				$toDelete[$r[0]] = $r;
+
+			//получение старой html-таблицы дл€ истории дейсвтий
+			$sql = "SELECT *
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					ORDER BY `id`";
+			$arrOld = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+			foreach($new as $r) {
+				$ze = _zayavExpense($r[1], 'all');
+				$sql = "INSERT INTO `_zayav_expense` (
+							`id`,
+							`app_id`,
+							`ws_id`,
+							`zayav_id`,
+							`category_id`,
+							`txt`,
+							`worker_id`,
+							`zp_id`,
+							`sum`,
+							`mon`,
+							`year`,
+							`viewer_id_add`
+						) VALUES (
+							".$r[0].",
+							".APP_ID.",
+							".WS_ID.",
+							".$zayav_id.",
+							".$r[1].",
+							'".($ze['txt'] ? addslashes($r[2]) : '')."',
+							".($ze['worker'] ? intval($r[2]) : 0).",
+							".($ze['zp'] ? intval($r[2]) : 0).",
+							".$r[3].",
+							".intval(strftime('%m')).",
+							".strftime('%Y').",
+							".VIEWER_ID."
+						) ON DUPLICATE KEY UPDATE
+							`category_id`=VALUES(`category_id`),
+							`txt`=VALUES(`txt`),
+							`worker_id`=VALUES(`worker_id`),
+							`zp_id`=VALUES(`zp_id`),
+							`sum`=VALUES(`sum`)";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+
+				unset($toDelete[$r[0]]);
+			}
+
+			//удаление расходов, которые были удалены
+			if(!empty($toDelete)) {
+				$sql = "DELETE FROM `_zayav_expense` WHERE `id` IN (".implode(',', array_keys($toDelete)).")";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			}
+
+		//	_zayavBalansUpdate($zayav_id);
+
+			//получение новой html-таблицы дл€ истории дейсвтий
+			$sql = "SELECT *
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					ORDER BY `id`";
+			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+			$old = _zayav_expense_html($arrOld, false, $arrNew);
+			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
+
+			_history(array(
+				'type_id' => 30,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'v1' => '<table><tr><td>'.$old.'<td>ї<td>'.$new.'</table>'
+			));
+		}
+		jsonSuccess();
+		break;
+
+	case 'salary_spisok':
+		$send['balans'] = salaryWorkerBalans(_num($_POST['id']), 1);
+		$send['acc'] = utf8(salary_worker_acc($_POST));
+		$send['zp'] = utf8(salary_worker_zp($_POST));
+		$send['month'] = utf8(salary_month_list($_POST));
+		jsonSuccess($send);
+		break;
+	case 'salary_balans_set'://установка баланса сотрудника
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+
+		$sum = _cena($_POST['sum'], 1);
+
+		if(!$r = _viewerWorkerQuery($worker_id))
+			jsonError();
+
+		$start = $sum - (salaryWorkerBalans($worker_id) - $r['salary_balans_start']);
+
+		$sql = "UPDATE `_vkuser`
+				SET `salary_balans_start`=".$start."
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `viewer_id`=".$worker_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
+
+ 		_balans(array(
+			'category_id' => 5,
+			'action_id' => 5,
+			'worker_id' => $worker_id,
+			'sum' => $sum
+		));
+
+		_history(array(
+			'type_id' => 45,
+			'worker_id' => $worker_id,
+			'v1' => $sum
+		));
+
+		$send['balans'] = salaryWorkerBalans($worker_id, 1);
+		jsonSuccess($send);
+		break;
+	case 'salary_rate_set'://установка ставки сотрудника
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+		if(!$period = _num($_POST['period']))
+			jsonError();
+
+		$sum = _cena($_POST['sum']);
+
+		$day = 0;
+		switch($period) {
+			case 1:
+				if(!$day = _num($_POST['day']))
+					jsonError();
+				if($day > 28)
+					jsonError();
+				break;
+			case 2:
+				if(!$day = _num($_POST['day']))
+					jsonError();
+				if($day > 7)
+					jsonError();
+		}
+
+		if(!$r = _viewerWorkerQuery($worker_id))
+			jsonError();
+
+		$sql = "UPDATE `_vkuser`
+		        SET `salary_rate_sum`=".$sum.",
+		            `salary_rate_period`=".$period.",
+		            `salary_rate_day`=".$day."
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `viewer_id`=".$worker_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
+
+		$changes =
+			_historyChange('—умма', _cena($r['salary_rate_sum']), $sum).
+			_historyChange('ѕериод', $r['salary_rate_period'], $period, _salaryPeriod($r['salary_rate_period']), _salaryPeriod($period)).
+			_historyChange('ƒень', $r['salary_rate_day'], $day, $r['salary_rate_day'] ? $r['salary_rate_day'] : '', $day ? $day : '');
+
+		if($changes)
+			_history(array(
+				'type_id' => 35,
+				'worker_id' => $worker_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+		$send['rate'] = utf8(salaryWorkerRate($worker_id));
+		jsonSuccess($send);
+		break;
+	case 'salary_accrual_add'://внесение произвольного начислени€ зп сотруднику
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$mon = _num($_POST['mon']))
+			jsonError();
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$about = _txt($_POST['about']))
+			jsonError();
+
+		if(!$r = _viewerWorkerQuery($worker_id))
+			jsonError();
+
+		$sql = "INSERT INTO `_salary_accrual` (
+					`app_id`,
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`about`,
+					`mon`,
+					`year`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$worker_id.",
+					".$sum.",
+					'".addslashes($about)."',
+					".$mon.",
+					".$year.",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+ 		_balans(array(
+			'category_id' => 5,
+			'action_id' => 19,
+			'worker_id' => $worker_id,
+			'sum' => $sum
+		));
+
+		_history(array(
+			'type_id' => 36,
+			'worker_id' => $worker_id,
+			'v1' => $sum,
+			'v2' => $about
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_accrual_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_salary_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_salary_accrual` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+ 		_balans(array(
+			'category_id' => 5,
+			'action_id' => 21,
+			'worker_id' => $r['worker_id'],
+			'sum' => _cena($r['sum'])
+		));
+
+		_history(array(
+			'type_id' => 50,
+			'worker_id' => $r['worker_id'],
+			'v1' => _cena($r['sum']),
+			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_deduct_add':
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+		if(!$sum = _num($_POST['sum']))
+			jsonError();
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$mon = _num($_POST['mon']))
+			jsonError();
+		if(!$about = _txt($_POST['about']))
+			jsonError();
+
+		if(!$r = _viewerWorkerQuery($worker_id))
+			jsonError();
+
+		$sql = "INSERT INTO `_salary_deduct` (
+					`app_id`,
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`about`,
+					`year`,
+					`mon`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$worker_id.",
+					".$sum.",
+					'".addslashes($about)."',
+					".$year.",
+					".$mon.",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'category_id' => 5,
+			'action_id' => 20,
+			'worker_id' => $worker_id,
+			'sum' => $sum
+		));
+
+		_history(array(
+			'type_id' => 44,
+			'worker_id' => $worker_id,
+			'v1' => $sum,
+			'v2' => $about
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_deduct_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_salary_deduct`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_salary_deduct` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+ 		_balans(array(
+			'category_id' => 5,
+			'action_id' => 22,
+			'worker_id' => $r['worker_id'],
+			'sum' => _cena($r['sum'])
+		));
+
+		_history(array(
+			'type_id' => 51,
+			'worker_id' => $r['worker_id'],
+			'v1' => _cena($r['sum']),
+			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_zp_add':
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$mon = _num($_POST['mon']))
+			jsonError();
+		if(!$year = _num($_POST['year']))
+			jsonError();
+
+		$about = win1251(htmlspecialchars(trim($_POST['about'])));
+		$about = _monthDef($mon).' '.$year.($about ? ', ' : '').$about;
+
+		$sql = "INSERT INTO `money` (
+					`ws_id`,
+					`sum`,
+					`prim`,
+					`invoice_id`,
+					`expense_id`,
+					`worker_id`,
+					`year`,
+					`mon`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					-".$sum.",
+					'".addslashes($about)."',
+					".$invoice_id.",
+					1,
+					".$worker_id.",
+					".$year.",
+					".$mon.",
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		invoice_history_insert(array(
+			'action' => 6,
+			'table' => 'money',
+			'id' => mysql_insert_id()
+		));
+
+		history_insert(array(
+			'type' => 37,
+			'value' => $sum,
+			'value1' => $about,
+			'value2' => $worker_id
+		));
+
+		jsonSuccess();
+		break;
+
 }

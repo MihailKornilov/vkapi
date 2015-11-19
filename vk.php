@@ -46,6 +46,7 @@ setlocale(LC_NUMERIC, 'en_US');
 define('REGEXP_NUMERIC',    '/^[0-9]{1,20}$/i');
 define('REGEXP_INTEGER',    '/^-?[0-9]{1,20}$/i');
 define('REGEXP_CENA',       '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
+define('REGEXP_CENA_MINUS', '/^-?[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
 define('REGEXP_BOOL',       '/^[0-1]$/');
 define('REGEXP_DATE',       '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR',       '/^[0-9]{4}$/');
@@ -428,18 +429,13 @@ function _report() {
 			break;
 		case 'salary':
 			$left = _salary();
-			break;
-			if($worker_id = _num(@$_GET['id'])) {
-				$v = salaryFilter(array(
-					'worker_id' => $worker_id,
-					'mon' => intval(@$_GET['mon']),
-					'year' => intval(@$_GET['year']),
-					'acc_id' => intval(@$_GET['acc_id'])
-				));
-				$left = salary_worker($v);
-				if(defined('WORKER_OK'))
-					$right = '<input type="hidden" id="year" value="'.$v['year'].'" />'.
-						'<div id="monthList">'.salary_monthList($v).'</div>';
+			if(defined('WORKER_OK')) {
+				$filter = salaryFilter($_GET);
+				$right =
+					'<div id="salary-filter">'.
+						'<input type="hidden" id="year" value="'.$filter['year'].'" />'.
+						'<div id="month-list">'.salary_month_list($filter).''.
+					'</div>';
 			}
 			break;
 	}
@@ -825,8 +821,8 @@ function _bool($v) {//проверка на булево число
 		return 0;
 	return intval($v);
 }//_bool()
-function _cena($v) {//проверка на цену
-	if(empty($v) || is_array($v) || !preg_match(REGEXP_CENA, $v))
+function _cena($v, $minus=0) {//проверка на цену. $minus - может ли цена быть минусовой
+	if(empty($v) || is_array($v) || !preg_match($minus ? REGEXP_CENA_MINUS : REGEXP_CENA, $v))
 		return 0;
 	$v = str_replace(',', '.', $v);
 	return round($v, 2);
@@ -1130,6 +1126,7 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 											   AND `worker`
 											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'WORKER_SPISOK=_toSpisok(WORKER_ASS),'.
+		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 										   FROM `_money_expense_category`
 										   WHERE `app_id`=".APP_ID."
@@ -1217,7 +1214,7 @@ function _check($id, $txt='', $v=0, $light=false) {
 		$txt.
 	'</div>';
 }//_check()
-function _radio($id, $list, $value=0, $light=false) {
+function _radio($id, $list, $value=0, $light=0, $block=1) {
 	$spisok = '';
 	foreach($list as $uid => $title) {
 		$sel = $uid == $value ? 'on' : 'off';
@@ -1225,7 +1222,7 @@ function _radio($id, $list, $value=0, $light=false) {
 		$spisok .= '<div class="'.$sel.$l.'" val="'.$uid.'"><s></s>'.$title.'</div>';
 	}
 	return
-	'<div class="_radio" id="'.$id.'_radio">'.
+	'<div class="_radio'.($block ? ' block' : '').'" id="'.$id.'_radio">'.
 		'<input type="hidden" id="'.$id.'" value="'.$value.'">'.
 		$spisok.
 	'</div>';
@@ -1285,166 +1282,6 @@ function _rightLink($id, $spisok, $val=0) {
 		$a.
 	'</div>';
 }//_rightLink()
-
-/*
-function _historyInsert($type, $v=array(), $table='history') {
-	//Поля, которые отличные от обязательных, также вносятся. Их тип строго integer.
-	//Необходимо не забывать, что имя таблицы может быть отличной.
-
-$keys = '';
-$values = '';
-foreach($v as $key => $value) {
-	if($key == 'value' ||
-		$key == 'value1' ||
-		$key == 'value2' ||
-		$key == 'value3' ||
-		$key == 'viewer_id')
-		continue;
-	$keys .= '`'.$key.'`,';
-	$values .= intval($value).',';
-}
-$sql = "INSERT INTO `".$table."` (
-			   `type`,
-			   ".$keys."
-			   `value`,
-			   `value1`,
-			   `value2`,
-			   `value3`,
-			   `viewer_id_add`
-			) VALUES (
-				".$type.",
-				".$values."
-				'".(isset($v['value']) ? addslashes($v['value']) : '')."',
-				'".(isset($v['value1']) ? addslashes($v['value1']) : '')."',
-				'".(isset($v['value2']) ? addslashes($v['value2']) : '')."',
-				'".(isset($v['value3']) ? addslashes($v['value3']) : '')."',
-				".(_num(@$v['viewer_id']) ? $v['viewer_id'] : VIEWER_ID)."
-			)";
-query($sql);
-}//_historyInsert()
-function _historyFilter($v) {
-	return array(
-		'page' => !empty($v['page']) && _num($v['page']) ? intval($v['page']) : 1,
-		'limit' => !empty($v['limit']) && _num($v['limit']) ? intval($v['limit']) : 30,
-		'table' => !empty($v['table']) ? $v['table'] : 'history',
-		'type' => !empty($v['type']) && _num($v['type']) ? intval($v['type']) : 0,
-		'value' => !empty($v['value']) ? $v['value'] : '',
-		'value1' => !empty($v['value1']) ? $v['value1'] : '',
-		'value2' => !empty($v['value2']) ? $v['value2'] : '',
-		'value3' => !empty($v['value3']) ? $v['value3'] : '',
-		'viewer_id_add' => !empty($v['viewer_id_add']) && _num($v['viewer_id_add']) ? intval($v['viewer_id_add']) : 0,
-		'action' => !empty($v['action']) && _num($v['action']) ? intval($v['action']) : 0
-	);
-}//_historyFilter()
-function _history($types, $functions=array(), $v=array(), $filter_dop) {
-	$filter = $filter_dop + _historyFilter($v);
-
-	$filterNoUse = array(
-		'page' => 1,
-		'type' => 1,
-		'value' => 1,
-		'value1' => 1,
-		'value2' => 1,
-		'value3' => 1
-	);
-
-	$page = $filter['page'];
-	$limit = $filter['limit'];
-	$start = ($page - 1) * $limit;
-
-	$spisok = '';
-	$js = array();
-	if($page == 1) {
-		foreach($filter as $i => $r)
-			if(empty($filterNoUse[$i]))
-				$js[] = $i.':'.(preg_match(REGEXP_NUMERIC, $r) ? $r : '"'.$r.'"');
-		$spisok = '<script type="text/javascript">var HIST={'.implode(',', $js).'};</script>';
-	}
-
-	$filterNoUse['limit'] = 1;
-	$filterNoUse['action'] = 1;
-	$filterNoUse['table'] = 1;
-	$cond = "`id`";
-	foreach($filter as $i => $r)
-		if(empty($filterNoUse[$i]) && $r)
-			$cond .= " AND `".$i."`=".$r;
-
-	if($filter['action'] && function_exists('history_group'))
-		$cond .= " AND `type` IN(".history_group($filter['action']).")";
-
-	$sql = "SELECT COUNT(`id`) AS `all` FROM `".$filter['table']."` WHERE ".$cond;
-	$all = query_value($sql);
-	if(!$all)
-		return array(
-			'all' => 0,
-			'result' => 'Истории по указанным условиям нет',
-			'spisok' => $spisok.'<div class="_empty">Истории по указанным условиям нет</div>',
-			'filter' => $filter
-		);
-
-	$send = array(
-		'all' => $all,
-		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запис'._end($all, 'ь', 'и', 'ей'),
-		'spisok' => $spisok,
-		'filter' => $filter
-	);
-
-	$sql = "SELECT *
-			FROM `".$filter['table']."`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT ".$start.",".$limit;
-	$q = query($sql);
-	$history = array();
-	while($r = mysql_fetch_assoc($q))
-		$history[$r['id']] = $r;
-
-	$history = _viewer($history);
-	foreach($functions as $func)
-		$history = $func($history);
-
-	$txt = '';
-	end($history);
-	$keyEnd = key($history);
-	reset($history);
-	foreach($history as $r) {
-		if(!$txt) {
-			$time = strtotime($r['dtime_add']);
-			$viewer_id = $r['viewer_id_add'];
-		}
-		$txt .= '<li>'.(SA ? '<h4>'.$r['type'].'</h4>' : '').
-			'<div class="li">'.$types($r, $filter).'</div>';
-		$key = key($history);
-		if(!$key ||
-			$key == $keyEnd ||
-			$time - strtotime($history[$key]['dtime_add']) > 900 ||
-			$viewer_id != $history[$key]['viewer_id_add']) {
-			$send['spisok'] .=
-				'<div class="_hist-un">'.
-				'<table><tr>'.
-				($viewer_id ? '<td class="hist-img">'.$r['photo'] : '').
-				'<td>'.
-				($viewer_id ? '<h5>'.$r['viewer_name'].'</h5>' : '').
-				'<h6>'.FullDataTime($r['dtime_add']).(!$viewer_id ? '<span>cron</span>' : '').'</h6>'.
-				'</table>'.
-				'<ul>'.$txt.'</ul>'.
-				'</div>';
-			$txt = '';
-		}
-		next($history);
-	}
-	if($start + $limit < $all) {
-		$c = $all - $start - $limit;
-		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .=
-			'<div class="_next" id="_hist-next" val="'.($page + 1).'">'.
-			'<span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span>'.
-			'</div>';
-	}
-	return $send;
-}//_history_spisok()
-*/
-
 
 function _vkComment($table, $id=0) {
 	$sql = "SELECT *
