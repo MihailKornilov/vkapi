@@ -1,21 +1,4 @@
-var remindFilter = function(v, id) {
-		return {
-			op:'remind_spisok',
-			status:id == '_remind-status' ? $('#_remind-status').val() : $('#remind_filter_status').val()
-		};
-	},
-	remindSpisok = function(v, id) {
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_MAIN, remindFilter(v, id), function(res) {
-			$('#mainLinks').removeClass('busy');
-			if(res.success)
-				$('.left').html(res.html);
-		}, 'json');
-	};
-
-
-$(document)
-	.on('click', '._remind-add', function() {
+var _remindAdd = function() {
 		var html =
 				'<table class="_remind-add-tab">' +
 					(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
@@ -57,16 +40,40 @@ $(document)
 					if(res.success) {
 						dialog.close();
 						_msg('Напоминание внесено');
-						$(send.from ? '#remind-spisok' : 'td.left').html(res.html);
-						if(send.from == 'zayav' && window.REMIND)
-							REMIND.active++;
+						switch(send.from) {
+							case 'zayav':
+								$('#_remind-zayav').html(res.html);
+								REMIND.active++;
+								break;
+							case 'client': break;
+							default: $('td.left').html(res.html);
+						}
+
 					} else
 						dialog.abort();
 				}, 'json');
 			}
 		}
 		return false;
-	})
+	},
+	remindFilter = function(v, id) {
+		return {
+			op:'remind_spisok',
+			status:id == '_remind-status' ? $('#_remind-status').val() : $('#remind_filter_status').val()
+		};
+	},
+	remindSpisok = function(v, id) {
+		$('#mainLinks').addClass('busy');
+		$.post(AJAX_MAIN, remindFilter(v, id), function(res) {
+			$('#mainLinks').removeClass('busy');
+			if(res.success)
+				$('.left').html(res.html);
+		}, 'json');
+	};
+
+
+$(document)
+	.on('click', '._remind-add', _remindAdd)
 	.on('click', '._remind-unit .action', function() {
 		var t = $(this),
 			p = t;

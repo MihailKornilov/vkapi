@@ -1,4 +1,104 @@
-var incomeLoad = function() {
+var _accrualAdd = function() {
+		var html =
+			'<div id="_accrual-add">' +
+				'<table class="tab">' +
+	(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+					'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
+				'</table>' +
+				'<table class="tab status">' +
+					'<tr><td class="label topi">Статус заявки: <td><input type="hidden" id="acc_status" />' +
+				'</table>' +
+				'<table class="tab remind">' +
+					'<tr><td class="label topi">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
+					'<tr class="remind-tr"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Позвонить и сообщить о готовности" />' +
+					'<tr class="remind-tr"><td class="label">Дата:<td><input type="hidden" id="remind-day" />' +
+				'</table>' +
+			'</div>';
+
+		var dialog = _dialog({
+			top:30,
+			width:480,
+			head:'Внесение начисления',
+			content:html,
+			butSubmit:'Далее...',
+			submit:toStatus
+		});
+
+		$('#sum').focus();
+		$('#acc_status')._radio({
+			light:1,
+			spisok:STATUS,
+			func:function() {
+				$('.remind').show();
+			}
+		});
+		$('#acc_remind')._radio({
+			light:1,
+			block:0,
+			spisok:[
+				{uid:1,title:'да'},
+				{uid:2,title:'нет'}
+			],
+			func:function(v) {
+				$('.remind-tr')[v == 1 ? 'show' : 'hide']();
+				dialog.submit(submit);
+				dialog.butSubmit('Внести');
+			}
+		});
+		$('#remind-day')._calendar();
+
+		function toStatus() {
+			if(!_cena($('#sum').val())) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+				return false;
+			}
+			if($('.status').is(':hidden')) {
+				$('.status').show();
+				return false;
+			}
+			if(!_num($('#acc_status').val())) {
+				dialog.err('Укажите статус заявки');
+				return false;
+			}
+			if(!_num($('#acc_remind').val())) {
+				dialog.err('Выберите, нужно ли добавлять напоминание');
+				return false;
+			}
+		}
+		function submit() {
+			var send = {
+					op:'accrual_add',
+					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
+					sum:$('#sum').val(),
+					about:$('#about').val(),
+					zayav_status:$('#acc_status').val(),
+					remind:_num($('#acc_remind').val()) == 1 ? 1 : 0,
+					remind_txt:$('#remind-txt').val(),
+					remind_day:$('#remind-day').val()
+				};
+			if(!_cena(send.sum)) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else if(send.remind && !send.remind_txt) {
+				dialog.err('Не указано содержание напоминания');
+				$('#remind-txt').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					dialog.abort();
+					if(res.success) {
+						dialog.close();
+						_msg('Начисление успешно произведено');
+						location.reload();
+					}
+				}, 'json');
+			}
+		}
+	},
+
+	incomeLoad = function() {
 		window._calendarFilter = incomeSpisok;
 		$('#invoice_id')._radio({
 			light:1,
@@ -36,7 +136,60 @@ var incomeLoad = function() {
 		}, 'json');
 	},
 
-	expenseTab = function(dialog, arr) {//таблица для внесения или редактирования расхода
+	_refundAdd = function() {//внесение возврата
+		var html =
+			'<table id="_refund-add-tab">' +
+				'<tr><td class="label">Клиент:<td>' + ZAYAV.client_link +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" />' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+				'<tr><td class="label">Примечание:<td><input type="text" id="about" />' +
+			'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Возврат',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#prim').keyEnter(submit);
+		$('#invoice_id')._select({
+			width:200,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function(v) {
+				$('#sum').focus();
+			}
+		});
+
+		function submit() {
+			var send = {
+				op:'refund_add',
+				zayav_id:ZAYAV.id,
+				invoice_id:_num($('#invoice_id').val()),
+				sum:_cena($('#sum').val()),
+				about:$.trim($('#about').val())
+			};
+			if(!send.invoice_id)
+				dialog.err('Не указан счёт');
+			else if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					dialog.abort();
+					if(res.success) {
+						dialog.close();
+						_msg('Возврат успешно произведён');
+						location.reload();
+					}
+				}, 'json');
+			}
+		}
+	},
+
+	_expenseTab = function(dialog, arr) {//таблица для внесения или редактирования расхода
 		arr = $.extend({
 			id:0,
 			category_id:0,
@@ -138,7 +291,7 @@ var incomeLoad = function() {
 				width:380,
 				head:'Внесение расхода'
 			});
-		expenseTab(dialog);
+		_expenseTab(dialog);
 		});
 		$('#invoice_id')._select({
 			width:140,
@@ -200,7 +353,47 @@ var incomeLoad = function() {
 		}, 'json');
 	},
 
-	_zayavExpense = function() {//редактирование расходов по заявке
+	_zayavExpenseEdit = function () {//вывод окна для редактирование расходов по заявке в информации о заявке
+		var html =
+			'<table id="zee-tab">' +
+				'<tr><td class="label">Заявка:<td><b>' + ZAYAV.head + '</b>' +
+				'<tr><td class="label">Список расходов:' +
+				'<tr><td id="zee-spisok" colspan="2">' +
+			'</table>',
+			dialog = _dialog({
+				top: 30,
+				width: 510,
+				head: 'Изменение расходов заявки',
+				content: html,
+				butSubmit: 'Сохранить',
+				submit: submit
+			});
+
+		_zayavExpense();
+
+		function submit() {
+			var send = {
+				op:'zayav_expense_edit',
+				zayav_id:ZAYAV.id,
+				expense:_zayavExpenseGet()
+			};
+			if(send.expense == 'sum_error')
+				dialog.err('Некорректно указана сумма');
+			else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+//						zayavMoneyUpdate();
+						dialog.close();
+						_msg('Сохранено');
+						$('#_zayav-expense').html(res.html);
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+	_zayavExpense = function() {//процесс редактирования расходов по заявке
 		var num = 0;
 
 		for(var n = 0; n < ZAYAV_EXPENSE.length; n++)
@@ -620,74 +813,17 @@ var incomeLoad = function() {
 	};
 
 $(document)
-	.on('click', '.accrual-add', function() {
-		var html =
-			'<table id="accrual-add-tab">' +
-				(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
-//				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
-//				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-			'</table>';
-/*
-			'<table class="zayav_accrual_add remind">' +
-			'<tr><td class="label">Содержание:<td><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
-			'<tr><td class="label">Дата:<td><input type="hidden" id="reminder_day">' +
-			'</table>';
-*/
-		var dialog = _dialog({
-			width:420,
-			head:'Внесение начисления',
-			content:html,
-			submit:submit
-		});
-		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
-//		$('#acc_status')._dropdown({spisok:STATUS});
-//		$('#acc_remind')._check();
-//		$('#acc_remind_check').click(function(id) {
-//			$('.zayav_accrual_add.remind').toggle();
-//		});
-//		$('#reminder_day')._calendar();
-
-		function submit() {
-			var send = {
-					op:'accrual_add',
-					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
-					sum:$('#sum').val(),
-					about:$('#about').val()
-//					status:$('#acc_status').val(),
-//					remind:$('#acc_remind').val(),
-//					remind_txt:$('#reminder_txt').val(),
-//					remind_day:$('#reminder_day').val()
-				};
-			if(!_cena(send.sum)) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-			} //else if(send.remind == 1 && !send.remind_txt) { msg = 'Не указан текст напоминания'; $('#reminder_txt').focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Начисление успешно произведено');
-/*
-//						$('#money_spisok').html(res.html);
-//						zayavMoneyUpdate();
-						if(res.status) {
-							$('#status')
-								.html(res.status.name)
-								.css('background-color', '#' + res.status.color);
-							$('#status_dtime').html(res.status.dtime);
-						}
-						if(res.remind)
-							$('#remind-spisok').html(res.remind);
-*/
-					}
-				}, 'json');
+	.on('click', '._accrual-add', _accrualAdd)
+	.on('click', '._accrual-del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'начисления',
+			op:'accrual_del',
+			func:function() {
+				_parent(t).remove();
 			}
-		}
+		});
 	})
 
 	.on('click', '#income-next', function() {
@@ -851,6 +987,19 @@ $(document)
 		});
 	})
 
+	.on('click', '._refund-add', _refundAdd)
+	.on('click', '._refund-del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'возврата',
+			op:'refund_del',
+			func:function() {
+				_parent(t).remove();
+			}
+		});
+	})
+
 	.on('click', '#money-expense #mon-list div', function() {
 		var arr = [],
 			inp = $('#mon-list input');
@@ -887,7 +1036,7 @@ $(document)
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				res.arr.id = send.id;
-				expenseTab(dialog, res.arr);
+				_expenseTab(dialog, res.arr);
 			} else
 				dialog.loadError();
 		}, 'json');
@@ -1033,45 +1182,7 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '#_zayav-expense .img_edit', function () {//редактирование расходов по заявке в информации о заявке
-		var html =
-			'<table id="zee-tab">' +
-				'<tr><td class="label">Заявка:<td><b>' + ZAYAV.head + '</b>' +
-				'<tr><td class="label">Список расходов:' +
-				'<tr><td id="zee-spisok" colspan="2">' +
-			'</table>',
-			dialog = _dialog({
-				top: 30,
-				width: 510,
-				head: 'Изменение расходов заявки',
-				content: html,
-				butSubmit: 'Сохранить',
-				submit: submit
-			});
-
-		_zayavExpense();
-
-		function submit() {
-			var send = {
-				op:'zayav_expense_edit',
-				zayav_id:ZAYAV.id,
-				expense:_zayavExpenseGet()
-			};
-			if(send.expense == 'sum_error')
-				dialog.err('Некорректно указана сумма');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function (res) {
-					if(res.success) {
-//						zayavMoneyUpdate();
-						dialog.close();
-						_msg('Сохранено.');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
+	.on('click', '#_zayav-expense .img_edit', _zayavExpenseEdit)
 
 	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
 		var v = $(this).attr('val').split(':');

@@ -290,16 +290,6 @@ function salary_worker($v) {
 }//salary_worker()
 */
 
-function salaryWorkerAccGroup($arr, $spisok=array()) {//группировка начислений по ключу даты добавлени€
-	$send = $spisok;
-	foreach($arr as $r) {
-		$key = strtotime($r['dtime_add']);
-		while(isset($send[$key]))
-			$key++;
-		$send[$key] = $r;
-	}
-	return $send;
-}//salaryWorkerAccGroup()
 function salary_worker_acc($v) {
 	$filter = salaryFilter($v);
 
@@ -342,9 +332,9 @@ function salary_worker_acc($v) {
 	if(function_exists('_zayavValToList'))
 		$zayav = _zayavValToList($zayav);
 
-	$spisok = salaryWorkerAccGroup($accrual);
-	$spisok += salaryWorkerAccGroup($zayav, $spisok);
-	$spisok += salaryWorkerAccGroup($deduct, $spisok);
+	$spisok = _arrayTimeGroup($accrual);
+	$spisok += _arrayTimeGroup($zayav, $spisok);
+	$spisok += _arrayTimeGroup($deduct, $spisok);
 	krsort($spisok);
 
 	$send = '';
@@ -507,16 +497,26 @@ function _zayavExpenseDop($id=false) {//дополнительное условие дл€ категории рас
 	return $id !== false ? $arr[$id] : $arr;
 }//_zayavExpenseDop()
 function _zayav_expense($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
+	//$arr = _zpLink($arr);
+
+	return '<div id="_zayav-expense">'._zayav_expense_spisok($zayav_id).'</div>';
+}//_zayav_expense()
+function _zayav_expense_spisok($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
 	$sql = "SELECT *
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `zayav_id`=".$zayav_id."
 			ORDER BY `id`";
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return '';
+	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
-	//$arr = _zpLink($arr);
+	$send =
+		'<script type="text/javascript">'.
+			'var ZAYAV_EXPENSE=['._zayav_expense_json($arr).'];'.
+		'</script>';
+
+	if(empty($arr))
+		return $send;
 
 	//сумма начислений по за€вке
 	$sql = "SELECT SUM(`sum`)
@@ -528,18 +528,14 @@ function _zayav_expense($zayav_id) {//вставка расходов по за€вке в информацию о 
 	$accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
 	return
-		'<script type="text/javascript">'.
-			'var ZAYAV_EXPENSE=['._zayav_expense_json($arr).'];'.
-		'</script>'.
-		'<div id="_zayav-expense">'.
-			'<div class="headBlue">'.
-				'–асходы по за€вке'.
-				'<div class="img_edit'._tooltip('»зменить расходы по за€вке', -88).'</div>'.
-			'</div>'.
-			'<h1>'.($accrual_sum ? 'ќбща€ сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Ќачислений нет.').'</h1>'.
-			_zayav_expense_html($arr, $accrual_sum).
-		'</div>';
-}//_zayav_expense()
+		$send.
+		'<div class="headBlue">'.
+			'–асходы по за€вке'.
+			'<div class="img_edit'._tooltip('»зменить расходы по за€вке', -88).'</div>'.
+		'</div>'.
+		'<h1>'.($accrual_sum ? 'ќбща€ сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Ќачислений нет.').'</h1>'.
+		_zayav_expense_html($arr, $accrual_sum);
+}//_zayav_expense_spisok()
 function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вки при внесении в базу
 	if(empty($v))
 		return true;
@@ -558,7 +554,7 @@ function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вк
 	}
 	return true;
 }//_zayav_expense_test()
-function _zayav_expense_html($arr, $accrual_sum=false, $diff=array(), $new=false) {//вывод таблицы расходов по за€вке
+function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) {//вывод таблицы расходов по за€вке
 	$expense_sum = 0;
 	$send = '<table class="ze-spisok">';
 	foreach($arr as $arr_id => $r) {
@@ -566,7 +562,7 @@ function _zayav_expense_html($arr, $accrual_sum=false, $diff=array(), $new=false
 		$changeSum = '';
 		$changeDop = '';
 
-		if(!empty($diff)) {
+		if(is_array($diff)) {
 			$line = false; // изначально считаем, что строка была удалена или добавлена
  			foreach($diff as $diff_id => $d) {
 				if($arr_id == $diff_id) {
@@ -624,6 +620,8 @@ function _zayav_expense_json($arr) {//расходы по за€вке в формате json
 	return implode(',', $json);
 }//_zayav_expense_json()
 function _zayav_expense_array($v) {//расходы по за€вке в формате array
+	if(empty($v))
+		return array();
 	$array = array();
 	foreach(explode(',', $v) as $r) {
 		$ex = explode(':', $r);

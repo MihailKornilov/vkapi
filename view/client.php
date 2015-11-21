@@ -822,7 +822,16 @@ function clientBalansUpdate($client_id) {//обновление баланса клиента
 			  AND `client_id`=".$client_id;
 	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-	$balans = $income - $accrual;
+	//¬озвраты
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$client_id;
+	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$balans = $income - $accrual + $refund;
 
 	$sql = "UPDATE `_client`
 			SET `balans`=".$balans."

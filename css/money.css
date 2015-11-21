@@ -1,7 +1,11 @@
 /* Начисления */
-#accrual-add-tab{border-spacing:10px}
-#accrual-add-tab .label{width:100px;text-align:right}
-#accrual-add-tab #about{width:230px}
+#_accrual-add .tab{border-spacing:8px}
+#_accrual-add .label{width:130px;text-align:right}
+#_accrual-add #about{width:230px}
+#_accrual-add .status{display:none;background-color:#f8f8f0;width:100%}
+#_accrual-add .remind{display:none;background-color:#f4f4da;width:100%}
+#_accrual-add .remind-tr{display:none}
+#_accrual-add #remind-txt{width:230px}
 
 
 
@@ -29,6 +33,13 @@
 #income-add-tab #prepay_check{margin:0 6px -3px 0}
 #income-add-tab #about{width:210px}
 
+
+/* Возврат */
+#_refund-add-tab{border-spacing:10px}
+#_refund-add-tab .label{width:80px;text-align:right}
+#_refund-add-tab #isum{color:#888;font-size:10px;margin-left:10px}
+#_refund-add-tab #isum b{font-size:10px}
+#_refund-add-tab #about{width:220px}
 
 
 
@@ -83,18 +94,17 @@
 #balans-tab .balans{width:70px;text-align:right}
 
 
+/* деньги в информации о заявке */
+#_zayav-money{margin-top:15px}
+#_zayav-money em{float:right;margin:0 5px}
+#_zayav-money ._refund-add{color:#c22}
+#_zayav-money .accrual{color:#07a;cursor:default}
+#_zayav-money .income{color:#090;cursor:default}
+#_zayav-money .refund{color:#c22;cursor:default}
+
+
 
 /*
-.invoice-history{margin-top:10px}
-.invoice-history .action{width:80px}
-.invoice-history .balans{width:70px;text-align:right}
-
-
-
-
-
-
-
 .schet#report .headName{margin:15px 10px}
 .schet#report #spisok{margin:10px}
 .schet#report #result{margin-bottom:10px}

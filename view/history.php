@@ -197,20 +197,26 @@ function _history_types($history) {//перевод type_id в текст
 	foreach($history as $id => $r) {
 		$txt = $types[$r['type_id']];
 		foreach($str as $v) {
-			// проверка условия: ?{v1}, если v1 пустая, то не выводится строка, заключённая меду пробелами с этой переменной.
-			// например: <em>?{v1}</em>.
+			// проверка условия: ?{v1}, если v1 пустая, то не выводится строка, заключённая между пробелами с этой переменной.
+			// например: <em>?{v1}</em>
 			if(strpos($txt, '?{'.$v.'}') !== false) {
 				$ex = explode(' ', $txt);
 				foreach($ex as $i => $e)
 					if(strpos($e, '?{'.$v.'}') !== false && empty($r[$v]))
 						$ex[$i] = '';
-					else $ex[$i] = str_replace('?', '', $ex[$i]);
+					else $ex[$i] = str_replace('?{', '{', $ex[$i]);
 				$txt = implode(' ', $ex);
 			}
 			if(strpos($txt, '{'.$v.'}') !== false)
 				$txt = str_replace('{'.$v.'}', $r[$v], $txt);
 			if(strpos($txt, '#'.$v.'#') !== false)
 				$txt = str_replace('#'.$v.'#', '<div class="changes">'.$r[$v].'</div>', $txt);
+			//статус заявки: название статуса, подсвеченное соответствующим цветом (для mobile)
+			if(strpos($txt, '^'.$v.'^') !== false) {
+				$i = _zayavStatus($r[$v]);
+				$status = '<span class="zstatus" style="background-color:#'.$i['color'].'">'.$i['name'].'</span>';
+				$txt = str_replace('^'.$v.'^', $status, $txt);
+			}
 		}
 		$history[$id]['txt'] = _br($txt);
 	}
@@ -226,7 +232,7 @@ function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элеме
 			$old = $v1;
 			$new = $v2;
 		}
-		return '<tr><th>' . $name . ':<td>' . $old . '<td>»<td>' . $new;
+		return '<tr><th>'.$name.':<td>'.$old.'<td>»<td>'.$new;
 	}
 	return '';
 }//_historyChange()

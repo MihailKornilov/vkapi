@@ -978,6 +978,16 @@ function _numToWord($num, $firstSymbolUp=false) {
 function _maxSql($table, $pole='sort', $resource_id=0) {
 	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`", $resource_id);
 }//getMaxSql()
+function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу даты добавления
+	$send = $spisok;
+	foreach($arr as $r) {
+		$key = strtotime($r['dtime_add']);
+		while(isset($send[$key]))
+			$key++;
+		$send[$key] = $r;
+	}
+	return $send;
+}//_arrayTimeGroup()
 
 function _start($v) {//вычисление первой позиции в базе данных
 	return ($v['page'] - 1) * $v['limit'];

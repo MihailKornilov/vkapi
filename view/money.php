@@ -43,6 +43,25 @@ function _money() {
 		$content;
 }//_money()
 
+function _accrual_unit($r) {//строка начисления в таблице
+	return
+	'<tr><td class="sum '.$r['type']._tooltip('Начисление', -3)._sumSpace($r['sum']).
+		'<td>'.$r['about'].
+		'<td class="dtime">'._dtimeAdd($r).
+		'<td class="ed">'.
+			_iconDel(array(
+				'id' => $r['id'],
+				'class' => '_accrual-del'
+			));
+}//_accrual_unit()
+function _refund_unit($r) {//строка возврата в таблице
+	return
+	'<tr><td class="sum '.$r['type']._tooltip('Возврат', -3)._sumSpace($r['sum']).
+		'<td><span class="type">'._invoice($r['invoice_id']).($r['about'] ? ':' : '').'</span> '.$r['about'].
+		'<td class="dtime">'._dtimeAdd($r).
+		'<td class="ed">'._iconDel($r + array('class'=>'_refund-del'));
+}//_accrual_unit()
+
 
 function income_top($sel) { //Условия поиска сверху для платежей
 	$sql = "SELECT DISTINCT `viewer_id_add`
@@ -137,8 +156,7 @@ function incomeFilter($v) {
 function income_spisok($filter=array()) {
 	$filter = incomeFilter($filter);
 
-	define('PAGE1', $filter['page'] == 1);
-	$js = !PAGE1 ? '' :
+	$js = $filter['page'] != 1 ? '' :
 		'<script type="text/javascript">'.
 			'var MONEY={'.
 				'limit:'.$filter['limit'].','.
@@ -183,11 +201,16 @@ function income_spisok($filter=array()) {
 
 	$send['filter'] = $filter;
 	if(!$send['all'])
-		return $send + array('spisok' => $js.'<div class="_empty">Платежей нет.</div>');
+		return $send + array(
+						'spisok' => $js.'<div class="_empty">Платежей нет.</div>',
+						'arr' => array()
+					);
 
 	$all = $send['all'];
 
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				'income' `type`
 			FROM `_money_income`
 			WHERE ".$cond."
 			ORDER BY `dtime_add` DESC
@@ -204,7 +227,7 @@ function income_spisok($filter=array()) {
 //	$money = _zpLink($money);
 //	$money = _schetValues($money);
 
-	$send['spisok'] = !PAGE1 ? '' :
+	$send['spisok'] = $filter['page'] != 1 ? '' :
 		$js.
 		'<div id="summa">'.
 			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').
@@ -217,7 +240,7 @@ function income_spisok($filter=array()) {
 				'<th>';
 
 	foreach($money as $r)
-		$send['spisok'] .= income_unit($r, $filter);
+		$send['spisok'] .= _income_unit($r, $filter);
 
 	$send['spisok'] .= _next($filter + array(
 			'type' => 3,
@@ -225,20 +248,21 @@ function income_spisok($filter=array()) {
 			'tr' => 1,
 			'id' => 'income-next'
 		));
+	$send['arr'] = $money;
 
 	return $send;
 }//income_spisok()
-function income_unit($r) {
+function _income_unit($r, $filter=array()) {
 	return
 		'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
-			'<td class="sum">'._sumSpace($r['sum']).
-			'<td>'.incomeAbout($r).
+			'<td class="sum '.$r['type'].(@$filter['zayav_id'] ? _tooltip('Платёж', 8) : '">')._sumSpace($r['sum']).
+			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'._iconDel($r + array('class'=>'income-del'));
-}//income_unit()
-function incomeAbout($r) {
+}//_income_unit()
+function incomeAbout($r, $filter=array()) {
 	$about = '';
-	if($r['zayav_id'])
+	if($r['zayav_id'] && !@$filter['zayav_id'])
 		$about .= 'Заявка '.@$r['zayav_link'];
 	if($r['zp_id'])
 		$about .= 'Продажа запчасти '.$r['zp_link'];
@@ -247,12 +271,12 @@ function incomeAbout($r) {
 
 	$about .=
 		($r['about'] && $about ? ', ' : '').$r['about'].
-		($r['client_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '');
+		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '');
 
-	return '<span class="type">'._invoice($r['invoice_id']).':</span> '.$about;
+	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }//incomeAbout()
 
-
+/* --- расходы --- */
 function _expense($id=0, $i='name') {//Список категорий расходов
 	$key = CACHE_PREFIX.'expense'.WS_ID;
 	$arr = xcache_get($key);
@@ -846,6 +870,15 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 			  AND `invoice_id`=".$invoice_id;
 	$expense = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
+	//Возвраты
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `invoice_id`=".$invoice_id;
+	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
 	//перевод: счёт-отправитель
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_invoice_transfer`
@@ -864,7 +897,7 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 			  AND `invoice_id_to`=".$invoice_id;
 	$to = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-	return round($income - $expense - $from + $to - $start, 2);
+	return round($income - $expense - $refund - $from + $to - $start, 2);
 }//_invoiceBalans()
 function invoice() {//страница со списком счетов и переводами между счетами
 	if(_num(@$_GET['id']))
@@ -1096,6 +1129,7 @@ function _balans($v) {//внесение записи о балансе
 	if(!empty($v['client_id'])) {
 		$unit_id = _num($v['client_id']);
 		$balans = clientBalansUpdate($unit_id);
+		$sum *= -1;
 	}
 
 	//сотрудник
@@ -1349,3 +1383,67 @@ function balans_show_spisok($filter) {
 
 	return $send;
 }//balans_show_spisok()
+
+
+
+
+/* --- вывод списка начислений, платежей и возвратов в информации о заявке --- */
+function _zayavInfoMoney($zayav_id) {
+	return '<div id="_zayav-money">'._zayavInfoMoney_spisok($zayav_id).'</div>';
+}//_zayavInfoMoney()
+function _zayavInfoMoney_spisok($zayav_id) {
+	//начисления
+	$sql = "SELECT
+				*,
+				'accrual' `type`
+			FROM `_money_accrual`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	$accrual = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	//платежи
+	$income = income_spisok(array('zayav_id'=>$zayav_id));
+
+	//возвраты
+	$sql = "SELECT
+				*,
+				'refund' `type`
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	$refund = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$money = _arrayTimeGroup($accrual);
+	$money = _arrayTimeGroup($income['arr'], $money);
+	$money = _arrayTimeGroup($refund, $money);
+
+	if(empty($money))
+		return '';
+
+	krsort($money);
+
+	$spisok = '';
+	foreach($money as $r) {
+		if($r['type'] == 'accrual')
+			$spisok .= _accrual_unit($r);
+		elseif($r['type'] == 'refund')
+			$spisok .= _refund_unit($r);
+		else
+			$spisok .= _income_unit($r, array('zayav_id'=>$zayav_id));
+	}
+	return
+		'<div class="headBlue">'.
+			'Начисления и платежи'.
+			'<a class="add _refund-add'._tooltip('Произвести возврат денежных средств', -215, 'r').'Возврат</a>'.
+			'<em>::</em>'.
+			'<a class="add income-add">Внести платёж</a>'.
+			'<em>::</em>'.
+			'<a class="add _accrual-add">Начислить</a>'.
+		'</div>'.
+		'<table class="_spisok">'.$spisok.'</table>';
+}//_zayavInfoMoney_spisok()
+

@@ -293,21 +293,31 @@ function _remind_add($v) {
 		'day' => $v['day']
 	));
 }//_remind_add()
-function _remind_zayav($zayav_id, $link_values='&p=remind') {//вывод напоминаний в за€вке
+function _remind_zayav($zayav_id) {//вывод напоминаний в за€вке
+	return '<div id="_remind-zayav">'._remind_zayav_spisok($zayav_id).'</div>';
+}//_remind_zayav()
+function _remind_zayav_spisok($zayav_id) {//список напоминаний в за€вке
 	$data = _remind_spisok(array('zayav_id'=>$zayav_id));
-	return
+
+	$send =
 		'<script type="text/javascript">'.
 			'var REMIND={'.
 				'active:'.$data['active'].
 			'};'.
-		'</script>'.
+		'</script>';
+
+	if(empty($data['spisok']))
+		return $send;
+
+	return
+		$send.
 		'<div class="headBlue">'.
-			'<a href="'.URL.$link_values.'"><b>Ќапоминани€</b></a>'.
+			'<a href="'.URL.'&p=report&d=remind"><b>Ќапоминани€</b></a>'.
 			'<div class="img_add _remind-add'._tooltip('Ќовое напоминание', -60).'</div>'.
 			($data['hidden'] ? '<a id="_remind-show-all">ѕоказать все: '.$data['hidden'].'</a>' : '').
 		'</div>'.
 		'<div id="remind-spisok">'.$data['spisok'].'</div>';
-}//_remind_zayav()
+}//_remind_zayav_spisok()
 function _remind_active_to_ready_in_zayav($zayav_id) {//отметка активных напоминаний выполненными в за€вках
 	$sql = "SELECT * FROM `_remind` WHERE `app_id`=".APP_ID." AND `status`=1 AND `zayav_id`=".$zayav_id;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);

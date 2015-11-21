@@ -14,12 +14,14 @@ switch(@$_POST['op']) {
 
 		_remind_add($_POST);
 
-		$v = array();
-		if($_POST['from'] == 'client')
-			$v['client_id'] = $_POST['client_id'];
-		if($_POST['from'] == 'zayav')
-			$v['zayav_id'] = $_POST['zayav_id'];
-		$send['html'] = utf8(_remind_spisok($v, 'spisok'));
+		switch($_POST['from']) {
+			case 'zayav': $send['html'] = utf8(_remind_zayav($_POST['zayav_id'])); break;
+			case 'client': break;
+			default: $send['html'] = utf8(_remind_spisok(array(), 'spisok'));
+
+		}
+//		if($_POST['from'] == 'client')
+//			$v['client_id'] = $_POST['client_id'];
 
 		jsonSuccess($send);
 		break;
@@ -100,7 +102,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`,`txt`
 				FROM `_remind_reason`
 				WHERE `app_id`=".APP_ID."
-				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
+				  AND `ws_id`=".WS_ID."
 				ORDER BY `count` DESC, `txt`";
 		$send['spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
 		jsonSuccess($send);
@@ -108,7 +110,6 @@ switch(@$_POST['op']) {
 	case 'remind_head_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();
-
 		if(!$txt = _txt($_POST['txt']))
 			jsonError();
 
@@ -117,7 +118,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
-				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
+				  AND `ws_id`=".WS_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))

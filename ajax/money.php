@@ -4,10 +4,19 @@ switch(@$_POST['op']) {
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
-		$zayav_id = _num($_POST['zayav_id']);
-		$sum = intval($_POST['sum']);
 		$about = _txt($_POST['about']);
+		$zayav_id = _num($_POST['zayav_id']);
+		$zayav_status = _num($_POST['zayav_status']);
 		$client_id = 0;
+
+		$remind_txt = _txt($_POST['remind_txt']);
+		$remind_day = _txt($_POST['remind_day']);
+		if($remind = _bool($_POST['remind'])) {
+			if(!$remind_txt)
+				jsonError();
+			if(!preg_match(REGEXP_DATE, $remind_day))
+				jsonError();
+		}
 
 		if($zayav_id) {
 			$sql = "SELECT *
@@ -45,51 +54,29 @@ switch(@$_POST['op']) {
 			'category_id' => 2,
 			'action_id' => 19,
 			'client_id' => $client_id,
-			'sum' => $sum
+			'sum' => $sum,
+			'about' => $about
 		));
 
 		_history(array(
 			'type_id' => 74,
 			'client_id' => $client_id,
 			'zayav_id' => $zayav_id,
-			'v1' => $sum
+			'v1' => $sum,
+			'v2' => $about
 		));
 
-/*
-		zayavBalansUpdate($zayav_id);
-
-
-
 		//Обновление статуса заявки, если изменялся
-		if($z['zayav_status'] != $status) {
-			$sql = "UPDATE `zayav`
-					SET `zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP
-					WHERE `id`=".$zayav_id;
-			query($sql);
-			history_insert(array(
-				'type' => 4,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'value' => $status,
-				'value1' => $z['zayav_status']
-			));
-			$send['status'] = _zayavStatus($status);
-			$send['status']['name'] = utf8($send['status']['name']);
-			$send['status']['dtime'] = utf8(FullDataTime(curTime()));
-		}
+		zayavStatusChange($zayav_id, $zayav_status);//todo используется только в mobile
+		zayavBalansUpdate($zayav_id);//todo используется только в mobile
 
 		//Внесение напоминания, если есть
-		if($remind) {
+		if($remind)
 			_remind_add(array(
 				'zayav_id' => $zayav_id,
 				'txt' => $remind_txt,
 				'day' => $remind_day
 			));
-			$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$zayav_id), 'spisok'));
-		}
-
-		$send['html'] = utf8(zayav_info_money($zayav_id));
-*/
 
 		jsonSuccess();
 		break;
@@ -97,31 +84,41 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `id`=".$id;
-		if(!$r = query_assoc($sql))
+		$sql = "SELECT *
+				FROM `_money_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
+		$sql = "UPDATE `_money_accrual` SET
 					`deleted`=1,
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
-		query($sql);
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
 
-		history_insert(array(
-			'type' => 8,
+		//внесение баланса для клиента
+		_balans(array(
+			'category_id' => 2,
+			'action_id' => 21,
 			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
+			'sum' => $r['sum'],
+			'about' => $r['about']
 		));
+
+		_history(array(
+			'type_id' => 77,
+			'zayav_id' => $r['zayav_id'],
+			'client_id' => $r['client_id'],
+			'v1' => _cena($r['sum'], 2),
+			'v2' => $r['about']
+		));
+
 		jsonSuccess();
 		break;
 	case 'accrual_rest':
@@ -293,6 +290,128 @@ switch(@$_POST['op']) {
 		));
 		jsonSuccess();
 		break;
+
+	case 'refund_add'://внесение возврата
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		$sql = "SELECT * FROM `zayav` WHERE !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "INSERT INTO `_money_refund` (
+					`app_id`,
+					`ws_id`,
+					`zayav_id`,
+					`client_id`,
+					`invoice_id`,
+					`sum`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$zayav_id.",
+					".$z['client_id'].",
+					".$invoice_id.",
+					".$sum.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = query_insert_id('_money_refund', GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 13,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum,
+			'about' => $about
+		));
+
+		//внесение баланса для клиента
+		_balans(array(
+			'category_id' => 2,
+			'action_id' => 13,
+			'client_id' => $z['client_id'],
+			'sum' => $sum,
+			'about' => $about
+		));
+
+		zayavBalansUpdate($zayav_id);
+
+		_history(array(
+			'type_id' => 75,
+			'zayav_id' => $zayav_id,
+			'client_id' => $z['client_id'],
+			'invoice_id' => $invoice_id,
+			'v1' => _cena($sum, 2),
+			'v2' => $about
+		));
+
+		jsonSuccess();
+		break;
+	case 'refund_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_refund`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(TODAY != substr($r['dtime_add'], 0, 10))
+			jsonError();
+
+		$sql = "UPDATE `_money_refund`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		zayavBalansUpdate($r['zayav_id']);
+
+		_balans(array(
+			'category_id' => 1,
+			'action_id' => 14,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum'],
+			'about' => $r['about']
+		));
+
+		//внесение баланса для клиента
+		_balans(array(
+			'category_id' => 2,
+			'action_id' => 14,
+			'client_id' => $r['client_id'],
+			'sum' => $r['sum'],
+			'about' => $r['about']
+		));
+
+		_history(array(
+			'type_id' => 76,
+			'zayav_id' => $r['zayav_id'],
+			'client_id' => $r['client_id'],
+			'invoice_id' => $r['invoice_id'],
+			'v1' => _cena($r['sum'], 2),
+			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
+
 
 	case 'expense_spisok':
 		$data = expense_spisok($_POST);
@@ -834,7 +953,9 @@ switch(@$_POST['op']) {
 				'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
 			));
 		}
-		jsonSuccess();
+
+		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));
+		jsonSuccess($send);
 		break;
 
 	case 'salary_spisok':
