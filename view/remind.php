@@ -120,6 +120,7 @@ function _remind_spisok($v=array(), $i='all') {
 		'spisok' => '',
 		'filter' => $filter,
 		'active' => 0,
+		'active_spisok' => array(),
 		'hidden' => 0
 	);
 
@@ -141,8 +142,6 @@ function _remind_spisok($v=array(), $i='all') {
 			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id` DESC' : '`day`')."
 			LIMIT ".$start.",".$limit;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(!mysql_num_rows($q))
-		return 'Напоминаний нет.';
 	$remind = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$r['history'] = array();
@@ -164,8 +163,15 @@ function _remind_spisok($v=array(), $i='all') {
 		$remind[$r['remind_id']]['history'][] = $r;
 
 	foreach($remind as $r) {
-		if($r['status'] == 1)
+		if($r['status'] == 1) {
 			$send['active']++;
+			$send['active_spisok'][] =
+				'{'.
+					'id:'.$r['id'].','.
+					'txt:"'.addslashes($r['txt']).'",'.
+					'about:"'.addslashes(_br($r['about'])).'"'.
+				'}';
+		}
 		$send['spisok'] .=
 			'<div class="_remind-unit'.(($filter['zayav_id'] || $filter['client_id']) && $r['status'] != 1 ? ' dn' : '').'" val="'.$r['id'].'">'.
 				'<input type="hidden" class="ruday" value="'.$r['day'].'" />'.
@@ -207,14 +213,12 @@ function _remind_spisok($v=array(), $i='all') {
 		}
 	}
 
-	if($start + $limit < $all) {
-		$c = $all - $start - $limit;
-		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .=
-			'<div class="_next" id="_remind-next" val="'.($page + 1).'">'.
-				'<span>Показать ещё '.$c.' напоминани'._end($c, 'е', 'я', 'й').'</span>'.
-			'</div>';
-	}
+	$send['spisok'] .=
+		_next($filter + array(
+			'type' => 5,
+			'id' => '_remind-next',
+			'all' => $all
+		));
 
 	if($i == 'all')
 		return $send;
@@ -302,7 +306,8 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 	$send =
 		'<script type="text/javascript">'.
 			'var REMIND={'.
-				'active:'.$data['active'].
+				'active:'.$data['active'].','.
+				'active_spisok:['.implode(',', $data['active_spisok']).']'.
 			'};'.
 		'</script>';
 
@@ -318,8 +323,13 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 		'</div>'.
 		'<div id="remind-spisok">'.$data['spisok'].'</div>';
 }//_remind_zayav_spisok()
-function _remind_active_to_ready_in_zayav($zayav_id) {//отметка активных напоминаний выполненными в заявках
-	$sql = "SELECT * FROM `_remind` WHERE `app_id`=".APP_ID." AND `status`=1 AND `zayav_id`=".$zayav_id;
+function _remind_active_to_ready($ids) {//отметка выбранных активных напоминаний выполненными
+	$sql = "SELECT *
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=1
+			  AND `id` IN (".$ids.")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {
 		$sql = "UPDATE `_remind` SET `status`=2 WHERE `id`=".$r['id'];
@@ -327,7 +337,8 @@ function _remind_active_to_ready_in_zayav($zayav_id) {//отметка активных напомин
 
 		_remind_history_add(array(
 			'remind_id' => $r['id'],
-			'status' => 2
+			'status' => 2,
+			'reason' => 'внесён платёж по заявке'
 		));
 	}
-}//_remind_active_to_ready_in_zayav()
+}//_remind_active_to_ready()

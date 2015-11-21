@@ -276,7 +276,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
-		$send['html'] = utf8(sa_balans_category_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_category_edit':
@@ -301,7 +301,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
-		$send['html'] = utf8(sa_balans_category_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_category_del':
@@ -319,20 +319,23 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
-		$send['html'] = utf8(sa_balans_category_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_action_add':
-		$name = _txt($_POST['name']);
-		$minus = _bool($_POST['minus']);
-
-		if(!$name)
+		if(!$category_id = _num($_POST['category_id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
 			jsonError();
 
+		$minus = _bool($_POST['minus']);
+
 		$sql = "INSERT INTO `_balans_action` (
+					`category_id`,
 					`name`,
 					`minus`
 				) VALUES (
+					".$category_id.",
 					'".addslashes($name)."',
 					".$minus."
 				)";
@@ -340,7 +343,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
-		$send['html'] = utf8(sa_balans_action_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_action_edit':
@@ -367,7 +370,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
-		$send['html'] = utf8(sa_balans_action_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 	case 'sa_balans_action_del':
@@ -385,7 +388,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
-		$send['html'] = utf8(sa_balans_action_spisok());
+		$send['html'] = utf8(sa_balans_spisok());
 		jsonSuccess($send);
 		break;
 }

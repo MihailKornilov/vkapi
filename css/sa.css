@@ -53,11 +53,13 @@
 
 
 /* балансы */
-#sa-balans .headName{margin:20px 0 0;padding:0 15px 5px}
-#sa-balans .img_add{float:right;margin-top:4px}
-#sa-balans #category-spisok{margin:15px}
-#sa-balans #action-spisok{margin:15px}
-#sa-balans .id{text-align:right;color:#555;width:30px}
-#sa-balans .d1{display:none}
-#sa-balans .minus{width:30px;text-align:center}
+#sa-balans #spisok{margin:0 20px 20px}
+#sa-balans .head b{font-size:13px}
+#sa-balans .head .img_add,
+#sa-balans .head .img_edit,
+#sa-balans .head .img_del{float:right}
+#sa-balans ._spisok{width:350px;margin:15px 0 0 30px}
+#sa-balans .id{text-align:right;color:#555;width:25px}
+#sa-balans .name{color:#2a2}
+#sa-balans .minus{color:#d33}
 #sa-balans .count{width:30px;text-align:center}

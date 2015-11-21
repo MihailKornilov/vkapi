@@ -538,12 +538,13 @@ $.fn._check = function(o) {
 	o = $.extend({
 		name:'',
 		disabled:0,
+		light:0,
 		func:function() {}
 	}, o);
 
 	var val = t.val() == 1 ? 1 : 0;
 	t.val(val);
-	t.wrap('<div class="_check' + (o.disabled ? ' disabled' : '') + ' check' + val + (o.name ? '' : ' e') + '" id="' + id + '_check">');
+	t.wrap('<div class="_check' + (o.disabled ? ' disabled' : '') + ' check' + val + (o.name ? '' : ' e') + (o.light ? ' l' : '') + '" id="' + id + '_check">');
 	t.after(o.name);
 	_click(o.func);
 

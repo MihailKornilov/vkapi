@@ -32,7 +32,7 @@ var balansCategory = function(arr) {
 					if(res.success) {
 						dialog.close();
 						_msg();
-						$('#category-spisok').html(res.html);
+						$('#spisok').html(res.html);
 					} else
 						dialog.abort();
 				}, 'json');
@@ -42,16 +42,19 @@ var balansCategory = function(arr) {
 	balansAction = function(arr) {
 		arr = $.extend({
 			id:0,
+			category_id:0,
 			name:'',
 			minus:0
 		}, arr);
 
 		var html =
 				'<table class="sa-tab">' +
+					'<tr><td class="label">Категория:<td><b>' + arr.category + '</b>' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + arr.name + '" />' +
 					'<tr><td class="label">Минус:<td><input type="hidden" id="minus" value="' + arr.minus + '" />' +
 				'</table>',
 			dialog = _dialog({
+				width:400,
 				head:(arr.id ? 'Редактирование' : 'Внесение нового' ) + ' действия',
 				content:html,
 				butSubmit:arr.id ? 'Сохранить' : 'Внести',
@@ -65,6 +68,7 @@ var balansCategory = function(arr) {
 			var send = {
 				op:'sa_balans_action_' + (arr.id ? 'edit' : 'add'),
 				id:arr.id,
+				category_id:arr.category_id,
 				name:$('#name').val(),
 				minus:$('#minus').val()
 			};
@@ -77,7 +81,7 @@ var balansCategory = function(arr) {
 					if(res.success) {
 						dialog.close();
 						_msg();
-						$('#action-spisok').html(res.html);
+						$('#spisok').html(res.html);
 					} else
 						dialog.abort();
 				}, 'json');
@@ -303,28 +307,36 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '.balans-category-edit', function() {
+	.on('click', '#sa-balans .head .img_edit', function() {
 		var t = _parent($(this));
 		balansCategory({
-			id:t.attr('val'),
-			name:t.find('.name').html()
+			id:$(this).attr('val'),
+			name:t.find('b.c-name').html()
 		});
 	})
-	.on('click', '.balans-category-del', function() {
+	.on('click', '#sa-balans .head .img_del', function() {
 		_dialogDel({
-			id:_parent($(this)).attr('val'),
+			id:$(this).attr('val'),
 			head:'категории балансов',
 			op:'sa_balans_category_del',
 			func:function(res) {
-				$('#category-spisok').html(res.html);
+				$('#spisok').html(res.html);
 			}
+		});
+	})
+	.on('click', '#sa-balans .head .img_add', function() {
+		balansAction({
+			category_id:$(this).attr('val'),
+			category:_parent($(this), 'TABLE').find('b.c-name').html()
 		});
 	})
 	.on('click', '.balans-action-edit', function() {
 		var t = _parent($(this));
 		balansAction({
 			id:t.attr('val'),
-			name:t.find('.name').html()
+			category:_parent(t, 'TABLE').find('b.c-name').html(),
+			name:t.find('.name').html(),
+			minus:t.find('.minus').length
 		});
 	})
 	.on('click', '.balans-action-del', function() {
@@ -333,7 +345,7 @@ $(document)
 			head:'действия для балансов',
 			op:'sa_balans_action_del',
 			func:function(res) {
-				$('#action-spisok').html(res.html);
+				$('#spisok').html(res.html);
 			}
 		});
 	})
@@ -479,14 +491,6 @@ $(document)
 			});
 		}
 
-		if($('#sa-balans').length) {
-			$('.link').click(function() {//переключение подразделов
-				$('.link.sel').removeClass('sel');
-				var i = $(this).addClass('sel').index();
-				$('.div').hide();
-				$('.d' + i).show();
-			});
+		if($('#sa-balans').length)
 			$('#category-add').click(balansCategory);
-			$('#action-add').click(balansAction);
-		}
 	});

@@ -1,9 +1,9 @@
 /* Начисления */
-#_accrual-add .tab{border-spacing:8px}
-#_accrual-add .label{width:130px;text-align:right}
+#_accrual-add .tab{border-spacing:8px;padding:15px 0}
+#_accrual-add .label{width:140px;text-align:right}
 #_accrual-add #about{width:230px}
-#_accrual-add .status{display:none;background-color:#f8f8f0;width:100%}
-#_accrual-add .remind{display:none;background-color:#f4f4da;width:100%}
+#_accrual-add #status-div{display:none;background-color:#f8f8f0}
+#_accrual-add #remind-div{display:none;background-color:#f4f4da}
 #_accrual-add .remind-tr{display:none}
 #_accrual-add #remind-txt{width:230px}
 
@@ -28,10 +28,26 @@
 #money-income #spisok{margin:0 10px 10px}
 #money-income .income-client{font-size:10px;color:#777}
 #money-income .income-client a{font-size:10px}
-#income-add-tab{border-spacing:10px}
-#income-add-tab .label{width:80px;text-align:right}
-#income-add-tab #prepay_check{margin:0 6px -3px 0}
-#income-add-tab #about{width:210px}
+
+._income-unit.prepay{background-color:#ffe}
+
+/* Внесение платежа */
+#_income-add .tab{border-spacing:10px;padding:10px 0;width:100%}
+#_income-add .label{width:130px;text-align:right}
+#_income-add #about{width:210px}
+#_income-add #place-div{display:none;background-color:#efe}
+#_income-add #remind-div{display:none;padding:10px 20px;background-color:#dfd}
+#_income-add #remind-div h1{font-weight:bold}
+#_income-add #remind-div h2{margin-top:3px;color:#555}
+#_income-add .remind-iu{
+	margin:12px 0;
+	padding:8px 10px;
+	background-color:#ffb;
+	border:#dd9 solid 1px;
+}
+#_income-add .remind-iu h3{font-size:12px;font-weight:bold}
+#_income-add .remind-iu h4{margin-left:20px}
+#_income-add .remind-iu ._check{margin:15px 0 5px 20px}
 
 
 /* Возврат */

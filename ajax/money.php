@@ -51,8 +51,7 @@ switch(@$_POST['op']) {
 
 		//внесение баланса для клиента
 		_balans(array(
-			'category_id' => 2,
-			'action_id' => 19,
+			'action_id' => 25,
 			'client_id' => $client_id,
 			'sum' => $sum,
 			'about' => $about
@@ -104,8 +103,7 @@ switch(@$_POST['op']) {
 
 		//внесение баланса для клиента
 		_balans(array(
-			'category_id' => 2,
-			'action_id' => 21,
+			'action_id' => 26,
 			'client_id' => $r['client_id'],
 			'sum' => $r['sum'],
 			'about' => $r['about']
@@ -175,8 +173,27 @@ switch(@$_POST['op']) {
 
 		$about = _txt($_POST['about']);
 
-		if(!$about)
+		$zayav_id = _num($_POST['zayav_id']);
+		$client_id = 0;
+		$prepay = _bool($_POST['prepay']);
+		$place = _num($_POST['place']);
+		$place_other = !$place ? _txt($_POST['place_other']) : '';
+		$remind_ids = _ids($_POST['remind_ids']);
+
+		//в произвольном платеже обязательно указывается описание
+		if(!$zayav_id && !$about)
 			jsonError();
+
+		if($zayav_id) {
+			$sql = "SELECT *
+					FROM `zayav`
+					WHERE `ws_id`=".WS_ID."
+					  AND !`deleted`
+					  AND `id`=".$zayav_id;
+			if(!$r = query_assoc($sql))
+				jsonError();
+			$client_id = $r['client_id'];
+		}
 
 		$sql = "INSERT INTO `_money_income` (
 				`app_id`,
@@ -184,6 +201,9 @@ switch(@$_POST['op']) {
 				`invoice_id`,
 				`sum`,
 				`about`,
+				`zayav_id`,
+				`client_id`,
+				`prepay`,
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
@@ -191,6 +211,9 @@ switch(@$_POST['op']) {
 				".$invoice_id.",
 				".$sum.",
 				'".addslashes($about)."',
+				".$zayav_id.",
+				".$client_id.",
+				".$prepay.",
 				".VIEWER_ID."
 			)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -198,52 +221,32 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 1,
 			'invoice_id' => $invoice_id,
 			'sum' => $sum,
 			'income_id' => $insert_id
 		));
 
-		jsonSuccess();
-		break;
-/*
-	case 'income_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
-			jsonError();
-		if(!preg_match(REGEXP_CENA, $_POST['sum']))
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['prepay']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
-			jsonError();
+		//внесение баланса для клиента
+		_balans(array(
+			'action_id' => 27,
+			'client_id' => $client_id,
+			'sum' => $sum,
+			'about' => $about
+		));
 
-		$place = intval($_POST['place']);
-		$place_other = !$place ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
-		$remind_active = _bool($_POST['remind_active']);
 
-		if(!$_POST['zayav_id'] && empty($_POST['prim']))
-			jsonError();
+		if($zayav_id) {
+			zayavBalansUpdate($zayav_id);//todo используется только в mobile
+			zayavPlaceCheck($zayav_id, $place, $place_other);
 
-		if(!$v = income_insert($_POST))
-			jsonError();
-
-		$send = array();
-		if($v['zayav_id']) {
-			_zayavPlaceCheck($v['zayav_id'], $place, $place_other);
-			$send['html'] = utf8(zayav_info_money($v['zayav_id']));
-			$send['comment'] = utf8(_vkComment('zayav', $v['zayav_id']));
-			if($remind_active) {
-				_remind_active_to_ready_in_zayav($v['zayav_id']);
-				$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$v['zayav_id']), 'spisok'));
-			}
+			//отметка выбранных активных напоминаних выполненными
+			if($remind_ids)
+				_remind_active_to_ready($remind_ids);
 		}
 
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
-*/
 	case 'income_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();
@@ -272,7 +275,6 @@ switch(@$_POST['op']) {
 */
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 2,
 			'invoice_id' => $r['invoice_id'],
 			'sum' => $r['sum'],
@@ -298,10 +300,14 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
+		if(!$about = _txt($_POST['about']))
+			jsonError();
 
-		$about = _txt($_POST['about']);
-
-		$sql = "SELECT * FROM `zayav` WHERE !`deleted` AND `id`=".$zayav_id;
+		$sql = "SELECT *
+				FROM `zayav`
+				WHERE `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$zayav_id;
 		if(!$z = query_assoc($sql))
 			jsonError();
 
@@ -328,8 +334,9 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('_money_refund', GLOBAL_MYSQL_CONNECT);
 
+		zayavBalansUpdate($zayav_id);
+
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 13,
 			'invoice_id' => $invoice_id,
 			'sum' => $sum,
@@ -338,14 +345,11 @@ switch(@$_POST['op']) {
 
 		//внесение баланса для клиента
 		_balans(array(
-			'category_id' => 2,
-			'action_id' => 13,
+			'action_id' => 29,
 			'client_id' => $z['client_id'],
 			'sum' => $sum,
 			'about' => $about
 		));
-
-		zayavBalansUpdate($zayav_id);
 
 		_history(array(
 			'type_id' => 75,
@@ -384,7 +388,6 @@ switch(@$_POST['op']) {
 		zayavBalansUpdate($r['zayav_id']);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 14,
 			'invoice_id' => $r['invoice_id'],
 			'sum' => $r['sum'],
@@ -393,8 +396,7 @@ switch(@$_POST['op']) {
 
 		//внесение баланса для клиента
 		_balans(array(
-			'category_id' => 2,
-			'action_id' => 14,
+			'action_id' => 30,
 			'client_id' => $r['client_id'],
 			'sum' => $r['sum'],
 			'about' => $r['about']
@@ -467,7 +469,6 @@ switch(@$_POST['op']) {
 
 		//история баланса для расчётного счёта
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 6,
 			'invoice_id' => $invoice_id,
 			'sum' => $sum,
@@ -478,7 +479,6 @@ switch(@$_POST['op']) {
 		//история баланса для сотрудника
 		if($worker_id)
 			_balans(array(
-				'category_id' => 5,
 				'action_id' => 23,
 				'worker_id' => $worker_id,
 				'sum' => $sum,
@@ -604,7 +604,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 7,
 			'invoice_id' => $r['invoice_id'],
 			'sum' => $r['sum'],
@@ -615,7 +614,6 @@ switch(@$_POST['op']) {
 		//история баланса для сотрудника
 		if($r['worker_id'])
 			_balans(array(
-				'category_id' => 5,
 				'action_id' => 24,
 				'invoice_id' => $r['invoice_id'],
 				'sum' => $r['sum'],
@@ -662,7 +660,6 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 5,
 			'invoice_id' => $invoice_id,
 			'sum' => $sum
@@ -749,7 +746,6 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_invoice_transfer', GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 4,
 			'invoice_id' => $from,
 			'sum' => $sum,
@@ -757,7 +753,6 @@ switch(@$_POST['op']) {
 		));
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 4,
 			'invoice_id' => $to,
 			'sum' => $sum,
@@ -794,7 +789,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 12,
 			'invoice_id' => $r['invoice_id_from'],
 			'sum' => $r['sum'],
@@ -802,7 +796,6 @@ switch(@$_POST['op']) {
 		));
 
 		_balans(array(
-			'category_id' => 1,
 			'action_id' => 12,
 			'invoice_id' => $r['invoice_id_to'],
 			'sum' => $r['sum'],
@@ -986,7 +979,6 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
 
  		_balans(array(
-			'category_id' => 5,
 			'action_id' => 5,
 			'worker_id' => $worker_id,
 			'sum' => $sum
@@ -1090,7 +1082,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
  		_balans(array(
-			'category_id' => 5,
 			'action_id' => 19,
 			'worker_id' => $worker_id,
 			'sum' => $sum
@@ -1121,7 +1112,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
  		_balans(array(
-			'category_id' => 5,
 			'action_id' => 21,
 			'worker_id' => $r['worker_id'],
 			'sum' => _cena($r['sum'])
@@ -1173,7 +1163,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'category_id' => 5,
 			'action_id' => 20,
 			'worker_id' => $worker_id,
 			'sum' => $sum
@@ -1204,7 +1193,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
  		_balans(array(
-			'category_id' => 5,
 			'action_id' => 22,
 			'worker_id' => $r['worker_id'],
 			'sum' => _cena($r['sum'])

@@ -294,43 +294,30 @@ function sa_balans() {//управление балансами
 	return
 		sa_path('Балансы').
 		'<div id="sa-balans">'.
-			'<div class="headName">Управление балансами</div>'.
-			'<div id="dopLinks">'.
-				'<a class="link sel">Категории</a>'.
-				'<a class="link">Действия</a>'.
-				'<div id="category-add" class="img_add m30 div d0'._tooltip('Новая категория', -96, 'r').'</div>'.
-				'<div id="action-add"   class="img_add m30 div d1'._tooltip('Новое действие', -90, 'r').'</div>'.
+			'<div class="headName">'.
+				'Управление балансами'.
+				'<a class="add" id="category-add">Новая категория</a>'.
 			'</div>'.
-			'<div id="category-spisok" class="div d0">'.sa_balans_category_spisok().'</div>'.
-			'<div id="action-spisok" class="div d1">'.sa_balans_action_spisok().'</div>'.
+			'<div id="spisok">'.sa_balans_spisok().'</div>'.
 		'</div>';
 }//sa_balans()
-function sa_balans_category_spisok() {
+function sa_balans_spisok() {
 	$sql = "SELECT * FROM `_balans_category` ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
-	$send =
-		'<table class="_spisok">'.
-		'<tr><th>id'.
-			'<th>Название'.
-			'<th>';
-	foreach($spisok as $r)
-		$send .=
-			'<tr val="'.$r['id'].'">'.
-				'<td class="id">'.$r['id'].
-				'<td class="name">'.$r['name'].
-				'<td class="ed">'.
-					'<div class="img_edit balans-category-edit"></div>'.
-					'<div class="img_del balans-category-del"></div>';
-	$send .= '</table>';
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['action'] = array(); //список действий для каждой категории
+		$spisok[$r['id']] = $r;
+	}
 
-	return $send;
-}//sa_balans_category_spisok()
-function sa_balans_action_spisok() {
-	$sql = "SELECT * FROM `_balans_action` ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return 'Список пуст.';
+	$sql = "SELECT * FROM `_balans_action`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['action'][] = $r;
+
 
 	//количество внесенных записей для каждого действия
 	$sql = "SELECT
@@ -340,27 +327,40 @@ function sa_balans_action_spisok() {
 			WHERE `app_id`=".APP_ID."
 			GROUP BY `action_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$actionCount = array();
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['action_id']]['count'] = $r['count'];
+		$actionCount[$r['action_id']] = $r['count'];
 
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th>id'.
-				'<th>Название'.
-				'<th>Минус'.
-				'<th>Записи'.
-				'<th>';
-	foreach($spisok as $r)
+	$send = '';
+	foreach($spisok as $r) {
+		$send .=
+			'<table class="_spisok">'.
+				'<tr><td colspan="4" class="head">'.
+						'<b>'.$r['id'].'.</b> '.
+						'<b class="c-name">'.$r['name'].'</b>'.
+						_iconDel($r).
+						'<div val="'.$r['id'].'" class="img_add m30'._tooltip('Добавить действие', -63).'</div>'.
+						_iconEdit($r).
+				sa_balans_action_spisok($r['action'], $actionCount).
+			'</table>';
+	}
+
+	return $send;
+}//sa_balans_spisok()
+function sa_balans_action_spisok($arr, $count) {
+	if(empty($arr))
+		return '';
+
+	$send = '';
+	foreach($arr as $r)
 		$send .=
 			'<tr val="'.$r['id'].'">'.
-			'<td class="id">'.$r['id'].
-			'<td class="name">'.$r['name'].
-			'<td class="minus">'.($r['minus'] ? 'да' : '').
-			'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
-			'<td class="ed">'.
-				'<div class="img_edit balans-action-edit"></div>'.
-				'<div class="img_del balans-action-del"></div>';
-	$send .= '</table>';
+				'<td class="id">'.$r['id'].
+				'<td class="name'.($r['minus'] ? ' minus' : '').'">'.$r['name'].
+				'<td class="count">'.(empty($count[$r['id']]) ? '' : $count[$r['id']]).
+				'<td class="ed">'.
+					'<div class="img_edit balans-action-edit"></div>'.
+					'<div class="img_del balans-action-del"></div>';
 
 	return $send;
 }//sa_balans_action_spisok()

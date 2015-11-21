@@ -6,20 +6,27 @@ var _accrualAdd = function() {
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 					'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
 				'</table>' +
-				'<table class="tab status">' +
-					'<tr><td class="label topi">Статус заявки: <td><input type="hidden" id="acc_status" />' +
-				'</table>' +
-				'<table class="tab remind">' +
-					'<tr><td class="label topi">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-					'<tr class="remind-tr"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Позвонить и сообщить о готовности" />' +
-					'<tr class="remind-tr"><td class="label">Дата:<td><input type="hidden" id="remind-day" />' +
-				'</table>' +
+
+				'<div id="status-div">' +
+					'<table class="tab">' +
+						'<tr><td class="label topi">Статус заявки: <td><input type="hidden" id="acc_status" />' +
+					'</table>' +
+				'</div>' +
+
+				'<div id="remind-div">' +
+					'<table class="tab">' +
+						'<tr><td class="label topi">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
+						'<tr class="remind-tr"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Позвонить и сообщить о готовности" />' +
+						'<tr class="remind-tr"><td class="label">Дата:<td><input type="hidden" id="remind-day" />' +
+					'</table>' +
+				'</div>' +
 			'</div>';
 
 		var dialog = _dialog({
 			top:30,
 			width:480,
 			head:'Внесение начисления',
+			padding:0,
 			content:html,
 			butSubmit:'Далее...',
 			submit:toStatus
@@ -30,7 +37,7 @@ var _accrualAdd = function() {
 			light:1,
 			spisok:STATUS,
 			func:function() {
-				$('.remind').show();
+				$('#remind-div').slideDown(300);
 			}
 		});
 		$('#acc_remind')._radio({
@@ -54,8 +61,8 @@ var _accrualAdd = function() {
 				$('#sum').focus();
 				return false;
 			}
-			if($('.status').is(':hidden')) {
-				$('.status').show();
+			if($('#status-div').is(':hidden')) {
+				$('#status-div').slideDown(300);
 				return false;
 			}
 			if(!_num($('#acc_status').val())) {
@@ -98,6 +105,146 @@ var _accrualAdd = function() {
 		}
 	},
 
+	_incomeAdd = function() {
+		var zayav = window.ZAYAV,
+			about = zayav ? 'Примечаниие' : 'Описание',
+			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
+			html =
+			'<div id="_income-add">' +
+				'<table class="tab">' +
+		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZAYAV.client_link : '') +
+		   (zayav ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head : '') +
+					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+		   (zayav ? '<tr><td class="label">Предоплата:<td>' : '') +
+						'<input type="hidden" id="prepay" />' +
+					'<tr><td class="label">' + about + ':<td><input type="text" id="about"' + about_placeholder + ' />' +
+				'</table>' +
+
+		   (zayav ?
+				'<div id="place-div">' +
+					'<table class="tab">' +
+						'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' +
+					'</table>' +
+				'</div>' +
+
+				(REMIND.active ?
+					'<div id="remind-div">' +
+						'<h1>Есть ' + REMIND.active + ' активн' + _end(REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(REMIND.active, ['е', 'я', 'й']) + '.</h1>' +
+						'<h2>Поставье галочку напоминанию, если его нужно отметить выполненным.</h2>' +
+						incomeRemind() +
+					'</div>'
+		        : '')
+		   : '') +
+
+			'</div>';
+		var dialog = _dialog({
+			top:zayav ? 30 : 60,
+			width:460,
+			head:'Внесение платежа',
+			padding:0,
+			content:html,
+			submit:submit
+		});
+		$('#invoice_id-add')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
+		if(zayav) {
+			$('#prepay')._radio({
+				light:1,
+				block:0,
+				spisok:[
+					{uid:1, title:'да'},
+					{uid:2, title:'нет'}
+				],
+				func:function() {
+					$('#about').focus();
+					$('#place-div').slideDown(300);
+				}
+			});
+			zayavPlace(function() {
+				$('#remind-div').slideDown(300);
+			});
+			for(var n = 0; n < REMIND.active_spisok.length; n++) {
+				var i = REMIND.active_spisok[n];
+				$('#ui' + i.id)._check({
+					name:'выполнено',
+					light:1
+				});
+			}
+		}
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+
+		function incomeRemind() {//активные напоминания
+			var send = '';
+			for(var n = 0; n < REMIND.active_spisok.length; n++) {
+				var i = REMIND.active_spisok[n];
+				send +=
+					'<div class="remind-iu">' +
+						'<h3>' + i.txt + '</h3>' +
+						'<h4>' + i.about + '</h4>' +
+						'<input type="hidden" id="ui' + i.id + '" />' +
+					'</div>';
+			}
+			return send;
+		}
+		function submit() {
+			var remind = [];
+			if(zayav)
+				for(var n = 0; n < REMIND.active_spisok.length; n++) {
+					var i = REMIND.active_spisok[n];
+					if(_num($('#ui' + i.id).val()))
+						remind.push(i.id);
+				}
+			var send = {
+				op:'income_add',
+				invoice_id:_num($('#invoice_id-add').val()),
+				sum:_cena($('#sum').val()),
+				prepay:_num($('#prepay').val()),
+				about:$('#about').val(),
+				zayav_id:zayav ? ZAYAV.id : 0,
+				place:zayav ? $('#place').val() : 0,
+				place_other:zayav ? $('#place_other').val() : '',
+				remind_ids:remind.join()
+			};
+			if(!send.invoice_id)
+				dialog.err('Не указан счёт');
+			else if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else if(zayav && !send.prepay) {
+				dialog.err('Укажите, является ли платёж предоплатой');
+				$('#sum').focus();
+			} else if(!zayav && !send.about) {
+				dialog.err('Не указано описание');
+				$('#about').focus();
+			} else if(zayav && (send.place == -1 || send.place == 0 && ! send.place_other)) {
+				dialog.err('Не указано местонахождение устройства');
+				$('#place_other').focus()
+			} else {
+				if(send.prepay == 2)
+					send.prepay = 0;
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					dialog.abort();
+					if(res.success) {
+						dialog.close();
+						_msg('Новый платёж внесён.');
+						if(zayav)
+							location.reload();
+						else
+							incomeSpisok();
+					}
+				}, 'json');
+			}
+		}
+	},
 	incomeLoad = function() {
 		window._calendarFilter = incomeSpisok;
 		$('#invoice_id')._radio({
@@ -138,11 +285,14 @@ var _accrualAdd = function() {
 
 	_refundAdd = function() {//внесение возврата
 		var html =
+			'<div class="_info">' +
+				'После внесения возврата не забудьте удалить начисление, чтобы выровнять баланс клиента.' +
+			'</div>' +
 			'<table id="_refund-add-tab">' +
 				'<tr><td class="label">Клиент:<td>' + ZAYAV.client_link +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" />' +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Примечание:<td><input type="text" id="about" />' +
+				'<tr><td class="label">Причина:<td><input type="text" id="about" />' +
 			'</table>',
 			dialog = _dialog({
 				width:400,
@@ -175,6 +325,9 @@ var _accrualAdd = function() {
 			else if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
+			} else if(!send.about) {
+				dialog.err('Укажите причину возврата');
+				$('#about').focus();
 			} else {
 				dialog.process();
 				$.post(AJAX_MAIN, send, function(res) {
@@ -840,56 +993,11 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
-	.on('click', '.income-add', function() {
-		var html =
-			'<table id="income-add-tab">' +
-				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Описание:<td><input type="text" id="about" />' +
-			'</table>';
-		var dialog = _dialog({
-			width:380,
-			head:'Внесение платежа',
-			content:html,
-			submit:submit
-		});
-		$('#invoice_id-add')._select({
-			width:218,
-			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
-			func:function() {
-				$('#sum').focus();
-			}
-		});
-		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
-
-		function submit() {
-			var send = {
-				op:'income_add',
-				invoice_id:_num($('#invoice_id-add').val()),
-				sum:$('#sum').val(),
-				about:$('#about').val()
-			};
-			if(!send.invoice_id) dialog.err('Не указан счёт');
-			else if(!_cena(send.sum)) { dialog.err('Некорректно указана сумма'); $('#sum').focus(); }
-			else if(!send.about) { dialog.err('Не указано описание'); $('#about').focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новый платёж внесён.');
-						incomeSpisok();
-					}
-				}, 'json');
-			}
-		}
-	})
+	.on('click', '._income-add', _incomeAdd)
 /*
-	.on('click', '.income-add', function() {
+	.on('click', '._income-add', function() {
 		var html =
-			'<table id="income-add-tab">' +
+			'<table id="_income-add-tab">' +
 				'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
 				(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
 				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
@@ -979,11 +1087,14 @@ $(document)
 	})
 */
 	.on('click', '.income-del', function() {
+		var t = $(this);
 		_dialogDel({
-			id:$(this).attr('val'),
+			id:t.attr('val'),
 			head:'платежа',
 			op:'income_del',
-			func:incomeSpisok
+			func:function() {
+				_parent(t).remove();
+			}
 		});
 	})
 

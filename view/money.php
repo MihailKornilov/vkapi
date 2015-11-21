@@ -127,7 +127,7 @@ function income_path($data) {//путь с датой
 		(MON ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.YEAR.'">'.YEAR.'</a> » ' : '<b>'.YEAR.'</b>').
 		(DAY ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
 		(DAY ? '<b>'.intval(DAY).$to.'</b>' : '').
-		'<a class="income-add add">Внести платёж</a>';
+		'<a class="_income-add add">Внести платёж</a>';
 }//income_path()
 function income_day($day) {
 	$data = income_spisok(array('day'=>$day));
@@ -254,7 +254,7 @@ function income_spisok($filter=array()) {
 }//income_spisok()
 function _income_unit($r, $filter=array()) {
 	return
-		'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
+		'<tr class="_income-unit'.($r['deleted'] ? ' deleted' : '').($r['prepay'] ? ' prepay' : '').'">'.
 			'<td class="sum '.$r['type'].(@$filter['zayav_id'] ? _tooltip('Платёж', 8) : '">')._sumSpace($r['sum']).
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
@@ -1103,6 +1103,7 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 }//invoice_info_balans_day()
 
 function _balans($v) {//внесение записи о балансе
+	$category_id = _balansAction($v['action_id'], 'category_id');
 	$unit_id = 0;
 	$balans = 0;
 	$sum = _cena(@$v['sum'], 1);
@@ -1129,7 +1130,6 @@ function _balans($v) {//внесение записи о балансе
 	if(!empty($v['client_id'])) {
 		$unit_id = _num($v['client_id']);
 		$balans = clientBalansUpdate($unit_id);
-		$sum *= -1;
 	}
 
 	//сотрудник
@@ -1159,7 +1159,7 @@ function _balans($v) {//внесение записи о балансе
 				".APP_ID.",
 				".WS_ID.",
 
-				"._num(@$v['category_id']).",
+				".$category_id.",
 				".$unit_id.",
 				".$v['action_id'].",
 				".$sum.",
@@ -1440,7 +1440,7 @@ function _zayavInfoMoney_spisok($zayav_id) {
 			'Начисления и платежи'.
 			'<a class="add _refund-add'._tooltip('Произвести возврат денежных средств', -215, 'r').'Возврат</a>'.
 			'<em>::</em>'.
-			'<a class="add income-add">Внести платёж</a>'.
+			'<a class="add _income-add">Внести платёж</a>'.
 			'<em>::</em>'.
 			'<a class="add _accrual-add">Начислить</a>'.
 		'</div>'.

@@ -1005,6 +1005,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 			case 2: break; //заявки
 			case 3: $type = ' платеж'._end($c, '', 'а', 'ей'); break; //платежи
 			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;//счета
+			case 5: $type = ' напоминани'._end($c, 'е', 'я', 'й'); break;
 		}
 
 		$show = '<span>Показать ещё '.$c.$type.'</span>';
