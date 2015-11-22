@@ -50,7 +50,15 @@
 #_income-add .remind-iu ._check{margin:15px 0 5px 20px}
 
 
-/* Возврат */
+
+#money-refund .headName{margin:15px 10px 5px}
+#money-refund #spisok{padding:10px}
+#money-refund ._spisok{margin-top:5px}
+#money-refund .sum{color:#c22}
+#money-refund .refund-client{font-size:10px;color:#777}
+#money-refund .refund-client a{font-size:10px}
+
+/* Внесение возврата */
 #_refund-add-tab{border-spacing:10px}
 #_refund-add-tab .label{width:80px;text-align:right}
 #_refund-add-tab #isum{color:#888;font-size:10px;margin-left:10px}

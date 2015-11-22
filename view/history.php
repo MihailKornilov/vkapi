@@ -78,7 +78,7 @@ function _history_spisok($v=array()) {
 		: '';
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (51)".//todo удалить
+//	   " AND `type_id` IN (22)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])

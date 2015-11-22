@@ -262,23 +262,19 @@ var _accrualAdd = function() {
 		$('#prepay')._check(incomeSpisok);
 		$('#deleted')._check(function(v, id) {
 			$('#deleted_only_check')[v ? 'show' : 'hide']();
-			MONEY.deleted_only = 0;
+			INCOME.deleted_only = 0;
 			$('#deleted_only')._check(0);
 			incomeSpisok(v, id);
 		});
 		$('#deleted_only')._check(incomeSpisok);
 	},
 	incomeSpisok = function(v, id) {
-		MONEY.op = 'income_spisok';
-		MONEY.page = 1;
-		MONEY[id] = v;
-		if(_busy())
-			return;
-		$.post(AJAX_MAIN, MONEY, function(res) {
-			_busy(0);
+		INCOME.page = 1;
+		INCOME[id] = v;
+		$.post(AJAX_MAIN, INCOME, function(res) {
 			if(res.success) {
 				$('#path').html(res.path);
-				$('#spisok').html(res.html);
+				$('#spisok').html(res.spisok);
 			}
 		}, 'json');
 	},
@@ -340,6 +336,22 @@ var _accrualAdd = function() {
 				}, 'json');
 			}
 		}
+	},
+	_refundLoad = function() {
+		$('#invoice_id')._radio({
+			light:1,
+			title0:'Все счета',
+			spisok:INVOICE_SPISOK,
+			func:_refundSpisok
+		});
+	},
+	_refundSpisok = function(v, id) {
+		REFUND.page = 1;
+		REFUND[id] = v;
+		$.post(AJAX_MAIN, REFUND, function(res) {
+			if(res.success)
+				$('#spisok').html(res.spisok);
+		}, 'json');
 	},
 
 	_expenseTab = function(dialog, arr) {//таблица для внесения или редактирования расхода
@@ -479,20 +491,6 @@ var _accrualAdd = function() {
 				expenseSpisok(all ? '1,2,3,4,5,6,7,8,9,10,11,12' : '', 'month');
 			}
 		});
-	},
-	expenseFilter = function() {
-		var arr = [],
-			inp = $('#monthList input');
-		for(var n = 1; n <= 12; n++)
-			if(inp.eq(n - 1).val() == 1)
-				arr.push(n);
-		return {
-			op:'expense_spisok',
-			category:$('#category').val(),
-			worker:$('#worker').val(),
-			year:$('#year').val(),
-			month:arr.join()
-		};
 	},
 	expenseSpisok = function(v, id) {
 		EXPENSE.op = 'expense_spisok';
@@ -979,113 +977,7 @@ $(document)
 		});
 	})
 
-	.on('click', '#income-next', function() {
-		var next = $(this);
-		if(next.hasClass('busy'))
-			return;
-		next.addClass('busy');
-		MONEY.op = 'income_spisok';
-		MONEY.page = next.attr('val');
-		$.post(AJAX_MAIN, MONEY, function(res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '._income-add', _incomeAdd)
-/*
-	.on('click', '._income-add', function() {
-		var html =
-			'<table id="_income-add-tab">' +
-				'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
-				(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
-				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Описание:' +
-					'<td><input type="hidden" id="prepay" />' +
-						'<input type="text" id="about" />' +
-			(window.ZAYAV && !ZAYAV.cartridge ?
-				'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' +
-			(REMIND.active ?
-				'<tr><td><td>' +
-					'<div class="_info">' +
-						'<b>Есть ' + REMIND.active + ' активн' + _end(REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(REMIND.active, ['е', 'я', 'й']) + '!</b>' +
-						'<br />' +
-						'<br />' +
-						'<input type="hidden" id="remind_active" value="0" />' +
-				'</div>'
-			: '')
-			: '') +
-			'</table>';
-		var dialog = _dialog({
-			width:380,
-			head:'Внесение платежа',
-			content:html,
-			submit:submit
-		});
-		$('#invoice_id')._select({
-			width:218,
-			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
-			func:function() {
-				$('#sum').focus();
-			}
-		});
-		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
-		if(window.ZAYAV && !ZAYAV.cartridge) {
-			$('#prepay')._check({
-				func:function(v) {
-					$('#prim').val(v ? 'предоплата' : '');
-				}
-			});
-			$('#prepay_check')._tooltip('Предоплата', -39);
-			zayavPlace();
-			$('#remind_active')._check({
-				name:'отметить выполненным' + _end(REMIND.active, ['', 'и'])
-			});
-
-		}
-
-		function submit() {
-			var send = {
-				op:'income_add',
-				zayav_id:$('#zayav_id').val(),
-				cartridge:window.ZAYAV && ZAYAV.cartridge ? 1 : 0,
-				invoice_id:_num($('#invoice_id').val()),
-				sum:$('#sum').val(),
-				prepay:_num($('#prepay').val()),
-				prim:$('#prim').val(),
-				place:window.ZAYAV && !ZAYAV.cartridge ? $('#place').val() : 0,
-				place_other:window.ZAYAV && !ZAYAV.cartridge ? $('#place_other').val() : '',
-				remind_active:window.REMIND ? _num($('#remind_active').val()) : 0
-			};
-			if(!send.invoice_id) dialog.err('Не указан счёт');
-			else if(!REGEXP_CENA.test(send.sum)) { dialog.err('Некорректно указана сумма'); $('#sum').focus(); }
-			else if(!window.ZAYAV && !send.prim) { dialog.err('Не указано описание'); $('#prim').focus(); }
-			else if(window.ZAYAV && !send.cartridge && send.place == -1) dialog.err('Не указано местонахождение устройства');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новый платёж внесён.');
-						if(window.ZAYAV) {
-							$('#money_spisok').html(res.html);
-							if(res.comment)
-								$('.vkComment').after(res.comment).remove();
-							zayavMoneyUpdate();
-							if(res.remind)
-								$('#remind-spisok').html(res.remind);
-						} else
-							incomeSpisok();
-					}
-				}, 'json');
-			}
-		}
-	})
-*/
 	.on('click', '.income-del', function() {
 		var t = $(this);
 		_dialogDel({

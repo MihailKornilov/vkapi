@@ -150,6 +150,10 @@ a.add:hover{text-decoration:underline;color:#357}
 
 ._next{text-align:center;height:31px;color:#2B587A;cursor:pointer}
 ._next span{line-height:30px}
+._next:hover{background-color:#e9edf1}
+._next._busy span{display:none}
+
+/* todo удалить */
 ._next:hover,._next.busy:hover{background-color:#e9edf1}
 ._next.busy span{display:none}
 
@@ -315,7 +319,6 @@ a.add:hover{text-decoration:underline;color:#357}
 .vkButton button:active{background:#5e80a5;border:1px solid #5e80a5}
 .vkButton.busy button,.vkButton._busy button{visibility:hidden}
 .vkButton.busy,
-._next.busy,
 .tooltip.empty,
 #device_image.busy,
 #fotoUpload #direct a.busy,

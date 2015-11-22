@@ -170,7 +170,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
-//				'WS_ID='.WS_ID.','.
+				'APP_ID='.APP_ID.','.
+				'WS_ID='.WS_ID.','.
 				'APP_HTML="'.APP_HTML.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
@@ -989,6 +990,35 @@ function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу 
 	return $send;
 }//_arrayTimeGroup()
 
+function _filterJs($name, $filter) {//формирование условий поиска в формате js
+	$filter += array(
+		'js_name' => $name,
+		'op' => strtolower($name).'_spisok',
+		'js' => ''
+	);
+	if($filter['page'] != 1)
+		return $filter;
+
+	$arr = $filter;
+	unset($arr['page']);
+	unset($arr['clear']);
+	unset($arr['js']);
+	unset($arr['js_name']);
+
+	$spisok = array();
+	foreach($arr as $key => $val) {
+		if(!is_numeric($val))
+			$val = '"'.addslashes(_br($val)).'"';
+		$spisok[] = $key.':'.$val;
+	}
+
+	$filter['js'] =
+		'<script type="text/javascript">'.
+			'var '.$name.'={'.implode(',', $spisok).'};'.
+		'</script>';
+
+	return $filter;
+}//_filterJs()
 function _start($v) {//вычисление первой позиции в базе данных
 	return ($v['page'] - 1) * $v['limit'];
 }//_start()
@@ -1001,22 +1031,27 @@ function _next($v) {//вывод ссылки на догрузку списка
 
 		$type = ' запис'._end($c, 'ь', 'и', 'ей');
 		switch(@$v['type']) {
-			case 1: $type = ' клиент'._end($c, 'а', 'а', 'ов'); break; //клиенты
-			case 2: break; //заявки
-			case 3: $type = ' платеж'._end($c, '', 'а', 'ей'); break; //платежи
-			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;//счета
+			case 1: $type = ' клиент'._end($c, 'а', 'а', 'ов'); break;
+			case 2: $type = ' заяв'._end($c, 'ку', 'ки', 'ок'); break;
+			case 3: $type = ' платеж'._end($c, '', 'а', 'ей'); break;
+			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;
 			case 5: $type = ' напоминани'._end($c, 'е', 'я', 'й'); break;
 		}
 
 		$show = '<span>Показать ещё '.$c.$type.'</span>';
 		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
+		$page = $v['page'] + 1;
+		$js_name = empty($v['js_name']) ? '' : $v['js_name'].':';//глобальная переменная js, содержащая условия поиска. После двоеточия идёт номер страницы
 		$send = empty($v['tr']) ?
-			'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
+			'<div class="_next" val="'.$js_name.$page.'"'.$id.'>'.$show.'</div>'
 				:
-			'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
+			'<tr class="_next" val="'.$js_name.$page.'"'.$id.'>'.
 				'<td colspan="10">'.$show;
 	}
-	return $send.($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
+	return
+		$send.
+		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '').
+		(!empty($v['js']) ? $v['js'] : '');
 }//_next()
 
 function _selJson($arr) {
@@ -1931,6 +1966,9 @@ function _imageGet($v) {
 	$ownerArray = is_array($v['owner']);
 	if(!$ownerArray)
 		$v['owner'] = array($v['owner']);
+
+	if(empty($v['owner']))
+		return array();
 
 	$v['owner'] = array_unique($v['owner']);
 	$owner = array();

@@ -112,7 +112,7 @@ switch(@$_POST['op']) {
 		if(!empty($_POST['person']))
 			foreach($_POST['person'] as $r) {
 				$r['client_id'] = $client_id;
-				_clientPersonInsert($r);
+				_clientPersonInsert($r, 1);
 			}
 
 		_clientFindUpdate($client_id);
@@ -347,7 +347,7 @@ function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
 	$sql = "UPDATE `_client` SET `find`='".addslashes($find)."' WHERE `id`=".$client_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_clientFindUpdate()
-function _clientPersonInsert($v) {//внесение или обновление доверенного лица
+function _clientPersonInsert($v, $clientNew=false) {//внесение или обновление доверенного лица
 	$person_id = _num(@$v['person_id']);
 	$client_id = 0;
 	if($person_id) {
@@ -412,13 +412,14 @@ function _clientPersonInsert($v) {//внесение или обновление доверенного лица
 				`pasp_data`=VALUES(`pasp_data`)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	if(!$person_id)
-		_history(array(
-			'type_id' => 5,
-			'client_id' => $client_id,
-			'v1' => $fio
-		));
-	else {
+	if(!$person_id) {
+		if(!$clientNew)
+			_history(array(
+				'type_id' => 5,
+				'client_id' => $client_id,
+				'v1' => $fio
+			));
+	} else {
 		$changes =
 			_historyChange('‘»ќ', $r['fio'], $fio).
 			_historyChange('“елефон', $r['phone'], $phone).

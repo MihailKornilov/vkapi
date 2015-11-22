@@ -306,37 +306,10 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		}
 	},
 
-	clientFilter = function() {
-		var v = {
-				op:'client_spisok',
-				find:$('#find')._search('val'),
-				dolg:$('#dolg').val(),
-				active:$('#active').val(),
-				comm:$('#comm').val(),
-				opl:$('#opl').val()
-			},
-			loc = '';
-		$('.filter')[v.find ? 'hide' : 'show']();
-
-		if(v.find) loc += '.find=' + escape(v.find);
-		else {
-			if(v.dolg > 0) loc += '.dolg=' + v.dolg;
-			if(v.active > 0) loc += '.active=' + v.active;
-			if(v.comm > 0) loc += '.comm=' + v.comm;
-			if(v.opl > 0) loc += '.opl=' + v.opl;
-		}
-		VK.callMethod('setLocation', hashLoc + loc);
-
-		_cookie(VIEWER_ID + '_client_find', escape(v.find));
-		_cookie(VIEWER_ID + '_client_dolg', v.dolg);
-		_cookie(VIEWER_ID + '_client_active', v.active);
-		_cookie(VIEWER_ID + '_client_comm', v.comm);
-		_cookie(VIEWER_ID + '_client_opl', v.opl);
-
-		return v;
-	},
-	clientSpisok = function() {
-		$.post(AJAX_MAIN, clientFilter(), function (res) {
+	clientSpisok = function(v, id) {
+		_filterSpisok(CLIENT, v, id);
+		$('.filter')[CLIENT.find ? 'hide' : 'show']();
+		$.post(AJAX_MAIN, CLIENT, function (res) {
 			if(res.success) {
 				$('.result').html(res.all);
 				$('.left').html(res.spisok);
@@ -420,26 +393,17 @@ $.fn.clientSel = function(o) {
 };
 
 $(document)
-	.on('click', '#client ._next', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var next = $(this),
-			send = clientFilter();
-		send.page = next.attr('val');
-		next.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success)
-				next.after(res.spisok).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '#client #filter_clear', function() {
 		$('#find')._search('clear');
 		$('#dolg')._check(0);
 		$('#active')._check(0);
 		$('#comm')._check(0);
 		$('#opl')._check(0);
+		CLIENT.find = '';
+		CLIENT.dolg = 0;
+		CLIENT.active = 0;
+		CLIENT.comm = 0;
+		CLIENT.opl = 0;
 		clientSpisok();
 	})
 	.on('mouseenter', '#client .comm', function() {
@@ -534,7 +498,7 @@ $(document)
 				enter:1,
 				txt:'Начните вводить данные клиента',
 				func:clientSpisok
-			}).inp(C.find);
+			}).inp(CLIENT.find);
 			$('#buttonCreate').vkHint({
 				msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
 					'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +
@@ -555,7 +519,7 @@ $(document)
 					'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
 				ugol:'right',
 				width:150,
-				top:-6,
+				top:-25,
 				left:-185,
 				indent:20,
 				delayShow:1000

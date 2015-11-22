@@ -160,7 +160,7 @@ switch(@$_POST['op']) {
 
 	case 'income_spisok'://список платежей
 		$data = income_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
+		$send['spisok'] = utf8($data['spisok']);
 		if($data['filter']['page'] == 1)
 			$send['path'] = utf8(income_path($data['filter']['period']));
 		jsonSuccess($send);
@@ -413,12 +413,17 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
+	case 'refund_spisok'://список возвратов
+		$data = _refund_spisok($_POST);
+		$send['spisok'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
 
 	case 'expense_spisok':
 		$data = expense_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
-		$send['mon'] = utf8(expenseMonthSum($_POST));
+		if($data['filter']['page'] == 1)
+			$send['mon'] = utf8(expenseMonthSum($_POST));
 		jsonSuccess($send);
 		break;
 	case 'expense_add':

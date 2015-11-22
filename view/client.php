@@ -1,8 +1,8 @@
 <?php
 function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 	$filterDef = $v + array(
-		'CLIENT_FILTER_DOLG' => 0,//галочка-фильтр "должники"
-		'CLIENT_FILTER_OPL' => 0  //галочка-фильтр "предоплата"
+		'CLIENT_FILTER_DOLG' => 1,//галочка-фильтр "должники"
+		'CLIENT_FILTER_OPL' => 1  //галочка-фильтр "предоплата"
 	);
 	foreach($filterDef as $name => $key)
 		define($name, $key);
@@ -21,7 +21,7 @@ function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 				}
 			} else {
 				foreach($_COOKIE as $k => $val) {
-					$arr = explode(VIEWER_ID.'_client_', $k);
+					$arr = explode(APP_ID.'_'.VIEWER_ID.'_client_', $k);
 					if(isset($arr[1]))
 						$v[$arr[1]] = $val;
 				}
@@ -51,15 +51,10 @@ function client_list($v) {// страница со списком клиентов
 	  (CLIENT_FILTER_DOLG ? _check('dolg', 'Должники', $v['dolg']) : '').
 //							_check('active', 'С активными заявками', $v['active']).
 //							_check('comm', 'Есть заметки', $v['comm']).
-//							_check('opl', 'Внесена предоплата', $v['opl']).
+							_check('opl', 'Внесена предоплата', $v['opl']).
 						'</div>'.
 			'</table>'.
-		'</div>'.
-		'<script type="text/javascript">'.
-			'var C={'.
-				'find:"'.$v['find'].'"'.
-			'};'.
-		'</script>';
+		'</div>';
 }//client_list()
 function clientFilter($v) {
 	$default = array(
@@ -90,6 +85,8 @@ function clientFilter($v) {
 }//clientFilter()
 function client_data($v=array()) {// список клиентов
 	$filter = clientFilter($v);
+	$filter = _filterJs('CLIENT', $filter);
+
 	$cond = "`app_id`=".APP_ID."
 		 AND `ws_id`=".WS_ID."
 		 AND !`deleted`";
@@ -558,11 +555,12 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 
 	define('ORG', $c['category_id'] > 1);
 
+	$zayav = zayav_spisok(array(
+		'client_id' => $client_id,
+		'limit' => 10
+	));
 	/*
-		$zayavData = zayav_spisok(array(
-			'client_id' => $client_id,
-			'limit' => 10
-		));
+
 
 		$zayavCartridge = zayav_cartridge_spisok(array(
 			'client_id' => $client_id,
@@ -671,7 +669,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			'</table>'.
 
 			'<div id="dopLinks">'.
-				_clientDopLink('Заявки', 0).
+				_clientDopLink('Заявки', $zayav['all']).
 				_clientDopLink('Счета', 0).
 				_clientDopLink('Платежи', 0).
 				_clientDopLink('Напоминания', 0).
@@ -680,12 +678,11 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
-						'<div class="ci-cont" id="zayav-spisok">Заявки</div>'.
+						'<div class="ci-cont" id="zayav-spisok">'.$zayav['spisok'].'</div>'.
 						'<div class="ci-cont" id="schet-spisok">Счета</div>'.
 						'<div class="ci-cont" id="income-spisok">Платежи</div>'.
 						'<div class="ci-cont" id="remind-spisok">Напоминания</div>'.
 						'<div class="ci-cont" id="history-spisok">'.$hist['spisok'].'</div>'.
-//						($zayavData['all'] ? $zayavData['spisok'] : '').
 //						(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
 //						($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
 

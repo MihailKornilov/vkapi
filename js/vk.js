@@ -496,6 +496,34 @@ var VK_SCROLL = 0,
 			return true;
 		m.addClass('_busy');
 	},
+	_filterSpisok = function(arr, v, id) {//подготовка данных для отправки на сервер. Сохранение в cookies
+		if(id)
+			arr[id] = v;
+		arr.page = 1;
+
+		var name = arr.op.split('_spisok')[0],
+			loc = '';
+
+		for(var i in arr) {
+			if(i == 'op')
+				continue;
+			if(i == 'page')
+				continue;
+			_cookie(APP_ID + '_' + VIEWER_ID + '_' + name + '_' + i, escape(arr[i]));
+		}
+
+/*
+		if(v.find) loc += '.find=' + escape(v.find);
+		else {
+			if(v.dolg > 0) loc += '.dolg=' + v.dolg;
+			if(v.active > 0) loc += '.active=' + v.active;
+			if(v.comm > 0) loc += '.comm=' + v.comm;
+			if(v.opl > 0) loc += '.opl=' + v.opl;
+		}
+		VK.callMethod('setLocation', hashLoc + loc);
+*/
+//		_cookie(VIEWER_ID + '_client_find', escape(v.find));
+	},
 	_yearAss = function(start) {//получение списка годов
 		var d = new Date(),
 			yearStart = d.getFullYear(),//начальное значение года
@@ -2206,6 +2234,26 @@ $(document)
 			FOTO_HEIGHT = iv.height();
 			_fbhs();
 		}
+	})
+
+	.on('click', '._next', function() {//продолжение списка. Вспомогательная функция в PHP: _filterJs()
+		var t = $(this),
+			v = t.attr('val').split(':');
+
+		if(!v[1])
+			return;
+
+		if(t.hasClass('_busy'))
+			return;
+		t.addClass('_busy');
+
+		window[v[0]].page = v[1];
+		$.post(AJAX_MAIN, window[v[0]], function(res) {
+			if(res.success)
+				t.after(res.spisok).remove();
+			else
+				t.removeClass('_busy');
+		}, 'json');
 	})
 
 	.ready(function() {
