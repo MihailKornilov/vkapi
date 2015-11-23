@@ -147,7 +147,7 @@ function client_data($v=array()) {// список клиентов
 		return array(
 			'all' => 0,
 			'result' => 'Клиентов не найдено.'.$filter['clear'],
-			'spisok' => '<div class="_empty">Клиентов не найдено.</div>',
+			'spisok' => $filter['js'].'<div class="_empty">Клиентов не найдено.</div>',
 			'filter' => $filter
 		);
 
@@ -157,7 +157,7 @@ function client_data($v=array()) {// список клиентов
 					  ($plus ? '<em>(Сумма = '.$plus.' руб.)</em>' : '').
 					  $filter['clear'];
 	$send['filter'] = $filter;
-	$send['spisok'] = '';
+	$send['spisok'] = $filter['js'];
 
 	$spisok = array();
 	$sql = "SELECT *,

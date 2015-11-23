@@ -30,7 +30,7 @@ function _money() {
 			break;
 		case 'expense': $content = expense(); break;
 		case 'refund': $content = _refund(); break;
-		case 'schet': $content = report_schet(); break;
+		case 'schet': $content = _schet(); break;
 		case 'invoice': $content = invoice(); break;
 	}
 	return
@@ -100,7 +100,7 @@ function _refund_spisok($filter=array()) {
 	$send['filter'] = $filter;
 	if(!$send['all'])
 		return $send + array(
-				'spisok' => '<div class="_empty">Возвратов нет.</div>',
+				'spisok' => $filter['js'].'<div class="_empty">Возвратов нет.</div>',
 				'arr' => array()
 			);
 
@@ -120,6 +120,7 @@ function _refund_spisok($filter=array()) {
 		$spisok = _zayavValToList($spisok);
 
 	$send['spisok'] = $filter['page'] != 1 ? '' :
+		$filter['js'].
 		'<div id="summa">'.
 			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> возврат'._end($all, '', 'а', 'ов').
 			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
@@ -291,7 +292,7 @@ function income_spisok($filter=array()) {
 	$send['filter'] = $filter;
 	if(!$send['all'])
 		return $send + array(
-						'spisok' => '<div class="_empty">Платежей нет.</div>',
+						'spisok' => $filter['js'].'<div class="_empty">Платежей нет.</div>',
 						'arr' => array()
 					);
 
@@ -314,6 +315,7 @@ function income_spisok($filter=array()) {
 //	$money = _schetValues($money);
 
 	$send['spisok'] = $filter['page'] != 1 ? '' :
+		$filter['js'].
 		'<div id="summa">'.
 			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').
 			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
@@ -773,121 +775,6 @@ function income_insert($v) {
 
 	return $v;
 }//income_insert()
-
-
-
-
-
-
-function reportSchetFilter($v) {
-	$send = array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
-		'find' => trim(@$v['find']),
-		'client_id' => _num(@$v['client_id']),
-		'passpaid' => _num(@$v['passpaid'])
-	);
-	return $send;
-}//reportSchetFilter()
-function report_schet_right() {
-	return
-		'<div id="find"></div>'.
-		'<div class="findHead">Счета:</div>'.
-		_radio('passpaid',
-			array(
-				0 => 'ВСЕ',
-				1 => 'Не переданы',
-				2 => 'Переданы, не опл.',
-				3 => 'Оплачены'
-			), 0, 1);
-}//report_schet_right()
-function report_schet() {
-	$data = report_schet_spisok();
-	return
-		'<div class="headName">Список счетов на оплату</div>'.
-		'<div id="spisok">'.$data['spisok'].'</div>';
-}//report_schet()
-function report_schet_spisok($v=array()) {
-	$filter = reportSchetFilter($v);
-	$cond = "`ws_id`=".WS_ID;
-
-	if($filter['find'])
-		$cond .= " AND `nomer`="._num($filter['find']);
-	else {
-		if($filter['client_id'])
-			$cond .= " AND `client_id`=" . $filter['client_id'];
-		switch ($filter['passpaid']) {
-			case 1:
-				$cond .= " AND !`pass`";
-				break;
-			case 2:
-				$cond .= " AND `pass` AND `paid_sum`<`sum`";
-				break;
-			case 3:
-				$cond .= " AND `paid_sum`>=`sum`";
-				break;
-		}
-	}
-	$sql = "SELECT
-				COUNT(`id`) AS `all`,
-				SUM(`sum`) AS `sum`
-			FROM `zayav_schet`
-			WHERE ".$cond;
-	$send = mysql_fetch_assoc(query($sql));
-	$send['filter'] = $filter;
-	if(!$send['all'])
-		return $send + array('spisok' => '<div class="_empty">Счетов нет.</div>');
-
-	$all = $send['all'];
-	$filter['all'] = $all;
-
-	$send['spisok'] =
-		($filter['page'] == 1 ?
-			'<div id="result">'.
-			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
-			' на сумму <b>'.$send['sum'].'</b> руб.'.
-			'</div>'.
-			'<table class="_spisok _money">'
-			: '');
-
-	$sql = "SELECT *
-			FROM `zayav_schet`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT "._start($filter).",".$filter['limit'];
-	$q = query($sql);
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$r['paids'] = array();
-		$spisok[$r['id']] = $r;
-	}
-
-	$spisok = _zayavValToList($spisok);
-
-
-	//список платежей по счетам
-	$sql = "SELECT * FROM `money` WHERE `schet_id` IN (".implode(',', array_keys($spisok)).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['schet_id']]['paids'][] = array(
-			'sum' => $r['sum'],
-			'day' => $r['schet_paid_day']
-		);
-
-	foreach($spisok as $r)
-		$send['spisok'] .= schet_unit($r);
-
-
-	$send['spisok'] .=
-		_next(array(
-				'tr' => 1,
-				'type' => 4,
-				'id' => 'schet_next'
-			) + $filter);
-
-	return $send;
-}//report_schet_spisok()
 */
 
 
@@ -1467,6 +1354,211 @@ function balans_show_spisok($filter) {
 
 	return $send;
 }//balans_show_spisok()
+
+
+
+
+
+
+
+
+/* --- Счета на оплату --- */
+
+function _schetFilter($v) {
+	$send = array(
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
+		'find' => trim(@$v['find']),
+		'client_id' => _num(@$v['client_id']),
+		'zayav_id' => _num(@$v['zayav_id']),
+		'passpaid' => _num(@$v['passpaid'])
+	);
+	return $send;
+}//_schetFilter()
+function _schet() {
+	$data = _schet_spisok();
+	return
+	'<table class="tabLR" id="money-schet">'.
+		'<tr><td class="left">'.
+				'<div class="headName">Счета на оплату</div>'.
+				'<div id="spisok">'.$data['spisok'].'</div>'.
+			'<td class="right">'._schet_right().
+	'</table>';
+}//_schet()
+function _schet_spisok($v=array()) {
+	$filter = _schetFilter($v);
+	$filter = _filterJs('SCHET', $filter);
+
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID;
+
+	if($filter['find'])
+		$cond .= " AND `nomer`="._num($filter['find']);
+	else {
+		if($filter['client_id'])
+			$cond .= " AND `client_id`=" . $filter['client_id'];
+		switch ($filter['passpaid']) {
+			case 1:
+				$cond .= " AND !`pass`";
+				break;
+			case 2:
+				$cond .= " AND `pass` AND `paid_sum`<`sum`";
+				break;
+			case 3:
+				$cond .= " AND `paid_sum`>=`sum`";
+				break;
+		}
+	}
+	$sql = "SELECT
+				COUNT(`id`) AS `all`,
+				SUM(`sum`) AS `sum`
+			FROM `_schet`
+			WHERE ".$cond;
+	$send = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$send['filter'] = $filter;
+	if(!$send['all'])
+		return $send + array('spisok' => $filter['js'].'<div class="_empty">Счетов нет.</div>');
+
+	$all = $send['all'];
+	$filter['all'] = $all;
+
+	$send['spisok'] =
+		($filter['page'] == 1 ?
+			$filter['js'].
+			'<div id="result">'.
+				'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
+				' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
+			'</div>'.
+			'<table class="_spisok">'
+		: '');
+
+	$sql = "SELECT *
+			FROM `_schet`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT "._start($filter).",".$filter['limit'];
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['paids'] = array();
+		$spisok[$r['id']] = $r;
+	}
+
+	$spisok = _zayavValToList($spisok);
+
+
+	//список платежей по счетам
+	$sql = "SELECT *
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `schet_id` IN (".implode(',', array_keys($spisok)).")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['schet_id']]['paids'][] = array(
+			'sum' => $r['sum'],
+			'day' => $r['schet_paid_day']
+		);
+
+	foreach($spisok as $r)
+		$send['spisok'] .= _schet_unit($r);
+
+	$send['spisok'] .=
+		_next(array(
+				'tr' => 1,
+				'type' => 4
+			) + $filter);
+
+	return $send;
+}//_schet_spisok()
+function _schet_unit($r, $zayav=1) {
+	$paid = $r['paid_sum'] >= $r['sum'];
+	$to_pass = $r['pass'] || $paid ? '' : '<a class="to-pass" val="'.$r['id'].'">передать клиенту</a>';
+	$to_paid = $r['pass'] && !$paid ? '<a class="to-pay" val="'.$r['id'].'">оплатить</a>' : '';
+	$pass_info = $r['pass'] && !$paid ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
+	$paid_info = '';
+	if($r['paid_sum'] > 0) {
+		foreach($r['paids'] as $i)
+			$paid_info .= '<div class="paid-info">Оплачено <b>'.round($i['sum'], 2) . '</b> руб. '.FullData($i['day'], 1).'.</div>';
+	}
+	return
+		'<tr class="schet-unit'.($paid ? ' paid' : '').'">'.
+			'<td class="td-content">'.
+				'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'">'.
+					'Счёт № <b class="pay-nomer">СЦ'.$r['nomer'].'</b>'.
+				'</a> '.
+//				' + накладная '.
+				'от <u>'.FullData($r['date_create']).'</u> г. '.
+//				'<br />'.
+				'на сумму <b class="pay-sum">'._sumSpace($r['sum']).'</b> руб. '.
+				$to_pass.
+				$to_paid.
+				$pass_info.
+				$paid_info.
+			($zayav ? '<div>Заявка '.$r['zayav_link'].'.</div>' : '').
+			'<td class="ed">'.
+				(!$paid ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');
+}//_schet_unit()
+function _schet_right() {
+	return
+		'<div id="find"></div>'.
+		'<div class="findHead">Счета:</div>'.
+		_radio('passpaid',
+			array(
+				0 => 'ВСЕ',
+				1 => 'Не переданы',
+				2 => 'Переданы, не опл.',
+				3 => 'Оплачены'
+			), 0, 1);
+}//_schet_right()
+
+/*
+function zayav_info_schet($zayav_id) {//Счета
+	return
+		'<div class="headBlue">'.
+			'<a href="'.URL.'&p=report&d=money&d1=schet"><b>Счета, накладные, акты</b></a>'.
+			'<a class="add schet-add">Сформировать счёт</a>'.
+		'</div>'.
+		'<div id="schet-spisok">'.zayav_info_schet_spisok($zayav_id).'</div>';
+}//zayav_info_schet()
+function zayav_info_schet_spisok($zayav_id) {
+	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '<div id="no-schet">Счетов нет. <a class="schet-add">Сформировать</a></div>';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$spisok = _zayavValToList($spisok);
+
+	//список платежей по счетам
+	$sql = "SELECT * FROM `money` WHERE `schet_id` IN (".implode(',', array_keys($spisok)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['schet_id']]['paids'][] = array(
+			'sum' => $r['sum'],
+			'day' => $r['schet_paid_day']
+		);
+
+	$send =
+		'<table class="_spisok _money">';
+	foreach($spisok as $r)
+		$send .= schet_unit($r, 0);
+	$send .= '</table>';
+	return $send;
+}//zayav_info_schet_spisok()
+*/
+
+
+
+
+
+
+
 
 
 

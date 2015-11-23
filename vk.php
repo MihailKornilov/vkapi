@@ -60,6 +60,7 @@ define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
 $SA[982006] = 1; // Корнилов Михаил
+$SA[1382858] = 1; // Серёга Ш.
 //$SA[166424274] = 1; // тестовая запись
 define('SA', isset($SA[$_GET['viewer_id']]));
 
@@ -183,7 +184,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Переменные _global для всех приложений
 		'<script type="text/javascript" src="'.API_HTML.'/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
 
-		'<script type="text/javascript" src="'.APP_HTML.'/js/app_values.js?'.GLOBAL_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_'.WS_ID.'_values.js?'.WS_VALUES.'"></script>'.
 
 (PIN_ENTER ? '' :
 
@@ -327,7 +328,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 		xcache_set($key, $menu, 86400);
 	}
 
-	$key = CACHE_PREFIX.'menu_app'.APP_ID;
+	$key = CACHE_PREFIX.'menu_app';
 	if(!$app = xcache_get($key)) {
 		$sql = "SELECT `menu_id` `id`
 				FROM `_menu_app`
@@ -336,7 +337,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 		xcache_set($key, $app, 86400);
 	}
 
-	$key = CACHE_PREFIX.'menu_sort'.APP_ID;
+	$key = CACHE_PREFIX.'menu_sort';
 	if(!$sort = xcache_get($key)) {
 		$sort = array();
 		$sql = "SELECT
@@ -365,8 +366,8 @@ function _menuCache() {//получение списка разделов меню из кеша
 				)";
 			query($sql, GLOBAL_MYSQL_CONNECT);
 
-			xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
-			xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+			xcache_unset(CACHE_PREFIX.'menu_app');
+			xcache_unset(CACHE_PREFIX.'menu_sort');
 
 			$sort[] = $menu[$id];
 		}
@@ -1050,8 +1051,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 	}
 	return
 		$send.
-		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '').
-		(!empty($v['js']) ? $v['js'] : '');
+		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
 }//_next()
 
 function _selJson($arr) {
@@ -1144,6 +1144,13 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 	fwrite($fp, $save);
 	fclose($fp);
 
+	//обновление значения версии файлов global_values.js
+	$sql = "UPDATE `_setup`
+			SET `value`=`value`+1
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='GLOBAL_VALUES'";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
 	//для конкретного приложения
 	$save = 'var'.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
@@ -1189,31 +1196,34 @@ function _globalValuesJS() {//Составление файла global_values.js, используемый в
 		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=2", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=3", GLOBAL_MYSQL_CONNECT).';';
 
-	$fp = fopen(APP_PATH.'/js/app_values.js', 'w+');
+	$fp = fopen(APP_PATH.'/js/ws_'.WS_ID.'_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
 
-	//обновление значения версии файлов global_values.js и app_values.js
+	//обновление значения версии файлов global_values.js и ws_values.js
 	$sql = "UPDATE `_setup`
 			SET `value`=`value`+1
 			WHERE `app_id`=".APP_ID."
-			  AND `key`='GLOBAL_VALUES'";
+			  AND `ws_id`=".WS_ID."
+			  AND `key`='WS_VALUES'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	xcache_unset(CACHE_PREFIX.'setup'.WS_ID);
 }//_globalValuesJS()
 
 function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
-	xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);//значения для разделов меню для конкретного приложения
-	xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);//отсортированный список разделов меню с настройками
-	xcache_unset(CACHE_PREFIX.'setup'.APP_ID);//глобальные настройки приложения
+	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
+	xcache_unset(CACHE_PREFIX.'menu_sort');//отсортированный список разделов меню с настройками
+	xcache_unset(CACHE_PREFIX.'setup'.WS_ID);//глобальные настройки приложения конкретной организации
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
 	xcache_unset(CACHE_PREFIX.'ws'.WS_ID);//данные организации
 	xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.WS_ID);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'zayav_expense'.WS_ID);//категории расходов заявки
 
 
 	//сброс времени действия введённого пинкода
@@ -1227,6 +1237,7 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
 			  AND `worker`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {

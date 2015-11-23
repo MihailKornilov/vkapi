@@ -118,6 +118,15 @@
 #balans-tab .balans{width:70px;text-align:right}
 
 
+/* счета на оплату */
+#money-schet .headName{margin:15px 10px}
+#money-schet #spisok{margin:10px}
+#money-schet #result{margin-bottom:10px}
+#money-schet #find{margin-top:20px}
+#money-schet #paid_check{margin-top:20px}
+
+
+
 /* деньги в информации о заявке */
 #_zayav-money{margin-top:15px}
 #_zayav-money em{float:right;margin:0 5px}
@@ -128,10 +137,3 @@
 
 
 
-/*
-.schet#report .headName{margin:15px 10px}
-.schet#report #spisok{margin:10px}
-.schet#report #result{margin-bottom:10px}
-.schet#report #find{margin-top:20px}
-.schet#report #paid_check{margin-top:20px}
-*/

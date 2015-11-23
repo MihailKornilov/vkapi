@@ -28,6 +28,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_setup`
 				SET `value`=`value`+1
 				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
 				  AND `key`='VERSION'";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

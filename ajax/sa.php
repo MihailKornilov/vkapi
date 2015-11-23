@@ -17,8 +17,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
-		xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'menu_app');
+		xcache_unset(CACHE_PREFIX.'menu_sort');
 
 		_menuCache();
 
@@ -37,8 +37,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app'.APP_ID);
-		xcache_unset(CACHE_PREFIX.'menu_sort'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'menu_app');
+		xcache_unset(CACHE_PREFIX.'menu_sort');
 
 		_menuCache();
 		jsonSuccess();
