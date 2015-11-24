@@ -524,6 +524,7 @@ var VK_SCROLL = 0,
 */
 //		_cookie(VIEWER_ID + '_client_find', escape(v.find));
 	},
+	_nextCallback = function() {},//функция, которая выполняется после вывода на экран продолжения списка
 	_yearAss = function(start) {//получение списка годов
 		var d = new Date(),
 			yearStart = d.getFullYear(),//начальное значение года
@@ -2238,7 +2239,12 @@ $(document)
 
 	.on('click', '._next', function() {//продолжение списка. Вспомогательная функция в PHP: _filterJs()
 		var t = $(this),
-			v = t.attr('val').split(':');
+			v = t.attr('val');
+
+		if(!v)
+			return;
+
+		v = v.split(':');
 
 		if(!v[1])
 			return;
@@ -2249,9 +2255,10 @@ $(document)
 
 		window[v[0]].page = v[1];
 		$.post(AJAX_MAIN, window[v[0]], function(res) {
-			if(res.success)
+			if(res.success) {
 				t.after(res.spisok).remove();
-			else
+				_nextCallback();
+			} else
 				t.removeClass('_busy');
 		}, 'json');
 	})

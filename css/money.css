@@ -125,7 +125,47 @@
 #money-schet #find{margin-top:20px}
 #money-schet #paid_check{margin-top:20px}
 
+.schet-unit{background-color:#ffe}
+.schet-unit .td-content{padding:8px}
+.schet-unit.pass{background-color:#ffb}
+.schet-unit.paid{background-color:#cfc}
+.schet-unit .pass-info{color:#770;margin:3px 0}
+.schet-unit .paid-info{color:#070;margin:3px 0}
+.schet-unit ._dropdown{float:right}
+.schet-unit .img_xls{float:right}
+.schet-unit:not(:hover) ._dropdown{display:none}
+.schet-unit .schet-zayav{margin-top:5px}
 
+#_schet-info .tab{border-spacing:10px}
+#_schet-info h1{
+	text-align:center;
+	font-weight:bold;
+	font-size:12px;
+	margin:5px 0 10px
+}
+#_schet-info .n{width:20px;text-align:right}
+#_schet-info input{background-color:#ffd}
+#_schet-info .name input{width:330px}
+#_schet-info .count{width:40px;text-align:center}
+#_schet-info .count input{width:30px;text-align:right}
+#_schet-info .cost{width:50px;text-align:right}
+#_schet-info .cost input{width:40px;text-align:right}
+#_schet-info h2{margin-top:20px}
+
+/* Таблица формирования счёта */
+#schet-add-tab #sa-tab{border-spacing:10px;margin:10px}
+#schet-add-tab #schet-tab{width:100%}
+#schet-add-tab .td-n{width:10px;text-align:right}
+#schet-add-tab .td-name{width:300px}
+#schet-add-tab .td-count{width:40px;text-align:right}
+#schet-add-tab .td-cost{width:50px;text-align:right}
+#schet-add-tab .td-sum{width:55px;text-align:right}
+#schet-add-tab #tr-add{background-color:#ffb}
+#schet-add-tab #name{width:280px}
+#schet-add-tab #count{width:20px;text-align:right}
+#schet-add-tab #cost{width:35px;text-align:right}
+#schet-add-tab ._next{padding:0}
+#schet-add-tab #itog{margin:10px 0 20px;font-weight:bold;color:#555}
 
 /* деньги в информации о заявке */
 #_zayav-money{margin-top:15px}

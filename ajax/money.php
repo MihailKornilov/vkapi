@@ -638,6 +638,139 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'schet_spisok':
+		$data = _schet_spisok($_POST);
+		$send['spisok'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_schet_load'://получение данных для счёта по катрриджам
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `zayav_cartridge`
+				WHERE `zayav_id`=".$zayav_id."
+				  AND (`filling` OR `restore` OR `chip`)
+				  AND `cost`
+				  AND !`schet_id`
+				ORDER BY `id`";
+		$q = query($sql);
+		$schet = array();
+		$n = 1;
+		while($r = mysql_fetch_assoc($q)) {
+			$same = 0;//тут будет номер, с которым будет найдено совпадение
+			foreach($schet as $sn => $unit) {
+				$diff = 0; // пока различий не обнаружено
+				foreach($unit as $key => $val) {
+					if($key == 'count')
+						continue;
+					if($r[$key] != $val) {
+						$diff = 1;
+						break;
+					}
+				}
+				if(!$diff) { //если различий нет, то запоминание номера и выход
+					$same = $sn;
+					break;
+				}
+			}
+
+			if($same)
+				$schet[$same]['count']++;
+			else {
+				$schet[$n] = array(
+					'cartridge_id' => $r['cartridge_id'],
+					'filling' => $r['filling'],
+					'restore' => $r['restore'],
+					'chip' => $r['chip'],
+					'cost' => $r['cost'],
+					'prim' => $r['prim'],
+					'count' => 1
+				);
+				$n++;
+			}
+		}
+
+		$spisok = array();
+		foreach($schet as $r) {
+			$prim = array();
+			if($r['filling'])
+				$prim[] = 'заправка';
+			if($r['restore'])
+				$prim[] = 'восстановление';
+			if($r['chip'])
+				$prim[] = 'замена чипа у';
+
+			$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
+			$txt = mb_ucfirst($txt);
+
+			$spisok[] = array(
+				'name' => utf8($txt),
+				'count' => $r['count'],
+				'cost' => $r['cost'],
+				'cartridge' => 1
+			);
+		}
+
+		$send['spisok'] = $spisok;
+		jsonSuccess($send);
+		break;
+	case 'schet_load':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_schet`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$schet = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_schet_content`
+				WHERE `schet_id`=".$id."
+				ORDER BY `id`";
+		$content = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$html = '<table class="_spisok">'.
+					'<tr><th>№'.
+						'<th>Наименование товара'.
+						'<th>Кол-во'.
+						'<th>Цена'.
+						'<th>Сумма';
+		$n = 0;
+		$sum = 0;
+		$arr = array();
+		foreach($content as $id => $r) {
+			$html .=
+				'<tr><td class="n">'.(++$n).
+					'<td class="name">'.$r['name'].
+					'<td class="count">'.$r['count'].
+					'<td class="cost">'._sumSpace($r['cost']).
+					'<td class="sum">'._sumSpace($r['count'] * $r['cost']);
+			$sum += $r['cost'];
+
+			$r['name'] = utf8($r['name']);
+			$r['cost'] = _cena($r['cost']);
+			$arr[] = $r;
+		}
+		$html .= '</table>';
+
+
+		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
+		$send['head'] = utf8('СЧЁТ № СЦ'.$schet['nomer'].' от '.FullData($schet['date_create']).' г.');
+		$send['html'] = utf8($html);
+		$send['itog'] = utf8('Всего наименований <b>'.$n.'</b>, на сумму <b>'._sumSpace($sum).'</b> руб.');
+		$send['arr'] = $arr;
+		jsonSuccess($send);
+		break;
+
 	case 'invoice_set':
 		if(!RULE_SETUP_INVOICE)
 			jsonError();
@@ -1265,5 +1398,4 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
 }
