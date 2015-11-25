@@ -1364,6 +1364,15 @@ function balans_show_spisok($filter) {
 
 /* --- —чета на оплату --- */
 
+function _schetQuery($id) {//запрос данных об одном клиенте
+	$sql = "SELECT *
+			FROM `_schet`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `id`=".$id;
+	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}//_schetQuery()
 function _schetFilter($v) {
 	$send = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,

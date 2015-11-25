@@ -723,13 +723,7 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_schet`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$id;
-		if(!$schet = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$schet = _schetQuery($id))
 			jsonError();
 
 		$sql = "SELECT *
@@ -763,13 +757,219 @@ switch(@$_POST['op']) {
 		$html .= '</table>';
 
 
+		$send['schet_id'] = $schet['id'];
+		$send['client_id'] = $schet['client_id'];
+		$send['zayav_id'] = $schet['zayav_id'];
+		$send['date_create'] = $schet['date_create'];
+		$send['nakl'] = $schet['nakl'];
+		$send['act'] = $schet['act'];
 		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
-		$send['head'] = utf8('СЧЁТ № СЦ'.$schet['nomer'].' от '.FullData($schet['date_create']).' г.');
+		$send['nomer'] = utf8('СЧЁТ № СЦ'.$schet['nomer']);
+		$send['ot'] = utf8(' от '.FullData($schet['date_create']).' г.');
 		$send['html'] = utf8($html);
 		$send['itog'] = utf8('Всего наименований <b>'.$n.'</b>, на сумму <b>'._sumSpace($sum).'</b> руб.');
 		$send['arr'] = $arr;
 		jsonSuccess($send);
 		break;
+	case 'schet_edit'://редактирование счёта
+		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
+			jsonError();
+
+		$schet_id = _num($_POST['schet_id']);
+		$client_id = _num($_POST['client_id']);
+		$zayav_id = _num($_POST['zayav_id']);
+		$date_create = $_POST['date_create'];
+		$nakl = _bool($_POST['nakl']);
+		$act = _bool($_POST['act']);
+
+		if($schet_id && !_schetQuery($schet_id))
+			jsonError();
+
+		if($client_id && !_clientQuery($client_id))
+			jsonError();
+
+		if($zayav_id) {
+			$sql = "SELECT *
+					FROM `zayav`
+					WHERE `ws_id`=".WS_ID."
+					  AND !`deleted`
+					  AND `id`=".$zayav_id;
+			if(!$z = query_assoc($sql))
+				jsonError();
+			if(!$client_id)
+				$client_id = $z['client_id'];
+		}
+
+		$spisok = @$_POST['spisok'];
+		if(empty($spisok))
+			jsonError();
+
+		$sum = 0;
+		foreach($spisok as $r) {
+			$r['name'] = _txt($r['name']);
+			$sum += $r['count'] * $r['cost'];
+		}
+
+		$sql = "INSERT INTO `_schet` (
+					`id`,
+					`app_id`,
+					`ws_id`,
+					`client_id`,
+					`zayav_id`,
+					`date_create`,
+					`nakl`,
+					`act`,
+					`sum`,
+					`viewer_id_add`
+				) VALUES (
+					".$schet_id.",
+					".APP_ID.",
+					".WS_ID.",
+					".$client_id.",
+					".$zayav_id.",
+					'".$date_create."',
+					".$nakl.",
+					".$act.",
+					".$sum.",
+					".VIEWER_ID."
+				) ON DUPLICATE KEY UPDATE
+					`date_create`=VALUES(`date_create`),
+					`nakl`=VALUES(`nakl`),
+					`act`=VALUES(`act`),
+					`sum`=VALUES(`sum`)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_schet_content` WHERE `schet_id`=".$schet_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//внесение списка наименований для счёта
+		$values = array();
+		foreach($spisok as $r)
+			$values[] = "(".
+				$schet_id.",".
+				"'".addslashes(win1251($r['name']))."',".
+				$r['count'].",".
+				$r['cost'].
+			")";
+		$sql = "INSERT INTO `_schet_content` (
+					`schet_id`,
+					`name`,
+					`count`,
+					`cost`
+				) VALUES ".implode(',', $values);
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+/*
+		//изменение начисления
+		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `schet_id`=".$schet_id;
+		if($r = mysql_fetch_assoc(query($sql))) {
+			$sql = "UPDATE `accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
+			query($sql);
+			clientBalansUpdate($z['client_id']);
+			zayavBalansUpdate($z['id']);
+		}
+
+		history_insert(array(
+			'type' => 61,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$s['nomer']
+		));
+
+		$send['schet_zayav'] = utf8(zayav_info_schet_spisok($z['id']));
+		$data = report_schet_spisok();
+		$send['schet_all'] = utf8($data['spisok']);
+		$send['acc'] = utf8(zayav_info_money($z['id']));
+*/
+		jsonSuccess();
+		break;
+
+	case 'schet_pass'://передача счёта клиенту
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+		$zayav_id = _num($_POST['zayav_id']);
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND `id`=".$schet_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `zayav_schet`
+				SET `pass`=1,
+					`pass_day`='".$day."'
+					WHERE `id`=".$schet_id;
+		query($sql);
+
+		history_insert(array(
+			'type' => 63,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$r['nomer'],
+			'value1' => $day
+		));
+
+		$data = report_schet_spisok();
+		$send['html'] = utf8($data['spisok']);
+		if($zayav_id)
+			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
+		jsonSuccess($send);
+		break;
+	case 'schet_pay'://оплата счёта
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+		$zayav_id = _num($_POST['zayav_id']);
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `paid_sum`<`sum` AND `id`=".$schet_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		income_insert(array(
+			'zayav_id' => $z['id'],
+			'schet_id' => $schet_id,
+			'schet_paid_day' => $day,
+			'invoice_id' => 4,
+			'sum' => $sum
+		));
+
+		$paidSum = query_value("SELECT SUM(`sum`) FROM `money` WHERE !`deleted` AND `schet_id`=".$schet_id);
+		$sql = "UPDATE `zayav_schet`
+				SET `paid_sum`=".$paidSum."
+				WHERE `id`=".$schet_id;
+		query($sql);
+/*
+		history_insert(array(
+			'type' => 60,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$r['nomer'],
+			'value1' => $sum,
+			'value2' => $r['date_create']
+		));
+*/
+		$data = report_schet_spisok();
+		$send['html'] = utf8($data['spisok']);
+		if($zayav_id)
+			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
+		jsonSuccess($send);
+		break;
+
 
 	case 'invoice_set':
 		if(!RULE_SETUP_INVOICE)

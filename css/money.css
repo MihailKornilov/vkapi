@@ -143,14 +143,19 @@
 	font-size:12px;
 	margin:5px 0 10px
 }
+#_schet-info h4{text-align:right;margin:10px 0}
 #_schet-info .n{width:20px;text-align:right}
 #_schet-info input{background-color:#ffd}
+#_schet-info input.err{background-color:#fdd;color:#922}
 #_schet-info .name input{width:330px}
 #_schet-info .count{width:40px;text-align:center}
 #_schet-info .count input{width:30px;text-align:right}
 #_schet-info .cost{width:50px;text-align:right}
 #_schet-info .cost input{width:40px;text-align:right}
 #_schet-info h2{margin-top:20px}
+#_schet-info #pole-add{padding:0}
+#_schet-info h3{margin-top:20px}
+#_schet-info ._check{display:block;margin:3px 0 6px}
 
 /* Таблица формирования счёта */
 #schet-add-tab #sa-tab{border-spacing:10px;margin:10px}

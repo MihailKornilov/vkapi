@@ -225,6 +225,9 @@ var VK_SCROLL = 0,
 			}
 		return send;
 	},
+	_bool = function(v) {
+		return v == 1 ? 1 : 0;
+	},
 	_num = function(v) {
 		return !REGEXP_NUMERIC.test(v) ? 0 : v * 1;
 	},

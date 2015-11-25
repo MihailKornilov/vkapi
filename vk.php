@@ -233,6 +233,7 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 		case 'money': return _money();
 		case 'report': return _report();
 		case 'setup': return _setup();
+		case 'print': _print_xsl(); exit;
 
 		case 'sa':
 			if(empty($_GET['d']))
@@ -511,7 +512,7 @@ function _debug_cookie_count() {
 			if(strpos($key, 'debug') !== 0)
 				$count++;
 	return $count ? $count : '';
-}
+}//_debug_cookie_count()
 function _debug_cookie() {
 	$cookie = '';
 	if(!empty($_COOKIE))
@@ -519,7 +520,7 @@ function _debug_cookie() {
 			if(strpos($key, 'debug') !== 0)
 				$cookie .= '<p><b>'.$key.'</b> '.$val;
 	return $cookie;
-}
+}//_debug_cookie()
 function _footer() {
 	$getArr = array(
 		'start' => 1,
@@ -2022,3 +2023,18 @@ function _imageGet($v) {
 	$img = array_shift($img);
 	return $img['img'];
 }//_imageGet()
+
+
+
+function _print_xsl() {//вывод на печать документов в формате xsl
+	set_time_limit(10);
+	require_once GLOBAL_DIR.'/excel/PHPExcel.php';
+
+	switch(@$_GET['d']) {
+		case 'schet':
+			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
+			break;
+		default: die('Документ не найден.');
+	}
+	exit;
+}//_print_xsl()

@@ -963,26 +963,39 @@ var _accrualAdd = function() {
 		}
 	},
 
-	_schetInfo = function() {
-		var t = $(this),
+	_schetInfo = function(o) {
+		o = $.extend({
+			id:0,
+			edit:0
+		}, o);
+		var load = !o.html,
 			dialog = _dialog({
 				top:20,
 				width:580,
 				head:'Просмотр счёта',
-				load:1,
+				load:load,
 				butSubmit:'',
 				butCancel:'Закрыть'
 			});
-		var send = {
-			op:'schet_load',
-			id:t.attr('val')
-		};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				schetPrint(res);
-			} else
-				dialog.loadError();
-		}, 'json');
+
+		if(load) {
+			var send = {
+				op:'schet_load',
+				id:o.id ? o.id : $(this).attr('val')
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					if(o.edit) {
+						dialog.close();
+						res.edit = 1;
+						_schetEdit(res);
+					} else
+						schetPrint(res);
+				} else
+					dialog.loadError();
+			}, 'json');
+		} else
+			schetPrint(o);
 
 		function schetPrint(res) {
 			var html =
@@ -990,10 +1003,10 @@ var _accrualAdd = function() {
 					'<table class="tab">' +
 						'<tr><td class="label top">Плательщик:<td>' + res.client +
 					'</table>' +
-					'<h1>' + res.head + '</h1>' +
+					'<h1>' + res.nomer + res.ot + '</h1>' +
 					res.html +
 					'<h2>' + res.itog + '</h2>' +
-					'<a id="schet-edit">Редактировать</a>' +
+					'<h4><a id="schet-edit">Редактировать счёт</a></h4>' +
 				'</div>';
 			dialog.content.html(html);
 			$('#schet-edit').click(function() {
@@ -1003,31 +1016,33 @@ var _accrualAdd = function() {
 		}
 	},
 	_schetEdit = function(res) {
-		var spisok =
-			'<table class="_spisok">' +
-				'<tr><th>№' +
-					'<th>Наименование товара' +
-					'<th>Кол-во' +
-					'<th>Цена' +
-					'<th>Сумма' +
-					'<th>',
-			sum = 0;
+		var spisok = '';
 		for(var n = 0; n < res.arr.length; n++) {
 			var sp = res.arr[n];
 			sp.sum = sp.cost * sp.count;
 			spisok += pole(sp);
-//			sum += s;
 		}
-		spisok += '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию' +
-				'</table>';
-
 		var html =
 				'<div id="_schet-info">' +
 					'<table class="tab">' +
-						'<tr><td class="label top">Плательщик:<td>' + res.client +
+						'<tr><td class="label r top">Плательщик:<td>' + res.client +
+						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + res.date_create + '" />' +
+						'<tr><td class="label r topi">Приложения:' +
+							'<td><input id="nakl" type="hidden" value="' + res.nakl + '" />' +
+								'<input id="act" type="hidden" value="' + res.act + '" />' +
 					'</table>' +
-					'<h1>' + res.head + '</h1>' +
-					spisok +
+					'<h1>' + res.nomer + '</h1>' +
+					'<table class="_spisok">' +
+						'<tr><th>№' +
+							'<th>Наименование товара' +
+							'<th>Кол-во' +
+							'<th>Цена' +
+							'<th>Сумма' +
+							'<th>' +
+						spisok +
+						'<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию' +
+					'</table>' +
+					'<h3></h3>' +
 				'</div>',
 			dialog = _dialog({
 				top:20,
@@ -1035,10 +1050,18 @@ var _accrualAdd = function() {
 				head:'Редактирование счёта',
 				content:html,
 				butSubmit:'Сохранить',
-				submit:submit
+				submit:submit,
+				cancel:function() {
+					if(!res.edit)
+						_schetInfo(res);
+				}
 			});
 
 		poleNum();
+		itog();
+		$('#date_create')._calendar({lost:1});
+		$('#nakl')._check({name:'Накладная',light:1});
+		$('#act')._check({name:'Акт выполненных работ',light:1});
 		$('#pole-add').click(function() {//добавление новой позиции счёта
 			$(this)
 				.parent()
@@ -1049,28 +1072,26 @@ var _accrualAdd = function() {
 		});
 		$(document)
 			.on('click', '.pole-del', function() {
-			_parent($(this)).remove();
-			poleNum();
-		})
+				_parent($(this)).remove();
+				poleNum();
+				itog();
+			})
 			.on('keyup', '.pole input', function() {
 				var t = _parent($(this)),
 					count = t.find('.count input').val(),
 					cost = t.find('.cost input').val(),
 					sum = count * _cena(cost);
 				t.find('.sum').html(sum ? sum : '');
+				itog();
 			});
 
-		function spisokPrint() {
-			$('#itog').html('Всего наименований ' + n + ', на сумму ' + sum + ' руб.');
-
-		}
 		function pole(sp) {
 			sp = $.extend({
 				name:'',
 				count:1,
 				cost:''
 			}, sp);
-			sum = sp.count * _cena(sp.cost);
+			var sum = sp.count * _cena(sp.cost);
 			return '<tr class="pole">' +
 				'<td class="n">' +
 				'<td class="name"><input type="text" value="' + sp.name + '" />' +
@@ -1084,212 +1105,90 @@ var _accrualAdd = function() {
 			for(var n = 0; n < num.length; n++)
 				num.eq(n).html(n + 1);
 		}
-		function poleSubmit() {
-			var name = $.trim($('#name').val()),
-				count = _num($('#count').val()),
-				cost = _num($('#cost').val());
-			if(!name) {
-				poleErr('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			if(!count) {
-				poleErr('Некорректная сумма');
-				$('#count').focus();
-				return;
-			}
-			if(!cost) {
-				poleErr('Некорректное количество');
-				$('#cost').focus();
-				return;
-			}
-			spisok.push({
-				name:name,
-				count:count,
-				cost:cost,
-				del:1
-			});
-			spisokPrint();
-		}
-		function submit() {
-			var send = {
-				op:'zayav_cartridge_schet_add',
-				zayav_id:ZAYAV.id,
-				spisok:spisok,
-				date_create:$('#date_create').val(),
-				dop:_num($('#dop').val()),
-				acc:_num($('#acc').val())
-			};
-			if(!send.spisok.length) dialog.err('Не добавлено ни одной позиции');
-			else if(!send.dop) dialog.err('Выберите дополнительный документ');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function (res) {
-					if(res.success) {
-						$('#cart-tab').html(res.cart);
-						$('#schet-spisok').html(res.schet);
-						$('#money_spisok').html(res.acc);
-						dialog.close();
-						_msg('Новый счёт сформирован');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	},
-	_schetEdit0 = function() {
-		var t = $(this),
-			spisok,// содержимое таблицы
-			num,// очередной номер элемента таблицы
-			dialog = _dialog({
-				top:20,
-				width:580,
-				head:'Формирование счёта',
-				load:1,
-				butSubmit:'Сформировать',
-				submit:submit
-			});
-		var send = {
-			op:'zayav_cartridge_schet_load',
-			zayav_id:ZAYAV.id
-		};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				spisok = res.spisok;
-				var html =
-					'<div id="schet-add-tab">' +
-						'<table class="_spisok" id="schet-tab"></table>' +
-						'<div id="itog"></div>' +
-						'<table id="sa-tab">' +
-							'<tr><td class="label r">Дата:<td><input id="date_create" type="hidden" />' +
-							'<tr><td class="label r topi">Приложения:<td><input id="dop" type="hidden" />' +
-							'<tr><td><td><input id="acc" type="hidden" />' +
-						'</table>' +
-					'</div>';
-
-				dialog.content.html(html);
-				spisokPrint();
-				$('#date_create')._calendar({lost:1});
-				$('#dop')._radio({
-					light:1,
-					spisok:[
-						{uid:1,title:'Накладная'},
-						{uid:2,title:'Акт выполненных работ'}
-					]
-				});
-				$('#acc')._check({
-					name:'Произвести начисление по счёту'
-				});
-			} else
-				dialog.loadError();
-		}, 'json');
-		function spisokPrint() {
-			var html =
-					'<tr><th>№' +
-						'<th>Наименование товара' +
-						'<th>Кол-во' +
-						'<th>Цена' +
-						'<th>Сумма' +
-						'<th>',
-				sum = 0;
-			for(var n = 0; n < spisok.length; n++) {
-				var sp = spisok[n],
-				s = sp.cost * sp.count;
-				html +=
-					'<tr><td class="td-n">' + (n + 1) +
-						'<td class="td-name">' + sp.name +
-						'<td class="td-count">' + sp.count +
-						'<td class="td-cost">' + sp.cost +
-						'<td class="td-sum">' + s +
-						'<td>' + (sp.del ? '<div val="' + n + '" class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
+		function itog() {//подведение итога и подсветка ошибочных полей
+			var pole = $('#_schet-info .pole'),
+				num = 0,    //количество наименований
+				sum = 0,    //общая сумма
+				arr = [],   //массив для возврата
+				err = 0;    //найдена ли ошибка
+			for(var n = 0; n < pole.length; n++) {
+				var eq = pole.eq(n),
+					name_inp = eq.find('.name input'),
+					count_inp = eq.find('.count input'),
+					cost_inp = eq.find('.cost input'),
+					name = $.trim(name_inp.val()),
+					count = _num(count_inp.val()),
+					cost = _cena(cost_inp.val()),
+					s = count * cost;
+				if(s)
+					num++;
+				name_inp[(name ? 'remove' : 'add') + 'Class']('err');
+				count_inp[(count ? 'remove' : 'add') + 'Class']('err');
+				cost_inp[(cost ? 'remove' : 'add') + 'Class']('err');
 				sum += s;
+				if(!err && name && !count) {
+					err = 1;
+					arr = {
+						error:1,
+						msg:'Некорректно указано количество',
+						place:count_inp
+					};
+				}
+				if(!err && name && !cost) {
+					err = 1;
+					arr = {
+						error:1,
+						msg:'Некорректно указана сумма',
+						place:cost_inp
+					};
+				}
+				if(!err && !name && count && cost) {
+					err = 1;
+					arr = {
+						error:1,
+						msg:'Не указано наименование',
+						place:name_inp
+					};
+				}
+				if(!err)
+					arr.push({
+						name:name,
+						count:count,
+						cost:cost
+					});
 			}
-			num = n + 1;
-			html += '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию для счёта';
-			$('#schet-tab').html(html);
-			$('#itog').html('Всего наименований ' + n + ', на сумму ' + sum + ' руб.');
-			$('#pole-add').click(poleAdd);
-			$('.pole-del').click(function() {
-				spisok.splice(_num($(this).attr('val')), 1);
-				spisokPrint();
-			});
-		}
-		function poleAdd() {
-			var t = $(this),
-				html =
-					'<tr id="tr-add">' +
-						'<td class="td-n">' + num +
-						'<td class="td-name"><input type="text" id="name" />' +
-						'<td class="td-count"><input type="text" id="count" value="1" />' +
-						'<td class="td-cost"><input type="text" id="cost" />' +
-						'<td><div class="vkButton"><button>OK</button></div>' +
-						'<td><div class="img_del' + _tooltip('Отменить', -32) + '</div>';
-			t.parent().hide();
-			$('#schet-tab').append(html);
-			$('#name').focus();
-			$('#tr-add .img_del').click(function() {
-				$('#tr-add').remove();
-				t.parent().show();
-			});
-			$('#tr-add .vkButton').click(poleSubmit);
-		}
-		function poleSubmit() {
-			var name = $.trim($('#name').val()),
-				count = _num($('#count').val()),
-				cost = _num($('#cost').val());
-			if(!name) {
-				poleErr('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			if(!count) {
-				poleErr('Некорректная сумма');
-				$('#count').focus();
-				return;
-			}
-			if(!cost) {
-				poleErr('Некорректное количество');
-				$('#cost').focus();
-				return;
-			}
-			spisok.push({
-				name:name,
-				count:count,
-				cost:cost,
-				del:1
-			});
-			spisokPrint();
-		}
-		function poleErr(msg) {
-			$('#name').vkHint({
-				msg:'<span class="red">' + msg + '</span>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-58,
-				left:404
-			});
+
+			if(!err && !num)
+				arr = {
+					error:1,
+					msg:'Не добавлено ни одной позиции'
+				};
+
+			$('#_schet-info h3').html('Всего наименований <b>' + num + '</b>, на сумму <b>' + sum + '</b> руб.');
+			return arr;
 		}
 		function submit() {
 			var send = {
-				op:'zayav_cartridge_schet_add',
-				zayav_id:ZAYAV.id,
-				spisok:spisok,
+				op:'schet_edit',
+				schet_id:res.schet_id,
+				client_id:res.client_id,
+				zayav_id:res.zayav_id,
+				spisok:itog(),
 				date_create:$('#date_create').val(),
-				dop:_num($('#dop').val()),
-				acc:_num($('#acc').val())
+				nakl:_bool($('#nakl').val()),
+				act:_bool($('#act').val())
 			};
-			if(!send.spisok.length) dialog.err('Не добавлено ни одной позиции');
-			else if(!send.dop) dialog.err('Выберите дополнительный документ');
-			else {
+			if(send.spisok.error) {
+				dialog.err(send.spisok.msg);
+				if(send.spisok.place)
+					send.spisok.place.focus();
+			} else {
 				dialog.process();
-				$.post(AJAX_MAIN, send, function (res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
-						$('#cart-tab').html(res.cart);
-						$('#schet-spisok').html(res.schet);
-						$('#money_spisok').html(res.acc);
 						dialog.close();
-						_msg('Новый счёт сформирован');
+						_msg();
+						_schetInfo({id:send.schet_id});
 					} else
 						dialog.abort();
 				}, 'json');
@@ -1310,21 +1209,29 @@ var _accrualAdd = function() {
 		var action = $('.schet-action');
 		if(action.length) {
 			for(var n = 0; n < action.length; n++) {
-				var eq = action.eq(n);
+				var eq = action.eq(n),
+					spisok = [
+						{uid:1,title:'Посмотреть содержание'},
+						{uid:2,title:'Редактировать'},
+						{uid:3,title:'Распечатать<div class="img_xls"></div>'},
+						{uid:4,title:'Передать клиенту'},
+						{uid:5,title:'Отменить передачу'},
+						{uid:6,title:'<b>Оплатить</b>'},
+						{uid:7,title:'<tt class="red">Удалить счёт</tt>'}
+					],
+					unit = eq.parent().parent(),
+					pass = unit.hasClass('pass');
+				spisok.splice(pass ? 3 : 4,1);
 				$('#' + eq.attr('id'))._dropdown({
 					head:'действие',
 					nosel:1,
-					spisok:[
-						{uid:1, title:'Редактировать'},
-						{uid:2, title:'Распечатать<div class="img_xls"></div>'},
-						{uid:3, title:'Передать клиенту'},
-						{uid:4, title:'Отменить передачу'},
-						{uid:5, title:'<b>Оплатить</b>'},
-						{uid:6, title:'<tt class="red">Удалить счёт</tt>'}
-					],
-					func:function(v) {
+					spisok:spisok,
+					func:function(v, id) {
+						var schet_id = id.split('act')[1]
 						switch(v) {
-							case 1: break;
+							case 1: _schetInfo({id:schet_id}); break;
+							case 2: _schetInfo({id:schet_id,edit:1}); break;
+							case 3: location.href = URL + '&p=print&d=schet&schet_id=' + schet_id; break;
 						}
 					}
 				});

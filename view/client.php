@@ -413,6 +413,9 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 				constant($prefix.'NAME').
 			'</a>'
 		);
+
+		define($prefix.'INN', $org ? $c['org_inn'] : '');
+		define($prefix.'KPP', $org ? $c['org_kpp'] : '');
 	}
 
 	$send = array(
@@ -431,7 +434,10 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		'phone' => constant($prefix.'PHONE'),
 		'adres' => constant($prefix.'ADRES'),
 		'link' => constant($prefix.'LINK'),
-		'go' => constant($prefix.'GO')
+		'go' => constant($prefix.'GO'),
+
+		'inn' => constant($prefix.'INN'),
+		'kpp' => constant($prefix.'KPP')
 	);
 
 	return $i ? $send[$i] : $send;
