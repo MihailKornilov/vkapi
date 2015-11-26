@@ -18,7 +18,7 @@ switch(@$_POST['op']) {
 		break;
 	case 'history_spisok':
 		$data = _history_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
+		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'history_del'://удаление элемента истории

@@ -282,18 +282,14 @@ function xls_schet_podpis($sheet, $line) {
 
 
 
-function xls_nakl_razmer() {
-	global $sheet;
-
+function xls_nakl_razmer($sheet) {
 	//Размеры ячеек
 	for($n = 1; $n <= 31; $n++)
 		$sheet->getColumnDimension(pageNum($n))->setWidth(3);
 	for($n = 1; $n <= 31; $n++)
 		$sheet->getRowDimension($n)->setRowHeight(12);
 }//xls_nakl_razmer()
-function xls_nakl_head() {
-	global $sheet, $s;
-
+function xls_nakl_head($sheet, $s) {
 	$sheet->setCellValue('A1', 'Накладная № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
 	$sheet->getStyle('A1')
 		->getFont()->setBold(true)
@@ -316,28 +312,26 @@ function xls_nakl_head() {
 	);
 	$sheet->getStyle('A1:'.pageNum(31).'1')->applyFromArray($ram);
 }//xls_nakl_head()
-function xls_nakl_rekvisit($line=3) {
-	global $sheet, $ws, $c;
-
+function xls_nakl_rekvisit($sheet, $ws, $s, $line=3) {
 	$x = pageNum(5);
 
 	$sheet->setCellValue('A'.$line, 'Поставщик:');
-	$sheet->setCellValue($x.$line, utf8($ws['org_name']));
+	$sheet->setCellValue($x.$line, utf8($ws['name']));
 	$sheet->getStyle($x.$line)->getFont()->setBold(true);
 	if($ws['adres_yur']) {
 		$line++;
 		$sheet->setCellValue($x.$line, utf8($ws['adres_yur']));
 		$sheet->getStyle($x.$line)->getFont()->setBold(true);
 	}
-	if($ws['telefon']) {
+	if($ws['phone']) {
 		$line++;
-		$sheet->setCellValue($x.$line, 'Телефон: '.utf8($ws['telefon']));
+		$sheet->setCellValue($x.$line, 'Телефон: '.utf8($ws['phone']));
 		$sheet->getStyle($x.$line)->getFont()->setBold(true);
 	}
 
 	$line += 2;
 	$sheet->setCellValue('A'.$line, 'Покупатель:');
-	$sheet->setCellValue($x.$line, utf8(($c['category_id'] > 2 ? _clientCategory($c['category_id']).' ' : '').htmlspecialchars_decode(_clientName($c))));
+	$sheet->setCellValue($x.$line, utf8(_clientVal($s['client_id'], 'name')));
 	$sheet->getStyle($x.$line)->getFont()->setBold(true);
 
 	$line += 2;
@@ -346,9 +340,7 @@ function xls_nakl_rekvisit($line=3) {
 	$line += 2;
 	return $line;
 }//xls_nakl_rekvisit()
-function xls_nakl_table($line) {
-	global $sheet;
-
+function xls_nakl_table($sheet, $line) {
 	$ram = array(
 		'borders' => array(
 			'allborders' => array(
@@ -388,14 +380,12 @@ function xls_nakl_table($line) {
 
 	return ++$line;
 }//xls_nakl_table()
-function xls_nakl_tovar_spisok($line) {
-	global $sheet;
-
+function xls_nakl_tovar_spisok($sheet, $line) {
 	$sql = "SELECT *
-			FROM `zayav_schet_spisok`
+			FROM `_schet_content`
 			WHERE `schet_id`=".SCHET_ID."
 			ORDER BY `id`";
-	$q = query($sql);
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$start = $line;
 	$n = 1;
 	$sum = 0;
@@ -412,7 +402,7 @@ function xls_nakl_tovar_spisok($line) {
 		$sheet->getCell(pageNum(22).$line)->setValue('шт');
 		$sheet->mergeCells(pageNum(22).$line.':'.pageNum(23).$line);
 
-		$sheet->getCell(pageNum(24).$line)->setValue($r['cost'].',00');
+		$sheet->getCell(pageNum(24).$line)->setValue(round($r['cost'], 2).',00');
 		$sheet->mergeCells(pageNum(24).$line.':'.pageNum(27).$line);
 
 		$s = $r['count'] * $r['cost'];
@@ -473,9 +463,7 @@ function xls_nakl_tovar_spisok($line) {
 		'sum' => $sum
 	);
 }//xls_nakl_tovar_spisok()
-function xls_nakl_itogo($r) {
-	global $sheet;
-
+function xls_nakl_itogo($sheet, $r) {
 	$line = $r['line'];
 	$sum = $r['sum'];
 
@@ -510,9 +498,7 @@ function xls_nakl_itogo($r) {
 
 	return $line + 3;
 }//xls_nakl_itogo()
-function xls_nakl_podpis($line) {
-	global $sheet;
-
+function xls_nakl_podpis($sheet, $line) {
 	$sheet->setCellValue(pageNum(1).$line, 'Отпустил');
 	$sheet->getStyle(pageNum(1).$line)->getFont()->setBold(true);
 
@@ -556,9 +542,7 @@ function xls_nakl_podpis($line) {
 	$sheet->setCellValue(pageNum(27).$line, 'подпись');
 }//xls_nakl_podpis()
 
-function xls_act_width() {//установка ширины столбцов
-	global $sheet;
-
+function xls_act_width($sheet) {//установка ширины столбцов
 	$sheet->getColumnDimension('A')->setWidth(3);
 	$sheet->getColumnDimension('B')->setWidth(39);
 	$sheet->getColumnDimension('C')->setWidth(9);
@@ -566,29 +550,22 @@ function xls_act_width() {//установка ширины столбцов
 	$sheet->getColumnDimension('E')->setWidth(12);
 	$sheet->getColumnDimension('F')->setWidth(13);
 }//xls_act_width()
-function xls_act_top() {
-	global $sheet, $ws;
-
-	$sheet->setCellValue('A1', utf8($ws['org_name']));
+function xls_act_top($sheet, $ws) {
+	$sheet->setCellValue('A1', utf8($ws['name']));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
 	$sheet->setCellValue('A2', 'Адрес: '.utf8($ws['adres_yur']));
 	$sheet->getStyle('A2')->getFont()->setBold(true);
 }//xls_act_top()
-function xls_act_head() {
-	global $sheet, $c, $s;
-
+function xls_act_head($sheet, $s) {
 	$sheet->mergeCells('A4:F4');
 	$sheet->setCellValue('A4', 'Акт № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
 	$sheet->getStyle('A4')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A4')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
-	$client = utf8(($c['category_id'] > 2 ? _clientCategory($c['category_id']).' ' : '').htmlspecialchars_decode(_clientName($c)));
-	$sheet->setCellValue('A6', 'Заказчик: '.$client);
+	$sheet->setCellValue('A6', 'Заказчик: '.utf8(_clientVal($s['client_id'], 'name')));
 }//xls_act_head()
-function xls_act_tabHead() {//заголовок колонок таблицы
-	global $sheet;
-
+function xls_act_tabHead($sheet) {//заголовок колонок таблицы
 	$line = 8;
 
 	$ram = array(
@@ -613,11 +590,9 @@ function xls_act_tabHead() {//заголовок колонок таблицы
 	$sheet->setCellValue('E'.$line, 'Цена');
 	$sheet->setCellValue('F'.$line, 'Сумма');
 }//xls_act_tabHead()
-function xls_act_tab() {
-	global $sheet;
-
+function xls_act_tab($sheet) {
 	$start = 9;
-	$arr = xls_tabContent($start);
+	$arr = xls_tabContent($sheet, $start);
 	$line = $arr['line'];
 	$sum = $arr['sum'];
 
@@ -646,9 +621,7 @@ function xls_act_tab() {
 
 	return $line;
 }//xls_act_tab()
-function xls_act_podpis($line) {
-	global $sheet;
-
+function xls_act_podpis($sheet, $line) {
 	$line++;
 	$sheet->getCell('A'.$line)->setValue(
 		'Вышеперечисленные услуги выполнены полностью и в срок. '.
@@ -676,9 +649,7 @@ function xls_act_podpis($line) {
 	$sheet->getCell('D'.$line)->setValue('      М.П.');
 }//xls_act_podpis()
 
-function xls_act_podpis2($line) {
-	global $sheet;
-
+function xls_act_podpis2($sheet, $line) {
 	$line++;
 	$sheet->getCell('A'.$line)->setValue(
 		'Вышеперечисленные услуги выполнены полностью и в срок. '.
@@ -738,10 +709,10 @@ $sql = "SELECT *
 		  AND `id`=".WS_ID;
 $ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
-
+$page = 0;
 
 $book = new PHPExcel();
-$book->setActiveSheetIndex(0);
+$book->setActiveSheetIndex($page++);
 $sheet = $book->getActiveSheet();
 
 pageSetup($book, 'Счёт');
@@ -753,56 +724,56 @@ $line = xls_schet_head($sheet, $s);
 xls_schet_tabHead($sheet, $line);
 $line = xls_schet_tab($sheet, $line);
 xls_schet_podpis($sheet, $line);
-/*
+
 if(NAKL) {
 	$book->createSheet();
-	$book->setActiveSheetIndex(1);
+	$book->setActiveSheetIndex($page++);
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Накладная');
-	xls_nakl_razmer();
-	xls_nakl_head();
-	$line = xls_nakl_rekvisit();
-	$line = xls_nakl_table($line);
-	$r = xls_nakl_tovar_spisok($line);
-	$line = xls_nakl_itogo($r);
-	xls_nakl_podpis($line);
+	xls_nakl_razmer($sheet);
+	xls_nakl_head($sheet, $s);
+	$line = xls_nakl_rekvisit($sheet, $ws, $s);
+	$line = xls_nakl_table($sheet, $line);
+	$r = xls_nakl_tovar_spisok($sheet, $line);
+	$line = xls_nakl_itogo($sheet, $r);
+	xls_nakl_podpis($sheet, $line);
 }
 
 if(ACT) {
 	$book->createSheet();
-	$book->setActiveSheetIndex(1);
+	$book->setActiveSheetIndex($page++);
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт выполненных работ 1');
-	xls_act_width();
-	xls_act_top();
-	xls_act_head();
-	xls_act_tabHead();
-	$line = xls_act_tab();
-	xls_act_podpis($line);
+	xls_act_width($sheet);
+	xls_act_top($sheet, $ws);
+	xls_act_head($sheet, $s);
+	xls_act_tabHead($sheet);
+	$line = xls_act_tab($sheet);
+	xls_act_podpis($sheet, $line);
 
 	$book->createSheet();
-	$book->setActiveSheetIndex(2);
+	$book->setActiveSheetIndex($page++);
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт выполненных работ 2');
-	xls_act_width();
-	xls_act_top();
-	xls_act_head();
-	xls_act_tabHead();
-	$line = xls_act_tab();
-	xls_act_podpis($line);
+	xls_act_width($sheet);
+	xls_act_top($sheet, $ws);
+	xls_act_head($sheet, $s);
+	xls_act_tabHead($sheet);
+	$line = xls_act_tab($sheet);
+	xls_act_podpis($sheet, $line);
 
 	$book->createSheet();
-	$book->setActiveSheetIndex(3);
+	$book->setActiveSheetIndex($page++);
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт 3 (для бухгалтерии)');
-	xls_act_width();
-	xls_act_top();
-	xls_act_head();
-	xls_act_tabHead();
-	$line = xls_act_tab();
-	xls_act_podpis2($line);
+	xls_act_width($sheet);
+	xls_act_top($sheet, $ws);
+	xls_act_head($sheet, $s);
+	xls_act_tabHead($sheet);
+	$line = xls_act_tab($sheet);
+	xls_act_podpis2($sheet, $line);
 }
-*/
+
 
 $book->setActiveSheetIndex(0);
 

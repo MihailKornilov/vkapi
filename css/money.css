@@ -143,7 +143,21 @@
 	font-size:12px;
 	margin:5px 0 10px
 }
-#_schet-info h4{text-align:right;margin:10px 0}
+#_schet-info #dop td{width:410px;vertical-align:top;padding-top:10px}
+#_schet-info #dop td div{margin:5px 0 0 10px;color:#555}
+#_schet-info #dop td div#deleted{
+	margin-top:15px;
+	border:#dcc solid 1px;
+	background-color:#fee;
+	padding:20px;
+	text-align:center;
+	width:300px;
+	color:red;
+}
+#_schet-info #dop th{text-align:left;vertical-align:top}
+#_schet-info #dop th a{display:block;width:125px;padding:6px 0 6px 20px}
+#_schet-info #dop th a:hover{background-color:#e9edf1;text-decoration:none}
+#_schet-info #dop th .img_xls{float:right;margin:-1px 20px 0 0}
 #_schet-info .n{width:20px;text-align:right}
 #_schet-info input{background-color:#ffd}
 #_schet-info input.err{background-color:#fdd;color:#922}
@@ -156,6 +170,9 @@
 #_schet-info #pole-add{padding:0}
 #_schet-info h3{margin-top:20px}
 #_schet-info ._check{display:block;margin:3px 0 6px}
+#_schet-info #schet-del{color:red}
+#_schet-info #hist{display:none}
+#_schet-info .result{font-weight:normal}
 
 /* Таблица формирования счёта */
 #schet-add-tab #sa-tab{border-spacing:10px;margin:10px}

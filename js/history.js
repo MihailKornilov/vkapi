@@ -1,12 +1,9 @@
 var _history = function(v, id) {
 		if(id)
-			HIST[id] = v;
-		HIST.op = 'history_spisok';
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_MAIN, HIST, function(res) {
-			$('#mainLinks').removeClass('busy');
+			HISTORY[id] = v;
+		$.post(AJAX_MAIN, HISTORY, function(res) {
 			if(res.success)
-				$($('#client-info').length ? '#history-spisok' : '.left').html(res.html);
+				$($('#client-info').length ? '#history-spisok' : '.left').html(res.spisok);
 		}, 'json');
 	},
 	_historyRight = function() {
@@ -61,20 +58,6 @@ $(document)
 		}
 	})
 
-	.on('click', '#_hist-next', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
-		HIST.op = 'history_spisok';
-		HIST.page = $(this).attr('val');
-		t.addClass('busy');
-		$.post(AJAX_MAIN, HIST, function(res) {
-			if(res.success)
-				t.after(res.html).remove();
-			else
-				t.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '._hist-un h4', function() {//удаление записи истории (для SA)
 		var t = $(this);
 		_dialogDel({

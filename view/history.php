@@ -16,6 +16,7 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				`client_id`,
 				`zayav_id`,
+				`schet_id`,
 				`zp_id`,
 				`tovar_id`,
 				`worker_id`,
@@ -35,6 +36,7 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				"._num(@$v['client_id']).",
 				"._num(@$v['zayav_id']).",
+				"._num(@$v['schet_id']).",
 				"._num(@$v['zp_id']).",
 				"._num(@$v['tovar_id']).",
 				"._num(@$v['worker_id']).",
@@ -57,28 +59,19 @@ function _historyFilter($v) {
 		'viewer_id_add' => _num(@$v['viewer_id_add']),
 		'category_id' => _num(@$v['category_id']),
 		'client_id' => _num(@$v['client_id']),
-		'zayav_id' => _num(@$v['zayav_id'])
+		'zayav_id' => _num(@$v['zayav_id']),
+		'schet_id' => _num(@$v['schet_id'])
 	);
 }//_historyFilter()
 function _history_spisok($v=array()) {
 	$filter = _historyFilter($v);
+	$filter = _filterJs('HISTORY', $filter);
 
 	define('PAGE1', $filter['page'] == 1);
-	$spisok =
-		PAGE1 ?
-			'<script type="text/javascript">'.
-				'var HIST={'.
-						'limit:'.$filter['limit'].','.
-						'viewer_id_add:'.$filter['viewer_id_add'].','.
-						'category_id:'.$filter['category_id'].','.
-						'client_id:'.$filter['client_id'].','.
-						'zayav_id:'.$filter['zayav_id'].
-					'};'.
-			'</script>'
-		: '';
+	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (22)".//todo удалить
+//	   " AND `type_id` IN (63)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
@@ -92,8 +85,10 @@ function _history_spisok($v=array()) {
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['zayav_id'])
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
+	if($filter['schet_id'])
+		$cond .= " AND `schet_id`=".$filter['schet_id'];
 
-	$add = $filter['client_id'] || $filter['zayav_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
+	$add = $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
 	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -165,10 +160,7 @@ function _history_spisok($v=array()) {
 		next($history);
 	}
 
-	$send['spisok'] .= _next($filter + array(
-			'all' => $all,
-			'id' => '_hist-next'
-		));
+	$send['spisok'] .= _next($filter + array('all'=>$all));
 	return $send;
 }//_history_spisok()
 function _history_types($history) {//перевод type_id в текст

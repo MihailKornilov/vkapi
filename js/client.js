@@ -309,7 +309,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 	clientSpisok = function(v, id) {
 		_filterSpisok(CLIENT, v, id);
 		$('.filter')[CLIENT.find ? 'hide' : 'show']();
-		$.post(AJAX_MAIN, CLIENT, function (res) {
+		$.post(AJAX_MAIN, CLIENT, function(res) {
 			if(res.success) {
 				$('.result').html(res.all);
 				$('.left').html(res.spisok);

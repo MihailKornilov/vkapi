@@ -1364,12 +1364,12 @@ function balans_show_spisok($filter) {
 
 /* --- Счета на оплату --- */
 
-function _schetQuery($id) {//запрос данных об одном клиенте
+function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
 	$sql = "SELECT *
 			FROM `_schet`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
+			  AND `ws_id`=".WS_ID.
+			  ($withDeleted ? '' : ' AND !`deleted`')."
 			  AND `id`=".$id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 }//_schetQuery()
@@ -1399,7 +1399,8 @@ function _schet_spisok($v=array()) {
 	$filter = _filterJs('SCHET', $filter);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID;
+		 AND `ws_id`=".WS_ID."
+		 AND !`deleted`";
 
 	if($filter['find'])
 		$cond .= " AND `nomer`="._num($filter['find']);
@@ -1494,7 +1495,7 @@ function _schet_unit($r, $zayav=1) {
 	$paid = $paid ? ' paid' : '';
 	$pass = $pass_info ? ' pass' : '';
 	return
-		'<tr class="schet-unit'.$pass.$paid.'">'.
+		'<tr class="schet-unit'.$pass.$paid.'" id="schet-unit'.$r['id'].'">'.
 			'<td class="td-content">'.
 				'<input type="hidden"'.($paid ? '' : ' class="schet-action"').' id="act'.$r['id'].'" />'.
 				'<a class="info" val="'.$r['id'].'">'.

@@ -723,7 +723,7 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		if(!$schet = _schetQuery($id))
+		if(!$schet = _schetQuery($id, 1))
 			jsonError();
 
 		$sql = "SELECT *
@@ -741,7 +741,7 @@ switch(@$_POST['op']) {
 		$n = 0;
 		$sum = 0;
 		$arr = array();
-		foreach($content as $id => $r) {
+		foreach($content as $r) {
 			$html .=
 				'<tr><td class="n">'.(++$n).
 					'<td class="name">'.$r['name'].
@@ -757,18 +757,24 @@ switch(@$_POST['op']) {
 		$html .= '</table>';
 
 
-		$send['schet_id'] = $schet['id'];
+		$send['schet_id'] = $id;
 		$send['client_id'] = $schet['client_id'];
 		$send['zayav_id'] = $schet['zayav_id'];
 		$send['date_create'] = $schet['date_create'];
-		$send['nakl'] = $schet['nakl'];
-		$send['act'] = $schet['act'];
+		$send['nakl'] = _bool($schet['nakl']);
+		$send['act'] = _bool($schet['act']);
+		$send['pass'] = _bool($schet['pass']);
+		$send['paid'] = _num($schet['paid_sum'] >= $schet['sum']);
 		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
-		$send['nomer'] = utf8('СЧЁТ № СЦ'.$schet['nomer']);
+		$send['nomer'] = utf8('СЦ'.$schet['nomer']);
 		$send['ot'] = utf8(' от '.FullData($schet['date_create']).' г.');
 		$send['html'] = utf8($html);
 		$send['itog'] = utf8('Всего наименований <b>'.$n.'</b>, на сумму <b>'._sumSpace($sum).'</b> руб.');
 		$send['arr'] = $arr;
+		$send['del'] = _bool($schet['deleted']);
+		$hist = _history(array('schet_id'=>$id));
+		$send['hist'] = _num($hist['all']);
+		$send['hist_spisok'] = utf8($hist['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'schet_edit'://редактирование счёта
@@ -859,6 +865,13 @@ switch(@$_POST['op']) {
 				) VALUES ".implode(',', $values);
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		_history(array(
+			'type_id' => 61,
+			'schet_id' => $schet_id,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id
+		));
+
 /*
 		//изменение начисления
 		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `schet_id`=".$schet_id;
@@ -869,12 +882,7 @@ switch(@$_POST['op']) {
 			zayavBalansUpdate($z['id']);
 		}
 
-		history_insert(array(
-			'type' => 61,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$s['nomer']
-		));
+
 
 		$send['schet_zayav'] = utf8(zayav_info_schet_spisok($z['id']));
 		$data = report_schet_spisok();
@@ -883,7 +891,6 @@ switch(@$_POST['op']) {
 */
 		jsonSuccess();
 		break;
-
 	case 'schet_pass'://передача счёта клиенту
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError();
@@ -891,38 +898,59 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_id = _num($_POST['zayav_id']);
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND `id`=".$schet_id;
-		if(!$r = query_assoc($sql))
+		if(!$r = _schetQuery($schet_id))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
+		if($r['pass'])
 			jsonError();
 
-		$sql = "UPDATE `zayav_schet`
+		$sql = "UPDATE `_schet`
 				SET `pass`=1,
 					`pass_day`='".$day."'
 					WHERE `id`=".$schet_id;
-		query($sql);
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		history_insert(array(
-			'type' => 63,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $day
+		_history(array(
+			'type_id' => 63,
+			'schet_id' => $schet_id,
+			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'v1' => 'СЦ'.$r['nomer'],
+			'v2' => FullData($day, 1)
 		));
 
-		$data = report_schet_spisok();
-		$send['html'] = utf8($data['spisok']);
-		if($zayav_id)
-			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
-		jsonSuccess($send);
+		jsonSuccess();
+		break;
+	case 'schet_pass_cancel'://отмена передачи счёта
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+
+		if(!$r = _schetQuery($schet_id))
+			jsonError();
+
+		if(!$r['pass'])
+			jsonError();
+
+		$sql = "UPDATE `_schet`
+				SET `pass`=0,
+					`pass_day`='0000-00-00'
+					WHERE `id`=".$schet_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 65,
+			'schet_id' => $schet_id,
+			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'v1' => 'СЦ'.$r['nomer']
+		));
+
+		jsonSuccess();
 		break;
 	case 'schet_pay'://оплата счёта
 		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
@@ -930,44 +958,84 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_id = _num($_POST['zayav_id']);
 
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `paid_sum`<`sum` AND `id`=".$schet_id;
-		if(!$r = query_assoc($sql))
+		if(!$r = _schetQuery($schet_id))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
+		$sql = "INSERT INTO `_money_income` (
+				`app_id`,
+				`ws_id`,
+				`schet_id`,
+				`schet_paid_day`,
+				`invoice_id`,
+				`sum`,
+				`client_id`,
+				`zayav_id`,
+				`viewer_id_add`
+			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
+				".$schet_id.",
+				'".$day."',
+				".$invoice_id.",
+				".$sum.",
+				".$r['client_id'].",
+				".$r['zayav_id'].",
+				".VIEWER_ID."
+			)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		income_insert(array(
-			'zayav_id' => $z['id'],
-			'schet_id' => $schet_id,
-			'schet_paid_day' => $day,
-			'invoice_id' => 4,
-			'sum' => $sum
-		));
-
-		$paidSum = query_value("SELECT SUM(`sum`) FROM `money` WHERE !`deleted` AND `schet_id`=".$schet_id);
-		$sql = "UPDATE `zayav_schet`
-				SET `paid_sum`=".$paidSum."
+		$sql = "SELECT SUM(`sum`)
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `schet_id`=".$schet_id;
+		$sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$sql = "UPDATE `_schet`
+				SET `paid_sum`=".$sum."
 				WHERE `id`=".$schet_id;
-		query($sql);
-/*
-		history_insert(array(
-			'type' => 60,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $sum,
-			'value2' => $r['date_create']
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 60,
+			'schet_id' => $schet_id,
+			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'v1' => _cena($sum)
 		));
-*/
-		$data = report_schet_spisok();
-		$send['html'] = utf8($data['spisok']);
-		if($zayav_id)
-			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
-		jsonSuccess($send);
+
+		jsonSuccess();
+		break;
+	case 'schet_del'://удаление счёта
+		if(!$schet_id = _num($_POST['id']))
+			jsonError();
+
+		if(!$r = _schetQuery($schet_id))
+			jsonError();
+
+		$sql = "SELECT SUM(`sum`)
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `schet_id`=".$schet_id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('По этому счёту уже производились платежи');
+
+		$sql = "UPDATE `_schet`
+				SET `deleted`=1
+				WHERE `id`=".$schet_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 66,
+			'schet_id' => $schet_id,
+			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id']
+		));
+
+		jsonSuccess();
 		break;
 
 
