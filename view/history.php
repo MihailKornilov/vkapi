@@ -113,7 +113,7 @@ function _history_spisok($v=array()) {
 	$sql = "SELECT *
 			FROM `_history`
 			WHERE ".$cond."
-			ORDER BY `id` DESC
+			ORDER BY `dtime_add` DESC
 			LIMIT "._start($filter).",".$filter['limit'];
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$history = array();
@@ -127,6 +127,7 @@ function _history_spisok($v=array()) {
 	$history = _clientValToList($history);
 	if(function_exists('_zayavValToList'))
 		$history = _zayavValToList($history);
+	$history = _schetValToList($history);
 	$history = _history_types($history);
 
 	$txt = '';
@@ -177,6 +178,7 @@ function _history_types($history) {//перевод type_id в текст
 		'client_name',
 		'client_link',
 		'zayav_link',
+		'schet_link_full',
 		'invoice_name',
 		'worker_name',
 		'worker_link',

@@ -269,11 +269,13 @@ switch(@$_POST['op']) {
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
 /*
 		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
 */
 
+		//баланс для расчётного счёта
 		_balans(array(
 			'action_id' => 2,
 			'invoice_id' => $r['invoice_id'],
@@ -281,10 +283,14 @@ switch(@$_POST['op']) {
 			'income_id' => $r['id']
 		));
 
+		//платёж быть произведён по счёту
+		_schetPayCorrect($r['schet_id']);
+
 		_history(array(
 			'type_id' => 9,
 			'client_id' => $r['client_id'],
 			'zayav_id' => $r['zayav_id'],
+			'schet_id' => $r['schet_id'],
 			'zp_id' => $r['zp_id'],
 			'v1' => round($r['sum'], 2),
 			'v2' => $r['about'],
@@ -914,9 +920,7 @@ switch(@$_POST['op']) {
 			'type_id' => 63,
 			'schet_id' => $schet_id,
 			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'v1' => 'СЦ'.$r['nomer'],
-			'v2' => FullData($day, 1)
+			'zayav_id' => $r['zayav_id']
 		));
 
 		jsonSuccess();
@@ -941,8 +945,7 @@ switch(@$_POST['op']) {
 			'type_id' => 65,
 			'schet_id' => $schet_id,
 			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'v1' => 'СЦ'.$r['nomer']
+			'zayav_id' => $r['zayav_id']
 		));
 
 		jsonSuccess();
@@ -985,21 +988,12 @@ switch(@$_POST['op']) {
 			)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$sql = "SELECT SUM(`sum`)
-				FROM `_money_income`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `schet_id`=".$schet_id;
-		$sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
-		$sql = "UPDATE `_schet`
-				SET `paid_sum`=".$sum."
-				WHERE `id`=".$schet_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		_schetPayCorrect($schet_id);
 
 		_history(array(
 			'type_id' => 60,
 			'schet_id' => $schet_id,
+			'invoice_id' => $invoice_id,
 			'client_id' => $r['client_id'],
 			'zayav_id' => $r['zayav_id'],
 			'v1' => _cena($sum)
@@ -1037,7 +1031,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
 
 	case 'invoice_set':
 		if(!RULE_SETUP_INVOICE)

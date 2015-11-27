@@ -21,6 +21,7 @@
 #money-income #mi-center{vertical-align:top}
 #money-income #mi-calendar{width:177px;vertical-align:top}
 #money-income #worker_id_select{margin-bottom:18px}
+#money-income ._check{display:block;margin-top:6px}
 #money-income #deleted_check{margin-top:15px}
 #money-income #deleted_only_check{margin-top:7px;display:none}
 #money-income #path{margin:10px}
@@ -30,6 +31,7 @@
 #money-income .income-client a{font-size:10px}
 
 ._income-unit.prepay{background-color:#ffe}
+._income-unit .schet{margin:4px 0}
 
 /* Внесение платежа */
 #_income-add .tab{border-spacing:10px;padding:10px 0;width:100%}
@@ -173,6 +175,19 @@
 #_schet-info #schet-del{color:red}
 #_schet-info #hist{display:none}
 #_schet-info .result{font-weight:normal}
+
+.schet-link{
+	cursor:pointer;
+	display:inline-block;
+	border:#ccc solid 1px;
+	background-color:#ffe;
+	padding:1px 5px;
+	margin-right:3px;
+	color:#555;
+}
+.schet-link.pass{background-color:#ffb}
+.schet-link.paid{background-color:#cfc}
+
 
 /* Таблица формирования счёта */
 #schet-add-tab #sa-tab{border-spacing:10px;margin:10px}

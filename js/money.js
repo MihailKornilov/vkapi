@@ -259,6 +259,7 @@ var _accrualAdd = function() {
 			spisok:INCOME_WORKER,
 			func:incomeSpisok
 		});
+		$('#schet_id')._check(incomeSpisok);
 		$('#prepay')._check(incomeSpisok);
 		$('#deleted')._check(function(v, id) {
 			$('#deleted_only_check')[v ? 'show' : 'hide']();
@@ -981,7 +982,7 @@ var _accrualAdd = function() {
 		if(load) {
 			var send = {
 				op:'schet_load',
-				id:o.id ? o.id : $(this).attr('val')
+				id:o.id
 			};
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -1354,7 +1355,7 @@ var _accrualAdd = function() {
 					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
 					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" /> руб.' +
 					'<tr><td class="label">День оплаты:<td><input type="hidden" id="pay-day" />' +
-					'<tr><td class="label">Расчётный счёт:<td><input type="hidden" id="invoice_id" value="4" />' +
+					'<tr><td class="label">Расчётный счёт:<td><input type="hidden" id="invoice_id-pay" value="4" />' +
 				'</table>';
 		var dialog = _dialog({
 				head:'Оплата счёта',
@@ -1364,7 +1365,7 @@ var _accrualAdd = function() {
 			});
 
 		$('#pay-day')._calendar({lost:1});
-		$('#invoice_id')._select({
+		$('#invoice_id-pay')._select({
 			width:200,
 			spisok:INVOICE_SPISOK,
 			func:function() {
@@ -1376,7 +1377,7 @@ var _accrualAdd = function() {
 			var send = {
 				op:'schet_pay',
 				schet_id:schet_id,
-				invoice_id:_num($('#invoice_id').val()),
+				invoice_id:_num($('#invoice_id-pay').val()),
 				sum:_cena($('#sum').val()),
 				day:$('#pay-day').val()
 			};
@@ -1486,7 +1487,10 @@ $(document)
 		});
 	})
 
-	.on('click', '.schet-unit .info', _schetInfo)
+	.on('click', '.schet-unit .info, .schet-link', function(e) {
+		e.stopPropagation();
+		_schetInfo({id:$(this).attr('val')});
+	})
 
 	.on('click', '.invoice-set', function() {
 		var t = $(this),
