@@ -1084,12 +1084,13 @@ function _balans($v) {//внесение записи о балансе
 	$unit_id = 0;
 	$balans = 0;
 	$sum = _cena(@$v['sum'], 1);
+	$sum_old = _cena(@$v['sum_old'], 1);
 	$invoice_transfer_id = _num(@$v['invoice_transfer_id']);
 
 	if(_balansAction($v['action_id'], 'minus'))
 		$sum *= -1;
 
-	// счёт
+	//расчётный счёт
 	if(!empty($v['invoice_id'])) {
 		$unit_id = _num($v['invoice_id']);
 		$balans = _invoiceBalans($unit_id);
@@ -1124,12 +1125,14 @@ function _balans($v) {//внесение записи о балансе
 				`unit_id`,
 				`action_id`,
 				`sum`,
+				`sum_old`,
 				`balans`,
 				`about`,
 
 				`income_id`,
 				`expense_id`,
 				`invoice_transfer_id`,
+				`schet_id`,
 
 				`viewer_id_add`
 			) VALUES (
@@ -1140,12 +1143,14 @@ function _balans($v) {//внесение записи о балансе
 				".$unit_id.",
 				".$v['action_id'].",
 				".$sum.",
+				".$sum_old.",
 				".$balans.",
 				'".addslashes(@$v['about'])."',
 
 				"._num(@$v['income_id']).",
 				"._num(@$v['expense_id']).",
 				".$invoice_transfer_id.",
+				"._num(@$v['schet_id']).",
 
 				".VIEWER_ID."
 			)";
@@ -1292,6 +1297,8 @@ function balans_show_spisok($filter) {
 			LIMIT "._start($filter).",".$filter['limit'];
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
+	$spisok = _schetValToList($spisok);
+
 	$transfer = array();
 	if($transfer_ids = _idsGet($spisok, 'invoice_transfer_id')) {
 		$sql = "SELECT * FROM `_money_invoice_transfer` WHERE `id` IN (".$transfer_ids.")";
@@ -1323,7 +1330,15 @@ function balans_show_spisok($filter) {
 				'<th>Дата';
 
 	foreach($spisok as $r) {
-		$about = $r['about'];
+		$sum = _sumSpace($r['sum']);
+		$sum_diff = '';
+		if(round($r['sum_old'], 2)) {//если сумма изменялась
+			$sum = _sumSpace($r['sum_old'] - $r['sum']);
+			$sum_diff = '<div class="diff">'.round($r['sum_old'], 2).' &rarr; '.round($r['sum'], 2).'</div>';
+		}
+		$sum = $sum ? $sum : '';
+
+		$about = @$r['schet_link_full'].$r['about'];
 
 		// описание для переводов между счетами
 		if($r['invoice_transfer_id']) {
@@ -1346,8 +1361,8 @@ function balans_show_spisok($filter) {
 
 		$send['spisok'] .=
 			'<tr><td class="action">'._balansAction($r['action_id']).
-				'<td class="sum">'._sumSpace(round($r['sum'], 2)).
-				'<td class="balans">'._sumSpace(round($r['balans'], 2)).
+				'<td class="sum">'.$sum.$sum_diff.
+				'<td class="balans">'._sumSpace($r['balans']).
 				'<td>'.$about.
 				'<td class="dtime">'._dtimeAdd($r);
 	}
@@ -1403,13 +1418,14 @@ function _schetValToList($arr) {//данные о счёте, подставляемые в список
 }//_schetValToList()
 function _schetValForm($r) {//формирование переменных счёта для подстановки
 	$prefix = 'СЦ';
-	$classPaid = $r['paid_sum'] >= $r['sum'] ? ' paid' : '';
-	$classPass = !$classPaid && $r['pass'] ? ' pass' : '';
+	$deleted = $r['deleted'] ? ' deleted' : '';
+	$classPaid = !$deleted && _cena($r['paid_sum']) && $r['paid_sum'] >= $r['sum'] ? ' paid' : '';
+	$classPass = !$deleted && !$classPaid && $r['pass'] ? ' pass' : '';
 	return array(
 		'schet_nomer' => $prefix.$r['nomer'],
 		'schet_date' => FullData($r['date_create']),
-		'schet_link' => '<span class="schet-link'.$classPass.$classPaid.'" val="'.$r['id'].'">'.$prefix.$r['nomer'].'</span>',
-		'schet_link_full' => '<span class="schet-link'.$classPass.$classPaid.'" val="'.$r['id'].'"><b>'.$prefix.$r['nomer'].'</b> от '.FullData($r['date_create'], 1).'</span>'
+		'schet_link' => '<span class="schet-link'.$deleted.$classPass.$classPaid.'" val="'.$r['id'].'">'.$prefix.$r['nomer'].'</span>',
+		'schet_link_full' => '<span class="schet-link'.$deleted.$classPass.$classPaid.'" val="'.$r['id'].'"><b>'.$prefix.$r['nomer'].'</b> от '.FullData($r['date_create'], 1).'</span>'
 	);
 }//_schetValForm()
 function _schetFilter($v) {
@@ -1523,7 +1539,7 @@ function _schet_spisok($v=array()) {
 	return $send;
 }//_schet_spisok()
 function _schet_unit($r, $zayav=1) {
-	$paid = $r['paid_sum'] >= $r['sum'];
+	$paid = _cena($r['paid_sum']) && $r['paid_sum'] >= $r['sum'];
 	$pass_info = $r['pass'] && !$paid ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
 
 	$paid_info = '';

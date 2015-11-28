@@ -205,11 +205,15 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		if($join) {
-//			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-//			query("UPDATE `money`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-//			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
-//			query("UPDATE `zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-//			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_money_accrual` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_money_income` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_money_refund` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_schet` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+//			query("UPDATE `_history` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_remind` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
+			query("UPDATE `zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2, GLOBAL_MYSQL_CONNECT);
 
 			// доверенные лица перенос€тс€ новому клиенту. ≈сли это частное лицо, то первый по пор€дку не трогаетс€
@@ -226,6 +230,11 @@ switch(@$_POST['op']) {
 			}
 
 //			clientBalansUpdate($client_id);
+			//баланс дл€ клиента
+			_balans(array(
+				'action_id' => 38,//ќбъединение с другим клиентом
+				'client_id' => $client_id
+			));
 
 			_history(array(
 				'type_id' => 3,

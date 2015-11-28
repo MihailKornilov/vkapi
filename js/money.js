@@ -1058,23 +1058,37 @@ var _accrualAdd = function() {
 			});
 		}
 	},
-	_schetEdit = function(res) {
+	_schetEdit = function(o) {
+		o = $.extend({
+			edit:0,//0 - возвращаться на просмотр счёта при отмене, 1 - просто закрыть окно
+			schet_id:0,
+			client_id:0,
+			zayav_id:0,
+			arr:[],
+			client:'',
+			date_create:'',
+			nakl:0,
+			act:0
+		}, o);
+
+		o.nomer = o.schet_id ? 'СЧЁТ № ' + o.nomer : 'НОВЫЙ СЧЁТ';
+
 		var spisok = '';
-		for(var n = 0; n < res.arr.length; n++) {
-			var sp = res.arr[n];
+		for(var n = 0; n < o.arr.length; n++) {
+			var sp = o.arr[n];
 			sp.sum = sp.cost * sp.count;
 			spisok += pole(sp);
 		}
 		var html =
 				'<div id="_schet-info">' +
 					'<table class="tab">' +
-						'<tr><td class="label r top">Плательщик:<td>' + res.client +
-						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + res.date_create + '" />' +
+						'<tr><td class="label r top">Плательщик:<td>' + o.client +
+						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + o.date_create + '" />' +
 						'<tr><td class="label r topi">Приложения:' +
-							'<td><input id="nakl" type="hidden" value="' + res.nakl + '" />' +
-								'<input id="act" type="hidden" value="' + res.act + '" />' +
+							'<td><input id="nakl" type="hidden" value="' + o.nakl + '" />' +
+								'<input id="act" type="hidden" value="' + o.act + '" />' +
 					'</table>' +
-					'<h1>СЧЁТ № ' + res.nomer + '</h1>' +
+					'<h1>' + o.nomer + '</h1>' +
 					'<table class="_spisok">' +
 						'<tr><th>№' +
 							'<th>Наименование товара' +
@@ -1095,8 +1109,8 @@ var _accrualAdd = function() {
 				butSubmit:'Сохранить',
 				submit:submit,
 				cancel:function() {
-					if(!res.edit)
-						_schetInfo(res);
+					if(!o.edit)
+						_schetInfo(o);
 				}
 			});
 
@@ -1113,6 +1127,10 @@ var _accrualAdd = function() {
 				.find('.name:last input').focus();
 			poleNum();
 		});
+
+		if(!o.schet_id)//если новый счёт, но выводится одно пустое поле
+			$('#pole-add').trigger('click');
+
 		$(document)
 			.on('click', '.pole-del', function() {
 				_parent($(this)).remove();
@@ -1128,7 +1146,7 @@ var _accrualAdd = function() {
 				itog();
 			});
 
-		function pole(sp) {
+		function pole(sp) {//добавление нового поля
 			sp = $.extend({
 				name:'',
 				count:1,
@@ -1213,9 +1231,9 @@ var _accrualAdd = function() {
 		function submit() {
 			var send = {
 				op:'schet_edit',
-				schet_id:res.schet_id,
-				client_id:res.client_id,
-				zayav_id:res.zayav_id,
+				schet_id:o.schet_id,
+				client_id:o.client_id,
+				zayav_id:o.zayav_id,
 				spisok:itog(),
 				date_create:$('#date_create').val(),
 				nakl:_bool($('#nakl').val()),
@@ -1231,7 +1249,10 @@ var _accrualAdd = function() {
 					if(res.success) {
 						dialog.close();
 						_msg();
-						_schetInfo({id:send.schet_id});
+						if(!o.schet_id)
+							location.reload(); //создаётся новый счёт
+						else
+							_schetInfo({id:o.schet_id});//счёт редактируется
 					} else
 						dialog.abort();
 				}, 'json');

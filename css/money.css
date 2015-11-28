@@ -118,6 +118,7 @@
 
 #balans-tab .action{width:100px}
 #balans-tab .balans{width:70px;text-align:right}
+#balans-tab .diff{font-size:10px;color:#777}
 
 
 /* счета на оплату */
@@ -187,22 +188,11 @@
 }
 .schet-link.pass{background-color:#ffb}
 .schet-link.paid{background-color:#cfc}
-
-
-/* Таблица формирования счёта */
-#schet-add-tab #sa-tab{border-spacing:10px;margin:10px}
-#schet-add-tab #schet-tab{width:100%}
-#schet-add-tab .td-n{width:10px;text-align:right}
-#schet-add-tab .td-name{width:300px}
-#schet-add-tab .td-count{width:40px;text-align:right}
-#schet-add-tab .td-cost{width:50px;text-align:right}
-#schet-add-tab .td-sum{width:55px;text-align:right}
-#schet-add-tab #tr-add{background-color:#ffb}
-#schet-add-tab #name{width:280px}
-#schet-add-tab #count{width:20px;text-align:right}
-#schet-add-tab #cost{width:35px;text-align:right}
-#schet-add-tab ._next{padding:0}
-#schet-add-tab #itog{margin:10px 0 20px;font-weight:bold;color:#555}
+.schet-link.deleted{
+	background-color:#eee;
+	border:#ddd solid 1px;
+	color:#888;
+}
 
 /* деньги в информации о заявке */
 #_zayav-money{margin-top:15px}

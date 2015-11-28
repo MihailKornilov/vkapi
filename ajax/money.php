@@ -220,6 +220,7 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
 
+		//баланс для расчётного счёта
 		_balans(array(
 			'action_id' => 1,
 			'invoice_id' => $invoice_id,
@@ -227,14 +228,18 @@ switch(@$_POST['op']) {
 			'income_id' => $insert_id
 		));
 
-		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 27,
-			'client_id' => $client_id,
-			'sum' => $sum,
-			'about' => $about
-		));
+		$about = ($prepay ? 'предоплата' : '').
+				 ($prepay && $about ? '. ' : '').
+				 $about;
 
+		//баланс для клиента
+		if($client_id)
+			_balans(array(
+				'action_id' => 27,
+				'client_id' => $client_id,
+				'sum' => $sum,
+				'about' => $about
+			));
 
 		if($zayav_id) {
 			zayavBalansUpdate($zayav_id);//todo используется только в mobile
@@ -244,6 +249,15 @@ switch(@$_POST['op']) {
 			if($remind_ids)
 				_remind_active_to_ready($remind_ids);
 		}
+
+		_history(array(
+			'type_id' => 78,
+			'invoice_id' => $invoice_id,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
+			'v1' => $sum,
+			'v2' => $about
+		));
 
 		jsonSuccess();
 		break;
@@ -270,10 +284,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-/*
-		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
-*/
 
 		//баланс для расчётного счёта
 		_balans(array(
@@ -283,18 +294,31 @@ switch(@$_POST['op']) {
 			'income_id' => $r['id']
 		));
 
+		$about = ($r['prepay'] ? 'предоплата' : '').
+				 ($r['prepay'] && $r['about'] ? '. ' : '').
+				 $r['about'];
+
+		//баланс для клиента
+		if($r['client_id'])
+			_balans(array(
+				'action_id' => 28,
+				'client_id' => $r['client_id'],
+				'sum' => $r['sum'],
+				'about' => $about
+			));
+
 		//платёж быть произведён по счёту
 		_schetPayCorrect($r['schet_id']);
 
 		_history(array(
 			'type_id' => 9,
+			'invoice_id' => $r['invoice_id'],
 			'client_id' => $r['client_id'],
 			'zayav_id' => $r['zayav_id'],
 			'schet_id' => $r['schet_id'],
 			'zp_id' => $r['zp_id'],
 			'v1' => round($r['sum'], 2),
-			'v2' => $r['about'],
-			'v3' => _invoice($r['invoice_id'])
+			'v2' => $about
 		));
 		jsonSuccess();
 		break;
@@ -754,7 +778,7 @@ switch(@$_POST['op']) {
 					'<td class="count">'.$r['count'].
 					'<td class="cost">'._sumSpace($r['cost']).
 					'<td class="sum">'._sumSpace($r['count'] * $r['cost']);
-			$sum += $r['cost'];
+			$sum += $r['count'] * $r['cost'];
 
 			$r['name'] = utf8($r['name']);
 			$r['cost'] = _cena($r['cost']);
@@ -770,7 +794,7 @@ switch(@$_POST['op']) {
 		$send['nakl'] = _bool($schet['nakl']);
 		$send['act'] = _bool($schet['act']);
 		$send['pass'] = _bool($schet['pass']);
-		$send['paid'] = _num($schet['paid_sum'] >= $schet['sum']);
+		$send['paid'] = _num(_cena($schet['paid_sum']) && $schet['paid_sum'] >= $schet['sum']);
 		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
 		$send['nomer'] = utf8('СЦ'.$schet['nomer']);
 		$send['ot'] = utf8(' от '.FullData($schet['date_create']).' г.');
@@ -783,7 +807,7 @@ switch(@$_POST['op']) {
 		$send['hist_spisok'] = utf8($hist['spisok']);
 		jsonSuccess($send);
 		break;
-	case 'schet_edit'://редактирование счёта
+	case 'schet_edit'://создание или редактирование счёта
 		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
 			jsonError();
 
@@ -794,11 +818,12 @@ switch(@$_POST['op']) {
 		$nakl = _bool($_POST['nakl']);
 		$act = _bool($_POST['act']);
 
-		if($schet_id && !_schetQuery($schet_id))
-			jsonError();
-
-		if($client_id && !_clientQuery($client_id))
-			jsonError();
+		if($schet_id) {
+			if(!$r = _schetQuery($schet_id))
+				jsonError();
+			$client_id = $r['client_id'];
+			$zayav_id = $r['zayav_id'];
+		}
 
 		if($zayav_id) {
 			$sql = "SELECT *
@@ -812,6 +837,9 @@ switch(@$_POST['op']) {
 				$client_id = $z['client_id'];
 		}
 
+		if(!$client_id || !_clientQuery($client_id))
+			jsonError();
+
 		$spisok = @$_POST['spisok'];
 		if(empty($spisok))
 			jsonError();
@@ -819,13 +847,14 @@ switch(@$_POST['op']) {
 		$sum = 0;
 		foreach($spisok as $r) {
 			$r['name'] = _txt($r['name']);
-			$sum += $r['count'] * $r['cost'];
+			$sum += _num($r['count']) * _cena($r['cost']);
 		}
 
 		$sql = "INSERT INTO `_schet` (
 					`id`,
 					`app_id`,
 					`ws_id`,
+					`nomer`,
 					`client_id`,
 					`zayav_id`,
 					`date_create`,
@@ -837,6 +866,7 @@ switch(@$_POST['op']) {
 					".$schet_id.",
 					".APP_ID.",
 					".WS_ID.",
+					".(_maxSql('_schet', 'nomer', 1)).",
 					".$client_id.",
 					".$zayav_id.",
 					'".$date_create."',
@@ -850,6 +880,12 @@ switch(@$_POST['op']) {
 					`act`=VALUES(`act`),
 					`sum`=VALUES(`sum`)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = 0;//изначально считается, что не вносится новый счёт, а редактируется существующий
+		if(!$schet_id) {
+			$insert_id = query_insert_id('_schet', GLOBAL_MYSQL_CONNECT);
+			$schet_id = $insert_id;
+		}
 
 		$sql = "DELETE FROM `_schet_content` WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -871,30 +907,68 @@ switch(@$_POST['op']) {
 				) VALUES ".implode(',', $values);
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_history(array(
-			'type_id' => 61,
-			'schet_id' => $schet_id,
-			'client_id' => $client_id,
-			'zayav_id' => $zayav_id
-		));
+		//начисление по счёту
+		if($insert_id) {
+			$sql = "INSERT INTO `_money_accrual` (
+						`app_id`,
+						`ws_id`,
+						`schet_id`,
+						`client_id`,
+						`zayav_id`,
+						`sum`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".WS_ID.",
+						".$schet_id.",
+						".$client_id.",
+						".$zayav_id.",
+						".$sum.",
+						".VIEWER_ID."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
 
-/*
-		//изменение начисления
-		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `schet_id`=".$schet_id;
-		if($r = mysql_fetch_assoc(query($sql))) {
-			$sql = "UPDATE `accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
-			query($sql);
-			clientBalansUpdate($z['client_id']);
-			zayavBalansUpdate($z['id']);
+			//баланс для клиента
+			_balans(array(
+				'action_id' => 25,//новое начисление
+				'client_id' => $client_id,
+				'schet_id' => $schet_id,
+				'sum' => $sum
+			));
+		} else {
+			//изменение начисления
+			$sql = "SELECT *
+					FROM `_money_accrual`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND !`deleted`
+					  AND `schet_id`=".$schet_id."
+					LIMIT 1";
+			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+				if($sum != $r['sum']) {
+					$sql = "UPDATE `_money_accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
+					query($sql, GLOBAL_MYSQL_CONNECT);
+					//баланс для клиента
+					_balans(array(
+						'action_id' => 37,//изменение начисления
+						'client_id' => $client_id,
+						'schet_id' => $schet_id,
+						'sum' => $sum,
+						'sum_old' => $r['sum']
+					));
+			}
 		}
 
+		zayavBalansUpdate($zayav_id);
 
+		_history(array(
+			'type_id' => $insert_id ? 59 : 61,
+			'schet_id' => $schet_id,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
+			'v1' => $insert_id ? $sum : ''
+		));
 
-		$send['schet_zayav'] = utf8(zayav_info_schet_spisok($z['id']));
-		$data = report_schet_spisok();
-		$send['schet_all'] = utf8($data['spisok']);
-		$send['acc'] = utf8(zayav_info_money($z['id']));
-*/
 		jsonSuccess();
 		break;
 	case 'schet_pass'://передача счёта клиенту
@@ -1021,6 +1095,20 @@ switch(@$_POST['op']) {
 				SET `deleted`=1
 				WHERE `id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//удаление начисления
+		$sql = "UPDATE `_money_accrual`
+				SET `deleted`=1
+				WHERE `schet_id`=".$schet_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//внесение баланса для клиента
+		_balans(array(
+			'action_id' => 26,//удаление начисления
+			'client_id' => $r['client_id'],
+			'schet_id' => $schet_id,
+			'sum' => $r['sum']
+		));
 
 		_history(array(
 			'type_id' => 66,

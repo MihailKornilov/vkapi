@@ -132,7 +132,7 @@ switch(@$_POST['op']) {
 			if(!$first_name || !$last_name)
 				jsonError();
 
-			$viewer_id = _maxSql('_vkuser', 'viewer_id', GLOBAL_MYSQL_CONNECT);
+			$viewer_id = _maxSql('_vkuser', 'viewer_id');
 			if($viewer_id < VIEWER_MAX)
 				$viewer_id = VIEWER_MAX;
 
@@ -560,7 +560,7 @@ switch(@$_POST['op']) {
 					".WS_ID.",
 					'".addslashes($name)."',
 					".$worker_use.",
-					"._maxSql('_money_expense_category', 'sort', GLOBAL_MYSQL_CONNECT)."
+					"._maxSql('_money_expense_category')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -670,7 +670,7 @@ switch(@$_POST['op']) {
 					".APP_ID.",
 					'".addslashes($name)."',
 					".$dop.",
-					"._maxSql('_zayav_expense_category', 'sort', GLOBAL_MYSQL_CONNECT)."
+					"._maxSql('_zayav_expense_category')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

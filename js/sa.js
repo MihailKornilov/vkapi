@@ -350,6 +350,103 @@ $(document)
 		});
 	})
 
+
+	.on('click', '#sa-user .action', function() {
+		var t = $(this),
+			un = t;
+		while(!un.hasClass('un'))
+			un = un.parent();
+		var send = {
+			op:'user_action',
+			viewer_id:un.attr('val')
+		};
+		t.html('&nbsp;').addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				t.after(res.html).remove();
+			else
+				t.html('Действие').removeClass('_busy');
+		}, 'json');
+	})
+
+	.on('click', '#sa-ws-info .ws_status_change', function() {
+		var t = $(this),
+			send = {
+				op:'ws_status_change',
+				ws_id:t.attr('val')
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				document.location.reload();
+			else
+				t.vkHint({
+					msg:'<SPAN class=red>' + res.text + '</SPAN>',
+					top:-47,
+					left:27,
+					indent:50,
+					show:1,
+					remove:1
+				});
+		}, 'json');
+	})
+
+	.on('click', '#sa-ws-info .ws_enter', function() {
+		_cookie('sa_viewer_id', $(this).attr('val'));
+		document.location.reload();
+	})
+	.on('click', '#sa-ws-info .ws_del', function() {
+		var t = $(this);
+		var dialog = _dialog({
+			top:110,
+			width:250,
+			head:'Удаление организации',
+			content:'<center>Подтвердите удаление организации.</center>',
+			butSubmit:'Удалить',
+			submit:submit
+		});
+		function submit() {
+			var send = {
+				op:'ws_del',
+				ws_id:t.attr('val')
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success)
+					document.location.reload();
+			}, 'json');
+		}
+	})
+	.on('click', '#sa-ws-info .ws_client_balans', function() {
+		var t = $(this),
+			send = {
+				op:'sa_ws_client_balans',
+				ws_id:t.attr('val')
+			};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success) {
+				t.next().remove('span');
+				t.after('<span> Изменено: ' + res.count + '. Время: ' + res.time + '</span>');
+			}
+		}, 'json');
+	})
+	.on('click', '#sa-ws-info .ws_zayav_balans', function() {
+		var t = $(this),
+			send = {
+				op:'sa_ws_zayav_balans',
+				ws_id:t.attr('val')
+			};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success) {
+				t.next().remove('span');
+				t.after('<span> Изменено: ' + res.count + '. Время: ' + res.time + '</span>');
+			}
+		}, 'json');
+	})
+
+
 	.ready(function() {
 		if($('#sa-history').length) {
 			$('textarea').autosize();

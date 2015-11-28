@@ -146,7 +146,7 @@ switch(@$_POST['op']) {
 					'".addslashes($name)."',
 					'".addslashes($about)."',
 					".$js_use.",
-					"._maxSql('_history_category', 'sort', GLOBAL_MYSQL_CONNECT)."
+					"._maxSql('_history_category')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -389,6 +389,218 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
 		$send['html'] = utf8(sa_balans_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'sa_user_action':
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+/*		$tables = array(
+			'accrual' => "Начисления",
+			'base_device' => "Устройства",
+			'base_model' => "Модели",
+			'base_vendor' => "Производители",
+			'chem_catalog' => "Схемы",
+			'client' => "Клиенты",
+			'device_specific' => "Характеристики устройств",
+			'fw_catalog' => "Прошивоки",
+			'images' => "Изображения",
+			'money' => "Оплаты",
+			'setup_color_name' => "Настройки цветов",
+			'setup_device_place' => "Местонахождения устройств",
+			'setup_device_specific_item' => "Элементы характеристик",
+			'setup_device_specific_razdel' => "Разделы характеристик",
+			'setup_fault' => "Неисправности",
+			'setup_zayavki_category' => "Категории заявок",
+			'setup_zayavki_status' => "Статусы заявок",
+			'setup_zp_name' => "Наименования запчастей",
+			'vk_comment' => "Комментарии",
+			'zayavki' => "Заявки",
+			'zp_catalog' => "Запчасти",
+			'zp_move' => "Движения запчастей",
+			'zp_zakaz' => "Заказ запчастей"
+		);
+*/
+		$sql = "SHOW TABLES";
+		$q = query($sql);
+		$tab = '';
+		while($r = mysql_fetch_row($q)) {
+			$count = '';
+			if(!$count = sa_user_tab_test($r[0], 'viewer_id_add', $viewer_id))
+				if(!$count = sa_user_tab_test($r[0], 'viewer_id', $viewer_id))
+					if(!$count = sa_user_tab_test($r[0], 'admin_id', $viewer_id))
+						continue;
+			$tab .= '<tr><td>'.$r[0].'<td class="c">'.$count;
+		}
+
+		$send['html'] = '<table class="action-res">'.$tab.'</table>';
+		jsonSuccess($send);
+		break;
+
+	case 'sa_ws_status_change':
+		if(!$ws_id = _num($_POST['ws_id']))
+			jsonError('Неверный id');
+		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id;
+		if(!$ws = mysql_fetch_assoc(query($sql)))
+			jsonError('Организация не существует');
+		if($ws['status']) {
+			query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".$ws_id);
+			query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
+		} else {
+			if(query_value("SELECT `ws_id` FROM `vk_user` WHERE `viewer_id`=".$ws['admin_id']))
+				jsonError('За администратором закреплена другая организация');
+			query("UPDATE `workshop` SET `status`=1,`dtime_del`='0000-00-00 00:00:00' WHERE `id`=".$ws_id);
+			query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".$ws['admin_id']);
+			xcache_unset(CACHE_PREFIX.'viewer_'.$ws['admin_id']);
+		}
+		_cacheClear($ws_id);
+		jsonSuccess();
+		break;
+	case 'sa_ws_del':
+		if(!$ws_id = _num($_POST['ws_id']))
+			jsonError();
+		foreach(sa_ws_tables() as $tab => $about)
+			query("DELETE FROM `".$tab."` WHERE `ws_id`=".$ws_id);
+		query("DELETE FROM `workshop` WHERE `id`=".$ws_id);
+		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
+		_cacheClear($ws_id);
+		jsonSuccess();
+		break;
+	case 'sa_ws_client_balans'://корректировка балансов клиентов
+		if(!$ws_id = _num($_POST['ws_id']))
+			jsonError();
+
+		$sql = "SELECT
+					`id`,
+					`balans`,
+					0 `balans_new`
+				FROM `_client`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND !`deleted`";
+		$client = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		//начисления
+		$sql = "SELECT
+					`client_id`,
+					IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND `client_id`
+				  AND !`deleted`
+				GROUP BY `client_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$client[$r['client_id']]['balans_new'] -= $r['sum'];
+
+		//платежи
+		$sql = "SELECT
+					`client_id`,
+					IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND `client_id`
+				  AND !`deleted`
+				GROUP BY `client_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$client[$r['client_id']]['balans_new'] += $r['sum'];
+
+		//Возвраты
+		$sql = "SELECT
+					`client_id`,
+					IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_refund`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND `client_id`
+				  AND !`deleted`
+				GROUP BY `client_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$client[$r['client_id']]['balans_new'] += $r['sum'];
+
+
+		$send['count'] = 0;
+		foreach($client as $r)
+			if(round($r['balans'], 2) != round($r['balans_new'], 2)) {
+				$upd[] = '('.$r['id'].','.$r['balans_new'].')';
+				$send['count']++;
+			}
+
+		if(!empty($upd)) {
+			$sql = "INSERT INTO `_client`
+						(`id`,`balans`)
+					VALUES ".implode(',', $upd)."
+					ON DUPLICATE KEY UPDATE `balans`=VALUES(`balans`)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		$send['time'] = round(microtime(true) - TIME, 3);
+		jsonSuccess($send);
+		break;
+	case 'sa_ws_zayav_balans':
+		if(!$ws_id = _num($_POST['ws_id']))
+			jsonError();
+
+		$sql = "SELECT
+				  `id`,
+				  0 `accrual`,
+				  `accrual_sum`,
+				  0 `oplata`,
+				  `oplata_sum`
+				FROM `zayav`
+				WHERE `ws_id`=".$ws_id."
+				  AND !`deleted`";
+		$zayav = query_arr($sql);
+
+		$sql = "SELECT
+					`zayav_id`,
+		            IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND !`deleted`
+				  AND `zayav_id`
+				GROUP BY `zayav_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$zayav[$r['zayav_id']]['accrual'] = round($r['sum']);
+
+		$sql = "SELECT
+					`zayav_id`,
+		            IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND !`deleted`
+				  AND `zayav_id`
+				GROUP BY `zayav_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$zayav[$r['zayav_id']]['oplata'] = round($r['sum']);
+
+		$send['count'] = 0;
+		$upd = array();
+		foreach($zayav as $r)
+			if($r['accrual_sum'] != $r['accrual'] || $r['oplata_sum'] != $r['oplata']) {
+				$upd[] = '('.$r['id'].','.$r['accrual'].','.$r['oplata'].')';
+				$send['count']++;
+			}
+
+		if(!empty($upd)) {
+			$sql = "INSERT INTO `zayav`
+						(`id`,`accrual_sum`, `oplata_sum`)
+					VALUES ".implode(',', $upd)."
+					ON DUPLICATE KEY UPDATE
+						`accrual_sum`=VALUES(`accrual_sum`),
+						`oplata_sum`=VALUES(`oplata_sum`)";
+			query($sql);
+		}
+
+		$send['time'] = round(microtime(true) - TIME, 3);
 		jsonSuccess($send);
 		break;
 }

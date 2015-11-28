@@ -363,7 +363,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 				) VALUES (
 					".APP_ID.",
 					'".$id."',
-					'"._maxSql('_menu_app', 'sort', GLOBAL_MYSQL_CONNECT)."'
+					'"._maxSql('_menu_app')."'
 				)";
 			query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -978,8 +978,15 @@ function _numToWord($num, $firstSymbolUp=false) {
 		$word[0] = strtoupper($word[0]);
 	return $word;
 }//_numToWord()
-function _maxSql($table, $pole='sort', $resource_id=0) {
-	return query_value("SELECT IFNULL(MAX(`".$pole."`)+1,1) FROM `".$table."`", $resource_id);
+function _maxSql($table, $pole='sort', $ws=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
+	/*
+		$ws: учитывать приложение и организацию
+	*/
+	$sql = "SELECT IFNULL(MAX(`".$pole."`)+1,1)
+			FROM `".$table."`
+			WHERE `id`".
+			($ws ? " AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID : '');
+	return query_value($sql, $resource_id);
 }//getMaxSql()
 function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу даты добавления
 	$send = $spisok;
