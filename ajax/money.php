@@ -302,6 +302,7 @@ switch(@$_POST['op']) {
 		if($r['client_id'])
 			_balans(array(
 				'action_id' => 28,
+				'schet_id' => $r['schet_id'],
 				'client_id' => $r['client_id'],
 				'sum' => $r['sum'],
 				'about' => $about
@@ -818,11 +819,12 @@ switch(@$_POST['op']) {
 		$nakl = _bool($_POST['nakl']);
 		$act = _bool($_POST['act']);
 
+		$schet = array();
 		if($schet_id) {
-			if(!$r = _schetQuery($schet_id))
+			if(!$schet = _schetQuery($schet_id))
 				jsonError();
-			$client_id = $r['client_id'];
-			$zayav_id = $r['zayav_id'];
+			$client_id = $schet['client_id'];
+			$zayav_id = $schet['zayav_id'];
 		}
 
 		if($zayav_id) {
@@ -961,13 +963,29 @@ switch(@$_POST['op']) {
 
 		zayavBalansUpdate($zayav_id);
 
-		_history(array(
-			'type_id' => $insert_id ? 59 : 61,
-			'schet_id' => $schet_id,
-			'client_id' => $client_id,
-			'zayav_id' => $zayav_id,
-			'v1' => $insert_id ? $sum : ''
-		));
+		if($insert_id)
+			_history(array(
+				'type_id' => 59,
+				'schet_id' => $schet_id,
+				'client_id' => $client_id,
+				'zayav_id' => $zayav_id,
+				'v1' => $sum
+			));
+		else {
+			$changes =
+				_historyChange('Дата', FullData($schet['date_create']), FullData($date_create)).
+				_historyChange('Накладная', _daNet($schet['nakl']), _daNet($nakl)).
+				_historyChange('Акт', _daNet($schet['act']), _daNet($act)).
+				_historyChange('Сумма', _cena($schet['sum']), _cena($sum));
+			if($changes)
+				_history(array(
+					'type_id' => 61,
+					'schet_id' => $schet_id,
+					'client_id' => $client_id,
+					'zayav_id' => $zayav_id,
+					'v1' => '<table>'.$changes.'</table>'
+				));
+		}
 
 		jsonSuccess();
 		break;
@@ -1063,6 +1081,14 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_schetPayCorrect($schet_id);
+
+		//баланс для клиента
+		_balans(array(
+			'action_id' => 27,
+			'schet_id' => $schet_id,
+			'client_id' => $r['client_id'],
+			'sum' => $sum
+		));
 
 		_history(array(
 			'type_id' => 60,

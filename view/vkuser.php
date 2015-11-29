@@ -243,7 +243,7 @@ function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника
 
 
 function _viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
-	return 'вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'viewer_name');
+	return 'вн'.(_viewer($viewer_id, 'viewer_sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'viewer_name');
 }//_viewerAdded();
 function _viewerDeleted($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
 	return 'удалил'.(_viewer($viewer_id, 'sex') == 1 ? 'а' : '').' '._viewer($viewer_id, 'viewer_name');

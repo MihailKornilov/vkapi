@@ -724,7 +724,7 @@ a.add:hover{text-decoration:underline;color:#357}
 ._radio .on s{background-position:0 -14px}
 ._radio .on:hover s{background-position:0 -42px}
 ._radio .off.l{color:#888}
-
+._radio em{float:right}
 /* «адний фон при открытии поверхностных окон */
 ._backfon{
 	position:absolute;

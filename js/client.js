@@ -536,6 +536,13 @@ $(document)
 				$('.ci-right').hide().eq(i).show();
 			});
 
+			$('#client-schet-add').click(function() {
+				_schetEdit({
+					edit:1,
+					client_id:CLIENT.id,
+					client:CLIENT.name
+				});
+			});
 			$('#client-edit').click(clientEdit);
 			$('#client-del').click(function() {
 				_dialogDel({
@@ -547,19 +554,10 @@ $(document)
 					}
 				});
 			});
-/*
-
-			$('#status').rightLink(clientZayavSpisok);
-			$('#diff')._check(clientZayavSpisok);
-			$('#dev').device({
-				width:145,
-				type_no:1,
-				device_ids:DEVICE_IDS,
-				vendor_ids:VENDOR_IDS,
-				model_ids:MODEL_IDS,
-				func:clientZayavSpisok
+			$('#zayav-type')._radio(function(v) {
+				$('#spisok1')[(v == 1 ? 'remove' : 'add') + 'Class']('dn');
+				$('#spisok2')[(v == 2 ? 'remove' : 'add') + 'Class']('dn');
 			});
-*/
 		}
 	});
 

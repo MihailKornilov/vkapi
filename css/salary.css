@@ -37,6 +37,7 @@
 
 
 /* расходы по заявке в информации о заявке */
+#_zayav-expense{margin-top:10px}
 #_zayav-expense h1{
 	border-left:#e9edf1 solid 1px;
 	border-right:#e9edf1 solid 1px;

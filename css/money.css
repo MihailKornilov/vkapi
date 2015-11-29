@@ -7,7 +7,7 @@
 #_accrual-add .remind-tr{display:none}
 #_accrual-add #remind-txt{width:230px}
 
-
+._accrual-unit .sum{color:#07a;cursor:default}
 
 
 /* Платежи */
@@ -198,7 +198,6 @@
 #_zayav-money{margin-top:15px}
 #_zayav-money em{float:right;margin:0 5px}
 #_zayav-money ._refund-add{color:#c22}
-#_zayav-money .accrual{color:#07a;cursor:default}
 #_zayav-money .income{color:#090;cursor:default}
 #_zayav-money .refund{color:#c22;cursor:default}
 

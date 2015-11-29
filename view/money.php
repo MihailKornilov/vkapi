@@ -44,10 +44,88 @@ function _money() {
 		$content;
 }//_money()
 
-function _accrual_unit($r) {//строка начисления в таблице
+function _accrualFilter($v) {
+	$send = array(
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 100,
+		'client_id' => _num(@$v['client_id']),
+		'zayav_id' => _num(@$v['zayav_id'])
+	);
+	return $send;
+}//_refundFilter()
+function _accrual_spisok($v=array()) {//список начислений
+	$filter = _accrualFilter($v);
+	$filter = _filterJs('ACCRUAL', $filter);
+
+	$cond = "`app_id`=".APP_ID."
+	     AND `ws_id`=".WS_ID."
+	     AND !`deleted`";
+
+	if($filter['client_id'])
+		$cond .= " AND `client_id`=".$filter['client_id'];
+	if($filter['zayav_id'])
+		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
+
+	$sql = "SELECT
+				COUNT(`id`) AS `all`,
+				SUM(`sum`) AS `sum`
+			FROM `_money_accrual`
+			WHERE ".$cond;
+	$send = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+	$send['filter'] = $filter;
+	if(!$send['all'])
+		return $send + array(
+				'spisok' => $filter['js'].'<div class="_empty">Начислений нет.</div>'
+			);
+
+	$all = $send['all'];
+	$send['spisok'] = $filter['page'] != 1 ? '' :
+		$filter['js'].
+		'<div id="summa">'.
+			'Показано <b>'.$all.'</b> начислени'._end($all, 'е', 'я', 'й').
+			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
+		'</div>'.
+		'<table class="_spisok">'.
+			'<tr><th>Сумма'.
+				'<th>Описание'.
+				'<th>Дата'.
+				'<th>';
+
+	$sql = "SELECT *
+			FROM `_money_accrual`
+			WHERE ".$cond."
+			ORDER BY `dtime_add` DESC
+			LIMIT "._start($filter).",".$filter['limit'];
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$spisok = _schetValToList($spisok);
+	$spisok = _zayavValToList($spisok);
+
+	foreach($spisok as $r)
+		$send['spisok'] .= _accrual_unit($r, $filter);
+
+	$send['spisok'] .= _next($filter + array(
+			'all' => $all,
+			'tr' => 1
+		));
+
+	$send['arr'] = $spisok;
+
+	return $send;
+}//_accrual_spisok()
+function _accrual_unit($r, $filter) {//строка начисления в таблице
+	$about = '';
+	if($r['schet_id'])
+		$about = 'Счёт '.$r['schet_link_full'].' ';
+	if(!$filter['zayav_id'] && $r['zayav_id'])
+		$about .= 'Заявка '.$r['zayav_link'].'. ';
+	$about .= $r['about'];
+
 	return
-	'<tr><td class="sum '.$r['type']._tooltip('Начисление', -3)._sumSpace($r['sum']).
-		'<td>'.($r['schet_id'] ? 'Счёт '.$r['schet_link_full'] : '').$r['about'].
+	'<tr class="_accrual-unit'.($r['deleted'] ? ' deleted' : '').'">'.
+		'<td class="sum">'._sumSpace($r['sum']).
+		'<td>'.trim($about).
 		'<td class="dtime">'._dtimeAdd($r).
 		'<td class="ed">'.
 			(!$r['schet_id'] ?
@@ -57,8 +135,31 @@ function _accrual_unit($r) {//строка начисления в таблице
 				))
 			: '');
 }//_accrual_unit()
+/* --- вывод списка начислений в информации о заявке --- */
+function _zayavInfoAccrual($zayav_id) {
+	return '<div id="_zayav-accrual">'._zayavInfoAccrual_spisok($zayav_id).'</div>';
+}//_zayavInfoAccrual()
+function _zayavInfoAccrual_spisok($zayav_id) {
+	$accrual = _accrual_spisok(array('zayav_id'=>$zayav_id));
+
+	if(!$accrual['all'])
+		return '';
+
+	$spisok = '';
+	foreach($accrual['arr'] as $r)
+		$spisok .= _accrual_unit($r, array('zayav_id'=>$zayav_id));
+
+	return
+		'<div class="headBlue">'.
+			'Начисления'.
+			'<a class="add _accrual-add">Внести начисление</a>'.
+		'</div>'.
+		'<table class="_spisok">'.$spisok.'</table>';
+}//_zayavInfoAccrual_spisok()
 
 
+
+/* --- возвраты --- */
 function _refund() {
 	$data = _refund_spisok();
 	return
@@ -169,6 +270,7 @@ function _refund_right() {
 		'<script type="text/javascript">_refundLoad();</script>';
 }//_refund_right()
 
+/* --- платежи --- */
 function income_top($sel) { //Условия поиска сверху для платежей
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `_money_income`
@@ -1655,31 +1757,18 @@ function zayav_info_schet_spisok($zayav_id) {
 
 
 
-/* --- вывод списка начислений, платежей и возвратов в информации о заявке --- */
+/* --- вывод списка платежей и возвратов в информации о заявке --- */
 function _zayavInfoMoney($zayav_id) {
 	return '<div id="_zayav-money">'._zayavInfoMoney_spisok($zayav_id).'</div>';
 }//_zayavInfoMoney()
 function _zayavInfoMoney_spisok($zayav_id) {
-	//начисления
-	$sql = "SELECT
-				*,
-				'accrual' `type`
-			FROM `_money_accrual`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
-			  AND `zayav_id`=".$zayav_id;
-	$accrual = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-	$accrual = _schetValToList($accrual);
-
 	//платежи
 	$income = income_spisok(array('zayav_id'=>$zayav_id));
 
 	//возвраты
 	$refund = _refund_spisok(array('zayav_id'=>$zayav_id));
 
-	$money = _arrayTimeGroup($accrual);
-	$money = _arrayTimeGroup($income['arr'], $money);
+	$money = _arrayTimeGroup($income['arr']);
 	$money = _arrayTimeGroup($refund['arr'], $money);
 
 	if(empty($money))
@@ -1689,21 +1778,17 @@ function _zayavInfoMoney_spisok($zayav_id) {
 
 	$spisok = '';
 	foreach($money as $r) {
-		if($r['type'] == 'accrual')
-			$spisok .= _accrual_unit($r);
-		elseif($r['type'] == 'refund')
+		if($r['type'] == 'refund')
 			$spisok .= _refund_unit($r, array('zayav_id'=>$zayav_id));
 		else
 			$spisok .= _income_unit($r, array('zayav_id'=>$zayav_id));
 	}
 	return
 		'<div class="headBlue">'.
-			'Начисления и платежи'.
+			'Платежи и возвраты'.
 			'<a class="add _refund-add'._tooltip('Произвести возврат денежных средств', -215, 'r').'Возврат</a>'.
 			'<em>::</em>'.
 			'<a class="add _income-add">Внести платёж</a>'.
-			'<em>::</em>'.
-			'<a class="add _accrual-add">Начислить</a>'.
 		'</div>'.
 		'<table class="_spisok">'.$spisok.'</table>';
 }//_zayavInfoMoney_spisok()

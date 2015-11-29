@@ -544,9 +544,43 @@ function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клие
 			  AND `id`=".$client_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 }//_clientQuery()
-function _clientDopLink($name, $count) {
-	return '<a class="link">'.$name.($count ? ' <b class="count">'.$count.'</b>' : '').'</a>';
+function _clientDopLink($name, $arr) {//меню с дополнительными списками (заявки, начисления, платежи, история...)
+	return
+		$arr['all'] ?
+			'<a class="link">'.$name.' <b class="count">'.$arr['all'].'</b></a>'
+			: '';
 }//_clientDopLink()
+function _clientDopContent($name, $arr) {//содержание дополнительных списоков (начисления, платежи, история...)
+	return
+		$arr['all'] ?
+			'<div class="ci-cont" id="'.$name.'-spisok">'.$arr['spisok'].'</div>'
+			: '';
+}//_clientDopContent()
+function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списоков (заявки)
+	$arr['all'] += $arr2['all'];
+	return
+		$arr['all'] ?
+			'<div class="ci-cont" id="'.$name.'-spisok">'.
+				'<div id="spisok1">'.$arr['spisok'].'</div>'.
+				'<div id="spisok2" class="dn">'.$arr2['spisok'].'</div>'.
+			'</div>'
+			: '';
+}//_clientDopContentZayav()
+function _clientDopRight($name, $arr, $filterContent) {//правая сторона (условия поиска) для дополнительных списков (заявки, начисления, платежи, история...)
+	return
+		$arr['all'] ?
+			'<div class="ci-right" id="'.$name.'-right">'.$filterContent.'</div>'
+			: '';
+}//_clientDopRight()
+function _clientInfoZayavRight($zayav, $cartridge) {
+	$list = array(
+		1 => 'Оборудование<em>'.$zayav['all'].'</em>',
+		2 => 'Картриджи<em>'.$cartridge['all'].'</em>'
+	);
+	return
+	'<div class="f-label">Вид заявок</div>'.
+	_radio('zayav-type', $list, 1, 1);
+}//_clientInfoZayavRight()
 function _clientInfo($client_id) {//вывод информации о клиенте
 	if(!$c = _clientQuery($client_id, 1))
 		return _noauth('Клиента не существует');
@@ -565,6 +599,11 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 		'client_id' => $client_id,
 		'limit' => 10
 	));
+	$cartridge = zayav_cartridge_spisok(array(
+		'client_id' => $client_id,
+		'limit' => 15
+	));
+	$accrual = _accrual_spisok(array('client_id'=>$client_id));
 	/*
 
 
@@ -628,6 +667,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			'var CLIENT={'.
 				'id:'.$client_id.','.
 				'category_id:'.$c['category_id'].','.
+				'name:"'._clientVal($client_id, 'name').'",'.
 
 				'person_id:'._clientVal($client_id, 'person_id').','.
 				'fio:"'.addslashes(_clientVal($client_id, 'fio')).'",'.
@@ -660,8 +700,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 						_clientInfoPasp($client_id).
 						'<div id="person-spisok">'._clientInfoPerson($client_id).'</div>'.
 						'<div class="dtime">'.
-							'Клиента вн'.(_viewer($c['viewer_id_add'], 'viewer_sex') == 1 ? 'есла' : 'ёс').' '.
-							_viewer($c['viewer_id_add'], 'viewer_name').' '.
+							'Клиента '._viewerAdded($c['viewer_id_add']).' '.
 							FullData($c['dtime_add'], 1).
 						'</div>'.
 
@@ -669,45 +708,29 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 						'<div class="rightLink">'.
 							'<a id="zayav-add" val="client_'.$client_id.'"><b>Новая заявка</b></a>'.//'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'todo
 							'<a class="_remind-add">Новое напоминание</a>'.
+							'<a id="client-schet-add">Счёт на оплату</a>'.
 							'<a id="client-edit">Редактировать</a>'.
 							'<a id="client-del">Удалить клиента</a>'.
 						'</div>'.
 			'</table>'.
 
 			'<div id="dopLinks">'.
-				_clientDopLink('Заявки', $zayav['all']).
-				_clientDopLink('Счета', 0).
-				_clientDopLink('Платежи', 0).
-				_clientDopLink('Напоминания', 0).
-				_clientDopLink('История', $hist['all']).
+				_clientDopLink('Заявки', array('all' => $zayav['all'] + $cartridge['all'])).
+				_clientDopLink('Начисления', $accrual).
+//				_clientDopLink('Платежи', 0).
+//				_clientDopLink('Напоминания', 0).
+				_clientDopLink('История', $hist).
 			'</div>'.
 
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
-						'<div class="ci-cont" id="zayav-spisok">'.$zayav['spisok'].'</div>'.
-						'<div class="ci-cont" id="schet-spisok">Счета</div>'.
-						'<div class="ci-cont" id="income-spisok">Платежи</div>'.
-						'<div class="ci-cont" id="remind-spisok">Напоминания</div>'.
-						'<div class="ci-cont" id="history-spisok">'.$hist['spisok'].'</div>'.
-//						(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
-//						($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
-
-//						'<div id="schet_spisok">'.$schet['spisok'].'</div>'.
-//						'<div id="money_spisok">'.$money.'</div>'.
-//						'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
-//						'<div id="comments">'._vkComment('client', $client_id).'</div>'.
+						_clientDopContentZayav('zayav', $zayav, $cartridge).
+						_clientDopContent('accrual', $accrual).
+						_clientDopContent('history', $hist).
 					'<td class="right">'.
-//						'<div id="zayav_filter">'.
-//						'<div id="zayav_result">'.$zayavData['result'].'</div>'.
-//						'<div class="findHead">Статус заявки</div>'.
-//						_rightLink('status', _zayavStatusName()).
-//						_check('diff', 'Неоплаченные заявки').
-//						'<div class="findHead">Устройство</div><div id="dev"></div>'.
-						'<div class="ci-right" id="zayav-right">Заявки</div>'.
-						'<div class="ci-right" id="schet-right">Счета</div>'.
-						'<div class="ci-right" id="income-right">Платежи</div>'.
-						'<div class="ci-right" id="remind-right">Напоминания</div>'.
-						'<div class="ci-right" id="history-right">'._history_right().'</div>'.
+						_clientDopRight('zayav', $zayav, _clientInfoZayavRight($zayav, $cartridge)).
+						_clientDopRight('accrual', $accrual, '').
+						_clientDopRight('history', $hist, _history_right()).
 				'</div>'.
 			'</table>'.
 

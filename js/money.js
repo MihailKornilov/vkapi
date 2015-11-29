@@ -1104,9 +1104,9 @@ var _accrualAdd = function() {
 			dialog = _dialog({
 				top:20,
 				width:610,
-				head:'Редактирование счёта',
+				head:o.schet_id ? 'Редактирование счёта на оплату' : 'Формирование нового счёта на оплату',
 				content:html,
-				butSubmit:'Сохранить',
+				butSubmit:o.schet_id ? 'Сохранить' : 'Готово',
 				submit:submit,
 				cancel:function() {
 					if(!o.edit)
