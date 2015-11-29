@@ -459,7 +459,7 @@ function incomeAbout($r, $filter=array()) {
 	if($r['zayav_id'] && !@$filter['zayav_id'])
 		$about .= 'Заявка '.@$r['zayav_link'];
 	if($r['zp_id'])
-		$about .= 'Продажа запчасти '.$r['zp_link'];
+		$about .= 'Продажа запчасти '.@$r['zp_link'];//todo
 	if($r['schet_id'])
 		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 
@@ -478,7 +478,7 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
+				  AND (`ws_id`=".WS_ID." OR !`ws_id`)
 				ORDER BY `sort`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		xcache_set($key, $arr, 86400);

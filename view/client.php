@@ -706,7 +706,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
-							'<a id="zayav-add" val="client_'.$client_id.'"><b>Новая заявка</b></a>'.//'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'todo
+							'<a id="zayav-add"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'val="client_'.$client_id.'"><b>Новая заявка</b></a>'.
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
 							'<a id="client-edit">Редактировать</a>'.

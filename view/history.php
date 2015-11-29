@@ -30,7 +30,7 @@ function _history_insert($v=array()) {//внесение истории действий
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
+				".(_num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID).",
 
 				".$v['type_id'].",
 
@@ -71,7 +71,7 @@ function _history_spisok($v=array()) {
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (63)".//todo удалить
+//	   " AND `type_id` IN (13)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])

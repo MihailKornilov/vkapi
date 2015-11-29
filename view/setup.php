@@ -78,7 +78,8 @@ function _setup() {
 	) + (function_exists('setup') ? setup() : array());
 
 	$sub = array(
-		'worker' => 'rule'
+		'worker' => 'rule',
+		'service' => 'cartridge'
 	);
 
 	if(!RULE_SETUP_WORKER)
@@ -91,7 +92,7 @@ function _setup() {
 		unset($page['invoice']);
 
 	if(!SA)
-		unset($page['zayavexpense']);
+		unset($page['zayav_expense']);
 
 	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
 
@@ -377,7 +378,7 @@ function setup_expense_spisok() {
 				0 `count`
 			FROM `_money_expense_category`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND (`ws_id`=".WS_ID." OR !`ws_id`)
 			ORDER BY `sort`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	if(!mysql_num_rows($q))
@@ -415,7 +416,7 @@ function setup_expense_spisok() {
 					'<td class="worker_use">'.($r['worker_use'] ? 'да' : '').
 					'<td class="count">'.($r['count'] ? $r['count'] : '').
 					'<td class="ed">'.
-						'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
+						($r['ws_id'] ? '<div class="img_edit'._tooltip('Изменить', -33).'</div>' : '').
 						(!$r['count'] ? '<div class="img_del"></div>' : '').
 			'</table>';
 	$send .= '</dl>';
