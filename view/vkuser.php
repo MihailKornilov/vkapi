@@ -218,7 +218,7 @@ function _viewerFormat($u) {//формирование данных пользовател€
 
 		'pin' => $u['pin'],
 
-		'balans_start' => _cena($u['salary_balans_start']),
+		'balans_start' => round($u['salary_balans_start'], 2),
 		'rate_sum' => _cena($u['salary_rate_sum']),
 		'rate_period' => $u['salary_rate_period'],
 		'rate_day' => $u['salary_rate_day']
@@ -243,6 +243,8 @@ function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника
 
 
 function _viewerAdded($viewer_id) {//¬ывод сотрудника, который вносил запись с учЄтом пола
+	if(!$viewer_id)
+		return 'внесено автоматически';
 	return 'вн'.(_viewer($viewer_id, 'viewer_sex') == 1 ? 'есла' : 'Єс').' '._viewer($viewer_id, 'viewer_name');
 }//_viewerAdded();
 function _viewerDeleted($viewer_id) {//¬ывод сотрудника, который вносил запись с учЄтом пола
@@ -375,9 +377,6 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	// 1. ѕроверка на правильность внесЄнных прав в базе дл€ выбранного пользовател€
 	// 2. ‘ормирование констант прав, если это текущий пользователь
 	// 3. ѕолучение конкретной константы
-
-	if($viewer_id >= VIEWER_MAX)
-		return false;
 
 	$key = CACHE_PREFIX.'viewer_rule_'.$viewer_id;
 	$rule = xcache_get($key);

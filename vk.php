@@ -59,21 +59,24 @@ define('DOMAIN', $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
+if(!defined('CRON'))
+	define('CRON', 0);
+
 $SA[982006] = 1; // Корнилов Михаил
 //$SA[1382858] = 1; // Серёга Ш.
 //$SA[166424274] = 1; // тестовая запись
-define('SA', isset($SA[$_GET['viewer_id']]));
+define('SA', isset($SA[@$_GET['viewer_id']]));
 
 //setcookie('sa_viewer_id', '', time() - 3600, '/');
 //вход из админа в другую мастерскую от имени другого пользователя
 define('SA_VIEWER_ID', SA && _num(@$_COOKIE['sa_viewer_id']) ? $_COOKIE['sa_viewer_id'] : 0);
 define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : _num(@$_GET['viewer_id']));
 
-if(!VIEWER_ID)
+if(!VIEWER_ID && !CRON)
 	die('Error: not correct viewer_id.');
 
 define('VALUES', TIME.
-				 '&viewer_id='.$_GET['viewer_id'].
+				 '&viewer_id='.@$_GET['viewer_id'].
 				 '&auth_key='.@$_GET['auth_key'].
 				 '&access_token='.@$_GET['access_token']);
 define('URL', APP_HTML.'/index.php?'.VALUES);
@@ -83,9 +86,6 @@ define('TODAY_UNIXTIME', strtotime(TODAY));
 define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES.'&ajax=1');
 define('AJAX', !empty($_GET['ajax']));//производится ли запрос аjax
 define('APP_URL', 'http://vk.com/app'.APP_ID);
-
-if(!defined('CRON'))
-	define('CRON', 0);
 
 define('VIEWER_MAX', 2147000001);
 define('CRON_MAIL', 'mihan_k@mail.ru');
@@ -107,12 +107,14 @@ session_start();
 _appAuth();
 _dbConnect('GLOBAL_');
 _dbConnect();
-_getVkUser();
-_ws();
-_setupApp();
-_pinCheck();
-_hashRead();
-
+if(!CRON) {
+	_getVkUser();
+	_ws();
+	_setupApp();
+	_pinCheck();
+	_hashRead();
+} else
+	define('WS_ID', 0);
 
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))

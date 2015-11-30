@@ -1182,6 +1182,7 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 }//invoice_info_balans_day()
 
 function _balans($v) {//внесение записи о балансе
+	$ws_id = _num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID;
 	$category_id = _balansAction($v['action_id'], 'category_id');
 	$unit_id = 0;
 	$balans = 0;
@@ -1215,7 +1216,7 @@ function _balans($v) {//внесение записи о балансе
 	//сотрудник
 	if(!empty($v['worker_id'])) {
 		$unit_id = _num($v['worker_id']);
-		$balans = salaryWorkerBalans($unit_id);
+		$balans = salaryWorkerBalans($unit_id, 0, $ws_id);
 	}
 
 
@@ -1239,7 +1240,7 @@ function _balans($v) {//внесение записи о балансе
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
+				".$ws_id.",
 
 				".$category_id.",
 				".$unit_id.",

@@ -199,17 +199,24 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td><td><div class="vkButton" id="w-save"><button>Сохранить</button></div>'.
 		'</table>'.
 
+		'<div class="headName">Дополнительные настройки</div>'.
+		'<table class="rtab">'.
+			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
+		'</table>'.
+
 
 	(!$u['viewer_admin'] && $u['pin'] ?
 		'<div class="headName">Пин-код</div>'.
 		'<div class="vkButton" id="pin-clear"><button>Сбросить пин-код</button></div>'
 	: '').
+
 /*		'<div class="headName">Дополнительно</div>'.
 			'<table class="rtab">'.
 				'<tr><td class="lab">Процент от платежей:<td><input type="text" id="rules_money_procent" value="'.$rule['RULES_MONEY_PROCENT'].'" maxlength="2" />'.
 				'<tr><td><td><div class="vkButton dop-save"><button>Сохранить</button></div>'.
 			'</table.
 */
+
 	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
 		'<div class="headName">Права в приложении</div>'.
 			_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
@@ -240,8 +247,9 @@ function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 		return false;
 
 	$u = _viewer($viewer_id);
-	if($u['viewer_admin'])
+	if($u['viewer_admin'] && $post['op'] != 'RULE_SALARY_SHOW')
 		return false;
+
 	if($u['viewer_ws_id'] != WS_ID)
 		return false;
 

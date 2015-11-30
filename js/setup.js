@@ -579,6 +579,7 @@ $(document)
 					});
 				}
 			});
+			$('#RULE_SALARY_SHOW')._check(setupRuleCheck);
 			$('#RULE_APP_ENTER')._check(function(v, id) {
 				$('#div-app-enter')[(v ? 'remove' : 'add') + 'Class']('dn');
 				setupRuleCheck(v, id);

@@ -86,6 +86,8 @@ function _salary_spisok() {
 					'<th>—тавка'.
 					'<th>Ѕаланс';
 	foreach($worker as $r) {
+		if(!_viewerRule($r['id'], 'RULE_SALARY_SHOW'))
+			continue;
 		$balans = round($r['balans'] + $r['salary_balans_start'], 2);
 		$send .=
 			'<tr><td class="fio"><a href="'.URL.'&p=report&d=salary&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
@@ -190,14 +192,14 @@ function salaryFilter($v) {
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
 	return $v;
 }//salaryFilter()
-function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса зп сотрудника
+function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение текущего баланса зп сотрудника
 	$start = _viewer($worker_id, 'balans_start');
 
 	//произвольные начислени€
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$acc = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -205,7 +207,7 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$zayav = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -213,7 +215,7 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$deduct = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -221,7 +223,7 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
+			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id."
 			  AND !`deleted`";
 	$zp = query_value($sql, GLOBAL_MYSQL_CONNECT);

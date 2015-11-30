@@ -287,6 +287,15 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'RULE_SALARY_SHOW'://ѕоказывать в списке з/п сотрудников
+		$_POST['h1'] = 1036;
+		$_POST['h0'] = 1035;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
 	case 'RULE_APP_ENTER'://разрешать сотруднику вход в приложение
 		$_POST['h1'] = 1002;
 		$_POST['h0'] = 1003;

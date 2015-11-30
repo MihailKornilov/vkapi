@@ -1480,6 +1480,7 @@ switch(@$_POST['op']) {
 		if(!$r = _viewerWorkerQuery($worker_id))
 			jsonError();
 
+
 		$start = $sum - (salaryWorkerBalans($worker_id) - $r['salary_balans_start']);
 
 		$sql = "UPDATE `_vkuser`
@@ -1492,7 +1493,7 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
 
  		_balans(array(
-			'action_id' => 5,
+			'action_id' => 39,
 			'worker_id' => $worker_id,
 			'sum' => $sum
 		));
@@ -1502,6 +1503,7 @@ switch(@$_POST['op']) {
 			'worker_id' => $worker_id,
 			'v1' => $sum
 		));
+
 
 		$send['balans'] = salaryWorkerBalans($worker_id, 1);
 		jsonSuccess($send);

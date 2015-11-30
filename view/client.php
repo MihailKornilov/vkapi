@@ -556,7 +556,9 @@ function _clientDopContent($name, $arr) {//содержание дополнительных списоков (н
 			'<div class="ci-cont" id="'.$name.'-spisok">'.$arr['spisok'].'</div>'
 			: '';
 }//_clientDopContent()
-function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списоков (заявки)
+function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списков (заявки)
+	if(!$arr['all']) //если заявок на оборудование нет, то сразу выводятся заявки с картриджами
+		$arr = $arr2;
 	$arr['all'] += $arr2['all'];
 	return
 		$arr['all'] ?
@@ -573,6 +575,9 @@ function _clientDopRight($name, $arr, $filterContent) {//правая сторона (условия
 			: '';
 }//_clientDopRight()
 function _clientInfoZayavRight($zayav, $cartridge) {
+	if(!$zayav['all'] || !$cartridge['all'])
+		return '';
+
 	$list = array(
 		1 => 'Оборудование<em>'.$zayav['all'].'</em>',
 		2 => 'Картриджи<em>'.$cartridge['all'].'</em>'
@@ -604,6 +609,8 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 		'limit' => 15
 	));
 	$accrual = _accrual_spisok(array('client_id'=>$client_id));
+	$remind = _remind_spisok(array('client_id'=>$client_id));
+
 	/*
 
 
@@ -611,8 +618,6 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			'client_id' => $client_id,
 			'limit' => 10
 		));
-
-		$schet = report_schet_spisok(array('client_id'=>$client_id));
 
 		$commCount = query_value("SELECT COUNT(`id`)
 								  FROM `vk_comment`
@@ -656,7 +661,6 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			$money .= '</table>';
 		}
 
-		$remind = _remind_spisok(array('client_id'=>$client_id));
 
 	*/
 
@@ -718,7 +722,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 				_clientDopLink('Заявки', array('all' => $zayav['all'] + $cartridge['all'])).
 				_clientDopLink('Начисления', $accrual).
 //				_clientDopLink('Платежи', 0).
-//				_clientDopLink('Напоминания', 0).
+				_clientDopLink('Напоминания', $remind).
 				_clientDopLink('История', $hist).
 			'</div>'.
 
@@ -726,10 +730,12 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 				'<tr><td class="left">'.
 						_clientDopContentZayav('zayav', $zayav, $cartridge).
 						_clientDopContent('accrual', $accrual).
+						_clientDopContent('remind', $remind).
 						_clientDopContent('history', $hist).
 					'<td class="right">'.
-						_clientDopRight('zayav', $zayav, _clientInfoZayavRight($zayav, $cartridge)).
+						_clientDopRight('zayav', array('all' => $zayav['all'] + $cartridge['all']), _clientInfoZayavRight($zayav, $cartridge)).
 						_clientDopRight('accrual', $accrual, '').
+						_clientDopRight('remind', $remind, '').
 						_clientDopRight('history', $hist, _history_right()).
 				'</div>'.
 			'</table>'.

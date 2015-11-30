@@ -139,7 +139,8 @@ function _history_spisok($v=array()) {
 			$time = strtotime($r['dtime_add']);
 			$viewer_id = $r['viewer_id_add'];
 		}
-		$txt .= '<li class="light">'.(SA ? '<h4 val="'.$r['id'].'">'.($r['type_id_old'] ? $r['type_id_old'].'-' : '').$r['type_id'].'</h4>' : '').//todo удалить type_id_old после перенесения
+		$txt .= '<li'.(SA ? ' class="light"' : '').'>'.
+					(SA ? '<h4 val="'.$r['id'].'">'.($r['type_id_old'] ? $r['type_id_old'].'-' : '').$r['type_id'].'</h4>' : '').//todo удалить type_id_old после перенесения
 					'<div class="li">'.$r['txt'].'</div>';
 		$key = key($history);
 		if(!$key ||
@@ -229,7 +230,8 @@ function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элеме
 			$old = $v1;
 			$new = $v2;
 		}
-		return '<tr><th>'.$name.':<td>'.$old.'<td>»<td>'.$new;
+		$name = $name ? '<th>'.$name.':' : '';
+		return '<tr>'.$name.'<td>'.$old.'<td>»<td>'.$new;
 	}
 	return '';
 }//_historyChange()

@@ -16,12 +16,13 @@ switch(@$_POST['op']) {
 
 		switch($_POST['from']) {
 			case 'zayav': $send['html'] = utf8(_remind_zayav($_POST['zayav_id'])); break;
-			case 'client': break;
+			case 'client':
+				$remind = _remind_spisok(array('client_id'=>$_POST['client_id']));
+				$send['html'] = utf8($remind['spisok']);
+				break;
 			default: $send['html'] = utf8(_remind_spisok(array(), 'spisok'));
 
 		}
-//		if($_POST['from'] == 'client')
-//			$v['client_id'] = $_POST['client_id'];
 
 		jsonSuccess($send);
 		break;
