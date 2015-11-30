@@ -220,59 +220,9 @@ function client_data($v=array()) {// список клиентов
 		}
 		$k++;
 	}
+
+	$spisok = _zayavCountToClient($spisok);
 /*
-	// общее количество заявок
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_count'] = $r['count'];
-
-	//заявки, ожидающие выполнения
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=1
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_wait'] = $r['count'];
-
-	//выполненные заявки
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=2
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_ready'] = $r['count'];
-
-	//отменённые заявки
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=3
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_fail'] = $r['count'];
-
 	//комментарии по клиентам
 	$sql = "SELECT
 				`table_id` `id`,
@@ -601,23 +551,19 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 	define('ORG', $c['category_id'] > 1);
 
 	$zayav = zayav_spisok(array(
-		'client_id' => $client_id,
-		'limit' => 10
+			'client_id' => $client_id,
+			'limit' => 10
 	));
 	$cartridge = zayav_cartridge_spisok(array(
-		'client_id' => $client_id,
-		'limit' => 15
+			'client_id' => $client_id,
+			'limit' => 15
 	));
+
 	$accrual = _accrual_spisok(array('client_id'=>$client_id));
 	$remind = _remind_spisok(array('client_id'=>$client_id));
 
 	/*
 
-
-		$zayavCartridge = zayav_cartridge_spisok(array(
-			'client_id' => $client_id,
-			'limit' => 10
-		));
 
 		$commCount = query_value("SELECT COUNT(`id`)
 								  FROM `vk_comment`

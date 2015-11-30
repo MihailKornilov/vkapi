@@ -385,7 +385,7 @@ function setup_expense_spisok() {
 	$sql = "SELECT *,
 				0 `count`
 			FROM `_money_expense_category`
-			WHERE `app_id`=".APP_ID."
+			WHERE (`app_id`=".APP_ID." OR !`app_id`)
 			  AND (`ws_id`=".WS_ID." OR !`ws_id`)
 			ORDER BY `sort`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -425,7 +425,7 @@ function setup_expense_spisok() {
 					'<td class="count">'.($r['count'] ? $r['count'] : '').
 					'<td class="ed">'.
 						($r['ws_id'] ? '<div class="img_edit'._tooltip('Изменить', -33).'</div>' : '').
-						(!$r['count'] ? '<div class="img_del"></div>' : '').
+						($r['ws_id'] && !$r['count'] ? '<div class="img_del"></div>' : '').
 			'</table>';
 	$send .= '</dl>';
 	return $send;

@@ -477,7 +477,7 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 	if(empty($arr)) {
 		$sql = "SELECT *
 				FROM `_money_expense_category`
-				WHERE `app_id`=".APP_ID."
+				WHERE (`app_id`=".APP_ID." OR !`app_id`)
 				  AND (`ws_id`=".WS_ID." OR !`ws_id`)
 				ORDER BY `sort`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);

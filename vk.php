@@ -1192,12 +1192,12 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 										   FROM `_money_expense_category`
-										   WHERE `app_id`=".APP_ID."
+										   WHERE (`app_id`=".APP_ID." OR !`app_id`)
 											 AND (`ws_id`=".$ws_id." OR !`ws_id`)
 										   ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'EXPENSE_WORKER_USE='.query_assJson("SELECT `id`,1
 												  FROM `_money_expense_category`
-												  WHERE `app_id`=".APP_ID."
+												  WHERE (`app_id`=".APP_ID." OR !`app_id`)
 													AND (`ws_id`=".$ws_id." OR !`ws_id`)
 													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
