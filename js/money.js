@@ -1008,7 +1008,8 @@ var _accrualAdd = function() {
 			var html =
 				'<div id="_schet-info">' +
 					'<table class="tab">' +
-						'<tr><td class="label top">Плательщик:<td>' + res.client +
+						'<tr><td class="label r top">Плательщик:<td>' + res.client +
+		(res.zayav_id ? '<tr><td class="label r">Заявка:<td>' + res.zayav_link : '') +
 					'</table>' +
 					'<h1>СЧЁТ № ' + res.nomer + res.ot + '</h1>' +
 					res.html +
@@ -1071,6 +1072,7 @@ var _accrualAdd = function() {
 			client_id:0,
 			zayav_id:0,
 			arr:[],
+			zayav_spisok:[],
 			client:'',
 			date_create:'',
 			nakl:0,
@@ -1089,6 +1091,7 @@ var _accrualAdd = function() {
 				'<div id="_schet-info">' +
 					'<table class="tab">' +
 						'<tr><td class="label r top">Плательщик:<td>' + o.client +
+(o.zayav_spisok.length ? '<tr><td class="label r">Заявка:<td><input type="hidden" id="zayav_id" value="' + o.zayav_id + '" />' : '') +
 						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + o.date_create + '" />' +
 						'<tr><td class="label r topi">Приложения:' +
 							'<td><input id="nakl" type="hidden" value="' + o.nakl + '" />' +
@@ -1122,6 +1125,11 @@ var _accrualAdd = function() {
 
 		poleNum();
 		itog();
+		if(o.zayav_spisok.length)
+			$('#zayav_id')._select({
+				title0:'Заявка не выбрана',
+				spisok:o.zayav_spisok
+			});
 		$('#date_create')._calendar({lost:1});
 		$('#nakl')._check({name:'Накладная',light:1});
 		$('#act')._check({name:'Акт выполненных работ',light:1});
@@ -1239,7 +1247,7 @@ var _accrualAdd = function() {
 				op:'schet_edit',
 				schet_id:o.schet_id,
 				client_id:o.client_id,
-				zayav_id:o.zayav_id,
+				zayav_id:o.zayav_spisok.length ? $('#zayav_id').val() : o.zayav_id,
 				spisok:itog(),
 				date_create:$('#date_create').val(),
 				nakl:_bool($('#nakl').val()),

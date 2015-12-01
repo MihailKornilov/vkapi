@@ -855,10 +855,26 @@ switch(@$_POST['op']) {
 		}
 		$html .= '</table>';
 
+		//данные о заявке, которая привязана к счёту
+		if($schet['zayav_id']) {
+			$zayav[1] = array(
+					'id' => 1,
+					'zayav_id' => $schet['zayav_id']
+			);
+			$zayav = _zayavValToList($zayav);
+			$send['zayav_link'] = utf8($zayav[1]['zayav_link']);
+		}
+
+		//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
+		$sql = "SELECT `id`,CONCAT('№',`nomer`)
+				FROM `zayav`
+				WHERE `client_id`=".$schet['client_id']."
+				ORDER BY `id`";
+		$send['zayav_spisok'] = query_selArray($sql);
 
 		$send['schet_id'] = $id;
-		$send['client_id'] = $schet['client_id'];
-		$send['zayav_id'] = $schet['zayav_id'];
+		$send['client_id'] = _num($schet['client_id']);
+		$send['zayav_id'] = _num($schet['zayav_id']);
 		$send['date_create'] = $schet['date_create'];
 		$send['nakl'] = _bool($schet['nakl']);
 		$send['act'] = _bool($schet['act']);
@@ -892,7 +908,6 @@ switch(@$_POST['op']) {
 			if(!$schet = _schetQuery($schet_id))
 				jsonError();
 			$client_id = $schet['client_id'];
-			$zayav_id = $schet['zayav_id'];
 		}
 
 		if($zayav_id) {
@@ -946,6 +961,7 @@ switch(@$_POST['op']) {
 					".VIEWER_ID."
 				) ON DUPLICATE KEY UPDATE
 					`date_create`=VALUES(`date_create`),
+					`zayav_id`=VALUES(`zayav_id`),
 					`nakl`=VALUES(`nakl`),
 					`act`=VALUES(`act`),
 					`sum`=VALUES(`sum`)";
@@ -1014,21 +1030,26 @@ switch(@$_POST['op']) {
 					  AND !`deleted`
 					  AND `schet_id`=".$schet_id."
 					LIMIT 1";
-			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-				if($sum != $r['sum']) {
-					$sql = "UPDATE `_money_accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
-					query($sql, GLOBAL_MYSQL_CONNECT);
-					//баланс для клиента
-					_balans(array(
-						'action_id' => 37,//изменение начисления
-						'client_id' => $client_id,
-						'schet_id' => $schet_id,
-						'sum' => $sum,
-						'sum_old' => $r['sum']
-					));
-			}
+			$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+			$sql = "UPDATE `_money_accrual`
+					SET `sum`=".$sum.",
+						`zayav_id`=".$zayav_id."
+					WHERE `id`=".$r['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			//баланс для клиента
+			if($sum != $r['sum'])
+				_balans(array(
+					'action_id' => 37,//изменение начисления
+					'client_id' => $client_id,
+					'schet_id' => $schet_id,
+					'sum' => $sum,
+					'sum_old' => $r['sum']
+				));
 		}
 
+		zayavBalansUpdate($schet['zayav_id']);
 		zayavBalansUpdate($zayav_id);
 
 		if($insert_id)
@@ -1040,7 +1061,14 @@ switch(@$_POST['op']) {
 				'v1' => $sum
 			));
 		else {
+				//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
+			$sql = "SELECT `id`,CONCAT('№',`nomer`)
+					FROM `zayav`
+					WHERE `client_id`=".$schet['client_id']."
+					ORDER BY `id`";
+			$zayav = query_ass($sql) + array(0=>'');
 			$changes =
+				_historyChange('Заявка', $zayav[$schet['zayav_id']], $zayav[$zayav_id]).
 				_historyChange('Дата', FullData($schet['date_create']), FullData($date_create)).
 				_historyChange('Накладная', _daNet($schet['nakl']), _daNet($nakl)).
 				_historyChange('Акт', _daNet($schet['act']), _daNet($act)).

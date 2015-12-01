@@ -476,7 +476,7 @@ function incomeAbout($r, $filter=array()) {
 	$about .= $refund.
 		($r['about'] && $about ? ', ' : '').$r['about'].
 		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '').
-		($r['refund_id'] ? ' <span class="red">Сделан возврат.</span>' : '');
+		($r['refund_id'] ? ' <span class="red">Платёж возвращён.</span>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }//incomeAbout()
@@ -1676,7 +1676,7 @@ function _schet_unit($r, $zayav=1) {
 				'на сумму <b class="pay-sum">'._sumSpace($r['sum']).'</b> руб. '.
 				$pass_info.
 				$paid_info.
-			($zayav ? '<div class="schet-zayav">Заявка '.$r['zayav_link'].'.</div>' : '');
+			($zayav && $r['zayav_id'] ? '<div class="schet-zayav">Заявка '.$r['zayav_link'].'.</div>' : '');
 }//_schet_unit()
 function _schet_right() {
 	return
