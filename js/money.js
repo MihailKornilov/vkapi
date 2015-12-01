@@ -107,6 +107,7 @@ var _accrualAdd = function() {
 
 	_incomeAdd = function() {
 		var zayav = window.ZAYAV,
+			cartridge = window.ZAYAV.cartridge,
 			about = zayav ? 'Примечаниие' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
@@ -121,7 +122,7 @@ var _accrualAdd = function() {
 					'<tr><td class="label">' + about + ':<td><input type="text" id="about"' + about_placeholder + ' />' +
 				'</table>' +
 
-		   (zayav ?
+		   (zayav && !cartridge ?
 				'<div id="place-div">' +
 					'<table class="tab">' +
 						'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' +
@@ -164,9 +165,14 @@ var _accrualAdd = function() {
 				],
 				func:function() {
 					$('#about').focus();
-					$('#place-div').slideDown(300);
+					if(!cartridge)
+						$('#place-div').slideDown(300);
 				}
 			});
+
+			if(!cartridge)
+				return;
+
 			zayavPlace(function() {
 				$('#remind-div').slideDown(300);
 			});
@@ -196,7 +202,7 @@ var _accrualAdd = function() {
 		}
 		function submit() {
 			var remind = [];
-			if(zayav)
+			if(zayav && !cartridge)
 				for(var n = 0; n < REMIND.active_spisok.length; n++) {
 					var i = REMIND.active_spisok[n];
 					if(_num($('#ui' + i.id).val()))
@@ -209,8 +215,8 @@ var _accrualAdd = function() {
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
 				zayav_id:zayav ? ZAYAV.id : 0,
-				place:zayav ? $('#place').val() : 0,
-				place_other:zayav ? $('#place_other').val() : '',
+				place:zayav && !cartridge ? $('#place').val() : 0,
+				place_other:zayav && !cartridge ? $('#place_other').val() : '',
 				remind_ids:remind.join()
 			};
 			if(!send.invoice_id)
@@ -224,7 +230,7 @@ var _accrualAdd = function() {
 			} else if(!zayav && !send.about) {
 				dialog.err('Не указано описание');
 				$('#about').focus();
-			} else if(zayav && (send.place == -1 || send.place == 0 && ! send.place_other)) {
+			} else if(zayav && !cartridge && (send.place == -1 || send.place == 0 && ! send.place_other)) {
 				dialog.err('Не указано местонахождение устройства');
 				$('#place_other').focus()
 			} else {
