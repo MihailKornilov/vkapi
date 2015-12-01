@@ -323,6 +323,67 @@ switch(@$_POST['op']) {
 		));
 		jsonSuccess();
 		break;
+	case 'income_refund'://внесение возврата произвольного платежа
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$dtime = _txt($_POST['dtime']);
+
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND !`client_id`
+				  AND !`zp_id`
+				  AND !`refund_id`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$about = $r['about'].'<br />Платёж от <u>'.$dtime.'</u>.';
+
+		$sql = "INSERT INTO `_money_refund` (
+					`app_id`,
+					`ws_id`,
+					`invoice_id`,
+					`sum`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$r['invoice_id'].",
+					".$r['sum'].",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = query_insert_id('_money_refund', GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_money_income`
+				SET `refund_id`=".$insert_id."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 13,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum'],
+			'about' => $about
+		));
+
+		_history(array(
+			'type_id' => 79,
+			'invoice_id' => $r['invoice_id'],
+			'v1' => _cena($r['sum']),
+			'v2' => $r['about'],
+			'v3' => $dtime
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'refund_add'://внесение возврата
 		if(!$zayav_id = _num($_POST['zayav_id']))
@@ -387,7 +448,7 @@ switch(@$_POST['op']) {
 			'zayav_id' => $zayav_id,
 			'client_id' => $z['client_id'],
 			'invoice_id' => $invoice_id,
-			'v1' => _cena($sum, 2),
+			'v1' => _cena($sum),
 			'v2' => $about
 		));
 
@@ -416,6 +477,12 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		//отмена возврата произвольного платежа, если есть
+		$sql = "UPDATE `_money_income`
+				SET `refund_id`=0
+				WHERE `refund_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 		zayavBalansUpdate($r['zayav_id']);
 
 		_balans(array(
@@ -426,12 +493,13 @@ switch(@$_POST['op']) {
 		));
 
 		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 30,
-			'client_id' => $r['client_id'],
-			'sum' => $r['sum'],
-			'about' => $r['about']
-		));
+		if($r['client_id'])
+			_balans(array(
+				'action_id' => 30,
+				'client_id' => $r['client_id'],
+				'sum' => $r['sum'],
+				'about' => $r['about']
+			));
 
 		_history(array(
 			'type_id' => 76,

@@ -37,6 +37,19 @@ function _client($v) {
 function client_list($v) {// страница со списком клиентов
 	$data = client_data($v);
 	$v = $data['filter'];
+
+	//Если внесены клиенты только одной категории, то условие по катериям не будет выводиться
+	$sql = "SELECT COUNT(DISTINCT `category_id`)
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`";
+	$categoryShow = query_value($sql, GLOBAL_MYSQL_CONNECT) > 1;
+	$category = array(
+		0 => 'Любая категория',
+		1 => 'Частные лица',
+		2 => 'Организации'
+	);
 	return
 		'<div id="client">'.
 			'<table id="find-tab"><tr>'.
@@ -48,6 +61,9 @@ function client_list($v) {// страница со списком клиентов
 				'<tr><td class="left">'.$data['spisok'].
 					'<td class="right">'.
 						'<div class="filter'.($v['find'] ? ' dn' : '').'">'.
+		   ($categoryShow ? '<div class="f-label">Категория</div>'.
+							_radio('category_id', $category, $v['category_id'], 1)
+			: '').
 	  (CLIENT_FILTER_DOLG ? _check('dolg', 'Должники', $v['dolg']) : '').
 //							_check('active', 'С активными заявками', $v['active']).
 //							_check('comm', 'Есть заметки', $v['comm']).
@@ -64,7 +80,8 @@ function clientFilter($v) {
 		'dolg' => 0,
 		'active' => 0,
 		'comm' => 0,
-		'opl' => 0
+		'opl' => 0,
+		'category_id' => 0
 	);
 	$filter = array(
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
@@ -74,6 +91,7 @@ function clientFilter($v) {
 		'active' => _bool(@$v['active']),
 		'comm' => _bool(@$v['comm']),
 		'opl' => _bool(@$v['opl']),
+		'category_id' => _num(@$v['category_id']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -108,13 +126,13 @@ function client_data($v=array()) {// список клиентов
 
 		$cond .= " AND ".(empty($find) ? " !`id` " : "(".implode(' OR ', $find).")");
 	} else {
+		if($filter['category_id'])
+			$cond .= " AND `category_id`=".$filter['category_id'];
 		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
 			$sql = "SELECT SUM(`balans`)
 					FROM `_client`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND !`deleted`
+					WHERE ".$cond."
 					  AND `balans`<0";
 			$dolg = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
 		}

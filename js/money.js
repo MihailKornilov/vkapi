@@ -107,7 +107,7 @@ var _accrualAdd = function() {
 
 	_incomeAdd = function() {
 		var zayav = window.ZAYAV,
-			cartridge = window.ZAYAV.cartridge,
+			cartridge = zayav && window.ZAYAV.cartridge,
 			about = zayav ? 'Примечаниие' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
@@ -1449,6 +1449,44 @@ $(document)
 				_parent(t).remove();
 			}
 		});
+	})
+	.on('click', '._income-unit .refund', function() {
+		var t = $(this),
+			id = t.attr('val'),
+			p = _parent(t),
+			sum = p.find('.sum').html(),
+			dtime = p.find('.refund-dtime').val(),
+			html =
+				'<div class="_info">' +
+					'Платёж будет отмечен как <b>возврат</b>. Также будет сделана запись в разделе "Возвраты".' +
+				'</div>' +
+				'<div id="income-refund-tab">' +
+					'<p>Возврат платежа на сумму <b>' + sum + '</b> руб.' +
+					'<p>Дата платежа: <u>' + dtime + '</u>.' +
+					'<p><b class="red">Подтвердите данное действие.</b>' +
+				'</div>',
+			dialog = _dialog({
+				head:'Возврат платежа',
+				content:html,
+				butSubmit:'Подтвердить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'income_refund',
+				id:id,
+				dtime:dtime
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					p.addClass('ref');
+					p.find('.refund').remove();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 
 	.on('click', '._refund-add', _refundAdd)

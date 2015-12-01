@@ -850,7 +850,7 @@ function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 }//_iconEdit()
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
-	if(!empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
+	if(!empty($v['nodel']) || !empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
 		return '';
 
 	$v = array(

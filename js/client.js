@@ -395,12 +395,14 @@ $.fn.clientSel = function(o) {
 $(document)
 	.on('click', '#client #filter_clear', function() {
 		$('#find')._search('clear');
+		$('#category_id')._radio(0);
 		$('#dolg')._check(0);
 		$('#active')._check(0);
 		$('#comm')._check(0);
 		$('#opl')._check(0);
 		CLIENT.find = '';
 		CLIENT.dolg = 0;
+		CLIENT.category_id = 0;
 		CLIENT.active = 0;
 		CLIENT.comm = 0;
 		CLIENT.opl = 0;
@@ -510,6 +512,7 @@ $(document)
 				indent:40,
 				delayShow:1000
 			}).click(clientAdd);
+			$('#category_id')._radio(clientSpisok);
 			$('#dolg')._check(clientSpisok);
 			$('#active')._check(clientSpisok);
 			$('#comm')._check(clientSpisok);
@@ -519,7 +522,7 @@ $(document)
 					'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
 				ugol:'right',
 				width:150,
-				top:-25,
+				top:-5,
 				left:-185,
 				indent:20,
 				delayShow:1000
@@ -560,4 +563,3 @@ $(document)
 			});
 		}
 	});
-

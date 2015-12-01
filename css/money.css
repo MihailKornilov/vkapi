@@ -31,7 +31,11 @@
 #money-income .income-client a{font-size:10px}
 
 ._income-unit.prepay{background-color:#ffe}
+._income-unit.ref{background-color:#fee}
 ._income-unit .schet{margin:4px 0}
+._income-unit .refund{float:right;color:red}
+._income-unit:not(:hover) .refund{display:none}
+
 
 /* Внесение платежа */
 #_income-add .tab{border-spacing:10px;padding:10px 0;width:100%}
@@ -59,6 +63,9 @@
 #money-refund .sum{color:#c22}
 #money-refund .refund-client{font-size:10px;color:#777}
 #money-refund .refund-client a{font-size:10px}
+
+#income-refund-tab{padding:20px 0 30px;text-align:center}
+#income-refund-tab p{margin:10px 0}
 
 /* Внесение возврата */
 #_refund-add-tab{border-spacing:10px}

@@ -261,7 +261,7 @@ function _refundAbout($r, $filter=array()) {
 
 	$about .=
 		($r['about'] && $about ? ', ' : '').$r['about'].
-		(!@$filter['zayav_id'] ? '<div class="refund-client">Клиент: '.$r['client_link'].'</div>' : '');
+		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="refund-client">Клиент: '.$r['client_link'].'</div>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }//incomeAbout()
@@ -449,12 +449,15 @@ function income_spisok($filter=array()) {
 	return $send;
 }//income_spisok()
 function _income_unit($r, $filter=array()) {
+	$prepay = $r['prepay'] ? ' prepay' : '';
+	$refund = $r['refund_id'] ? ' ref' : '';
+	$deleted = $r['deleted'] ? ' deleted' : '';
 	return
-		'<tr class="_income-unit'.($r['deleted'] ? ' deleted' : '').($r['prepay'] ? ' prepay' : '').'">'.
+		'<tr class="_income-unit'.$prepay.$refund.$deleted.'">'.
 			'<td class="sum '.$r['type'].(@$filter['zayav_id'] ? _tooltip('Платёж', 8) : '">')._sumSpace($r['sum']).
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
-			'<td class="ed">'._iconDel($r + array('class'=>'income-del'));
+			'<td class="ed">'._iconDel($r + array('class'=>'income-del','nodel'=>$refund));
 }//_income_unit()
 function incomeAbout($r, $filter=array()) {
 	$about = '';
@@ -465,9 +468,15 @@ function incomeAbout($r, $filter=array()) {
 	if($r['schet_id'])
 		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 
-	$about .=
+	$refund = !$r['refund_id'] && !$r['client_id'] && !$r['zp_id'] ?
+			'<a class="refund" val="'.$r['id'].'">возврат</a>'.
+			'<input type="hidden" class="refund-dtime" value="'.FullDataTime($r['dtime_add']).'">'
+			: '';
+
+	$about .= $refund.
 		($r['about'] && $about ? ', ' : '').$r['about'].
-		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '');
+		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '').
+		($r['refund_id'] ? ' <span class="red">Сделан возврат.</span>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }//incomeAbout()
