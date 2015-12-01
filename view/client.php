@@ -796,6 +796,7 @@ function clientBalansUpdate($client_id) {//обновление баланса клиента
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
+			  AND !`zp_id`
 			  AND !`deleted`
 			  AND `client_id`=".$client_id;
 	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -809,7 +810,7 @@ function clientBalansUpdate($client_id) {//обновление баланса клиента
 			  AND `client_id`=".$client_id;
 	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-	$balans = $income - $accrual + $refund;
+	$balans = $income - $accrual - $refund;
 
 	$sql = "UPDATE `_client`
 			SET `balans`=".$balans."

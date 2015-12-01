@@ -184,7 +184,9 @@ function _refund_spisok($filter=array()) {
 	$filter = _refundFilter($filter);
 	$filter = _filterJs('REFUND', $filter);
 
-	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID;
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID."
+		 AND !`deleted`";
 
 	if($filter['invoice_id'])
 		$cond .= " AND `invoice_id`=".$filter['invoice_id'];

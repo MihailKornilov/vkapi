@@ -502,6 +502,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".$ws_id."
 				  AND `client_id`
+				  AND !`zp_id`
 				  AND !`deleted`
 				GROUP BY `client_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -520,8 +521,7 @@ switch(@$_POST['op']) {
 				GROUP BY `client_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q))
-			$client[$r['client_id']]['balans_new'] += $r['sum'];
-
+			$client[$r['client_id']]['balans_new'] -= $r['sum'];
 
 		$send['count'] = 0;
 		foreach($client as $r)
@@ -581,6 +581,19 @@ switch(@$_POST['op']) {
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['oplata'] = round($r['sum']);
+
+		$sql = "SELECT
+					`zayav_id`,
+		            IFNULL(SUM(`sum`),0) `sum`
+				FROM `_money_refund`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND !`deleted`
+				  AND `zayav_id`
+				GROUP BY `zayav_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$zayav[$r['zayav_id']]['oplata'] -= round($r['sum']);
 
 		$send['count'] = 0;
 		$upd = array();
