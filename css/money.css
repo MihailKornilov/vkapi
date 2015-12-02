@@ -170,6 +170,7 @@
 #_schet-info #dop th .img_xls{float:right;margin:-1px 20px 0 0}
 #_schet-info .n{width:20px;text-align:right}
 #_schet-info ._spisok input{background-color:#ffd}
+#_schet-info ._spisok input[readonly]{background-color:#f3f3f3}
 #_schet-info ._spisok input.err{background-color:#fdd;color:#922}
 #_schet-info .name input{width:330px}
 #_schet-info .count{width:40px;text-align:center}

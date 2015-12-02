@@ -742,82 +742,6 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
-	case 'zayav_cartridge_schet_load'://получение данных дл€ счЄта по катрриджам
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `zayav_cartridge`
-				WHERE `zayav_id`=".$zayav_id."
-				  AND (`filling` OR `restore` OR `chip`)
-				  AND `cost`
-				  AND !`schet_id`
-				ORDER BY `id`";
-		$q = query($sql);
-		$schet = array();
-		$n = 1;
-		while($r = mysql_fetch_assoc($q)) {
-			$same = 0;//тут будет номер, с которым будет найдено совпадение
-			foreach($schet as $sn => $unit) {
-				$diff = 0; // пока различий не обнаружено
-				foreach($unit as $key => $val) {
-					if($key == 'count')
-						continue;
-					if($r[$key] != $val) {
-						$diff = 1;
-						break;
-					}
-				}
-				if(!$diff) { //если различий нет, то запоминание номера и выход
-					$same = $sn;
-					break;
-				}
-			}
-
-			if($same)
-				$schet[$same]['count']++;
-			else {
-				$schet[$n] = array(
-					'cartridge_id' => $r['cartridge_id'],
-					'filling' => $r['filling'],
-					'restore' => $r['restore'],
-					'chip' => $r['chip'],
-					'cost' => $r['cost'],
-					'prim' => $r['prim'],
-					'count' => 1
-				);
-				$n++;
-			}
-		}
-
-		$spisok = array();
-		foreach($schet as $r) {
-			$prim = array();
-			if($r['filling'])
-				$prim[] = 'заправка';
-			if($r['restore'])
-				$prim[] = 'восстановление';
-			if($r['chip'])
-				$prim[] = 'замена чипа у';
-
-			$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
-			$txt = mb_ucfirst($txt);
-
-			$spisok[] = array(
-				'name' => utf8($txt),
-				'count' => $r['count'],
-				'cost' => $r['cost'],
-				'cartridge' => 1
-			);
-		}
-
-		$send['spisok'] = $spisok;
-		jsonSuccess($send);
-		break;
 	case 'schet_load':
 		if(!$id = _num($_POST['id']))
 			jsonError();
@@ -1049,7 +973,7 @@ switch(@$_POST['op']) {
 				));
 		}
 
-		zayavBalansUpdate($schet['zayav_id']);
+		zayavBalansUpdate(_num(@$schet['zayav_id']));
 		zayavBalansUpdate($zayav_id);
 
 		if($insert_id)
@@ -1083,7 +1007,8 @@ switch(@$_POST['op']) {
 				));
 		}
 
-		jsonSuccess();
+		$send['schet_id'] = $schet_id;
+		jsonSuccess($send);
 		break;
 	case 'schet_pass'://передача счЄта клиенту
 		if(!$schet_id = _num($_POST['schet_id']))

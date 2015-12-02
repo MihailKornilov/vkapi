@@ -170,7 +170,7 @@ var _accrualAdd = function() {
 				}
 			});
 
-			if(!cartridge)
+			if(cartridge)
 				return;
 
 			zayavPlace(function() {
@@ -1076,7 +1076,8 @@ var _accrualAdd = function() {
 			client:'',
 			date_create:'',
 			nakl:0,
-			act:0
+			act:0,
+			func:function() {}
 		}, o);
 
 		o.nomer = o.schet_id ? 'СЧЁТ № ' + o.nomer : 'НОВЫЙ СЧЁТ';
@@ -1142,7 +1143,7 @@ var _accrualAdd = function() {
 			poleNum();
 		});
 
-		if(!o.schet_id)//если новый счёт, но выводится одно пустое поле
+		if(!o.schet_id && !o.arr.length)//если новый счёт и нет контента, выводится одно пустое поле
 			$('#pole-add').trigger('click');
 
 		$(document)
@@ -1166,14 +1167,16 @@ var _accrualAdd = function() {
 				count:1,
 				cost:''
 			}, sp);
-			var sum = sp.count * _cena(sp.cost);
+			var sum = sp.count * _cena(sp.cost),
+				readonly = sp.readonly ? ' readonly' : '';
 			return '<tr class="pole">' +
 				'<td class="n">' +
 				'<td class="name"><input type="text" value="' + sp.name + '" />' +
-				'<td class="count"><input type="text" value="' + sp.count + '" />' +
-				'<td class="cost"><input type="text" value="' + sp.cost + '" />' +
+				'<td class="count"><input type="text"' + readonly + ' value="' + sp.count + '" />' +
+				'<td class="cost"><input type="text"' + readonly + ' value="' + sp.cost + '" />' +
 				'<td class="sum">' + (sum ? sum : '') +
-				'<td class="ed"><div class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>';
+				'<td class="ed">' +
+					(!readonly ? '<div class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
 		}
 		function poleNum() {//порядковая нумерация позиций счёта
 			var num = $('#_schet-info .n');
@@ -1263,10 +1266,11 @@ var _accrualAdd = function() {
 					if(res.success) {
 						dialog.close();
 						_msg();
-						if(!o.schet_id)
-							location.reload(); //создаётся новый счёт
-						else
-							_schetInfo({id:o.schet_id});//счёт редактируется
+						o.func(res.schet_id);
+//						if(!o.schet_id)
+//							location.reload(); //создаётся новый счёт
+//						else
+//							_schetInfo({id:o.schet_id});//счёт редактируется
 					} else
 						dialog.abort();
 				}, 'json');

@@ -546,6 +546,26 @@ var VK_SCROLL = 0,
 			send[n] = n;
 
 		return send;
+	},
+	_checkAll = function(o, v) {
+		var check = $('._check'),
+			len = check.length,
+			arr = [];
+		for(var n = 0; n < len; n++) {
+			var eq = check.eq(n),
+				id = _num(eq.attr('id').split('_check')[0].split('ch')[1]);
+			if(!id)
+				continue;
+			if(o == 'change')
+				$('#ch' + id)._check(v);
+			else
+				if(_num(eq.find('input').val()))
+					arr.push(id);
+		}
+
+		if(o == 'array')
+			return arr;
+		return arr.join();
 	};
 
 $.fn._check = function(o) {
@@ -1889,6 +1909,15 @@ $(document)
 			butCancel:'Закрыть'
 		});
 		d.content.find('textarea').autosize();
+	})
+
+	.on('click', '#check_all_check', function() {//выборка всех чекбоксов, которые стоят ниже
+		/*
+			check_all - главный _check
+			ch1, ch2, ... - выбираемые
+		*/
+		var v = !_num($(this).find('input').val());
+		_checkAll('change', v);
 	})
 
 	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {

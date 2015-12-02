@@ -1666,13 +1666,11 @@ function _schet_unit($r, $zayav=1) {
 	return
 		'<tr class="schet-unit'.$pass.$paid.'" id="schet-unit'.$r['id'].'">'.
 			'<td class="td-content">'.
-				'<input type="hidden"'.($paid ? '' : ' class="schet-action"').' id="act'.$r['id'].'" />'.
+	  (!$paid ? '<input type="hidden" class="schet-action" id="act'.$r['id'].'" />' : '').
 				'<a class="info" val="'.$r['id'].'">'.
 					'—чЄт є <b class="pay-nomer">—÷'.$r['nomer'].'</b>'.
 				'</a> '.
-//				' + накладна€ '.
 				'от <u>'.FullData($r['date_create']).'</u> г. '.
-//				'<br />'.
 				'на сумму <b class="pay-sum">'._sumSpace($r['sum']).'</b> руб. '.
 				$pass_info.
 				$paid_info.
@@ -1720,48 +1718,6 @@ function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка за€
 	}
 	return $zayav;
 }//_schetToZayav()
-/*
-function zayav_info_schet($zayav_id) {//—чета
-	return
-		'<div class="headBlue">'.
-			'<a href="'.URL.'&p=report&d=money&d1=schet"><b>—чета, накладные, акты</b></a>'.
-			'<a class="add schet-add">—формировать счЄт</a>'.
-		'</div>'.
-		'<div id="schet-spisok">'.zayav_info_schet_spisok($zayav_id).'</div>';
-}//zayav_info_schet()
-function zayav_info_schet_spisok($zayav_id) {
-	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return '<div id="no-schet">—четов нет. <a class="schet-add">—формировать</a></div>';
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
-
-	$spisok = _zayavValToList($spisok);
-
-	//список платежей по счетам
-	$sql = "SELECT * FROM `money` WHERE `schet_id` IN (".implode(',', array_keys($spisok)).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['schet_id']]['paids'][] = array(
-			'sum' => $r['sum'],
-			'day' => $r['schet_paid_day']
-		);
-
-	$send =
-		'<table class="_spisok _money">';
-	foreach($spisok as $r)
-		$send .= schet_unit($r, 0);
-	$send .= '</table>';
-	return $send;
-}//zayav_info_schet_spisok()
-*/
-
-
-
-
 
 
 

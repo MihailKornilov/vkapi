@@ -67,8 +67,16 @@
 
 
 .remind#report .left{padding:0 8px}
-/*
 
-.remind ._empty{margin:8px 0}
-#_remind-next{margin-bottom:10px}
-*/
+
+
+#_remind-zayav{margin-top:15px}
+#_remind-zayav ._remind-add{
+	float:right;
+	background-color:#fff;
+	width:15px;
+	height:15px;
+	margin:-2px -5px 0 0;
+	border:#ddd solid 1px;
+	background-position:2px 2px;
+}
