@@ -1,10 +1,4 @@
 <?php
-//Первая буква строки заглавная
-mb_internal_encoding('UTF-8');
-function mb_ucfirst($text) {
-	return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
-}
-
 function pageNum($n) {
 	$arr = array(
 		1 => 'A',

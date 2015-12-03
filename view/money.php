@@ -468,7 +468,7 @@ function incomeAbout($r, $filter=array()) {
 	if($r['schet_id'])
 		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 
-	$refund = !$r['refund_id'] && !$r['client_id'] && !$r['zp_id'] ?
+	$refund = !@$r['no_refund_show'] && !$r['refund_id'] && !$r['client_id'] && !$r['zp_id'] ?
 			'<a class="refund" val="'.$r['id'].'">возврат</a>'.
 			'<input type="hidden" class="refund-dtime" value="'.FullDataTime($r['dtime_add']).'">'
 			: '';
@@ -1424,8 +1424,8 @@ function balans_show_spisok($filter) {
 		$sql = "SELECT * FROM `_money_income` WHERE `id` IN (".$income_ids.")";
 		$income = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		$income = _clientValToList($income);
-		if(function_exists('_zayavValToList'))
-			$income = _zayavValToList($income);
+		$income = _zayavValToList($income);
+		$income = _schetValToList($income);
 	}
 
 	$expense = array();
@@ -1466,6 +1466,7 @@ function balans_show_spisok($filter) {
 		// описание для платежей
 		if($r['income_id']) {
 			$income[$r['income_id']]['client_id'] = 0;
+			$income[$r['income_id']]['no_refund_show'] = 1;//не отображать ссылку "возврат"
 			$about = incomeAbout($income[$r['income_id']]);
 		}
 

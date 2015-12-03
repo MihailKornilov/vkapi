@@ -1056,7 +1056,11 @@ var _accrualAdd = function() {
 					head:'ñ÷¸òà ¹ ' + res.nomer,
 					op:'schet_del',
 					func:function() {
-
+						dialog.close();
+						if(window.SCHET)
+							_schetSpisok();
+						else
+							location.reload();
 					}
 				});
 			});
@@ -1077,7 +1081,9 @@ var _accrualAdd = function() {
 			date_create:'',
 			nakl:0,
 			act:0,
-			func:function() {}
+			func:function() {
+				location.reload();
+			}
 		}, o);
 
 		o.nomer = o.schet_id ? 'Ñ×¨Ò ¹ ' + o.nomer : 'ÍÎÂÛÉ Ñ×¨Ò';
@@ -1168,7 +1174,7 @@ var _accrualAdd = function() {
 				cost:''
 			}, sp);
 			var sum = sp.count * _cena(sp.cost),
-				readonly = sp.readonly ? ' readonly' : '';
+				readonly = sp.readonly ? ' readonly="readonly"' : '';
 			return '<tr class="pole">' +
 				'<td class="n">' +
 				'<td class="name"><input type="text" value="' + sp.name + '" />' +
@@ -1232,7 +1238,8 @@ var _accrualAdd = function() {
 					arr.push({
 						name:name,
 						count:count,
-						cost:cost
+						cost:cost,
+						readonly:count_inp.attr('readonly') == 'readonly'
 					});
 			}
 
@@ -1279,7 +1286,8 @@ var _accrualAdd = function() {
 	},
 	_schetSpisok = function(v, id) {
 		SCHET.page = 1;
-		SCHET[id] = v;
+		if(id)
+			SCHET[id] = v;
 		$.post(AJAX_MAIN, SCHET, function(res) {
 			if(res.success) {
 				$('#spisok').html(res.spisok);

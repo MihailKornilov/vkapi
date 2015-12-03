@@ -1338,6 +1338,12 @@ function _tooltip($msg, $left=0, $ugolSide='') {
 function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
 function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
+function mb_ucfirst($txt) {//делание заклавной первую букву текста
+	mb_internal_encoding('UTF-8');
+	$txt = utf8($txt);
+	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
+	return win1251($txt);
+}//mb_ucfirst()
 
 function _rightLink($id, $spisok, $val=0) {
 	$a = '';

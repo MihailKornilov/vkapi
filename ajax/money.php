@@ -775,6 +775,7 @@ switch(@$_POST['op']) {
 
 			$r['name'] = utf8($r['name']);
 			$r['cost'] = _cena($r['cost']);
+			$r['readonly'] = _bool($r['readonly']);
 			$arr[] = $r;
 		}
 		$html .= '</table>';
@@ -907,13 +908,15 @@ switch(@$_POST['op']) {
 				$schet_id.",".
 				"'".addslashes(win1251($r['name']))."',".
 				$r['count'].",".
-				$r['cost'].
+				$r['cost'].",".
+				$r['readonly'].
 			")";
 		$sql = "INSERT INTO `_schet_content` (
 					`schet_id`,
 					`name`,
 					`count`,
-					`cost`
+					`cost`,
+					`readonly`
 				) VALUES ".implode(',', $values);
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1148,6 +1151,8 @@ switch(@$_POST['op']) {
 				SET `deleted`=1
 				WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		zayavCartridgeSchetDel($schet_id);
 
 		//внесение баланса для клиента
 		_balans(array(
