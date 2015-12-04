@@ -1,4 +1,5 @@
 var VK_SCROLL = 0,
+	COOKIE_PREFIX = APP_ID + '_' + VIEWER_ID + '_',
 	ZINDEX = 0,
 	BC = 0,
 	FB, // frameBody
@@ -40,7 +41,6 @@ var VK_SCROLL = 0,
 	},
 	URL = APP_HTML + '/index.php?' + VALUES,
 	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES + '&ajax=1',
-	_onScroll = [],
 	hashLoc,
 	hashSet = function(hash) {
 		if(!hash && !hash.p)
@@ -75,6 +75,45 @@ var VK_SCROLL = 0,
 		}
 		if(s)
 			VK.callMethod('setLocation', hashLoc);
+	},
+	_scroll = function(action, unit) {//сохранение и возврат скролла для конкретной страницы, если необходимо
+		var p = _cookie('p'),
+			d = _cookie('d');
+		if(!p)
+			return 0;
+		var key = COOKIE_PREFIX + 'scroll_' + p + (d || ''),
+			u = _cookie(key + '_unit');
+
+		if(action == 'set') {
+			_cookie(key, VK_SCROLL);
+			if(unit)
+				_cookie(key + '_unit', unit);
+			return;
+		}
+
+		if(action == 'page') {
+			_cookie(key + '_page', unit);
+			return;
+		}
+
+		if(action == 'clear') {
+			_cookie(key, 0);
+			_cookie(key + '_page', 1);
+			return;
+		}
+
+		//подсвечивание просмотренного элемента
+		if(u)
+			$('#' + u)
+				.css('position', 'relative')
+				.append('<div id="unit-select-show"></div>')
+				.find('#unit-select-show')
+				.animate({opacity:.9}, 200)
+				.animate({opacity:0}, 900, function() {
+					$('#unit-select-show').remove()
+				});
+
+		return _num(_cookie(key));
 	},
 	pinEnter = function() {
 		var send = {
@@ -178,10 +217,7 @@ var VK_SCROLL = 0,
 					table:$(this).attr('val'),
 					ids:arr.join()
 				};
-				$('#mainLinks').addClass('busy');
-				$.post(AJAX_MAIN, send, function(res) {
-					$('#mainLinks').removeClass('busy');
-				}, 'json');
+				$.post(AJAX_MAIN, send, function() {}, 'json');
 			}
 		});
 	},
@@ -504,6 +540,9 @@ var VK_SCROLL = 0,
 			arr[id] = v;
 		arr.page = 1;
 
+		//очистка количества выводимых страниц и высоту прокрутки
+		_scroll('clear');
+
 		var name = arr.op.split('_spisok')[0],
 			loc = '';
 
@@ -512,7 +551,7 @@ var VK_SCROLL = 0,
 				continue;
 			if(i == 'page')
 				continue;
-			_cookie(APP_ID + '_' + VIEWER_ID + '_' + name + '_' + i, escape(arr[i]));
+			_cookie(COOKIE_PREFIX + name + '_' + i, escape(arr[i]));
 		}
 
 /*
@@ -2286,6 +2325,7 @@ $(document)
 		t.addClass('_busy');
 
 		window[v[0]].page = v[1];
+		_scroll('page', _num(v[1])); //сохранение номера страницы для вывода всего спика при возвращении
 		$.post(AJAX_MAIN, window[v[0]], function(res) {
 			if(res.success) {
 				t.after(res.spisok).remove();
@@ -2296,19 +2336,39 @@ $(document)
 	})
 
 	.ready(function() {
-		VK.callMethod('scrollWindow', 0);
-		VK.callMethod('scrollSubscribe');
-		VK.addCallback('onScroll', function(top) {
-			VK_SCROLL = top;
-			for(var i in _onScroll)
-				_onScroll[i](top);
-		});
-
 		FB = $('#frameBody');
 		FH = $('#frameHidden');
 		_fbhs();
-		sortable();
 
+		window.frameHidden.onresize = _fbhs;
+
+		sortable();
+		imageSortable();
+
+		VK.callMethod('scrollWindow', _scroll());
+
+		VK.callMethod('scrollSubscribe');
+		VK.addCallback('onScroll', function(top) {
+			VK_SCROLL = top;
+		});
+
+
+
+		if($('#pin-enter').length) {
+			$('#pin')
+				.focus()
+				.keydown(function() {
+					$('.red').html('&nbsp;');
+				})
+				.keyEnter(pinEnter);
+			$('.vkButton').click(pinEnter);
+		}
+	});
+
+
+
+
+/*
 		$('.pagehelp_create').click(function() {
 			var t = $(this),
 				page = t.attr('val'),
@@ -2446,18 +2506,4 @@ $(document)
 				$('#pagehelp_txt').autosize();
 			}
 		});
-
-		imageSortable();
-
-		window.frameHidden.onresize = _fbhs;
-
-		if($('#pin-enter').length) {
-			$('#pin')
-				.focus()
-				.keydown(function() {
-					$('.red').html('&nbsp;');
-				})
-				.keyEnter(pinEnter);
-			$('.vkButton').click(pinEnter);
-		}
-	});
+*/

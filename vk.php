@@ -1007,6 +1007,15 @@ function _filterJs($name, $filter) {//формирование условий поиска в формате js
 		'op' => strtolower($name).'_spisok',
 		'js' => ''
 	);
+
+	//количество страниц, которое будет выводиться в списке
+	$filter['page_count'] = 1;
+	if(!empty($_GET['p'])) {
+		$key = APP_ID.'_'.VIEWER_ID.'_scroll_'.$_GET['p'].'_page';
+		$filter['page_count'] = _num(@$_COOKIE[$key]);
+		$filter['page_count'] = $filter['page_count'] && $filter['page'] == 1 ? $filter['page_count'] : 1;
+	}
+
 	if($filter['page'] != 1)
 		return $filter;
 
@@ -1030,14 +1039,18 @@ function _filterJs($name, $filter) {//формирование условий поиска в формате js
 
 	return $filter;
 }//_filterJs()
+function _startLimit($filter) {
+	return _start($filter).','.($filter['limit'] * $filter['page_count']);
+}//_startLimit()
 function _start($v) {//вычисление первой позиции в базе данных
 	return ($v['page'] - 1) * $v['limit'];
 }//_start()
 function _next($v) {//вывод ссылки на догрузку списка
 	$send = '';
 	$start = _start($v);
-	if($start + $v['limit'] < $v['all']) {
-		$c = $v['all'] - $start - $v['limit'];
+	$page_count = empty($v['page_count']) ? 1 : $v['page_count'];
+	if($start + $v['limit'] * $page_count < $v['all']) {
+		$c = $v['all'] - $start - ($v['limit'] * $page_count);
 		$c = $c > $v['limit'] ? $v['limit'] : $c;
 
 		$type = ' запис'._end($c, 'ь', 'и', 'ей');
@@ -1051,7 +1064,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 
 		$show = '<span>Показать ещё '.$c.$type.'</span>';
 		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
-		$page = $v['page'] + 1;
+		$page = $v['page'] + $page_count;
 		$js_name = empty($v['js_name']) ? '' : $v['js_name'].':';//глобальная переменная js, содержащая условия поиска. После двоеточия идёт номер страницы
 		$send = empty($v['tr']) ?
 			'<div class="_next" val="'.$js_name.$page.'"'.$id.'>'.$show.'</div>'

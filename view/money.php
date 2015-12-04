@@ -475,7 +475,7 @@ function incomeAbout($r, $filter=array()) {
 
 	$about .= $refund.
 		($r['about'] && $about ? ', ' : '').$r['about'].
-		($r['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '').
+		($r['client_id'] && !@$filter['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '').
 		($r['refund_id'] ? ' <span class="red">Платёж возвращён.</span>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;

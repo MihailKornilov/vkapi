@@ -1274,10 +1274,6 @@ var _accrualAdd = function() {
 						dialog.close();
 						_msg();
 						o.func(res.schet_id);
-//						if(!o.schet_id)
-//							location.reload(); //создаётся новый счёт
-//						else
-//							_schetInfo({id:o.schet_id});//счёт редактируется
 					} else
 						dialog.abort();
 				}, 'json');

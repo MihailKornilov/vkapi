@@ -190,7 +190,7 @@ function client_data($v=array()) {// список клиентов
 			FROM `_client`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
-			LIMIT "._start($filter).",".$filter['limit'];
+			LIMIT "._startLimit($filter);
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {
 		if(FIND) {
@@ -289,7 +289,7 @@ function client_data($v=array()) {// список клиентов
 
 
 		$send['spisok'] .=
-			'<div class="unit">'.
+			'<div class="unit" id="cu'.$r['id'].'">'.
 				'<table class="g-tab">'.
 					'<tr><td>'.$left.
 						'<td class="r-td">'.
@@ -578,6 +578,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 	));
 
 	$accrual = _accrual_spisok(array('client_id'=>$client_id));
+	$income = income_spisok(array('client_id'=>$client_id));
 	$remind = _remind_spisok(array('client_id'=>$client_id));
 
 	/*
@@ -685,7 +686,7 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 			'<div id="dopLinks">'.
 				_clientDopLink('Заявки', array('all' => $zayav['all'] + $cartridge['all'])).
 				_clientDopLink('Начисления', $accrual).
-//				_clientDopLink('Платежи', 0).
+				_clientDopLink('Платежи', $income).
 				_clientDopLink('Напоминания', $remind).
 				_clientDopLink('История', $hist).
 			'</div>'.
@@ -694,11 +695,13 @@ function _clientInfo($client_id) {//вывод информации о клиенте
 				'<tr><td class="left">'.
 						_clientDopContentZayav('zayav', $zayav, $cartridge).
 						_clientDopContent('accrual', $accrual).
+						_clientDopContent('income', $income).
 						_clientDopContent('remind', $remind).
 						_clientDopContent('history', $hist).
 					'<td class="right">'.
 						_clientDopRight('zayav', array('all' => $zayav['all'] + $cartridge['all']), _clientInfoZayavRight($zayav, $cartridge)).
 						_clientDopRight('accrual', $accrual, '').
+						_clientDopRight('income', $income, '').
 						_clientDopRight('remind', $remind, '').
 						_clientDopRight('history', $hist, _history_right()).
 				'</div>'.

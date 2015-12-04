@@ -315,25 +315,6 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 				$('.left').html(res.spisok);
 			}
 		}, 'json');
-	},
-	clientZayavFilter = function() {
-		return {
-			op:'client_zayav_spisok',
-			client_id:CLIENT.id,
-			status:$('#status').val(),
-			diff:$('#diff').val(),
-			device:$('#dev_device').val(),
-			vendor:$('#dev_vendor').val(),
-			model:$('#dev_model').val()
-		};
-	},
-	clientZayavSpisok = function() {
-		$('#dopLinks').addClass('busy');
-		$.post(AJAX_MAIN, clientZayavFilter(), function (res) {
-			$('#dopLinks').removeClass('busy');
-			$('#zayav_result').html(res.all);
-			$('#zayav_spisok').html(res.html);
-		}, 'json');
 	};
 
 $.fn.clientSel = function(o) {
@@ -393,18 +374,21 @@ $.fn.clientSel = function(o) {
 };
 
 $(document)
+	.on('click', '#client .unit', function() {
+		_scroll('set', $(this).attr('id'));
+	})
 	.on('click', '#client #filter_clear', function() {
 		$('#find')._search('clear');
 		$('#category_id')._radio(0);
 		$('#dolg')._check(0);
-		$('#active')._check(0);
-		$('#comm')._check(0);
+//		$('#active')._check(0);
+//		$('#comm')._check(0);
 		$('#opl')._check(0);
 		CLIENT.find = '';
 		CLIENT.dolg = 0;
 		CLIENT.category_id = 0;
-		CLIENT.active = 0;
-		CLIENT.comm = 0;
+//		CLIENT.active = 0;
+//		CLIENT.comm = 0;
 		CLIENT.opl = 0;
 		clientSpisok();
 	})
@@ -428,20 +412,6 @@ $(document)
 		p.remove();
 	})
 
-	.on('click', '#clientInfo #zayav_spisok ._next', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var next = $(this),
-			send = clientZayavFilter();
-		send.page = $(this).attr('val');
-		next.addClass('busy');
-		$.post(AJAX_MAIN, send, function (res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '.client-info-go', function(e) {
 		e.stopPropagation();
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
@@ -514,8 +484,8 @@ $(document)
 			}).click(clientAdd);
 			$('#category_id')._radio(clientSpisok);
 			$('#dolg')._check(clientSpisok);
-			$('#active')._check(clientSpisok);
-			$('#comm')._check(clientSpisok);
+//			$('#active')._check(clientSpisok);
+//			$('#comm')._check(clientSpisok);
 			$('#opl')._check(clientSpisok);
 			$('#dolg_check').vkHint({
 				msg:'<b>Список должников.</b><br /><br />' +
