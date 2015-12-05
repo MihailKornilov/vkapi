@@ -1579,7 +1579,7 @@ function _schet_spisok($v=array()) {
 			$cond .= " AND `client_id`=" . $filter['client_id'];
 		switch ($filter['passpaid']) {
 			case 1:
-				$cond .= " AND !`pass`";
+				$cond .= " AND !`pass` AND `paid_sum`<`sum`";
 				break;
 			case 2:
 				$cond .= " AND `pass` AND `paid_sum`<`sum`";

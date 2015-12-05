@@ -550,7 +550,9 @@ switch(@$_POST['op']) {
 				  0 `accrual`,
 				  `accrual_sum`,
 				  0 `oplata`,
-				  `oplata_sum`
+				  `oplata_sum`,
+				  0 `schet_exist`,
+				  `schet`
 				FROM `zayav`
 				WHERE `ws_id`=".$ws_id."
 				  AND !`deleted`";
@@ -595,21 +597,43 @@ switch(@$_POST['op']) {
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['oplata'] -= round($r['sum']);
 
+		$sql = "SELECT
+					`zayav_id`,
+		            IFNULL(COUNT(`id`),0) `count`
+				FROM `_schet`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".$ws_id."
+				  AND !`deleted`
+				  AND `zayav_id`
+				GROUP BY `zayav_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$zayav[$r['zayav_id']]['schet_exist'] = _num($r['count']) ? 1 : 0;
+
 		$send['count'] = 0;
 		$upd = array();
 		foreach($zayav as $r)
-			if($r['accrual_sum'] != $r['accrual'] || $r['oplata_sum'] != $r['oplata']) {
-				$upd[] = '('.$r['id'].','.$r['accrual'].','.$r['oplata'].')';
+			if($r['accrual_sum'] != $r['accrual'] || $r['oplata_sum'] != $r['oplata'] || $r['schet'] != $r['schet_exist']) {
+				$upd[] = '('.
+						$r['id'].','.
+						$r['accrual'].','.
+						$r['oplata'].','.
+						$r['schet_exist'].
+					')';
 				$send['count']++;
 			}
 
 		if(!empty($upd)) {
-			$sql = "INSERT INTO `zayav`
-						(`id`,`accrual_sum`, `oplata_sum`)
-					VALUES ".implode(',', $upd)."
+			$sql = "INSERT INTO `zayav` (
+						`id`,
+						`accrual_sum`,
+						`oplata_sum`,
+						`schet`
+					) VALUES ".implode(',', $upd)."
 					ON DUPLICATE KEY UPDATE
 						`accrual_sum`=VALUES(`accrual_sum`),
-						`oplata_sum`=VALUES(`oplata_sum`)";
+						`oplata_sum`=VALUES(`oplata_sum`),
+						`schet`=VALUES(`schet`)";
 			query($sql);
 		}
 

@@ -1153,6 +1153,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		zayavCartridgeSchetDel($schet_id);
+		zayavBalansUpdate($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(

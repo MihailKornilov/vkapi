@@ -530,6 +530,6 @@ function sa_ws_info($id) {
 		'<div class="headName">Счётчики</div>'.
 		'<div class="vkButton ws_client_balans" val="'.$ws['id'].'"><button>Обновить балансы клиентов</button></div>'.
 		'<br />'.
-		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить суммы начислений и платежей заявок</button></div>'.
+		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить в заявках: начисления, платежи, наличие счетов</button></div>'.
 	'</div>';
 }//sa_ws_info()
