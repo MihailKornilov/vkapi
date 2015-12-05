@@ -1244,6 +1244,7 @@ function _balans($v) {//внесение записи о балансе
 				`expense_id`,
 				`invoice_transfer_id`,
 				`schet_id`,
+				`zayav_id`,
 
 				`viewer_id_add`
 			) VALUES (
@@ -1262,6 +1263,7 @@ function _balans($v) {//внесение записи о балансе
 				"._num(@$v['expense_id']).",
 				".$invoice_transfer_id.",
 				"._num(@$v['schet_id']).",
+				"._num(@$v['zayav_id']).",
 
 				".VIEWER_ID."
 			)";
@@ -1409,6 +1411,7 @@ function balans_show_spisok($filter) {
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
 	$spisok = _schetValToList($spisok);
+	$spisok = _zayavValToList($spisok);
 
 	$transfer = array();
 	if($transfer_ids = _idsGet($spisok, 'invoice_transfer_id')) {
@@ -1444,7 +1447,7 @@ function balans_show_spisok($filter) {
 		$sum = _sumSpace($r['sum']);
 		$sum_diff = '';
 		if(round($r['sum_old'], 2)) {//если сумма изменялась
-			$sum = _sumSpace($r['sum_old'] - $r['sum']);
+			$sum = ($r['sum'] - $r['sum_old'] > 0  ? '+' : '')._sumSpace($r['sum'] - $r['sum_old']);
 			$sum_diff = '<div class="diff">'.round($r['sum_old'], 2).' &rarr; '.round($r['sum'], 2).'</div>';
 		}
 		$sum = $sum ? $sum : '';
@@ -1470,6 +1473,9 @@ function balans_show_spisok($filter) {
 		// описание для расходов
 		if($r['expense_id'])
 			$about = expenseAbout($expense[$r['expense_id']]);
+
+		if($r['zayav_id'])
+			$about .= ' Заявка '.$r['zayav_link'].'.';
 
 		$send['spisok'] .=
 			'<tr><td class="action">'._balansAction($r['action_id']).

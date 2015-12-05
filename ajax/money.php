@@ -1388,6 +1388,7 @@ switch(@$_POST['op']) {
 				ORDER BY `id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		$arr = array();
+		$workerBalans = array();//сохранение старых балансов сотрудников
 		while($r = mysql_fetch_assoc($q)) {
 			$dop = '';
 			$ze = _zayavExpense($r['category_id'], 'all');
@@ -1403,6 +1404,7 @@ switch(@$_POST['op']) {
 				$dop.':'.
 				$r['sum'];
 		}
+
 		$old = _zayav_expense_array(implode(',', $arr));
 		$new = _zayav_expense_array($expense);
 
@@ -1411,7 +1413,7 @@ switch(@$_POST['op']) {
 			foreach($old as $r)
 				$toDelete[$r[0]] = $r;
 
-			//получение старой html-таблицы для истории дейсвтий
+			//получение старого массива для истории действий
 			$sql = "SELECT *
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
@@ -1465,9 +1467,7 @@ switch(@$_POST['op']) {
 				query($sql, GLOBAL_MYSQL_CONNECT);
 			}
 
-		//	_zayavBalansUpdate($zayav_id);
-
-			//получение новой html-таблицы для истории дейсвтий
+			//получение нового массива для истории дейсвтий
 			$sql = "SELECT *
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
@@ -1475,6 +1475,8 @@ switch(@$_POST['op']) {
 					  AND `zayav_id`=".$zayav_id."
 					ORDER BY `id`";
 			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+			_zayav_expense_worker_balans($arrOld, $arrNew);
 
 			$old = _zayav_expense_html($arrOld, false, $arrNew);
 			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
@@ -1745,59 +1747,6 @@ switch(@$_POST['op']) {
 			'worker_id' => $r['worker_id'],
 			'v1' => _cena($r['sum']),
 			'v2' => $r['about']
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_zp_add':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-		if(!$mon = _num($_POST['mon']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		$about = _monthDef($mon).' '.$year.($about ? ', ' : '').$about;
-
-		$sql = "INSERT INTO `money` (
-					`ws_id`,
-					`sum`,
-					`prim`,
-					`invoice_id`,
-					`expense_id`,
-					`worker_id`,
-					`year`,
-					`mon`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					-".$sum.",
-					'".addslashes($about)."',
-					".$invoice_id.",
-					1,
-					".$worker_id.",
-					".$year.",
-					".$mon.",
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 6,
-			'table' => 'money',
-			'id' => mysql_insert_id()
-		));
-
-		history_insert(array(
-			'type' => 37,
-			'value' => $sum,
-			'value1' => $about,
-			'value2' => $worker_id
 		));
 
 		jsonSuccess();

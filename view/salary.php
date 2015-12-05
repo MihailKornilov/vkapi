@@ -637,3 +637,54 @@ function _zayav_expense_array($v) {//расходы по заявке в формате array
 
 	return $array;
 }//_zayav_expense_array()
+function _zayav_expense_worker_balans($old, $new) {//внесение балансов сотрудников, если меняются
+	$balansOld = array();
+	foreach($old as $id => $r)
+		if($r['worker_id'])
+			$balansOld[$r['worker_id']][$id] = $r['sum'];
+
+	//начисление изменилось
+	foreach($new as $id => $r)
+		if($r['worker_id'] && isset($balansOld[$r['worker_id']][$id]))
+			if($r['sum'] != $balansOld[$r['worker_id']][$id]) {
+				_balans(array(
+					'action_id' => 40,
+					'worker_id' => $r['worker_id'],
+					'zayav_id' => $r['zayav_id'],
+					'sum' => $r['sum'],
+					'sum_old' => $balansOld[$r['worker_id']][$id]
+				));
+				unset($balansOld[$r['worker_id']][$id]);
+			}
+
+	//начиление было удалено
+	foreach($balansOld as $worker_id => $worker)
+		foreach($worker as $id => $sum)
+			if(empty($new[$id]))
+				_balans(array(
+					'action_id' => 21,
+					'worker_id' => $worker_id,
+					'zayav_id' => $old[$id]['zayav_id'],
+					'sum' => $sum
+				));
+
+	//начисление добавилось
+	foreach($new as $id => $r)
+		if($r['worker_id'] && empty($old[$id]))
+			_balans(array(
+				'action_id' => 19,
+				'worker_id' => $r['worker_id'],
+				'zayav_id' => $r['zayav_id'],
+				'sum' => $r['sum']
+			));
+}//_zayav_expense_worker_balans()
+
+
+
+
+
+
+
+
+
+
