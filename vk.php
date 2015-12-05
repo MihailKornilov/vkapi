@@ -75,6 +75,7 @@ define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : _num(@$_GET['viewer_id']));
 if(!VIEWER_ID && !CRON)
 	die('Error: not correct viewer_id.');
 
+define('COOKIE_PREFIX', APP_ID.'_'.VIEWER_ID.'_');
 define('VALUES', TIME.
 				 '&viewer_id='.@$_GET['viewer_id'].
 				 '&auth_key='.@$_GET['auth_key'].
@@ -680,6 +681,25 @@ function _hashCookieSet() {
 	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
 	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
 }//_hashCookieSet()
+function _hashFilter($name) {//формирование элементов фильтра из cookie или адресной строки
+	$v = array();
+	if(HASH_VALUES) {
+		$ex = explode('.', HASH_VALUES);
+		foreach($ex as $r) {
+			$arr = explode('=', $r);
+			$v[$arr[0]] = $arr[1];
+		}
+	} else
+		foreach($_COOKIE as $k => $val) {
+			$arr = explode(COOKIE_PREFIX.$name.'_', $k);
+			if(isset($arr[1]))
+				$v[$arr[1]] = $val;
+		}
+
+	$v['find'] = unescape(@$v['find']);
+
+	return $v;
+}//_hashFilter()
 
 function _appAuth() {//проверка авторизации в приложении
 	if(LOCAL || CRON || SA_VIEWER_ID)

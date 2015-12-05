@@ -7,27 +7,8 @@ function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 	foreach($filterDef as $name => $key)
 		define($name, $key);
 	switch(@$_GET['d']) {
-		case 'info':
-			if(!_num($_GET['id']))
-				return 'Страницы не существует';
-			return _clientInfo($_GET['id']);
-		default:
-			$v = array();
-			if(HASH_VALUES) {
-				$ex = explode('.', HASH_VALUES);
-				foreach($ex as $r) {
-					$arr = explode('=', $r);
-					$v[$arr[0]] = $arr[1];
-				}
-			} else {
-				foreach($_COOKIE as $k => $val) {
-					$arr = explode(APP_ID.'_'.VIEWER_ID.'_client_', $k);
-					if(isset($arr[1]))
-						$v[$arr[1]] = $val;
-				}
-			}
-			$v['find'] = unescape(@$v['find']);
-			return _client($v);
+		case 'info': return _clientInfo();
+		default: return _client(_hashFilter('client'));
 	}
 }//_clientCase()
 
@@ -554,9 +535,12 @@ function _clientInfoZayavRight($zayav, $cartridge) {
 	'<div class="f-label">Вид заявок</div>'.
 	_radio('zayav-type', $list, 1, 1);
 }//_clientInfoZayavRight()
-function _clientInfo($client_id) {//вывод информации о клиенте
+function _clientInfo() {//вывод информации о клиенте
+	if(!$client_id = _num(@$_GET['id']))
+		return _err('Страницы не существует');
+
 	if(!$c = _clientQuery($client_id, 1))
-		return _noauth('Клиента не существует');
+		return _err('Клиента не существует');
 
 	if($c['deleted'])
 		if($c['join_id'])
