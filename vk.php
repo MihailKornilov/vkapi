@@ -1921,6 +1921,24 @@ function _calendarWeek($day=0) {// Формирование периода за неделю недели
 
 	return $start.':'.$end;
 }//_calendarPeriod()
+function _period($v=0, $action='get') {// Формирование периода для элементов массива запросившего фильтра
+	/*
+		$i: get, sql
+	*/
+
+	if(empty($v))
+		$v = _calendarWeek();
+
+	switch($action) {
+		case 'get': return $v;
+		case 'sql':
+			$ex = explode(':', $v);
+			if(empty($ex[1]))
+				return " AND `dtime_add` LIKE '".$v."%'";
+			return " AND `dtime_add`>='".$ex[0]." 00:00:00' AND `dtime_add`<='".$ex[1]." 23:59:59'";
+		default: return '';
+	}
+}//_period()
 
 function _imageAdd($v=array()) {
 	$v = array(

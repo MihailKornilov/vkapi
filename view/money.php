@@ -360,9 +360,9 @@ function incomeFilter($v) {
 		'worker_id' => _num(@$v['worker_id']),
 		'prepay' => _bool(@$v['prepay']),
 		'deleted' => _bool(@$v['deleted']),
-		'deleted_only' => _bool(@$v['deleted_only'])
+		'deleted_only' => _bool(@$v['deleted_only']),
+		'period' => _period(@$v['period'])
 	);
-	$send = _calendarPeriod(@$v['day']) + $send;
 	return $send;
 }//incomeFilter()
 function income_spisok($filter=array()) {
@@ -387,10 +387,7 @@ function income_spisok($filter=array()) {
 		$cond .= " AND !`deleted`";
 	elseif($filter['deleted_only'])
 		$cond .= " AND `deleted`";
-	if($filter['day'])
-		$cond .= " AND `dtime_add` LIKE '".$filter['day']."%'";
-	if($filter['from'])
-		$cond .= " AND `dtime_add`>='".$filter['from']." 00:00:00' AND `dtime_add`<='".$filter['to']." 23:59:59'";
+	$cond .= _period($filter['period'], 'sql');
 
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,

@@ -2138,10 +2138,10 @@ $(document)
 			cal = cal.parent();
 		if(!sel)
 			cal.find('.sel').removeClass('sel');
-		p[(sel ? 'remove' : 'add') + 'Class']('sel');
-		cal.find('.selected').val(sel ? '' : val);
+		p.addClass('sel');
+		cal.find('.selected').val(val);
 		if(window._calendarFilter)
-			_calendarFilter(sel ? '' : val, 'day');
+			_calendarFilter(val, 'period');
 	})
 	.on('click', '._calendarFilter .ch', function() {
 		var t = $(this),
