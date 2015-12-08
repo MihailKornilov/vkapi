@@ -40,6 +40,7 @@ require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
 
+
 setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
 
@@ -913,12 +914,12 @@ function _mon($v) {//проверка даты в формате 2015-10, если не соответствует, воз
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEARMONTH, $v))
 		return strftime('%Y-%m');
 	return $v;
-}//_num()
+}//_mon()
 function _year($v) {//проверка года, если не соответствует, возврат текущего года
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEAR, $v))
 		return strftime('%Y');
 	return intval($v);
-}//_num()
+}//_year()
 function _numToWord($num, $firstSymbolUp=false) {
 	$num = intval($num);
 	$one = array(

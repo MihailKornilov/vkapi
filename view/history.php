@@ -209,10 +209,8 @@ function _history_types($history) {//перевод type_id в текст
 			//статус заявки: название статуса, подсвеченное соответствующим цветом (для mobile)
 			if(strpos($txt, '^'.$v.'^') !== false) {
 				$status = '';
-				if($r[$v]) {
-					$i = _zayavStatus($r[$v]);
-					$status = '<span class="zstatus" style="background-color:#'.$i['color'].'">'.$i['name'].'</span>';
-				}
+				if($r[$v])
+					$status = '<span class="zstatus"'._zayavStatus($r[$v], 'bg').'>'._zayavStatus($r[$v]).'</span>';
 				$txt = str_replace('^'.$v.'^', $status, $txt);
 			}
 		}

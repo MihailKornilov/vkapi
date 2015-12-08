@@ -35,7 +35,7 @@ var _accrualAdd = function() {
 		$('#sum').focus();
 		$('#acc_status')._radio({
 			light:1,
-			spisok:STATUS,
+			spisok:ZAYAV.status_sel,
 			func:function() {
 				$('#remind-div').slideDown(300);
 			}

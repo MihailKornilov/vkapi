@@ -1081,6 +1081,20 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
+/* Цветная кнопка статуса заявки  */
+#zayav-status-button h1 {
+	display:inline-block;
+	border:#DDD solid 1px;
+	width:140px;
+	text-align:center;
+	padding:2px 0 3px 0;
+	color:#666;
+	cursor:pointer;
+}
+#zayav-status-button h1:hover{border-color:#bbd; color:#444}
+#zayav-status-button span{color:#aaa;font-size:10px;margin-left:10px}
+
+
 
 
 
