@@ -670,6 +670,16 @@ $.fn._radio = function(o) {
 			}
 			return t;
 		case 'function': _click(o);	return t;
+		case 'object':
+			if('length' in o) {
+				var div = $('#' + id + '_radio').find('div'),
+					len = div.length;
+				for(n = 0; n < div.length; n++) {
+					var eq = div.eq(n);
+					eq.html('<s></s>' + o[n].title);
+				}
+				return t;
+			}
 	}
 
 	o = $.extend({

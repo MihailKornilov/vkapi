@@ -165,7 +165,9 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js?'.VERSION.'"></script>' : '').
 
 		//Стороние скрипты
-		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.0.3.min.js"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.js/jquery-ui.min.js"></script>'.
+		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
@@ -1098,6 +1100,25 @@ function _next($v) {//вывод ссылки на догрузку списка
 		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
 }//_next()
 
+function _arr($arr, $i=false) {//Последовательный массив
+	$send = array();
+	foreach($arr as $r) {
+		$v = $i === false ? $r : $r[$i];
+		$send[] = preg_match(REGEXP_CENA, $v) ? _cena($v) : utf8(htmlspecialchars_decode($v));
+	}
+	return $send;
+}//_arr()
+
+function _sel($arr) {
+	$send = array();
+	foreach($arr as $uid => $title) {
+		$send[] = array(
+			'uid' => $uid,
+			'title' => utf8($title)
+		);
+	}
+	return $send;
+}//_sel()
 function _selJson($arr) {
 	$send = array();
 	foreach($arr as $uid => $title) {
@@ -1116,12 +1137,21 @@ function _selJson($arr) {
 	return '['.implode(',',$send).']';
 }//_selJson()
 function _assJson($arr) {//Ассоциативный массив
+	$send = array();
 	foreach($arr as $id => $v)
 		$send[] =
 			(preg_match(REGEXP_NUMERIC, $id) ? $id : '"'.$id.'"').
 			':'.
 			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
 	return '{'.implode(',', $send).'}';
+}//_assJson()
+function _arrJson($arr, $i=false) {//Последовательный массив
+	$send = array();
+	foreach($arr as $r) {
+		$v = $i === false ? $r : $r[$i];
+		$send[] = preg_match(REGEXP_CENA, $v) ? $v : '"'.addslashes(htmlspecialchars_decode($v)).'"';
+	}
+	return '['.implode(',', $send).']';
 }//_assJson()
 
 function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоциативный список подкатегорий
@@ -1225,20 +1255,20 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 		"\n".'WORKER_SPISOK=_toSpisok(WORKER_ASS),'.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
-										   FROM `_money_expense_category`
-										   WHERE (`app_id`=".APP_ID." OR !`app_id`)
-											 AND (`ws_id`=".$ws_id." OR !`ws_id`)
-										   ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
+											  FROM `_money_expense_category`
+											  WHERE `app_id` IN (".APP_ID.",0)
+											    AND `ws_id` IN (".$ws_id.",0)
+											  ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'EXPENSE_WORKER_USE='.query_assJson("SELECT `id`,1
 												  FROM `_money_expense_category`
-												  WHERE (`app_id`=".APP_ID." OR !`app_id`)
-													AND (`ws_id`=".$ws_id." OR !`ws_id`)
+												  WHERE `app_id` IN (".APP_ID.",0)
+													AND `ws_id` IN (".$ws_id.",0)
 													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
-		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=1", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=2", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `dop`=3", GLOBAL_MYSQL_CONNECT).';';
+		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=1", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=2", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).';';
 
 	$fp = fopen(APP_PATH.'/js/ws_'.$ws_id.'_values.js', 'w+');
 	fwrite($fp, $save);

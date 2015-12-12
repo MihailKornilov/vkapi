@@ -691,7 +691,6 @@ if($s['zayav_id']) {
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`
 			  AND `id`=".$s['zayav_id'];
 	if(!query_assoc($sql))
 		die(win1251('Заявки не существует.'));

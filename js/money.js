@@ -108,6 +108,7 @@ var _accrualAdd = function() {
 	_incomeAdd = function() {
 		var zayav = window.ZAYAV,
 			cartridge = zayav && window.ZAYAV.cartridge,
+			place = window.zayavPlace ? 1 : 0,
 			about = zayav ? 'Примечаниие' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
@@ -165,7 +166,7 @@ var _accrualAdd = function() {
 				],
 				func:function() {
 					$('#about').focus();
-					if(!cartridge)
+					if(!cartridge && place)
 						$('#place-div').slideDown(300);
 				}
 			});
@@ -173,9 +174,10 @@ var _accrualAdd = function() {
 			if(cartridge)
 				return;
 
-			zayavPlace(function() {
-				$('#remind-div').slideDown(300);
-			});
+			if(place)
+				zayavPlace(function() {
+					$('#remind-div').slideDown(300);
+				});
 			for(var n = 0; n < REMIND.active_spisok.length; n++) {
 				var i = REMIND.active_spisok[n];
 				$('#ui' + i.id)._check({
@@ -215,8 +217,8 @@ var _accrualAdd = function() {
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
 				zayav_id:zayav ? ZAYAV.id : 0,
-				place:zayav && !cartridge ? $('#place').val() : 0,
-				place_other:zayav && !cartridge ? $('#place_other').val() : '',
+				place:zayav && !cartridge && place ? $('#place').val() : 0,
+				place_other:zayav && !cartridge && place ? $('#place_other').val() : '',
 				remind_ids:remind.join()
 			};
 			if(!send.invoice_id)
@@ -230,7 +232,7 @@ var _accrualAdd = function() {
 			} else if(!zayav && !send.about) {
 				dialog.err('Не указано описание');
 				$('#about').focus();
-			} else if(zayav && !cartridge && (send.place == -1 || send.place == 0 && ! send.place_other)) {
+			} else if(zayav && !cartridge && place && (send.place == -1 || send.place == 0 && !send.place_other)) {
 				dialog.err('Не указано местонахождение устройства');
 				$('#place_other').focus()
 			} else {
@@ -463,13 +465,18 @@ var _accrualAdd = function() {
 				width:380,
 				head:'Внесение расхода'
 			});
-		_expenseTab(dialog);
+			_expenseTab(dialog);
 		});
 		$('#invoice_id')._select({
 			width:140,
 			title0:'Все счета',
 			spisok:INVOICE_SPISOK,
 			func:expenseSpisok
+		});
+		EXPENSE_SPISOK.push({
+			uid:-1,
+			title:'Без категории',
+			content:'<b>Без категории</b>'
 		});
 		$('#category_id')._select({
 			width:140,
@@ -483,21 +490,81 @@ var _accrualAdd = function() {
 			spisok:EXPENSE_WORKER,
 			func:expenseSpisok
 		});
-		$('#year').years({
-			func:expenseSpisok,
-			center:function() {
-				var inp = $('#mon-list input'),
-					all = 0;
-				for(var n = 1; n <= 12; n++)
-					if(inp.eq(n - 1).val() == 0) {
-						all = 1;
-						break;
-					}
-				for(n = 1; n <= 12; n++)
-					$('#c' + n)._check(all);
-				expenseSpisok(all ? '1,2,3,4,5,6,7,8,9,10,11,12' : '', 'month');
-			}
+		$('#year').years({func:expenseSpisok});
+		$('#mon')._radio({
+			spisok:EXPENSE_MON,
+			light:1,
+			right:0,
+			func:expenseSpisok
 		});
+		_expenseGraf();
+	},
+	_expenseGraf = function() {
+		$('#container').highcharts({
+	        chart: {
+	            type: 'bar',
+		        animation:false
+	        },
+	        title: {
+	            text: 'Сумма в рублях по категориям'
+	        },
+	        xAxis: {
+	            categories: GRAF.categories,
+	            title: {
+	                text: null
+	            }
+	        },
+	        yAxis: {
+	            min: 0,
+	            title: {
+	                text: '',
+	                align: 'high'
+	            },
+	            labels: {
+	                overflow: 'justify'
+	            }
+	        },
+	        tooltip: {
+	            enabled:false
+	        },
+	        plotOptions: {
+		        series:{
+			        cursor:'pointer'
+		        },
+	            bar:{
+		            dataLabels:{
+			            enabled:true
+		            },
+		            events:{
+			            click:function(e) {
+				            var i = e.point.index,
+						        v = GRAF.index[i],
+						        sel = e.point.color != '#ff7777',
+						        color0 = Highcharts.getOptions().colors[0],
+								color = sel ? '#ff7777' : color0,
+						        chart = $('#container').highcharts(),
+						        data = chart.series[0].data,
+						        len = data.length;
+
+				            for(var n = 0; n < len; n++)
+					            data[n].update({color:color0})
+
+							data[i].update({color:color});
+
+				            $('#category_id')._select(sel ? v : 0);
+							expenseSpisok(sel ? v ? v : -1 : 0, 'category_id');
+			            }
+		            }
+	            }
+	        },
+	        credits: {
+	            enabled: false
+	        },
+	        series: [{
+	            showInLegend: false,
+	            data: GRAF.sum
+	        }]
+	    });
 	},
 	expenseSpisok = function(v, id) {
 		EXPENSE.op = 'expense_spisok';
@@ -506,7 +573,11 @@ var _accrualAdd = function() {
 		$.post(AJAX_MAIN, EXPENSE, function(res) {
 			if(res.success) {
 				$('#spisok').html(res.html);
-				$('#mon-list').html(res.mon);
+				$('#mon')._radio(res.mon);
+				if(id != 'category_id') {
+					GRAF = res.graf;
+					_expenseGraf();
+				}
 			}
 		}, 'json');
 	},
@@ -1518,14 +1589,6 @@ $(document)
 		});
 	})
 
-	.on('click', '#money-expense #mon-list div', function() {
-		var arr = [],
-			inp = $('#mon-list input');
-		for(var n = 1; n <= 12; n++)
-			if(inp.eq(n - 1).val() == 1)
-				arr.push(n);
-		expenseSpisok(arr.join(), 'month');
-	})
 	.on('click', '#money-expense ._next', function() {
 		var next = $(this);
 		if(next.hasClass('busy'))

@@ -121,7 +121,7 @@ function client_data($v=array()) {// список клиентов
 			$ids = query_ids("SELECT DISTINCT `client_id`
 							FROM `zayav`
 							WHERE `ws_id`=".WS_ID."
-							  AND `zayav_status`=1");
+							  AND `status`=1");
 			$cond .= " AND `id` IN (".$ids.")";
 		}
 		if($filter['comm']) {
@@ -506,8 +506,8 @@ function _clientDopContent($name, $arr) {//содержание дополнительных списоков (н
 			: '';
 }//_clientDopContent()
 function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списков (заявки)
-	if(!$arr['all']) //если заявок на оборудование нет, то сразу выводятся заявки с картриджами
-		$arr = $arr2;
+	if(!$arr2['all']) //если заявок на оборудование нет, то сразу выводятся заявки с картриджами
+		$arr2 = $arr;
 	$arr['all'] += $arr2['all'];
 	return
 		$arr['all'] ?

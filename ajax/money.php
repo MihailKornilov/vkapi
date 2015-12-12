@@ -521,8 +521,10 @@ switch(@$_POST['op']) {
 	case 'expense_spisok':
 		$data = expense_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
-		if($data['filter']['page'] == 1)
-			$send['mon'] = utf8(expenseMonthSum($_POST));
+		if($data['filter']['page'] == 1) {
+			$send['mon'] = _sel(expenseMonthSum($_POST));
+			$send['graf'] = expense_graf($data['filter'], 'arr');
+		}
 		jsonSuccess($send);
 		break;
 	case 'expense_add':

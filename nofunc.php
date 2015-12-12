@@ -99,6 +99,12 @@ if(!function_exists('zayavBalansUpdate')) {//обновление баланса заявки
 	}
 }
 
+if(!function_exists('zayavPlaceCheck')) {//Обновление местонахождения заявки
+	function zayavPlaceCheck() {
+		return;
+	}
+}
+
 if(!function_exists('_zayavValToList')) {
 	function _zayavValToList($arr) {
 		return $arr;

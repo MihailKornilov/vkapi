@@ -521,20 +521,26 @@ function expense() {
 		'<table class="tabLR" id="money-expense">'.
 			'<tr><td class="left">'.
 					'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.
+					'<div id="container"></div>'.
 					'<div id="spisok">'.$data['spisok'].'</div>'.
 				'<td class="right">'.expense_right().
-		'</table>';
+		'</table>'.
+
+		'<script type="text/javascript">'.
+			'var GRAF='.expense_graf($data['filter']).','.
+				'EXPENSE_MON='._selJson(expenseMonthSum()).';'.
+			'expenseLoad();'.
+		'</script>';
 }//expense()
 function expenseFilter($v) {
 	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'invoice_id' => _num(@$v['invoice_id']),
-		'category_id' => _num(@$v['category_id']),
+		'category_id' => intval(@$v['category_id']),
 		'worker_id' => _num(@$v['worker_id']),
 		'year' => _year(@$v['year']),
-		'month' => isset($v['month']) ? _ids(@$v['month']) : intval(strftime('%m')) //список выбранных месяцев
-		//'del' => isset($v['del']) && preg_match(REGEXP_BOOL, $v['del']) ? $v['del'] : 0
+		'mon' => isset($v['mon']) ? _num($v['mon']) : _num(strftime('%m'))
 	);
 }//expenseFilter()
 function expense_right() {
@@ -555,16 +561,17 @@ function expense_right() {
 		'<input type="hidden" id="worker_id">'.
 
 		'<input type="hidden" id="year">'.
-		'<div id="mon-list">'.expenseMonthSum().'</div>'.
+		'<input type="hidden" id="mon" value="'._num(strftime('%m')).'">'.
 		'<script type="text/javascript">'.
 			'var EXPENSE_WORKER='.query_workerSelJson($sql_worker, GLOBAL_MYSQL_CONNECT).';'.
-			'expenseLoad();'.
 		'</script>';
 }//expense_right()
 function expenseMonthSum($v=array()) {//список чекбоксов с месяцами и суммами расходов по каждому месяцу
 	$filter = expenseFilter($v);
 
-	$mon = _ids($filter['month'], 1);
+	$res = array();
+	for($n = 1; $n <= 12; $n++)
+		$res[$n] = _monthDef($n);
 
 	$sql = "SELECT
 				DISTINCT(DATE_FORMAT(`dtime_add`,'%m')) AS `month`,
@@ -575,28 +582,84 @@ function expenseMonthSum($v=array()) {//список чекбоксов с месяцами и суммами ра
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".$filter['year']."-%'".
 		($filter['invoice_id'] ? " AND `invoice_id`=".$filter['invoice_id'] : '').
-		($filter['category_id'] ? " AND `category_id`=".$filter['category_id'] : '').
+		($filter['category_id'] ? " AND `category_id`=".($filter['category_id'] == -1 ? 0 : $filter['category_id']) : '').
 		($filter['worker_id'] ? " AND `worker_id`=".$filter['worker_id'] : '')."
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
 			ORDER BY `dtime_add` ASC";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	$res = array();
 	while($r = mysql_fetch_assoc($q))
-		$res[intval($r['month'])] = abs($r['sum']);
-	$send = '';
-	for($n = 1; $n <= 12; $n++)
-		$send .= _check(
-			'c'.$n,
-			_monthDef($n).(isset($res[$n]) ? '<span class="sum">'._sumSpace($res[$n]).'</span>' : ''),
-			in_array($n, $mon),
-			1
-		);
-	return $send;
+		$res[_num($r['month'])] .= '<span>'._sumSpace(round($r['sum'])).'</span>';
+
+	return $res;
+//	return _radio('mon', $res, $filter['mon'], 1);
 }//expenseMonthSum()
+function expense_graf($filter, $i='json') {//список сумм расходов по категориям
+	$sql = "SELECT
+				`id`,
+				`name`,
+				0 `sum`
+			FROM `_money_expense_category`
+			WHERE `app_id` IN (".APP_ID.",0)
+			  AND `ws_id` IN(".WS_ID.",0)
+			ORDER BY `sort`";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok[0] = array(
+			'id' => 0,
+			'name' => 'Без категории',
+			'sum' => 0
+	);
+
+	$sql = "SELECT
+				DISTINCT `category_id`,
+				SUM(`sum`) `sum`
+			FROM `_money_expense`
+			WHERE ".$filter['cond']."
+			GROUP BY `category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['sum'] = _cena($r['sum']);
+
+	foreach($spisok as $id => $r)
+		if(!$r['sum'])
+			unset($spisok[$id]);
+
+	if($i == 'json')
+		return '{'.
+					'index:'._arrJson($spisok, 'id').','.
+					'categories:'._arrJson($spisok, 'name').','.
+					'sum:'._arrJson($spisok, 'sum').
+				'}';
+
+	return array(
+		'index' => _arr($spisok, 'id'),
+		'categories' => _arr($spisok, 'name'),
+		'sum' => _arr($spisok, 'sum')
+	);
+}//expense_graf()
 function expense_spisok($v=array()) {
 	$filter = expenseFilter($v);
 
 	define('PAGE1', $filter['page'] == 1);
+
+	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND !`deleted`";
+
+	if($filter['invoice_id'])
+		$cond .= " AND `invoice_id`=".$filter['invoice_id'];
+	if($filter['worker_id'])
+		$cond .= " AND `worker_id`=".$filter['worker_id'];
+	if($filter['category_id'])
+		$cond .= " AND `category_id`=".($filter['category_id'] == -1 ? 0 : $filter['category_id']);
+	$cond .= " AND `dtime_add` LIKE '".$filter['year']."-".($filter['mon'] < 10 ? 0 : '').$filter['mon']."-%'";
+
+	$sql = "SELECT
+				COUNT(`id`) AS `all`,
+				SUM(`sum`) AS `sum`
+			FROM `_money_expense`
+			WHERE ".$cond;
+	$send = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+	$filter['cond'] = $cond;
+	$send['filter'] = $filter;
 
 	$js = !PAGE1 ? '' :
 		'<script type="text/javascript">'.
@@ -606,35 +669,12 @@ function expense_spisok($v=array()) {
 				'worker_id:'.$filter['worker_id'].','.
 				'category_id:'.$filter['category_id'].','.
 				'year:'.$filter['year'].','.
-				'month:"'.$filter['month'].'"'.
+				'mon:'.$filter['mon'].
 			'};'.
 		'</script>';
 
-	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND !`deleted`";
-
-	if($filter['invoice_id'])
-		$cond .= " AND `invoice_id`=".$filter['invoice_id'];
-	if($filter['worker_id'])
-		$cond .= " AND `worker_id`=".$filter['worker_id'];
-	if($filter['category_id'])
-		$cond .= " AND `category_id`=".$filter['category_id'];
-	if($filter['month']) {
-		$dtime = array();
-		foreach(_ids($filter['month'], 1) as $mon)
-			$dtime[] = "`dtime_add` LIKE '" . $filter['year'] . "-" . ($mon < 10 ? 0 : '') . $mon . "%'";
-		$cond .= " AND (".implode(' OR ', $dtime).")";
-	}
-
-	$sql = "SELECT
-				COUNT(`id`) AS `all`,
-				SUM(`sum`) AS `sum`
-			FROM `_money_expense`
-			WHERE ".$cond;
-	$send = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
-
-	$send['filter'] = $filter;
 	if(!$send['all'])
-		return $send + array('spisok' => $js.'<div class="_empty">Платежей нет.</div>');
+		return $send + array('spisok' => $js.'<div class="_empty">Записей нет</div>');
 
 	$all = $send['all'];
 
@@ -655,9 +695,8 @@ function expense_spisok($v=array()) {
 		'<div id="summa">'.
 			'Показан'._end($all, 'а', 'о').' <b>'.$all.'</b> запис'._end($all, 'ь', 'и', 'ей').
 			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
-			(empty($dtime) ? ' за всё время.' : '').
 		'</div>'.
-		'<table class="_spisok">'.
+		'<table class="_spisok" id="tab">'.
 			'<tr><th>Сумма'.
 				'<th>Описание'.
 				'<th>Дата'.
