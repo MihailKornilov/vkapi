@@ -2,7 +2,7 @@ var _accrualAdd = function() {
 		var html =
 			'<div id="_accrual-add">' +
 				'<table class="tab">' +
-	(window.ZAYAV ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
+	(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' : '') +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 					'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
 				'</table>' +
@@ -109,14 +109,15 @@ var _accrualAdd = function() {
 		var zayav = window.ZAYAV,
 			cartridge = zayav && window.ZAYAV.cartridge,
 			place = window.zayavPlace ? 1 : 0,
-			about = zayav ? 'Примечаниие' : 'Описание',
+			about = zayav ? 'Примечание' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
 			'<div id="_income-add">' +
 				'<table class="tab">' +
 		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZAYAV.client_link : '') +
-		   (zayav ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head : '') +
+		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' : '') +
 					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+					'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 		   (zayav ? '<tr><td class="label">Предоплата:<td>' : '') +
 						'<input type="hidden" id="prepay" />' +
@@ -152,9 +153,18 @@ var _accrualAdd = function() {
 			width:218,
 			title0:'Не выбран',
 			spisok:INVOICE_SPISOK,
-			func:function() {
+			func:function(id) {
 				$('#sum').focus();
+				$('.tr_confirm')[(INVOICE_CONFIRM_INCOME[id] ? 'remove' : 'add') + 'Class']('dn');
+				$('#confirm')._check(0);
 			}
+		});
+		$('#confirm')._check();
+		$('#confirm_check').vkHint({
+			width:210,
+			msg:'Установите галочку, если платёж нужно внести, но требуется подтверждение о его поступлении на счёт.',
+			top:-96,
+			left:-100
 		});
 		if(zayav) {
 			$('#prepay')._radio({
@@ -213,6 +223,7 @@ var _accrualAdd = function() {
 			var send = {
 				op:'income_add',
 				invoice_id:_num($('#invoice_id-add').val()),
+				confirm:_bool($('#confirm').val()),
 				sum:_cena($('#sum').val()),
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
@@ -369,11 +380,15 @@ var _accrualAdd = function() {
 			category_id:0,
 			invoice_id:INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0,
 			worker_id:0,
+			attach_id:0,
 			sum:'',
 			about:'',
 			mon:(new Date).getMonth() + 1,
 			year:(new Date).getFullYear()
 		}, arr);
+
+		ATTACH[arr.attach_id] = arr.attach;
+
 		var html =
 			'<table id="expense-add-tab">' +
 				'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" value="' + arr.category_id + '" />' +
@@ -383,6 +398,7 @@ var _accrualAdd = function() {
 					'<td><input type="hidden" id="tabmon" value="' + arr.mon + '" /> ' +
 						'<input type="hidden" id="tabyear" value="' + arr.year + '" />' +
 				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + arr.about + '" />' +
+				'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + arr.attach_id + '" />' +
 				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + arr.invoice_id + '" />' +
 				'<tr><td class="label">Сумма:' +
 					'<td><input type="text" id="sum" class="money" value="' + arr.sum + '"' + (arr.id ? ' disabled' : '') + ' /> руб.' +
@@ -423,6 +439,7 @@ var _accrualAdd = function() {
 			width:60,
 			spisok:_toSpisok(_yearAss(arr.year))
 		});
+		$('#attach_id-add')._attach();
 
 		$('#sum').keyEnter(submit);
 
@@ -432,6 +449,7 @@ var _accrualAdd = function() {
 				op:arr.id ? 'expense_edit' : 'expense_add',
 				category_id:_num($('#category_id-add').val()),
 				worker_id:$('#worker_id-add').val(),
+				attach_id:$('#attach_id-add').val(),
 				about:$('#about').val(),
 				invoice_id:_num($('#invoice_id-add').val()),
 				sum:_cena($('#sum').val()),
@@ -580,162 +598,6 @@ var _accrualAdd = function() {
 				}
 			}
 		}, 'json');
-	},
-
-	_zayavExpenseEdit = function () {//вывод окна для редактирование расходов по заявке в информации о заявке
-		var html =
-			'<table id="zee-tab">' +
-				'<tr><td class="label">Заявка:<td><b>' + ZAYAV.head + '</b>' +
-				'<tr><td class="label">Список расходов:' +
-				'<tr><td id="zee-spisok" colspan="2">' +
-			'</table>',
-			dialog = _dialog({
-				top: 30,
-				width: 510,
-				head: 'Изменение расходов заявки',
-				content: html,
-				butSubmit: 'Сохранить',
-				submit: submit
-			});
-
-		_zayavExpense();
-
-		function submit() {
-			var send = {
-				op:'zayav_expense_edit',
-				zayav_id:ZAYAV.id,
-				expense:_zayavExpenseGet()
-			};
-			if(send.expense == 'sum_error')
-				dialog.err('Некорректно указана сумма');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-//						zayavMoneyUpdate();
-						dialog.close();
-						_msg('Сохранено');
-						$('#_zayav-expense').html(res.html);
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	},
-	_zayavExpense = function() {//процесс редактирования расходов по заявке
-		var num = 0;
-
-		for(var n = 0; n < ZAYAV_EXPENSE.length; n++)
-			item(ZAYAV_EXPENSE[n])
-
-		item();
-
-		function item(v) {
-			if(!v)
-				v = [
-					0, //0 - id
-					0, //1 - категория
-					'',//2 - описание, id сотрудника или id запчасти
-					'' //3 - сумма
-				];
-			var html =
-					'<table id="zee-tab'+ num + '" class="zee-tab" val="' + num + '">' +
-						'<tr><td><input type="hidden" id="' + num + 'cat" value="' + v[1] + '" />' +
-							'<td class="dop">' +
-							'<td class="tdsum">' +
-								'<input type="text" class="zee-sum" tabindex="' + (num * 10) + '" value="' + v[3] + '" />руб.' +
-								'<input type="hidden" class="id" value="' + v[0] + '" />' +
-					'</table>';
-
-			$('#zee-spisok').append(html);
-			itemDop(v[1], v[2], num);
-
-			var tab = $('#zee-tab' + num);
-			$('#' + num + 'cat')._select({
-				width:130,
-				disabled:0,
-				title0:'Категория',
-				spisok:ZAYAV_EXPENSE_SPISOK,
-				func:function(id, attr) {
-					tab.find('.id').val(0);
-					itemDop(id, '', attr.split('cat')[0]);
-//					sum.val(id == 1 ? ZAYAV.worker_zp : '');
-					if(id && !tab.next().hasClass('zee-tab'))
-						item();
-				}
-			});
-
-			num++;
-		}
-		function itemDop(cat_id, val, num) {
-			var tab = $('#zee-tab' + num),
-				dop = tab.find('.dop'),
-				sum = tab.find('.zee-sum');
-
-			dop.html('');
-			tab.find('.tdsum')[(cat_id ? 'remove' : 'add') + 'Class']('dn');
-
-			if(!cat_id)
-				return;
-
-			if(ZAYAV_EXPENSE_TXT[cat_id]) {
-				dop.html('<input type="text" class="zee-txt" placeholder="описание не указано" tabindex="' + (num * 10 - 1) + '" value="' + val + '" />');
-				dop.find('input').focus();
-			}
-
-			if(ZAYAV_EXPENSE_WORKER[cat_id]) {
-				dop.html('<input type="hidden" id="' + num + 'worker" value="' + val + '" />');
-				$('#' + num + 'worker')._select({
-					width:240,
-					disabled:0,
-					title0:'Сотрудник',
-					spisok:WORKER_SPISOK,
-					func:function(v) {
-						sum.focus();
-					}
-				});
-			}
-
-			if(ZAYAV_EXPENSE_ZP[cat_id]) {
-				dop.html('<input type="hidden" id="' + num + 'zp" value="' + val + '" />');
-				$('#' + num + 'zp')._select({
-					width:240,
-					title0:'Запчасть не выбрана',
-					spisok:ZAYAV.zp_avai,
-					func:function(v) {
-						sum.focus();
-					}
-				});
-			}
-		}
-	},
-	_zayavExpenseGet = function() {//получение значения списка расходов заявки при редактировании
-		var tab = $('.zee-tab'),
-			send = [];
-		for(var n = 0; n < tab.length; n++) {
-			var eq = tab.eq(n),
-				num = eq.attr('val'),
-				id = eq.find('.id').val(),
-				cat_id = _num($('#' + num + 'cat').val()),
-				sum = eq.find('.zee-sum').val(),
-				dop = '';
-			if(!cat_id)
-				continue;
-			if(!_cena(sum) && sum != '0')
-				return 'sum_error';
-			if(ZAYAV_EXPENSE_TXT[cat_id])
-				dop = eq.find('.zee-txt').val();
-			else if(ZAYAV_EXPENSE_WORKER[cat_id])
-				dop = $('#' + num + 'worker').val();
-			else if(ZAYAV_EXPENSE_ZP[cat_id])
-				dop = $('#' + num + 'zp').val();
-
-			send.push(id + ':' +
-					  cat_id + ':' +
-					  dop + ':' +
-					  sum);
-		}
-		return send.join();
 	},
 
 	_salarySpisok = function() {
@@ -1767,8 +1629,6 @@ $(document)
 				dialog.loadError();
 		}, 'json');
 	})
-
-	.on('click', '#_zayav-expense .img_edit', _zayavExpenseEdit)
 
 	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
 		var v = $(this).attr('val').split(':');

@@ -47,6 +47,30 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 	return $u;
 }//_viewer()
 */
+
+/*
+					if(APP_FIRST_LOAD) { //учёт посещений
+						$day = strftime('%Y-%m-%d');
+						$sql = "SELECT `id` FROM `vk_visit` WHERE `viewer_id`=".VIEWER_ID." AND `day`='".$day."' LIMIT 1";
+						$id = query_value($sql);
+						$sql = "INSERT INTO `vk_visit` (
+								`id`,
+								`viewer_id`,
+								`day`,
+								`is_secure`
+							 ) VALUES (
+								".($id === false ? 0 : $id).",
+								".VIEWER_ID.",
+								'".$day."',
+								"._bool($_GET['is_secure'])."
+							 ) ON DUPLICATE KEY UPDATE
+								`count_day`=`count_day`+1,
+								`is_secure`="._bool($_GET['is_secure']);
+						query($sql);
+						query("UPDATE `vk_user` SET `count_day`=".($id === false ? 1 : "`count_day`+1")." WHERE `viewer_id`=".VIEWER_ID);
+					}
+*/
+
 function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате из контакта
 	if(is_array($viewer_id))
 		return _viewerValToList($viewer_id);
@@ -271,28 +295,14 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 
 	_viewerRule();//формирование констант прав
 
-/*
-					if(APP_FIRST_LOAD) { //учёт посещений
-						$day = strftime('%Y-%m-%d');
-						$sql = "SELECT `id` FROM `vk_visit` WHERE `viewer_id`=".VIEWER_ID." AND `day`='".$day."' LIMIT 1";
-						$id = query_value($sql);
-						$sql = "INSERT INTO `vk_visit` (
-								`id`,
-								`viewer_id`,
-								`day`,
-								`is_secure`
-							 ) VALUES (
-								".($id === false ? 0 : $id).",
-								".VIEWER_ID.",
-								'".$day."',
-								"._bool($_GET['is_secure'])."
-							 ) ON DUPLICATE KEY UPDATE
-								`count_day`=`count_day`+1,
-								`is_secure`="._bool($_GET['is_secure']);
-						query($sql);
-						query("UPDATE `vk_user` SET `count_day`=".($id === false ? 1 : "`count_day`+1")." WHERE `viewer_id`=".VIEWER_ID);
-					}
-				*/
+	if(APP_FIRST_LOAD) {
+		//обновление даты посещения приложения сотрудником
+		$sql = "UPDATE `_vkuser`
+				SET `last_seen`=CURRENT_TIMESTAMP
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".VIEWER_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+	}
 }//_getVkUser()
 
 

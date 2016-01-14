@@ -68,6 +68,8 @@
 
 .remind#report .left{padding:0 8px}
 
+#_remind-stat{margin-top:10px}
+#_remind-stat .count{width:80px;text-align:center}
 
 
 #_remind-zayav{margin-top:15px}

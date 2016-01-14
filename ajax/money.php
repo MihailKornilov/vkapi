@@ -19,14 +19,8 @@ switch(@$_POST['op']) {
 		}
 
 		if($zayav_id) {
-			$sql = "SELECT *
-					FROM `zayav`
-					WHERE `ws_id`=".WS_ID."
-					  AND !`deleted`
-					  AND `id`=".$zayav_id;
-			if(!$z = query_assoc($sql))
+			if(!$z = _zayavQuery($zayav_id))
 				jsonError();
-
 			$client_id = $z['client_id'];
 		}
 
@@ -67,7 +61,7 @@ switch(@$_POST['op']) {
 
 		//Обновление статуса заявки, если изменялся
 		zayavStatusChange($zayav_id, $zayav_status);//todo используется только в mobile
-		zayavBalansUpdate($zayav_id);//todo используется только в mobile
+		_zayavBalansUpdate($zayav_id);
 
 		//Внесение напоминания, если есть
 		if($remind)
@@ -92,6 +86,12 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
+		if($r['schet_id'])
+			jsonError('Начисление привязано к счёту на оплату');
+
+		if($r['dogovor_id'])
+			jsonError('Начисление привязано к договору');
+
 		$sql = "UPDATE `_money_accrual` SET
 					`deleted`=1,
 					`viewer_id_del`=".VIEWER_ID.",
@@ -99,7 +99,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		zayavBalansUpdate($r['zayav_id']);
+		_zayavBalansUpdate($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(
@@ -119,44 +119,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'accrual_rest':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT
-		            *,
-					'acc' AS `type`
-				FROM `accrual`
-				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
-					`deleted`=0,
-					`viewer_id_del`=0,
-					`dtime_del`='0000-00-00 00:00:00'
-				WHERE `id`=".$id;
-		query($sql);
-
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 27,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
-		));
-		$send['html'] = utf8(zayav_accrual_unit($r));
-		jsonSuccess($send);
-		break;
 
 	case 'income_spisok'://список платежей
 		$data = income_spisok($_POST);
@@ -175,6 +137,7 @@ switch(@$_POST['op']) {
 
 		$zayav_id = _num($_POST['zayav_id']);
 		$client_id = 0;
+		$confirm = _bool($_POST['confirm']);
 		$prepay = _bool($_POST['prepay']);
 		$place = _num($_POST['place']);
 		$place_other = !$place ? _txt($_POST['place_other']) : '';
@@ -186,11 +149,12 @@ switch(@$_POST['op']) {
 
 		if($zayav_id) {
 			$sql = "SELECT *
-					FROM `zayav`
-					WHERE `ws_id`=".WS_ID."
+					FROM `_zayav`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
 					  AND !`deleted`
 					  AND `id`=".$zayav_id;
-			if(!$r = query_assoc($sql))
+			if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 				jsonError();
 			$client_id = $r['client_id'];
 		}
@@ -203,6 +167,7 @@ switch(@$_POST['op']) {
 				`about`,
 				`zayav_id`,
 				`client_id`,
+				`confirm`,
 				`prepay`,
 				`viewer_id_add`
 			) VALUES (
@@ -213,6 +178,7 @@ switch(@$_POST['op']) {
 				'".addslashes($about)."',
 				".$zayav_id.",
 				".$client_id.",
+				".$confirm.",
 				".$prepay.",
 				".VIEWER_ID."
 			)";
@@ -242,7 +208,7 @@ switch(@$_POST['op']) {
 			));
 
 		if($zayav_id) {
-			zayavBalansUpdate($zayav_id);//todo используется только в mobile
+			_zayavBalansUpdate($zayav_id);
 			zayavPlaceCheck($zayav_id, $place, $place_other);
 
 			//отметка выбранных активных напоминаних выполненными
@@ -284,7 +250,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		zayavBalansUpdate($r['zayav_id']);
+		_zayavBalansUpdate($r['zayav_id']);
 
 		//баланс для расчётного счёта
 		_balans(array(
@@ -396,11 +362,12 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `zayav`
-				WHERE `ws_id`=".WS_ID."
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
+		if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
 		$sql = "INSERT INTO `_money_refund` (
@@ -426,7 +393,7 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('_money_refund', GLOBAL_MYSQL_CONNECT);
 
-		zayavBalansUpdate($zayav_id);
+		_zayavBalansUpdate($zayav_id);
 
 		_balans(array(
 			'action_id' => 13,
@@ -483,7 +450,7 @@ switch(@$_POST['op']) {
 				WHERE `refund_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		zayavBalansUpdate($r['zayav_id']);
+		_zayavBalansUpdate($r['zayav_id']);
 
 		_balans(array(
 			'action_id' => 14,
@@ -541,6 +508,7 @@ switch(@$_POST['op']) {
 
 		//
 		$worker_id = _num($_POST['worker_id']);
+		$attach_id = _num($_POST['attach_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
@@ -554,6 +522,7 @@ switch(@$_POST['op']) {
 					`invoice_id`,
 					`category_id`,
 					`worker_id`,
+					`attach_id`,
 					`year`,
 					`mon`,
 					`viewer_id_add`
@@ -565,6 +534,7 @@ switch(@$_POST['op']) {
 					".$invoice_id.",
 					".$category_id.",
 					".$worker_id.",
+					".$attach_id.",
 					".$year.",
 					".$mon.",
 					".VIEWER_ID."
@@ -616,6 +586,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$worker_id = _num($_POST['worker_id']);
+		$attach_id = _num($_POST['attach_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
@@ -634,6 +605,7 @@ switch(@$_POST['op']) {
 				SET `about`='".addslashes($about)."',
 					`category_id`=".$category_id.",
 					`worker_id`=".$worker_id.",
+					`attach_id`=".$attach_id.",
 					`year`=".$year.",
 					`mon`=".$mon."
 				WHERE `id`=".$id;
@@ -668,6 +640,7 @@ switch(@$_POST['op']) {
 					`category_id`,
 					`invoice_id`,
 					`worker_id`,
+					`attach_id`,
 					`sum`,
 					`about`,
 					`year`,
@@ -682,6 +655,7 @@ switch(@$_POST['op']) {
 
 		$r['sum'] = round($r['sum'], 2);
 		$r['about'] = utf8($r['about']);
+		$r['attach'] = _attachArr($r['attach_id']);
 		$send['arr'] = $r;
 
 		jsonSuccess($send);
@@ -794,10 +768,10 @@ switch(@$_POST['op']) {
 
 		//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
 		$sql = "SELECT `id`,CONCAT('№',`nomer`)
-				FROM `zayav`
+				FROM `_zayav`
 				WHERE `client_id`=".$schet['client_id']."
 				ORDER BY `id`";
-		$send['zayav_spisok'] = query_selArray($sql);
+		$send['zayav_spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
 
 		$send['schet_id'] = $id;
 		$send['client_id'] = _num($schet['client_id']);
@@ -839,14 +813,14 @@ switch(@$_POST['op']) {
 
 		if($zayav_id) {
 			$sql = "SELECT *
-					FROM `zayav`
-					WHERE `ws_id`=".WS_ID."
+					FROM `_zayav`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
 					  AND !`deleted`
 					  AND `id`=".$zayav_id;
-			if(!$z = query_assoc($sql))
+			if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 				jsonError();
-			if(!$client_id)
-				$client_id = $z['client_id'];
+			$client_id = $z['client_id'];
 		}
 
 		if(!$client_id || !_clientQuery($client_id))
@@ -978,8 +952,8 @@ switch(@$_POST['op']) {
 				));
 		}
 
-		zayavBalansUpdate(_num(@$schet['zayav_id']));
-		zayavBalansUpdate($zayav_id);
+		_zayavBalansUpdate(_num(@$schet['zayav_id']));
+		_zayavBalansUpdate($zayav_id);
 
 		if($insert_id)
 			_history(array(
@@ -990,19 +964,18 @@ switch(@$_POST['op']) {
 				'v1' => $sum
 			));
 		else {
-				//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
+			//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
 			$sql = "SELECT `id`,CONCAT('№',`nomer`)
-					FROM `zayav`
+					FROM `_zayav`
 					WHERE `client_id`=".$schet['client_id']."
 					ORDER BY `id`";
-			$zayav = query_ass($sql) + array(0=>'');
-			$changes =
+			$zayav = query_ass($sql, GLOBAL_MYSQL_CONNECT) + array(0=>'');
+			if($changes =
 				_historyChange('Заявка', $zayav[$schet['zayav_id']], $zayav[$zayav_id]).
 				_historyChange('Дата', FullData($schet['date_create']), FullData($date_create)).
 				_historyChange('Накладная', _daNet($schet['nakl']), _daNet($nakl)).
 				_historyChange('Акт', _daNet($schet['act']), _daNet($act)).
-				_historyChange('Сумма', _cena($schet['sum']), _cena($sum));
-			if($changes)
+				_historyChange('Сумма', _cena($schet['sum']), _cena($sum)))
 				_history(array(
 					'type_id' => 61,
 					'schet_id' => $schet_id,
@@ -1106,7 +1079,18 @@ switch(@$_POST['op']) {
 			)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		$income_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
+
 		_schetPayCorrect($schet_id);
+
+		//баланс для расчётного счёта
+		_balans(array(
+			'action_id' => 1,
+			'invoice_id' => $invoice_id,
+			'schet_id' => $schet_id,
+			'income_id' => $income_id,
+			'sum' => $sum
+		));
 
 		//баланс для клиента
 		_balans(array(
@@ -1155,7 +1139,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		zayavCartridgeSchetDel($schet_id);
-		zayavBalansUpdate($r['zayav_id']);
+		_zayavBalansUpdate($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(
@@ -1364,134 +1348,6 @@ switch(@$_POST['op']) {
 	case 'balans_spisok':
 		$data = balans_show_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-
-	case 'zayav_expense_edit'://изменение расходов по заявке
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		$expense = _txt($_POST['expense']);
-		if(!_zayav_expense_test($expense))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `zayav`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `_zayav_expense`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND `zayav_id`=".$zayav_id."
-				ORDER BY `id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		$arr = array();
-		$workerBalans = array();//сохранение старых балансов сотрудников
-		while($r = mysql_fetch_assoc($q)) {
-			$dop = '';
-			$ze = _zayavExpense($r['category_id'], 'all');
-			if($ze['txt'])
-				$dop = $r['txt'];
-			if($ze['worker'])
-				$dop = $r['worker_id'];
-			if($ze['zp'])
-				$dop = $r['zp_id'];
-			$arr[] =
-				$r['id'].':'.
-				$r['category_id'].':'.
-				$dop.':'.
-				$r['sum'];
-		}
-
-		$old = _zayav_expense_array(implode(',', $arr));
-		$new = _zayav_expense_array($expense);
-
-		if($old != $new) {
-			$toDelete = array();
-			foreach($old as $r)
-				$toDelete[$r[0]] = $r;
-
-			//получение старого массива для истории действий
-			$sql = "SELECT *
-					FROM `_zayav_expense`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND `zayav_id`=".$zayav_id."
-					ORDER BY `id`";
-			$arrOld = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-			foreach($new as $r) {
-				$ze = _zayavExpense($r[1], 'all');
-				$sql = "INSERT INTO `_zayav_expense` (
-							`id`,
-							`app_id`,
-							`ws_id`,
-							`zayav_id`,
-							`category_id`,
-							`txt`,
-							`worker_id`,
-							`zp_id`,
-							`sum`,
-							`mon`,
-							`year`,
-							`viewer_id_add`
-						) VALUES (
-							".$r[0].",
-							".APP_ID.",
-							".WS_ID.",
-							".$zayav_id.",
-							".$r[1].",
-							'".($ze['txt'] ? addslashes($r[2]) : '')."',
-							".($ze['worker'] ? intval($r[2]) : 0).",
-							".($ze['zp'] ? intval($r[2]) : 0).",
-							".$r[3].",
-							".intval(strftime('%m')).",
-							".strftime('%Y').",
-							".VIEWER_ID."
-						) ON DUPLICATE KEY UPDATE
-							`category_id`=VALUES(`category_id`),
-							`txt`=VALUES(`txt`),
-							`worker_id`=VALUES(`worker_id`),
-							`zp_id`=VALUES(`zp_id`),
-							`sum`=VALUES(`sum`)";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-
-				unset($toDelete[$r[0]]);
-			}
-
-			//удаление расходов, которые были удалены
-			if(!empty($toDelete)) {
-				$sql = "DELETE FROM `_zayav_expense` WHERE `id` IN (".implode(',', array_keys($toDelete)).")";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-			}
-
-			//получение нового массива для истории дейсвтий
-			$sql = "SELECT *
-					FROM `_zayav_expense`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND `zayav_id`=".$zayav_id."
-					ORDER BY `id`";
-			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-			_zayav_expense_worker_balans($arrOld, $arrNew);
-
-			$old = _zayav_expense_html($arrOld, false, $arrNew);
-			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
-
-			_history(array(
-				'type_id' => 30,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
-			));
-		}
-
-		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));
 		jsonSuccess($send);
 		break;
 

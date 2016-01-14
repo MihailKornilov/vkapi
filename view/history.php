@@ -1,5 +1,4 @@
 <?php
-
 function _history($v=array()) {
 	if(isset($v['type_id']))
 		return _history_insert($v);
@@ -8,6 +7,14 @@ function _history($v=array()) {
 }//_history()
 
 function _history_insert($v=array()) {//внесение истории действий
+	$client_id = _num(@$v['client_id']);
+	$zayav_id = _num(@$v['zayav_id']);
+
+	if(!$client_id && $zayav_id) {//если указана заявка, но не указан клиент, обновляется id клиента
+		$r = _zayavQuery($zayav_id);
+		$client_id = $r['client_id'];
+	}
+
 	$sql = "INSERT INTO `_history` (
 				`app_id`,
 				`ws_id`,
@@ -16,6 +23,8 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				`client_id`,
 				`zayav_id`,
+				`dogovor_id`,
+				`attach_id`,
 				`schet_id`,
 				`zp_id`,
 				`tovar_id`,
@@ -34,8 +43,10 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				".$v['type_id'].",
 
-				"._num(@$v['client_id']).",
-				"._num(@$v['zayav_id']).",
+				".$client_id.",
+				".$zayav_id.",
+				"._num(@$v['dogovor_id']).",
+				"._num(@$v['attach_id']).",
 				"._num(@$v['schet_id']).",
 				"._num(@$v['zp_id']).",
 				"._num(@$v['tovar_id']).",
@@ -60,6 +71,7 @@ function _historyFilter($v) {
 		'category_id' => _num(@$v['category_id']),
 		'client_id' => _num(@$v['client_id']),
 		'zayav_id' => _num(@$v['zayav_id']),
+		'attach_id' => _num(@$v['attach_id']),
 		'schet_id' => _num(@$v['schet_id'])
 	);
 }//_historyFilter()
@@ -71,7 +83,7 @@ function _history_spisok($v=array()) {
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (13)".//todo удалить
+//	   " AND `type_id` IN (42)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
@@ -125,8 +137,9 @@ function _history_spisok($v=array()) {
 
 	$history = _viewerValToList($history);
 	$history = _clientValToList($history);
-	if(function_exists('_zayavValToList'))
-		$history = _zayavValToList($history);
+	$history = _zayavValToList($history);
+	$history = _dogovorValToList($history);
+	$history = _attachValToList($history);
 	$history = _schetValToList($history);
 	$history = _history_types($history);
 
@@ -179,6 +192,10 @@ function _history_types($history) {//перевод type_id в текст
 		'client_name',
 		'client_link',
 		'zayav_link',
+		'dogovor_nomer',
+		'dogovor_data',
+		'dogovor_sum',
+		'attach_link',
 		'schet_link_full',
 		'invoice_name',
 		'worker_name',
@@ -221,7 +238,6 @@ function _history_types($history) {//перевод type_id в текст
 }//_history_types()
 
 
-
 function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элемент таблицы, если было изменение при редактировании данных
 	if($old != $new) {
 		if($v1 && $v2) {
@@ -241,29 +257,6 @@ function _history_right() {//вывод условий поиска для истории действий
 			  AND `ws_id`=".WS_ID."
 			  AND `viewer_id_add`";
 	$worker = query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
-
-/*
-	$sql = "
-EXPLAIN
-			SELECT
-            `cat`.`id`,
-			`cat`.`name`
-			FROM `_history_category` `cat`
-
-				LEFT JOIN `_history_ids` `ids`
-				ON `cat`.`id`=`ids`.`category_id`
-
-				RIGHT JOIN `_history` `h`
-				ON `h`.`type_id`=`ids`.`type_id`
-
-			WHERE `h`.`app_id`=2031819
-			  AND `h`.`ws_id`=1
-			  AND `cat`.`js_use`
-			GROUP BY `cat`.`id`
-			ORDER BY `cat`.`sort`;
-
-			";
-*/
 
 	$sql = "SELECT
 	            `cat`.`id`,

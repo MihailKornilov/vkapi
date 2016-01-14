@@ -74,12 +74,14 @@ function _setup() {
 		'rekvisit' => 'Реквизиты организации',
 		'invoice' => 'Расчётные счета',
 		'expense' => 'Категории расходов',
-		'zayav_expense' => 'SA: Расходы по заявке'
+		'zayav_expense' => 'SA: Расходы по заявке',
+		'product' => 'Виды изделий'
 	) + (function_exists('setup') ? setup() : array());
 
 	$sub = array(
 		'worker' => 'rule',
-		'service' => 'cartridge'
+		'service' => 'cartridge',
+		'product' => 'sub'
 	);
 
 	if(!RULE_SETUP_WORKER)
@@ -162,6 +164,7 @@ function setup_worker_spisok() {
 					'<td>'.
 						'<a class="name" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.$r['first_name'].' '.$r['last_name'].'</a>'.
 						'<div>'.$r['post'].'</div>'.
+					  ($r['last_seen'] != '0000-00-00 00:00:00' ? '<div class="activity">Заходил'.($r['sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($r['last_seen']).'</div>' : '').
 			'</table>';
 	}
 	return $send;
@@ -430,6 +433,119 @@ function setup_expense_spisok() {
 	$send .= '</dl>';
 	return $send;
 }//setup_expense_spisok()
+
+function setup_product() {
+	return
+	'<div id="setup_product">'.
+		'<div class="headName">Настройки видов изделий<a class="add">Добавить</a></div>'.
+		'<div class="spisok">'.setup_product_spisok().'</div>'.
+	'</div>';
+}//setup_product()
+function setup_product_spisok() {
+	$sql = "SELECT
+				*,
+				0 `sub`,
+				0 `zayav`
+			FROM `_product`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			ORDER BY `name`";
+	$product = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	if(empty($product))
+		return 'Список пуст.';
+
+	$sql = "SELECT `product_id`,
+				   COUNT(`id`) AS `sub`
+			FROM `_product_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			GROUP BY `product_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$product[$r['product_id']]['sub'] = $r['sub'];
+
+	$sql = "SELECT `product_id`,
+				   COUNT(`id`) AS `zayav`
+			FROM `_zayav_product`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			GROUP BY `product_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$product[$r['product_id']]['zayav'] = $r['zayav'];
+
+	$send = '<table class="_spisok">'.
+				'<tr><th>Наименование'.
+					'<th>Подвиды'.
+					'<th>Кол-во<br />заявок'.
+					'<th>';
+	foreach($product as $id => $r)
+		$send .= '<tr val="'.$id.'">'.
+					'<td class="name"><a href="'.URL.'&p=setup&d=product&id='.$id.'">'.$r['name'].'</a>'.
+					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
+					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+					'<td><div class="img_edit"></div>'.
+						($r['sub'] || $r['zayav'] ? '' :'<div class="img_del"></div>');
+	$send .= '</table>';
+	return $send;
+}//setup_product_spisok()
+function setup_product_sub($product_id) {
+	$sql = "SELECT *
+			FROM `_product`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `id`=".$product_id;
+	if(!$pr = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Изделия id = '.$product_id.' не существует.';
+
+	return
+	'<script type="text/javascript">var PRODUCT_ID='.$product_id.';</script>'.
+	'<div id="setup_product_sub">'.
+		'<a href="'.URL.'&p=setup&d=product"><< назад к видам изделий</a>'.
+		'<div class="headName">Список подвидов изделий для "'.$pr['name'].'"<a class="add">Добавить</a></div>'.
+		'<div class="spisok">'.setup_product_sub_spisok($product_id).'</div>'.
+	'</div>';
+}//setup_product_sub()
+function setup_product_sub_spisok($product_id) {
+	$sql = "SELECT
+				*,
+				0 `zayav`
+			FROM `_product_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `product_id`=".$product_id."
+			ORDER BY `name`";
+	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	if(empty($arr))
+		return 'Список пуст.';
+
+	$sql = "SELECT
+				`product_sub_id`,
+				COUNT(`id`) `zayav`
+			FROM `_zayav_product`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `product_id`=".$product_id."
+			  AND `product_sub_id`
+			GROUP BY `product_sub_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['product_sub_id']]['zayav'] = $r['zayav'];
+
+	$send = '<table class="_spisok">'.
+				 '<tr><th>Наименование'.
+					 '<th>Кол-во<br />заявок'.
+					 '<th>';
+	foreach($arr as $id => $r)
+		$send .= '<tr val="'.$r['id'].'">'.
+			 '<td class="name">'.$r['name'].
+			 '<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+			 '<td><div class="img_edit"></div>'.
+					($r['zayav'] ? '' : '<div class="img_del"></div>');
+		$send .= '</table>';
+	return $send;
+}//setup_product_sub_spisok()
+
 
 function setup_zayav_expense() {//категории расходов по заявке
 	if(!SA)

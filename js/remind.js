@@ -1,14 +1,14 @@
 var _remindAdd = function() {
 		var html =
 				'<table class="_remind-add-tab">' +
-					(window.ZAYAV.id ? '<tr><td class="label">Заявка:<td>' + ZAYAV.head: '') +
+					 (window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' : '') +
 					(window.CLIENT ? '<tr><td class="label">Клиент:<td>' + CLIENT.fio : '') +
 					'<tr><td class="label">Задача:<td><input type="text" id="txt" />' +
 					'<tr><td class="label top">Подробно:<td><textarea id="about"></textarea>' +
 					'<tr><td class="label">День выполнения:<td><input type="hidden" id="day" />' +
 				'</table>' +
 				'<input type="hidden" id="client_id" value="' + (window.CLIENT ? CLIENT.id : 0) + '">' +
-				'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV.id ? ZAYAV.id : 0) + '">',
+				'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '">',
 			dialog = _dialog({
 				top:40,
 				width:480,
@@ -24,7 +24,7 @@ var _remindAdd = function() {
 		function submit() {
 			var send = {
 				op:'remind_add',
-				from:window.ZAYAV.id ? 'zayav' : (window.CLIENT ? 'client' : ''),
+				from:window.ZAYAV ? 'zayav' : (window.CLIENT ? 'client' : ''),
 				client_id:$('#client_id').val(),
 				zayav_id:$('#zayav_id').val(),
 				txt:$.trim($('#txt').val()),

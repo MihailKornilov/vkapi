@@ -1,21 +1,5 @@
 <?php
 /*
-CREATE TABLE IF NOT EXISTS `vk_comment` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`),
-  `table_name` varchar(20) DEFAULT '',
-  `table_id` int unsigned DEFAULT 0,
-  `parent_id` int unsigned DEFAULT 0,
-  `txt` text,
-  `status` tinyint unsigned DEFAULT 1,
-  `viewer_id_add` int unsigned DEFAULT 0,
-  `dtime_add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `viewer_id_del` int unsigned DEFAULT 0,
-  `dtime_del` datetime DEFAULT '0000-00-00 00:00:00',
-  `child_del` text,
-  KEY `i_table_id` (`table_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=cp1251;
-
 CREATE TABLE IF NOT EXISTS `pagehelp` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
@@ -33,12 +17,14 @@ define('GLOBAL_DIR_AJAX', GLOBAL_DIR.'/ajax');
 require_once GLOBAL_DIR.'/syncro.php';
 require_once GLOBAL_DIR.'/view/vkuser.php';
 require_once GLOBAL_DIR.'/view/client.php';
+require_once GLOBAL_DIR.'/view/zayav.php';
 require_once GLOBAL_DIR.'/view/money.php';
 require_once GLOBAL_DIR.'/view/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
+require_once GLOBAL_DIR.'/view/note.php';
 
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
@@ -115,8 +101,15 @@ if(!CRON) {
 	_setupApp();
 	_pinCheck();
 	_hashRead();
+	_zayavPoleUseInfoConst();
 } else
 	define('WS_ID', 0);
+
+define('ATTACH_PATH', GLOBAL_PATH.'.attach/'.APP_ID.'/ws_'.WS_ID.'/');
+define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID.'/ws_'.WS_ID.'/');
+
+define('PATH_DOGOVOR', APP_PATH.'/files/dogovor/');
+define('LINK_DOGOVOR', APP_HTML.'/files/dogovor/');
 
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))
@@ -157,7 +150,7 @@ function _header() {
 			'<div id="frameBody">'.
 				'<iframe id="frameHidden" name="frameHidden"></iframe>';
 //			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
-}//_header()
+}
 function _api_scripts() {//скрипты и стили, которые вставляются в html
 	define('MIN', DEBUG ? '' : '.min');
 	return
@@ -198,6 +191,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/client'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/client'.MIN.'.js?'.VERSION.'"></script>'.
 
+		//Заявки
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/zayav'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/zayav'.MIN.'.js?'.VERSION.'"></script>'.
+
 		//Деньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/money'.MIN.'.js?'.VERSION.'"></script>'.
@@ -232,31 +229,32 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/debug'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
 	: '');
-}//_api_scripts()
+}
 function _global_index() {//пути переходов по ссылкам глобальных разделов
 	switch(@$_GET['p']) {
 		case 'client': return _clientCase();
-		case 'money': return _money();
+		case 'zayav':  return _zayav();
+		case 'money':  return _money();
 		case 'report': return _report();
-		case 'setup': return _setup();
-		case 'print': _print_xsl(); exit;
-
+		case 'setup':  return _setup();
+		case 'print':  _print_document(); exit;
 		case 'sa':
-			if(empty($_GET['d']))
-				return sa_global_index();
-			switch($_GET['d']) {
+			switch(@$_GET['d']) {
+				default:            return sa_global_index();
 				case 'menu':        return sa_menu();
 				case 'history':     return sa_history();
 				case 'historycat':  return sa_history_cat();
 				case 'rule':        return sa_rule();
 				case 'balans':      return sa_balans();
+				case 'zayav':       return sa_zayav();
+				case 'color':       return sa_color();
 			}
 	}
 
 	return '';
-}//_global_index()
+}
 
-function _ws() {//Получение данных об организации
+function _ws($i='all') {//Получение данных об организации
 	_wsOneCheck();
 
 	if(!WS_ID) {
@@ -279,9 +277,17 @@ function _ws() {//Получение данных об организации
 		xcache_set($key, $ws, 86400);
 	}
 
-	define('WS_ACCESS', 1);
-	return true;
-}//_ws()
+	if(!defined('WS_ACCESS'))
+		define('WS_ACCESS', 1);
+
+	if($i == 'all')
+		return $ws;
+
+	if(!isset($ws[$i]))
+		return '_ws: неизвестный ключ <b>'.$i.'</b>';
+
+	return $ws[$i];
+}
 function _wsOneCheck() {
 	// Проверка наличия в базе данных хотя бы об одной организации.
 	// Если нет и если пользователь является суперадминистратором, то внесение организации.
@@ -320,7 +326,7 @@ function _wsOneCheck() {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 	}
-}//_wsOneCheck()
+}
 
 
 /* Разделы главного меню */
@@ -381,7 +387,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 	}
 
 	return $sort;
-}//_setupApp()
+}
 function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa')
 		return '';
@@ -404,7 +410,7 @@ function _menu() {//разделы основного меню
 			$link.
 			pageHelpIcon().
 		'</div>';
-}//_menu()
+}
 
 
 /* Секция отчётов - report */
@@ -417,16 +423,25 @@ function _report() {
 		'salary' => 'З/п сотрудников'
 	);
 
+	if(!RULE_HISTORY_VIEW) {
+		unset($pages['history']);
+		if($d == 'history')
+			$d = 'remind';
+	}
+
 	$rightLink = '<div class="rightLink">';
 	if($pages)
 		foreach($pages as $p => $name)
 			$rightLink .= '<a href="'.URL.'&p=report&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
 	$rightLink .= '</div>';
 
+	$left = '';
 	$right = '';
 	switch($d) {
 		default: $d = 'history';
 		case 'histoty':
+			if(!RULE_HISTORY_VIEW)
+				break;
 			$data = _history();
 			$left = $data['spisok'];
 			$right .= _history_right();
@@ -456,7 +471,7 @@ function _report() {
 					$rightLink.
 					$right.
 		'</table>';
-}//_report()
+}
 
 
 function _debug() {
@@ -510,7 +525,7 @@ function _debug() {
 		'</div>';
 	}
 	return $send;
-}//_debug()
+}
 function _debug_cookie_count() {
 	$count = 0;
 	if(!empty($_COOKIE))
@@ -518,7 +533,7 @@ function _debug_cookie_count() {
 			if(strpos($key, 'debug') !== 0)
 				$count++;
 	return $count ? $count : '';
-}//_debug_cookie_count()
+}
 function _debug_cookie() {
 	$cookie = '';
 	if(!empty($_COOKIE))
@@ -526,7 +541,7 @@ function _debug_cookie() {
 			if(strpos($key, 'debug') !== 0)
 				$cookie .= '<p><b>'.$key.'</b> '.$val;
 	return $cookie;
-}//_debug_cookie()
+}
 function _footer() {
 	$getArr = array(
 		'start' => 1,
@@ -565,7 +580,7 @@ function _footer() {
 		'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
 //		$_SESSION[PIN_TIME_KEY].
 		'</div></body></html>';
-}//_footer()
+}
 
 function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
@@ -580,7 +595,7 @@ function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	if(DEBUG)
 		$res['url'] = $url;
 	return $res;
-}//_vkapi()
+}
 
 function jsonError($values=null) {
 	$send['error'] = 1;
@@ -591,11 +606,11 @@ function jsonError($values=null) {
 	else
 		$send['text'] = utf8($values);
 	die(json_encode($send + jsonDebugParam()));
-}//jsonError()
+}
 function jsonSuccess($send=array()) {
 	$send['success'] = 1;
 	die(json_encode($send + jsonDebugParam()));
-}//jsonSuccess()
+}
 function jsonDebugParam() {//возвращение дополнительных параметров json, если включен debug
 	if(DEBUG) {
 		global $sqlQuery, $sqlTime;
@@ -612,7 +627,7 @@ function jsonDebugParam() {//возвращение дополнительных параметров json, если вк
 		);
 	}
 	return array();
-}//jsonDebugParam()
+}
 
 function _hashRead() {
 	if(AJAX)
@@ -677,13 +692,13 @@ function _hashRead() {
 			}
 	}
 	_hashCookieSet();
-}//_hashRead()
+}
 function _hashCookieSet() {
 	setcookie('p', $_GET['p'], time() + 2592000, '/');
 	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
 	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
 	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
-}//_hashCookieSet()
+}
 function _hashFilter($name) {//формирование элементов фильтра из cookie или адресной строки
 	$v = array();
 	if(HASH_VALUES) {
@@ -702,20 +717,20 @@ function _hashFilter($name) {//формирование элементов фильтра из cookie или адре
 	$v['find'] = unescape(@$v['find']);
 
 	return $v;
-}//_hashFilter()
+}
 
 function _appAuth() {//проверка авторизации в приложении
 	if(LOCAL || CRON || SA_VIEWER_ID)
 		return;
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
 		die('Ошибка авторизации приложения. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
-}//_appAuth()
+}
 function _noauth($msg='Не удалось выполнить вход в приложение.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
-}//_noauth()
+}
 function _err($msg='Ошибка') {
 	return '<div class="_err">'.$msg.'</div>';
-}//_err()
+}
 function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 	if(!PIN)
 		return;
@@ -739,7 +754,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 		_footer();
 
 	die($html);
-}//_pinCheck()
+}
 
 function _dbConnect($prefix='') {
 	global $sqlQuery;
@@ -753,7 +768,7 @@ function _dbConnect($prefix='') {
 	mysql_select_db(constant($prefix.'MYSQL_DATABASE'), $conn) or die("Can't select database");
 	query('SET NAMES `'.constant($prefix.'MYSQL_NAMES').'`', $conn);
 	define($prefix.'MYSQL_CONNECT', $conn);
-}//_dbConnect()
+}
 function query($sql, $resource_id=MYSQL_CONNECT) {
 	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
@@ -766,40 +781,40 @@ function query($sql, $resource_id=MYSQL_CONNECT) {
 	if(mysql_insert_id() && strpos(strtoupper($sql), 'INSERT INTO') !== false)
 		return mysql_insert_id();
 	return $res;
-}//query()
+}
 function query_value($sql, $resource_id=MYSQL_CONNECT) {
 	$q = query($sql, $resource_id);
 	if(!$r = mysql_fetch_row($q))
 		return 0;
 	return $r[0];
-}//query_value()
+}
 function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
 	$q = query($sql, $resource_id);
 	if(!$r = mysql_fetch_assoc($q))
 		return array();
 	return $r;
-}//query_assoc()
+}
 function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_row($q))
 		$send[$r[0]] = $r[1];
 	return $send;
-}//query_ass()
+}
 function query_arr($sql, $resource_id=MYSQL_CONNECT) {//Массив, где ключами является id
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_assoc($q))
 		$send[$r['id']] = $r;
 	return $send;
-}//query_arr()
+}
 function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($sp = mysql_fetch_row($q))
 		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
 	return '['.implode(',',$send).']';
-}//query_selJson()
+}
 function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
 	$send = array();
 	$q = query($sql, $resource_id);
@@ -809,7 +824,7 @@ function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудн
 			'title:"'._viewer($r[0], 'viewer_name').'"'.
 		'}';
 	return '['.implode(',',$send).']';
-}//query_selJson()
+}
 function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select при отправке через ajax
 	$send = array();
 	$q = query($sql, $resource_id);
@@ -819,44 +834,45 @@ function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select 
 			'title' => utf8(addslashes(htmlspecialchars_decode($sp[1])))
 		);
 	return $send;
-}//query_selArray()
+}
 function query_assJson($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив js
 	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
-}//query_assJson()
+}
 function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
 	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0];
 	return empty($send) ? 0 : implode(',', array_unique($send));
-}//query_ids()
+}
 function query_insert_id($tab, $resource_id=MYSQL_CONNECT) {//id последнего внесённого элемента
 	$sql = "SELECT `id` FROM `".$tab."` ORDER BY `id` DESC LIMIT 1";
 	return query_value($sql, $resource_id);
-}//query_insert_id()
+}
 
 function _num($v) {
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
 		return 0;
 	return intval($v);
-}//_num()
+}
 function _bool($v) {//проверка на булево число
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_BOOL, $v))
 		return 0;
 	return intval($v);
-}//_bool()
+}
 function _cena($v, $minus=0) {//проверка на цену. $minus - может ли цена быть минусовой
 	if(empty($v) || is_array($v) || !preg_match($minus ? REGEXP_CENA_MINUS : REGEXP_CENA, $v))
 		return 0;
 	$v = str_replace(',', '.', $v);
 	return round($v, 2);
-}//_cena()
-function _txt($v) {
-	return win1251(htmlspecialchars(trim($v)));
+}
+function _txt($v, $utf8=0) {
+	$v = htmlspecialchars(trim($v));
+	return $utf8 ? $v : win1251($v);
 }//_txt
 function _br($v) {//вставка br в текст при нахождении enter
 	return str_replace("\n", '<br />', $v);
@@ -870,7 +886,7 @@ function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	);
 
 	return '<div'.$v['id'].' class="img_edit'._tooltip('Изменить', -52, 'r').'</div>';
-}//_iconEdit()
+}
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
 	if(!empty($v['nodel']) || !empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
@@ -882,7 +898,7 @@ function _iconDel($v=array()) {//иконка удаления записи в таблице
 	);
 
 	return '<div '.$v['id'].'class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
-}//_iconDel()
+}
 function _dtimeAdd($v=array()) {//дата и время внесения записи с подсказкой сотрудника, который вносил запись
 	return
 		'<div class="'._tooltip(_viewerAdded($v['viewer_id_add']), -40).FullDataTime($v['dtime_add']).'</div>'.
@@ -891,7 +907,7 @@ function _dtimeAdd($v=array()) {//дата и время внесения записи с подсказкой сотр
 			FullDataTime($v['dtime_del']).
 		'</div>'
 	: '');
-}//_dtimeAdd()
+}
 
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
 	$ids = trim($ids);
@@ -911,17 +927,17 @@ function _idsGet($arr, $i='id') {//возвращение из массива списка id через запяту
 		if(!empty($r[$i]))
 			$ids[] = $r[$i];
 	return empty($ids) ? 0 : implode(',', array_unique($ids));
-}//_idsGet()
+}
 function _mon($v) {//проверка даты в формате 2015-10, если не соответствует, возврат текущей даты
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEARMONTH, $v))
 		return strftime('%Y-%m');
 	return $v;
-}//_mon()
+}
 function _year($v) {//проверка года, если не соответствует, возврат текущего года
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEAR, $v))
 		return strftime('%Y');
 	return intval($v);
-}//_year()
+}
 function _numToWord($num, $firstSymbolUp=false) {
 	$num = intval($num);
 	$one = array(
@@ -1002,7 +1018,7 @@ function _numToWord($num, $firstSymbolUp=false) {
 	if($firstSymbolUp)
 		$word[0] = strtoupper($word[0]);
 	return $word;
-}//_numToWord()
+}
 function _maxSql($table, $pole='sort', $ws=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	/*
 		$ws: учитывать приложение и организацию
@@ -1012,7 +1028,7 @@ function _maxSql($table, $pole='sort', $ws=0, $resource_id=GLOBAL_MYSQL_CONNECT)
 			WHERE `id`".
 			($ws ? " AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID : '');
 	return query_value($sql, $resource_id);
-}//getMaxSql()
+}
 function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу даты добавления
 	$send = $spisok;
 	foreach($arr as $r) {
@@ -1022,7 +1038,7 @@ function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу 
 		$send[$key] = $r;
 	}
 	return $send;
-}//_arrayTimeGroup()
+}
 
 function _filterJs($name, $filter) {//формирование условий поиска в формате js
 	$filter += array(
@@ -1061,13 +1077,13 @@ function _filterJs($name, $filter) {//формирование условий поиска в формате js
 		'</script>';
 
 	return $filter;
-}//_filterJs()
+}
 function _startLimit($filter) {
 	return _start($filter).','.($filter['limit'] * $filter['page_count']);
-}//_startLimit()
+}
 function _start($v) {//вычисление первой позиции в базе данных
 	return ($v['page'] - 1) * $v['limit'];
-}//_start()
+}
 function _next($v) {//вывод ссылки на догрузку списка
 	$send = '';
 	$start = _start($v);
@@ -1098,7 +1114,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 	return
 		$send.
 		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
-}//_next()
+}
 
 function _arr($arr, $i=false) {//Последовательный массив
 	$send = array();
@@ -1107,7 +1123,7 @@ function _arr($arr, $i=false) {//Последовательный массив
 		$send[] = preg_match(REGEXP_CENA, $v) ? _cena($v) : utf8(htmlspecialchars_decode($v));
 	}
 	return $send;
-}//_arr()
+}
 
 function _sel($arr) {
 	$send = array();
@@ -1118,7 +1134,7 @@ function _sel($arr) {
 		);
 	}
 	return $send;
-}//_sel()
+}
 function _selJson($arr) {
 	$send = array();
 	foreach($arr as $uid => $title) {
@@ -1135,7 +1151,7 @@ function _selJson($arr) {
 		'}';
 	}
 	return '['.implode(',',$send).']';
-}//_selJson()
+}
 function _assJson($arr) {//Ассоциативный массив
 	$send = array();
 	foreach($arr as $id => $v)
@@ -1144,7 +1160,7 @@ function _assJson($arr) {//Ассоциативный массив
 			':'.
 			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
 	return '{'.implode(',', $send).'}';
-}//_assJson()
+}
 function _arrJson($arr, $i=false) {//Последовательный массив
 	$send = array();
 	foreach($arr as $r) {
@@ -1152,11 +1168,11 @@ function _arrJson($arr, $i=false) {//Последовательный массив
 		$send[] = preg_match(REGEXP_CENA, $v) ? $v : '"'.addslashes(htmlspecialchars_decode($v)).'"';
 	}
 	return '['.implode(',', $send).']';
-}//_assJson()
+}
 
-function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоциативный список подкатегорий
+function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT) {//ассоциативный список подкатегорий
 	$sql = "SELECT * FROM `".$table."` ORDER BY ".$sort;
-	$q = query($sql);
+	$q = query($sql, $resource_id);
 	$sub = array();
 	while($r = mysql_fetch_assoc($q)) {
 		if(!isset($sub[$r[$category_id]]))
@@ -1171,11 +1187,13 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id') {//ассоци
 	foreach($sub as $n => $sp)
 		$v[] = $n.':['.implode(',', $sp).']';
 	return '{'.implode(',', $v).'}';
-}//Gvalues_obj()
+}
 function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, используемый во всех приложениях
 	//одинаковые для всех приложений:
 	$save =
 		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
+ 		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'COUNTRY_SPISOK=['.
 				'{uid:1,title:"Россия"},'.
 				'{uid:2,title:"Украина"},'.
@@ -1264,11 +1282,17 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 												  WHERE `app_id` IN (".APP_ID.",0)
 													AND `ws_id` IN (".$ws_id.",0)
 													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
+		_zayavPoleUseInfoConst(1).
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=1", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=2", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).';';
+		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_ATTACH='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=4", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." AND `ws_id`=".$ws_id." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
+		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT);
+
 
 	$fp = fopen(APP_PATH.'/js/ws_'.$ws_id.'_values.js', 'w+');
 	fwrite($fp, $save);
@@ -1284,13 +1308,14 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	xcache_unset(CACHE_PREFIX.'setup'.$ws_id);
-}//_globalValuesJS()
+}
 
 function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
 	xcache_unset(CACHE_PREFIX.'menu_sort');//отсортированный список разделов меню с настройками
 	xcache_unset(CACHE_PREFIX.'setup'.$ws_id);//глобальные настройки приложения конкретной организации
+	xcache_unset(CACHE_PREFIX.'setup_color');//цвета
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
@@ -1298,6 +1323,8 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'product'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'product_sub'.$ws_id);
 
 
 	//сброс времени действия введённого пинкода
@@ -1319,7 +1346,7 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
 		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 	}
-}//_globalCacheClear()
+}
 
 function pageHelpIcon() {
 	return '';
@@ -1344,7 +1371,7 @@ function _check($id, $txt='', $v=0, $light=false) {
 		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
 		$txt.
 	'</div>';
-}//_check()
+}
 function _radio($id, $list, $value=0, $light=0, $block=1) {
 	$spisok = '';
 	foreach($list as $uid => $title) {
@@ -1357,7 +1384,7 @@ function _radio($id, $list, $value=0, $light=0, $block=1) {
 		'<input type="hidden" id="'.$id.'" value="'.$value.'">'.
 		$spisok.
 	'</div>';
-}//_radio()
+}
 
 function _end($count, $o1, $o2, $o5=false) {
 	if($o5 === false) $o5 = $o2;
@@ -1371,7 +1398,7 @@ function _end($count, $o1, $o2, $o5=false) {
 			case 4: return $o2;
 		}
 	return $o5;
-}//_end()
+}
 function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 	$znak = $sum < 0 ? -1 : 1;
 	$sum *= $znak;
@@ -1389,7 +1416,7 @@ function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
 	$send = $send ? trim($send) : 0;
 	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
 	return ($znak < 0 ? '-' : '').$send;
-}//_sumSpace()
+}
 function _tooltip($msg, $left=0, $ugolSide='') {
 	return
 		' _tooltip">'.
@@ -1397,7 +1424,7 @@ function _tooltip($msg, $left=0, $ugolSide='') {
 			'<div class="ttmsg">'.$msg.'</div>'.
 			'<div class="ttug'.($ugolSide ? ' '.$ugolSide : '').'"></div>'.
 		'</div>';
-}//_tooltip()
+}
 
 function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
 function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
@@ -1407,7 +1434,7 @@ function mb_ucfirst($txt) {//делание заклавной первую букву текста
 	$txt = utf8($txt);
 	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
 	return win1251($txt);
-}//mb_ucfirst()
+}
 
 function _rightLink($id, $spisok, $val=0) {
 	$a = '';
@@ -1418,115 +1445,7 @@ function _rightLink($id, $spisok, $val=0) {
 		'<input type="hidden" id="'.$id.'" value="'.$val.'">'.
 		$a.
 	'</div>';
-}//_rightLink()
-
-function _vkComment($table, $id=0) {
-	$sql = "SELECT *
-			FROM `vk_comment`
-			WHERE `status`=1
-			  AND `table_name`='".$table."'
-			  AND `table_id`=".intval($id)."
-			ORDER BY `dtime_add` ASC";
-	$count = 'Заметок нет';
-	$units = '';
-	$q = query($sql);
-	if(mysql_num_rows($q)) {
-		$v = array();
-		while($r = mysql_fetch_assoc($q))
-			$arr[$r['id']] = $r;
-		$arr = _viewerValToList($arr);
-
-		$comm = array();
-		foreach($arr as $r)
-			if(!$r['parent_id'])
-				$comm[$r['id']] = $r;
-			elseif(isset($comm[$r['parent_id']]))
-				$comm[$r['parent_id']]['childs'][] = $r;
-
-		$count = count($comm);
-		$count = 'Всего '.$count.' замет'._end($count, 'ка', 'ки','ок');
-		$comm = array_reverse($comm);
-		foreach($comm as $n => $r) {
-			$childs = array();
-			if(!empty($r['childs']))
-				foreach($r['childs'] as $c)
-					$childs[] = _vkCommentChild($c);
-			$units .= _vkCommentUnit($r, $childs, ($n+1));
-		}
-	}
-	return
-	'<div class="vkComment" val="'.$table.'_'.$id.'">'.
-		'<div class="hb"><div class="count">'.$count.'</div>Заметки</div>'.
-		'<div class="add">'.
-			'<textarea>Добавить заметку...</textarea>'.
-			'<div class="vkButton"><button>Добавить</button></div>'.
-		'</div>'.
-		$units.
-	'</div>';
-}//_vkComment()
-function _vkCommentUnit($r, $childs=array(), $n=0) {
-	return
-	'<div class="cunit" val="'.$r['id'].'">'.
-		'<table class="t">'.
-			'<tr><td class="ava">'.$r['viewer_photo'].
-				'<td class="i">'.str_replace('a href', 'a class="vlink" href', $r['viewer_link']).
-					($r['viewer_id_add'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
-					'<div class="ctxt">'.$r['txt'].'</div>'.
-					'<div class="cdat">'.FullDataTime($r['dtime_add'], 1).
-						'<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
-							'<a>'.(empty($childs) ? 'Комментировать' : 'Комментарии ('.count($childs).')').'</a>'.
-						'</SPAN>'.
-					'</div>'.
-					'<div class="cdop'.(empty($childs) ? ' empty' : '').($n == 1 && !empty($childs) ? '' : ' hide').'">'.
-						implode('', $childs).
-						'<div class="cadd">'.
-							'<textarea>Комментировать...</textarea>'.
-							'<div class="vkButton"><button>Добавить</button></div>'.
-						'</div>'.
-					'</div>'.
-		'</table>'.
-	'</div>';
-}//_vkCommentUnit()
-function _vkCommentChild($r) {
-	return
-	'<div class="child" val="'.$r['id'].'">'.
-		'<table class="t">'.
-			'<tr><td class="dava">'.$r['viewer_photo'].
-				'<td class="di">'.$r['viewer_link'].
-					($r['viewer_id_add'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
-					'<div class="dtxt">'.$r['txt'].'</div>'.
-					'<div class="ddat">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-		'</table>'.
-	'</div>';
-}//_vkCommentChild()
-function _vkCommentAdd($table, $id, $txt) {
-	if(empty($txt))
-		return;
-	$parent_id = 0;
-	$sql = "SELECT `id`,`parent_id`
-				FROM `vk_comment`
-				WHERE `table_name`='".$table."'
-				  AND `table_id`=".$id."
-				  AND `status`=1
-				ORDER BY `id` DESC
-				LIMIT 1";
-	if($r = mysql_fetch_assoc(query($sql)))
-		$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
-	$sql = "INSERT INTO `vk_comment` (
-					`table_name`,
-					`table_id`,
-					`txt`,
-					`parent_id`,
-					`viewer_id_add`
-				) VALUES (
-					'".$table."',
-					".$id.",
-					'".addslashes($txt)."',
-					".$parent_id.",
-					".VIEWER_ID."
-				)";
-	query($sql);
-}//_vkCommentAdd()
+}
 
 function _monthFull($n=0) {
 	$mon = array(
@@ -1544,7 +1463,7 @@ function _monthFull($n=0) {
 		12 => 'декабря'
 	);
 	return $n ? $mon[intval($n)] : $mon;
-}//_monthFull()
+}
 function _monthDef($n=0, $firstUp=false) {
 	$mon = array(
 		1 => 'январь',
@@ -1570,7 +1489,7 @@ function _monthDef($n=0, $firstUp=false) {
 	if($firstUp)
 		$send[0] = strtoupper($send[0]);
 	return $send;
-}//_monthFull()
+}
 function _monthCut($n) {
 	$mon = array(
 		0 => '',
@@ -1588,7 +1507,7 @@ function _monthCut($n) {
 		12 => 'дек'
 	);
 	return $mon[intval($n)];
-}//_monthCut()
+}
 function _week($n) {
 	$week = array(
 		1 => 'пн',
@@ -1600,7 +1519,7 @@ function _week($n) {
 		0 => 'вс'
 	);
 	return $week[intval($n)];
-}//_week()
+}
 function FullData($v=0, $noyear=0, $cut=0, $week=0) {//пт. 14 апреля 2010
 	if(!$v)
 		$v = curTime();
@@ -1610,7 +1529,7 @@ function FullData($v=0, $noyear=0, $cut=0, $week=0) {//пт. 14 апреля 2010
 		abs($d[2]).' '.
 		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
 		(!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
-}//FullData()
+}
 function FullDataTime($v=0, $cut=0) {//14 апреля 2010 в 12:45
 	if(!$v)
 		$v = curTime();
@@ -1626,7 +1545,7 @@ function FullDataTime($v=0, $cut=0) {//14 апреля 2010 в 12:45
 		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
 		(date('Y') == $d[0] ? '' : ' '.$d[0]).
 		' в '.$t[0].':'.$t[1];
-}//FullDataTime()
+}
 function _curMonday() { //Понедельник в текущей неделе
 	// Номер текущего дня недели
 	$time = time();
@@ -1635,7 +1554,7 @@ function _curMonday() { //Понедельник в текущей неделе
 	// Приведение дня к понедельнику
 	$time -= 86400 * ($curDay - 1);
 	return strftime('%Y-%m-%d', $time);
-}//_curMonday()
+}
 function _curSunday() { //Воскресенье в текущей неделе
 	$time = time();
 	$curDay = date("w", $time);
@@ -1643,7 +1562,11 @@ function _curSunday() { //Воскресенье в текущей неделе
 	$time += 86400 * (7 - $curDay);
 	return strftime('%Y-%m-%d', $time);
 
-}//_curSunday()
+}
+function _dataDog($v) {//формат даты как для договора
+	$d = explode('-', $v);
+	return $d[2].'/'.$d[1].'/'.$d[0];
+}
 
 function _engRusChar($word) { //Перевод символов раскладки с английского на русский
 	$char = array(
@@ -1894,7 +1817,7 @@ function _calendarFilter($data=array()) {
 	$send .= '</table>'.($data['upd'] ? '</div></div>' : '');
 
 	return $send;
-}//_calendarFilter()
+}
 function _calendarDataCheck($data) {
 	if(empty($data))
 		return false;
@@ -1904,7 +1827,7 @@ function _calendarDataCheck($data) {
 	if(preg_match(REGEXP_DATE, $ex[0]) && preg_match(REGEXP_DATE, @$ex[1]))
 		return true;
 	return false;
-}//_calendarDataCheck()
+}
 function _calendarPeriod($data) {// Формирование периода для элементов массива запросившего фильтра
 	$send = array(
 		'period' => $data,
@@ -1921,7 +1844,7 @@ function _calendarPeriod($data) {// Формирование периода для элементов массива з
 		'from' => $ex[0],
 		'to' => $ex[1]
 	) + $send;
-}//_calendarPeriod()
+}
 function _calendarWeek($day=0) {// Формирование периода за неделю недели
 	if(!$day)
 		$day = strftime('%Y-%m-%d');
@@ -1951,7 +1874,7 @@ function _calendarWeek($day=0) {// Формирование периода за неделю недели
 		$end = $month.'-'.($dayEnd < 10 ? 0 : '').$dayEnd;
 
 	return $start.':'.$end;
-}//_calendarPeriod()
+}
 function _period($v=0, $action='get') {// Формирование периода для элементов массива запросившего фильтра
 	/*
 		$i: get, sql
@@ -1969,7 +1892,7 @@ function _period($v=0, $action='get') {// Формирование периода для элементов мас
 			return " AND `dtime_add`>='".$ex[0]." 00:00:00' AND `dtime_add`<='".$ex[1]." 23:59:59'";
 		default: return '';
 	}
-}//_period()
+}
 
 function _imageAdd($v=array()) {
 	$v = array(
@@ -1993,7 +1916,7 @@ function _imageAdd($v=array()) {
 			'<span>'.$v['txt'].'</span>'.
 			'<iframe name="_image-frame"></iframe>'.
 		'</div>';
-}//_imageAdd()
+}
 function _imageSpisok($owner) {
 	if(!$owner)
 		return '';
@@ -2016,14 +1939,14 @@ function _imageCookie($v) {//Установка cookie после загрузки изображения и выход
 	}
 	setcookie('_upload', $cookie, time() + 3600, '/');
 	exit;
-}//_imageCookie()
+}
 function _imageNameCreate() {
 	$arr = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0');
 	$name = '';
 	for($i = 0; $i < 10; $i++)
 		$name .= $arr[rand(0,35)];
 	return $name;
-}//_imageNameCreate()
+}
 function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изображения с сохранением пропорций
 	$x = $x_new;
 	$y = $y_new;
@@ -2051,7 +1974,7 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изобр
 		'x' => $x,
 		'y' => $y
 	);
-}//_imageResize()
+}
 function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие изображения
 	$send = _imageResize($x_cur, $y_cur, $x_new, $y_new);
 
@@ -2061,7 +1984,7 @@ function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие из
 	imagedestroy($im_new);
 
 	return $send;
-}//_imageImCreate()
+}
 function _imageGet($v) {
 	$v = array(
 		'owner' => $v['owner'],
@@ -2119,19 +2042,123 @@ function _imageGet($v) {
 
 	$img = array_shift($img);
 	return $img['img'];
-}//_imageGet()
+}
 
+function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['attach_id'])) {
+			$ids[$r['attach_id']] = 1;
+			$arrIds[$r['attach_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
 
+	$sql = "SELECT *
+			FROM `_attach`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
-function _print_xsl() {//вывод на печать документов в формате xsl
+	foreach($attach as $r) {
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'">'.$r['name'].'</a>',
+			);
+		}
+	}
+
+	return $arr;
+}
+function _attachJs($v=array()) {//получение ссылок на файлы в javascript
+	$v = array(
+		'id' => _num(@$v['id']),
+		'array' => _num(@$v['array']), //передача списка массивом через ajax
+		'zayav_id' => _num(@$v['zayav_id'])
+	);
+
+	$sql = "SELECT *
+			FROM `_attach`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID.
+			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
+			($v['id'] ? " AND `id`=".$v['id'] : '');
+	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$send = array();
+	$array = array();
+	foreach($attach as $r) {
+		$send[] =
+			$r['id'].':{'.
+				'name:"'.addslashes($r['name']).'",'.
+				'link:"'.addslashes($r['link']).'",'.
+				'size:'.$r['size'].
+			'}';
+		$array[intval($r['id'])] = array(
+			'name' => utf8($r['name']),
+			'link' => $r['link'],
+			'size' => $r['size']
+		);
+	}
+
+	if($v['array'])
+		return $array;
+
+	return
+	'<script type="text/javascript">'.
+		'var ATTACH={'.implode(',', $send).'};'.
+	'</script>';
+}
+function _attachArr($id) {//получение данных о файле в формате json для ajax
+	$sql = "SELECT *
+			FROM `_attach`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `id`=".$id;
+	if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return array(
+			'name' => utf8($r['name']),
+			'link' => $r['link'],
+			'size' => $r['size']
+		);
+
+	return array();
+}
+
+function _color($color_id, $color_dop=0) {
+	if(!defined('COLOR_LOADED')) {
+		$key = CACHE_PREFIX.'setup_color';
+		if(!$arr = xcache_get($key)) {
+			$sql = "SELECT * FROM `_setup_color`";
+			$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+			xcache_set($key, $arr, 86400);
+		}
+		foreach($arr as $id => $r) {
+			define('COLORPRE_'.$id, $r['predlog']);
+			define('COLOR_'.$id, $r['name']);
+		}
+		define('COLORPRE_0', '');
+		define('COLOR_0', '');
+		define('COLOR_LOADED', true);
+	}
+	if($color_dop)
+		return constant('COLORPRE_'.$color_id).' - '.strtolower(constant('COLOR_'.$color_dop));;
+	return constant('COLOR_'.$color_id);
+}
+
+function _print_document() {//вывод на печать документов
 	set_time_limit(10);
 	require_once GLOBAL_DIR.'/excel/PHPExcel.php';
+	require_once GLOBAL_DIR.'/word/clsMsDocGenerator.php';
 
 	switch(@$_GET['d']) {
 		case 'schet':
 			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
 			break;
+		case 'receipt': _incomeReceiptPrint(); break;
 		default: die('Документ не найден.');
 	}
 	exit;
-}//_print_xsl()
+}

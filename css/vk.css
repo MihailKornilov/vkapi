@@ -951,9 +951,38 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-/* Комментарии VK */
-.vkComment{margin-top:15px}
-.vkComment .hb{
+/* новая кнопка ВКонтакте */
+button.vk{
+	padding: 6px 16px 7px 16px;
+	zoom: 1;
+	cursor: pointer;
+	white-space: nowrap;
+	outline: none;
+	overflow: visible;
+	line-height: 13px;
+	background-color: #6383a8;
+	color: #FFF;
+	border:0;
+	-webkit-border-radius: 2px;
+	-khtml-border-radius: 2px;
+	-moz-border-radius: 2px;
+	-ms-border-radius: 2px;
+	border-radius: 2px;
+	-webkit-transition: background-color 100ms ease-in-out;
+	-khtml-transition: background-color 100ms ease-in-out;
+	-moz-transition: background-color 100ms ease-in-out;
+	-ms-transition: background-color 100ms ease-in-out;
+	-o-transition: background-color 100ms ease-in-out;
+	transition: background-color 100ms ease-in-out;
+}
+button.vk:not(._busy):hover{background-color:#6d8cb0}
+button.vk:active{padding:7px 16px 6px 16px;}
+button.vk._busy{color:transparent}
+
+
+/* Заметки */
+._note{margin-top:15px}
+._note H1{
 	background-color:#E1E7ED;
 	border-top:#D3DAE0 solid 1px;
 	border-bottom:#D8DFE5 solid 1px;
@@ -961,33 +990,51 @@ a.add:hover{text-decoration:underline;color:#357}
 	color:#45688E;
 	padding:3px 8px;
 }
-.vkComment .count{float:right;color:#666}
-.vkComment TEXTAREA{resize:none;overflow:hidden;width:100%;height:13px;color:#777;border:#CCD solid 1px}
-.vkComment .add{background-color:#F7F7F7;padding:8px 20px 8px 8px}
-.vkComment .add .vkButton{margin-top:8px;display:none}
-.vkComment .cunit{padding:10px 0;border-bottom:#DAE1E8 solid 1px}
-.vkComment .img_del{float:right}
-.vkComment .cunit:not(:hover) .unit_del,.vkComment .child:not(:hover) .child_del,.vkComment .hide{display:none}
-.vkComment .cunit.busy,.vkComment .child.busy{background-color:#eee;opacity:0.4}
-.vkComment .cunit.busy *{color:#777}
-.vkComment .t{width:100%}
-.vkComment .ava{width:58px;vertical-align:top}
-.vkComment .ava img{width:50px;height:50px}
-.vkComment .i{vertical-align:top}
-.vkComment .vlink{display:inline-block;font-weight:bold}
-.vkComment .ctxt{margin-top:3px}
-.vkComment .cdat{color:#999;font-size:10px;margin-top:6px}
-.vkComment .cdat span,.vkComment .cdat a{font-size:10px}
-.vkComment .cdop{margin:7px 0 0 -7px}
-.vkComment .child{padding:7px 0;border-top:#E9EDF1 solid 1px}
-.vkComment .dava{width:35px;vertical-align:top}
-.vkComment .dava img{width:30px;height:30px}
-.vkComment .di{vertical-align:top}
-.vkComment .dtxt{margin-top:3px}
-.vkComment .ddat{color:#999;font-size:10px;margin-top:5px}
-.vkComment .cadd{background-color:#F7F7F7;padding:6px 18px 6px 6px;margin-top:6px}
-.vkComment .cadd .vkButton{margin-top:6px;display:none}
-.vkComment .deleted{color:#555;text-align:center}
+._note TT{float:right;color:#777}
+._note .add{background-color:#f1f1f1;padding:8px 16px 8px 8px}
+._note TEXTAREA{
+	overflow:hidden;
+	width:100%;
+	border:#CCD solid 1px;
+	height:13px;
+}
+._note .vk{margin-top:8px}
+._note .nu{padding:10px 0;border-bottom:#dae1e8 solid 1px}
+._note .nu.busy{background-color:#eee;opacity:.3}
+._note .nu-rest{text-align:center}
+._note .nu-rest a._busy{color:transparent}
+._note .nu:not(.deleted) .nu-rest{display:none}
+._note .nu.deleted .nu-tab{display:none}
+._note .nu-tab{width:100%}
+._note .nu-photo{width:58px;vertical-align:top}
+._note .nu-photo img{width:50px;height:50px}
+._note .nu-i{vertical-align:top}
+._note .img_del{float:right}
+._note .nu:not(:hover) .nu-del{display:none}
+._note .nu.busy .nu-del{display:none}
+._note H3 a{font-weight:bold}
+._note H4{margin-top:3px}
+._note H5{color:#999;font-size:10px;margin-top:6px}
+._note H5 *{font-size:10px}
+._note H5 a{margin-left:15px}
+._note H2{margin-top:7px}/* список комментариев */
+._note .nu:not(:hover) H5 a:not(.ex){display:none}
+._note .nu.busy H5 a{display:none}
+._note H6{background-color:#f1f1f1;padding:6px 14px 6px 6px;margin-top:4px}
+/* комментарии */
+._note .cu{padding-top:7px;margin-top:7px;border-top:#E9EDF1 solid 1px}
+._note .cu.busy{background-color:#eee;opacity:.3}
+._note .cu-rest{text-align:center;margin:6px 0 10px}
+._note .cu-rest a._busy{color:transparent}
+._note .cu:not(.deleted) .cu-rest{display:none}
+._note .cu.deleted .cu-tab{display:none}
+._note .cu-tab{width:100%}
+._note .cu-photo{width:35px;vertical-align:top}
+._note .cu-photo img{width:30px;height:30px}
+._note .cu:not(:hover) .cu-del{display:none}
+
+
+
 
 
 
@@ -1046,57 +1093,50 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-/* Ссылка на заявку с подсказкой */
-.zayav_link{position:relative;display:inline-block}
-.zayav_link .tooltip{
-	position:absolute;
-	background-color:#fff;
-	border:#ccc solid 1px;
-	min-width:100px;
-	min-height:75px;
-	padding:5px;
-	top:-91px;
-	left:-10px;
-	z-index:1000;
-}
-.zayav_link:not(:hover) .tooltip{display:none}
-.zayav_link td{border:0;padding:0}
-.zayav_link .image{max-width:100px;overflow:hidden}
-.zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
-.zayav_link .label{padding-right:3px}
-.zayav_link .tstat{
-	float:left;
-	border:#DDD solid 1px;
-	width:22px;
-	height:22px;
-	margin:2px 4px 0 0;
-}
-.zayav_link .tname{font-weight:700;margin-bottom:8px}
-.zayav_link .bl{font-weight:700}
-.zayav_link.color{display:inline-block;padding:2px 5px}
-
-/* долг по заявке (в зп сотрудников) */
-.zayav-dolg{font-size:10px;color:#a00;margin-left:7px;cursor:default}
 
 
 
 
-/* Цветная кнопка статуса заявки  */
-#zayav-status-button h1 {
+
+
+
+
+
+
+/* Загрузка файла */
+#attach-add-tab{padding-bottom:10px}
+#attach-add-tab h1{margin-left:135px;width:110px}
+#attach-add-tab.uploaded h1{display:none}
+#attach-add-tab form{
 	display:inline-block;
-	border:#DDD solid 1px;
-	width:140px;
-	text-align:center;
-	padding:2px 0 3px 0;
-	color:#666;
-	cursor:pointer;
+	position:absolute;
+	width:110px;
+	height:28px;
+	overflow:hidden;
+	opacity:0;
 }
-#zayav-status-button h1:hover{border-color:#bbd; color:#444}
-#zayav-status-button span{color:#aaa;font-size:10px;margin-left:10px}
+#attach-add-tab h1:hover .vk{background-color:#6d8cb0}
+#attach-add-tab input[type="file"]{cursor:pointer}
+#attach-add-tab .vk{width:110px}
+#attach-add-tab iframe{display:none}
+#attach-add-tab #tab{border-spacing:10px}
+#attach-add-tab:not(.uploaded) #tab{display:none}
+#attach-add-tab #name{width:250px}
+
+/* Ссылка на диалоговое окно для закрузки файла */
+._attach-add{color:#888}
+._attach.ex ._attach-add{display:none}
+._attach-link{border-bottom:#2B587A dotted 1px}
+._attach-link:hover{text-decoration:none}
 
 
 
-
+._select-color tt{
+	display:inline-block;
+	margin:0 5px;
+	position:relative;
+	top:-6px;
+}
 
 
 

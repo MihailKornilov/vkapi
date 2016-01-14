@@ -40,7 +40,9 @@
 #_hist-next{margin:0 8px 10px}
 
 ._hist-un .z td{border:none}
-._hist-un .z .ze-spisok td{border:#ddd solid 1px}
+._hist-un .z .ze-spisok td,
+._hist-un .z .zayav-rashod-spisok td
+{border:#ddd solid 1px}
 ._hist-un .z .ze-spisok tr.new{background-color:#e0ffe0}
 ._hist-un .z .ze-spisok tr.del{background-color:#fee}
 ._hist-un .z .ze-spisok tr.del *{color:#999}

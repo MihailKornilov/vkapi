@@ -392,6 +392,164 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'sa_zayav_pole_add':
+		$name = _txt($_POST['name']);
+		$const = strtoupper(_txt($_POST['const']));
+
+		if(!$name)
+			jsonError();
+		if(!$const)
+			jsonError();
+
+		$sql = "SELECT COUNT(*)
+				FROM `_zayav_pole_name`
+				WHERE `const`='".addslashes($const)."'";
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Константа занята');
+
+		$sql = "INSERT INTO `_zayav_pole_name` (
+					`name`,
+					`const`
+				) VALUES (
+					'".addslashes($name)."',
+					'".addslashes($const)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_globalValuesJS();
+
+		$send['html'] = utf8(sa_zayav_pole_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_zayav_pole_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$const = strtoupper(_txt($_POST['const']));
+
+		if(!$name)
+			jsonError();
+		if(!$const)
+			jsonError();
+
+		$sql = "SELECT COUNT(*)
+				FROM `_zayav_pole_name`
+				WHERE `const`='".addslashes($const)."'
+				  AND `id`!=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Константа занята');
+
+		$sql = "UPDATE `_zayav_pole_name`
+				SET `name`='".addslashes($name)."',
+					`const`='".addslashes($const)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_globalValuesJS();
+
+		$send['html'] = utf8(sa_zayav_pole_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_zayav_pole_use_info_change':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_pole_use_info`
+				WHERE `app_id`=".APP_ID."
+				  AND `pole_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		if(_bool($_POST['v'])) {
+			$sql = "INSERT INTO `_zayav_pole_use_info` (
+						`app_id`,
+						`pole_id`
+					) VALUES (
+						".APP_ID.",
+						".$id."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		_globalValuesJS();
+
+		jsonSuccess();
+		break;
+
+	case 'sa_color_add':
+		$predlog = _txt($_POST['predlog']);
+		$name = _txt($_POST['name']);
+
+		if(empty($predlog))
+			jsonError();
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_setup_color` (
+					`predlog`,
+					`name`
+				) VALUES (
+					'".addslashes($predlog)."',
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'setup_color');
+		_globalValuesJS();
+
+		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_color_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+				$predlog = _txt($_POST['predlog']);
+		$name = _txt($_POST['name']);
+
+		if(empty($predlog))
+			jsonError();
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `_setup_color`
+				SET `predlog`='".addslashes($predlog)."',
+					`name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'setup_color');
+		_globalValuesJS();
+
+		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_color_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_setup_color` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `color_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `color_dop`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_setup_color` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'setup_color');
+		_globalValuesJS();
+
+		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'sa_user_action':
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
@@ -657,4 +815,4 @@ function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истор
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 	}
-}//sa_history_ids_insert()
+}

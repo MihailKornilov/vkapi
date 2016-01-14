@@ -48,10 +48,12 @@
 	width:100%;
 }
 #client .result.busy{background-position:585px center}
-#client .result em{color:#999;margin-left:10px;font-size:10px}
+#client .result em{color:#999;margin-left:10px;font-size:10px;cursor:default}
+#client .result em span,
+#client .result em b{margin-left:10px;font-size:10px}
 #client .result.busy #filter_clear{display:none}
 #client #filter_clear{float:right}
-#client b#dolg{color:#922;font-size:10px}
+#client #dolg-sum{color:#922;font-size:10px}
 #client ._radio{margin-bottom:30px}
 #client ._check{margin-bottom:10px}
 #client .left{padding-bottom:10px}
@@ -127,7 +129,7 @@
 #client-info #ci-person .td-person-ed{width:35px}
 
 #client-info .post{margin-left:4px;font-size:10px;color:#777}
-#client-info .dtime{
+#client-info .added{
 	font-size:10px;
 	color:#999;
 	text-align:right;

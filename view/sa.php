@@ -16,6 +16,8 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=history">История действий</a>'.
 		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a>'.
 		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
+		'<a href="'.URL.'&p=sa&d=zayav">Заявки</a>'.
+		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
 		'<br />'.
 
 		'<div><b>Организации и сотрудники:</b></div>'.
@@ -25,7 +27,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 
 		(function_exists('sa_index') ? sa_index() : '').
 	'</div>';
-}//sa_global_index()
+}
 function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу после посещения суперадмина
 	if(!empty($_GET['pre_p'])) {
 		$_COOKIE['pre_p'] = $_GET['pre_p'];
@@ -40,8 +42,8 @@ function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу
 	$d = empty($_COOKIE['pre_d']) ? '' :'&d='.$_COOKIE['pre_d'];
 	$d1 = empty($_COOKIE['pre_d1']) ? '' :'&d1='.$_COOKIE['pre_d1'];
 	$id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
-	return '<a href="'.URL.'&p='.$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
-}//sa_cookie_back()
+	return '<a href="'.URL.'&p='.@$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
+}
 function sa_path($v1, $v2='') {
 	return
 		'<div class="path">'.
@@ -50,7 +52,7 @@ function sa_path($v1, $v2='') {
 			$v1.($v2 ? ' » ' : '').
 			$v2.
 		'</div>';
-}//sa_path()
+}
 
 
 function sa_menu() {//управление историей действий
@@ -60,7 +62,7 @@ function sa_menu() {//управление историей действий
 			'<div class="headName">Разделы меню<a class="add">Добавить</a></div>'.
 			'<div id="spisok">'.sa_menu_spisok().'</div>'.
 		'</div>';
-}//sa_menu()
+}
 function sa_menu_spisok() {
 	$sql = "SELECT
 				`ma`.`id`,
@@ -99,7 +101,7 @@ function sa_menu_spisok() {
 		'</table>';
 
 	return $send;
-}//sa_menu_spisok()
+}
 
 
 function sa_history() {//управление историей действий
@@ -119,7 +121,7 @@ function sa_history() {//управление историей действий
 			'</div>'.
 			'<div id="spisok">'.sa_history_spisok().'</div>'.
 		'</div>';
-}//sa_history()
+}
 function sa_history_spisok() {
 	$sql = "SELECT * FROM `_history_type` ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -196,7 +198,7 @@ function sa_history_spisok() {
 	$send .= sa_history_spisok_page('Без категории', $spisok);
 
 	return $send;
-}//sa_history_spisok()
+}
 function sa_history_spisok_page($name, $spisok) {//вывод списка конкретной категории
 	if(empty($spisok))
 		return '';
@@ -220,7 +222,7 @@ function sa_history_spisok_page($name, $spisok) {//вывод списка конкретной катег
 					'<input type="hidden" id="ids'.$r['id'].'" value="'.implode(',', $r['ids']).'" />';
 	$send .= '</table>';
 	return $send;
-}//sa_history_spisok_page()
+}
 function sa_history_cat() {//настройка категорий истории действий
 	return
 		sa_path('<a href="'.URL.'&p=sa&d=history">История действий</a>', 'Настройка категорий').
@@ -228,7 +230,7 @@ function sa_history_cat() {//настройка категорий истории действий
 			'<div class="headName">Категории истории действий<a class="add">Добавить</a></div>'.
 			'<div id="spisok">'.sa_history_cat_spisok().'</div>'.
 		'</div>';
-}//sa_history_cat()
+}
 function sa_history_cat_spisok() {
 	$sql = "SELECT * FROM `_history_category` ORDER BY `sort`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -260,7 +262,7 @@ function sa_history_cat_spisok() {
 				'</table>';
 	$send .= '</dl>';
 	return $send;
-}//sa_history_cat_spisok()
+}
 
 
 function sa_rule() {//управление историей действий
@@ -270,7 +272,7 @@ function sa_rule() {//управление историей действий
 			'<div class="headName">Права сотрудников<a class="add">Добавить</a></div>'.
 			'<div id="spisok">'.sa_rule_spisok().'</div>'.
 		'</div>';
-}//sa_rule()
+}
 function sa_rule_spisok() {
 	$sql = "SELECT * FROM `_vkuser_rule_default` ORDER BY `key`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -301,7 +303,7 @@ function sa_rule_spisok() {
 	$send .= '</table>';
 
 	return $send;
-}//sa_rule_spisok()
+}
 
 
 function sa_balans() {//управление балансами
@@ -314,7 +316,7 @@ function sa_balans() {//управление балансами
 			'</div>'.
 			'<div id="spisok">'.sa_balans_spisok().'</div>'.
 		'</div>';
-}//sa_balans()
+}
 function sa_balans_spisok() {
 	$sql = "SELECT * FROM `_balans_category` ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -360,7 +362,7 @@ function sa_balans_spisok() {
 	}
 
 	return $send;
-}//sa_balans_spisok()
+}
 function sa_balans_action_spisok($arr, $count) {
 	if(empty($arr))
 		return '';
@@ -377,8 +379,131 @@ function sa_balans_action_spisok($arr, $count) {
 					'<div class="img_del balans-action-del"></div>';
 
 	return $send;
-}//sa_balans_action_spisok()
+}
 
+
+
+function sa_zayav() {//управление балансами
+	/*
+		Поля для отображения информации о заявке
+		Какие поля участвуют в быстром поиске find
+		Какие условия поиска выводить в списке заявок
+		Что сохраняется в name заявки
+		Показывать или нет изображение
+		Включение-выключение функций:
+			- формирование договора
+			- печать квитации
+			- составление счёта на оплату
+	*/
+	return
+		sa_path('Настройки заявок').
+		'<div id="sa-zayav">'.
+			'<div class="headName">'.
+				'Используемые поля'.
+				'<a class="add" id="pole-add">Добавить поле</a>'.
+			'</div>'.
+			'<div id="pole-spisok">'.sa_zayav_pole_spisok().'</div>'.
+		'</div>';
+}
+function sa_zayav_pole_spisok() {
+	$sql = "SELECT
+				*,
+				0 `use_info`
+			FROM `_zayav_pole_name`
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$sql = "SELECT *
+			FROM `_zayav_pole_use_info`
+			WHERE `app_id`=".APP_ID;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['pole_id']]['use_info'] = 1;
+
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>'.
+				'<th>Наименование'.
+				'<th>Константа'.
+				'<th>Использование<br />в информации<br />о заявке'.
+				'<th>';
+	foreach($spisok as $r)
+		$send .=
+			'<tr><td class="id">'.$r['id'].
+				'<td class="name">'.$r['name'].
+				'<td class="const">'.$r['const'].
+				'<td class="use-info">'._check('use-info'.$r['id'], '', $r['use_info']).
+				'<td class="ed">'._iconEdit($r);
+	$send .= '</table>';
+
+	return $send;
+}
+
+
+
+function sa_color() {
+	return
+		sa_path('Цвета').
+		'<div id="sa-color">'.
+			'<div class="headName">'.
+				'Цвета'.
+				'<a class="add" id="pole-add">Новый цвет</a>'.
+			'</div>'.
+			'<div id="spisok">'.sa_color_spisok().'</div>'.
+		'</div>';
+}
+function sa_color_spisok() {
+	$sql = "SELECT
+				*,
+				0 `zayav`,
+				0 `zp`
+			FROM `_setup_color`
+			ORDER BY `name`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Цвета не внесены.';
+
+	$sql = "SELECT
+				`color_id`,
+				COUNT(`id`) `c`
+			FROM `_zayav`
+			WHERE `color_id`
+			GROUP BY `color_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['color_id']]['zayav'] = $r['c'];
+
+	$sql = "SELECT
+				`color_dop`,
+				COUNT(`id`) `c`
+			FROM `_zayav`
+			WHERE `color_dop`
+			GROUP BY `color_dop`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['color_dop']]['zayav'] += $r['c'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Предлог'.
+				'<th>Цвет'.
+				'<th>Кол-во<br />заявок'.
+				'<th>Кол-во<br />запчастей'.
+				'<th>';
+	foreach($spisok as $r) {
+		$r['nodel'] = $r['zayav'] || $r['zp'];
+		$send .=
+			'<tr>'.
+				'<td class="predlog">'.$r['predlog'].
+				'<td class="name">'.$r['name'].
+				'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+				'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
+				'<td class="ed">'._iconEdit($r)._iconDel($r);
+	}
+	$send .= '</table>';
+	return $send;
+}
 
 
 
@@ -393,7 +518,7 @@ function sa_user() {
 				'<td class="right">'.
 		'</table>'.
 	'</div>';
-}//sa_user()
+}
 function sa_user_spisok() {
 	$sql = "SELECT *
 			FROM `_vkuser`
@@ -426,7 +551,7 @@ function sa_user_spisok() {
 				'</table>'.
 			'</div>';
 	return $send;
-}//sa_user_spisok()
+}
 function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей для пользователя в определённой таблице
 	$sql = "SELECT COUNT(*)
 			FROM information_schema.COLUMNS
@@ -440,7 +565,7 @@ function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей
 		return query_value($sql);
 	}
 	return 0;
-}//sa_user_tab_test()
+}
 
 function sa_ws() {
 	$wsSpisok =
@@ -466,7 +591,7 @@ function sa_ws() {
 		'<div class="count">Всего <b>'.$count.'</b> организац'._end($count, 'ая', 'ии', 'ий').'.</div>'.
 		'<table class="_spisok">'.$wsSpisok.'</table>'.
 	'</div>';
-}//sa_ws()
+}
 function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 	$sql = "SHOW TABLES";
 	$q = query($sql);
@@ -479,7 +604,7 @@ function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 
 //	unset($send['vk_user']);
 	return $send;
-}//sa_ws_tables()
+}
 function sa_ws_info($id) {
 	$sql = "SELECT * FROM `_ws` WHERE `app_id`=".APP_ID." AND `id`=".$id;
 	if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -532,4 +657,4 @@ function sa_ws_info($id) {
 		'<br />'.
 		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить в заявках: начисления, платежи, наличие счетов</button></div>'.
 	'</div>';
-}//sa_ws_info()
+}

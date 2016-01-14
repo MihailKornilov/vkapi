@@ -67,6 +67,24 @@
 
 
 
+/* заявки */
+#sa-zayav ._spisok{width:auto}
+#sa-zayav #pole-spisok{margin:10px 20px}
+#sa-zayav .id{text-align:right;color:#777}
+#sa-zayav .name{width:180px}
+#sa-zayav .const{font-weight:bold}
+#sa-zayav .use-info{text-align:center}
+
+#zayav-pole-tab #const{width:250px;font-weight:bold}
+
+
+/* цвета */
+#sa-color #spisok{margin:10px 20px}
+#sa-color .zayav{text-align:center}
+#sa-color .zp{text-align:center}
+#sa-color-add{border-spacing:8px}
+#sa-color-add input{width:200px}
+
 
 /* пользователи */
 #sa-user .un{padding-bottom:8px;margin:8px;border-bottom:#dae1e8 solid 1px}

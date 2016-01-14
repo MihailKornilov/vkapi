@@ -39,6 +39,9 @@ var VK_SCROLL = 0,
 		11:'ноября',
 		12:'декабря'
 	},
+	FullData = function(v, noyear, cut, week) {
+
+	},
 	URL = APP_HTML + '/index.php?' + VALUES,
 	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES + '&ajax=1',
 	hashLoc,
@@ -1245,6 +1248,206 @@ $.fn._tooltip = function(msg, left, ugolSide) {
 		'</div>'
 	);
 };
+$.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
+
+	// ._attach: блок, в котором происходят все манипуляции с файлом
+	// ._attach-add: ссылка для открывания окна добавления файла
+
+	if(!window.ATTACH)
+		ATTACH = {};
+
+	var t = $(this),
+		attach_id = _num(t.val());
+
+	o = $.extend({
+		zayav_id:0,
+		func:function() {}
+	}, o);
+
+	t.wrap('<div class="_attach">');
+	t.parent().append('<a class="_attach-add">прикрепить файл</a>');
+
+	var attach = t.parent(),
+		attachAdd = attach.find('._attach-add');
+
+	if(attach_id)
+		attach.addClass('ex');
+
+	attachAdd.click(add);
+	menu(attach_id);
+
+	function add() {//окно для загрузки файла
+		var html =
+			'<div id="attach-add-tab">' +
+				'<div class="_info">' +
+					'Типы файлов, которые возможно загрузить: ' +
+					'<b>xls</b>, ' +
+					'<b>xlsx</b>, ' +
+					'<b>doc</b>, ' +
+					'<b>docx</b>, ' +
+					'<b>pdf</b>, ' +
+					'<b>rtf</b>.' +
+				'</div>' +
+				'<h1>' +
+					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="attach-frame">' +
+						'<input type="hidden" name="op" value="attach_upload" />' +
+						'<input type="file" name="f1" id="file" />' +
+					'</form>' +
+					'<button class="vk">Выбрать файл</button>' +
+				'</h1>' +
+				'<iframe name="attach-frame"></iframe>' +
+				'<table id="tab">' +
+					'<tr><td class="label r">Название файла:<td><input type="text" id="name" />' +
+					'<tr><td class="label r">Размер:<td><b id="size">0</b> Кб' +
+				'</table>' +
+			'</div>',
+			dialog = _dialog({
+				top:40,
+				width:400,
+				head:'Загрузка нового файла',
+				content:html,
+				butSubmit:'',
+				submit:submit
+			}),
+			tab = $('#attach-add-tab'),
+			but = tab.find('.vk'),
+			form = tab.find('form'),
+			file = $('#file'),
+			timer;
+
+
+
+		file.change(function() {
+			file.css('visibility', 'hidden');
+			but.addClass('_busy');
+			_cookie('_attached', 0);
+			_cookie('_attached_id', 0);
+			timer = setInterval(upload_start, 500);
+			form.submit();
+		});
+		function upload_start() {
+			var c = _cookie('_attached');
+			if(c == 0)
+				return;
+			clearInterval(timer);
+			but.removeClass('_busy');
+			file.css('visibility', 'visible');
+			if(c == 1) {
+				attach_id = _cookie('_attached_id');
+				var send = {
+					op:'attach_get',
+					id:attach_id
+				};
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('#name').val(res.name);
+						$('#size').html(res.size);
+						tab.addClass('uploaded');
+						dialog.butSubmit('Сохранить');
+					}
+				}, 'json');
+				return;
+			}
+		}
+		function submit() {
+			var send = {
+				op:'attach_save',
+				id:attach_id,
+				zayav_id:o.zayav_id,
+				name:$.trim($('#name').val())
+			};
+			if(!send.name)
+				dialog.err('Не указано название файла');
+			else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					dialog.abort();
+					if(res.success) {
+						dialog.close();
+						attach.addClass('ex');
+						t.val(attach_id);
+						ATTACH[attach_id] = res.arr;
+						menu();
+						o.func(attach_id);
+					}
+				}, 'json');
+			}
+		}
+	}
+	function menu() {
+		if(!attach_id)
+			return;
+
+		var at = ATTACH[attach_id];
+
+		t._dropdown({
+			head:at.name,
+			nosel:1,
+			spisok:[
+				{uid:1,title:'Скачать (' + Math.round(at.size / 2014) + ' кб.)'},
+				{uid:2,title:'Изменить'},
+				{uid:3,title:'Удалить'}
+			],
+			func:function(v) {
+				switch(v) {
+					case 1: location.href = at.link; break;
+					case 2: edit(); break;
+					case 3: del(); break;
+				}
+			}
+		});
+	}
+	function edit() {
+		var at = ATTACH[attach_id];
+		var html =
+			'<div id="attach-add-tab" class="uploaded">' +
+				'<table id="tab">' +
+					'<tr><td class="label r">Название файла:<td><input type="text" id="name" value="' + at.name + '" />' +
+					'<tr><td class="label r">Размер:<td><b id="size">' + Math.round(at.size / 2014) + '</b> Кб' +
+				'</table>' +
+			'</div>',
+			dialog = _dialog({
+				top:40,
+				width:400,
+				head:'Редактирование данных файла',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'attach_edit',
+				id:attach_id,
+				name:$.trim($('#name').val())
+			};
+			if(!send.name)
+				dialog.err('Не указано название файла');
+			else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					dialog.abort();
+					if(res.success) {
+						dialog.close();
+						ATTACH[attach_id].name = send.name;
+						menu();
+					}
+				}, 'json');
+			}
+		}
+
+	}
+	function del() {
+		_dialogDel({
+			id:attach_id,
+			head:'файла',
+			op:'attach_del',
+			func:function() {
+				t.val(0)._dropdown('remove');
+				attach.removeClass('ex');
+			}
+		});
+	}
+};
 
 (function () {// Подсказки vkHint 2013-02-14 14:43
 	var Hint = function (t, o) { this.create(t, o); return t; };
@@ -1875,6 +2078,59 @@ $.fn._select = function(o) {
 	window[id + '_select'] = t;
 	return t;
 };
+$.fn._selectColor = function(o) {//вывод селектов для выбора цветов
+	var t = $(this),
+		id = t.attr('id');
+
+	o = $.extend({
+		color_id:0,
+		color_dop:0,
+		func:function() {}
+	}, o);
+
+
+	var html =  '<input type="hidden" id="color_id" value="' + o.color_id + '" />' +
+				'<span class="dn">' +
+					'<tt>-</tt>' +
+					'<input type="hidden" id="color_dop" value="' + o.color_dop + '" />' +
+				'</span>';
+
+	t.html(html).addClass('_select-color');
+
+	var c1 = $('#color_id'),
+		c2 = $('#color_dop'),
+		dopSpan = t.find('span');
+
+	c1._select({
+		width:122,
+		title0:'Цвет не указан',
+		spisok:COLOR_SPISOK,
+		func:function(v) {
+			dop(v);
+			c2._select(0);
+			c1._select(COLOR_SPISOK)
+			  ._select(v);
+
+		}
+	});
+
+	dop(o.color_id);
+
+	c2._select({
+		width:123,
+		title0:'Цвет не указан',
+		spisok:COLOR_SPISOK,
+		func:function(id) {
+			c1._select(id ? COLORPRE_SPISOK : COLOR_SPISOK)
+			  ._select(c1.val());
+		}
+	});
+
+
+	function dop(v) {
+		dopSpan[v ? 'show' : 'hide']();
+	}
+};
 
 $(document)
 	.ajaxStart(_busy)
@@ -1969,154 +2225,156 @@ $(document)
 		_checkAll('change', v);
 	})
 
-	.on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
+	.on('click focus', '._note TEXTAREA', function() {//разворачивание поля текста и показ кнопки
 		var t = $(this),
 			but = t.next(),
-			val = t.val();
+			v,
+			area = t.parent().attr('class') == 'add' ? '.add' : 'h6';
 		if(but.is(':hidden')) {
-			t.val('')
-				.attr('val', val)
-				.css('color','#000')
-				.height(26)
-				.autosize();
-			but.show()
-				.css('display','inline-block');
+			v = t.attr('placeholder');
+			t.attr('placeholder', '')
+			 .attr('val', v)
+			 .height(26)
+			 .autosize();
+			but.removeClass('dn');
+			t.keydown(function(e) {
+				if(e.ctrlKey && e.keyCode == 13) {
+					$('._note ' + area + ' .vk').trigger('click');
+				}
+			});
 		}
 	})
-	.on('blur', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
-		var t = $(this);
-		if(!t.val()) {
-			if(t.parent().parent().hasClass('empty')) {
-				t.parent().parent().hide()
-					.parent().find('span').show();
-				return;
-			}
-			var val = t.attr('val');
-			t.val(val)
-				.css('color','#777')
-				.height(13)
-				.next().hide();
-		}
-	})
-	.on('click', '.vkComment span a', function() {
+	.on('blur', '._note TEXTAREA', function() {//сворачивание поля текста и скрытие кнопки
 		var t = $(this),
-			cdop = t.parent().parent().next();
-		t.parent().hide();
-		cdop.show();
-		if(cdop.hasClass('empty'))
-			cdop.find('textarea').focus()
+			val = t.attr('val');
+		if(!t.val()) {
+			t.attr('placeholder', val)
+			 .height(13)
+			 .next().addClass('dn');
+		}
 	})
-	.on('click', '.vkComment .add .vkButton', function() {
+	.on('click', '._note .add .vk', function() {//внесение новой заметки
 		var t = $(this);
-		if(t.hasClass('busy'))
+		if(t.hasClass('_busy'))
 			return;
 		var val = t.parent().parent().attr('val').split('_'),
 			send = {
-				op:'vkcomment_add',
-				table:val[0],
-				id:val[1],
+				op:'note_add',
+				page_name:val[0],
+				page_id:val[1],
 				txt:$.trim(t.prev().val())
 			};
 		if(!send.txt)
 			return;
-		t.addClass('busy');
+		t.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('busy').hide();
-			var val = t.prev().attr('val');
-			t.prev()
-				.val(val)
-				.css('color', '#777')
-				.height(13);
-			t.parent().after(res.html);
+			t.removeClass('_busy');
+			if(res.success) {
+				t.prev().val('').focus();
+				t.parent().after(res.html);
+				t.parent().parent().find('tt').html(res.count);
+				$('.nu.deleted').remove();
+			}
 		}, 'json');
 	})
-	.on('click', '.vkComment .cadd .vkButton', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
+	.on('click', '._note .nu-del', function() {//удаление заметки
+		var t = $(this),
+			nu = _parent(t, 'TABLE').parent();
+
+		if(nu.hasClass('busy'))
 			return;
-		var p = t.parent(),
-			pid,
-			val;
-		for(var n = 0; n < 10; n++) {
-			p = p.parent();
-			if(p.hasClass('cunit'))
-				pid = p.attr('val');
-			if(p.hasClass('vkComment')) {
-				val = p.attr('val').split('_');
-				break;
-			}
-		}
+
 		var send = {
-			op:'vkcomment_add_child',
-			table:val[0],
-			id:val[1],
-			txt:$.trim(t.prev().val()),
-			parent:pid
-		};
+				op:'note_del',
+				note_id:nu.attr('val')
+			};
+		nu.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			nu.removeClass('busy');
+			if(res.success)
+				nu.addClass('deleted');
+		}, 'json');
+	})
+	.on('click', '._note .nu-rest a', function() {//восстановление заметки
+		var t = $(this),
+			nu = t.parent().parent();
+
+		if(t.hasClass('_busy'))
+			return;
+
+		var send = {
+				op:'note_rest',
+				note_id:nu.attr('val')
+			};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success)
+				nu.removeClass('deleted');
+		}, 'json');
+	})
+	.on('click', '.nu-go-comm', function() {//показ поля для комментария
+		var t = $(this),
+			td = _parent(t, 'TD');
+		td.find('h2').removeClass('dn');
+		td.find('h6').removeClass('dn');
+		td.find('textarea').focus().autosize();
+		t.remove();
+	})
+	.on('click', '._note h6 .vk', function() {//внесение нового комментария
+		var t = $(this);
+		if(t.hasClass('_busy'))
+			return;
+		var send = {
+				op:'note_comment_add',
+				note_id:_parent(t, 'TABLE').parent().attr('val'),
+				txt:$.trim(t.prev().val())
+			};
 		if(!send.txt)
 			return;
-		t.addClass('busy');
+		t.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('busy').hide();
-			var val = t.prev().attr('val');
-			t.prev()
-				.val(val)
-				.css('color', '#777')
-				.height(13);
-			t.parent().before(res.html)
-				.parent().removeClass('empty');
+			t.removeClass('_busy');
+			if(res.success) {
+				t.prev().val('').focus();
+				t.parent().before(res.html);
+			}
 		}, 'json');
 	})
-	.on('click', '.vkComment .unit_del', function() {
-		var u = $(this);
-		while(!u.hasClass('cunit'))
-			u = u.parent();
-		if(u.hasClass('busy'))
+	.on('click', '._note .cu-del', function() {//удаление комментария
+		var t = $(this),
+			cu = _parent(t, 'TABLE').parent();
+
+		if(cu.hasClass('busy'))
 			return;
-		var id = u.attr('val'),
-			send = {
-				op:'vkcomment_del',
-				id:id
-			};
-		u.addClass('busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			u.removeClass('busy');
-			if(res.success)
-				u.find('table:first').hide()
-					.before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
-		}, 'json');
-	})
-	.on('click', '.vkComment .unit_rest,.vkComment .child_rest', function() {
-		var t = $(this);
-		if(t.hasClass('busy'))
-			return;
+
 		var send = {
-			op:'vkcomment_rest',
-			id:t.attr('val')
-		};
-		t.addClass('busy');
+				op:'note_comment_del',
+				id:cu.attr('val')
+			};
+		cu.addClass('busy');
 		$.post(AJAX_MAIN, send, function(res) {
-			t.parent().next().show();
-			t.parent().remove()
+			cu.removeClass('busy');
+			if(res.success)
+				cu.addClass('deleted');
 		}, 'json');
 	})
-	.on('click', '.vkComment .child_del', function() {
-		var p = $(this);
-		while(!p.hasClass('child'))
-			p = p.parent();
-		if(p.hasClass('busy'))
+	.on('click', '._note .cu-rest a', function() {//восстановление комментария
+		var t = $(this),
+			cu = t.parent().parent();
+
+		if(t.hasClass('_busy'))
 			return;
-		var id = p.attr('val'),
-			send = {
-				op:'vkcomment_del',
-				id:id
+
+		var send = {
+				op:'note_comment_rest',
+				id:cu.attr('val')
 			};
-		p.addClass('busy');
+		t.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
-			p.removeClass('busy');
+			t.removeClass('_busy');
 			if(res.success)
-				p.find('table:first').hide()
-					.before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
+				cu.removeClass('deleted');
 		}, 'json');
 	})
 

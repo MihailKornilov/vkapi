@@ -87,6 +87,113 @@ var balansCategory = function(arr) {
 				}, 'json');
 			}
 		}
+	},
+
+	saZayavPoleEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:'',
+			const:'ZAYAV_USE_INFO_'
+		}, o);
+
+		var html =
+				'<table class="sa-tab" id="zayav-pole-tab">' +
+					'<tr><td class="label">Наименование:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label">Константа:<td><input type="text" id="const" value="' + o.const + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Изменение' : 'Внесение нового') + ' поля заявки',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name')
+			.focus()
+			.keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'sa_zayav_pole_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				const:$('#const').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			if(!send.const) {
+				dialog.err('Не указана константа');
+				$('#const').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#pole-spisok').html(res.html);
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
+	},
+	saColorEdit = function(o) {
+		o = $.extend({
+			id:0,
+			predlog:'',
+			name:''
+		}, o);
+
+		var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Предлог:<td><input id="predlog" type="text" value="' + o.predlog + '" />' +
+					'<tr><td class="label">Цвет:<td><input id="name" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Изменение' : 'Добавление нового') + ' цвета',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name,#predlog').keyEnter(submit);
+		$('#predlog').focus();
+
+		function submit() {
+			var send = {
+				op:'sa_color_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				predlog:$('#predlog').val(),
+				name:$('#name').val()
+			};
+			if(!send.predlog) {
+				dialog.err('Не указан предлог');
+				$('#predlog').focus();
+				return;
+			}
+			if(!send.name) {
+				dialog.err('Не указан цвет');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
 	};
 
 $(document)
@@ -350,6 +457,51 @@ $(document)
 		});
 	})
 
+
+	.on('click', '#sa-zayav #pole-add', saZayavPoleEdit)
+	.on('click', '#sa-zayav .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saZayavPoleEdit({
+			id:t.attr('val'),
+			name:p.find('.name').html(),
+			const:p.find('.const').html()
+		});
+	})
+	.on('click', '#sa-zayav #pole-spisok ._check', function() {
+		var t = $(this),
+			inp = t.find('input'),
+			send = {
+				op:'sa_zayav_pole_use_info_change',
+				id:_num(inp.attr('id').split('use-info')[1]),
+				v:inp.val()
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg();
+		}, 'json');
+	})
+
+	.on('click', '#sa-color .add', saColorEdit)
+	.on('click', '#sa-color .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saColorEdit({
+			id:t.attr('val'),
+			predlog:p.find('.predlog').html(),
+			name:p.find('.name').html()
+		});
+	})
+	.on('click', '#sa-color .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'цвета',
+			op:'sa_color_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
+			}
+		});
+	})
 
 	.on('click', '#sa-user .action', function() {
 		var t = $(this),

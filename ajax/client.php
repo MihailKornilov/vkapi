@@ -21,13 +21,8 @@ switch(@$_POST['op']) {
 			($not_client_id ? " AND `id`!=".$not_client_id : '')."
 				ORDER BY `id` DESC
 				LIMIT 50";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		if(!mysql_num_rows($q))
+		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 			jsonSuccess($send);
-
-		$spisok = array();
-		while($r = mysql_fetch_assoc($q))
-			$spisok[$r['id']] = $r;
 
 		// фио и телефоны клиентов
 		$sql = "SELECT *
@@ -137,10 +132,21 @@ switch(@$_POST['op']) {
 		if(!$client_id = _num($_POST['id']))
 			jsonError();
 
-		if(!$r = _clientQuery($client_id))
+		if(!$c = _clientQuery($client_id))
 			jsonError();
 
-		define('ORG', $r['category_id'] > 1);
+		define('ORG', $c['category_id'] > 1);
+
+		if($worker_id = _num($_POST['worker_id'])) {
+			$sql = "SELECT COUNT(`id`)
+					FROM `_client`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+			          AND `id`!=".$client_id."
+					  AND `worker_id`=".$worker_id;
+			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError('Этот сотрудник связан с другим клиентом');
+		}
 
 		$org_name = ORG ? _txt($_POST['org_name']) : '';
 		$org_phone = ORG ? _txt($_POST['org_phone']) : '';
@@ -181,6 +187,8 @@ switch(@$_POST['op']) {
 						`pasp_data`='".addslashes($pasp_data)."'
 					WHERE `id`=".$person_id;
 			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			$r['worker_id'] = $c['worker_id'];
 		} else
 			if(empty($org_name))//Для организации обязательно указывается Название организации
 				jsonError();
@@ -195,7 +203,8 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `_client`
-				SET `org_name`='".addslashes($org_name)."',
+				SET `worker_id`=".$worker_id.",
+					`org_name`='".addslashes($org_name)."',
 					`org_phone`='".addslashes($org_phone)."',
 					`org_fax`='".addslashes($org_fax)."',
 					`org_adres`='".addslashes($org_adres)."',
@@ -209,11 +218,10 @@ switch(@$_POST['op']) {
 			query("UPDATE `_money_income` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
 			query("UPDATE `_money_refund` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
 			query("UPDATE `_schet` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-//			query("UPDATE `_history` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
 			query("UPDATE `_remind` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
-			query("UPDATE `zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_note` SET `page_id`=".$client_id."  WHERE `page_name`='client' AND `page_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+//			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2, GLOBAL_MYSQL_CONNECT);
 
 			// доверенные лица переносятся новому клиенту. Если это частное лицо, то первый по порядку не трогается
@@ -229,7 +237,7 @@ switch(@$_POST['op']) {
 				query($sql, GLOBAL_MYSQL_CONNECT);
 			}
 
-//			clientBalansUpdate($client_id);
+//			_clientBalansUpdate($client_id);
 			//баланс для клиента
 			_balans(array(
 				'action_id' => 38,//Объединение с другим клиентом
@@ -249,6 +257,9 @@ switch(@$_POST['op']) {
 					_historyChange('ФИО', $r['fio'], $fio).
 					_historyChange('Телефон', $r['phone'], $phone).
 					_historyChange('Адрес', $r['adres'], $adres).
+					_historyChange('Связан с сотрудником',
+									$r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '',
+									$worker_id ? _viewer($worker_id, 'viewer_name') : '').
 					_historyChange('Паспорт серия', $r['pasp_seria'], $pasp_seria).
 					_historyChange('Паспорт номер', $r['pasp_nomer'], $pasp_nomer).
 					_historyChange('Паспорт прописка', $r['pasp_adres'], $pasp_adres).

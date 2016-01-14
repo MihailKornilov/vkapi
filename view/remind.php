@@ -18,6 +18,75 @@ function _remind_list($data) {
 			'</table>'.
 		'</div>';
 }//_remind_list()
+function _remind_stat() {
+	if(!SA)
+		return '';
+
+	//новые сегодня
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `dtime_add` LIKE '".TODAY."%'";
+	$newToday = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	//новые текущая неделя
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  "._period(0, 'sql');
+	$newWeek = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	//новые текущий месяц
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `dtime_add` LIKE '".strftime('%Y-%m-')."%'";
+	$newMonth = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$moveToday = _remind_stat_count(1) - $newToday;
+	$moveWeek = _remind_stat_count(1, 'week') - $newWeek;
+	$moveMonth = _remind_stat_count(1, strftime('%Y-%m-')) - $newMonth;
+	return
+	'<table class="_spisok" id="_remind-stat">'.
+		'<tr><th>'.
+			'<th>Сегодня'.
+			'<th>Текущая<br />неделя'.
+			'<th>Текущий<br />месяц'.
+		'<tr><td>Новые'.
+			'<td class="count">'.($newToday ? $newToday : '').
+			'<td class="count">'.($newWeek ? $newWeek : '').
+			'<td class="count">'.($newMonth ? $newMonth : '').
+		'<tr><td>Перенесены'.
+			'<td class="count">'.($moveToday ? $moveToday : '').
+			'<td class="count">'.($moveWeek ? $moveWeek : '').
+			'<td class="count">'.($moveMonth ? $moveMonth : '').
+		'<tr><td>Выполнены'.
+			'<td class="count">'._remind_stat_count(2).
+			'<td class="count">'._remind_stat_count(2, 'week').
+			'<td class="count">'._remind_stat_count(2, strftime('%Y-%m-')).
+		'<tr><td>Отменены'.
+			'<td class="count">'._remind_stat_count(0).
+			'<td class="count">'._remind_stat_count(0, 'week').
+			'<td class="count">'._remind_stat_count(0, strftime('%Y-%m-')).
+	'</table>';
+}//_remind_stat()
+function _remind_stat_count($status, $period=TODAY) {
+	$cont = " AND `dtime_add` LIKE '".$period."%'";
+	if($period == 'week')
+		$cont = _period(0, 'sql');
+
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=".$status."
+			  ".$cont;
+	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return $c ? $c : '';
+}//_remind_stat_count()
 function _remind_right() {
 	return
 		'<div class="findHead">Категории напоминаний</div>'.
@@ -31,12 +100,16 @@ function _remind_history_add($v) {
 		'reason' => !empty($v['reason']) ? $v['reason'] : ''
 	);
 	$sql = "INSERT INTO `_remind_history` (
+				`app_id`,
+				`ws_id`,
 				`remind_id`,
 				`status`,
 				`day`,
 				`txt`,
 				`viewer_id_add`
 			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
 				".$v['remind_id'].",
 				".$v['status'].",
 				'".$v['day']."',
@@ -104,8 +177,8 @@ function _remind_spisok($v=array(), $i='all') {
 
 	define('CLIENT_OR_ZAYAV', $filter['client_id'] || $filter['zayav_id']);
 
-	$cond = "`app_id`=".APP_ID.
-			" AND `ws_id`=".WS_ID.
+	$cond = "`app_id`=".APP_ID."
+		 AND `ws_id`=".WS_ID.
 			(CLIENT_OR_ZAYAV ? '' : " AND `status`=".$filter['status']);
 
 	if($filter['day'])
@@ -149,9 +222,7 @@ function _remind_spisok($v=array(), $i='all') {
 	}
 
 	$remind = _clientValToList($remind);
-
-	if(function_exists('_zayavValToList'))
-		$remind = _zayavValToList($remind);
+	$remind = _zayavValToList($remind);
 
 	//внесение истории
 	$sql = "SELECT *
@@ -206,6 +277,7 @@ function _remind_spisok($v=array(), $i='all') {
 		if(!$filter['zayav_id']) {
 			$c = $filter['client_id'] ? $send['active'] : $all;
 			$send['spisok'] =
+				(!$filter['client_id'] ? _remind_stat() : '').
 				'<div id="_remind-head">' .
 					($c ? 'Показано '.$c.' напоминани'._end($c, 'е', 'я', 'й') : 'Активных напоминаний нет.').
 					($filter['client_id'] && $send['hidden'] ? '<a id="_remind-show-all">Показать скрытые: '.$send['hidden'].'</a>' : '').
@@ -238,7 +310,7 @@ function _remind_history_show($v) {//отображение истории напоминаний
 			else {
 				$about = '';
 				$count--;
-				$sex1 = _viewer($r['viewer_id_add'], 'sex') == 1;
+				$sex1 = _viewer($r['viewer_id_add'], 'viewer_sex') == 1;
 				if($r['status'] == 1 && !$count)
 					$about = 'создал'.($sex1 ? 'а' : '').' напоминание.<br />День выполнения: <u>'.FullData($r['day']).'</u>';
 				else

@@ -660,6 +660,182 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_product_add':
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "INSERT INTO `_product` (
+					`app_id`,
+					`ws_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1037,
+			'v1' => $name
+		));
+
+		$send['html'] = utf8(setup_product_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_product_edit':
+		if(!$product_id = _num($_POST['id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_product`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$product_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_product`
+		        SET `name`='".addslashes($name)."'
+		        WHERE `id`=".$product_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
+		_globalValuesJS();
+
+		if($changes = _historyChange('Наименование', $r['name'], $name))
+			_history(array(
+				'type_id' => 1038,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_product_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_product_del':
+		if(!$product_id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_product` WHERE `id`=".$product_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_product_sub` WHERE `product_id`=".$product_id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav_product` WHERE `product_id`=".$product_id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_product` WHERE `id`=".$product_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1039,
+			'v1' => $r['name']
+		));
+
+		jsonSuccess();
+		break;
+	case 'setup_product_sub_add':
+		if(!$product_id = _num($_POST['product_id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_product` WHERE `id`=".$product_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "INSERT INTO `_product_sub` (
+					`app_id`,
+					`ws_id`,
+					`product_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$product_id.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1040,
+			'v1' => _product($product_id),
+			'v2' => $name
+		));
+
+		$send['html'] = utf8(setup_product_sub_spisok($product_id));
+		jsonSuccess($send);
+		break;
+	case 'setup_product_sub_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_product_sub` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_product_sub`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
+		_globalValuesJS();
+
+		if($changes = _historyChange('Наименование', $r['name'], $name))
+			_history(array(
+				'type_id' => 1041,
+				'v1' => _product($r['product_id']),
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		jsonSuccess();
+		break;
+	case 'setup_product_sub_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_product_sub` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav_product` WHERE `product_sub_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_product_sub` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
+		_globalValuesJS();
+
+		_history(array(
+			'type_id' => 1042,
+			'v1' => _product($r['product_id']),
+			'v2' => $r['name']
+		));
+
+		jsonSuccess();
+		break;
+
 	case 'setup_zayav_expense_add':
 		if(!SA)
 			jsonError();

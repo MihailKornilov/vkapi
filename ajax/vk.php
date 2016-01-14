@@ -10,6 +10,7 @@ if(empty($nopin[$_POST['op']]) && PIN_ENTER)
 $_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
 
 require_once GLOBAL_DIR_AJAX.'/client.php';
+require_once GLOBAL_DIR_AJAX.'/zayav.php';
 require_once GLOBAL_DIR_AJAX.'/money.php';
 require_once GLOBAL_DIR_AJAX.'/remind.php';
 require_once GLOBAL_DIR_AJAX.'/history.php';
@@ -183,129 +184,332 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'vkcomment_add':
-		$table = htmlspecialchars(trim($_POST['table']));
-		if(strlen($table) > 20)
+	case 'attach_upload':
+		/*
+			Прикрепление файлов
+			1 - успешно
+			2 - неверный формат
+			3 - загрузить не удалось
+		*/
+
+		$f = $_FILES['f1'];
+		switch($f['type']) {
+			case 'application/pdf':             //pdf
+			case 'application/rtf':             //rtf
+			case 'application/msword':          //doc
+			case 'application/vnd.ms-excel':    //xls
+			case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':       //xlsx
+			case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': //docx
+				break;
+			default: setcookie('_attached', 2, time() + 3600, '/'); exit;
+		}
+		if(!is_dir(ATTACH_PATH))
+			mkdir(ATTACH_PATH, 0777, true);
+		$fname = time().'_'.translit(trim($f['name'])); //имя файла, сохраняемое на диск
+		if(move_uploaded_file($f['tmp_name'], ATTACH_PATH.'/'.$fname)) {
+			$sql = "INSERT INTO `_attach` (
+						`app_id`,
+						`ws_id`,
+						`name`,
+						`size`,
+						`link`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".WS_ID.",
+						'".addslashes(trim($f['name']))."',
+						".$f['size'].",
+						'".addslashes(ATTACH_HTML.$fname)."',
+						".VIEWER_ID."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			$id = query_insert_id('_attach', GLOBAL_MYSQL_CONNECT);
+
+			setcookie('_attached', 1, time() + 3600, '/');
+			setcookie('_attached_id', $id, time() + 3600, '/');
+			exit;
+		}
+		setcookie('_attached', 3, time() + 3600, '/');
+		exit;
+	case 'attach_get'://получение данных о файле после его загрузке
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+
+		$sql = "SELECT *
+				FROM `_attach`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
-		if(empty($_POST['txt']))
-			jsonError();
-		$txt = win1251(htmlspecialchars(trim($_POST['txt'])));
-		$sql = "INSERT INTO `vk_comment` (
-					`table_name`,
-					`table_id`,
-					`txt`,
-					`viewer_id_add`
-				) VALUES (
-					'".$table."',
-					".intval($_POST['id']).",
-					'".addslashes($txt)."',
-					".VIEWER_ID."
-				)";
-		query($sql);
-		$data = array(
-			'id' => mysql_insert_id(),
-			'txt' => $txt,
-			'viewer_id_add' => VIEWER_ID,
-			'dtime_add' => curTime()
-		);
-		$send['html'] = utf8(_vkCommentUnit($data + _viewer()));
+
+		$send['name'] = utf8($r['name']);
+		$send['size'] = round($r['size'] / 1024);
 		jsonSuccess($send);
 		break;
-	case 'vkcomment_add_child':
-		$table = htmlspecialchars(trim($_POST['table']));
-		if(strlen($table) > 20)
+	case 'attach_save'://сохранение файла после его загрузки
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+
+		if($zayav_id = _num($_POST['zayav_id']))
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError();
+
+		$name = _txt($_POST['name']);
+
+		$sql = "SELECT *
+				FROM `_attach`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['parent']))
-			jsonError();
-		if(empty($_POST['txt']))
-			jsonError();
-		$txt = win1251(htmlspecialchars(trim($_POST['txt'])));
-		$sql = "INSERT INTO `vk_comment` (
-					`table_name`,
-					`table_id`,
-					`txt`,
-					`parent_id`,
-					`viewer_id_add`
-				) VALUES (
-					'".$table."',
-					".intval($_POST['id']).",
-					'".addslashes($txt)."',
-					".intval($_POST['parent']).",
-					".VIEWER_ID."
-				)";
-		query($sql);
-		$data = array(
-			'id' => mysql_insert_id(),
-			'txt' => $txt,
-			'viewer_id_add' => VIEWER_ID,
-			'dtime_add' => curTime()
-		);
-		$send['html'] = utf8(_vkCommentChild($data + _viewer()));
+
+		$sql = "UPDATE `_attach`
+				SET `name`='".addslashes($name)."',
+					`zayav_id`=".$zayav_id."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 85,
+			'attach_id' => $id,
+			'zayav_id' => $zayav_id
+		));
+
+		$send['arr'] = _attachArr($id);
 		jsonSuccess($send);
 		break;
-	case 'vkcomment_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+	case 'attach_edit'://редактирование данных файла
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
-		if(!VIEWER_ADMIN) {
-			$sql = "SELECT `viewer_id_add` FROM `vk_comment` WHERE `status`=1 AND `id`=".$id;
-			if(!$r = mysql_fetch_assoc(query($sql)))
-				jsonError();
-			if($r['viewer_id_add'] != VIEWER_ID)
-				jsonError();
-		}
 
-		$childs = array();
+		$name = _txt($_POST['name']);
 
-		$sql = "SELECT `id` FROM `vk_comment` WHERE `status`=1 AND `parent_id`=".$id;
-		$q = query($sql);
-		if(mysql_num_rows($q)) {
-			while($r = mysql_fetch_assoc($q))
-				$childs[] = $r['id'];
-			$sql = "UPDATE `vk_comment` SET
-					`status`=0,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP
-			   WHERE `parent_id`=".$id;
-			query($sql);
-		}
+		$sql = "SELECT *
+				FROM `_attach`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Файл был удалён');
 
-		$sql = "UPDATE `vk_comment` SET
-					`status`=0,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP,
-					`child_del`=".(!empty($childs) ? "'".implode(',', $childs)."'" : 'NULL')."
-			   WHERE `id`=".$id;
-		query($sql);
+		$sql = "UPDATE `_attach`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 		jsonSuccess();
 		break;
-	case 'vkcomment_rest':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+	case 'attach_del'://удаление файла
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
 
-		$sql = "SELECT `child_del` FROM `vk_comment` WHERE `id`=".$id;
-		$r = mysql_fetch_assoc(query($sql));
-		if($r['child_del']) {
-			$sql = "UPDATE `vk_comment` SET
-					`status`=1,
+		$sql = "SELECT *
+				FROM `_attach`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Файл уже был удалён');
+
+		$sql = "UPDATE `_attach`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//удаление из расходов
+		$sql = "UPDATE `_money_expense`
+				SET `attach_id`=0
+				WHERE `attach_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 86,
+			'attach_id' => $id,
+			'zayav_id' => $r['zayav_id']
+		));
+
+		jsonSuccess();
+		break;
+
+	case 'note_add':
+		if(!$page_id = _num($_POST['page_id']))
+			jsonError();
+
+		$page_name = _txt($_POST['page_name']);
+
+		if(!_note(array(
+			'add' => 1,
+			'p' => $page_name,
+			'id' => $page_id,
+			'txt' => $_POST['txt']
+		)))
+			jsonError();
+
+
+		$sql = "SELECT *
+				FROM `_note`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				ORDER BY `id` DESC
+				LIMIT 1";
+		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(_noteUnit($r + _viewer()));
+		$send['count'] = utf8(_noteCount(array(
+			'p' => $page_name,
+			'id' => $page_id
+		)));
+		jsonSuccess($send);
+		break;
+	case 'note_del':
+		if(!$note_id = _num($_POST['note_id']))
+			jsonError();
+
+		if(!$r = _noteQuery($note_id))
+			jsonError();
+
+		//заметку может удалить только руководитель или кто её внёс
+		if(!VIEWER_ADMIN && $r['viewer_id_add'] != VIEWER_ID)
+			jsonError();
+
+		$sql = "UPDATE `_note`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$note_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		jsonSuccess();
+		break;
+	case 'note_rest'://восстановление заметки
+		if(!$note_id = _num($_POST['note_id']))
+			jsonError();
+
+		if(!$r = _noteQuery($note_id, 1))
+			jsonError();
+
+		if(!$r['deleted'])
+			jsonError();
+
+		//заметку может восстановить только руководитель или кто её внёс
+		if(!VIEWER_ADMIN && $r['viewer_id_add'] != VIEWER_ID)
+			jsonError();
+
+		$sql = "UPDATE `_note`
+				SET `deleted`=0,
 					`viewer_id_del`=0,
 					`dtime_del`='0000-00-00 00:00:00'
-			   WHERE `id` IN (".$r['child_del'].")";
-			query($sql);
-		}
+				WHERE `id`=".$note_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$sql = "UPDATE `vk_comment` SET
-					`status`=1,
+		jsonSuccess();
+		break;
+	case 'note_comment_add'://внесение нового комментария
+		if(!$note_id = _num($_POST['note_id']))
+			jsonError();
+
+		$txt = _txt($_POST['txt']);
+
+		if(empty($_POST['txt']))
+			jsonError();
+
+		if(!$r = _noteQuery($note_id))
+			jsonError();
+
+		$sql = "INSERT INTO `_note_comment` (
+					`app_id`,
+					`ws_id`,
+					`note_id`,
+					`txt`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$note_id.",
+					'".addslashes($txt)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_noteCommentCountUpdate($note_id);
+
+		$sql = "SELECT *
+				FROM `_note_comment`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `note_id`=".$note_id."
+				ORDER BY `id` DESC
+				LIMIT 1";
+		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(_noteCommentUnit($r + _viewer()));
+		jsonSuccess($send);
+		break;
+	case 'note_comment_del'://удаление комментария
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_note_comment`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		//комментарий может удалить только руководитель или кто его внёс
+		if(!VIEWER_ADMIN && $r['viewer_id_add'] != VIEWER_ID)
+			jsonError();
+
+		$sql = "UPDATE `_note_comment`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_noteCommentCountUpdate($r['note_id']);
+
+		jsonSuccess();
+		break;
+	case 'note_comment_rest'://восстановление комментария
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_note_comment`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		//комментарий может восстановить только руководитель или кто его внёс
+		if(!VIEWER_ADMIN && $r['viewer_id_add'] != VIEWER_ID)
+			jsonError();
+
+		$sql = "UPDATE `_note_comment`
+				SET `deleted`=0,
 					`viewer_id_del`=0,
-					`dtime_del`='0000-00-00 00:00:00',
-					`child_del`=NULL
-			   WHERE `id`=".$id;
-		query($sql);
+					`dtime_del`='0000-00-00 00:00:00'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_noteCommentCountUpdate($r['note_id']);
+
 		jsonSuccess();
 		break;
 

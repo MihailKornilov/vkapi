@@ -1,0 +1,246 @@
+#_zayav .clear{float:right}
+#_zayav #spisok{
+	padding-bottom:10px;
+	background-color:#f7f7f7;
+	vertical-align:top;
+}
+#_zayav #find{margin-top:15px}
+#_zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
+#_zayav ._empty{margin:10px}
+#_zayav ._next{margin:6px 8px 0}
+
+
+/* элемент списка заявок */
+._zayav-unit{
+	cursor:pointer;
+	margin:10px 10px 0;
+	border:#ccc solid 1px;
+	border-radius:2px;
+	box-shadow: 0 0 5px rgba(0,0,0,0.2);
+	min-height:50px;
+}
+._zayav-unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4)}
+._zayav-unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
+._zayav-unit .name b{font-size:12px}
+._zayav-unit .zd{float:right;text-align:right;font-size:10px;color:#777;padding:4px}
+._zayav-unit .zd em{font-size:10px}
+._zayav-unit .tab{border-spacing:2px;margin:4px 0 4px 4px}
+._zayav-unit .label{width:70px;padding-left:10px}
+._zayav-unit .acc{color:#07a;cursor:default;font-size:10px}
+._zayav-unit .pay{color:#090;cursor:default;font-size:10px}
+._zayav-unit .diff .acc,
+._zayav-unit .diff .pay{color:#c33}
+._zayav-unit .dog{color:#555}
+
+
+
+
+/* внесение новой заявки */
+#_zayav-add-tab{border-spacing:12px;margin-bottom:30px}
+#_zayav-add-tab .label{width:170px;text-align:right}
+#_zayav-add-tab #name,
+#_zayav-add-tab #about,
+#_zayav-add-tab #adres{width:251px}
+#_zayav-add-tab #count{width:40px}
+#_zayav-add-tab #imei{width:130px}
+#_zayav-add-tab #serial{width:251px}
+#_zayav-add-tab #note{width:251px;height:40px}
+
+/* Выбор изделий при внесении новой заявки или редактировании */
+#product-list ._select{margin-right:5px}
+#product-list #item-count{width:25px}
+
+/* информация о заявке */
+#_zayav-info .page{margin:10px}
+#_zayav-info .headName{margin:10px 0}
+#_zayav-info .headName ._dropdown{float:right;margin-right:115px}
+#_zayav-info ._info{margin-bottom:5px}
+#_zayav-info #tab{border-spacing:8px}
+#_zayav-info .label{width:70px}
+#_zayav-info #added{
+	font-size:10px;
+	color:#999;
+	text-align:right;
+	margin:10px;
+}
+#_zayav-info .dogn{cursor:default}/* номер договора */
+#_zayav-info .img_word{margin:0 15px -4px -2px}
+#_zayav-info .acc{color:#07a;cursor:default}
+#_zayav-info .pay{color:#090;cursor:default}
+#_zayav-info #sum-diff{color:#888;margin-left:10px}
+
+
+/* диалог заключения договора */
+#_zayav-dog-tab{border-spacing:10px}
+#_zayav-dog-tab .label{width:120px;text-align:right}
+#_zayav-dog-tab #fio,
+#_zayav-dog-tab #adres,
+#_zayav-dog-tab #reason
+{width:280px}
+#_zayav-dog-tab #pasp_seria{width:60px;margin:0 15px 0 3px}
+#_zayav-dog-tab #pasp_nomer{width:121px;margin-left:3px}
+#_zayav-dog-tab .l{display:inline-block;width:74px}
+#_zayav-dog-tab #pasp_adres,
+#_zayav-dog-tab #pasp_ovd,
+#_zayav-dog-tab #pasp_data{width:206px}
+#_zayav-dog-tab #nomer{width:40px}
+#_zayav-dog-tab .prim{font-size:10px;color:#999}
+#_zayav-dog-tab h1{display:block;font-weight:bold;text-align:center;margin-bottom:3px;color:#444}
+#_zayav-dog-tab #preview{display:block;text-align:center;margin-top:10px}
+#_zayav-dog-tab #avans_invoice_id_select{margin-top:-3px}
+
+
+
+
+
+
+
+
+
+/* Ссылка на заявку с подсказкой */
+.zayav_link{position:relative;display:inline-block}
+.zayav_link .tooltip{
+	position:absolute;
+	background-color:#fff;
+	border:#ccc solid 1px;
+	min-width:100px;
+	min-height:75px;
+	padding:5px;
+	top:-91px;
+	left:-10px;
+	z-index:1000;
+}
+.zayav_link:not(:hover) .tooltip{display:none}
+.zayav_link td{border:0;padding:0}
+.zayav_link .image{max-width:100px;overflow:hidden}
+.zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
+.zayav_link .label{padding-right:3px}
+.zayav_link .tstat{
+	float:left;
+	border:#DDD solid 1px;
+	width:22px;
+	height:22px;
+	margin:2px 4px 0 0;
+}
+.zayav_link .tname{font-weight:700;margin-bottom:8px}
+.zayav_link .bl{font-weight:700}
+.zayav_link.color{display:inline-block;padding:2px 5px}
+
+/* долг по заявке (в зп сотрудников) */
+.zayav-dolg{font-size:10px;color:#a00;margin-left:7px;cursor:default}
+
+
+
+
+/* Цветная кнопка статуса заявки  */
+#zayav-status-button h1 {
+	display:inline-block;
+	border:#DDD solid 1px;
+	width:140px;
+	text-align:center;
+	padding:2px 0 3px 0;
+	color:#666;
+	cursor:pointer;
+}
+#zayav-status-button h1:hover{border-color:#bbd; color:#444}
+#zayav-status-button span{color:#aaa;font-size:10px;margin-left:10px}
+
+
+
+
+
+/* Календарь заявок */
+#zayav-finish-calendar #fc-head{width:100%}
+#zayav-finish-calendar #fc-head td{padding:10px;text-align:center}
+#zayav-finish-calendar #fc-head td.ch{
+	width:47px;
+	cursor:pointer;
+	font-size:18px;
+	font-weight:bold;
+	color:#aaa;
+}
+#zayav-finish-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
+#zayav-finish-calendar #fc-head span{font-size:14px}
+#zayav-finish-calendar #fc-head._busy span{visibility:hidden}
+#zayav-finish-calendar #fc-mon{width:100%;border-collapse:collapse}
+#zayav-finish-calendar #fc-mon td{border:#ddd solid 1px}
+#zayav-finish-calendar #week-name td{
+	font-weight:bold;
+	font-size:13px;
+	background-color:#eee;
+	color:#555;
+	text-align:center;
+	padding:10px;
+}
+#zayav-finish-calendar td.d{width:47px;height:40px;text-align:center}
+#zayav-finish-calendar td.d.old{background-color:#f8f8f8;color:#888}
+#zayav-finish-calendar td.d.sel{background-color:#ffb}
+#zayav-finish-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
+#zayav-finish-calendar td.d b{
+	display:inline-block;
+	font-size:13px;
+	padding:1px 5px;
+	border:#cec solid 1px;
+	background-color:#dfd;
+	color:#080;
+}
+#zayav-finish-calendar #fc-cancel{
+	border:#cec solid 1px;
+	padding:10px;
+	text-align:center;
+	font-size:12px;
+	margin-top:10px;
+	cursor:pointer;
+	color:#555;
+}
+#zayav-finish-calendar #fc-cancel:hover{background-color:#afa}
+#zayav-finish-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* расходы по заявке в информации о заявке */
+#_zayav-expense{margin-top:10px}
+#_zayav-expense h1{
+	border-left:#e9edf1 solid 1px;
+	border-right:#e9edf1 solid 1px;
+	border-bottom:#e9edf1 solid 1px;
+	padding:5px 7px;
+}
+#_zayav-expense .img_edit{
+	float:right;
+	background-color:#fff;
+	width:16px;
+	height:16px;
+	margin:-2px -6px 0 0;
+	border:#ddd solid 1px;
+	background-position:2px 2px;
+}
+#_zayav-expense .img_edit:hover{background-position:2px -13px}
+#_zayav-expense table *{font-size:10px}
+#_zayav-expense table{width:100%;margin-top:-1px;border-collapse:collapse}
+#_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px}
+#_zayav-expense .name{width:100px}
+#_zayav-expense .sum{text-align:right;width:50px;white-space:nowrap;cursor:default}
+#_zayav-expense .itog{text-align:right}
+#_zayav-expense .plus{background-color:#dfd;color:#272}
+#_zayav-expense .minus{background-color:#fdd;color:#922}
+
+/* редактирование списка расходов в заявке */
+#zee-tab{border-spacing:10px}
+#zee-tab .label{width:100px;text-align:right}
+#zee-spisok .zee-tab{margin-bottom:6px}
+#zee-spisok .zee-txt{width:232px;margin-right:5px}
+#zee-spisok ._select{margin-right:5px}
+#zee-spisok .zee-sum{width:40px;margin-right:3px;text-align:right}
+#zee-spisok ._attach{width:237px;margin:0 4px}

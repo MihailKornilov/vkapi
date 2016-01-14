@@ -85,6 +85,7 @@ function _salary_spisok() {
 				'<tr><th>‘ио'.
 					'<th>—тавка'.
 					'<th>Ѕаланс';
+
 	foreach($worker as $r) {
 		if(!_viewerRule($r['id'], 'RULE_SALARY_SHOW'))
 			continue;
@@ -275,23 +276,35 @@ function salary_worker($v) {
 			'<input type="hidden" id="action" />'.
 		'<h2>'.
 		'<h1>—тавка: <em>'.salaryWorkerRate($filter['id']).'</em></h1>'.
+		salary_worker_client($filter['id']).
 		'<div id="spisok-acc">'.salary_worker_acc($filter).'</div>'.
 		'<div id="spisok-zp">'.salary_worker_zp($filter).'</div>'.
 	'</div>';
 }//salary_worker()
-/*
-function salary_worker($v) {
 
+function salary_worker_client($worker_id) {
+	$sql = "SELECT *
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `worker_id`=".$worker_id."
+			LIMIT 1";
+	if($c = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+		$c = _clientVal($c['id']);
+		if($c['balans'] < 0)
+			$send =
+				'ѕрисутствует клиентский долг в размере '.
+				'<a href="'.URL.'&p=client&d=info&id='.$c['id'].'" class="dolg '._tooltip('ѕерейти на клиентскую страницу', -85).
+					$c['balans'].
+				'</a> руб.';
+		else
+			$send = '—отрудник прив€зан к клиенту '.$c['link'].'.';
+		return '<div class="_info">'.$send.'</div>';
+	}
 
-
-
-
-	return
-	'<script type="text/javascript">'.
-		'var PROCENT='._viewerRules($filter['worker_id'], 'RULES_MONEY_PROCENT').';'.
-}//salary_worker()
-*/
-
+	return '';
+}
 function salary_worker_acc($v) {
 	$filter = salaryFilter($v);
 
@@ -331,8 +344,7 @@ function salary_worker_acc($v) {
 			  AND `mon`=".$filter['mon'];
 	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
-	if(function_exists('_zayavValToList'))
-		$zayav = _zayavValToList($zayav);
+	$zayav = _zayavValToList($zayav);
 
 	$spisok = _arrayTimeGroup($accrual);
 	$spisok += _arrayTimeGroup($zayav, $spisok);
@@ -437,247 +449,6 @@ function salary_worker_zp($v) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-// --- –асходы по за€вке ---
-
-function _zayavExpense($id=0, $i='name') {//расходы за€вки из кеша
-	$key = CACHE_PREFIX.'zayav_expense'.APP_ID;
-	$arr = xcache_get($key);
-	if(empty($arr)) {
-		$sql = "SELECT *
-				FROM `_zayav_expense_category`
-				WHERE `app_id`=".APP_ID."
-				ORDER BY `sort`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		$arr = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$r['txt'] = $r['dop'] == 1;
-			$r['worker'] = $r['dop'] == 2;
-			$r['zp'] = $r['dop'] == 3;
-			$arr[$r['id']] = $r;
-		}
-		xcache_set($key, $arr, 86400);
-	}
-
-	//все категории
-	if(!$id)
-		return $arr;
-
-	//некорректный id
-	if(!_num($id))
-		die('Error: _zayav_expense_category id: <b>'.$id.'</b> not correct');
-
-	//неизвестный id
-	if(!isset($arr[$id]))
-		die('Error: no _zayav_expense_category id: <b>'.$id.'</b>');
-
-	switch($i) {
-		case 'all': return $arr[$id];   //возврат данных конкретной категории
-		case 'name':
-		case 'txt':
-		case 'worker':
-		case 'zp': return $arr[$id][$i];
-		default: return '<span class="red">неизвестный ключ категории за€вки: <b>'.$i.'</b></span>';
-	}
-}//_zayavExpense()
-function _zayavExpenseDop($id=false) {//дополнительное условие дл€ категории расхода по за€вке
-	$arr =  array(
-		0 => 'нет',
-		1 => 'текстовое поле',
-		2 => 'список сотрудников',
-		3 => 'список запчастей'
-	);
-	return $id !== false ? $arr[$id] : $arr;
-}//_zayavExpenseDop()
-function _zayav_expense($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
-	//$arr = _zpLink($arr);
-
-	return '<div id="_zayav-expense">'._zayav_expense_spisok($zayav_id).'</div>';
-}//_zayav_expense()
-function _zayav_expense_spisok($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
-	$sql = "SELECT *
-			FROM `_zayav_expense`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `zayav_id`=".$zayav_id."
-			ORDER BY `id`";
-	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-	$send =
-		'<script type="text/javascript">'.
-			'var ZAYAV_EXPENSE=['._zayav_expense_json($arr).'];'.
-		'</script>';
-
-	if(empty($arr))
-		return $send;
-
-	//сумма начислений по за€вке
-	$sql = "SELECT SUM(`sum`)
-			FROM `_money_accrual`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `zayav_id`=".$zayav_id."
-			  AND !`deleted`";
-	$accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
-
-	return
-		$send.
-		'<div class="headBlue">'.
-			'–асходы по за€вке'.
-			'<div class="img_edit'._tooltip('»зменить расходы по за€вке', -88).'</div>'.
-		'</div>'.
-		'<h1>'.($accrual_sum ? 'ќбща€ сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Ќачислений нет.').'</h1>'.
-		_zayav_expense_html($arr, $accrual_sum);
-}//_zayav_expense_spisok()
-function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вки при внесении в базу
-	if(empty($v))
-		return true;
-
-	foreach(explode(',', $v) as $r) {
-		$ids = explode(':', $r);
-		if($ids[0] != 0 && !_num($ids[0]))//id расхода
-			return false;
-		if(!$cat_id = _num($ids[1]))//категори€
-			return false;
-		$ze = _zayavExpense($cat_id, 'all');
-		if(($ze['worker'] || $ze['zp']) && !_num($ids[2]))
-			return false;
-		if(!_cena($ids[3]) && $ids[3] != 0)
-			return false;
-	}
-	return true;
-}//_zayav_expense_test()
-function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) {//вывод таблицы расходов по за€вке
-	$expense_sum = 0;
-	$send = '<table class="ze-spisok">';
-	foreach($arr as $arr_id => $r) {
-		$tr = ''; // изначално ничего не мен€лось
-		$changeSum = '';
-		$changeDop = '';
-
-		if(is_array($diff)) {
-			$line = false; // изначально считаем, что строка была удалена или добавлена
- 			foreach($diff as $diff_id => $d) {
-				if($arr_id == $diff_id) {
-					$line = true;
-					if($r['sum'] != $d['sum'])
-						$changeSum = ' change';
-					if($r['txt'] != $d['txt'] || $r['worker_id'] != $d['worker_id'] || $r['zp_id'] != $d['zp_id'])
-						$changeDop = ' class="change"';
-					break;
-				}
-			}
-			if(!$line)
-				$tr = ' class="'.($new ? 'new' : 'del').'"';
-		}
-
-		$sum = round($r['sum'], 2);
-		$expense_sum += $sum;
-		$send .=
-			'<tr'.$tr.'>'.
-				'<td class="name">'._zayavExpense($r['category_id']).
-				'<td'.$changeDop.'>'.
-					(_zayavExpense($r['category_id'], 'txt') ? $r['txt'] : '').
-					(_zayavExpense($r['category_id'], 'worker') ?
-						'<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
-							_viewer($r['worker_id'], 'viewer_name').
-						'</a>'
-					: '').
-	//				(_zayavExpense($r['category_id'], 'zp') ? $r['zp_short'] : '').
-				'<td class="sum'.$changeSum.'">'.$sum.' р.';
-	}
-
-	if($accrual_sum !== false) {
-		$ost = $accrual_sum - $expense_sum;
-		$send .= '<tr><td colspan="2" class="itog">»тог:<td class="sum"><b>'.$expense_sum.'</b> р.'.
-				 '<tr><td colspan="2" class="itog">ќстаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'.$ost.' р.';
-
-	}
-	$send .= '</table>';
-//echo '<textarea>'.$send.'<textarea/>';
-	return $send;
-}//_zayav_expense_html()
-function _zayav_expense_json($arr) {//расходы по за€вке в формате json
-	$json = array();
-	foreach($arr as $r) {
-		$ze = _zayavExpense($r['category_id'], 'all');
-		$json[] = '['.
-			$r['id'].','.
-			$r['category_id'].','.
-			($ze['txt'] ? '"'.trim($r['txt']).'"' : '').
-			($ze['worker'] ? intval($r['worker_id']) : '').
-			($ze['zp'] ? intval($r['zp_id']) : '').','.
-			round($r['sum'], 2).
-		']';
-	}
-	return implode(',', $json);
-}//_zayav_expense_json()
-function _zayav_expense_array($v) {//расходы по за€вке в формате array
-	if(empty($v))
-		return array();
-	$array = array();
-	foreach(explode(',', $v) as $r) {
-		$ex = explode(':', $r);
-		$array[] = array(
-			intval($ex[0]),
-			intval($ex[1]),
-			trim($ex[2]),
-			_cena($ex[3])
-		);
-	}
-
-	return $array;
-}//_zayav_expense_array()
-function _zayav_expense_worker_balans($old, $new) {//внесение балансов сотрудников, если мен€ютс€
-	$balansOld = array();
-	foreach($old as $id => $r)
-		if($r['worker_id'])
-			$balansOld[$r['worker_id']][$id] = $r['sum'];
-
-	//начисление изменилось
-	foreach($new as $id => $r)
-		if($r['worker_id'] && isset($balansOld[$r['worker_id']][$id]))
-			if($r['sum'] != $balansOld[$r['worker_id']][$id]) {
-				_balans(array(
-					'action_id' => 40,
-					'worker_id' => $r['worker_id'],
-					'zayav_id' => $r['zayav_id'],
-					'sum' => $r['sum'],
-					'sum_old' => $balansOld[$r['worker_id']][$id]
-				));
-				unset($balansOld[$r['worker_id']][$id]);
-			}
-
-	//начиление было удалено
-	foreach($balansOld as $worker_id => $worker)
-		foreach($worker as $id => $sum)
-			if(empty($new[$id]))
-				_balans(array(
-					'action_id' => 21,
-					'worker_id' => $worker_id,
-					'zayav_id' => $old[$id]['zayav_id'],
-					'sum' => $sum
-				));
-
-	//начисление добавилось
-	foreach($new as $id => $r)
-		if($r['worker_id'] && empty($old[$id]))
-			_balans(array(
-				'action_id' => 19,
-				'worker_id' => $r['worker_id'],
-				'zayav_id' => $r['zayav_id'],
-				'sum' => $r['sum']
-			));
-}//_zayav_expense_worker_balans()
 
 
 

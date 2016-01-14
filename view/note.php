@@ -1,0 +1,172 @@
+<?php
+function _noteQuery($note_id, $withDeleted=false) {//запрос данных по заметке
+	$withDeleted = $withDeleted ? '' : 'AND !`deleted`';
+	$sql = "SELECT *
+			FROM `_note`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  ".$withDeleted."
+			  AND `id`=".$note_id;
+	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}///_noteQuery()
+function _noteFilter($v) {
+	return array(
+		'p' => empty($v['p']) ? @$_GET['p'] : _txt($v['p']),
+		'id' => empty($v['id']) ? _num(@$_GET['id']) : _num($v['id']),
+		'add' => _bool(@$v['add']),
+		'txt' => _txt(@$v['txt'])
+	);
+}//_noteFilter()
+function _noteArr($v) {//запрос массива заметок (для общего списка, либо отдельно для количества)
+	$sql = "SELECT
+				*,
+				'' `comment`
+			FROM `_note`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `page_name`='".$v['p']."'
+			  AND `page_id`=".$v['id']."
+			ORDER BY `id` DESC";
+	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+}//_noteArr()
+function _note($v=array()) {
+	$v = _noteFilter($v);
+
+	if($v['add'])
+		return _noteAdd($v);
+
+	$arr = _noteArr($v);
+
+	return
+	'<div class="_note" val="'.$v['p'].'_'.$v['id'].'">'.
+		'<h1>Заметки<tt>'._noteCount($arr).'</tt></h1>'.
+		'<div class="add">'.
+			'<textarea placeholder="Добавить заметку..."></textarea>'.
+			'<button class="vk dn">Добавить</button>'.
+		'</div>'.
+		_noteSpisok($arr).
+	'</div>';
+}//_note()
+function _noteCount($arr) {//количество заметок
+	if(!empty($arr['p']))//получение списка заметок (для обновления количества при внесении или удалении)
+		$arr = _noteArr($arr);
+	$count = count($arr);
+	return $count ? 'Всего '.$count.' замет'._end($count, 'ка', 'ки','ок') : 'Заметок нет';
+}//_noteCount()
+function _noteSpisok($arr) {//список заметок
+	if(empty($arr))
+		return '';
+
+	$arr = _viewerValToList($arr);
+	$arr = _noteCommentSpisok($arr);
+
+	$send = '';
+	$n = 0;
+	foreach($arr as $r) {
+		$r['n'] = $n++;
+		$send .= _noteUnit($r);
+	}
+	return $send;
+}//_noteSpisok()
+function _noteUnit($r) {
+	$n = _num(@$r['n']);//порядковый номер. Для определения первого элемента списка.
+	$goComm = $r['comment_count'] ? 'Комментарии ('.$r['comment_count'].')' : 'Комментировать';
+	return
+	'<div class="nu" val="'.$r['id'].'">'.
+		'<div class="nu-rest">Заметка удалена. <a>Восстановить</a></div>'.
+		'<table class="nu-tab">'.
+			'<tr><td class="nu-photo">'.$r['viewer_photo'].
+				'<td class="nu-i">'.
+					'<div class="img_del nu-del'._tooltip('Удалить заметку', -98, 'r').'</div>'.
+					'<h3>'.$r['viewer_link'].'</h3>'.
+					'<h4>'._br($r['txt']).'</h4>'.
+					'<h5>'.
+						FullDataTime($r['dtime_add'], 1).
+						($n ? '<a class="nu-go-comm'.($r['comment_count'] ? ' ex' : '').'">'.$goComm.'</a>' : '').
+					'</h5>'.
+					'<h2'.($n ? ' class="dn"' : '').'>'.@$r['comment'].'</h2>'.
+					'<h6'.($n ? ' class="dn"' : '').'>'.
+						'<textarea placeholder="Комментировать..."></textarea>'.
+						'<button class="vk dn">Добавить</button>'.
+					'</h6>'.
+		'</table>'.
+	'</div>';
+}//_noteUnit()
+
+function _noteCommentSpisok($arr) {//прикрепление к списку заметок список комментариев
+	$sql = "SELECT *
+			FROM `_note_comment`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `note_id` IN (".implode(',', array_keys($arr)).")
+			ORDER BY `id` ASC";
+	$comment = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$comment = _viewerValToList($comment);
+
+	foreach($comment as $r)
+		$arr[$r['note_id']]['comment'] .= _noteCommentUnit($r);
+
+	return $arr;
+}//_noteCommentSpisok()
+function _noteCommentUnit($r) {
+	return
+	'<div class="cu" val="'.$r['id'].'">'.
+		'<div class="cu-rest">Комментарий удалён. <a>Восстановить</a></div>'.
+		'<table class="cu-tab">'.
+			'<tr><td class="cu-photo">'.$r['viewer_photo'].
+				'<td class="cu-i">'.$r['viewer_link'].
+					'<div class="img_del cu-del'._tooltip('Удалить комментарий', -126, 'r').'</div>'.
+					'<h4>'._br($r['txt']).'</h4>'.
+					'<h5>'.FullDataTime($r['dtime_add'], 1).'</h5>'.
+		'</table>'.
+	'</div>';
+}//_noteCommentUnit()
+function _noteCommentCountUpdate($note_id) {//обновление количества комментариев к заметке
+	$sql = "SELECT COUNT(`id`)
+			FROM `_note_comment`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `note_id`=".$note_id;
+	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "UPDATE `_note`
+			SET `comment_count`=".$count."
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `id`=".$note_id;
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	return $count;
+}//_noteCommentCountUpdate()
+
+function _noteAdd($v) {//внесение новой заметки
+	if(empty($v['p']))
+		return false;
+	if(strlen($v['p']) > 10)
+		return false;
+	if(empty($v['txt']))
+		return false;
+
+	$sql = "INSERT INTO `_note` (
+				`app_id`,
+				`ws_id`,
+				`page_name`,
+				`page_id`,
+				`txt`,
+				`viewer_id_add`
+			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
+				'".$v['p']."',
+				".$v['id'].",
+				'".addslashes($v['txt'])."',
+				".VIEWER_ID."
+			)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	return true;
+}//_noteAdd()

@@ -1,23 +1,27 @@
 var clientPeopleTab = function(v, p) {// таблица: частное лицо
-		v = v || {
+		v = $.extend({
+			id:0,
 			fio:'',
 			phone:'',
 			adres:'',
+			worker_id:0,
 			post:'',
 			pasp_seria:'',
 			pasp_nomer:'',
 			pasp_adres:'',
 			pasp_ovd:'',
 			pasp_data:''
-		};
+		}, v);
 		// отображать ли паспортные данные
 		var pasp = v.pasp_seria || v.pasp_nomer || v.pasp_adres || v.pasp_ovd || v.pasp_data ? '' : ' class="dn"',
-			prefix = p ? 'person-' : '';
+			prefix = p ? 'person-' : '',
+			worker = !p && v.id;//показывать пункт: связан с сотрудником
 		return '' +
 		'<table class="ca-table" id="people">' +
 			'<tr><td class="label"><b>Ф.И.О.:</b><td><input type="text" id="' + prefix + 'fio" value="' + v.fio + '" />' +
 			'<tr><td class="label">Телефон:      <td><input type="text" id="' + prefix + 'phone" value="' + v.phone + '" />' +
 			'<tr><td class="label topi">Адрес:   <td><textarea id="' + prefix + 'adres">' + v.adres + '</textarea>' +
+  (worker ? '<tr><td class="label">Связан с сотрудником:<td><input type="hidden" id="worker_id" value="' + v.worker_id + '">' : '') +
 	   (p ? '<tr><td class="label">Должность:<td><input type="text" id="person-post" value="' + v.post + '" />' : '') +
 
 	(pasp ? '<tr><td><td><a class="client-pasp-show">Заполнить паспортные данные</a>' : '') +
@@ -155,6 +159,11 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 			});
 		$('#' + (org ? 'org_name' : 'fio')).focus();
 		$('#adres,#org_adres').autosize();
+		$('#worker_id')._select({
+			width:220,
+			title0:'Сотрудник не выбран',
+			spisok:CLIENT.workers
+		});
 		$('#client2').clientSel({
 			width:258,
 			category_id:CLIENT.category_id,
@@ -190,6 +199,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 				send.fio = $.trim($('#fio').val());
 				send.phone = $.trim($('#phone').val());
 				send.adres = $.trim($('#adres').val());
+				send.worker_id = _num($('#worker_id').val());
 				send.pasp_seria = $.trim($('#pasp_seria').val());
 				send.pasp_nomer = $.trim($('#pasp_nomer').val());
 				send.pasp_adres = $.trim($('#pasp_adres').val());
@@ -227,7 +237,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 						_msg('Данные клиента изменены');
 						document.location.reload();
 					} else
-						dialog.abort();
+						dialog.abort().err(res.text);
 				}, 'json');
 			}
 		}
@@ -306,7 +316,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		}
 	},
 
-	clientSpisok = function(v, id) {
+	_clientSpisok = function(v, id) {
 		_filterSpisok(CLIENT, v, id);
 		$('.filter')[CLIENT.find ? 'hide' : 'show']();
 		$.post(AJAX_MAIN, CLIENT, function(res) {
@@ -381,16 +391,14 @@ $(document)
 		$('#find')._search('clear');
 		$('#category_id')._radio(0);
 		$('#dolg')._check(0);
-//		$('#active')._check(0);
-//		$('#comm')._check(0);
 		$('#opl')._check(0);
+		$('#worker')._check(0);
+		CLIENT.category_id = 0;
 		CLIENT.find = '';
 		CLIENT.dolg = 0;
-		CLIENT.category_id = 0;
-//		CLIENT.active = 0;
-//		CLIENT.comm = 0;
 		CLIENT.opl = 0;
-		clientSpisok();
+		CLIENT.worker = 0;
+		_clientSpisok();
 	})
 	.on('mouseenter', '#client .comm', function() {
 		var t = $(this),
@@ -468,32 +476,29 @@ $(document)
 				width:458,
 				focus:1,
 				enter:1,
-				txt:'Начните вводить данные клиента',
-				func:clientSpisok
+				txt:'Введите текст и нажмите Enter',
+				func:_clientSpisok
 			}).inp(CLIENT.find);
-			$('#buttonCreate').vkHint({
-				msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
-					'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +
-					'Клиентов также можно добавлять при <A href="' + URL + '&p=zayav&d=add&back=client">создании новой заявки</A>.',
-				ugol:'right',
-				width:215,
-				top:-38,
-				left:-250,
-				indent:40,
-				delayShow:1000
-			}).click(clientAdd);
-			$('#category_id')._radio(clientSpisok);
-			$('#dolg')._check(clientSpisok);
-//			$('#active')._check(clientSpisok);
-//			$('#comm')._check(clientSpisok);
-			$('#opl')._check(clientSpisok);
+			$('#buttonCreate').click(clientAdd);
+			$('#category_id')._radio(_clientSpisok);
+			$('#dolg')._check(function(v, id) {
+				$('#opl')._check(0);
+				CLIENT.opl = 0;
+				_clientSpisok(v, id);
+			});
+			$('#opl')._check(function(v, id) {
+				$('#dolg')._check(0);
+				CLIENT.dolg = 0;
+				_clientSpisok(v, id);
+			});
+			$('#worker')._check(_clientSpisok);
 			$('#dolg_check').vkHint({
 				msg:'<b>Список должников.</b><br /><br />' +
 					'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
 				ugol:'right',
 				width:150,
-				top:-5,
-				left:-185,
+				top:-25,
+				left:-183,
 				indent:20,
 				delayShow:1000
 			});
