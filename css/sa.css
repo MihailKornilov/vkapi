@@ -72,8 +72,14 @@
 #sa-zayav #pole-spisok{margin:10px 20px}
 #sa-zayav .id{text-align:right;color:#777}
 #sa-zayav .name{width:180px}
+#sa-zayav .about{
+	margin-left:20px;
+	font-size:10px;
+	color:#888;
+	white-space:pre-line;
+}
 #sa-zayav .const{font-weight:bold}
-#sa-zayav .use-info{text-align:center}
+#sa-zayav .use{text-align:center}
 
 #zayav-pole-tab #const{width:250px;font-weight:bold}
 

@@ -44,12 +44,6 @@ if(!function_exists('zayavStatusChange')) {//обновление статуса заявки
 	}
 }
 
-if(!function_exists('zayavPlaceCheck')) {//Обновление местонахождения заявки
-	function zayavPlaceCheck() {
-		return;
-	}
-}
-
 if(!function_exists('_zayavValToList')) {
 	function _zayavValToList($arr) {
 		return $arr;

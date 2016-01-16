@@ -8,19 +8,35 @@ switch(@$_POST['op']) {
 		$about = _txt($_POST['about']);
 		$count = _num($_POST['count']);
 		$adres = _txt($_POST['adres']);
+
+		$device_id = _num($_POST['device_id']);
+		$vendor_id = _num($_POST['vendor_id']);
+		$model_id = _num($_POST['model_id']);
+		$equip = _ids($_POST['equip']);
 		$imei = _txt($_POST['imei']);
 		$serial = _txt($_POST['serial']);
+
+		$place_id = _num($_POST['place']);
+		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
+
 		$color_id = _num($_POST['color_id']);
 		$color_dop = _num($_POST['color_dop']);
 		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
 		$day_finish = $_POST['day_finish'];
 
+
+		if(ZAYAV_INFO_DEVICE) {
+			if(!$device_id)
+				jsonError();
+			$name = _deviceName($device_id)._vendorName($vendor_id)._modelName($model_id);
+		}
+
+		if(ZAYAV_INFO_SROK && $day_finish == '0000-00-00')
+			jsonError();
+
 		if(!$name)
 			$name = 'Заявка #'._maxSql('_zayav', 'nomer', 1);
-
-		if(ZAYAV_USE_INFO_SROK && $day_finish == '0000-00-00')
-			jsonError();
 
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
@@ -32,8 +48,14 @@ switch(@$_POST['op']) {
 					`about`,
 					`count`,
 					`adres`,
+
+					`base_device_id`,
+					`base_vendor_id`,
+					`base_model_id`,
+					`equip`,
 					`imei`,
 					`serial`,
+
 					`color_id`,
 					`color_dop`,
 					`diagnost`,
@@ -54,8 +76,14 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."',
 					".$count.",
 					'".addslashes($adres)."',
+
+					".$device_id.",
+					".$vendor_id.",
+					".$model_id.",
+					'".$equip."',
 					'".addslashes($imei)."',
 					'".addslashes($serial)."',
+
 					".$color_id.",
 					".$color_dop.",
 					".$diagnost.",
@@ -71,6 +99,9 @@ switch(@$_POST['op']) {
 		$send['id'] = query_insert_id('_zayav', GLOBAL_MYSQL_CONNECT);
 
 		_zayavProductUpdate($send['id'], $_POST);
+
+		if(ZAYAV_INFO_DEVICE)
+			zayavPlaceCheck($send['id'], $place_id, $place_other);
 
 		_note(array(
 			'add' => 1,
@@ -96,21 +127,27 @@ switch(@$_POST['op']) {
 		$about = _txt($_POST['about']);
 		$count = _num($_POST['count']);
 		$adres = _txt($_POST['adres']);
+
+		$device_id = _num($_POST['device_id']);
+		$vendor_id = _num($_POST['vendor_id']);
+		$model_id = _num($_POST['model_id']);
+		$equip = _ids($_POST['equip']);
 		$imei = _txt($_POST['imei']);
 		$serial = _txt($_POST['serial']);
+
 		$color_id = _num($_POST['color_id']);
 		$color_dop = _num($_POST['color_dop']);
 		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
 
-		$sql = "SELECT *
-				FROM `_zayav`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
+
+		if(ZAYAV_INFO_DEVICE) {
+			if(!$device_id)
+				jsonError();
+			$name = _deviceName($device_id)._vendorName($vendor_id)._modelName($model_id);
+		}
 
 		$sql = "UPDATE `_zayav` SET
 					`client_id`=".$client_id.",
@@ -118,8 +155,14 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."',
 					`count`=".$count.",
 					`adres`='".addslashes($adres)."',
+
+					`base_device_id`=".$device_id.",
+					`base_vendor_id`=".$vendor_id.",
+					`base_model_id`=".$model_id.",
+					`equip`='".addslashes($equip)."',
 					`imei`='".addslashes($imei)."',
 					`serial`='".addslashes($serial)."',
+
 					`color_id`=".$color_id.",
 					`color_dop`=".$color_dop.",
 					`diagnost`=".$diagnost.",
@@ -164,13 +207,20 @@ switch(@$_POST['op']) {
 		}
 		$productArrNew = _zayavProductUpdate($zayav_id, $_POST);
 
+		$labelName = 'Название';
+		if(ZAYAV_INFO_DEVICE)
+			$labelName = 'Устройство';
+
 		if($changes =
 			_historyChange('Клиент', $z['client_id'], $client_id, _clientVal($z['client_id'], 'go'), _clientVal($client_id, 'go')).
-			_historyChange('Название', $z['name'], $name).
+			_historyChange($labelName, $z['name'], $name).
 			_historyChange('Описание', $z['about'], $about).
 			_historyChange('Количество', $z['count'], $count).
 			_historyChange('Изделия', _zayavProductTxt($productArrOld), _zayavProductTxt($productArrNew)).
 			_historyChange('Адрес', $z['adres'], $adres).
+		(ZAYAV_INFO_DEVICE ?
+			_historyChange('Комплект', zayavEquipSpisok($z['equip']), zayavEquipSpisok($equip))
+		: '').
 			_historyChange('IMEI', $z['imei'], $imei).
 			_historyChange('Серийный номер', $z['serial'], $serial).
 			_historyChange('Цвет', _color($z['color_id'], $z['color_dop']), _color($color_id, $color_dop)).
@@ -229,6 +279,46 @@ switch(@$_POST['op']) {
 
 		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
 		jsonSuccess($send);
+		break;
+
+	case 'zayav_executer_change'://изменение исполнителя заявки
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		$executer_id = _num($_POST['executer_id']);
+		if($executer_id) {//если id такого сотрудника нет в мастерской - ошибка
+			$sql = "SELECT COUNT(*)
+					FROM `_vkuser`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `worker`
+					  AND `viewer_id`=".$executer_id;
+			if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError();
+		}
+
+		if($z['executer_id'] == $executer_id)
+			jsonError();
+
+		$sql = "UPDATE `_zayav` SET `executer_id`=".$executer_id." WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 58,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' =>
+				'<table>'.
+					'<tr><td>'.($z['executer_id'] ? _viewer($z['executer_id'], 'viewer_name') : '').
+						'<td>»'.
+						'<td>'.($executer_id ? _viewer($executer_id, 'viewer_name') : '').
+					'</table>'
+		));
+
+		jsonSuccess();
 		break;
 
 	case 'dogovor_preview':

@@ -6,6 +6,14 @@
 }
 #_zayav #find{margin-top:15px}
 #_zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
+#_zayav #desc_check{margin-top:10px}
+#_zayav #diagnost_check{margin-top:15px}
+#_zayav #diff_check{margin-top:10px}
+/* Срок выполнения заявки */
+	#_zayav .rightLink a:not(.sel) #srok{display:none}
+	#_zayav #srok,#_zayav #srok *{font-size:10px}
+	#_zayav #srok{margin-top:8px}
+	#_zayav .day-finish-link{color:#BCDCFF}
 #_zayav ._empty{margin:10px}
 #_zayav ._next{margin:6px 8px 0}
 
@@ -20,6 +28,7 @@
 	min-height:50px;
 }
 ._zayav-unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4)}
+._zayav-unit em{background:#ffc;border-bottom:1px solid #FE2;font-size:12px}
 ._zayav-unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
 ._zayav-unit .name b{font-size:12px}
 ._zayav-unit .zd{float:right;text-align:right;font-size:10px;color:#777;padding:4px}
@@ -42,6 +51,7 @@
 #_zayav-add-tab #about,
 #_zayav-add-tab #adres{width:251px}
 #_zayav-add-tab #count{width:40px}
+#_zayav-add-tab #equip-spisok div{display:block;margin-bottom:5px}
 #_zayav-add-tab #imei{width:130px}
 #_zayav-add-tab #serial{width:251px}
 #_zayav-add-tab #note{width:251px;height:40px}
@@ -51,9 +61,20 @@
 #product-list #item-count{width:25px}
 
 /* информация о заявке */
-#_zayav-info .page{margin:10px}
-#_zayav-info .headName{margin:10px 0}
-#_zayav-info .headName ._dropdown{float:right;margin-right:115px}
+#_zayav-info #nz{/* номер заявки */
+	float:right;
+	margin-top:4px;
+	color:#777;
+	cursor:default;
+}
+#_zayav-info table.page{padding-left:10px;width:100%}
+#_zayav-info #left{
+	vertical-align:top;
+	padding:0 10px 10px 0;
+	min-width:385px;
+}
+#_zayav-info .headName{margin:10px 0;max-width:480px}
+#_zayav-info .headName ._dropdown{float:right}
 #_zayav-info ._info{margin-bottom:5px}
 #_zayav-info #tab{border-spacing:8px}
 #_zayav-info .label{width:70px}
@@ -61,13 +82,15 @@
 	font-size:10px;
 	color:#999;
 	text-align:right;
-	margin:10px;
+	margin:10px 0;
 }
 #_zayav-info .dogn{cursor:default}/* номер договора */
 #_zayav-info .img_word{margin:0 15px -4px -2px}
 #_zayav-info .acc{color:#07a;cursor:default}
 #_zayav-info .pay{color:#090;cursor:default}
 #_zayav-info #sum-diff{color:#888;margin-left:10px}
+#_zayav-info #right{vertical-align:top;padding:10px 0}
+#_zayav-info div.page{margin:0 10px}
 
 
 /* диалог заключения договора */
@@ -196,6 +219,9 @@
 #zayav-finish-calendar #fc-cancel:hover{background-color:#afa}
 #zayav-finish-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
 
+.day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
+.day-finish-link:hover{text-decoration:underline}
+.day-finish-link._busy span{visibility:hidden}
 
 
 

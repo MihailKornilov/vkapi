@@ -209,7 +209,8 @@ switch(@$_POST['op']) {
 
 		if($zayav_id) {
 			_zayavBalansUpdate($zayav_id);
-			zayavPlaceCheck($zayav_id, $place, $place_other);
+			if(ZAYAV_INFO_DEVICE)
+				zayavPlaceCheck($zayav_id, $place, $place_other);
 
 			//отметка выбранных активных напоминаних выполненными
 			if($remind_ids)

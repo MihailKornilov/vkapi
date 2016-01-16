@@ -8,6 +8,38 @@ var _zayavSpisok = function(v, id) {
 			}
 		}, 'json');
 	},
+	_zayavDeviceFilter = function() {//установка или обновление фильтров устройства #mobile
+		if(!ZAYAV_INFO_DEVICE)
+			return;
+		$('#dev').device({
+			width:155,
+			type_no:1,
+			device_id:ZAYAV.device,
+			vendor_id:ZAYAV.vendor,
+			model_id:ZAYAV.model,
+//			device_ids:ZAYAV.device_ids,
+//			vendor_ids:ZAYAV.vendor_ids,
+//			model_ids:ZAYAV.model_ids,
+			device_multiselect:1,
+			func:function(i) {
+				ZAYAV.device = i.device_id;
+				ZAYAV.vendor = i.vendor_id;
+				ZAYAV.model = i.model_id;
+				_zayavSpisok();
+			}
+		});
+	},
+	_zayavProductSubFilter = function(product_id) {//показ-скрытие подвида изделия
+		if(!ZAYAV_INFO_PRODUCT)
+			return;
+		var sub = PRODUCT_SUB_SPISOK[product_id];
+		$('#product_sub_id').val(0)._select(!sub ? 'remove' : {
+			width:155,
+			title0:'Любые изделия',
+			spisok:sub,
+			func:_zayavSpisok
+		});
+	},
 	_zayavEdit = function() {
 		var c = $.extend({//если заявка вносится из клиента, то получение данных о клиенте
 				id:0,
@@ -22,42 +54,50 @@ var _zayavSpisok = function(v, id) {
 				count:'',
 				product:[[0,0,0]],
 				adres:'',
+				device_id:0,
+				vendor_id:0,
+				model_id:0,
+				equip:'',
 				imei:'',
 				serial:'',
 				color_id:0,
 				color_dop:0,
 				day_finish:'0000-00-00',
-				place:0,
+				place:-1,
 				diagnost:0,
 				sum_cost:''
-			}, ZAYAV);
+			}, window.ZI || {});
 
 		var html =
 				'<table id="_zayav-add-tab">' +
 					'<tr><td class="label">Клиент:' +
 						'<td><input type="hidden" id="client_id" value="' + o.client_id + '" />' +
 							'<b>' + o.client_name + '</b>' +
-					'<tr' + (ZAYAV_USE_INFO_NAME ?    '' : ' class="dn"') + '><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-					'<tr' + (ZAYAV_USE_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr' + (ZAYAV_USE_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" id="count" value="' + o.count + '" /> шт.' +
-					'<tr' + (ZAYAV_USE_INFO_PRODUCT ? '' : ' class="dn"') + '><td class="label topi">Изделие:<td id="product">' +
-					'<tr' + (ZAYAV_USE_INFO_ADRES ?   '' : ' class="dn"') + '><td class="label">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" />' +
-					'<tr' + (ZAYAV_USE_INFO_DEVICE ?  '' : ' class="dn"') + '><td class="label">Устройство:<td>' +
-					'<tr' + (ZAYAV_USE_INFO_IMEI ?    '' : ' class="dn"') + '><td class="label">IMEI:<td><input type="text" id="imei" value="' + o.imei + '" />' +
-					'<tr' + (ZAYAV_USE_INFO_SERIAL ?  '' : ' class="dn"') + '><td class="label">Серийный номер:<td><input type="text" id="serial" value="' + o.serial + '" />' +
-					'<tr' + (ZAYAV_USE_INFO_COLOR ?   '' : ' class="dn"') + '><td class="label">Цвет:<td id="color">' +
-					'<tr' + (ZAYAV_USE_INFO_EQUIP ?   '' : ' class="dn"') + '><td class="label">Комплектация:<td>' +
-					'<tr' + (ZAYAV_USE_INFO_SERIAL ?  '' : ' class="dn"') + '>' +
-						'<td class="label">Местонахождение устройства<br />после внесения заявки:' +
-						'<td><input type="hidden" id="place" value="' + o.place + '" />' +
-					'<tr' + (ZAYAV_USE_INFO_DIAGNOST ?'' : ' class="dn"') + '><td class="label">Диагностика:<td><input type="hidden" id="diagnost" value="' + o.diagnost + '" />' +
+					'<tr' + (ZAYAV_INFO_NAME ?    '' : ' class="dn"') + '><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
+					'<tr' + (ZAYAV_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" id="count" value="' + o.count + '" /> шт.' +
+					'<tr' + (ZAYAV_INFO_PRODUCT ? '' : ' class="dn"') + '><td class="label topi">Изделие:<td id="product">' +
+					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '><td class="label">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" />' +
+					'<tr' + (ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
+						'<td class="label topi">Устройство:' +
+						'<td><table><td id="za-dev"><td id="device_image"></table>' +
+					'<tr' + (!ZAYAV_INFO_DEVICE || !o.equip ? ' class="dn"' : '') + ' id="equip-tr">' +
+						'<td class="label top">Комплектация:' +
+						'<td id="equip-spisok">' + o.equip +
+					'<tr' + (ZAYAV_INFO_IMEI ?    '' : ' class="dn"') + '><td class="label">IMEI:<td><input type="text" id="imei" value="' + o.imei + '" />' +
+					'<tr' + (ZAYAV_INFO_SERIAL ?  '' : ' class="dn"') + '><td class="label">Серийный номер:<td><input type="text" id="serial" value="' + o.serial + '" />' +
+					'<tr' + (ZAYAV_INFO_COLOR ?   '' : ' class="dn"') + '><td class="label">Цвет:<td id="color">' +
+					'<tr' + (!o.id && ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
+						'<td class="label top">Местонахождение устройства<br />после внесения заявки:' +
+						'<td><input type="hidden" id="device-place" value="' + o.place + '" />' +
+					'<tr' + (ZAYAV_INFO_DIAGNOST ?'' : ' class="dn"') + '><td class="label">Диагностика:<td><input type="hidden" id="za-diagnost" value="' + o.diagnost + '" />' +
 					'<tr><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="sum_cost" value="' + (o.sum_cost ? o.sum_cost : '') + '" /> руб.' +
 
-				(!o.id && ZAYAV_USE_INFO_NOTE ?
+				(!o.id && ZAYAV_INFO_NOTE ?
 					'<tr><td class="label top">Заметка:<td><textarea id="note"></textarea>'
 				: '') +
 
-				(!o.id && ZAYAV_USE_INFO_SROK ?
+				(!o.id && ZAYAV_INFO_SROK ?
 					'<tr><td class="label top">Срок:' +
 						'<td><input type="hidden" id="day_finish" value="' + o.day_finish + '" />' +
 							'<div class="day-finish-link">' +
@@ -80,11 +120,24 @@ var _zayavSpisok = function(v, id) {
 		$('#name').focus();
 		$('#about').autosize();
 		$('#product').product(o.product);
+		if(ZAYAV_INFO_DEVICE) {
+			$('#za-dev').device({
+				width:190,
+				device_id:o.device_id,
+				vendor_id:o.vendor_id,
+				model_id:o.model_id,
+				add:1,
+				func:zayavDevSelect
+			});
+			modelImageGet();
+			if(!o.id)
+				zayavPlace();
+		}
 		$('#color')._selectColor({
 			color_id:o.color_id,
 			color_dop:o.color_dop
 		});
-		$('#diagnost')._check();
+		$('#za-diagnost')._check();
 		$('#note').autosize();
 
 		function submit() {
@@ -99,18 +152,51 @@ var _zayavSpisok = function(v, id) {
 					product_count:$('#item-count').val(),
 					count:$('#count').val(),
 					adres:$('#adres').val(),
+					device_id:_num($('#za-dev_device').val()),
+					vendor_id:_num($('#za-dev_vendor').val()),
+					model_id:_num($('#za-dev_model').val()),
+					equip:'',
 					imei:$('#imei').val(),
 					serial:$('#serial').val(),
 					color_id:$('#color_id').val(),
 					color_dop:$('#color_dop').val(),
-					place:$('#place').val(),
-					diagnost:$('#diagnost').val(),
+					place:$('#device-place').val(),
+					place_other:$.trim($('#place_other').val()),
+					diagnost:$('#za-diagnost').val(),
 					sum_cost:$('#sum_cost').val(),
 					note:$('#note').val(),
 					day_finish:'0000-00-00'
 				};
 
-			if(!o.id && ZAYAV_USE_INFO_SROK) {
+			if(!send.client_id) {
+				dialog.err('Не выбран клиент');
+				return;
+			}
+
+			if(ZAYAV_INFO_DEVICE) {
+				if(!send.device_id) {
+					dialog.err('Не выбрано устройство');
+					return;
+				}
+
+				if(!$('#equip-tr').hasClass('dn')) {
+					var inp = $('#equip-spisok input'),
+						arr = [];
+					for(var n = 0; n < inp.length; n++) {
+						var eq = inp.eq(n);
+						if(eq.val() == 1)
+							arr.push(eq.attr('id').split('_')[1]);
+					}
+					send.equip = arr.join();
+				}
+
+				if(!o.id && (send.place == '-1' || send.place == 0 && !send.place_other)) {
+					dialog.err('Не указано местонахождение устройства');
+					return;
+				}
+			}
+
+			if(!o.id && ZAYAV_INFO_SROK) {
 				send.day_finish = $('#day_finish').val();
 				if(send.day_finish == '0000-00-00') {
 					dialog.err('Не указан срок');
@@ -118,10 +204,6 @@ var _zayavSpisok = function(v, id) {
 				}
 			}
 
-			if(!send.client_id) {
-				dialog.err('Не выбран клиент');
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -221,7 +303,7 @@ var _zayavSpisok = function(v, id) {
 			var send = {
 				op:'dogovor_' + (o.id ? 'edit' : 'create'),
 				id:o.id,
-				zayav_id:ZAYAV.id,
+				zayav_id:ZI.id,
 				fio:$('#fio').val(),
 				adres:$('#adres').val(),
 				pasp_seria:$('#pasp_seria').val(),
@@ -281,7 +363,7 @@ var _zayavSpisok = function(v, id) {
 	_zayavExpenseEdit = function () {//вывод окна для редактирование расходов по заявке в информации о заявке
 		var html =
 			'<table id="zee-tab">' +
-				'<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' +
+				'<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
 				'<tr><td class="label">Список расходов:' +
 				'<tr><td id="zee-spisok" colspan="2">' +
 			'</table>',
@@ -299,7 +381,7 @@ var _zayavSpisok = function(v, id) {
 		function submit() {
 			var send = {
 				op:'zayav_expense_edit',
-				zayav_id:ZAYAV.id,
+				zayav_id:ZI.id,
 				expense:_zayavExpenseGet()
 			};
 			if(send.expense == 'sum_error')
@@ -355,7 +437,7 @@ var _zayavSpisok = function(v, id) {
 				func:function(id, attr) {
 					tab.find('.id').val(0);
 					itemDop(id, '', attr.split('cat')[0]);
-//					sum.val(id == 1 ? ZAYAV.worker_zp : '');
+//					sum.val(id == 1 ? ZI.worker_zp : '');
 					if(id && !tab.next().hasClass('zee-tab'))
 						item();
 				}
@@ -397,7 +479,7 @@ var _zayavSpisok = function(v, id) {
 				$('#' + num + 'zp')._select({
 					width:240,
 					title0:'Запчасть не выбрана',
-					spisok:ZAYAV.zp_avai,
+					spisok:ZI.zp_avai,
 					func:function(v) {
 						sum.focus();
 					}
@@ -407,7 +489,7 @@ var _zayavSpisok = function(v, id) {
 			if(ZAYAV_EXPENSE_ATTACH[cat_id]) {
 				dop.html('<input type="hidden" id="' + num + 'attach" value="' + _num(val) + '" />');
 				$('#' + num + 'attach')._attach({
-					zayav_id:ZAYAV.id,
+					zayav_id:ZI.id,
 					func:function() {
 						sum.focus();
 					}
@@ -494,15 +576,28 @@ $.fn.product = function(o) {
 
 $(document)
 	.on('click', '#_zayav .clear', function() {
-		$('#find')._search('clear');
-		$('#sort')._radio(1);
-		$('#desc')._check(0);
-		$('#status').rightLink(0);
+		$('#find')._search('clear');    ZAYAV.find = '';
+		$('#sort')._radio(1);           ZAYAV.sort = 1;
+		$('#desc')._check(0);           ZAYAV.desc = 0;
+		$('#status').rightLink(0);		ZAYAV.status = 0;
 
-		ZAYAV.find = '';
-		ZAYAV.sort = 1;
-		ZAYAV.desc = 0;
-		ZAYAV.status = 0;
+		$('#day_finish').val('0000-00-00');
+		$('.day-finish-link span').html('не указан');
+		ZAYAV.finish = '0000-00-00';
+
+		$('#diagnost')._check(0);		ZAYAV.diagnost = 0;
+		$('#diff')._check(0);			ZAYAV.diff = 0;
+		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
+		$('#product_id')._select(0);	ZAYAV.product_id = 0;
+		_zayavProductSubFilter(0);
+
+		$('#zpzakaz')._radio(0);		ZAYAV.zpzakaz = 0;
+		ZAYAV.device = 0;
+		ZAYAV.vendor = 0;
+		ZAYAV.model = 0;
+		_zayavDeviceFilter();
+		$('#place')._select(0);			ZAYAV.place = 0;
+
 		_zayavSpisok();
 	})
 	.on('click', '._zayav-unit', function() {
@@ -512,7 +607,7 @@ $(document)
 	})
 	.on('click', '#_zayav-add,#_zayav-info #edit', _zayavEdit)
 
-	.on('click', '.day-finish-link', function(e) {//открытие календаря ремонтов
+	.on('click', '.day-finish-link', function(e) {//открытие календаря заявок
 		e.stopPropagation();
 		var t = $(this),
 			save = t.hasClass('no-save') ? 0 : 1;
@@ -521,14 +616,14 @@ $(document)
 		var dialog = _dialog({
 				top:40,
 				width:480,
-				head:'Календарь ремонтов',
+				head:'Календарь заявок',
 				load:1,
 				butSubmit:''
 			}),
 			send = {
 				op:'zayav_day_finish',
 				day:$('#day_finish').val(),
-				zayav_spisok:$('#zayav').length
+				zayav_spisok:$('#_zayav').length
 			};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
@@ -546,7 +641,7 @@ $(document)
 				send = {
 					op:'zayav_day_finish_save',
 					day:$(this).attr('val'),
-					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
+					zayav_id:window.ZI ? ZI.id : 0,
 					save:save
 				};
 				$.post(AJAX_MAIN, send, function(res) {
@@ -554,13 +649,13 @@ $(document)
 					if(res.success) {
 						t.prev('input').val(send.day);
 						t.find('span').html(res.data);
-						if($('#zayav').length)
-							zayavSpisok(send.day, 'finish');
+						if($('#_zayav').length)
+							_zayavSpisok(send.day, 'finish');
 					}
 				}, 'json');
 			});
 	})
-	.on('click', '#zayav-finish-calendar .ch', function() {//перемотка календаря ремонтов
+	.on('click', '#zayav-finish-calendar .ch', function() {//перемотка календаря заявок
 		if($('#fc-head').hasClass('_busy'))
 			return;
 		$('#fc-head').addClass('_busy');
@@ -568,7 +663,7 @@ $(document)
 			op:'zayav_day_finish_next',
 			mon:$(this).attr('val'),
 			day:$('#day_finish').val(),
-			zayav_spisok:$('#zayav').length
+			zayav_spisok:$('#_zayav').length
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
@@ -594,6 +689,35 @@ $(document)
 			$('#sort')._radio(_zayavSpisok);
 			$('#desc')._check(_zayavSpisok);
 			$('#status').rightLink(_zayavSpisok);
+			$('#diagnost')._check(_zayavSpisok);
+			$('#diff')._check(_zayavSpisok);
+			$('#executer_id')._select({
+				width: 155,
+				title0: 'не указан',
+				spisok: WORKER_SPISOK,
+				func: _zayavSpisok
+			});
+			$('#product_id')._select({
+				width:155,
+				bottom:3,
+				title0:'Любые изделия',
+				spisok:PRODUCT_SPISOK,
+				func:function(v, id) {
+					_zayavProductSubFilter(v);
+					_zayavSpisok(v, id);
+				}
+			});
+
+			if(ZAYAV_INFO_DEVICE) {
+				$('#zpzakaz')._radio(_zayavSpisok);
+				_zayavDeviceFilter();
+				$('#place')._select({
+					width:155,
+					title0:'Любое местонахождение',
+					spisok:DEVPLACE_SPISOK,
+					func:_zayavSpisok
+				});
+			}
 		}
 		if($('#_zayav-info').length) {
 			$('.a-page').click(function() {
@@ -603,40 +727,67 @@ $(document)
 				$('.page:first')[(i ? 'add' : 'remove') + 'Class']('dn');
 				$('.page:last')[(!i ? 'add' : 'remove') + 'Class']('dn');
 			});
+			var name = [0], action = [0];
+
+			name.push('Редактировать данные заявки'); action.push(_zayavEdit);
+			if(ZAYAV_INFO_DOGOVOR) {
+				name.push(DOG.id ? 'Изменить данные договора' : 'Заключить договор');
+				action.push(_zayavDogovorCreate);
+			}
+//			name.push('<b>Распечатать квитанцию</b>');  action.push();
+
+			if(ZAYAV_INFO_SCHET) {
+				name.push('Сформировать счёт на оплату');
+				action.push(function() {
+					_schetEdit({
+						edit:1,
+						client_id:ZI.client_id,
+						client:ZI.client_link,
+						zayav_id:ZI.id
+					})
+				});
+			}
+//			name.push('Изменить статус заявки');        action.push();
+			name.push('Начислить');                     action.push(_accrualAdd);
+			name.push('<b>Принять платёж</b>');         action.push(_incomeAdd);
+			name.push('Возврат');                       action.push(_refundAdd);
+			name.push('Изменить расходы по заявке');    action.push(_zayavExpenseEdit);
+			name.push('Новое напоминание');             action.push(_remindAdd);
+
+			var spisok = _toSpisok(name);
+			spisok.splice(0,1);
 			$('#zayav-action')._dropdown({
 				head:'Действие',
 				nosel:1,
-				spisok:[
-					{uid:1, title:'Редактировать данные заявки'},
-//					{uid:2, title:'<b>Распечатать квитанцию</b>'},
-					{uid:20, title:DOG.id ? 'Изменить данные договора' : 'Заключить договор'},
-					{uid:3, title:'Сформировать счёт на оплату'},
-//					{uid:4, title:'Изменить статус заявки'},
-					{uid:5, title:'Начислить'},
-					{uid:6, title:'<b>Принять платёж</b>'},
-					{uid:7, title:'Возврат'},
-					{uid:8, title:'Изменить расходы по заявке'},
-					{uid:9, title:'Новое напоминание'}
-				],
+				spisok:spisok,
 				func:function(v) {
-					switch(v) {
-						case 1: _zayavEdit(); break;
-						case 20: _zayavDogovorCreate(); break;
-						case 3:
-							_schetEdit({
-								edit:1,
-								client_id:ZAYAV.client_id,
-								client:ZAYAV.client_link,
-								zayav_id:ZAYAV.id
-							});
-							break;
-						case 5: _accrualAdd(); break;
-						case 6: _incomeAdd(); break;
-						case 7: _refundAdd(); break;
-						case 8: _zayavExpenseEdit(); break;
-						case 9: _remindAdd(); break;
-					}
+					action[v]();
 				}
+			});
+			$('#executer_id')._dropdown({
+				title0: 'не указан',
+				spisok: WORKER_SPISOK,
+				func: function (v, id) {
+					var td = $('#' + id).parent(),
+						send = {
+							op: 'zayav_executer_change',
+							zayav_id: ZI.id,
+							executer_id: v
+						};
+					td.addClass('_busy');
+					$.post(AJAX_MAIN, send, function (res) {
+						td.removeClass('_busy');
+						if(res.success)
+							_msg('Исполнитель изменён');
+					}, 'json');
+				}
+			});
+			$('#executer_id_dropdown').vkHint({
+				msg: 'Сотрудник, который назначен на выполнение данной заявки.',
+				delayShow: 1000,
+				width: 150,
+				top: -79,
+				left: -50
 			});
 		}
 	});

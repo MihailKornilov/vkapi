@@ -394,6 +394,7 @@ switch(@$_POST['op']) {
 
 	case 'sa_zayav_pole_add':
 		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
 		$const = strtoupper(_txt($_POST['const']));
 
 		if(!$name)
@@ -402,16 +403,18 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_pole_name`
+				FROM `_zayav_setup`
 				WHERE `const`='".addslashes($const)."'";
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError('Константа занята');
 
-		$sql = "INSERT INTO `_zayav_pole_name` (
+		$sql = "INSERT INTO `_zayav_setup` (
 					`name`,
+					`about`,
 					`const`
 				) VALUES (
 					'".addslashes($name)."',
+					'".addslashes($about)."',
 					'".addslashes($const)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -426,6 +429,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
 		$const = strtoupper(_txt($_POST['const']));
 
 		if(!$name)
@@ -434,14 +438,15 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_pole_name`
+				FROM `_zayav_setup`
 				WHERE `const`='".addslashes($const)."'
 				  AND `id`!=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError('Константа занята');
 
-		$sql = "UPDATE `_zayav_pole_name`
+		$sql = "UPDATE `_zayav_setup`
 				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."',
 					`const`='".addslashes($const)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -451,17 +456,17 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_zayav_pole_spisok());
 		jsonSuccess($send);
 		break;
-	case 'sa_zayav_pole_use_info_change':
+	case 'sa_zayav_setup_use_change':
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "DELETE FROM `_zayav_pole_use_info`
+		$sql = "DELETE FROM `_zayav_setup_use`
 				WHERE `app_id`=".APP_ID."
 				  AND `pole_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		if(_bool($_POST['v'])) {
-			$sql = "INSERT INTO `_zayav_pole_use_info` (
+			$sql = "INSERT INTO `_zayav_setup_use` (
 						`app_id`,
 						`pole_id`
 					) VALUES (

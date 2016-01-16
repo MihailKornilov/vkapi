@@ -93,12 +93,14 @@ var balansCategory = function(arr) {
 		o = $.extend({
 			id:0,
 			name:'',
-			const:'ZAYAV_USE_INFO_'
+			about:'',
+			const:'ZAYAV_'
 		}, o);
 
 		var html =
 				'<table class="sa-tab" id="zayav-pole-tab">' +
 					'<tr><td class="label">Наименование:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Структура:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr><td class="label">Константа:<td><input type="text" id="const" value="' + o.const + '" />' +
 				'</table>',
 			dialog = _dialog({
@@ -112,12 +114,14 @@ var balansCategory = function(arr) {
 		$('#name')
 			.focus()
 			.keyEnter(submit);
+		$('#about').autosize();
 
 		function submit() {
 			var send = {
 				op:'sa_zayav_pole_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
 				name:$('#name').val(),
+				about:$('#about').val(),
 				const:$('#const').val()
 			};
 			if(!send.name) {
@@ -465,6 +469,7 @@ $(document)
 		saZayavPoleEdit({
 			id:t.attr('val'),
 			name:p.find('.name').html(),
+			about:p.find('.about').html(),
 			const:p.find('.const').html()
 		});
 	})
@@ -472,8 +477,8 @@ $(document)
 		var t = $(this),
 			inp = t.find('input'),
 			send = {
-				op:'sa_zayav_pole_use_info_change',
-				id:_num(inp.attr('id').split('use-info')[1]),
+				op:'sa_zayav_setup_use_change',
+				id:_num(inp.attr('id').split('use')[1]),
 				v:inp.val()
 			};
 		$.post(AJAX_MAIN, send, function(res) {

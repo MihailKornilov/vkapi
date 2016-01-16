@@ -409,13 +409,13 @@ function sa_zayav_pole_spisok() {
 	$sql = "SELECT
 				*,
 				0 `use_info`
-			FROM `_zayav_pole_name`
+			FROM `_zayav_setup`
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
 
 	$sql = "SELECT *
-			FROM `_zayav_pole_use_info`
+			FROM `_zayav_setup_use`
 			WHERE `app_id`=".APP_ID;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -427,14 +427,15 @@ function sa_zayav_pole_spisok() {
 			'<tr><th>'.
 				'<th>Наименование'.
 				'<th>Константа'.
-				'<th>Использование<br />в информации<br />о заявке'.
+				'<th>use'.
 				'<th>';
 	foreach($spisok as $r)
 		$send .=
 			'<tr><td class="id">'.$r['id'].
-				'<td class="name">'.$r['name'].
+				'<td><div class="name">'.$r['name'].'</div>'.
+					'<div class="about">'.$r['about'].'</div>'.
 				'<td class="const">'.$r['const'].
-				'<td class="use-info">'._check('use-info'.$r['id'], '', $r['use_info']).
+				'<td class="use">'._check('use'.$r['id'], '', $r['use_info']).
 				'<td class="ed">'._iconEdit($r);
 	$send .= '</table>';
 

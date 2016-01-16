@@ -418,6 +418,177 @@ $(document)
 		});
 	})
 
+	.on('click', '#setup_product .add', function() {
+		var t = $(this),
+			html = '<table style="border-spacing:10px">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" />' +
+				'</table>',
+			dialog = _dialog({
+				top:60,
+				width:390,
+				head:'Добавление нового наименования изделия',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'setup_product_add',
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_product .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name a'),
+			dog = t.find('.dog').html() ? 1 : 0,
+			html = '<table style="border-spacing:10px">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" value="' + name.html() + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:60,
+				width:390,
+				head:'Редактирование наименования изделия',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'setup_product_edit',
+				id:id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_product .img_del', function() {
+		var p = _parent($(this));
+		_dialogDel({
+			id:p.attr('val'),
+			head:'изделия',
+			op:'setup_product_del',
+			func:function() {
+				p.remove();
+			}
+		});
+	})
+
+	.on('click', '#setup_product_sub .add', function() {
+		var t = $(this),
+			html = '<table style="border-spacing:10px">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Добавление нового подвида изделия',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'setup_product_sub_add',
+				product_id:PRODUCT_ID,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_product_sub .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var name = t.find('.name'),
+			html = '<table style="border-spacing:10px">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" style="width:250px" value="' + name.html() + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Редактирование подвида изделия',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'setup_product_sub_edit',
+				id:t.attr('val'),
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						name.html(send.name);
+						dialog.close();
+						_msg('Сохранено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_product_sub .img_del', function() {
+		var p = _parent($(this));
+		_dialogDel({
+			id:p.attr('val'),
+			head:'подвида изделия',
+			op:'setup_product_sub_del',
+			func:function() {
+				p.remove();
+			}
+		});
+	})
+
 	.ready(function() {
 		if($('#setup_my').length) {
 			$('#pinset').click(function() {

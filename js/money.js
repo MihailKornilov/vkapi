@@ -2,7 +2,7 @@ var _accrualAdd = function() {
 		var html =
 			'<div id="_accrual-add">' +
 				'<table class="tab">' +
-	(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' : '') +
+	(window.ZI ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 					'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
 				'</table>' +
@@ -35,7 +35,7 @@ var _accrualAdd = function() {
 		$('#sum').focus();
 		$('#acc_status')._radio({
 			light:1,
-			spisok:ZAYAV.status_sel,
+			spisok:ZI.status_sel,
 			func:function() {
 				$('#remind-div').slideDown(300);
 			}
@@ -77,7 +77,7 @@ var _accrualAdd = function() {
 		function submit() {
 			var send = {
 					op:'accrual_add',
-					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
+					zayav_id:window.ZI ? ZI.id : 0,
 					sum:$('#sum').val(),
 					about:$('#about').val(),
 					zayav_status:$('#acc_status').val(),
@@ -106,16 +106,16 @@ var _accrualAdd = function() {
 	},
 
 	_incomeAdd = function() {
-		var zayav = window.ZAYAV,
-			cartridge = zayav && window.ZAYAV.cartridge,
+		var zayav = window.ZI,
+			cartridge = zayav && window.ZI.cartridge,
 			place = window.zayavPlace ? 1 : 0,
 			about = zayav ? 'Примечание' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
 			'<div id="_income-add">' +
 				'<table class="tab">' +
-		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZAYAV.client_link : '') +
-		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZAYAV.name + '</b>' : '') +
+		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
+		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
 					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 					'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
@@ -227,7 +227,7 @@ var _accrualAdd = function() {
 				sum:_cena($('#sum').val()),
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
-				zayav_id:zayav ? ZAYAV.id : 0,
+				zayav_id:zayav ? ZI.id : 0,
 				place:zayav && !cartridge && place ? $('#place').val() : 0,
 				place_other:zayav && !cartridge && place ? $('#place_other').val() : '',
 				remind_ids:remind.join()
@@ -305,7 +305,7 @@ var _accrualAdd = function() {
 				'После внесения возврата не забудьте удалить начисление, чтобы выровнять баланс клиента.' +
 			'</div>' +
 			'<table id="_refund-add-tab">' +
-				'<tr><td class="label">Клиент:<td>' + ZAYAV.client_link +
+				'<tr><td class="label">Клиент:<td>' + ZI.client_link +
 				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 				'<tr><td class="label">Причина:<td><input type="text" id="about" />' +
@@ -331,7 +331,7 @@ var _accrualAdd = function() {
 		function submit() {
 			var send = {
 				op:'refund_add',
-				zayav_id:ZAYAV.id,
+				zayav_id:ZI.id,
 				invoice_id:_num($('#invoice_id').val()),
 				sum:_cena($('#sum').val()),
 				about:$.trim($('#about').val())

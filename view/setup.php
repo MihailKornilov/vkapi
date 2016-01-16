@@ -93,6 +93,9 @@ function _setup() {
 	if(!RULE_SETUP_INVOICE)
 		unset($page['invoice']);
 
+	if(!ZAYAV_INFO_PRODUCT)
+		unset($page['product']);
+
 	if(!SA)
 		unset($page['zayav_expense']);
 

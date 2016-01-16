@@ -1170,8 +1170,12 @@ function _arrJson($arr, $i=false) {//Последовательный массив
 	return '['.implode(',', $send).']';
 }
 
-function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT) {//ассоциативный список подкатегорий
-	$sql = "SELECT * FROM `".$table."` ORDER BY ".$sort;
+function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT, $ws=0) {//ассоциативный список подкатегорий
+	$cond = $ws ? " AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID : '';
+	$sql = "SELECT *
+			FROM `".$table."`
+			WHERE `id`".$cond."
+			ORDER BY ".$sort;
 	$q = query($sql, $resource_id);
 	$sub = array();
 	while($r = mysql_fetch_assoc($q)) {
@@ -1291,7 +1295,7 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 		"\n".'ZAYAV_EXPENSE_ATTACH='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=4", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." AND `ws_id`=".$ws_id." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
-		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT);
+		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
 
 
 	$fp = fopen(APP_PATH.'/js/ws_'.$ws_id.'_values.js', 'w+');

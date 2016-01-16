@@ -39,9 +39,6 @@ var VK_SCROLL = 0,
 		11:'но€бр€',
 		12:'декабр€'
 	},
-	FullData = function(v, noyear, cut, week) {
-
-	},
 	URL = APP_HTML + '/index.php?' + VALUES,
 	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES + '&ajax=1',
 	hashLoc,

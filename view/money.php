@@ -38,7 +38,7 @@ function _money() {
 			'<a class="link'.($d == 'income' ? ' sel' : '').'" href="'.URL.'&p=money&d=income">Платежи</a>'.
 			'<a class="link'.($d == 'expense' ? ' sel' : '').'" href="'.URL.'&p=money&d=expense">Расходы</a>'.
 			'<a class="link'.($d == 'refund' ? ' sel' : '').'" href="'.URL.'&p=money&d=refund">Возвраты</a>'.
-			'<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>'.
+(ZAYAV_INFO_SCHET ? '<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>' : '').
 			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета</a>'.
 		'</div>'.
 		$content;
@@ -118,7 +118,7 @@ function _accrual_spisok($v=array()) {//список начислений
 function _accrual_unit($r, $filter) {//строка начисления в таблице
 	$about = '';
 	if($r['schet_id'])
-		$about = 'Счёт '.$r['schet_link_full'].' ';
+		$about = 'Счёт '.$r['schet_link_full'].'<br />';
 	if(!$filter['zayav_id'] && $r['zayav_id'])
 		$about .= 'Заявка '.$r['zayav_link'].'. ';
 	if($r['dogovor_id'])
@@ -460,7 +460,7 @@ function _income_unit($r, $filter=array()) {
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'.
-				'<a href="'.URL.'&p=print&d=receipt&id='.$r['id'].'" class="img_doc"></a>'.
+				'<a href="'.URL.'&p=print&d=receipt&id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>'.
 				_iconDel($r + array('class'=>'income-del','nodel'=>($refund || $r['dogovor_id'])));
 }//_income_unit()
 function incomeAbout($r, $filter=array()) {
