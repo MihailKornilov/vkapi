@@ -336,8 +336,12 @@ function _remind_history_show($v) {//отображение истории напоминаний
 	return $send;
 }//_remind_history_show()
 function _remind_add($v) {
-	if($v['zayav_id'] && !@$v['client_id'])
-		$v['client_id'] = query_value("SELECT `client_id` FROM `zayav` WHERE `id`=".$v['zayav_id']);
+	if($v['zayav_id'] && !@$v['client_id']) {
+		$sql = "SELECT `client_id`
+				FROM `_zayav`
+				WHERE `id`=".$v['zayav_id'];
+		$v['client_id'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	}
 
 	$sql = "INSERT INTO `_remind` (
 					`app_id`,

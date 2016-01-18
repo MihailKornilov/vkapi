@@ -350,7 +350,7 @@ switch(@$_POST['op']) {
 			'add' => 1,
 			'p' => $page_name,
 			'id' => $page_id,
-			'txt' => $_POST['txt']
+			'txt' => _txt($_POST['txt'])
 		)))
 			jsonError();
 

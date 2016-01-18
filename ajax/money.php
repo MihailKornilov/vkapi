@@ -1139,7 +1139,8 @@ switch(@$_POST['op']) {
 				WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		zayavCartridgeSchetDel($schet_id);
+		if(ZAYAV_INFO_CARTRIDGE)
+			zayavCartridgeSchetDel($schet_id);
 		_zayavBalansUpdate($r['zayav_id']);
 
 		//внесение баланса для клиента

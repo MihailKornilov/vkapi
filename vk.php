@@ -1198,6 +1198,7 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
  		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'PAY_TYPE='._selJson(_payType()).','.
 		"\n".'COUNTRY_SPISOK=['.
 				'{uid:1,title:"Россия"},'.
 				'{uid:2,title:"Украина"},'.
@@ -1743,6 +1744,22 @@ function translit($str) {
 		'¦' => ''
 	);
 	return strtr($str, $list);
+}
+
+function _button($id, $name, $width=0) {
+	return
+	'<div class="vkButton" id="'.$id.'">'.
+		'<button'.($width ? ' style="width:'.$width.'px"' : '').'>'.$name.'</button>'.
+	'</div>';
+}
+function _payType($type_id=false) {//вид расчёта
+	$arr = array(
+		1 => 'Наличный',
+		2 => 'Безналичный'
+	);
+	if($type_id === false)
+		return $arr;
+	return isset($arr[$type_id]) ? $arr[$type_id] : '';
 }
 
 function _calendarFilter($data=array()) {

@@ -13,8 +13,10 @@ function _noteFilter($v) {
 	return array(
 		'p' => empty($v['p']) ? @$_GET['p'] : _txt($v['p']),
 		'id' => empty($v['id']) ? _num(@$_GET['id']) : _num($v['id']),
+		'last' => _bool(@$v['last']),
 		'add' => _bool(@$v['add']),
-		'txt' => _txt(@$v['txt'])
+		'comment' => _bool(@$v['comment']),
+		'txt' => @$v['txt']
 	);
 }//_noteFilter()
 function _noteArr($v) {//запрос массива заметок (для общего списка, либо отдельно для количества)
@@ -35,6 +37,9 @@ function _note($v=array()) {
 
 	if($v['add'])
 		return _noteAdd($v);
+
+	if($v['last'])
+		return _noteLast($v);
 
 	$arr = _noteArr($v);
 
@@ -151,6 +156,10 @@ function _noteAdd($v) {//внесение новой заметки
 	if(empty($v['txt']))
 		return false;
 
+	//если разрешён комментарий, то попытка внесения комментария
+	if(!empty($v['comment']) && _noteCommentAdd($v))
+		return true;
+
 	$sql = "INSERT INTO `_note` (
 				`app_id`,
 				`ws_id`,
@@ -170,3 +179,49 @@ function _noteAdd($v) {//внесение новой заметки
 
 	return true;
 }//_noteAdd()
+function _noteCommentAdd($v) {//внесение комментария к заметке
+	$sql = "SELECT `id`
+			FROM `_note`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `page_name`='".$v['p']."'
+			  AND `page_id`="._num(@$v['id'])."
+			  AND !`deleted`
+			ORDER BY `id` DESC
+			LIMIT 1";
+	if(!$note_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	$sql = "INSERT INTO `_note_comment` (
+				`app_id`,
+				`ws_id`,
+				`note_id`,
+				`txt`,
+				`viewer_id_add`
+			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
+				".$note_id.",
+				'".addslashes($v['txt'])."',
+				".VIEWER_ID."
+			)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	_noteCommentCountUpdate($note_id);
+
+	return true;
+}
+
+function _noteLast($v) {
+	$sql = "SELECT `txt`
+			FROM `_note`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `page_name`='".$v['p']."'
+			  AND `page_id`="._num(@$v['id'])."
+			  AND !`deleted`
+			ORDER BY `id` DESC
+			LIMIT 1";
+	$txt = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return $txt ? htmlspecialchars_decode($txt) : '';
+}

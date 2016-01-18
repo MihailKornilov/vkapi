@@ -400,7 +400,13 @@ function sa_zayav() {//управление балансами
 		'<div id="sa-zayav">'.
 			'<div class="headName">'.
 				'Используемые поля'.
-				'<a class="add" id="pole-add">Добавить поле</a>'.
+				'<a class="add" id="pole-add">Новое поле</a>'.
+				'<tt>::</tt>'.
+				'<a class="add" id="type-add">Новый вид заявки</a>'.
+			'</div>'.
+			'<div id="dopLinks">'.
+				'<a class="link sel">Оборудование</a>'.
+				'<a class="link">Картриджи</a>'.
 			'</div>'.
 			'<div id="pole-spisok">'.sa_zayav_pole_spisok().'</div>'.
 		'</div>';
@@ -416,11 +422,11 @@ function sa_zayav_pole_spisok() {
 
 	$sql = "SELECT *
 			FROM `_zayav_setup_use`
-			WHERE `app_id`=".APP_ID;
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=0";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['pole_id']]['use_info'] = 1;
-
 
 	$send =
 		'<table class="_spisok">'.
@@ -450,7 +456,7 @@ function sa_color() {
 		'<div id="sa-color">'.
 			'<div class="headName">'.
 				'Цвета'.
-				'<a class="add" id="pole-add">Новый цвет</a>'.
+				'<a class="add">Новый цвет</a>'.
 			'</div>'.
 			'<div id="spisok">'.sa_color_spisok().'</div>'.
 		'</div>';

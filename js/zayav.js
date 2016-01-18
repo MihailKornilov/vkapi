@@ -51,7 +51,7 @@ var _zayavSpisok = function(v, id) {
 				client_name:c.name,
 				name:'',
 				about:'',
-				count:'',
+				count:1,
 				product:[[0,0,0]],
 				adres:'',
 				device_id:0,
@@ -65,7 +65,8 @@ var _zayavSpisok = function(v, id) {
 				day_finish:'0000-00-00',
 				place:-1,
 				diagnost:0,
-				sum_cost:''
+				sum_cost:'',
+				pay_type:0
 			}, window.ZI || {});
 
 		var html =
@@ -75,7 +76,7 @@ var _zayavSpisok = function(v, id) {
 							'<b>' + o.client_name + '</b>' +
 					'<tr' + (ZAYAV_INFO_NAME ?    '' : ' class="dn"') + '><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr' + (ZAYAV_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" id="count" value="' + o.count + '" /> шт.' +
+					'<tr' + (ZAYAV_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" class="money" id="count" value="' + o.count + '" /> шт.' +
 					'<tr' + (ZAYAV_INFO_PRODUCT ? '' : ' class="dn"') + '><td class="label topi">Изделие:<td id="product">' +
 					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '><td class="label">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" />' +
 					'<tr' + (ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
@@ -91,7 +92,8 @@ var _zayavSpisok = function(v, id) {
 						'<td class="label top">Местонахождение устройства<br />после внесения заявки:' +
 						'<td><input type="hidden" id="device-place" value="' + o.place + '" />' +
 					'<tr' + (ZAYAV_INFO_DIAGNOST ?'' : ' class="dn"') + '><td class="label">Диагностика:<td><input type="hidden" id="za-diagnost" value="' + o.diagnost + '" />' +
-					'<tr><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="sum_cost" value="' + (o.sum_cost ? o.sum_cost : '') + '" /> руб.' +
+					'<tr' + (ZAYAV_INFO_SUM_COST ?'' : ' class="dn"') + '><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="sum_cost" value="' + (o.sum_cost ? o.sum_cost : '') + '" /> руб.' +
+					'<tr' + (ZAYAV_INFO_PAY_TYPE ?'' : ' class="dn"') + '><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" value="' + o.pay_type + '" />' +
 
 				(!o.id && ZAYAV_INFO_NOTE ?
 					'<tr><td class="label top">Заметка:<td><textarea id="note"></textarea>'
@@ -99,7 +101,7 @@ var _zayavSpisok = function(v, id) {
 
 				(!o.id && ZAYAV_INFO_SROK ?
 					'<tr><td class="label top">Срок:' +
-						'<td><input type="hidden" id="day_finish" value="' + o.day_finish + '" />' +
+						'<td><input type="hidden" id="za-day_finish" value="' + o.day_finish + '" />' +
 							'<div class="day-finish-link">' +
 								'<span>не указан</span>' +
 							'</div>'
@@ -138,6 +140,10 @@ var _zayavSpisok = function(v, id) {
 			color_dop:o.color_dop
 		});
 		$('#za-diagnost')._check();
+		$('#pay_type')._radio({
+			light:1,
+			spisok:PAY_TYPE
+		});
 		$('#note').autosize();
 
 		function submit() {
@@ -150,7 +156,7 @@ var _zayavSpisok = function(v, id) {
 					product_id:$('#item').val(),
 					product_sub_id:$('#item-sub').val(),
 					product_count:$('#item-count').val(),
-					count:$('#count').val(),
+					count:_num($('#count').val()),
 					adres:$('#adres').val(),
 					device_id:_num($('#za-dev_device').val()),
 					vendor_id:_num($('#za-dev_vendor').val()),
@@ -164,6 +170,7 @@ var _zayavSpisok = function(v, id) {
 					place_other:$.trim($('#place_other').val()),
 					diagnost:$('#za-diagnost').val(),
 					sum_cost:$('#sum_cost').val(),
+					pay_type:_num($('#pay_type').val()),
 					note:$('#note').val(),
 					day_finish:'0000-00-00'
 				};
@@ -197,11 +204,21 @@ var _zayavSpisok = function(v, id) {
 			}
 
 			if(!o.id && ZAYAV_INFO_SROK) {
-				send.day_finish = $('#day_finish').val();
+				send.day_finish = $('#za-day_finish').val();
 				if(send.day_finish == '0000-00-00') {
 					dialog.err('Не указан срок');
 					return;
 				}
+			}
+
+			if(ZAYAV_INFO_COUNT && !send.count) {
+				dialog.err('Некорректно указано количество');
+				return;
+			}
+
+			if(ZAYAV_INFO_PAY_TYPE && !send.pay_type) {
+				dialog.err('Укажите вид расчёта');
+				return;
 			}
 
 			dialog.process();
@@ -211,6 +228,146 @@ var _zayavSpisok = function(v, id) {
 					_msg();
 					_scroll('set', 'u' + res.id);
 					location.href = URL + '&p=zayav&d=info&id=' + res.id;
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_zayavStatus = function() {//Изменение статуса заявки
+		var html =
+			'<div id="zayav-status">' +
+		(ZI.status != 1 ?
+				'<div class="st c1" val="1">' +
+					'Ожидает выполнения' +
+					'<div class="about">Возобновление работы по заявке.</div>' +
+				'</div>'
+		: '') +
+		(ZI.status != 2 ?
+				'<div class="st c2" val="2">' +
+					'Выполнено' +
+					'<div class="about">' +
+						'Заявка выполнена успешно.<br />' +
+						'Не забудьте расписать расходы по заявке, проверьте начисления.<br />' +
+						'Добавьте напоминание, если необходимо.' +
+					'</div>' +
+				(ZAYAV_INFO_STATUS_DAY ?
+					'<div class="label">Уточните день выполнения:</div>' +
+					'<input type="hidden" id="day" value="' + ZI.status_day + '">'
+				: '') +
+				'</div>'
+		: '') +
+		(ZI.status != 3 ?
+				'<div class="st c3" val="3">' +
+					'Заявка отменена' +
+					'<div class="about">Отмена заявки по какой-либо причине.</div>' +
+				'</div>'
+		: '') +
+				'<input type="hidden" id="zs-status" />' +
+				'<table id="zs-tab">' +
+			(ZAYAV_INFO_DEVICE ?
+					'<tr><td class="label r topi">Местонахождение устройства:<td><input type="hidden" id="device-place" value="-1" />'
+			: '') +
+
+			(ZAYAV_INFO_SROK ?
+					'<tr id="zs-srok" class="dn">' +
+						'<td class="label r">Срок выполнения:' +
+						'<td><input type="hidden" id="zs-day_finish" value="0000-00-00" />' +
+							'<div class="day-finish-link no-save"><span>не указан</span></div>'
+			: '') +
+					'<tr id="zs-reason" class="dn">' +
+						'<td class="label r topi">Причина отмены:' +
+						'<td><textarea id="reason"></textarea>' +
+
+				'</table>' +
+
+			'</div>',
+
+			dialog = _dialog({
+				top:30,
+				width:420,
+				head:'Изменение статуса заявки',
+				content:html,
+				butSubmit:'',
+				submit:submit
+			});
+
+		if(ZAYAV_INFO_STATUS_DAY)
+			$('#day')._calendar({lost:1});
+
+		if(ZAYAV_INFO_DEVICE)
+			zayavPlace();
+
+		$('#reason').autosize();
+
+		$('.st').click(function() {
+			var t = $(this),
+				v = t.attr('val');
+			t.parent().find('.st').hide();
+			t.show();
+			$('#zs-status').val(v);
+			$('#zs-tab').show();
+			if(v == 1) {
+				if(ZAYAV_INFO_SROK)
+					$('#zs-srok').removeClass('dn');
+				else
+					if(!ZAYAV_INFO_DEVICE)
+						submit();
+			}
+			if(v == 2 && !ZAYAV_INFO_DEVICE)
+				submit();
+			if(v == 3) {
+				$('#zs-reason').removeClass('dn');
+				$('#reason').focus();
+			}
+			dialog.butSubmit('Сохранить');
+		});
+
+		function submit() {
+			var send = {
+				op:'zayav_status',
+				zayav_id:ZI.id,
+				status:_num($('#zs-status').val()),
+				status_day:'0000-00-00',
+				place:0,
+				place_other:'',
+				day_finish:'0000-00-00',
+				reason:$('#reason').val()
+			};
+
+			if(ZAYAV_INFO_DEVICE) {
+				send.place = $('#device-place').val() * 1;
+				send.place_other = $('#place_other').val();
+				if(send.place > 0)
+					send.place_other = '';
+				if(send.place == -1 || !send.place && !send.place_other) {
+					dialog.err('Не указано местонахождение устройства');
+					$('#place_other').focus();
+					return;
+				}
+			}
+
+			if(ZAYAV_INFO_SROK && send.status == 1) {
+				send.day_finish = $('#zs-day_finish').val();
+				if(send.day_finish == '0000-00-00') {
+					dialog.err('Не указан срок выполнения');
+					return;
+				}
+			}
+
+			if(send.status == 3 && !send.reason) {
+				dialog.err('Укажите причину отмены');
+				return;
+			}
+
+			if(ZAYAV_INFO_STATUS_DAY && send.status == 2)
+				send.status_day = $('#day').val();
+
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					document.location.reload();
 				} else
 					dialog.abort();
 			}, 'json');
@@ -587,6 +744,8 @@ $(document)
 
 		$('#diagnost')._check(0);		ZAYAV.diagnost = 0;
 		$('#diff')._check(0);			ZAYAV.diff = 0;
+		$('#paytype')._radio(0);		ZAYAV.paytype = 0;
+		$('#noschet')._check(0);		ZAYAV.noschet = 0;
 		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
 		$('#product_id')._select(0);	ZAYAV.product_id = 0;
 		_zayavProductSubFilter(0);
@@ -605,7 +764,24 @@ $(document)
 		_scroll('set', 'u' + id);
 		location.href = URL + '&p=zayav&d=info&id=' + id;
 	})
+	.on('mouseenter', '._zayav-unit', function() {
+		var t = $(this),
+			msg = t.find('.note').html();
+		if(msg)
+			t.vkHint({
+				width:150,
+				msg:msg,
+				ugol:'left',
+				top:10,
+				left:t.width() + 43,
+				show:1,
+				indent:5,
+				delayShow:500
+			});
+	})
 	.on('click', '#_zayav-add,#_zayav-info #edit', _zayavEdit)
+
+	.on('click', '#zayav-status-button .status', _zayavStatus)
 
 	.on('click', '.day-finish-link', function(e) {//открытие календаря заявок
 		e.stopPropagation();
@@ -691,6 +867,9 @@ $(document)
 			$('#status').rightLink(_zayavSpisok);
 			$('#diagnost')._check(_zayavSpisok);
 			$('#diff')._check(_zayavSpisok);
+			$('#paytype')._radio(_zayavSpisok);
+			$('#noschet')._check(_zayavSpisok);
+			WORKER_SPISOK.push({uid: -1, title: 'Не назначен', content: '<b>Не назначен</b>'});
 			$('#executer_id')._select({
 				width: 155,
 				title0: 'не указан',
@@ -730,15 +909,36 @@ $(document)
 			var name = [0], action = [0];
 
 			name.push('Редактировать данные заявки'); action.push(_zayavEdit);
+
+			if(ZAYAV_INFO_CARTRIDGE) {
+				name.push('Добавить картриджи');
+				action.push(zayavCartridgeAdd);
+			}
+
+			if(ZAYAV_INFO_KVIT) {
+				name.push('<b>Распечатать квитанцию</b>');
+				action.push(function() {
+					if(WS_ID == 3) {
+						if(ZAYAV_INFO_CARTRIDGE)
+							location.href = APP_HTML + '/view/kvit_cartridge.php?' + VALUES + '&id=' + ZI.id;
+						else
+							location.href = APP_HTML + '/view/kvit_comtex.php?' + VALUES + '&id=' + ZI.id;
+					} else
+						zayavKvit();
+				});
+			}
+
 			if(ZAYAV_INFO_DOGOVOR) {
 				name.push(DOG.id ? 'Изменить данные договора' : 'Заключить договор');
 				action.push(_zayavDogovorCreate);
 			}
-//			name.push('<b>Распечатать квитанцию</b>');  action.push();
 
 			if(ZAYAV_INFO_SCHET) {
 				name.push('Сформировать счёт на оплату');
 				action.push(function() {
+					if(ZAYAV_INFO_CARTRIDGE && zayavCartridgeSchet())
+						return;
+
 					_schetEdit({
 						edit:1,
 						client_id:ZI.client_id,
@@ -747,7 +947,8 @@ $(document)
 					})
 				});
 			}
-//			name.push('Изменить статус заявки');        action.push();
+
+			name.push('Изменить статус заявки');        action.push(_zayavStatus);
 			name.push('Начислить');                     action.push(_accrualAdd);
 			name.push('<b>Принять платёж</b>');         action.push(_incomeAdd);
 			name.push('Возврат');                       action.push(_refundAdd);

@@ -1,4 +1,5 @@
 #_zayav .clear{float:right}
+#_zayav #z-count{color:#777;margin-left:10px}
 #_zayav #spisok{
 	padding-bottom:10px;
 	background-color:#f7f7f7;
@@ -9,6 +10,7 @@
 #_zayav #desc_check{margin-top:10px}
 #_zayav #diagnost_check{margin-top:15px}
 #_zayav #diff_check{margin-top:10px}
+#_zayav #noschet_check{margin-top:10px}
 /* Срок выполнения заявки */
 	#_zayav .rightLink a:not(.sel) #srok{display:none}
 	#_zayav #srok,#_zayav #srok *{font-size:10px}
@@ -25,7 +27,7 @@
 	border:#ccc solid 1px;
 	border-radius:2px;
 	box-shadow: 0 0 5px rgba(0,0,0,0.2);
-	min-height:50px;
+	min-height:60px;
 }
 ._zayav-unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4)}
 ._zayav-unit em{background:#ffc;border-bottom:1px solid #FE2;font-size:12px}
@@ -33,6 +35,8 @@
 ._zayav-unit .name b{font-size:12px}
 ._zayav-unit .zd{float:right;text-align:right;font-size:10px;color:#777;padding:4px}
 ._zayav-unit .zd em{font-size:10px}
+._zayav-unit .date-add{font-size:10px;color:#999}
+._zayav-unit .date-ready{font-size:10px;color:#3a3;font-weight:bold}
 ._zayav-unit .tab{border-spacing:2px;margin:4px 0 4px 4px}
 ._zayav-unit .label{width:70px;padding-left:10px}
 ._zayav-unit .acc{color:#07a;cursor:default;font-size:10px}
@@ -40,8 +44,19 @@
 ._zayav-unit .diff .acc,
 ._zayav-unit .diff .pay{color:#c33}
 ._zayav-unit .dog{color:#555}
+._zayav-unit .note{display:none}
+._zayav-unit .schet-link{margin-bottom:-5px}
 
-
+/*
+.zayav_unit .image{
+	width:80px;
+	height:80px;
+	vertical-align:top;
+	text-align:center;
+	border-left:#DDD solid 1px;
+	background-color:#FFF;
+}
+*/
 
 
 /* внесение новой заявки */
@@ -60,10 +75,10 @@
 #product-list ._select{margin-right:5px}
 #product-list #item-count{width:25px}
 
-/* информация о заявке */
+/* Информация о заявке */
 #_zayav-info #nz{/* номер заявки */
 	float:right;
-	margin-top:4px;
+	margin-top:3px;
 	color:#777;
 	cursor:default;
 }
@@ -73,7 +88,8 @@
 	padding:0 10px 10px 0;
 	min-width:385px;
 }
-#_zayav-info .headName{margin:10px 0;max-width:480px}
+#_zayav-info .headName{margin:10px 0}
+#_zayav-info table .headName{max-width:480px}
 #_zayav-info .headName ._dropdown{float:right}
 #_zayav-info ._info{margin-bottom:5px}
 #_zayav-info #tab{border-spacing:8px}
@@ -91,6 +107,29 @@
 #_zayav-info #sum-diff{color:#888;margin-left:10px}
 #_zayav-info #right{vertical-align:top;padding:10px 0}
 #_zayav-info div.page{margin:0 10px}
+
+#_zayav-accrual{margin-top :10px}
+
+/* Статус заявки */
+#zayav-status{margin:10px}
+#zayav-status .st{
+	padding:10px 15px;
+	font-size:13px;
+	font-weight:bold;
+	border:#ddd solid 1px;
+	color:#357;
+	cursor:pointer;
+	margin-bottom:10px;
+}
+#zayav-status .st:hover{border-color:#BBD}
+#zayav-status .c1{background-color:#E8E8FF}
+#zayav-status .c2{background-color:#CFC}
+#zayav-status .c3{background-color:#FDD}
+#zayav-status .about{color:#777;margin-top:3px}
+#zayav-status .label{color:#444;margin:10px 0 3px 20px}
+#zayav-status #day_calendar{color:#444;margin-left:20px}
+#zayav-status #zs-tab{border-spacing:8px;display:none}
+#zayav-status #reason{width:200px}
 
 
 /* диалог заключения договора */
@@ -159,14 +198,13 @@
 #zayav-status-button h1 {
 	display:inline-block;
 	border:#DDD solid 1px;
-	width:140px;
+	width:170px;
 	text-align:center;
 	padding:2px 0 3px 0;
-	color:#666;
+	color:#777;
 	cursor:pointer;
 }
 #zayav-status-button h1:hover{border-color:#bbd; color:#444}
-#zayav-status-button span{color:#aaa;font-size:10px;margin-left:10px}
 
 
 

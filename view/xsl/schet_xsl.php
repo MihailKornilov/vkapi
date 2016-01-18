@@ -688,11 +688,12 @@ define('ACT', $s['act']);
 
 if($s['zayav_id']) {
 	$sql = "SELECT *
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `id`=".$s['zayav_id'];
-	if(!query_assoc($sql))
+	if(!query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		die(win1251('Заявки не существует.'));
 }
 

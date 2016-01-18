@@ -23,6 +23,7 @@ switch(@$_POST['op']) {
 		$color_dop = _num($_POST['color_dop']);
 		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
+		$pay_type = _num($_POST['pay_type']);
 		$day_finish = $_POST['day_finish'];
 
 
@@ -33,6 +34,12 @@ switch(@$_POST['op']) {
 		}
 
 		if(ZAYAV_INFO_SROK && $day_finish == '0000-00-00')
+			jsonError();
+
+		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
+			jsonError();
+
+		if(ZAYAV_INFO_COUNT && !$count)
 			jsonError();
 
 		if(!$name)
@@ -60,10 +67,12 @@ switch(@$_POST['op']) {
 					`color_dop`,
 					`diagnost`,
 					`sum_cost`,
+					`pay_type`,
 					`day_finish`,
 
 					`status_dtime`,
 
+					`barcode`,
 					`viewer_id_add`,
 					`find`
 				) VALUES (
@@ -88,10 +97,12 @@ switch(@$_POST['op']) {
 					".$color_dop.",
 					".$diagnost.",
 					".$sum_cost.",
+					".$pay_type.",
 					'".$day_finish."',
 
 					current_timestamp,
 
+					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".VIEWER_ID.",
 					''
 				)";
@@ -107,7 +118,7 @@ switch(@$_POST['op']) {
 			'add' => 1,
 			'p' => 'zayav',
 			'id' => $send['id'],
-			'txt' => @$_POST['note']
+			'txt' => _txt(@$_POST['note'])
 		));
 
 		_history(array(
@@ -139,6 +150,7 @@ switch(@$_POST['op']) {
 		$color_dop = _num($_POST['color_dop']);
 		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
+		$pay_type = _num($_POST['pay_type']);
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
@@ -148,6 +160,12 @@ switch(@$_POST['op']) {
 				jsonError();
 			$name = _deviceName($device_id)._vendorName($vendor_id)._modelName($model_id);
 		}
+
+		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
+			jsonError();
+
+		if(ZAYAV_INFO_COUNT && !$count)
+			jsonError();
 
 		$sql = "UPDATE `_zayav` SET
 					`client_id`=".$client_id.",
@@ -166,7 +184,8 @@ switch(@$_POST['op']) {
 					`color_id`=".$color_id.",
 					`color_dop`=".$color_dop.",
 					`diagnost`=".$diagnost.",
-					`sum_cost`=".$sum_cost."
+					`sum_cost`=".$sum_cost.",
+					`pay_type`=".$pay_type."
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -225,7 +244,8 @@ switch(@$_POST['op']) {
 			_historyChange('Серийный номер', $z['serial'], $serial).
 			_historyChange('Цвет', _color($z['color_id'], $z['color_dop']), _color($color_id, $color_dop)).
 			_historyChange('Диагностика', _daNet($z['diagnost']), _daNet($diagnost)).
-			_historyChange('Предварительная стоимость', _cena($z['sum_cost']), $sum_cost))
+			_historyChange('Предварительная стоимость', _cena($z['sum_cost']), $sum_cost).
+			_historyChange('Расчёт', _payType($z['pay_type']), _payType($pay_type)))
 			_history(array(
 				'type_id' => 72,
 				'client_id' => $z['client_id'],
@@ -243,6 +263,57 @@ switch(@$_POST['op']) {
 			$send['all'] = utf8($data['result']);
 		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
+		break;
+
+	case 'zayav_status':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$status = _num($_POST['status']))
+			jsonError();
+
+		$place_id = _num($_POST['place']);
+		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
+		if(ZAYAV_INFO_DEVICE && !$place_id && !$place_other)
+			jsonError();
+
+		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
+			jsonError();
+		$day_finish = $_POST['day_finish'];
+
+		$status_day = $_POST['status_day'];
+		$reason = $status == 3 ? 'Причина: '._txt($_POST['reason']) : '';
+
+		if(ZAYAV_INFO_SROK && $status == 1 && $day_finish == '0000-00-00')
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		if($z['status'] == $status)
+			jsonError();
+
+		$sql = "UPDATE `_zayav`
+				SET `status`=".$status.",
+					`status_dtime`=CURRENT_TIMESTAMP,
+					`status_day`='".$status_day."'
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		if(ZAYAV_INFO_DEVICE)
+			zayavPlaceCheck($zayav_id, $place_id, $place_other);
+
+		_zayavDayFinishChange($zayav_id, $day_finish);
+
+		_history(array(
+			'type_id' => 71,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => $z['status'],
+			'v2' => $status,
+			'v3' => $reason
+		));
+
+		jsonSuccess();
 		break;
 
 	case 'zayav_day_finish':
@@ -557,6 +628,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+/*
 	case 'dogovor_terminate'://расторжение договора
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -630,7 +702,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
+*/
 	case 'zayav_expense_edit'://изменение расходов по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

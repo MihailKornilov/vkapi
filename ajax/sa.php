@@ -460,19 +460,61 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
+		$type_id = _num($_POST['type_id']);
+
 		$sql = "DELETE FROM `_zayav_setup_use`
 				WHERE `app_id`=".APP_ID."
+				  AND `type_id`=".$type_id."
 				  AND `pole_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		if(_bool($_POST['v'])) {
 			$sql = "INSERT INTO `_zayav_setup_use` (
 						`app_id`,
+						`type_id`,
 						`pole_id`
 					) VALUES (
 						".APP_ID.",
+						".$type_id.",
 						".$id."
 					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		_globalValuesJS();
+
+		jsonSuccess();
+		break;
+	case 'sa_zayav_type_add':
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_setup_type` (
+					`app_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$type_id = query_insert_id('_zayav_setup_type', GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT COUNT(*)
+				FROM `_zayav_setup_type`
+				WHERE `app_id`=".APP_ID;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
+			$sql = "UPDATE `_zayav`
+					SET `type_id`=".$type_id."
+					WHERE `app_id`=".APP_ID;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			//применение типа заявки к используемым полям
+			$sql = "UPDATE `_zayav_setup_use`
+					SET `type_id`=".$type_id."
+					WHERE `app_id`=".APP_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
@@ -554,36 +596,11 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
 		break;
-
+/*
 	case 'sa_user_action':
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
-/*		$tables = array(
-			'accrual' => "Начисления",
-			'base_device' => "Устройства",
-			'base_model' => "Модели",
-			'base_vendor' => "Производители",
-			'chem_catalog' => "Схемы",
-			'client' => "Клиенты",
-			'device_specific' => "Характеристики устройств",
-			'fw_catalog' => "Прошивоки",
-			'images' => "Изображения",
-			'money' => "Оплаты",
-			'setup_color_name' => "Настройки цветов",
-			'setup_device_place' => "Местонахождения устройств",
-			'setup_device_specific_item' => "Элементы характеристик",
-			'setup_device_specific_razdel' => "Разделы характеристик",
-			'setup_fault' => "Неисправности",
-			'setup_zayavki_category' => "Категории заявок",
-			'setup_zayavki_status' => "Статусы заявок",
-			'setup_zp_name' => "Наименования запчастей",
-			'vk_comment' => "Комментарии",
-			'zayavki' => "Заявки",
-			'zp_catalog' => "Запчасти",
-			'zp_move' => "Движения запчастей",
-			'zp_zakaz' => "Заказ запчастей"
-		);
-*/
+
 		$sql = "SHOW TABLES";
 		$q = query($sql);
 		$tab = '';
@@ -803,6 +820,8 @@ switch(@$_POST['op']) {
 		$send['time'] = round(microtime(true) - TIME, 3);
 		jsonSuccess($send);
 		break;
+*/
+
 }
 
 function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истории действий

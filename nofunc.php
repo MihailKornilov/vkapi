@@ -56,11 +56,4 @@ if(!function_exists('_zayavCountToClient')) {
 	}
 }
 
-if(!function_exists('zayavCartridgeSchetDel')) {
-	function zayavCartridgeSchetDel($schet_id) {
-		return;
-	}
-}
-
-
 

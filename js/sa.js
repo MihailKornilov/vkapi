@@ -147,6 +147,56 @@ var balansCategory = function(arr) {
 			}, 'json');
 		}
 	},
+	saZayavTypeEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var html =
+				'<table class="sa-tab" id="zayav-pole-tab">' +
+					'<tr><td colspan="2">' +
+							'<div class="_info">' +
+								'Если это первый вид заявок, то все текущие заявки будут помещены в этот вид.' +
+							'</div>' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Изменение' : 'Внесение нового') + ' вида заявки',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name')
+			.focus()
+			.keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'sa_zayav_type_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					document.location.reload();
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
+	},
 	saColorEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -478,6 +528,7 @@ $(document)
 			inp = t.find('input'),
 			send = {
 				op:'sa_zayav_setup_use_change',
+				type_id:0,
 				id:_num(inp.attr('id').split('use')[1]),
 				v:inp.val()
 			};
@@ -486,6 +537,8 @@ $(document)
 				_msg();
 		}, 'json');
 	})
+
+	.on('click', '#sa-zayav #type-add', saZayavTypeEdit)
 
 	.on('click', '#sa-color .add', saColorEdit)
 	.on('click', '#sa-color .img_edit', function() {
