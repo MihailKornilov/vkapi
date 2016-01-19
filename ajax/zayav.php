@@ -4,6 +4,7 @@ switch(@$_POST['op']) {
 		if(!$client_id = _num($_POST['client_id']))
 			jsonError();
 
+		$type_id = _num($_POST['type_id']);
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$count = _num($_POST['count']);
@@ -26,6 +27,7 @@ switch(@$_POST['op']) {
 		$pay_type = _num($_POST['pay_type']);
 		$day_finish = $_POST['day_finish'];
 
+		_zayavPoleUseInfoConst(0, $type_id);
 
 		if(ZAYAV_INFO_DEVICE) {
 			if(!$device_id)
@@ -42,12 +44,19 @@ switch(@$_POST['op']) {
 		if(ZAYAV_INFO_COUNT && !$count)
 			jsonError();
 
+		if(!ZAYAV_INFO_COUNT)
+			$count = 0;
+
+		if(ZAYAV_INFO_CARTRIDGE)
+			$name = 'Картриджи';
+
 		if(!$name)
 			$name = 'Заявка #'._maxSql('_zayav', 'nomer', 1);
 
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
 					`ws_id`,
+					`type_id`,
 					`client_id`,
 					`nomer`,
 
@@ -78,6 +87,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
+					".$type_id.",
 					".$client_id.",
 					"._maxSql('_zayav', 'nomer', 1).",
 
@@ -154,6 +164,8 @@ switch(@$_POST['op']) {
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
+
+		_zayavPoleUseInfoConst(0, $z['type_id']);
 
 		if(ZAYAV_INFO_DEVICE) {
 			if(!$device_id)
@@ -270,6 +282,11 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$status = _num($_POST['status']))
 			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		_zayavPoleUseInfoConst(0, $z['type_id']);
 
 		$place_id = _num($_POST['place']);
 		$place_other = !$place_id ? _txt($_POST['place_other']) : '';

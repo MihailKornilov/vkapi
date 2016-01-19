@@ -107,8 +107,6 @@ var _accrualAdd = function() {
 
 	_incomeAdd = function() {
 		var zayav = window.ZI,
-			cartridge = zayav && window.ZI.cartridge,
-			place = window.zayavPlace ? 1 : 0,
 			about = zayav ? 'Примечание' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
@@ -124,12 +122,14 @@ var _accrualAdd = function() {
 					'<tr><td class="label">' + about + ':<td><input type="text" id="about"' + about_placeholder + ' />' +
 				'</table>' +
 
-		   (zayav && !cartridge ?
-				'<div id="place-div">' +
-					'<table class="tab">' +
-						'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' +
-					'</table>' +
-				'</div>' +
+		   (zayav ?
+				(ZAYAV_INFO_DEVICE ?
+					'<div id="place-div">' +
+						'<table class="tab">' +
+							'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="device-place" value="-1" />' +
+						'</table>' +
+					'</div>'
+				: '') +
 
 				(REMIND.active ?
 					'<div id="remind-div">' +
@@ -176,15 +176,14 @@ var _accrualAdd = function() {
 				],
 				func:function() {
 					$('#about').focus();
-					if(!cartridge && place)
+					if(ZAYAV_INFO_DEVICE)
 						$('#place-div').slideDown(300);
+					else
+						$('#remind-div').slideDown(300);
 				}
 			});
 
-			if(cartridge)
-				return;
-
-			if(place)
+			if(ZAYAV_INFO_DEVICE)
 				zayavPlace(function() {
 					$('#remind-div').slideDown(300);
 				});
@@ -214,7 +213,7 @@ var _accrualAdd = function() {
 		}
 		function submit() {
 			var remind = [];
-			if(zayav && !cartridge)
+			if(zayav)
 				for(var n = 0; n < REMIND.active_spisok.length; n++) {
 					var i = REMIND.active_spisok[n];
 					if(_num($('#ui' + i.id).val()))
@@ -228,40 +227,60 @@ var _accrualAdd = function() {
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
 				zayav_id:zayav ? ZI.id : 0,
-				place:zayav && !cartridge && place ? $('#place').val() : 0,
-				place_other:zayav && !cartridge && place ? $('#place_other').val() : '',
+				place:0,
+				place_other:'',
 				remind_ids:remind.join()
 			};
-			if(!send.invoice_id)
+
+			if(!send.invoice_id) {
 				dialog.err('Не указан счёт');
-			else if(!send.sum) {
+				return;
+			}
+
+			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
-			} else if(zayav && !send.prepay) {
+				return;
+			}
+
+			if(zayav && !send.prepay) {
 				dialog.err('Укажите, является ли платёж предоплатой');
 				$('#sum').focus();
-			} else if(!zayav && !send.about) {
+				return;
+			}
+
+			if(!zayav && !send.about) {
 				dialog.err('Не указано описание');
 				$('#about').focus();
-			} else if(zayav && !cartridge && place && (send.place == -1 || send.place == 0 && !send.place_other)) {
-				dialog.err('Не указано местонахождение устройства');
-				$('#place_other').focus()
-			} else {
-				if(send.prepay == 2)
-					send.prepay = 0;
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Новый платёж внесён.');
-						if(zayav)
-							location.reload();
-						else
-							incomeSpisok();
-					}
-				}, 'json');
+				return;
 			}
+
+			if(zayav && ZAYAV_INFO_DEVICE) {
+				send.place = $('#device-place').val() * 1;
+				send.place_other = $('#place_other').val();
+				if(send.place > 0)
+					send.place_other = '';
+				if(send.place == -1 || !send.place && !send.place_other) {
+					dialog.err('Не указано местонахождение устройства');
+					$('#place_other').focus();
+					return;
+				}
+			}
+
+			if(send.prepay == 2)
+				send.prepay = 0;
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				dialog.abort();
+				if(res.success) {
+					dialog.close();
+					_msg('Новый платёж внесён.');
+					if(zayav)
+						location.reload();
+					else
+						incomeSpisok();
+				}
+			}, 'json');
 		}
 	},
 	incomeLoad = function() {

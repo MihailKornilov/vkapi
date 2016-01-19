@@ -551,6 +551,8 @@ var VK_SCROLL = 0,
 				continue;
 			if(i == 'page')
 				continue;
+			if(i == 'type_id')
+				continue;
 			_cookie(COOKIE_PREFIX + name + '_' + i, escape(arr[i]));
 		}
 

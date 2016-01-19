@@ -385,12 +385,12 @@ function sa_balans_action_spisok($arr, $count) {
 
 function sa_zayav() {//управление балансами
 	/*
-		Поля для отображения информации о заявке
-		Какие поля участвуют в быстром поиске find
-		Какие условия поиска выводить в списке заявок
-		Что сохраняется в name заявки
-		Показывать или нет изображение
-		Включение-выключение функций:
+		+ Поля для отображения информации о заявке
+		- Какие поля участвуют в быстром поиске find
+		+ Какие условия поиска выводить в списке заявок
+		+ Что сохраняется в name заявки
+		- Показывать или нет изображение
+		+ Включение-выключение функций:
 			- формирование договора
 			- печать квитации
 			- составление счёта на оплату
@@ -404,12 +404,48 @@ function sa_zayav() {//управление балансами
 				'<tt>::</tt>'.
 				'<a class="add" id="type-add">Новый вид заявки</a>'.
 			'</div>'.
-			'<div id="dopLinks">'.
-				'<a class="link sel">Оборудование</a>'.
-				'<a class="link">Картриджи</a>'.
-			'</div>'.
+			sa_zayav_type_link().
 			'<div id="pole-spisok">'.sa_zayav_pole_spisok().'</div>'.
-		'</div>';
+		'</div>'.
+		'<script type="text/javascript">'.
+			'var SA_ZAYAV_TYPE_ID='.TYPE_ID.';'.
+		'</script>';
+}
+
+function sa_zayav_type_link() {//меню списка видов заявок
+	$sql = "SELECT *
+			FROM `_zayav_setup_type`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+		define('TYPE_ID', 0);
+		return '';
+	}
+
+	if(!$id = _num(@$_GET['id'])) {
+		$id = key($spisok);
+	}
+	$exist = 0; //проверка, чтобы id вида заявки совпадал с существующими, иначе ставится по умолчанию
+	foreach($spisok as $r)
+		if($r['id'] == $id) {
+			$exist = 1;
+			break;
+		}
+
+	if(!$exist) {
+		reset($spisok);
+		$id = key($spisok);
+	}
+
+	$link = '';
+	foreach($spisok as $r) {
+		$sel = $r['id'] == $id ? ' sel' : '';
+		$link .= '<a href="'.URL.'&p=sa&d=zayav&id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+	}
+
+	define('TYPE_ID', $id);
+
+	return '<div id="dopLinks">'.$link.'</div>';
 }
 function sa_zayav_pole_spisok() {
 	$sql = "SELECT
@@ -423,7 +459,7 @@ function sa_zayav_pole_spisok() {
 	$sql = "SELECT *
 			FROM `_zayav_setup_use`
 			WHERE `app_id`=".APP_ID."
-			  AND `type_id`=0";
+			  AND `type_id`=".TYPE_ID;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['pole_id']]['use_info'] = 1;

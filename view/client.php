@@ -508,6 +508,7 @@ function _clientDopContent($name, $arr) {//содержание дополнительных списоков (н
 			'<div class="ci-cont" id="'.$name.'-spisok">'.$arr['spisok'].'</div>'
 			: '';
 }//_clientDopContent()
+/*
 function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списков (заявки)
 	$sp2dn = !$arr['all'] && $arr2['all'] ? '' : ' class="dn"';
 	$sp1dn = $arr['all'] || $sp2dn ? '' : ' class="dn"';
@@ -522,6 +523,7 @@ function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных
 			'</div>'
 			: '';
 }//_clientDopContentZayav()
+*/
 function _clientDopRight($name, $arr, $filterContent) {//правая сторона (условия поиска) для дополнительных списков (заявки, начисления, платежи, история...)
 	return
 		$arr['all'] ?
@@ -558,12 +560,8 @@ function _clientInfo() {//вывод информации о клиенте
 	define('ORG', $c['category_id'] > 1);
 
 	$zayav = _zayav_spisok(array(
-			'client_id' => $client_id,
-			'limit' => 10
-	));
-	$cartridge = zayav_cartridge_spisok(array(
-			'client_id' => $client_id,
-			'limit' => 15
+		'client_id' => $client_id,
+		'limit' => 10
 	));
 
 	$accrual = _accrual_spisok(array('client_id'=>$client_id));
@@ -591,6 +589,8 @@ function _clientInfo() {//вывод информации о клиенте
 	          AND `viewer_id` NOT IN (".$cWorkersIds.",982006)";
 	$workers = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 
+	$type_id = _zayavTypeId();
+
 	return
 		'<script type="text/javascript">'.
 			'var CLIENT={'.
@@ -617,7 +617,9 @@ function _clientInfo() {//вывод информации о клиенте
 				'org_inn:"'.addslashes($c['org_inn']).'",'.
 				'org_kpp:"'.addslashes($c['org_kpp']).'",'.
 				'person:'._clientInfoPerson($client_id, 'json').
-			'};'.
+			'},'.
+			_zayavPoleUseInfoConst(1, $type_id).
+			'ZAYAV_TYPE_ID='.$type_id.';'.
 		'</script>'.
 
 		'<div id="client-info">'.
@@ -634,7 +636,7 @@ function _clientInfo() {//вывод информации о клиенте
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
-							'<a id="_zayav-add"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'val="client_'.$client_id.'"><b>Новая заявка</b></a>'.
+							'<a id="_zayav-add" val="client_'.$client_id.'"><b>Новая заявка</b></a>'.
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
 							'<a id="client-edit">Редактировать</a>'.
@@ -643,7 +645,7 @@ function _clientInfo() {//вывод информации о клиенте
 			'</table>'.
 
 			'<div id="dopLinks">'.
-				_clientDopLink('Заявки', array('all' => $zayav['all'] + $cartridge['all'])).
+				_clientDopLink('Заявки', $zayav).
 				_clientDopLink('Начисления', $accrual).
 				_clientDopLink('Платежи', $income).
 				_clientDopLink('Напоминания', $remind).
@@ -652,13 +654,14 @@ function _clientInfo() {//вывод информации о клиенте
 
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
-						_clientDopContentZayav('zayav', $zayav, $cartridge).
+						_clientDopContent('zayav', $zayav).
 						_clientDopContent('accrual', $accrual).
 						_clientDopContent('income', $income).
 						_clientDopContent('remind', $remind).
 						_clientDopContent('history', $hist).
 					'<td class="right">'.
-						_clientDopRight('zayav', array('all' => $zayav['all'] + $cartridge['all']), _clientInfoZayavRight($zayav, $cartridge)).
+					//	_clientDopRight('zayav', array('all' => $zayav['all'] + $cartridge['all']), _clientInfoZayavRight($zayav, $cartridge)).
+						_clientDopRight('accrual', $zayav, '').
 						_clientDopRight('accrual', $accrual, '').
 						_clientDopRight('income', $income, '').
 						_clientDopRight('remind', $remind, '').

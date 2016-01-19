@@ -60,7 +60,7 @@ switch(@$_POST['op']) {
 		));
 
 		//Обновление статуса заявки, если изменялся
-		zayavStatusChange($zayav_id, $zayav_status);//todo используется только в mobile
+		_zayavStatusChange($zayav_id, $zayav_status);//todo используется только в mobile
 		_zayavBalansUpdate($zayav_id);
 
 		//Внесение напоминания, если есть
@@ -209,8 +209,7 @@ switch(@$_POST['op']) {
 
 		if($zayav_id) {
 			_zayavBalansUpdate($zayav_id);
-			if(ZAYAV_INFO_DEVICE)
-				zayavPlaceCheck($zayav_id, $place, $place_other);
+			zayavPlaceCheck($zayav_id, $place, $place_other);
 
 			//отметка выбранных активных напоминаних выполненными
 			if($remind_ids)
@@ -1139,8 +1138,7 @@ switch(@$_POST['op']) {
 				WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		if(ZAYAV_INFO_CARTRIDGE)
-			zayavCartridgeSchetDel($schet_id);
+		zayavCartridgeSchetDel($schet_id);
 		_zayavBalansUpdate($r['zayav_id']);
 
 		//внесение баланса для клиента

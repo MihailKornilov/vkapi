@@ -528,7 +528,7 @@ $(document)
 			inp = t.find('input'),
 			send = {
 				op:'sa_zayav_setup_use_change',
-				type_id:0,
+				type_id:SA_ZAYAV_TYPE_ID,
 				id:_num(inp.attr('id').split('use')[1]),
 				v:inp.val()
 			};

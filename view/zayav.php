@@ -4,10 +4,10 @@ function _zayav() {
 		return zayavCase();
 	if(@$_GET['d'] == 'info')
 		return _zayav_info();
-	return _zayav_list(_hashFilter('zayav'));
+	return _zayav_list(_hashFilter('zayav'._zayavTypeId()));
 }
 
-function _zayavPoleUseInfoConst($js=false) {//формирование констант дл€ полей за€вки
+function _zayavPoleUseInfoConst($js=false, $type_id=0) {//формирование констант дл€ полей за€вки
 	$sql = "SELECT
 				*,
 				0 `use_info`
@@ -18,7 +18,8 @@ function _zayavPoleUseInfoConst($js=false) {//формирование констант дл€ полей за
 
 	$sql = "SELECT *
 			FROM `_zayav_setup_use`
-			WHERE `app_id`=".APP_ID;
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=".$type_id;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['pole_id']]['use_info'] = 1;
@@ -139,8 +140,122 @@ function _zayavTooltip($z, $v) {
 			'</table>'.
 		'</table>';
 }
+function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством за€вок в список клиентов
+	$ids = implode(',', array_keys($spisok));
+	/*
+	// общее количество за€вок
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `status`
+			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_count'] = $r['count'];
+*/
+	//за€вки, ожидающие выполнени€
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=1
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_wait'] = $r['count'];
+
+	//выполненные за€вки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=2
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_ready'] = $r['count'];
+
+	//отменЄнные за€вки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=3
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_fail'] = $r['count'];
+
+	return $spisok;
+}
+function _zayavStatusChange($zayav_id, $status) {
+	$z = _zayavQuery($zayav_id);
+
+	if($z['status'] != $status) {
+		$sql = "UPDATE `_zayav`
+				SET `status`=".$status.",
+					`status_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		_history(array(
+			'type_id' => 71,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => $z['status'],
+			'v2' => $status,
+		));
+	}
+}
 
 
+function _zayavTypeId($type_id=0) {//получение текущего type_id pза€вок
+	$sql = "SELECT *
+			FROM `_zayav_setup_type`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	if(count($spisok) == 1)
+		return key($spisok);
+
+	$cookie_key = COOKIE_PREFIX.'zayav-type';
+
+	if($type_id)
+		foreach($spisok as $r)
+			if($r['id'] == $type_id) {
+				setcookie($cookie_key, $type_id, time() + 3600, '/');
+				return $type_id;
+			}
+
+	reset($spisok);
+	if(!$id = _num(@$_GET['type_id'])) {
+		if(_num($_COOKIE[$cookie_key]))
+			return $_COOKIE[$cookie_key];
+		return key($spisok);
+	}
+
+	foreach($spisok as $r)
+		if($r['id'] == $id) {
+			setcookie($cookie_key, $id, time() + 3600, '/');
+			return $id;
+		}
+
+	reset($spisok);
+	return key($spisok);
+}
 function _zayavFilter($v) {
 	$default = array(
 		'page' => 1,
@@ -169,7 +284,7 @@ function _zayavFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
 		'client_id' => _num(@$v['client_id']),
 		'find' => trim(@$v['find']),
-		'sort' => _num(@$v['sort']),
+		'sort' => _num(@$v['sort']) ? _num(@$v['sort']) : 1,
 		'desc' => _bool(@$v['desc']),
 		'status' => _num(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
@@ -192,7 +307,30 @@ function _zayavFilter($v) {
 			$filter['clear'] = '<a class="clear">ќчистить фильтр</a>';
 			break;
 		}
+
+	$filter['type_id'] = _zayavTypeId(_num(@$v['type_id']));
+
 	return $filter;
+}
+function _zayavTypeLink() {//меню списка видов за€вок
+	$sql = "SELECT *
+			FROM `_zayav_setup_type`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	if(count($spisok) < 2 || !SERVIVE_CARTRIDGE)
+		return '';
+
+	$id = _zayavTypeId();
+
+	$link = '';
+	foreach($spisok as $r) {
+		$sel = $r['id'] == $id ? ' sel' : '';
+		$link .= '<a href="'.URL.'&p=zayav&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+	}
+
+	return '<div id="dopLinks">'.$link.'</div>';
 }
 function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
@@ -203,7 +341,7 @@ function _zayav_list($v=array()) {
 
 	return
 	'<div id="_zayav">'.
-
+		_zayavTypeLink().
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td id="spisok">'.$data['spisok'].
@@ -248,26 +386,28 @@ function _zayav_list($v=array()) {
    : '').
 					'</div>'.
 		'</table>'.
-	'</div>';
-/*
-		'<script type="text/javascript">'.
-			'var Z={'.
-				'device_ids:['._zayavBaseDeviceIds().'],'.
-				'vendor_ids:['._zayavBaseVendorIds().'],'.
-				'model_ids:['._zayavBaseModelIds().']'.
-			'};'.
-		'</script>'.
-*/
+	'</div>'.
+	'<script type="text/javascript">'.
+		'var '._zayavPoleUseInfoConst(1, $v['type_id']).
+		'ZAYAV_TYPE_ID='.$v['type_id'].';'.
+	'</script>';
+
+//		'var Z={'.
+//			'device_ids:['._zayavBaseDeviceIds().'],'.
+//			'vendor_ids:['._zayavBaseVendorIds().'],'.
+//			'model_ids:['._zayavBaseModelIds().']'.
+//		'};'.
+
 }
 function _zayav_spisok($v) {
 	$filter = _zayavFilter($v);
 	$filter = _filterJs('ZAYAV', $filter);
 
-	define('ZAYAV_PAGE1', $filter['page'] == 1);
+	_zayavPoleUseInfoConst(0, $filter['type_id']);
 
 	$cond = "`app_id`=".APP_ID."
 		 AND `ws_id`=".WS_ID."
-		 AND `type_id`=2
+		 AND `type_id`=".$filter['type_id']."
 		 AND !`deleted`";
 	$nomer = 0;
 
@@ -279,7 +419,7 @@ function _zayav_spisok($v) {
 		if($engRus)
 			$regEngRus = '/('.$engRus.')/i';
 
-		if(ZAYAV_PAGE1)
+		if($filter['page'] == 1)
 			$nomer = _num($filter['find']);
 	} else {
 		if($filter['client_id'])
@@ -382,7 +522,7 @@ function _zayav_spisok($v) {
 	$send = array(
 		'all' => $all,
 		'result' => 'ѕоказан'._end($all, 'а', 'о').' '.$all.' за€в'._end($all, 'ка', 'ки', 'ок').
-					'<span id="z-count">('.$r['count'].' шт.)</span>'.
+					($count ? '<span id="z-count">('.$count.' шт.)</span>' : '').
 					$filter['clear'],
 		'spisok' => $filter['js'],
 		'filter' => $filter
@@ -595,6 +735,9 @@ function _zayav_info() {
 	if(!$z = _zayavQuery($zayav_id))
 		return _err('«а€вки не существует.');
 
+	_zayavPoleUseInfoConst(0, $z['type_id']);
+	_zayavTypeId($z['type_id']);
+
 	if(!VIEWER_ADMIN && $z['deleted'])
 		return _noauth('«а€вка удалЄна');
 
@@ -639,8 +782,9 @@ function _zayav_info() {
 				'diagnost:'.$z['diagnost'].','.
 				'sum_cost:'.$z['sum_cost'].','.
 				'pay_type:'.$z['pay_type'].
-			'},
-			DOG={'._zayavDogovorJs($z).'};'.
+			'},'.
+			_zayavPoleUseInfoConst(1, $z['type_id']).
+			'DOG={'._zayavDogovorJs($z).'};'.
 			'KVIT={'.
 				'dtime:"'.FullDataTime($z['dtime_add']).'",'.
 (ZAYAV_INFO_DEVICE ?

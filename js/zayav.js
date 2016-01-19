@@ -1,5 +1,7 @@
 var _zayavSpisok = function(v, id) {
+		ZAYAV.op = 'zayav' + ZAYAV.type_id + '_spisok';
 		_filterSpisok(ZAYAV, v, id);
+		ZAYAV.op = 'zayav_spisok';
 		$('.condLost')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('hide');
 		$.post(AJAX_MAIN, ZAYAV, function(res) {
 			if(res.success) {
@@ -47,6 +49,7 @@ var _zayavSpisok = function(v, id) {
 			}, window.CLIENT || {}),
 			o = $.extend({
 				id:0,
+				type_id:window.ZAYAV_TYPE_ID || 0,
 				client_id:c.id,
 				client_name:c.name,
 				name:'',
@@ -125,6 +128,7 @@ var _zayavSpisok = function(v, id) {
 		if(ZAYAV_INFO_DEVICE) {
 			$('#za-dev').device({
 				width:190,
+				device_ids:WS_DEVS,
 				device_id:o.device_id,
 				vendor_id:o.vendor_id,
 				model_id:o.model_id,
@@ -149,6 +153,7 @@ var _zayavSpisok = function(v, id) {
 		function submit() {
 			var send = {
 					op:o.id ? 'zayav_edit' : 'zayav_add',
+					type_id:o.type_id,
 					zayav_id:o.id,
 					client_id:_num($('#client_id').val()),
 					name:$('#name').val(),
@@ -798,7 +803,7 @@ $(document)
 			}),
 			send = {
 				op:'zayav_day_finish',
-				day:$('#day_finish').val(),
+				day:$('#day_finish').val() || $('#za-day_finish').val(),
 				zayav_spisok:$('#_zayav').length
 			};
 		$.post(AJAX_MAIN, send, function(res) {

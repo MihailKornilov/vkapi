@@ -101,7 +101,7 @@ if(!CRON) {
 	_setupApp();
 	_pinCheck();
 	_hashRead();
-	_zayavPoleUseInfoConst();
+//	_zayavPoleUseInfoConst();
 } else
 	define('WS_ID', 0);
 
