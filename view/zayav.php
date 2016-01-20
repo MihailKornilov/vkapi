@@ -142,20 +142,7 @@ function _zayavTooltip($z, $v) {
 }
 function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством заявок в список клиентов
 	$ids = implode(',', array_keys($spisok));
-	/*
-	// общее количество заявок
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `status`
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_count'] = $r['count'];
-*/
+
 	//заявки, ожидающие выполнения
 	$sql = "SELECT
 				`client_id` AS `id`,
@@ -414,7 +401,9 @@ function _zayav_spisok($v) {
 		 AND !`deleted`";
 	$nomer = 0;
 
-	if($filter['find']) {
+	$FIND = !empty($filter['find']);
+
+	if($FIND) {
 		$engRus = _engRusChar($filter['find']);
 		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
 			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
@@ -546,6 +535,8 @@ function _zayav_spisok($v) {
 			continue;
 		$r['sum_accrual'] = round($r['sum_accrual']);
 		$r['sum_pay'] = round($r['sum_pay']);
+		$r['name'] = $FIND ? _findRegular($filter['find'], $r['name']) : $r['name'];
+
 		$zayav[$r['id']] = $r;
 	}
 

@@ -56,6 +56,8 @@ switch(@$_POST['op']) {
 		if(!$name)
 			$name = 'Заявка #'._maxSql('_zayav', 'nomer', 1);
 
+		$find = $name;
+
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
 					`ws_id`,
@@ -117,7 +119,7 @@ switch(@$_POST['op']) {
 
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".VIEWER_ID.",
-					''
+					'".addslashes($find)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$send['id'] = query_insert_id('_zayav', GLOBAL_MYSQL_CONNECT);
@@ -185,6 +187,8 @@ switch(@$_POST['op']) {
 		if(ZAYAV_INFO_COUNT && !$count)
 			jsonError();
 
+		$find = $name;
+
 		$sql = "UPDATE `_zayav` SET
 					`client_id`=".$client_id.",
 					`name`='".addslashes($name)."',
@@ -203,7 +207,9 @@ switch(@$_POST['op']) {
 					`color_dop`=".$color_dop.",
 					`diagnost`=".$diagnost.",
 					`sum_cost`=".$sum_cost.",
-					`pay_type`=".$pay_type."
+					`pay_type`=".$pay_type.",
+
+					`find`='".addslashes($find)."'
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
