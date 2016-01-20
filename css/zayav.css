@@ -108,6 +108,14 @@
 #_zayav-info #sum-diff{color:#888;margin-left:10px}
 #_zayav-info #right{vertical-align:top;padding:10px 0}
 #_zayav-info div.page{margin:0 10px}
+#_zayav-info #zayav-deleted{
+	background-color:#fdd;
+	border-bottom:#ecc solid 1px;
+	padding:15px;
+	font-weight:bold;
+	text-align:center;
+	color:red;
+}
 
 #_zayav-accrual{margin-top :10px}
 
@@ -188,6 +196,7 @@
 .zayav_link .tname{font-weight:700;margin-bottom:8px}
 .zayav_link .bl{font-weight:700}
 .zayav_link.color{display:inline-block;padding:2px 5px}
+.zayav_link .deleted{color:#b77}
 
 /* долг по заявке (в зп сотрудников) */
 .zayav-dolg{font-size:10px;color:#a00;margin-left:7px;cursor:default}

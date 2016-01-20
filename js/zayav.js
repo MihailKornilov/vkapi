@@ -986,16 +986,31 @@ $(document)
 			name.push('Изменить расходы по заявке');    action.push(_zayavExpenseEdit);
 			name.push('Новое напоминание');             action.push(_remindAdd);
 
+			if(ZI.todel) {
+				name.push('<tt>Удалить заявку</tt>');
+				action.push(function() {
+					_dialogDel({
+						id:ZI.id,
+						head:'заявки',
+						op:'zayav_del',
+						func:function() {
+							document.location.reload();
+						}
+					});
+				});
+			}
+
 			var spisok = _toSpisok(name);
 			spisok.splice(0,1);
-			$('#zayav-action')._dropdown({
-				head:'Действие',
-				nosel:1,
-				spisok:spisok,
-				func:function(v) {
-					action[v]();
-				}
-			});
+			if(!ZI.deleted)
+				$('#zayav-action')._dropdown({
+					head:'Действие',
+					nosel:1,
+					spisok:spisok,
+					func:function(v) {
+						action[v]();
+					}
+				});
 			$('#executer_id')._dropdown({
 				title0: 'не указан',
 				spisok: WORKER_SPISOK,

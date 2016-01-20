@@ -47,6 +47,7 @@ switch(@$_POST['op']) {
 		_balans(array(
 			'action_id' => 25,
 			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
 			'sum' => $sum,
 			'about' => $about
 		));
@@ -92,8 +93,8 @@ switch(@$_POST['op']) {
 		if($r['dogovor_id'])
 			jsonError('Начисление привязано к договору');
 
-		$sql = "UPDATE `_money_accrual` SET
-					`deleted`=1,
+		$sql = "UPDATE `_money_accrual`
+				SET `deleted`=1,
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
@@ -105,6 +106,7 @@ switch(@$_POST['op']) {
 		_balans(array(
 			'action_id' => 26,
 			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id'],
 			'sum' => $r['sum'],
 			'about' => $r['about']
 		));
@@ -922,6 +924,7 @@ switch(@$_POST['op']) {
 				'action_id' => 25,//новое начисление
 				'client_id' => $client_id,
 				'schet_id' => $schet_id,
+				'zayav_id' => $zayav_id,
 				'sum' => $sum
 			));
 		} else {
@@ -947,6 +950,7 @@ switch(@$_POST['op']) {
 					'action_id' => 37,//изменение начисления
 					'client_id' => $client_id,
 					'schet_id' => $schet_id,
+					'zayav_id' => $zayav_id,
 					'sum' => $sum,
 					'sum_old' => $r['sum']
 				));
@@ -1145,6 +1149,7 @@ switch(@$_POST['op']) {
 		_balans(array(
 			'action_id' => 26,//удаление начисления
 			'client_id' => $r['client_id'],
+			'zayav_id' => $r['zayav_id'],
 			'schet_id' => $schet_id,
 			'sum' => $r['sum']
 		));

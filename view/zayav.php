@@ -107,7 +107,7 @@ function _zayavValToList($arr) {//вставка данных за€вок в массив по zayav_id
 			$arr[$id] += array(
 				'zayav_link' =>
 					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link">'.
-						'є'.$r['nomer'].
+						'<span'.($r['deleted'] ? ' class="deleted"' : '').'>є'.$r['nomer'].'</span>'.
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
 				'zayav_color' => //подсветка за€вки на основании статуса
@@ -710,15 +710,12 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 
 
 
-function _zayavQuery($zayav_id) {
-	if(empty($zayav_id))
-		return array();
-
+function _zayavQuery($zayav_id, $withDel=0) {
 	$sql = "SELECT *
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
+			  ".($withDel ? '' : ' AND !`deleted`')."
 			  AND `id`=".$zayav_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 }
@@ -726,7 +723,7 @@ function _zayav_info() {
 	if(!$zayav_id = _num(@$_GET['id']))
 		return _err('—траницы не существует');
 
-	if(!$z = _zayavQuery($zayav_id))
+	if(!$z = _zayavQuery($zayav_id, 1))
 		return _err('«а€вки не существует.');
 
 	_zayavPoleUseInfoConst(0, $z['type_id']);
@@ -775,7 +772,9 @@ function _zayav_info() {
 				'color_dop:'.$z['color_dop'].','.
 				'diagnost:'.$z['diagnost'].','.
 				'sum_cost:'.$z['sum_cost'].','.
-				'pay_type:'.$z['pay_type'].
+				'pay_type:'.$z['pay_type'].','.
+				'todel:'._zayavToDel($zayav_id).','.//показывать пункт дл€ удалени€ за€вки
+				'deleted:'.$z['deleted'].
 			'},'.
 			_zayavPoleUseInfoConst(1, $z['type_id']).
 			'DOG={'._zayavDogovorJs($z).'};'.
@@ -800,6 +799,8 @@ function _zayav_info() {
 			'<a class="link a-page">»стори€</a>'.
 			'<div id="nz" class="'._tooltip('Ќомер за€вки', -74, 'r').'#'.$z['nomer'].'</div>'.
 		'</div>'.
+
+		($z['deleted'] ? '<div id="zayav-deleted">«а€вка удалена.</div>' : '').
 
 		'<table class="page">'.
 			'<tr><td id="left">'.
@@ -865,6 +866,62 @@ function _zayav_info() {
 		'</div>'.
 
 	'</div>';
+}
+function _zayavToDel($zayav_id) {//можно ли удал€ть за€вку..
+	if(!_zayavQuery($zayav_id))
+		return 0;
+
+	//проверка на наличие платежей
+	$sql = "SELECT COUNT(`id`)
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	//проверка на наличие возвратов
+	$sql = "SELECT COUNT(`id`)
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	//проверка на наличие заключЄнных договоров
+	$sql = "SELECT COUNT(`id`)
+			FROM `_zayav_dogovor`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	//проверка на наличие счетов на оплату
+	$sql = "SELECT COUNT(`id`)
+			FROM `_schet`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	//проверка на наличие начислений зп сотрудникам
+	$sql = "SELECT COUNT(`id`)
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`
+			  AND `zayav_id`=".$zayav_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 0;
+
+	return 1;
 }
 function _zayavDogovor($z) {//отображение номера договора
 	$sql = "SELECT *

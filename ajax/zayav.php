@@ -257,6 +257,57 @@ switch(@$_POST['op']) {
 		$send['id'] = $zayav_id;
 		jsonSuccess($send);
 		break;
+	case 'zayav_del'://удаление за€вки
+		if(!$zayav_id = _num($_POST['id']))
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError('«а€вки не существует');
+
+		if($z['deleted'])
+			jsonError('«а€вка уже была удалена');
+
+		if(!_zayavToDel($zayav_id))
+			jsonError();
+
+		$sql = "UPDATE `_zayav`
+				SET `deleted`=1
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT IFNULL(SUM(`sum`),0)
+				FROM `_money_accrual`
+				WHERE !`deleted`
+				  AND `zayav_id`=".$zayav_id;
+		if($accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+			//удаление произвольных начислений
+			$sql = "UPDATE `_money_accrual`
+					SET `deleted`=1,
+						`viewer_id_del`=".VIEWER_ID.",
+						`dtime_del`=CURRENT_TIMESTAMP
+					WHERE !`deleted`
+					  AND `zayav_id`=".$zayav_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			_zayavBalansUpdate($zayav_id);
+
+			//внесение баланса дл€ клиента
+			_balans(array(
+				'action_id' => 40,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'sum' => $accrual_sum
+			));
+		}
+
+		_history(array(
+			'type_id' => 80,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id
+		));
+
+		jsonSuccess();
+		break;
 	case 'zayav_spisok':
 		$_POST['find'] = win1251($_POST['find']);
 		$data = _zayav_spisok($_POST);
@@ -483,6 +534,15 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		//внесение баланса дл€ клиента
+		_balans(array(
+			'action_id' => 25,
+			'client_id' => $v['client_id'],
+			'zayav_id' => $v['zayav_id'],
+			'dogovor_id' => $dog_id,
+			'sum' => $v['sum']
+		));
+
 		//ѕрисвоение за€вке id договора и обновление адреса
 		$sql = "UPDATE `_zayav`
 		        SET `dogovor_id`=".$dog_id."
@@ -547,6 +607,17 @@ switch(@$_POST['op']) {
 				WHERE `dogovor_id`=".$dog['id'];
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		if($dog['sum'] != $v['sum']) {
+			_balans(array(
+				'action_id' => 37,
+				'client_id' => $v['client_id'],
+				'zayav_id' => $v['zayav_id'],
+				'dogovor_id' => $dog['id'],
+				'sum_old' => $dog['sum'],
+				'sum' => $v['sum']
+			));
+		}
+
 		// ќбновление авансового платежа
 		$sql = "SELECT *
 				FROM `_money_income`
@@ -567,6 +638,14 @@ switch(@$_POST['op']) {
 					'invoice_id' => $avans['invoice_id'],
 					'sum' => $avans['sum'],
 					'income_id' => $avans['id']
+				));
+				//баланс дл€ клиента
+				_balans(array(
+					'action_id' => 28,
+					'client_id' => $v['client_id'],
+					'zayav_id' => $v['zayav_id'],
+					'dogovor_id' => $dog['id'],
+					'sum' => $avans['sum']
 				));
 			} elseif($avans['sum'] != $v['avans'] || $avans['invoice_id'] != $v['invoice_id']) {//изменение платежа
 				$sql = "UPDATE `_money_income`
@@ -600,13 +679,24 @@ switch(@$_POST['op']) {
 						'income_id' => $avans['id']
 					));
 				}
+
+				if($avans['sum'] != $v['avans']) {
+					//баланс дл€ клиента
+					_balans(array(
+						'action_id' => 41,
+						'client_id' => $v['client_id'],
+						'zayav_id' => $v['zayav_id'],
+						'dogovor_id' => $dog['id'],
+						'sum_old' => $avans['sum'],
+						'sum' => $v['avans']
+					));
+				}
 			}
 		} else
 			_zayavDogovorAvansInsert($v);
 
 		_zayavDogovorPrint($dog['id']);
 
-		_clientBalansUpdate($v['client_id']);
 		_zayavBalansUpdate($v['zayav_id']);
 
 		unlink(PATH_DOGOVOR.$dog['link'].'.doc');
@@ -954,6 +1044,17 @@ function _zayavDogovorAvansInsert($v) {//¬несение авансового платежа при заключе
 			'sum' => $v['avans'],
 			'income_id' => $income_id
 		));
+
+		//баланс дл€ клиента
+		_balans(array(
+			'action_id' => 27,
+			'client_id' => $v['client_id'],
+			'zayav_id' => $v['zayav_id'],
+			'dogovor_id' => $v['id'],
+			'sum' => $v['avans'],
+			'about' => 'јвансовый платЄж.'
+		));
+
 	}
 }
 function _zayavDayFinishChange($zayav_id, $day) {//изменение срока выполнени€

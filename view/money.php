@@ -1390,6 +1390,7 @@ function _balans($v) {//внесение записи о балансе
 				`invoice_transfer_id`,
 				`schet_id`,
 				`zayav_id`,
+				`dogovor_id`,
 
 				`viewer_id_add`
 			) VALUES (
@@ -1409,6 +1410,7 @@ function _balans($v) {//внесение записи о балансе
 				".$invoice_transfer_id.",
 				"._num(@$v['schet_id']).",
 				"._num(@$v['zayav_id']).",
+				"._num(@$v['dogovor_id']).",
 
 				".VIEWER_ID."
 			)";
@@ -1557,6 +1559,7 @@ function balans_show_spisok($filter) {
 
 	$spisok = _schetValToList($spisok);
 	$spisok = _zayavValToList($spisok);
+	$spisok = _dogovorValToList($spisok);
 
 	$transfer = array();
 	if($transfer_ids = _idsGet($spisok, 'invoice_transfer_id')) {
@@ -1598,7 +1601,16 @@ function balans_show_spisok($filter) {
 		}
 		$sum = $sum ? $sum : '';
 
-		$about = @$r['schet_link_full'].$r['about'];
+
+		$about = @$r['schet_link_full'];
+
+		if($r['zayav_id'])
+			$about .= '«а€вка '.$r['zayav_link'].'. ';
+
+		if($r['dogovor_id'])
+			$about .= 'ƒоговор '.$r['dogovor_nomer'].'. ';
+
+		$about .= $r['about'];
 
 		// описание дл€ переводов между счетами
 		if($r['invoice_transfer_id']) {
@@ -1619,9 +1631,6 @@ function balans_show_spisok($filter) {
 		// описание дл€ расходов
 		if($r['expense_id'])
 			$about = expenseAbout($expense[$r['expense_id']]);
-
-		if($r['zayav_id'])
-			$about .= ' «а€вка '.$r['zayav_link'].'.';
 
 		$send['spisok'] .=
 			'<tr><td class="action">'._balansAction($r['action_id']).

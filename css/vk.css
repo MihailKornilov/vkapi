@@ -568,6 +568,8 @@ a.add:hover{text-decoration:underline;color:#357}
 #dopLinks :not(.sel) .count{background-color:#D5DDE5;border-radius:2px}
 
 
+
+
 /* ¬ыпадающее меню по ссылке */
 ._dropdown{position:relative;display:inline-block}
 ._dropdown .ddhead{white-space:nowrap}
@@ -608,6 +610,10 @@ a.add:hover{text-decoration:underline;color:#357}
 	padding:2px 5px 3px 5px;
 	border:#476D96 solid 1px;
 }
+._dropdown .ddu:not(:hover) tt{color:red}
+
+
+
 
 
 /* таблица списком */
