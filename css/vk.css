@@ -57,7 +57,6 @@ table{border:0;border-spacing:0}
 
 
 
-
 .tabLR{width:100%}
 .tabLR .left{vertical-align:top}
 .tabLR .right{
@@ -118,9 +117,6 @@ td.top,td.topi{vertical-align:top}
 td.topi{padding-top:3px}
 td.r{text-align:right}
 
-
-.red{color:#E22}
-.grey{color:#888}
 
 ._sort dd{background-color:#fff}
 
@@ -1146,4 +1142,9 @@ button.vk._busy{color:transparent}
 
 
 
+/* Короткие стили */
+.mt20{margin-top:20px}
+.bs10{border-spacing:10px}
+.red{color:#E22}
+.grey{color:#888}
 .dn{display:none}

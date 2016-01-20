@@ -46,13 +46,15 @@ var _zayavSpisok = function(v, id) {
 	_zayavEdit = function() {
 		var c = $.extend({//если заявка вносится из клиента, то получение данных о клиенте
 				id:0,
-				name:''
+				name:'',
+				adres:''
 			}, window.CLIENT || {}),
 			o = $.extend({
 				id:0,
 				type_id:window.ZAYAV_TYPE_ID || 0,
 				client_id:c.id,
 				client_name:c.name,
+				client_adres:c.adres,
 				name:'',
 				about:'',
 				count:1,
@@ -82,7 +84,10 @@ var _zayavSpisok = function(v, id) {
 					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr' + (ZAYAV_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" class="money" id="count" value="' + o.count + '" /> шт.' +
 					'<tr' + (ZAYAV_INFO_PRODUCT ? '' : ' class="dn"') + '><td class="label topi">Изделие:<td id="product">' +
-					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '><td class="label">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" />' +
+					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '>' +
+						'<td class="label">Адрес:<td>' +
+							'<input type="text" id="adres" value="' + o.adres + '" />' +
+							'<input type="hidden" id="client-adres" />' +
 					'<tr' + (ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
 						'<td class="label topi">Устройство:' +
 						'<td><table><td id="za-dev"><td id="device_image"></table>' +
@@ -122,10 +127,34 @@ var _zayavSpisok = function(v, id) {
 			});
 
 		if(!o.client_name)
-			$('#client_id').clientSel({add:1});
+			$('#client_id').clientSel({
+				add:1,
+				func:function(uid, id, item) {
+					o.client_adres = uid ? item.adres : '';
+					if($('#client-adres').val() == 1)
+						$('#adres').val(o.client_adres);
+				}
+			});
 		$('#name').focus();
 		$('#about').autosize();
 		$('#product').product(o.product);
+
+		$('#client-adres')._check({
+			func:function(v) {
+				$('#adres').val(v ? o.client_adres : '');
+			}
+		});
+		$('#client-adres_check').vkHint({
+			msg:'Совпадает с адресом клиента',
+			top:-76,
+			left:184,
+			indent:60,
+			delayShow:500
+		});
+		$('#adres').keyup(function() {
+			$('#client-adres')._check(0);
+		});
+
 		if(ZAYAV_INFO_DEVICE) {
 			$('#za-dev').device({
 				width:190,

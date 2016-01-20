@@ -371,6 +371,15 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'RULE_MY_PAY_SHOW_PERIOD'://мои настройки: показывать платежи: за день, неделю, мес€ц
+		_workerRuleQuery(VIEWER_ID, 'RULE_MY_PAY_SHOW_PERIOD', _num($_POST['v']));
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+		xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
+
+		jsonSuccess();
+		break;
+
 	case 'setup_rekvisit':
 		if(!RULE_SETUP_REKVISIT)
 			jsonError();

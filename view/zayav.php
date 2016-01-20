@@ -232,7 +232,7 @@ function _zayavTypeId($type_id=0) {//получение текущего type_id pзаявок
 
 	reset($spisok);
 	if(!$id = _num(@$_GET['type_id'])) {
-		if(_num($_COOKIE[$cookie_key]))
+		if(_num(@$_COOKIE[$cookie_key]))
 			return $_COOKIE[$cookie_key];
 		return key($spisok);
 	}

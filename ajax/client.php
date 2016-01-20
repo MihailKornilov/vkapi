@@ -41,6 +41,7 @@ switch(@$_POST['op']) {
 			if(!$k) {
 				$spisok[$r['client_id']]['fio'] = $r['fio'];
 				$spisok[$r['client_id']]['phone'] = $r['phone'];
+				$spisok[$r['client_id']]['adres'] = $r['adres'];
 			}
 			$k++;
 		}
@@ -48,12 +49,15 @@ switch(@$_POST['op']) {
 		foreach($spisok as $r) {
 			$name = $r['category_id'] == 1 ? $r['fio'] : $r['org_name'];
 			$phone = $r['category_id'] == 1 ? $r['phone'] : $r['org_phone'];
+			$adres = $r['category_id'] == 1 ? $r['adres'] : $r['org_adres'];
 			$unit = array(
 				'uid' => $r['id'],
 				'title' => utf8(htmlspecialchars_decode($name))
 			);
 			if($phone)
 				$unit['content'] = utf8($name.'<span>'.$phone.'</span>');
+			if($adres)
+				$unit['adres'] = utf8($adres);
 			$send['spisok'][] = $unit;
 		}
 		jsonSuccess($send);

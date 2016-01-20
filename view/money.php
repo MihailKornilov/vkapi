@@ -7,9 +7,12 @@ function _money() {
 			switch(@$_GET['d1']) {
 				case 'income':
 				default:
-					if(!_calendarDataCheck(@$_GET['day']))
-						$_GET['day'] = _calendarWeek();
-					$content = income_day($_GET['day']);
+					switch(@RULE_MY_PAY_SHOW_PERIOD) {
+						case 1: $period = TODAY; break;
+						case 2: $period = substr(TODAY, 0,7); break;
+						default: $period = _period();
+					}
+					$content = income_day($period);
 					break;
 				case 'all': $left = income_all(); break;
 				case 'year':
@@ -307,7 +310,6 @@ function income_top($sel) { //Условия поиска сверху для платежей
 			'var INCOME_WORKER='.$worker.';'.
 			'incomeLoad();'.
 		'</script>';
-//		(VIEWER_ADMIN ? _check('del', 'Удалённые платежи') : '');
 }//income_top()
 function income_days($mon=0) {//отметка дней в календаре, в которые вносились платежи
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`
@@ -344,7 +346,7 @@ function income_path($data) {//путь с датой
 		'<a class="_income-add add">Внести платёж</a>';
 }//income_path()
 function income_day($day) {
-	$data = income_spisok(array('day'=>$day));
+	$data = income_spisok(array('period'=>$day));
 	return
 		'<div id="money-income">'.
 			income_top($day).
@@ -1440,7 +1442,6 @@ function balansFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'category_id' => _num(@$v['category_id']),
 		'unit_id' => _num(@$v['unit_id'])
-//		'day' => !empty($v['day']) && preg_match(REGEXP_DATE, $v['day']) ? $v['day'] : TODAY
 	);
 }//balansFilter()
 function balans_show($v) {//вывод таблицы с балансами конкретного счёта

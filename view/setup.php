@@ -134,6 +134,13 @@ function setup_my() {
 	:
 		'<div class="vkButton" id="pinset"><button>Установить пин-код</button></div>'
 	).
+
+
+		'<div class="headName" id="dop" >Дополнительно</div>'.
+		'<table class="bs10">'.
+			'<tr><td class="label">Показывать платежи:<td><input type="hidden" id="RULE_MY_PAY_SHOW_PERIOD" value="'._num(@RULE_MY_PAY_SHOW_PERIOD).'" />'.
+		'</table>'.
+
 	'</div>';
 }//setup_my()
 
@@ -277,11 +284,32 @@ function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	return true;
 }//setup_worker_rule_save()
 function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотрудника в базе
+	$sql = "SELECT COUNT(*)
+			FROM `_vkuser_rule`
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='".$key."'
+			  AND `viewer_id`=".$viewer_id;
+	if(!query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		$sql = "INSERT INTO `_vkuser_rule` (
+					`app_id`,
+					`viewer_id`,
+					`key`,
+					`value`
+				) VALUES (
+					".APP_ID.",
+					".$viewer_id.",
+					'".strtoupper($key)."',
+					'".$v."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		return;
+	}
+
 	$sql = "UPDATE `_vkuser_rule`
-				SET `value`=".$v."
-				WHERE `app_id`=".APP_ID."
-				  AND `viewer_id`=".$viewer_id."
-				  AND `key`='".$key."'";
+			SET `value`=".$v."
+			WHERE `app_id`=".APP_ID."
+			  AND `viewer_id`=".$viewer_id."
+			  AND `key`='".$key."'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }//_workerRuleQuery()
 

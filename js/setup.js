@@ -1,7 +1,7 @@
 var setupRuleCheck = function(v, id) {
 	var send = {
 		op:id,
-		viewer_id:RULE_VIEWER_ID,
+		viewer_id:window.RULE_VIEWER_ID || VIEWER_ID,
 		v:v
 	};
 	$.post(AJAX_MAIN, send, function(res) {
@@ -702,6 +702,14 @@ $(document)
 						}, 'json');
 					}
 				}
+			});
+			$('#RULE_MY_PAY_SHOW_PERIOD')._select({
+				spisok:[
+					{uid:1,title:'за текущий день'},
+					{uid:0,title:'за текущую неделю'},
+					{uid:2,title:'за текущий мес€ц'}
+				],
+				func:setupRuleCheck
 			});
 		}
 		if($('#setup_rule').length) {
