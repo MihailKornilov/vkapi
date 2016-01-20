@@ -101,7 +101,6 @@ if(!CRON) {
 	_setupApp();
 	_pinCheck();
 	_hashRead();
-//	_zayavPoleUseInfoConst();
 } else
 	define('WS_ID', 0);
 
@@ -694,6 +693,8 @@ function _hashRead() {
 	_hashCookieSet();
 }
 function _hashCookieSet() {
+	if($_GET['p'] == 'print')
+		return;
 	setcookie('p', $_GET['p'], time() + 2592000, '/');
 	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
 	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');

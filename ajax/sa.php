@@ -419,6 +419,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		sa_zayav_type_link();
 		_globalValuesJS();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok());
@@ -452,6 +453,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_globalValuesJS();
+		sa_zayav_type_link();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok());
 		jsonSuccess($send);

@@ -707,10 +707,12 @@ var _zayavSpisok = function(v, id) {
 
 			}
 
-			send.push(id + ':' +
-					  cat_id + ':' +
-					  dop + ':' +
-					  sum);
+			send.push(
+				id + ':' +
+				cat_id + ':' +
+				dop + ':' +
+				_cena(sum)
+			);
 		}
 		return send.join();
 	};
@@ -1018,6 +1020,10 @@ $(document)
 				width: 150,
 				top: -79,
 				left: -50
+			});
+			$('#attach_id')._attach({
+				zayav_id:ZI.id,
+				zayav_save:1
 			});
 		}
 	});

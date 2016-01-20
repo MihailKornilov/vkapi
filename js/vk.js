@@ -1260,6 +1260,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 
 	o = $.extend({
 		zayav_id:0,
+		zayav_save:0,//сразу прикреплять к заявке, как только будет загружен
 		func:function() {}
 	}, o);
 
@@ -1353,6 +1354,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 				op:'attach_save',
 				id:attach_id,
 				zayav_id:o.zayav_id,
+				zayav_save:o.zayav_save,
 				name:$.trim($('#name').val())
 			};
 			if(!send.name)

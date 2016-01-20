@@ -831,6 +831,9 @@ function _zayav_info() {
   : '').
 
 						'<tr><td class="label">Статус:<td>'._zayavStatusButton($z).
+
+ (ZAYAV_INFO_DOCUMENT ? '<tr><td class="label">Документ:<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />' : '').
+
    ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._cena($z['sum_accrual']).'</b> руб.' : '').
 	   ($z['sum_pay'] ? '<tr><td class="label">Оплачено:'.
 							'<td><b class="pay">'._cena($z['sum_pay']).'</b> руб.'.

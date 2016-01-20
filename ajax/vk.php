@@ -257,6 +257,7 @@ switch(@$_POST['op']) {
 			if(!$z = _zayavQuery($zayav_id))
 				jsonError();
 
+		$zayav_save = _bool($_POST['zayav_save']);
 		$name = _txt($_POST['name']);
 
 		$sql = "SELECT *
@@ -279,6 +280,13 @@ switch(@$_POST['op']) {
 			'attach_id' => $id,
 			'zayav_id' => $zayav_id
 		));
+
+		if($zayav_save && $zayav_id) {
+			$sql = "UPDATE `_zayav`
+					SET `attach_id`=".$id."
+					WHERE `id`=".$zayav_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
 
 		$send['arr'] = _attachArr($id);
 		jsonSuccess($send);
@@ -327,6 +335,18 @@ switch(@$_POST['op']) {
 
 		//удаление из расходов
 		$sql = "UPDATE `_money_expense`
+				SET `attach_id`=0
+				WHERE `attach_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//удаление из заявок
+		$sql = "UPDATE `_zayav`
+				SET `attach_id`=0
+				WHERE `attach_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//удаление из расходов по заявке
+		$sql = "UPDATE `_zayav_expense`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);

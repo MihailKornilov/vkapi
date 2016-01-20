@@ -412,7 +412,7 @@ function sa_zayav() {//управление балансами
 		'</script>';
 }
 
-function sa_zayav_type_link() {//меню списка видов заявок
+function sa_zayav_type_link() {//меню списка видов заявок и получение TYPE_ID
 	$sql = "SELECT *
 			FROM `_zayav_setup_type`
 			WHERE `app_id`=".APP_ID."
