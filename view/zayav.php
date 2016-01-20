@@ -267,7 +267,9 @@ function _zayavFilter($v) {
 		'model' => 0,
 		'place' => 0,
 		'paytype' => 0,
-		'noschet' => 0
+		'noschet' => 0,
+		'deleted' => 0,
+		'deleted_only' => 0
 	);
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -290,6 +292,8 @@ function _zayavFilter($v) {
 		'place' => _num(@$v['place']),
 		'paytype' => _num(@$v['paytype']),
 		'noschet' => _bool(@$v['noschet']),
+		'deleted' => _bool(@$v['deleted']),
+		'deleted_only' => _bool(@$v['deleted_only']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -374,6 +378,13 @@ function _zayav_list($v=array()) {
 						'<div class="findHead">Нахождение устройства</div>'.
 						'<input type="hidden" id="place" value="'.$v['place'].'" />'
    : '').
+
+		(VIEWER_ADMIN ? _check('deleted', '+ удалённые заявки', $v['deleted'], 1).
+						'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
+							_check('deleted_only', 'только удалённые', $v['deleted_only'], 1).
+						'</div>'
+		: '').
+
 					'</div>'.
 		'</table>'.
 	'</div>'.
@@ -397,8 +408,10 @@ function _zayav_spisok($v) {
 
 	$cond = "`app_id`=".APP_ID."
 		 AND `ws_id`=".WS_ID."
-		 AND `type_id`=".$filter['type_id']."
-		 AND !`deleted`";
+		 AND `type_id`=".$filter['type_id'];
+	if(!VIEWER_ADMIN)
+		$cond .= " AND !`deleted`";
+
 	$nomer = 0;
 
 	$FIND = !empty($filter['find']);
@@ -407,10 +420,6 @@ function _zayav_spisok($v) {
 		$engRus = _engRusChar($filter['find']);
 		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
 			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
-		$reg = '/('.$filter['find'].')/i';
-		if($engRus)
-			$regEngRus = '/('.$engRus.')/i';
-
 		if($filter['page'] == 1)
 			$nomer = _num($filter['find']);
 	} else {
@@ -468,6 +477,15 @@ function _zayav_spisok($v) {
 			if($filter['place'])
 				$cond .= " AND `device_place`=".$filter['place'];
 		}
+
+		if(VIEWER_ADMIN) {
+			if($filter['deleted']) {
+				if($filter['deleted_only'])
+					$cond .= " AND `deleted`";
+			} else
+				$cond .= " AND !`deleted`";
+		}
+
 	}
 
 	$sql = "SELECT
@@ -596,8 +614,10 @@ function _zayav_spisok($v) {
 	foreach($zayav as $id => $r) {
 		$diff = $r['sum_accrual'] - $r['sum_pay'];
 		$diff = $diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено';
+		$deleted = $r['deleted'] ? ' deleted' : '';
+		$statusColor = $r['deleted'] ? '' : _zayavStatus($r['status'], 'bg');
 		$send['spisok'] .=
-			'<div class="_zayav-unit" id="u'.$id.'"'._zayavStatus($r['status'], 'bg').' val="'.$r['id'].'">'.
+			'<div class="_zayav-unit'.$deleted.'" id="u'.$id.'"'.$statusColor.' val="'.$r['id'].'">'.
 				'<div class="zd">'.
 					'#'.$r['nomer'].
 					'<div class="date-add">'.FullData($r['dtime_add'], 1).'</div>'.

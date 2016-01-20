@@ -16,6 +16,8 @@
 	#_zayav #srok,#_zayav #srok *{font-size:10px}
 	#_zayav #srok{margin-top:8px}
 	#_zayav .day-finish-link{color:#BCDCFF}
+#_zayav #deleted_check{margin-top:20px}
+#_zayav #deleted-only-div{margin-top:5px}
 #_zayav ._empty{margin:10px}
 #_zayav ._next{margin:6px 8px 0}
 
@@ -47,6 +49,8 @@
 ._zayav-unit .dog{color:#555}
 ._zayav-unit .note{display:none}
 ._zayav-unit .schet-link{margin-bottom:-5px}
+._zayav-unit.deleted{background-color:#ddd;opacity:.7}
+._zayav-unit.deleted .name{color:#777}
 
 /*
 .zayav_unit .image{

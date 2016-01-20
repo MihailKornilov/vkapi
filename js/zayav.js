@@ -3,6 +3,7 @@ var _zayavSpisok = function(v, id) {
 		_filterSpisok(ZAYAV, v, id);
 		ZAYAV.op = 'zayav_spisok';
 		$('.condLost')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('hide');
+		$('#deleted-only-div')[(ZAYAV.deleted ? 'remove' : 'add') + 'Class']('dn');
 		$.post(AJAX_MAIN, ZAYAV, function(res) {
 			if(res.success) {
 				$('.result').html(res.all);
@@ -788,6 +789,9 @@ $(document)
 		_zayavDeviceFilter();
 		$('#place')._select(0);			ZAYAV.place = 0;
 
+		$('#deleted')._check(0);		ZAYAV.deleted = 0;
+		$('#deleted_only')._check(0);	ZAYAV.deleted_only = 0;
+
 		_zayavSpisok();
 	})
 	.on('click', '._zayav-unit', function() {
@@ -928,6 +932,9 @@ $(document)
 					func:_zayavSpisok
 				});
 			}
+
+			$('#deleted')._check(_zayavSpisok);
+			$('#deleted_only')._check(_zayavSpisok);
 		}
 		if($('#_zayav-info').length) {
 			$('.a-page').click(function() {
@@ -992,6 +999,12 @@ $(document)
 					_dialogDel({
 						id:ZI.id,
 						head:'за€вки',
+						info:'<u>«а€вку можно удалить, если отсутствуют:</u><br />' +
+							  '- платежи;<br />' +
+							  '- возвраты;<br />' +
+							  '- начислени€ з/п сотрудникам;<br />' +
+							  '- заключЄнные договора;<br />' +
+							  '- сформированные счета на оплату.',
 						op:'zayav_del',
 						func:function() {
 							document.location.reload();

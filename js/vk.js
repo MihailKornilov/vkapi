@@ -484,13 +484,16 @@ var VK_SCROLL = 0,
 		o = $.extend({
 			id:0,               //id, который нужно удалить
 			head:'записи',      //заголовок диалога
+			info:'',            //дополнительна€ информаци€ об удалении
 			op:'_del',          //переменна€ switch, по которой будет производитьс€ удаление
 			func:function() {}  //функци€, выполн€ема€ после успешного удалени€
 		}, o);
-		var dialog = _dialog({
+		var html = (o.info ? '<div class="_info">'+ o.info + '</div>' : '') +
+				'<center class="red">ѕодтвердите удаление<br /><b>' + o.head + '</b>.</center>',
+			dialog = _dialog({
 				head:'”даление ' + o.head,
-				padding:50,
-				content:'<center class="red">ѕодтвердите удаление<br /><b>' + o.head + '</b>.</center>',
+				padding:30,
+				content:html,
 				butSubmit:'”далить',
 				submit:submit
 			});
