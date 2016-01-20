@@ -184,12 +184,12 @@ var _zayavSpisok = function(v, id) {
 				dialog.err('Не выбран клиент');
 				return;
 			}
-
+/*
 			if(ZAYAV_INFO_NAME && !send.name) {
 				dialog.err('Укажите название заявки');
 				return;
 			}
-
+*/
 			if(ZAYAV_INFO_DEVICE) {
 				if(!send.device_id) {
 					dialog.err('Не выбрано устройство');

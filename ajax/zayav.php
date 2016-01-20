@@ -29,34 +29,20 @@ switch(@$_POST['op']) {
 
 		_zayavPoleUseInfoConst(0, $type_id);
 
-		if(ZAYAV_INFO_NAME && !$name)
-			jsonError();
-
-		if(ZAYAV_INFO_DEVICE) {
-			if(!$device_id)
-				jsonError();
-			$name = _deviceName($device_id)._vendorName($vendor_id)._modelName($model_id);
-		}
+		if(ZAYAV_INFO_DEVICE && !$device_id)
+			jsonError('Не выбрано устройство');
 
 		if(ZAYAV_INFO_SROK && $day_finish == '0000-00-00')
-			jsonError();
+			jsonError('Не указан срок выполнения заявки');
 
 		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
-			jsonError();
+			jsonError('Не указан вид платежа');
 
 		if(ZAYAV_INFO_COUNT && !$count)
-			jsonError();
+			jsonError('Не указано количество');
 
 		if(!ZAYAV_INFO_COUNT)
 			$count = 0;
-
-		if(ZAYAV_INFO_CARTRIDGE)
-			$name = 'Картриджи';
-
-		if(!$name)
-			$name = 'Заявка #'._maxSql('_zayav', 'nomer', 1);
-
-		$find = $name;
 
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
@@ -87,8 +73,7 @@ switch(@$_POST['op']) {
 					`status_dtime`,
 
 					`barcode`,
-					`viewer_id_add`,
-					`find`
+					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
@@ -118,13 +103,13 @@ switch(@$_POST['op']) {
 					current_timestamp,
 
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
-					".VIEWER_ID.",
-					'".addslashes($find)."'
+					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$send['id'] = query_insert_id('_zayav', GLOBAL_MYSQL_CONNECT);
 
 		_zayavProductUpdate($send['id'], $_POST);
+		_zayavNameUpdate($send['id']);
 
 		if(ZAYAV_INFO_DEVICE)
 			zayavPlaceCheck($send['id'], $place_id, $place_other);
@@ -172,22 +157,14 @@ switch(@$_POST['op']) {
 
 		_zayavPoleUseInfoConst(0, $z['type_id']);
 
-		if(ZAYAV_INFO_NAME && !$name)
-			jsonError();
-
-		if(ZAYAV_INFO_DEVICE) {
-			if(!$device_id)
-				jsonError();
-			$name = _deviceName($device_id)._vendorName($vendor_id)._modelName($model_id);
-		}
+		if(ZAYAV_INFO_DEVICE && !$device_id)
+			jsonError('Не выбрано устройство');
 
 		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
 			jsonError();
 
 		if(ZAYAV_INFO_COUNT && !$count)
 			jsonError();
-
-		$find = $name;
 
 		$sql = "UPDATE `_zayav` SET
 					`client_id`=".$client_id.",
@@ -207,9 +184,7 @@ switch(@$_POST['op']) {
 					`color_dop`=".$color_dop.",
 					`diagnost`=".$diagnost.",
 					`sum_cost`=".$sum_cost.",
-					`pay_type`=".$pay_type.",
-
-					`find`='".addslashes($find)."'
+					`pay_type`=".$pay_type."
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -249,6 +224,8 @@ switch(@$_POST['op']) {
 			);
 		}
 		$productArrNew = _zayavProductUpdate($zayav_id, $_POST);
+
+		_zayavNameUpdate($zayav_id);
 
 		$labelName = 'Название';
 		if(ZAYAV_INFO_DEVICE)
@@ -904,20 +881,46 @@ function _zayavProductUpdate($zayav_id, $p) {//внесение|обновление изделия для к
 			)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	$product_name = _product($product_id);
-	if($product_sub_id)
-		$product_name .= ' '._productSub($product_sub_id);
+	//если не было указано названия заявки, то вносится название продукта
+	$z = _zayavQuery($zayav_id);
+	if(!$z['name']) {
+		$product_name = _product($product_id);
+		if($product_sub_id)
+			$product_name .= ' '._productSub($product_sub_id);
 
-	if(!ZAYAV_INFO_NAME) {
 		$sql = "UPDATE `_zayav`
 				SET `name`='".addslashes($product_name)."'
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 	}
+
 	return array($product_id, $product_sub_id, $count);
 }
 function _zayavProductTxt($r) {//преобразование id изделий в текст
 	return $r ? _product($r[0]).($r[1] ? ' '._productSub($r[1]) : '').': '.$r[2].' шт.' : '';
+}
+function _zayavNameUpdate($zayav_id) {//обновление названия заявки и строки для поиска
+	$z = _zayavQuery($zayav_id);
+
+	$name = $z['name'];
+
+	if(ZAYAV_INFO_DEVICE)
+		$name = _deviceName($z['base_device_id'])._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']);
+
+	if(ZAYAV_INFO_CARTRIDGE)
+		$name = 'Картриджи';
+
+	if(!$name)
+		$name = 'Заявка #'.$z['nomer'];
+
+	$find = $name;
+
+	$sql = "UPDATE `_zayav`
+			SET `name`='".addslashes($name)."',
+				`find`='".addslashes($find)."'
+			WHERE `id`=".$zayav_id;
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
 }
 function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключении/изменении договора
 	if($v['avans']) {
