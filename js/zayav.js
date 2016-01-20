@@ -531,7 +531,7 @@ var _zayavSpisok = function(v, id) {
 			'</table>',
 			dialog = _dialog({
 				top: 30,
-				width: 510,
+				width: 550,
 				head: 'Изменение расходов заявки',
 				content: html,
 				butSubmit: 'Сохранить',
@@ -546,20 +546,23 @@ var _zayavSpisok = function(v, id) {
 				zayav_id:ZI.id,
 				expense:_zayavExpenseGet()
 			};
-			if(send.expense == 'sum_error')
+			if(send.expense == 'sum_error') {
 				dialog.err('Некорректно указана сумма');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-//						zayavMoneyUpdate();
-						dialog.close();
-						_msg('Сохранено');
-						$('#_zayav-expense').html(res.html);
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			if(send.expense == 'file_error') {
+				dialog.err('Прикрепите файл или укажите описание');
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Сохранено');
+					$('#_zayav-expense').html(res.html);
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	},
 	_zayavExpense = function() {//процесс редактирования расходов по заявке
@@ -649,13 +652,21 @@ var _zayavSpisok = function(v, id) {
 			}
 
 			if(ZAYAV_EXPENSE_ATTACH[cat_id]) {
-				dop.html('<input type="hidden" id="' + num + 'attach" value="' + _num(val) + '" />');
+				var html = '<table class="tab-attach">' +
+						'<tr><td><input type="text" id="' + num + 'attach-txt" class="attach-txt" value="' + $.trim(val) + '" />' +
+							'<td><input type="hidden" id="' + num + 'attach" value="' + _num(val) + '" />' +
+					'</table>';
+				dop.html(html);
 				$('#' + num + 'attach')._attach({
 					zayav_id:ZI.id,
-					func:function() {
+					func:function(v) {
+						$('#' + num + 'attach-txt')[v ? 'hide' : 'show']().val('');
 						sum.focus();
 					}
 				});
+				if(ATTACH[val])
+					$('#' + num + 'attach-txt').hide();
+
 				sum.focus();
 			}
 		}
@@ -680,8 +691,16 @@ var _zayavSpisok = function(v, id) {
 				dop = $('#' + num + 'worker').val();
 			else if(ZAYAV_EXPENSE_ZP[cat_id])
 				dop = $('#' + num + 'zp').val();
-			else if(ZAYAV_EXPENSE_ATTACH[cat_id])
+			else if(ZAYAV_EXPENSE_ATTACH[cat_id]) {
 				dop = $('#' + num + 'attach').val();
+				if(!_num(dop)) {
+					var txt = $('#' + num + 'attach-txt').val();
+					if(!txt)
+						return 'file_error';
+					dop = '.' + txt;
+				}
+
+			}
 
 			send.push(id + ':' +
 					  cat_id + ':' +

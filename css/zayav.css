@@ -303,8 +303,9 @@
 /* редактирование списка расходов в заявке */
 #zee-tab{border-spacing:10px}
 #zee-tab .label{width:100px;text-align:right}
-#zee-spisok .zee-tab{margin-bottom:6px}
+#zee-spisok .zee-tab{margin-bottom:8px}
 #zee-spisok .zee-txt{width:232px;margin-right:5px}
 #zee-spisok ._select{margin-right:5px}
 #zee-spisok .zee-sum{width:40px;margin-right:3px;text-align:right}
-#zee-spisok ._attach{width:237px;margin:0 4px}
+#zee-spisok .tab-attach{width:245px}
+#zee-spisok .attach-txt{width:130px}

@@ -723,8 +723,9 @@ switch(@$_POST['op']) {
 	case 'zayav_expense_edit'://изменение расходов по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		$expense = _txt($_POST['expense']);
-		if(!_zayav_expense_test($expense))
+
+		$expense = _zayav_expense_test($_POST['expense']);
+		if($expense === false)
 			jsonError();
 
 		$sql = "SELECT *
@@ -755,12 +756,12 @@ switch(@$_POST['op']) {
 			if($ze['zp'])
 				$dop = $r['zp_id'];
 			if($ze['attach'])
-				$dop = $r['attach_id'];
+				$dop = $r['attach_id'] ? $r['attach_id'] : '.'.$r['txt'];
 			$arr[] =
 				$r['id'].':'.
 				$r['category_id'].':'.
 				$dop.':'.
-				$r['sum'];
+				_cena($r['sum']);
 		}
 
 		$old = _zayav_expense_array(implode(',', $arr));
@@ -783,6 +784,11 @@ switch(@$_POST['op']) {
 
 			foreach($new as $r) {
 				$ze = _zayavExpense($r[1], 'all');
+				$txt = '';
+				if($ze['txt'])
+					$txt = _txt($r[2]);
+				if($ze['attach'] && !preg_match(REGEXP_NUMERIC, $r[2]))
+					$txt = _txt(substr($r[2], 1));
 				$sql = "INSERT INTO `_zayav_expense` (
 							`id`,
 							`app_id`,
@@ -803,10 +809,10 @@ switch(@$_POST['op']) {
 							".WS_ID.",
 							".$zayav_id.",
 							".$r[1].",
-							'".($ze['txt'] ? addslashes($r[2]) : '')."',
-							".($ze['worker'] ? intval($r[2]) : 0).",
-							".($ze['zp'] ? intval($r[2]) : 0).",
-							".($ze['attach'] ? intval($r[2]) : 0).",
+							'".addslashes($txt)."',
+							".($ze['worker'] ? _num($r[2]) : 0).",
+							".($ze['zp'] ? _num($r[2]) : 0).",
+							".($ze['attach'] ? _num($r[2]) : 0).",
 							".$r[3].",
 							".intval(strftime('%m')).",
 							".strftime('%Y').",

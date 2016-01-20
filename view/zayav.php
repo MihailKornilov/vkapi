@@ -164,6 +164,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `status`=1
+			  AND !`deleted`
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -178,6 +179,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `status`=2
+			  AND !`deleted`
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -192,6 +194,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `status`=3
+			  AND !`deleted`
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -1528,22 +1531,40 @@ function _zayav_expense_spisok($zayav_id) {//вставка расходов по заявке в информ
 		_zayav_expense_html($arr, $accrual_sum);
 }
 function _zayav_expense_test($v) {// Проверка корректности данных расходов заявки при внесении в базу
+	$v = trim($v);
 	if(empty($v))
-		return true;
+		return $v;
+
+	$send = array();
 
 	foreach(explode(',', $v) as $r) {
+		$u = array();
 		$ids = explode(':', $r);
 		if($ids[0] != 0 && !_num($ids[0]))//id расхода
 			return false;
+		$u[] = _num($ids[0]);
+
 		if(!$cat_id = _num($ids[1]))//категория
 			return false;
+		$u[] = $cat_id;
+
 		$ze = _zayavExpense($cat_id, 'all');
-		if(($ze['worker'] || $ze['zp'] || $ze['attach']) && !_num($ids[2]))
+		if($ze['zp'] && !_num($ids[2]))
 			return false;
+		if($ze['attach'] && !preg_match(REGEXP_NUMERIC, $ids[2])) {
+			$txt = substr($ids[2], 1);
+			if(empty($txt))
+				return false;
+		}
+		$u[] = $ids[2];
+
 		if(!_cena($ids[3]) && $ids[3] != 0)
 			return false;
+		$u[] = _cena($ids[3]);
+
+		$send[] = implode(':', $u);
 	}
-	return true;
+	return implode(',', $send);
 }
 function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) {//вывод таблицы расходов по заявке
 	$expense_sum = 0;
@@ -1606,9 +1627,9 @@ function _zayav_expense_json($arr) {//расходы по заявке в формате json
 			$r['id'].','.
 			$r['category_id'].','.
 			($ze['txt'] ? '"'.trim($r['txt']).'"' : '').
-			($ze['worker'] ? intval($r['worker_id']) : '').
-			($ze['zp'] ? intval($r['zp_id']) : '').
-			($ze['attach'] ? intval($r['attach_id']) : '').','.
+			($ze['worker'] ? _num($r['worker_id']) : '').
+			($ze['zp'] ? _num($r['zp_id']) : '').
+			($ze['attach'] ? (_num($r['attach_id']) ? _num($r['attach_id']) : '"'.trim($r['txt']).' "') : '').','.
 			round($r['sum'], 2).
 		']';
 	}
@@ -1621,9 +1642,9 @@ function _zayav_expense_array($v) {//расходы по заявке в формате array
 	foreach(explode(',', $v) as $r) {
 		$ex = explode(':', $r);
 		$array[] = array(
-			intval($ex[0]),
-			intval($ex[1]),
-			trim($ex[2]),
+			_num($ex[0]),
+			_num($ex[1]),
+			$ex[2],
 			_cena($ex[3])
 		);
 	}

@@ -1443,6 +1443,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			func:function() {
 				t.val(0)._dropdown('remove');
 				attach.removeClass('ex');
+				o.func(0);
 			}
 		});
 	}
