@@ -29,6 +29,9 @@ switch(@$_POST['op']) {
 
 		_zayavPoleUseInfoConst(0, $type_id);
 
+		if(ZAYAV_INFO_NAME && !$name)
+			jsonError();
+
 		if(ZAYAV_INFO_DEVICE) {
 			if(!$device_id)
 				jsonError();
@@ -166,6 +169,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		_zayavPoleUseInfoConst(0, $z['type_id']);
+
+		if(ZAYAV_INFO_NAME && !$name)
+			jsonError();
 
 		if(ZAYAV_INFO_DEVICE) {
 			if(!$device_id)
@@ -896,11 +902,12 @@ function _zayavProductUpdate($zayav_id, $p) {//внесение|обновление изделия для к
 	if($product_sub_id)
 		$product_name .= ' '._productSub($product_sub_id);
 
-	$sql = "UPDATE `_zayav`
-			SET `name`='".addslashes($product_name)."'
-			WHERE `id`=".$zayav_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
-
+	if(!ZAYAV_INFO_NAME) {
+		$sql = "UPDATE `_zayav`
+				SET `name`='".addslashes($product_name)."'
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+	}
 	return array($product_id, $product_sub_id, $count);
 }
 function _zayavProductTxt($r) {//преобразование id изделий в текст
