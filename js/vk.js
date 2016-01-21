@@ -1674,6 +1674,9 @@ $.fn._select = function(o) {
 		id = t.attr('id'),
 		val = t.val() || 0;
 
+	if(!id)
+		return;
+
 	switch(typeof o) {
 		default:
 		case 'number':

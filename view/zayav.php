@@ -331,7 +331,8 @@ function _zayav_list($v=array()) {
 	$v = $data['filter'];
 
 	$status = _zayavStatus();
-	$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
+	if(ZAYAV_INFO_SROK)
+		$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
 
 	return
 	'<div id="_zayav">'.

@@ -81,9 +81,9 @@ var _zayavSpisok = function(v, id) {
 						'<td><input type="hidden" id="client_id" value="' + o.client_id + '" />' +
 							'<b>' + o.client_name + '</b>' +
 					'<tr' + (ZAYAV_INFO_NAME ?    '' : ' class="dn"') + '><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr' + (ZAYAV_INFO_COUNT ?   '' : ' class="dn"') + '><td class="label">Количество:<td><input type="text" class="money" id="count" value="' + o.count + '" /> шт.' +
 					'<tr' + (ZAYAV_INFO_PRODUCT ? '' : ' class="dn"') + '><td class="label topi">Изделие:<td id="product">' +
+					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '>' +
 						'<td class="label">Адрес:<td>' +
 							'<input type="text" id="adres" value="' + o.adres + '" />' +
