@@ -136,7 +136,6 @@
 	margin:20px 10px 0 0;
 }
 
-
 #client-info .right{width:140px;height:auto}
 #client-info #dopLinks{border-top:#dae1e8 solid 1px}
 #client-info #dopLinks a{font-weight:normal}
@@ -146,6 +145,7 @@
 #client-info .ci-right{display:none}
 
 #client-info #zayav-spisok ._next{margin:6px 8px 0}
+#zayav-type-id_radio{margin-top:10px}
 #client-info #accrual-spisok{margin:10px}
 #client-info #accrual-spisok ._spisok{margin-top:5px}
 #client-info #income-spisok{margin:10px}

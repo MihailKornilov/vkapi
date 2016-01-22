@@ -4,7 +4,7 @@ function _history($v=array()) {
 		return _history_insert($v);
 
 	return _history_spisok($v);
-}//_history()
+}
 
 function _history_insert($v=array()) {//внесение истории действий
 	$client_id = _num(@$v['client_id']);
@@ -62,7 +62,7 @@ function _history_insert($v=array()) {//внесение истории действий
 			)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 	return true;
-}//_history_insert()
+}
 function _historyFilter($v) {
 	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -74,7 +74,7 @@ function _historyFilter($v) {
 		'attach_id' => _num(@$v['attach_id']),
 		'schet_id' => _num(@$v['schet_id'])
 	);
-}//_historyFilter()
+}
 function _history_spisok($v=array()) {
 	$filter = _historyFilter($v);
 	$filter = _filterJs('HISTORY', $filter);
@@ -177,7 +177,7 @@ function _history_spisok($v=array()) {
 
 	$send['spisok'] .= _next($filter + array('all'=>$all));
 	return $send;
-}//_history_spisok()
+}
 function _history_types($history) {//перевод type_id в текст
 	$types = array();
 	foreach($history as $r)
@@ -235,7 +235,7 @@ function _history_types($history) {//перевод type_id в текст
 	}
 
 	return $history;
-}//_history_types()
+}
 
 
 function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элемент таблицы, если было изменение при редактировании данных
@@ -248,14 +248,18 @@ function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элеме
 		return '<tr>'.$name.'<td>'.$old.'<td>»<td>'.$new;
 	}
 	return '';
-}//_historyChange()
+}
 
-function _history_right() {//вывод условий поиска для истории действий
+function _history_right($v=array()) {//вывод условий поиска для истории действий
+	$v = array(
+		'client_id' => _num(@$v['client_id'])
+	);
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `_history`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
-			  AND `viewer_id_add`";
+			  AND `viewer_id_add`".
+			  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
 	$worker = query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
 
 	$sql = "SELECT
@@ -270,6 +274,7 @@ function _history_right() {//вывод условий поиска для истории действий
 			  AND `cat`.`id`=`ids`.`category_id`
 			  AND `h`.`type_id`=`ids`.`type_id`
 			  AND `cat`.`js_use`
+			  ".($v['client_id'] ? " AND `h`.`client_id`=".$v['client_id'] : '')."
 			GROUP BY `cat`.`id`
 			ORDER BY `cat`.`sort`";
 	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
@@ -285,5 +290,5 @@ function _history_right() {//вывод условий поиска для истории действий
 				'HIST_CAT='.$category.';'.
 			'_historyRight();'.
 		'</script>';
-}//_history_right()
+}
 

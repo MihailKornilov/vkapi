@@ -10,11 +10,11 @@ function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 		case 'info': return _clientInfo();
 		default: return _client(_hashFilter('client'));
 	}
-}//_clientCase()
+}
 
 function _client($v) {
 	return client_list($v);
-}//_client()
+}
 function client_list($v) {// страница со списком клиентов
 	$data = client_data($v);
 	$v = $data['filter'];
@@ -51,7 +51,7 @@ function client_list($v) {// страница со списком клиентов
 						'</div>'.
 			'</table>'.
 		'</div>';
-}//client_list()
+}
 function clientFilter($v) {
 	$default = array(
 		'limit' => 20,
@@ -78,7 +78,7 @@ function clientFilter($v) {
 			break;
 		}
 	return $filter;
-}//clientFilter()
+}
 function client_data($v=array()) {// список клиентов
 	$filter = clientFilter($v);
 	$filter = _filterJs('CLIENT', $filter);
@@ -289,7 +289,7 @@ function client_data($v=array()) {// список клиентов
 		));
 
 	return $send;
-}//client_data()
+}
 
 
 
@@ -304,7 +304,7 @@ function _clientCategory($i=0, $menu=0) {//Категории клиентов
 		2 => 'Организация'
 	);
 	return $i ? $arr[$i] : $arr;
-}//_clientCategory()
+}
 /*
 function _clientCategory($i=0, $menu=0) {//Категории клиентов
 	$arr = array(
@@ -316,7 +316,7 @@ function _clientCategory($i=0, $menu=0) {//Категории клиентов
 		6 => 'ЗАО'
 	);
 	return $i ? $arr[$i] : $arr;
-}//_clientCategory()
+}
 */
 function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиенте
 	$prefix = 'CLIENT_'.$client_id.'_';
@@ -394,7 +394,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 	);
 
 	return $i ? $send[$i] : $send;
-}//_clientVal()
+}
 function _clientValToList($arr) {//вставка данных клиентов в массив по client_id
 	$ids = array();
 	$arrIds = array();
@@ -455,7 +455,7 @@ function _clientValToList($arr) {//вставка данных клиентов в массив по client_id
 		}
 	}
 	return $arr;
-}//_clientValToList()
+}
 function _findMatch($reg, $v, $empty=0) {//выделение при быстром поиске по конкретному регулярному выражению
 	//$empty - возвращать пустое значение, если нет совпадения
 	if(empty($reg))
@@ -464,13 +464,13 @@ function _findMatch($reg, $v, $empty=0) {//выделение при быстром поиске по конкр
 	$v = utf8($v);
 	$v = preg_match($reg, $v) ? preg_replace($reg, '<em>\\1</em>', $v, 1) : ($empty ? '': $v);
 	return win1251($v);
-}//_findMatch()
+}
 function _regFilter($v) {//проверка регулярного выражения на недопустимые символы
 	$reg = '/(\[)/'; // скобка [
 	if(preg_match($reg, $v))
 		return '';
 	return '/('.$v.')/iu';
-}//_regFilter()
+}
 function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром поиске на русском и английском языках
 	$engRus = _engRusChar($find);
 	$reg = _regFilter($find);
@@ -485,7 +485,7 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 		return $v;
 
 	return $send;
-}//_findRegular()
+}
 
 function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клиенте
 	$sql = "SELECT *
@@ -495,53 +495,63 @@ function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клие
 			  ($withDeleted ? '' : " AND !`deleted`")."
 			  AND `id`=".$client_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
-}//_clientQuery()
+}
 function _clientDopLink($name, $arr) {//меню с дополнительными списками (заявки, начисления, платежи, история...)
 	return
 		$arr['all'] ?
 			'<a class="link">'.$name.' <b class="count">'.$arr['all'].'</b></a>'
 			: '';
-}//_clientDopLink()
+}
 function _clientDopContent($name, $arr) {//содержание дополнительных списоков (начисления, платежи, история...)
 	return
 		$arr['all'] ?
 			'<div class="ci-cont" id="'.$name.'-spisok">'.$arr['spisok'].'</div>'
 			: '';
-}//_clientDopContent()
-/*
-function _clientDopContentZayav($name, $arr, $arr2) {//содержание дополнительных списков (заявки)
-	$sp2dn = !$arr['all'] && $arr2['all'] ? '' : ' class="dn"';
-	$sp1dn = $arr['all'] || $sp2dn ? '' : ' class="dn"';
-	if(!$arr2['all']) //если заявок на оборудование нет, то сразу выводятся заявки с картриджами
-		$arr2 = $arr;
-	$arr['all'] += $arr2['all'];
-	return
-		$arr['all'] ?
-			'<div class="ci-cont" id="'.$name.'-spisok">'.
-				'<div id="spisok1"'.$sp1dn.'>'.$arr['spisok'].'</div>'.
-				'<div id="spisok2"'.$sp2dn.'>'.$arr2['spisok'].'</div>'.
-			'</div>'
-			: '';
-}//_clientDopContentZayav()
-*/
+}
 function _clientDopRight($name, $arr, $filterContent) {//правая сторона (условия поиска) для дополнительных списков (заявки, начисления, платежи, история...)
 	return
 		$arr['all'] ?
 			'<div class="ci-right" id="'.$name.'-right">'.$filterContent.'</div>'
 			: '';
-}//_clientDopRight()
-function _clientInfoZayavRight($zayav, $cartridge) {
-	if(!$zayav['all'] || !$cartridge['all'])
+}
+function _clientZayavTypeId($client_id) {//получение первого id вида заявки клиента
+	$sql = "SELECT DISTINCT `type_id`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			   AND !`deleted`
+			  AND `client_id`=".$client_id."
+			ORDER BY `type_id`
+			LIMIT 1";
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _clientInfoZayavCount($client_id) {//общее количество заявок всех видов у клиента
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$client_id;
+	$send['all'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return $send;
+}
+function _clientInfoZayavRight($client_id) {
+	$sql = "SELECT DISTINCT `type_id`,1
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			   AND !`deleted`
+			  AND `client_id`=".$client_id."
+			ORDER BY `type_id`";
+	$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+
+	if(count($arr) < 2)
 		return '';
 
-	$list = array(
-		1 => 'Оборудование<em>'.$zayav['all'].'</em>',
-		2 => 'Картриджи<em>'.$cartridge['all'].'</em>'
-	);
 	return
-	'<div class="f-label">Вид заявок</div>'.
-	_radio('zayav-type', $list, 1, 1);
-}//_clientInfoZayavRight()
+	'<div class="f-label">Категория заявок</div>'.
+	'<input type="hidden" id="zayav-type-id" value="'.key($arr).'" />';
+}
 function _clientInfo() {//вывод информации о клиенте
 	if(!$client_id = _num(@$_GET['id']))
 		return _err('Страницы не существует');
@@ -559,7 +569,11 @@ function _clientInfo() {//вывод информации о клиенте
 
 	define('ORG', $c['category_id'] > 1);
 
+	if(!$type_id = _clientZayavTypeId($client_id))
+		$type_id = _zayavTypeId();
+
 	$zayav = _zayav_spisok(array(
+		'type_id' => $type_id,
 		'client_id' => $client_id,
 		'limit' => 10
 	));
@@ -569,28 +583,6 @@ function _clientInfo() {//вывод информации о клиенте
 	$remind = _remind_spisok(array('client_id'=>$client_id));
 	$hist = _history(array('client_id'=>$client_id,'limit'=>20));
 
-	//id сотрудников, которые уже привязаны к клиентам
-	$sql = "SELECT `worker_id`
-			FROM `_client`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `worker_id`
-			  AND !`deleted`
-			  AND `id`!=".$client_id;
-	$cWorkersIds = query_ids($sql, GLOBAL_MYSQL_CONNECT);
-	//список сотрудников для связки с клиентами
-	$sql = "SELECT
-				`viewer_id`,
-				CONCAT(`first_name`,' ',`last_name`)
-	        FROM `_vkuser`
-	        WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-	          AND `worker`
-	          AND `viewer_id` NOT IN (".$cWorkersIds.",982006)";
-	$workers = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
-
-	$type_id = _zayavTypeId();
-
 	return
 		'<script type="text/javascript">'.
 			'var CLIENT={'.
@@ -598,7 +590,7 @@ function _clientInfo() {//вывод информации о клиенте
 				'category_id:'.$c['category_id'].','.
 				'name:"'._clientVal($client_id, 'name').'",'.
 				'worker_id:'.$c['worker_id'].','.
-				'workers:'.$workers.','.
+				'workers:'._clientInfoWorker($client_id).','.
 
 				'person_id:'._clientVal($client_id, 'person_id').','.
 				'fio:"'.addslashes(_clientVal($client_id, 'fio')).'",'.
@@ -619,7 +611,8 @@ function _clientInfo() {//вывод информации о клиенте
 				'person:'._clientInfoPerson($client_id, 'json').','.
 
 				'zayav_type_count:'._zayavTypeCount().','.
-				'zayav_types:'._zayavTypeLink(1).
+				'zayav_types:'._zayavTypeLink(1).','.//виды заявок, используемые в приложении (для внесения новой заявки)
+				'zayav_types_client:'._zayavTypeLink(1, $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
 			'},'.
 			_zayavPoleUseInfoConst(1, $type_id).
 			'ZAYAV_TYPE_ID='.$type_id.';'.
@@ -648,7 +641,7 @@ function _clientInfo() {//вывод информации о клиенте
 			'</table>'.
 
 			'<div id="dopLinks">'.
-				_clientDopLink('Заявки', $zayav).
+				_clientDopLink('Заявки', _clientInfoZayavCount($client_id)).
 				_clientDopLink('Начисления', $accrual).
 				_clientDopLink('Платежи', $income).
 				_clientDopLink('Напоминания', $remind).
@@ -663,17 +656,16 @@ function _clientInfo() {//вывод информации о клиенте
 						_clientDopContent('remind', $remind).
 						_clientDopContent('history', $hist).
 					'<td class="right">'.
-					//	_clientDopRight('zayav', array('all' => $zayav['all'] + $cartridge['all']), _clientInfoZayavRight($zayav, $cartridge)).
-						_clientDopRight('accrual', $zayav, '').
+						_clientDopRight('zayav', $zayav, _clientInfoZayavRight($client_id)).
 						_clientDopRight('accrual', $accrual, '').
 						_clientDopRight('income', $income, '').
 						_clientDopRight('remind', $remind, '').
-						_clientDopRight('history', $hist, _history_right()).
+						_clientDopRight('history', $hist, _history_right(array('client_id'=>$client_id))).
 				'</div>'.
 			'</table>'.
 
 		'</div>';
-}//_clientInfo()
+}
 function _clientInfoBalans($r) {//отображение текущего баланса клиента
 	return
 		'<a style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
@@ -681,7 +673,7 @@ function _clientInfoBalans($r) {//отображение текущего баланса клиента
 		  ' class="ci-balans _balans-show'._tooltip('Баланс', -19).
 			round($r['balans'], 2).
 		'</a>';
-}//_clientInfoBalans()
+}
 function _clientInfoContent($r) {//основная информация о клиенте
 	return
 		'<div id="ci-name">'._clientVal($r['id'], 'name').'</div>'.
@@ -693,7 +685,7 @@ function _clientInfoContent($r) {//основная информация о клиенте
 			(ORG && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
 			(ORG && $r['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$r['org_kpp'] : '').
 		'</table>';
-}//_clientInfoContent()
+}
 function _clientInfoPerson($client_id, $type='html') {// формирование списка доверенных лиц
 	$sql = "SELECT * FROM `_client_person` WHERE `client_id`=".$client_id." ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -754,7 +746,7 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 		case 'json': return '{'.implode(',', $json).'}';
 		case 'array': return $array;
 	}
-}//_clientInfoPerson()
+}
 function _clientInfoPasp($client_id) {//паспортные данные
 	$r = _clientVal($client_id);
 
@@ -768,7 +760,28 @@ function _clientInfoPasp($client_id) {//паспортные данные
 			'<tr><td class="label">Прописка:<td>'.$r['pasp_adres'].
 			'<tr><td class="label">Выдан:<td>'.$r['pasp_ovd'].', '.$r['pasp_data'].
 		'</table>';
-}//_clientInfoPasp()
+}
+function _clientInfoWorker($client_id) {//список сотрудников для связки с клиентами
+	//id сотрудников, которые уже привязаны к клиентам
+	$sql = "SELECT `worker_id`
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`
+			  AND !`deleted`
+			  AND `id`!=".$client_id;
+	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT
+				`viewer_id`,
+				CONCAT(`first_name`,' ',`last_name`)
+	        FROM `_vkuser`
+	        WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+	          AND `worker`
+	          AND `viewer_id` NOT IN (".$ids.",982006)";
+	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+}
 
 function _clientBalansUpdate($client_id) {//обновление баланса клиента
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -805,7 +818,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	return $balans;
-}//_clientBalansUpdate()
+}
 
 
 

@@ -1,5 +1,8 @@
 <?php
 /*
+
+//[a-zA-Z_]*\(\)$
+
 CREATE TABLE IF NOT EXISTS `pagehelp` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),

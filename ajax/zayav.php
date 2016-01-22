@@ -309,7 +309,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zayav_spisok':
-		$_POST['find'] = win1251($_POST['find']);
+		$_POST['find'] = win1251(@$_POST['find']);
 		$data = _zayav_spisok($_POST);
 		if($data['filter']['page'] == 1)
 			$send['all'] = utf8($data['result']);

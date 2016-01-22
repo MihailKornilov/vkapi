@@ -325,6 +325,17 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 				$('.left').html(res.spisok);
 			}
 		}, 'json');
+	},
+	_clientZayavSpisok = function(v, id) {
+		var send = {
+			op:'zayav_spisok',
+			type_id:v,
+			client_id:CLIENT.id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				$('#zayav-spisok').html(res.spisok);
+		}, 'json');
 	};
 
 $.fn.clientSel = function(o) {
@@ -532,9 +543,11 @@ $(document)
 					}
 				});
 			});
-			$('#zayav-type')._radio(function(v) {
-				$('#spisok1')[(v == 1 ? 'remove' : 'add') + 'Class']('dn');
-				$('#spisok2')[(v == 2 ? 'remove' : 'add') + 'Class']('dn');
+			$('#zayav-type-id')._radio({
+				light:1,
+				right:0,
+				spisok:_toSpisok(CLIENT.zayav_types_client),
+				func:_clientZayavSpisok
 			});
 		}
 	});

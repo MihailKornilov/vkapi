@@ -342,16 +342,39 @@ function _zayavFilter($v) {
 
 	return $filter;
 }
-function _zayavTypeLink($js=0) {//меню списка видов заявок
+function _zayavTypeLink($js=0, $client_id=0) {//меню списка видов заявок
+	$cond = "`app_id`=".APP_ID;
+
+	$zayavCount = array();
+	if($client_id) {//учитывать только виды заявок, которые вносились клиенту (для информации о клиенте)
+		$sql = "SELECT
+					DISTINCT `type_id`,
+					COUNT(`id`)
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `client_id`=".$client_id."
+				GROUP BY `type_id`
+				ORDER BY `type_id`";
+		$zayavCount = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$cond .= " AND `id` IN (".implode(',', array_keys($zayavCount)).")";
+	}
+
 	$sql = "SELECT
 				`id`,
 				`name`
 			FROM `_zayav_setup_type`
-			WHERE `app_id`=".APP_ID."
+			WHERE ".$cond."
 			ORDER BY `id`";
 
-	if($js)
-		return query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+	if($js) {
+		$ass = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		if($client_id)
+			foreach($ass as $i => $k)
+				$ass[$i] .= '<em>'.$zayavCount[$i].'</em>';
+		return _assJson($ass);
+	}
 
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
