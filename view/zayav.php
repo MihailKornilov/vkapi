@@ -413,7 +413,7 @@ function _zayav_list($v=array()) {
 					'<div class="findHead">Порядок</div>'.
 					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
 					_check('desc', 'Обратный порядок', $v['desc']).
-					'<div class="condLost'.(!empty($v['find']) ? ' hide' : '').'">'.
+					'<div class="condLost'.(!empty($v['find']) ? ' dn' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
 						_rightLink('status', $status, $v['status']).
 

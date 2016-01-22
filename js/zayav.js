@@ -2,7 +2,7 @@ var _zayavSpisok = function(v, id) {
 		ZAYAV.op = 'zayav' + ZAYAV.type_id + '_spisok';
 		_filterSpisok(ZAYAV, v, id);
 		ZAYAV.op = 'zayav_spisok';
-		$('.condLost')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('hide');
+		$('.condLost')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('dn');
 		$('#deleted-only-div')[(ZAYAV.deleted ? 'remove' : 'add') + 'Class']('dn');
 		$.post(AJAX_MAIN, ZAYAV, function(res) {
 			if(res.success) {
