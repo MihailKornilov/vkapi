@@ -317,6 +317,14 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'zayav_type_js'://получение констант для js конкретного типа заявок
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+
+		$send['js'] = _zayavTypeConstArr($type_id);
+
+		jsonSuccess($send);
+		break;
 	case 'zayav_status':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

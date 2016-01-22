@@ -36,6 +36,31 @@ function _zayavPoleUseInfoConst($js=false, $type_id=0) {//формирование констант 
 
 	return true;
 }
+function _zayavTypeConstArr($type_id) {//формирование констант для полей заявки
+	$sql = "SELECT
+				`const`,
+				0 `use_info`
+			FROM `_zayav_setup`
+			ORDER BY `id`";
+	if(!$spisok = query_ass($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$sql = "SELECT
+				`s`.`const`
+			FROM
+				`_zayav_setup_use` `u`,
+				`_zayav_setup` `s`
+			WHERE `u`.`app_id`=".APP_ID."
+			  AND `u`.`pole_id`=`s`.`id`
+			  AND `u`.`type_id`=".$type_id;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['const']] = 1;
+
+	$spisok['ZAYAV_TYPE_ID'] = $type_id;
+
+	return $spisok;
+}
 
 function _zayavStatus($id=false, $i='name') {
 	$name = array(
@@ -210,7 +235,7 @@ function _zayavStatusChange($zayav_id, $status) {
 }
 
 
-function _zayavTypeId($type_id=0) {//получение текущего type_id pзаявок
+function _zayavTypeId($type_id=0) {//получение текущего type_id заявок
 	$sql = "SELECT *
 			FROM `_zayav_setup_type`
 			WHERE `app_id`=".APP_ID."
@@ -245,6 +270,17 @@ function _zayavTypeId($type_id=0) {//получение текущего type_id pзаявок
 
 	reset($spisok);
 	return key($spisok);
+}
+function _zayavTypeCount() {//получение количества видов заявок (для вывода списка видов из информации о клиенте)
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav_setup_type`
+			WHERE `app_id`=".APP_ID;
+	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	if(!SERVICE_CARTRIDGE)
+		$c--;
+
+	return $c;
 }
 function _zayavFilter($v) {
 	$default = array(
@@ -306,14 +342,20 @@ function _zayavFilter($v) {
 
 	return $filter;
 }
-function _zayavTypeLink() {//меню списка видов заявок
-	$sql = "SELECT *
+function _zayavTypeLink($js=0) {//меню списка видов заявок
+	$sql = "SELECT
+				`id`,
+				`name`
 			FROM `_zayav_setup_type`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
+
+	if($js)
+		return query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
-	if(count($spisok) < 2 || !SERVIVE_CARTRIDGE)
+	if(count($spisok) < 2 || !SERVICE_CARTRIDGE)
 		return '';
 
 	$id = _zayavTypeId();

@@ -43,6 +43,47 @@ var _zayavSpisok = function(v, id) {
 			func:_zayavSpisok
 		});
 	},
+	_zayavAddMenu = function() {
+		var sp = '';
+		for(var i in CLIENT.zayav_types)
+			sp +=   '<div class="u" val="' + i + '">' +
+						'<span>' + CLIENT.zayav_types[i] + '</span>' +
+					'</div>';
+
+		var html = '<div id="_client-zayav-add-tab">' +
+						'<div class="_info">Выберите категорию новой заявки:</div>' +
+						sp +
+					'</div>',
+			dialog = _dialog({
+				top:30,
+				width:300,
+				padding:20,
+				head:'Внесение новой заявки',
+				content:html,
+				butSubmit:''
+			});
+
+		$('#_client-zayav-add-tab .u').click(function() {
+			var t = $(this);
+			if(t.parent().find('._busy').length)
+				return;
+			t.addClass('_busy');
+			var send = {
+				op:'zayav_type_js',
+				type_id:_num(t.attr('val'))
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				t.removeClass('_busy');
+				if(res.success) {
+					dialog.close();
+					for(var i in res.js)
+						window[i] = res.js[i];
+					_zayavEdit();
+				}
+			}, 'json');
+		});
+	},
 	_zayavEdit = function() {
 		var c = $.extend({//если заявка вносится из клиента, то получение данных о клиенте
 				id:0,
@@ -214,12 +255,7 @@ var _zayavSpisok = function(v, id) {
 				dialog.err('Не выбран клиент');
 				return;
 			}
-/*
-			if(ZAYAV_INFO_NAME && !send.name) {
-				dialog.err('Укажите название заявки');
-				return;
-			}
-*/
+
 			if(ZAYAV_INFO_DEVICE) {
 				if(!send.device_id) {
 					dialog.err('Не выбрано устройство');
@@ -809,6 +845,7 @@ $(document)
 		$('#noschet')._check(0);		ZAYAV.noschet = 0;
 		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
 		$('#product_id')._select(0);	ZAYAV.product_id = 0;
+										ZAYAV.product_sub_id = 0;
 		_zayavProductSubFilter(0);
 
 		$('#zpzakaz')._radio(0);		ZAYAV.zpzakaz = 0;
@@ -844,6 +881,11 @@ $(document)
 			});
 	})
 	.on('click', '#_zayav-add,#_zayav-info #edit', _zayavEdit)
+	.on('click', '#_client-zayav-add', function() {
+		if(CLIENT.zayav_type_count > 1)
+			return _zayavAddMenu();
+		_zayavEdit();
+	})
 
 	.on('click', '#zayav-status-button .status', _zayavStatus)
 

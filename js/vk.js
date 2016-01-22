@@ -369,6 +369,7 @@ var VK_SCROLL = 0,
 		o = $.extend({
 			width:360,
 			top:100,
+			mb:0,      //margin-bottom: отступ снизу от диалога (дл€ календар€ или выпадающих списков)
 			padding:10,//отступ дл€ content
 			head:'head: Ќазвание заголовка',
 			load:0, // ѕоказ процесса ожидани€ загрузки в центре диалога
@@ -429,7 +430,7 @@ var VK_SCROLL = 0,
 				if(h > max)
 					max = h;
 			}
-			var dh = max + VK_SCROLL + 80;
+			var dh = max + VK_SCROLL + 80 + o.mb;
 			if(DIALOG_MAXHEIGHT != dh) {
 				DIALOG_MAXHEIGHT = dh;
 				_fbhs();

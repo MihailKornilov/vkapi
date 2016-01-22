@@ -4,8 +4,8 @@
 	Для устранения конфликтов.
 */
 
-if(!defined('SERVIVE_CARTRIDGE'))
-	define('SERVIVE_CARTRIDGE', 0);
+if(!defined('SERVICE_CARTRIDGE'))
+	define('SERVICE_CARTRIDGE', 0);
 
 if(!function_exists('zayavPlaceCheck')) {
 	function zayavPlaceCheck() {

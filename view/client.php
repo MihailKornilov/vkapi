@@ -616,7 +616,10 @@ function _clientInfo() {//вывод информации о клиенте
 				'org_adres:"'.addslashes($c['org_adres']).'",'.
 				'org_inn:"'.addslashes($c['org_inn']).'",'.
 				'org_kpp:"'.addslashes($c['org_kpp']).'",'.
-				'person:'._clientInfoPerson($client_id, 'json').
+				'person:'._clientInfoPerson($client_id, 'json').','.
+
+				'zayav_type_count:'._zayavTypeCount().','.
+				'zayav_types:'._zayavTypeLink(1).
 			'},'.
 			_zayavPoleUseInfoConst(1, $type_id).
 			'ZAYAV_TYPE_ID='.$type_id.';'.
@@ -636,7 +639,7 @@ function _clientInfo() {//вывод информации о клиенте
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
-							'<a id="_zayav-add" val="client_'.$client_id.'"><b>Новая заявка</b></a>'.
+							'<a id="_client-zayav-add"><b>Новая заявка</b></a>'.
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
 							'<a id="client-edit">Редактировать</a>'.

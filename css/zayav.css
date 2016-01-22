@@ -63,6 +63,24 @@
 }
 */
 
+/* Внесение новой заявки из клиента - список видов заявок */
+#_client-zayav-add-tab .u{
+	border:#e7e7e7 solid 1px;
+	margin:20px 0;
+	padding:20px 10px;
+	text-align:center;
+	cursor:pointer;
+	color:#888;
+	background-color:#f5f5f5;
+}
+#_client-zayav-add-tab .u:hover {
+	border:#dde solid 1px;
+	color:#048;
+	background-color:#eef;
+}
+#_client-zayav-add-tab .u span{font:bold 13px Verdana}
+#_client-zayav-add-tab .u._busy span{visibility:hidden}
+
 
 /* внесение новой заявки */
 #_zayav-add-tab{border-spacing:12px;margin-bottom:30px}

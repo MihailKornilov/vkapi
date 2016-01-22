@@ -24,6 +24,7 @@ var _accrualAdd = function() {
 
 		var dialog = _dialog({
 			top:30,
+			mb:60,
 			width:480,
 			head:'Внесение начисления',
 			padding:0,

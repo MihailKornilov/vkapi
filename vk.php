@@ -799,7 +799,7 @@ function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_row($q))
-		$send[$r[0]] = $r[1];
+		$send[$r[0]] = preg_match(REGEXP_NUMERIC, $r[1]) ? intval($r[1]) : $r[1];
 	return $send;
 }
 function query_arr($sql, $resource_id=MYSQL_CONNECT) {//Массив, где ключами является id
