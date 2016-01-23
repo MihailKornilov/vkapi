@@ -50,7 +50,7 @@ define('LOCAL', DOMAIN != 'nyandoma.ru');
 define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
 if(!defined('CRON'))
-	define('CRON', 0);
+	define('CRON', !empty($_GET['cron']));
 
 $SA[982006] = 1; // Корнилов Михаил
 //$SA[1382858] = 1; // Серёга Ш.
@@ -422,8 +422,12 @@ function _report() {
 	$pages = array(
 		'history' => 'История действий',
 		'remind' => 'Напоминания'.REMIND_ACTIVE.'<div class="img_add _remind-add"></div>',
+		'month' => 'Отчёт за месяц',//todo Evrookna
 		'salary' => 'З/п сотрудников'
 	);
+
+	if(APP_ID != 3978722)//todo Evrookna
+		unset($pages['month']);
 
 	if(!RULE_HISTORY_VIEW) {
 		unset($pages['history']);
@@ -452,6 +456,11 @@ function _report() {
 			$remind = _remind();
 			$left = $remind['spisok'];
 			$right .= $remind['right'];
+			break;
+		case 'month'://todo Evrookna
+			if(APP_ID != 3978722)
+				break;
+			$left = report_month();
 			break;
 		case 'salary':
 			$left = _salary();
@@ -2174,7 +2183,7 @@ function _color($color_id, $color_dop=0) {
 }
 
 function _print_document() {//вывод на печать документов
-	set_time_limit(10);
+	set_time_limit(60);
 	require_once GLOBAL_DIR.'/excel/PHPExcel.php';
 	require_once GLOBAL_DIR.'/word/clsMsDocGenerator.php';
 
@@ -2183,6 +2192,9 @@ function _print_document() {//вывод на печать документов
 			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
 			break;
 		case 'receipt': _incomeReceiptPrint(); break;
+		case 'report_month'://Евроокна
+			require_once DOCUMENT_ROOT.'/view/report_month.php';
+			break;
 		default: die('Документ не найден.');
 	}
 	exit;

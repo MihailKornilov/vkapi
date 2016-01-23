@@ -19,4 +19,10 @@ if(!function_exists('zayavCartridgeSchetDel')) {
 	}
 }
 
+if(!function_exists('_cacheClear')) {
+	function _cacheClear() {
+		return;
+	}
+}
+
 

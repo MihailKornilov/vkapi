@@ -239,7 +239,6 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-//		GvaluesCreate();
 
 		$changes =
 			_historyChange('Èìÿ', $u['viewer_first_name'], $first_name).

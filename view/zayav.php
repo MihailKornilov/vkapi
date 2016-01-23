@@ -780,6 +780,7 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 	foreach($dog as $r) {
 		foreach($arrIds[$r['id']] as $id) {
 			$arr[$id] += array(
+				'dogovor_n' => $r['nomer'],
 				'dogovor_nomer' => '№'.$r['nomer'],
 				'dogovor_data' => _dataDog($r['data_create']).' г.',
 				'dogovor_sum' => _cena($r['sum']),
