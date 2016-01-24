@@ -141,7 +141,10 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 						'№'.$r['nomer'].
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
-				'zayav_dolg' => $dolg ? '<span class="zayav-dolg'._tooltip('Долг по заявке', -45).$dolg.'</span>' : ''
+				'zayav_dolg' => $dolg ? '<span class="zayav-dolg'._tooltip('Долг по заявке', -45).$dolg.'</span>' : '',
+				'zayav_status_day' => $r['status_day'],
+				'zayav_adres' => $r['adres'],
+				'dogovor_id' => $r['dogovor_id']
 			);
 		}
 	}

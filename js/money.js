@@ -895,7 +895,6 @@ var _accrualAdd = function() {
 						'<tr><td class="label r">Сумма:<td><b>' + _checkAll('sum') + '</b> руб.' +
 						'<tr><td class="label r">Месяц:<td>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year +
 					'</table>' +
-					'<h1><a class="salary-list">Предварительный просмотр</a></h1>' +
 				'</div>',
 			dialog = _dialog({
 				width:330,
@@ -1752,6 +1751,10 @@ $(document)
 			op:'expense_del',
 			func:_salarySpisok
 		});
+	})
+	.on('click', '#salary-worker #spisok-list .img_xls', function() {//открытие листа выдачи з/п
+		var v = $(this).attr('val');
+		location.href = URL + '&p=print&d=salary_list&id=' + v;
 	})
 	.on('click', '.salary-list-del', function() {
 		var t = $(this);

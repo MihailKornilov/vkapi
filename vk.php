@@ -1582,7 +1582,8 @@ function _curSunday() { //¬оскресенье в текущей неделе
 
 }
 function _dataDog($v) {//формат даты как дл€ договора
-	$d = explode('-', $v);
+	$ex = explode(' ', $v);
+	$d = explode('-', $ex[0]);
 	return $d[2].'/'.$d[1].'/'.$d[0];
 }
 
@@ -2194,6 +2195,9 @@ function _print_document() {//вывод на печать документов
 		case 'receipt': _incomeReceiptPrint(); break;
 		case 'report_month'://≈вроокна
 			require_once DOCUMENT_ROOT.'/view/report_month.php';
+			break;
+		case 'salary_list':
+			require_once GLOBAL_DIR.'/view/xsl/salary_list.php';
 			break;
 		default: die('ƒокумент не найден.');
 	}
