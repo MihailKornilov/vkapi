@@ -644,6 +644,7 @@ a.add:hover{text-decoration:underline;color:#357}
 ._spisok .dtime div:not(.ttmsg){font-size:10px}
 ._spisok .ddel{color:#c33}
 ._spisok .ed{padding:2px;width:17px;white-space:nowrap}
+._spisok .ch{text-align:center;width:15px}
 ._spisok tr:not(.deleted) .img_rest,
 ._spisok tr.deleted .img_edit,
 ._spisok tr.deleted .img_del

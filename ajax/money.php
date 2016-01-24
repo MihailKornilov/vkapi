@@ -1358,6 +1358,7 @@ switch(@$_POST['op']) {
 
 	case 'salary_spisok':
 		$send['balans'] = salaryWorkerBalans(_num($_POST['id']), 1);
+		$send['list'] = utf8(salary_worker_list($_POST));
 		$send['acc'] = utf8(salary_worker_acc($_POST));
 		$send['zp'] = utf8(salary_worker_zp($_POST));
 		$send['month'] = utf8(salary_month_list($_POST));
@@ -1511,6 +1512,7 @@ switch(@$_POST['op']) {
 				FROM `_salary_accrual`
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
+				  AND !`salary_list_id`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -1592,6 +1594,7 @@ switch(@$_POST['op']) {
 				FROM `_salary_deduct`
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
+				  AND !`salary_list_id`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -1610,6 +1613,185 @@ switch(@$_POST['op']) {
 			'worker_id' => $r['worker_id'],
 			'v1' => _cena($r['sum']),
 			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_list_create':
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+		if(!$mon = _num($_POST['mon']) || $_POST['mon'] > 12)
+			jsonError();
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$ids = _txt($_POST['ids']))
+			jsonError();
+
+		//Формирование списков id начислений
+		$accrual_ids = array();
+		$deduct_ids = array();
+		$expense_ids = array();
+		foreach(explode(',', $ids) as $r) {
+			$i = explode(':', $r);
+			if(!$id = _num($i[1]))
+				jsonError('Некорректный id начисления');
+			switch($i[0]) {
+				case 'accrual': $accrual_ids[] = $id; break;
+				case 'deduct': $deduct_ids[] = $id; break;
+				case 'expense': $expense_ids[] = $id; break;
+				default: jsonError('Неизвестный тип начисления');
+			}
+		}
+		if(!$accrual_ids && !$deduct_ids && !$expense_ids)
+			jsonError('Начисления отсутствуют');
+
+		$accrual_ids = implode(',', $accrual_ids);
+		$deduct_ids  = implode(',', $deduct_ids);
+		$expense_ids = implode(',', $expense_ids);
+
+		$accrual_sum = 0;
+		$deduct_sum = 0;
+		$expense_sum = 0;
+
+		//Проверка, чтобы текущие начисления не были внесены ранее
+		if($accrual_ids) {
+			$sql = "SELECT COUNT(*)
+					FROM `_salary_accrual`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `salary_list_id`
+					  AND `id` IN (".$accrual_ids.")";
+			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError('Некоторые произвольные начисления уже были внесены');
+
+			$sql = "SELECT IFNULL(SUM(`sum`), 0)
+					FROM `_salary_accrual`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `id` IN (".$accrual_ids.")";
+			$accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		}
+		if($deduct_ids) {
+			$sql = "SELECT COUNT(*)
+					FROM `_salary_deduct`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `salary_list_id`
+					  AND `id` IN (".$deduct_ids.")";
+			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError('Некоторые вычеты уже были внесены');
+
+			$sql = "SELECT IFNULL(SUM(`sum`), 0)
+					FROM `_salary_deduct`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `id` IN (".$deduct_ids.")";
+			$deduct_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		}
+		if($expense_ids) {
+			$sql = "SELECT COUNT(*)
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `salary_list_id`
+					  AND `id` IN (".$expense_ids.")";
+			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError('Некоторые начисления расходов по заявке уже были внесены');
+
+			$sql = "SELECT IFNULL(SUM(`sum`), 0)
+					FROM `_zayav_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `id` IN (".$expense_ids.")";
+			$expense_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		//Общая сумма всех начислений
+		$sum = $accrual_sum - $deduct_sum + $expense_sum;
+		
+		//Внесение листа выдачи
+		$sql = "INSERT INTO `_salary_list` (
+					`app_id`,
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`year`,
+					`mon`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$worker_id.",
+					".$sum.",
+					'".$year."',
+					'".$mon."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = query_insert_id('_salary_list', GLOBAL_MYSQL_CONNECT);
+
+		//Привязка листа выдачи к начислениям
+		if($accrual_ids) {
+			$sql = "UPDATE `_salary_accrual`
+					SET `salary_list_id`=".$insert_id."
+					WHERE `id` IN (".$accrual_ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+		if($deduct_ids) {
+			$sql = "UPDATE `_salary_deduct`
+					SET `salary_list_id`=".$insert_id."
+					WHERE `id` IN (".$deduct_ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+		if($expense_ids) {
+			$sql = "UPDATE `_zayav_expense`
+					SET `salary_list_id`=".$insert_id."
+					WHERE `id` IN (".$expense_ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		_history(array(
+			'type_id' => 87,
+			'worker_id' => $worker_id,
+			'v1' => round($sum, 2),
+			'v2' => _monthDef($mon).' '.$year
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_list_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_salary_list`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(TODAY != substr($r['dtime_add'], 0, 10))
+			jsonError();
+
+		$sql = "UPDATE `_salary_accrual` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_salary_deduct` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_zayav_expense` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_salary_list` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 88,
+			'worker_id' => $r['worker_id'],
+			'v1' => round($r['sum'], 2),
+			'v2' => _monthDef($r['mon']).' '.$r['year']
 		));
 
 		jsonSuccess();

@@ -1063,6 +1063,12 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 			'about' => 'Авансовый платёж.'
 		));
 
+		_history(array(
+			'type_id' => 20,
+			'client_id' => $v['client_id'],
+			'zayav_id' => $v['zayav_id'],
+			'dogovor_id' => $v['id']
+		));
 	}
 }
 function _zayavDayFinishChange($zayav_id, $day) {//изменение срока выполнения

@@ -8,7 +8,7 @@ function _salary() {
 			'<div class="headName">Зарплата сотрудников</div>'.
 			'<div id="spisok">'._salary_spisok().'</div>'.
 		'</div>';
-}//_salary()
+}
 function _salary_spisok() {
 	$sql = "SELECT
 				`viewer_id` `id`,
@@ -98,7 +98,7 @@ function _salary_spisok() {
 	$send .= '</table>';
 
 	return $send;
-}//_salary_spisok()
+}
 function _salaryPeriod($v=false) {
 	$arr = array(
 		1 => 'месяц',
@@ -108,7 +108,7 @@ function _salaryPeriod($v=false) {
 	if($v == false)
 		return $arr;
 	return $arr[$v];
-}//_salaryPeriod()
+}
 
 function salary_month_list($v) {
 	$filter = salaryFilter($v);
@@ -181,18 +181,19 @@ function salary_month_list($v) {
 	foreach(_monthDef(0, 1) as $i => $r)
 		$mon[$i] = $r.($acc[$i] || $zp[$i]? '<em>'.$acc[$i].'/'.$zp[$i].'</em>' : '');
 	return _radio('salmon', $mon, $filter['mon'], 1);
-}//salary_month_list()
+}
 function salaryFilter($v) {
 	$v = array(
 		'id' => _num(@$v['id']),
 		'mon' => _num(@$v['mon']) ? intval($v['mon']) : intval(strftime('%m')),
 		'year' => _num(@$v['year']) ? intval($v['year']) : intval(strftime('%Y')),
-		'acc_id' => _num(@$v['acc_id'])
+		'acc_id' => _num(@$v['acc_id']),
+		'acc_show' => _bool(@$v['acc_show']) //показывать сразу список начислений
 	);
 	$v['month'] = _monthDef($v['mon'], 1).' '.$v['year'];
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
 	return $v;
-}//salaryFilter()
+}
 function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение текущего баланса зп сотрудника
 	$start = _viewer($worker_id, 'balans_start');
 
@@ -235,7 +236,7 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 		return '<b style="color:#'.($balans < 0 ? 'A00' : '090').'">'._sumSpace($balans).'</b>';
 
 	return $balans;
-}//salaryWorkerBalans()
+}
 function salaryWorkerRate($worker_id) {//получение ставки сотрудника
 	$u = _viewer($worker_id);
 	$period = '';
@@ -278,11 +279,12 @@ function salary_worker($v) {
 		'<h1>Ставка: <em>'.salaryWorkerRate($filter['id']).'</em></h1>'.
 		salary_worker_client($filter['id']).
 		'<div id="spisok-acc">'.salary_worker_acc($filter).'</div>'.
+		'<div id="spisok-list">'.salary_worker_list($filter).'</div>'.
 		'<div id="spisok-zp">'.salary_worker_zp($filter).'</div>'.
 	'</div>';
-}//salary_worker()
+}
 
-function salary_worker_client($worker_id) {
+function salary_worker_client($worker_id) {//блок связи с клиентом
 	$sql = "SELECT *
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
@@ -311,6 +313,7 @@ function salary_worker_acc($v) {
 	$sql = "SELECT
 				*,
 				'Начисление' `type`,
+				'accrual' `class`,
 				0 `zayav_id`
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
@@ -324,6 +327,7 @@ function salary_worker_acc($v) {
 				*,
 				-`sum` `sum`,
 				'Вычет' `type`,
+				'deduct' `class`,
 				0 `zayav_id`
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
@@ -335,7 +339,8 @@ function salary_worker_acc($v) {
 
 	$sql = "SELECT
 				*,
-				'Начисление' `type`
+				'Начисление' `type`,
+				'expense' `class`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
@@ -355,20 +360,25 @@ function salary_worker_acc($v) {
 	$accSum = 0;
 	$zayavSum = 0;
 	$dSum = 0;
+	$chAllShow = 0;//показывать галочку для выделения всех начислений
 	foreach($spisok as $r) {
-		$about = $r['zayav_id'] ?
+		$show = $filter['acc_id'] == $r['id'] ? ' show' : '';
+		$list = $r['salary_list_id'] ? ' list' : '';
+
+		$about = $r['zayav_id']?
 			$r['zayav_color'].$r['zayav_dolg']
 			:
 			$r['about'];
 
-		$del = $r['zayav_id'] ? '' :
-			_iconDel(array(
-				'id' => $r['id'],
-				'class' => $r['type'] == 'Начисление' ? 'worker-acc-del' : 'worker-deduct-del'
-			));
+		$del = $r['zayav_id'] || $list ? '' :
+				_iconDel(array(
+					'id' => $r['id'],
+					'class' => $r['type'] == 'Начисление' ? 'worker-acc-del' : 'worker-deduct-del'
+				));
 
 		$send .=
-			'<tr val="'.$r['id'].'" class="'.($filter['acc_id'] == $r['id'] ? ' show' : '').'">'.
+			'<tr class="'.$show.$list.'">'.
+				'<td class="ch" val="'.$r['class'].':'.$r['id'].'">'.($list ? '' : _check('ch'.$r['id'])).
 				'<td class="type">'.$r['type'].
 				'<td class="sum">'.round($r['sum'], 2).
 				'<td class="about">'.$about.
@@ -378,13 +388,18 @@ function salary_worker_acc($v) {
 		$accSum += (!$r['zayav_id'] && $r['sum'] > 0 ? $r['sum'] : 0);
 		$zayavSum += ($r['zayav_id'] ? $r['sum'] : 0);
 		$dSum += ($r['sum'] < 0 ? $r['sum'] : 0);
+
+		if(!$list)
+			$chAllShow = 1;
 	}
 
 	$allCount = count($accrual) + count($deduct) + count($zayav);
 	$send =
+		'<h3><b>Начисления и вычеты</b></h3>'.
 		'<h4>'.
 			(!$allCount ?
 				'<div>Записей нет.</div>' :
+				'<a id="salary-acc-show">подробно</a>'.
 				'<div><u>Всего <b>'.$allCount.'</b> запис'._end($allCount, 'ь', 'и', 'ей').'. Общая сумма <b>'._sumSpace($accSum + $zayavSum + $dSum).'</b> руб.</u></div>'
 			).
 			($accSum ? '<div>Начисления: <b>'.count($accrual).'</b> на сумму<b> '._sumSpace($accSum).'</b> руб.</div>' : '').
@@ -392,8 +407,9 @@ function salary_worker_acc($v) {
 			($dSum ? '<div>Вычеты: <b>'.count($deduct).'</b> на сумму<b> '._sumSpace($dSum).'</b> руб.</div>' : '').
 		'</h4>'.
 
-		'<table class="_spisok">'.
+		'<table class="_spisok'.($filter['acc_show'] ? '' : ' dn').'">'.
 			'<tr>'.
+				'<th>'.($chAllShow ? _check('check_all') : '').
 				'<th>Вид'.
 				'<th>Сумма'.
 				'<th>Описание'.
@@ -402,7 +418,39 @@ function salary_worker_acc($v) {
 			$send.
 		'</table>';
 	return $send;
-}//salary_worker_acc()
+}
+function salary_worker_list($v) {
+	$filter = salaryFilter($v);
+
+	$sql = "SELECT *
+			FROM `_salary_list`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`=".$filter['id']."
+			  AND `year`=".$filter['year']."
+			  AND `mon`=".$filter['mon']."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$send =
+		'<h3><b>Листы выдачи з/п</b></h3>'.
+		'<table class="_spisok">'.
+			'<tr><th>Наименование'.
+				'<th>К выдаче'.
+				'<th>Дата создания'.
+				'<th>';
+	$n = 1;
+	foreach($spisok as $r)
+		$send .=
+			'<tr><td class="about">'.
+					'<a class="img_xls" val="'.$r['id'].'">Лист выдачи з/п '.($n++).'</a>'.
+				'<td class="sum">'._cena($r['sum']).
+				'<td class="dtime">'.FullData($r['dtime_add']).
+				'<td class="ed">'._iconDel($r + array('class'=>'salary-list-del'));
+	$send .= '</table>';
+	return $send;
+}
 function salary_worker_zp($v) {
 	$filter = salaryFilter($v);
 
@@ -443,19 +491,4 @@ function salary_worker_zp($v) {
 		'</table>';
 
 	return $send;
-}//salary_worker_zp()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

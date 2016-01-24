@@ -130,6 +130,7 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 		foreach($arrIds[$r['id']] as $id) {
 			$dolg = $r['sum_accrual'] - $r['sum_pay'];
 			$arr[$id] += array(
+				'zayav_name' => $r['name'],
 				'zayav_link' =>
 					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link">'.
 						'<span'.($r['deleted'] ? ' class="deleted"' : '').'>№'.$r['nomer'].'</span>'.
@@ -357,8 +358,8 @@ function _zayavTypeLink($js=0, $client_id=0) {//меню списка видов заявок
 				  AND `client_id`=".$client_id."
 				GROUP BY `type_id`
 				ORDER BY `type_id`";
-		$zayavCount = query_ass($sql, GLOBAL_MYSQL_CONNECT);
-		$cond .= " AND `id` IN (".implode(',', array_keys($zayavCount)).")";
+		if($zayavCount = query_ass($sql, GLOBAL_MYSQL_CONNECT))
+			$cond .= " AND `id` IN (".implode(',', array_keys($zayavCount)).")";
 	}
 
 	$sql = "SELECT
@@ -784,6 +785,7 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 				'dogovor_nomer' => '№'.$r['nomer'],
 				'dogovor_data' => _dataDog($r['data_create']).' г.',
 				'dogovor_sum' => _cena($r['sum']),
+				'dogovor_avans' => _sumSpace(_cena($r['avans'])),
 				'dogovor_line' => '<span class="'._tooltip('Сумма: '._cena($r['sum']).' руб.', -3).
 									'<b>№'.$r['nomer'].'</b>'.
 									' от '._dataDog($r['data_create']).
@@ -1481,12 +1483,25 @@ function _zayavProductValToList($arr) {//вставка данных изделий в массив заявок
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return $arr;
 
-	foreach($spisok as $r)
+	foreach($arr as $r) {
+		$arr[$r['id']]['product'] = '';
+		$arr[$r['id']]['product_report'] = array();
+	}
+
+
+	foreach($spisok as $r) {
 		$arr[$r['zayav_id']]['product'] .= _zayav_product_unit($r);
+		$arr[$r['zayav_id']]['product_report'][] =
+			_product($r['product_id']).
+			($r['product_sub_id'] ? ' '._productSub($r['product_sub_id']) : '').': '.
+			$r['count'].' шт.';
+	}
 
 	foreach($arr as $r)
-		if($r['product'])
+		if($r['product']) {
 			$arr[$r['id']]['product'] = '<table>'.$r['product'].'</table>';
+			$arr[$r['id']]['product_report'] = implode("\n", $r['product_report']);
+		}
 
 	return $arr;
 }

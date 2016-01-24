@@ -206,7 +206,9 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 					$w = _viewerFormat($u);
 					$arr[$id] += array(
 						'worker_name' => $w['viewer_name'],
-						'worker_link' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>'
+						'worker_link' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
+						'worker_setup' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
+						'worker_salary' => '<a href="'.URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>'
 					);
 				}
 		}

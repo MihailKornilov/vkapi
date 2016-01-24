@@ -83,7 +83,7 @@ function _history_spisok($v=array()) {
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID.
-//	   " AND `type_id` IN (42)".//todo удалить
+//	   " AND `type_id` IN (20)".//todo удалить
 	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
@@ -195,11 +195,13 @@ function _history_types($history) {//перевод type_id в текст
 		'dogovor_nomer',
 		'dogovor_data',
 		'dogovor_sum',
+		'dogovor_avans',
 		'attach_link',
 		'schet_link_full',
 		'invoice_name',
 		'worker_name',
 		'worker_link',
+		'worker_salary',
 		'v1',
 		'v2',
 		'v3',

@@ -595,7 +595,9 @@ var VK_SCROLL = 0,
 	_checkAll = function(o, v) {
 		var check = $('._check'),
 			len = check.length,
-			arr = [];
+			arr = [],
+			sum = 0,
+			type = []; //список id с категориями. Пример: accrual:140,deduct:504,expense:21. Размещается в val c классом ch
 		for(var n = 0; n < len; n++) {
 			var eq = check.eq(n),
 				id = _num(eq.attr('id').split('_check')[0].split('ch')[1]);
@@ -604,12 +606,21 @@ var VK_SCROLL = 0,
 			if(o == 'change')
 				$('#ch' + id)._check(v);
 			else
-				if(_num(eq.find('input').val()))
+				if(_num(eq.find('input').val())) {
 					arr.push(id);
+					sum += _parent(eq).find('.sum').html() * 1;
+					type.push(eq.parent().attr('val'));
+				}
 		}
 
 		if(o == 'array')
 			return arr;
+		if(o == 'count')
+			return arr.length;
+		if(o == 'sum')
+			return sum;
+		if(o == 'type')
+			return type.join();
 		return arr.join();
 	};
 

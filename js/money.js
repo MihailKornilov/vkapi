@@ -624,6 +624,7 @@ var _accrualAdd = function() {
 		var send = {
 			op:'salary_spisok',
 			id:SALARY.worker_id,
+			acc_show:$('#spisok-acc ._spisok').hasClass('dn') ? 0 : 1,
 			year:_num($('#year').val()),
 			mon:_num($('#salmon').val())
 		};
@@ -633,6 +634,7 @@ var _accrualAdd = function() {
 				SALARY.year = send.year;
 				$('.headName em').html(MONTH_DEF[send.mon] + ' ' + send.year);
 				$('._balans-show').html(res.balans);
+				$('#spisok-list').html(res.list);
 				$('#spisok-acc').html(res.acc);
 				$('#spisok-zp').html(res.zp);
 				$('#month-list').html(res.month);
@@ -857,6 +859,68 @@ var _accrualAdd = function() {
 						dialog.abort();
 				}, 'json');
 			}
+		}
+	},
+	_salaryWorkerListNoSelect = function() {
+		var html =
+				'<div id="salary-list-tab">' +
+					'<div class="_info">' +
+						'Для создания листа выдачи з/п сначала необходимо выбрать начисления.' +
+					'</div>' +
+				'</div>',
+			dialog = _dialog({
+				padding:30,
+				width:300,
+				head:'Создание листа выдачи з/п',
+				content:html,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			});
+	},
+	_salaryWorkerListCreate = function() {
+		if(!_checkAll())
+			return _salaryWorkerListNoSelect();
+
+		var html =
+				'<div id="salary-list-tab">' +
+					'<div class="_info">' +
+						'<b>Создание листа выдачи з/п</b>' +
+						'После формирования листа выдачи з/п все ' +
+						'выделенные галочками начисления и вычеты станут фиксированными, ' +
+						'то есть их нельзя будет изменить.' +
+					'</div>' +
+					'<table>' +
+						'<tr><td class="label r">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+						'<tr><td class="label r">Выбрано записей:<td><b>' + _checkAll('count') + '</b>' +
+						'<tr><td class="label r">Сумма:<td><b>' + _checkAll('sum') + '</b> руб.' +
+						'<tr><td class="label r">Месяц:<td>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year +
+					'</table>' +
+					'<h1><a class="salary-list">Предварительный просмотр</a></h1>' +
+				'</div>',
+			dialog = _dialog({
+				width:330,
+				head:'Создание листа выдачи з/п',
+				content:html,
+				butSubmit:'Сформировать',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'salary_list_create',
+				worker_id:SALARY.worker_id,
+				ids:_checkAll('type'),
+				mon:SALARY.mon,
+				year:SALARY.year
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					_salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	},
 	_salaryWorkerZpAdd = function() {//внесение зп сотруднику
@@ -1657,6 +1721,13 @@ $(document)
 	.on('mouseenter', '.salary .show', function() {
 		$(this).removeClass('show');
 	})
+	.on('click', '#salary-acc-show', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
+		var t = $(this),
+			n = t.parent().next(),
+			v = n.hasClass('dn');
+			n[(v ? 'remove' : 'add') + 'Class']('dn');
+			t.html(v ? 'скрыть' : 'подробно');
+	})
 	.on('click', '.worker-acc-del', function() {
 		_dialogDel({
 			id:$(this).attr('val'),
@@ -1682,6 +1753,16 @@ $(document)
 			func:_salarySpisok
 		});
 	})
+	.on('click', '.salary-list-del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'листа выдачи з/п',
+			op:'salary_list_del',
+			func:_salarySpisok
+		});
+	})
+
 
 	.ready(function() {
 		if($('#money-schet').length) {
@@ -1771,7 +1852,8 @@ $(document)
 					{uid:2, title:'Изменить ставку'},
 					{uid:3, title:'Начислить'},
 					{uid:4, title:'Внести вычет'},
-					{uid:5, title:'Выдать з/п'}
+					{uid:5, title:'Сформировать лист выдачи з/п'},
+					{uid:6, title:'Выдать з/п'}
 				],
 				func:function(v) {
 					switch(v) {
@@ -1779,7 +1861,8 @@ $(document)
 						case 2: _salaryWorkerRateSet(); break;
 						case 3: _salaryWorkerAccAdd(); break;
 						case 4: _salaryWorkerDeductAdd(); break;
-						case 5: _salaryWorkerZpAdd(); break;
+						case 5: _salaryWorkerListCreate(); break;
+						case 6: _salaryWorkerZpAdd(); break;
 					}
 				}
 			});
