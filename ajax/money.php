@@ -508,9 +508,8 @@ switch(@$_POST['op']) {
 		if(!$category_id && empty($about))
 			jsonError();
 
-		//
 		$worker_id = _num($_POST['worker_id']);
-		$attach_id = _num($_POST['attach_id']);
+		$attach_id = _num(@$_POST['attach_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
@@ -678,8 +677,8 @@ switch(@$_POST['op']) {
 		if(TODAY != substr($r['dtime_add'], 0, 10))
 			jsonError();
 
-		$sql = "UPDATE `_money_expense` SET
-					`deleted`=1,
+		$sql = "UPDATE `_money_expense`
+				SET `deleted`=1,
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
@@ -698,6 +697,7 @@ switch(@$_POST['op']) {
 			_balans(array(
 				'action_id' => 24,
 				'invoice_id' => $r['invoice_id'],
+				'worker_id' => $r['worker_id'],
 				'sum' => $r['sum'],
 				'expense_id' => $r['id'],
 				'about' => $r['about']
