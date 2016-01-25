@@ -27,7 +27,7 @@ switch(@$_POST['op']) {
 		$pay_type = _num($_POST['pay_type']);
 		$day_finish = $_POST['day_finish'];
 
-		_zayavPoleUseInfoConst(0, $type_id);
+		_service('const_define', $type_id);
 
 		if(ZAYAV_INFO_DEVICE && !$device_id)
 			jsonError('Не выбрано устройство');
@@ -155,7 +155,7 @@ switch(@$_POST['op']) {
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
-		_zayavPoleUseInfoConst(0, $z['type_id']);
+		_service('const_define', $z['type_id']);
 
 		if(ZAYAV_INFO_DEVICE && !$device_id)
 			jsonError('Не выбрано устройство');
@@ -321,7 +321,7 @@ switch(@$_POST['op']) {
 		if(!$type_id = _num($_POST['type_id']))
 			jsonError();
 
-		$send['js'] = _zayavTypeConstArr($type_id);
+		$send['js'] = _service('const_arr', $type_id);
 
 		jsonSuccess($send);
 		break;
@@ -334,7 +334,7 @@ switch(@$_POST['op']) {
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
-		_zayavPoleUseInfoConst(0, $z['type_id']);
+		_service('const_define', $z['type_id']);
 
 		$place_id = _num($_POST['place']);
 		$place_other = !$place_id ? _txt($_POST['place_other']) : '';

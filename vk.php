@@ -756,7 +756,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 
 	unset($_SESSION[PIN_TIME_KEY]);
 
-	$html =
+	$html = _service().
 		_header().
 		'<div id="pin-enter">'.
 			'Пин: '.
@@ -1300,7 +1300,7 @@ function _globalValuesJS($ws_id=WS_ID) {//Составление файла global_values.js, ис
 												  WHERE `app_id` IN (".APP_ID.",0)
 													AND `ws_id` IN (".$ws_id.",0)
 													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
-		_zayavPoleUseInfoConst(1).
+//		_service('const_js').','.
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=1", GLOBAL_MYSQL_CONNECT).','.
@@ -1338,6 +1338,7 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
 	xcache_unset(CACHE_PREFIX.'ws'.$ws_id);//данные организации
+	xcache_unset(CACHE_PREFIX.'service'.$ws_id);//виды деятельности
 	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);//категории расходов заявки

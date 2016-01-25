@@ -91,6 +91,9 @@ function _setup() {
 	if(!RULE_SETUP_REKVISIT)
 		unset($page['rekvisit']);
 
+	if(_service('count') < 2)
+		unset($page['service']);
+
 	if(!RULE_SETUP_INVOICE)
 		unset($page['invoice']);
 

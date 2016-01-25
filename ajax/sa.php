@@ -420,6 +420,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		sa_zayav_type_link();
+
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
 		_globalValuesJS();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok());
@@ -452,9 +454,10 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
 		_globalValuesJS();
-		sa_zayav_type_link();
 
+		sa_zayav_type_link();
 		$send['html'] = utf8(sa_zayav_pole_spisok());
 		jsonSuccess($send);
 		break;
@@ -483,6 +486,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
 		_globalValuesJS();
 
 		jsonSuccess();
@@ -522,6 +526,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
 		_globalValuesJS();
 
 		jsonSuccess();

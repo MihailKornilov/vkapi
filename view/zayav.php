@@ -4,62 +4,7 @@ function _zayav() {
 		return zayavCase();
 	if(@$_GET['d'] == 'info')
 		return _zayav_info();
-	return _zayav_list(_hashFilter('zayav'._zayavTypeId()));
-}
-
-function _zayavPoleUseInfoConst($js=false, $type_id=0) {//формирование констант для полей заявки
-	$sql = "SELECT
-				*,
-				0 `use_info`
-			FROM `_zayav_const`
-			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return '';
-
-	$sql = "SELECT *
-			FROM `_zayav_const_use`
-			WHERE `app_id`=".APP_ID."
-			  AND `type_id`=".$type_id;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['pole_id']]['use_info'] = 1;
-
-	if($js) {
-		$send = '';
-		foreach($spisok as $r)
-			$send .= "\n".$r['const'].'='._bool($r['use_info']).',';
-		return $send;
-	}
-
-	foreach($spisok as $r)
-		define($r['const'], _bool($r['use_info']));
-
-	return true;
-}
-function _zayavTypeConstArr($type_id) {//формирование констант для полей заявки
-	$sql = "SELECT
-				`const`,
-				0 `use_info`
-			FROM `_zayav_const`
-			ORDER BY `id`";
-	if(!$spisok = query_ass($sql, GLOBAL_MYSQL_CONNECT))
-		return '';
-
-	$sql = "SELECT
-				`s`.`const`
-			FROM
-				`_zayav_const_use` `u`,
-				`_zayav_const` `s`
-			WHERE `u`.`app_id`=".APP_ID."
-			  AND `u`.`pole_id`=`s`.`id`
-			  AND `u`.`type_id`=".$type_id;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['const']] = 1;
-
-	$spisok['ZAYAV_TYPE_ID'] = $type_id;
-
-	return $spisok;
+	return _zayav_list(_hashFilter('zayav'._service('current')));
 }
 
 function _zayavStatus($id=false, $i='name') {
@@ -239,83 +184,6 @@ function _zayavStatusChange($zayav_id, $status) {
 }
 
 
-function _zayavTypeActive($spisok, $ass=0) {//выборка активных видов деятельности для конкретной организации
-	$spisok_ass = array();//для возвращения ассоциативного массива (для js)
-
-	$sql = "SELECT `type_id`
-			FROM `_zayav_type_active`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		if($ass)
-			$spisok_ass[$r['type_id']] = $spisok[$r['type_id']];
-		else
-			$spisok[$r['type_id']]['active'] = 1;
-
-	if($ass)
-		$spisok = $spisok_ass;
-	else
-		foreach($spisok as $r)
-			if(empty($r['active']))
-				unset($spisok[$r['id']]);
-
-	return $spisok;
-}
-function _zayavTypeId($type_id=0) {//получение текущего type_id заявок
-	$sql = "SELECT *
-			FROM `_zayav_type`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return 0;
-
-	//если есть только один вид деятельности, возвращение его, не важно, активен или нет
-	if(count($spisok) == 1)
-		return key($spisok);
-
-	if(!$type_id)
-		$spisok = _zayavTypeActive($spisok);
-
-	//если видов деятельности больше одного и не один не активен, то переход в настройки Видов деятельности
-	if(!$spisok)
-		header('Location:'.URL.'&p=setup&d=service');
-
-	$cookie_key = COOKIE_PREFIX.'zayav-type';
-
-	if($type_id)
-		foreach($spisok as $r)
-			if($r['id'] == $type_id) {
-				setcookie($cookie_key, $type_id, time() + 3600, '/');
-				return $type_id;
-			}
-
-	reset($spisok);
-	if(!$id = _num(@$_GET['type_id'])) {
-		if(_num(@$_COOKIE[$cookie_key]))
-			foreach($spisok as $r)
-				if($r['id'] == $_COOKIE[$cookie_key])
-					return $_COOKIE[$cookie_key];
-		reset($spisok);
-		return key($spisok);
-	}
-
-	foreach($spisok as $r)
-		if($r['id'] == $id) {
-			setcookie($cookie_key, $id, time() + 3600, '/');
-			return $id;
-		}
-
-	reset($spisok);
-	return key($spisok);
-}
-function _zayavTypeCount() {//получение количества видов деятельности (для вывода списка при внесении новой заявки из информации о клиенте)
-	$sql = "SELECT COUNT(*)
-			FROM `_zayav_type_active`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID;
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
-}
 function _zayavFilter($v) {
 	$default = array(
 		'page' => 1,
@@ -372,62 +240,9 @@ function _zayavFilter($v) {
 			break;
 		}
 
-	$filter['type_id'] = _zayavTypeId(_num(@$v['type_id']));
+	$filter['type_id'] = _service('current', _num(@$v['type_id']));
 
 	return $filter;
-}
-function _zayavTypeLink($js=0, $client_id=0) {//меню списка видов заявок
-	$cond = "`app_id`=".APP_ID;
-
-	$zayavCount = array();
-	if($client_id) {//учитывать только виды заявок, которые вносились клиенту (для информации о клиенте)
-		$sql = "SELECT
-					DISTINCT `type_id`,
-					COUNT(`id`)
-				FROM `_zayav`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `client_id`=".$client_id."
-				GROUP BY `type_id`
-				ORDER BY `type_id`";
-		if($zayavCount = query_ass($sql, GLOBAL_MYSQL_CONNECT))
-			$cond .= " AND `id` IN (".implode(',', array_keys($zayavCount)).")";
-	}
-
-	$sql = "SELECT
-				`id`,
-				`name`
-			FROM `_zayav_type`
-			WHERE ".$cond."
-			ORDER BY `id`";
-
-	if($js) {
-		$ass = query_ass($sql, GLOBAL_MYSQL_CONNECT);
-		if($client_id)
-			foreach($ass as $i => $k)
-				$ass[$i] .= '<em>'.$zayavCount[$i].'</em>';
-		else
-			$ass = _zayavTypeActive($ass, 1);
-
-		return _assJson($ass);
-	}
-
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-	$spisok = _zayavTypeActive($spisok);
-
-	if(count($spisok) < 2)
-		return '';
-
-	$id = _zayavTypeId();
-
-	$link = '';
-	foreach($spisok as $r) {
-		$sel = $r['id'] == $id ? ' sel' : '';
-		$link .= '<a href="'.URL.'&p=zayav&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
-	}
-
-	return '<div id="dopLinks">'.$link.'</div>';
 }
 function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
@@ -439,7 +254,7 @@ function _zayav_list($v=array()) {
 
 	return
 	'<div id="_zayav">'.
-		_zayavTypeLink().
+		_service('menu').
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td id="spisok">'.$data['spisok'].
@@ -493,8 +308,7 @@ function _zayav_list($v=array()) {
 		'</table>'.
 	'</div>'.
 	'<script type="text/javascript">'.
-		'var '._zayavPoleUseInfoConst(1, $v['type_id']).
-		'ZAYAV_TYPE_ID='.$v['type_id'].';'.
+		'var '._service('const_js', $v['type_id']).';'.
 	'</script>';
 
 //		'var Z={'.
@@ -508,7 +322,7 @@ function _zayav_spisok($v) {
 	$filter = _zayavFilter($v);
 	$filter = _filterJs('ZAYAV', $filter);
 
-	_zayavPoleUseInfoConst(0, $filter['type_id']);
+	_service('const_define', $filter['type_id']);
 
 	$cond = "`app_id`=".APP_ID."
 		 AND `ws_id`=".WS_ID."
@@ -852,8 +666,8 @@ function _zayav_info() {
 	if(!$z = _zayavQuery($zayav_id, 1))
 		return _err('Заявки не существует.');
 
-	_zayavPoleUseInfoConst(0, $z['type_id']);
-	_zayavTypeId($z['type_id']);//для установки куки для возврата
+	_service('const_define', $z['type_id']);
+	_service('current', $z['type_id']);//установка куки для возврата на соответствующий списов заявок
 
 	if(!VIEWER_ADMIN && $z['deleted'])
 		return _noauth('Заявка удалёна');
@@ -902,7 +716,7 @@ function _zayav_info() {
 				'todel:'._zayavToDel($zayav_id).','.//показывать пункт для удаления заявки
 				'deleted:'.$z['deleted'].
 			'},'.
-			_zayavPoleUseInfoConst(1, $z['type_id']).
+			_service('const_js', $z['type_id']).','.
 			'DOG={'._zayavDogovorJs($z).'};'.
 			'KVIT={'.
 				'dtime:"'.FullDataTime($z['dtime_add']).'",'.
@@ -1427,16 +1241,13 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 function _product($product_id=false) {//Список изделий для заявок
 	if(!defined('PRODUCT_LOADED') || $product_id === false) {
 		$key = CACHE_PREFIX.'product'.WS_ID;
-		$arr = xcache_get($key);
-		if(empty($arr)) {
+		if(!$arr = xcache_get($key)) {
 			$sql = "SELECT `id`,`name`
 					FROM `_product`
 					WHERE `app_id`=".APP_ID."
 					  AND `ws_id`=".WS_ID."
 					ORDER BY `name`";
-			$q = query($sql, GLOBAL_MYSQL_CONNECT);
-			while($r = mysql_fetch_assoc($q))
-				$arr[$r['id']] = $r['name'];
+			$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
 			xcache_set($key, $arr, 86400);
 		}
 		if(!defined('PRODUCT_LOADED')) {
@@ -1543,7 +1354,6 @@ function _zayavProductValToList($arr) {//вставка данных изделий в массив заявок
 	return $arr;
 }
 
-
 /* Срок выполнения заявки */
 function _zayavFinish($day='0000-00-00') {
 	return
@@ -1624,7 +1434,6 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 
 	return $send;
 }
-
 
 /* --- Расходы по заявке --- */
 function _zayavExpense($id=0, $i='name') {//категории расходов заявки из кеша
@@ -1881,4 +1690,209 @@ function _zayav_expense_worker_balans($old, $new) {//внесение балансов сотрудник
 			));
 }
 
+/* Виды деятельности */
+function _service($i=false, $id=0) {
+	$key = CACHE_PREFIX.'service'.WS_ID;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					`id`,
+					`name`
+				FROM `_zayav_type`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`";
+		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+			foreach($arr as $k => $r) {
+				$arr[$k]['active'] = 0;
+				$arr[$k]['const'] = array();
+			}
+			$arr = _serviceActiveSet($arr);
+		} else
+			$arr[0] = array(
+				'id' => 0,
+				'name' => '',
+				'active' => 0,
+				'const' => array()
+			);
+		$arr = _serviceConstSet($arr);
+		xcache_set($key, $arr, 86400);
+	}
+//_pre($arr);
+	if($i == 'menu')
+		return _serviceMenu($arr);
 
+	if($i == 'count')
+		return count($arr);
+
+	if($i == 'active_count')
+		return _serviceActiveCount($arr);
+
+	if($i == 'current')
+		return _serviceCurrentId($arr, $id);
+
+	if($i == 'js')
+		return _serviceActiveJs($arr);
+
+	if($i == 'js_client')
+		return _serviceActiveJsClient($arr, $id);
+
+	if($i == 'const_arr')
+		return _serviceConstArr($arr[$id]['const']);
+
+	if($i == 'const_define')
+		return _serviceConstDefine($arr[$id]['const']);
+
+	if($i == 'const_js')
+		return _serviceConstJs($arr[$id]['const']);
+
+	return false;
+}
+function _serviceMenu($arr) {//меню для списка заявок
+	if(_serviceActiveCount($arr) < 2)
+		return '';
+
+	$id = _serviceCurrentId($arr);
+
+	$link = '';
+	foreach(_serviceActive($arr) as $r) {
+		$sel = $r['id'] == $id ? ' sel' : '';
+		$link .= '<a href="'.URL.'&p=zayav&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+	}
+
+	return '<div id="dopLinks">'.$link.'</div>';
+}
+function _serviceCurrentId($spisok, $type_id=0) {//получение текущего type_id заявок
+	if(!$spisok)
+		return 0;
+
+	//если есть только один вид деятельности, возвращение его, не важно, активен или нет
+	if(count($spisok) == 1)
+		return key($spisok);
+
+	if(!$type_id)
+		$spisok = _serviceActive($spisok);
+
+	//если видов деятельности больше одного и не один не активен, то переход в настройки Видов деятельности
+	if(!$spisok)
+		header('Location:'.URL.'&p=setup&d=service');
+
+	$cookie_key = COOKIE_PREFIX.'zayav-type';
+
+	if($type_id)
+		foreach($spisok as $r)
+			if($r['id'] == $type_id) {
+				setcookie($cookie_key, $type_id, time() + 3600, '/');
+				return $type_id;
+			}
+
+	reset($spisok);
+	if(!$id = _num(@$_GET['type_id'])) {
+		if(_num(@$_COOKIE[$cookie_key]))
+			foreach($spisok as $r)
+				if($r['id'] == $_COOKIE[$cookie_key])
+					return $_COOKIE[$cookie_key];
+		reset($spisok);
+		return key($spisok);
+	}
+
+	foreach($spisok as $r)
+		if($r['id'] == $id) {
+			setcookie($cookie_key, $id, time() + 3600, '/');
+			return $id;
+		}
+
+	reset($spisok);
+	return key($spisok);
+}
+function _serviceActiveSet($arr) {//отметка активных видов деятельности
+	$sql = "SELECT `type_id`
+			FROM `_zayav_type_active`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['type_id']]['active'] = 1;
+	return $arr;
+}
+function _serviceActive($arr) {//возврат активных видов деятельности
+	$send = array();
+	foreach($arr as $r)
+		if($r['active'])
+			$send[$r['id']] = $r;
+	return $send;
+}
+function _serviceActiveCount($arr) {//количество активных видой деятельности
+	$count = 0;
+	foreach($arr as $r)
+		$count += $r['active'];
+	return $count;
+}
+function _serviceActiveJs($arr) {//список активных видов деятельности в формате JS - ассоциативный список
+	$send = array();
+	foreach(_serviceActive($arr) as $r)
+		$send[$r['id']] = $r['name'];
+	return _assJson($send);
+}
+function _serviceActiveJsClient($arr, $client_id) {//список видов деятельности, которые использовались в заявках клиента. В формате JS - ассоциативный список
+	if(count($arr) < 2)
+		return '{}';
+
+	$ass = array();
+	foreach($arr as $r)
+		$ass[$r['id']] = $r['name'];
+
+	$send = array();
+	$sql = "SELECT
+				DISTINCT `type_id`,
+				COUNT(`id`) `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$client_id."
+			GROUP BY `type_id`
+			ORDER BY `type_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$send[$r['type_id']] = $ass[$r['type_id']].'<em>'.$r['count'].'</em>';
+
+	return _assJson($send);
+}
+function _serviceConstSet($arr) {//установка констант видам деятельности
+	$sql = "SELECT
+				`id`,
+				`const`
+			FROM `_zayav_const`";
+	$const = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+
+	foreach($arr as $id => $r) {
+		foreach($const as $val)
+			$arr[$id]['const'][$val] = 0;
+		$arr[$id]['const']['ZAYAV_TYPE_ID'] = $id;
+	}
+
+	$sql = "SELECT *
+			FROM `_zayav_const_use`
+			WHERE `app_id`=".APP_ID;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['type_id']]['const'][$const[$r['pole_id']]] = 1;
+
+	return $arr;
+}
+function _serviceConstArr($arr) {//получение ассоциативного массива констант
+	$send = array();
+	foreach($arr as $key => $val)
+		$send[$key] = $val;
+	return $send;
+}
+function _serviceConstDefine($arr) {//установка констант для конкретного вида деятельности
+	foreach($arr as $key => $val)
+		define($key, $val);
+	return true;
+}
+function _serviceConstJs($arr) {//получение констант в формате JS для конкретного вида деятельности
+	$send = array();
+	foreach($arr as $key => $val)
+		$send[] = $key.'='.$val;
+	return implode(",\n", $send);
+}

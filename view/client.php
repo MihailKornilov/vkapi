@@ -570,7 +570,7 @@ function _clientInfo() {//вывод информации о клиенте
 	define('ORG', $c['category_id'] > 1);
 
 	if(!$type_id = _clientZayavTypeId($client_id))
-		$type_id = _zayavTypeId();
+		$type_id = _service('current');
 
 	$zayav = _zayav_spisok(array(
 		'type_id' => $type_id,
@@ -610,12 +610,11 @@ function _clientInfo() {//вывод информации о клиенте
 				'org_kpp:"'.addslashes($c['org_kpp']).'",'.
 				'person:'._clientInfoPerson($client_id, 'json').','.
 
-				'zayav_type_count:'._zayavTypeCount().','.
-				'zayav_types:'._zayavTypeLink(1).','.//виды заявок, используемые в приложении (для внесения новой заявки)
-				'zayav_types_client:'._zayavTypeLink(1, $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
+				'zayav_type_count:'._service('active_count').','.
+				'zayav_types:'._service('js').','.//виды заявок, используемые в приложении (для внесения новой заявки)
+				'zayav_types_client:'._service('js_client', $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
 			'},'.
-			_zayavPoleUseInfoConst(1, _zayavTypeId()).
-			'ZAYAV_TYPE_ID='._zayavTypeId().';'.
+			_service('const_js', $type_id).';'.
 		'</script>'.
 
 		'<div id="client-info">'.

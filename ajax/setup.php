@@ -486,6 +486,8 @@ switch(@$_POST['op']) {
 
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+
 		$send['on'] = $active;
 		jsonSuccess($send);
 		break;
@@ -513,6 +515,8 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
 
 		jsonSuccess();
 		break;
