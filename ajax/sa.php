@@ -495,9 +495,11 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_type` (
 					`app_id`,
-					`name`
+					`name`,
+					`head`
 				) VALUES (
 					".APP_ID.",
+					'".addslashes($name)."',
 					'".addslashes($name)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);

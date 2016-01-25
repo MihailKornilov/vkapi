@@ -1627,7 +1627,7 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 
 
 /* --- Расходы по заявке --- */
-function _zayavExpense($id=0, $i='name') {//расходы заявки из кеша
+function _zayavExpense($id=0, $i='name') {//категории расходов заявки из кеша
 	$key = CACHE_PREFIX.'zayav_expense'.APP_ID;
 	$arr = xcache_get($key);
 	if(empty($arr)) {
@@ -1679,8 +1679,6 @@ function _zayavExpenseDop($id=false) {//дополнительное условие для категории рас
 	return $id !== false ? $arr[$id] : $arr;
 }
 function _zayav_expense($zayav_id) {//вставка расходов по заявке в информацию о заявке
-	//$arr = _zpLink($arr);
-
 	return '<div id="_zayav-expense">'._zayav_expense_spisok($zayav_id).'</div>';
 }
 function _zayav_expense_spisok($zayav_id) {//вставка расходов по заявке в информацию о заявке
@@ -1795,7 +1793,6 @@ function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) 
 					: '').
 					($ze['attach'] && $r['attach_id'] ? $r['attach_link'] : '').
 					($ze['attach'] && !$r['attach_id'] && $r['txt'] ? $r['txt'] : '').
-	//				(_zayavExpense($r['category_id'], 'zp') ? $r['zp_short'] : '').
 				'<td class="sum'.$changeSum.'">'.$sum.' р.';
 	}
 
@@ -1820,7 +1817,8 @@ function _zayav_expense_json($arr) {//расходы по заявке в формате json
 			($ze['worker'] ? _num($r['worker_id']) : '').
 			($ze['zp'] ? _num($r['zp_id']) : '').
 			($ze['attach'] ? (_num($r['attach_id']) ? _num($r['attach_id']) : '"'.trim($r['txt']).' "') : '').','.
-			round($r['sum'], 2).
+			round($r['sum'], 2).','.
+			$r['salary_list_id'].
 		']';
 	}
 	return implode(',', $json);

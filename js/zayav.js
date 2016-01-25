@@ -650,30 +650,30 @@ var _zayavSpisok = function(v, id) {
 					0, //0 - id
 					0, //1 - категория
 					'',//2 - описание, id сотрудника, id запчасти, id файла
-					'' //3 - сумма
+					'',//3 - сумма
+					0  //4 - лист выдачи зп
 				];
 			var html =
 					'<table id="zee-tab'+ num + '" class="zee-tab" val="' + num + '">' +
 						'<tr><td><input type="hidden" id="' + num + 'cat" value="' + v[1] + '" />' +
 							'<td class="dop">' +
 							'<td class="tdsum">' +
-								'<input type="text" class="zee-sum" tabindex="' + (num * 10) + '" value="' + v[3] + '" />руб.' +
+								'<input type="text" class="zee-sum" tabindex="' + (num * 10) + '"' + (v[4] ? ' disabled' : '') + ' value="' + v[3] + '" />руб.' +
 								'<input type="hidden" class="id" value="' + v[0] + '" />' +
 					'</table>';
 
 			$('#zee-spisok').append(html);
-			itemDop(v[1], v[2], num);
+			itemDop(v[1], v[2], num, v[4]);
 
 			var tab = $('#zee-tab' + num);
 			$('#' + num + 'cat')._select({
 				width:130,
-				disabled:0,
+				disabled:v[4],
 				title0:'Категория',
 				spisok:ZAYAV_EXPENSE_SPISOK,
 				func:function(id, attr) {
 					tab.find('.id').val(0);
 					itemDop(id, '', attr.split('cat')[0]);
-//					sum.val(id == 1 ? ZI.worker_zp : '');
 					if(id && !tab.next().hasClass('zee-tab'))
 						item();
 				}
@@ -681,10 +681,12 @@ var _zayavSpisok = function(v, id) {
 
 			num++;
 		}
-		function itemDop(cat_id, val, num) {
+		function itemDop(cat_id, val, num, list_id) {
 			var tab = $('#zee-tab' + num),
 				dop = tab.find('.dop'),
 				sum = tab.find('.zee-sum');
+
+			list_id = list_id || 0;
 
 			dop.html('');
 			tab.find('.tdsum')[(cat_id ? 'remove' : 'add') + 'Class']('dn');
@@ -701,7 +703,7 @@ var _zayavSpisok = function(v, id) {
 				dop.html('<input type="hidden" id="' + num + 'worker" value="' + val + '" />');
 				$('#' + num + 'worker')._select({
 					width:240,
-					disabled:0,
+					disabled:list_id,
 					title0:'Сотрудник',
 					spisok:WORKER_SPISOK,
 					func:function(v) {

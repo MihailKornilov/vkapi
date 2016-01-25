@@ -620,7 +620,12 @@ var _accrualAdd = function() {
 		}, 'json');
 	},
 
-	_salarySpisok = function() {
+	_salarySpisok = function(v, id) {
+		if(id == 'year') {
+			v = SALARY.year > v ? 12 : 1;
+			$('#salmon')._radio(v);
+			SALARY.mon = v;
+		}
 		var send = {
 			op:'salary_spisok',
 			id:SALARY.worker_id,
@@ -630,8 +635,8 @@ var _accrualAdd = function() {
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
-				SALARY.mon = send.mon;
 				SALARY.year = send.year;
+				SALARY.mon = send.mon;
 				$('.headName em').html(MONTH_DEF[send.mon] + ' ' + send.year);
 				$('._balans-show').html(res.balans);
 				$('#spisok-list').html(res.list);

@@ -1620,7 +1620,7 @@ switch(@$_POST['op']) {
 	case 'salary_list_create':
 		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
-		if(!$mon = _num($_POST['mon']) || $_POST['mon'] > 12)
+		if(!$mon = _num($_POST['mon']))
 			jsonError();
 		if(!$year = _num($_POST['year']))
 			jsonError();

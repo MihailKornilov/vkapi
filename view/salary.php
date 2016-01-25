@@ -192,6 +192,8 @@ function salaryFilter($v) {
 	);
 	$v['month'] = _monthDef($v['mon'], 1).' '.$v['year'];
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
+	if($v['acc_id'])
+		$v['acc_show'] = 1;
 	return $v;
 }
 function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение текущего баланса зп сотрудника
