@@ -11,13 +11,13 @@ function _zayavPoleUseInfoConst($js=false, $type_id=0) {//формирование констант 
 	$sql = "SELECT
 				*,
 				0 `use_info`
-			FROM `_zayav_setup`
+			FROM `_zayav_const`
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
 
 	$sql = "SELECT *
-			FROM `_zayav_setup_use`
+			FROM `_zayav_const_use`
 			WHERE `app_id`=".APP_ID."
 			  AND `type_id`=".$type_id;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -40,7 +40,7 @@ function _zayavTypeConstArr($type_id) {//формирование констант для полей заявки
 	$sql = "SELECT
 				`const`,
 				0 `use_info`
-			FROM `_zayav_setup`
+			FROM `_zayav_const`
 			ORDER BY `id`";
 	if(!$spisok = query_ass($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
@@ -48,8 +48,8 @@ function _zayavTypeConstArr($type_id) {//формирование констант для полей заявки
 	$sql = "SELECT
 				`s`.`const`
 			FROM
-				`_zayav_setup_use` `u`,
-				`_zayav_setup` `s`
+				`_zayav_const_use` `u`,
+				`_zayav_const` `s`
 			WHERE `u`.`app_id`=".APP_ID."
 			  AND `u`.`pole_id`=`s`.`id`
 			  AND `u`.`type_id`=".$type_id;
@@ -239,16 +239,47 @@ function _zayavStatusChange($zayav_id, $status) {
 }
 
 
+function _zayavTypeActive($spisok, $ass=0) {//выборка активных видов деятельности для конкретной организации
+	$spisok_ass = array();//для возвращения ассоциативного массива (для js)
+
+	$sql = "SELECT `type_id`
+			FROM `_zayav_type_active`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if($ass)
+			$spisok_ass[$r['type_id']] = $spisok[$r['type_id']];
+		else
+			$spisok[$r['type_id']]['active'] = 1;
+
+	if($ass)
+		$spisok = $spisok_ass;
+	else
+		foreach($spisok as $r)
+			if(empty($r['active']))
+				unset($spisok[$r['id']]);
+
+	return $spisok;
+}
 function _zayavTypeId($type_id=0) {//получение текущего type_id заявок
 	$sql = "SELECT *
-			FROM `_zayav_setup_type`
+			FROM `_zayav_type`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 0;
 
+	//если есть только один вид деятельности, возвращение его, не важно, активен или нет
 	if(count($spisok) == 1)
 		return key($spisok);
+
+	if(!$type_id)
+		$spisok = _zayavTypeActive($spisok);
+
+	//если видов деятельности больше одного и не один не активен, то переход в настройки Видов деятельности
+	if(!$spisok)
+		header('Location:'.URL.'&p=setup&d=service');
 
 	$cookie_key = COOKIE_PREFIX.'zayav-type';
 
@@ -262,7 +293,10 @@ function _zayavTypeId($type_id=0) {//получение текущего type_id заявок
 	reset($spisok);
 	if(!$id = _num(@$_GET['type_id'])) {
 		if(_num(@$_COOKIE[$cookie_key]))
-			return $_COOKIE[$cookie_key];
+			foreach($spisok as $r)
+				if($r['id'] == $_COOKIE[$cookie_key])
+					return $_COOKIE[$cookie_key];
+		reset($spisok);
 		return key($spisok);
 	}
 
@@ -275,16 +309,12 @@ function _zayavTypeId($type_id=0) {//получение текущего type_id заявок
 	reset($spisok);
 	return key($spisok);
 }
-function _zayavTypeCount() {//получение количества видов заявок (для вывода списка видов из информации о клиенте)
+function _zayavTypeCount() {//получение количества видов деятельности (для вывода списка при внесении новой заявки из информации о клиенте)
 	$sql = "SELECT COUNT(*)
-			FROM `_zayav_setup_type`
-			WHERE `app_id`=".APP_ID;
-	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
-
-	if(!SERVICE_CARTRIDGE)
-		$c--;
-
-	return $c;
+			FROM `_zayav_type_active`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID;
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
 }
 function _zayavFilter($v) {
 	$default = array(
@@ -368,7 +398,7 @@ function _zayavTypeLink($js=0, $client_id=0) {//меню списка видов заявок
 	$sql = "SELECT
 				`id`,
 				`name`
-			FROM `_zayav_setup_type`
+			FROM `_zayav_type`
 			WHERE ".$cond."
 			ORDER BY `id`";
 
@@ -377,12 +407,16 @@ function _zayavTypeLink($js=0, $client_id=0) {//меню списка видов заявок
 		if($client_id)
 			foreach($ass as $i => $k)
 				$ass[$i] .= '<em>'.$zayavCount[$i].'</em>';
+		else
+			$ass = _zayavTypeActive($ass, 1);
+
 		return _assJson($ass);
 	}
 
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = _zayavTypeActive($spisok);
 
-	if(count($spisok) < 2 || !SERVICE_CARTRIDGE)
+	if(count($spisok) < 2)
 		return '';
 
 	$id = _zayavTypeId();
@@ -819,7 +853,7 @@ function _zayav_info() {
 		return _err('Заявки не существует.');
 
 	_zayavPoleUseInfoConst(0, $z['type_id']);
-	_zayavTypeId($z['type_id']);
+	_zayavTypeId($z['type_id']);//для установки куки для возврата
 
 	if(!VIEWER_ADMIN && $z['deleted'])
 		return _noauth('Заявка удалёна');

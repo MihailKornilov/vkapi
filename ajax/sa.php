@@ -403,12 +403,12 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_setup`
+				FROM `_zayav_const`
 				WHERE `const`='".addslashes($const)."'";
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError(' онстанта зан€та');
 
-		$sql = "INSERT INTO `_zayav_setup` (
+		$sql = "INSERT INTO `_zayav_const` (
 					`name`,
 					`about`,
 					`const`
@@ -439,13 +439,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_setup`
+				FROM `_zayav_const`
 				WHERE `const`='".addslashes($const)."'
 				  AND `id`!=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError(' онстанта зан€та');
 
-		$sql = "UPDATE `_zayav_setup`
+		$sql = "UPDATE `_zayav_const`
 				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
 					`const`='".addslashes($const)."'
@@ -464,14 +464,14 @@ switch(@$_POST['op']) {
 
 		$type_id = _num($_POST['type_id']);
 
-		$sql = "DELETE FROM `_zayav_setup_use`
+		$sql = "DELETE FROM `_zayav_const_use`
 				WHERE `app_id`=".APP_ID."
 				  AND `type_id`=".$type_id."
 				  AND `pole_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		if(_bool($_POST['v'])) {
-			$sql = "INSERT INTO `_zayav_setup_use` (
+			$sql = "INSERT INTO `_zayav_const_use` (
 						`app_id`,
 						`type_id`,
 						`pole_id`
@@ -493,7 +493,7 @@ switch(@$_POST['op']) {
 		if(!$name)
 			jsonError();
 
-		$sql = "INSERT INTO `_zayav_setup_type` (
+		$sql = "INSERT INTO `_zayav_type` (
 					`app_id`,
 					`name`
 				) VALUES (
@@ -502,10 +502,10 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$type_id = query_insert_id('_zayav_setup_type', GLOBAL_MYSQL_CONNECT);
+		$type_id = query_insert_id('_zayav_type', GLOBAL_MYSQL_CONNECT);
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_setup_type`
+				FROM `_zayav_type`
 				WHERE `app_id`=".APP_ID;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
 			$sql = "UPDATE `_zayav`
@@ -514,7 +514,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 
 			//применение типа за€вки к используемым пол€м
-			$sql = "UPDATE `_zayav_setup_use`
+			$sql = "UPDATE `_zayav_const_use`
 					SET `type_id`=".$type_id."
 					WHERE `app_id`=".APP_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);

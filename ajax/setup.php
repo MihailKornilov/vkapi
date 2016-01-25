@@ -448,6 +448,75 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'setup_service_toggle':
+		if(!VIEWER_ADMIN)
+			jsonError();
+
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_type`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(*)
+				FROM `_zayav_type_active`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `type_id`=".$id;
+		if($active = !query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+			$sql = "INSERT INTO `_zayav_type_active` (
+						`app_id`,
+						`ws_id`,
+						`type_id`
+					) VALUES (
+						".APP_ID.",
+						".WS_ID.",
+						".$id."
+					)";
+		} else {
+			$sql = "DELETE FROM `_zayav_type_active`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `type_id`=".$id;
+		}
+
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['on'] = $active;
+		jsonSuccess($send);
+		break;
+	case 'setup_service_edit':
+		if(!SA)
+			jsonError();
+
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$head = _txt($_POST['head']);
+		$about = win1251($_POST['about']);
+
+		$sql = "SELECT *
+				FROM `_zayav_type`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_type`
+				SET `name`='".addslashes($name)."',
+					`head`='".addslashes($head)."',
+					`about`='".addslashes($about)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		jsonSuccess();
+		break;
+
 	case 'setup_invoice_add':
 		if(!RULE_SETUP_INVOICE)
 			jsonError();

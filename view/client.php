@@ -614,8 +614,8 @@ function _clientInfo() {//вывод информации о клиенте
 				'zayav_types:'._zayavTypeLink(1).','.//виды заявок, используемые в приложении (для внесения новой заявки)
 				'zayav_types_client:'._zayavTypeLink(1, $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
 			'},'.
-			_zayavPoleUseInfoConst(1, $type_id).
-			'ZAYAV_TYPE_ID='.$type_id.';'.
+			_zayavPoleUseInfoConst(1, _zayavTypeId()).
+			'ZAYAV_TYPE_ID='._zayavTypeId().';'.
 		'</script>'.
 
 		'<div id="client-info">'.

@@ -414,7 +414,7 @@ function sa_zayav() {//управление балансами
 
 function sa_zayav_type_link() {//меню списка видов заявок и получение TYPE_ID
 	$sql = "SELECT *
-			FROM `_zayav_setup_type`
+			FROM `_zayav_type`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
@@ -451,13 +451,13 @@ function sa_zayav_pole_spisok() {
 	$sql = "SELECT
 				*,
 				0 `use_info`
-			FROM `_zayav_setup`
+			FROM `_zayav_const`
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
 
 	$sql = "SELECT *
-			FROM `_zayav_setup_use`
+			FROM `_zayav_const_use`
 			WHERE `app_id`=".APP_ID."
 			  AND `type_id`=".TYPE_ID;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);

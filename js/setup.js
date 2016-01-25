@@ -251,6 +251,64 @@ $(document)
 		}
 	})
 
+	.on('click', '.service-toggle', function() {
+		var t = $(this),
+			p = _parent(t, '.unit'),
+			h1 = p.find('h1'),
+			send = {
+				op:'setup_service_toggle',
+				id:p.attr('val')
+			};
+		if(h1.hasClass('_busy'))
+			return;
+		h1.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			h1.removeClass('_busy');
+			if(res.success) {
+				p[(res.on ? 'add' : 'remove') + 'Class']('on');
+				_msg();
+			}
+		}, 'json');
+	})
+	.on('click', '#setup-service .img_edit', function() {
+		var t = $(this),
+			p = _parent(t, '.unit'),
+			html = '<table id="setup-service-edit">' +
+				'<tr><td class="label r">Название:<td><input id="name" type="text" value="' + p.find('.name').val() + '" />' +
+				'<tr><td class="label r">Заголовок:<td><input id="head" type="text" value="' + p.find('h1').html() + '" />' +
+				'<tr><td class="label r topi">Описание:<td><textarea id="about">' + p.find('h2').html() + '</textarea>' +
+				'</table>',
+			dialog = _dialog({
+				top:20,
+				width:520,
+				head:'Редактирование вида деятельности',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus();
+		$('#name,#head').keyEnter(submit);
+		$('#about').autosize();
+		function submit() {
+			var send = {
+				op:'setup_service_edit',
+				id:p.attr('val'),
+				name:$('#name').val(),
+				head:$('#head').val(),
+				about:$('#about').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 	.on('click', '#setup_invoice .add', function() {
 		var dialog = _dialog({
 			top:40,

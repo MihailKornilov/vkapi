@@ -19,7 +19,7 @@ function _setupApp() {//применение настроек приложения и проверка на присутствие
 	_setupValue('GLOBAL_VALUES', 0, 'Версия файла global_values.js');
 	_setupValue('WS_VALUES', 0, 'Версия файла ws_'.WS_ID.'_values.js');
 	_setupValue('G_VALUES', 0, 'Версия файла G_values.js');
-}//_setupApp()
+}
 function _setupValue($key, $v='', $about='') {//получение значения настройки и внесение, если её нет в таблице базы
 	if(defined($key))
 		return true;
@@ -51,7 +51,7 @@ function _setupValue($key, $v='', $about='') {//получение значения настройки и в
 	define($key, $r['value']);
 
 	return $r['value'];
-}//_setupValue()
+}
 
 
 
@@ -72,6 +72,7 @@ function _setup() {
 		'my' => 'Мои настройки',
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
+		'service' => 'Виды деятельности',
 		'invoice' => 'Расчётные счета',
 		'expense' => 'Категории расходов',
 		'zayav_expense' => 'SA: Расходы по заявке',
@@ -113,7 +114,7 @@ function _setup() {
 					'<td class="right"><div class="rightLink">'.$links.'</div>'.
 			'</table>'.
 		'</div>';
-}//_setup()
+}
 
 function setup_my() {
 	return
@@ -142,7 +143,7 @@ function setup_my() {
 		'</table>'.
 
 	'</div>';
-}//setup_my()
+}
 
 function setup_worker() {
 	if(!RULE_SETUP_WORKER)
@@ -153,7 +154,7 @@ function setup_worker() {
 			'<div class="headName">Управление сотрудниками<a class="add">Новый сотрудник</a></div>'.
 			'<div id="spisok">'.setup_worker_spisok().'</div>'.
 		'</div>';
-}//setup_worker()
+}
 function setup_worker_spisok() {
 	$sql = "SELECT *
 			FROM `_vkuser`
@@ -175,7 +176,7 @@ function setup_worker_spisok() {
 			'</table>';
 	}
 	return $send;
-}//setup_worker_spisok()
+}
 function setup_worker_rule($viewer_id) {
 	if(!RULE_SETUP_WORKER)
 		return _err('Недостаточно прав: управление сотрудниками.');
@@ -248,7 +249,7 @@ function setup_worker_rule($viewer_id) {
 
 	'</div>';
 
-}//setup_worker_rule()
+}
 function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	if(!RULE_SETUP_RULES)
 		return false;
@@ -282,7 +283,7 @@ function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
 	}
 	return true;
-}//setup_worker_rule_save()
+}
 function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотрудника в базе
 	$sql = "SELECT COUNT(*)
 			FROM `_vkuser_rule`
@@ -311,7 +312,7 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 			  AND `viewer_id`=".$viewer_id."
 			  AND `key`='".$key."'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
-}//_workerRuleQuery()
+}
 
 function setup_rekvisit() {
 	if(!RULE_SETUP_REKVISIT)
@@ -346,7 +347,48 @@ function setup_rekvisit() {
 				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
 			'</table>'.
 		'</div>';
-}//setup_rekvisit()
+}
+
+function setup_service() {
+	$sql = "SELECT
+				*,
+				0 `active`
+			FROM `_zayav_type`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$sql = "SELECT `type_id`
+			FROM `_zayav_type_active`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['type_id']]['active'] = 1;
+
+	$send = '';
+	foreach($spisok as $r) {
+		$send .=
+		'<div class="unit'.($r['active'] ? ' on' : '').'" val="'.$r['id'].'">'.
+			(SA ? _iconEdit() : '').
+			'<input type="hidden" class="name" value="'.$r['name'].'">'.
+			'<h1>'.$r['head'].'</h1>'.
+			'<h2>'.$r['about'].'</h2>'.
+			'<h3><a class="service-toggle">Включить</a></h3>'.
+			'<h4>'.
+				($r['id'] == 2 ? '<a href="'.URL.'&p=setup&d=service&d1=cartridge&id=1">Настроить</a> :: ' : '').
+				'<a class="service-toggle">Отключить</a>'.
+			'</h4>'.
+		'</div>';
+	}
+
+	return
+	'<div id="setup-service">'.
+		'<div class="headName">Виды деятельности</div>'.
+		$send.
+	'</div>';
+}
 
 function setup_invoice() {
 	if(!RULE_SETUP_INVOICE)
@@ -356,7 +398,7 @@ function setup_invoice() {
 			'<div class="headName">Управление счетами<a class="add">Новый счёт</a></div>'.
 			'<div class="spisok">'.setup_invoice_spisok().'</div>'.
 		'</div>';
-}//setup_invoice()
+}
 function setup_invoice_spisok() {
 	$sql = "SELECT *
 			FROM `_money_invoice`
@@ -403,7 +445,7 @@ function setup_invoice_spisok() {
 	$send .= '</table>';
 
 	return $send;
-}//setup_invoice_spisok()
+}
 
 function setup_expense() {
 	return
@@ -411,7 +453,7 @@ function setup_expense() {
 			'<div class="headName">Категории расходов организации<a class="add">Новая категория</a></div>'.
 			'<div id="spisok">'.setup_expense_spisok().'</div>'.
 		'</div>';
-}//setup_expense()
+}
 function setup_expense_spisok() {
 	$sql = "SELECT *,
 				0 `count`
@@ -460,7 +502,7 @@ function setup_expense_spisok() {
 			'</table>';
 	$send .= '</dl>';
 	return $send;
-}//setup_expense_spisok()
+}
 
 function setup_product() {
 	return
@@ -468,7 +510,7 @@ function setup_product() {
 		'<div class="headName">Настройки видов изделий<a class="add">Добавить</a></div>'.
 		'<div class="spisok">'.setup_product_spisok().'</div>'.
 	'</div>';
-}//setup_product()
+}
 function setup_product_spisok() {
 	$sql = "SELECT
 				*,
@@ -516,7 +558,7 @@ function setup_product_spisok() {
 						($r['sub'] || $r['zayav'] ? '' :'<div class="img_del"></div>');
 	$send .= '</table>';
 	return $send;
-}//setup_product_spisok()
+}
 function setup_product_sub($product_id) {
 	$sql = "SELECT *
 			FROM `_product`
@@ -533,7 +575,7 @@ function setup_product_sub($product_id) {
 		'<div class="headName">Список подвидов изделий для "'.$pr['name'].'"<a class="add">Добавить</a></div>'.
 		'<div class="spisok">'.setup_product_sub_spisok($product_id).'</div>'.
 	'</div>';
-}//setup_product_sub()
+}
 function setup_product_sub_spisok($product_id) {
 	$sql = "SELECT
 				*,
@@ -572,7 +614,7 @@ function setup_product_sub_spisok($product_id) {
 					($r['zayav'] ? '' : '<div class="img_del"></div>');
 		$send .= '</table>';
 	return $send;
-}//setup_product_sub_spisok()
+}
 
 
 function setup_zayav_expense() {//категории расходов по заявке
@@ -584,7 +626,7 @@ function setup_zayav_expense() {//категории расходов по заявке
 		'<div class="headName">Настройки категорий расходов по заявке<a class="add">Добавить</a></div>'.
 		'<div id="spisok">'.setup_zayav_expense_spisok().'</div>'.
 	'</div>';
-}//setup_zayav_expense()
+}
 function setup_zayav_expense_spisok() {
 	if(!SA)
 		return '';
@@ -632,4 +674,4 @@ function setup_zayav_expense_spisok() {
 			'</table>';
 	$send .= '</dl>';
 	return $send;
-}//setup_zayav_expense_spisok()
+}

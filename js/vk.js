@@ -525,8 +525,17 @@ var VK_SCROLL = 0,
 	},
 	_parent = function(t, tag) {//поиск нужного тега методом parent()
 		tag = tag || 'TR';
-		while(t[0].tagName != tag)
+		var max = 10,
+			e = 0,
+			cls = tag[0] == '.';
+		if(cls)
+			tag = tag.substr(1);
+		while(!e) {
 			t = t.parent();
+			e = cls ? t.hasClass(tag) : t[0].tagName == tag;
+			if(!--max)
+				e = 1;
+		}
 		return t;
 	},
 	_busy = function(v) {//отображение прогресса ожидания в mainLinks
