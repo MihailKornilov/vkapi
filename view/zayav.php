@@ -1456,6 +1456,10 @@ function _zayavExpense($id=0, $i='name') {//категории расходов за€вки из кеша
 		xcache_set($key, $arr, 86400);
 	}
 
+	if($i == 'sort') {//ассоциативный массив пор€дка категорий
+		return array_keys($arr);
+	}
+
 	//все категории
 	if(!$id)
 		return $arr;
@@ -1527,6 +1531,14 @@ function _zayav_expense_spisok($zayav_id) {//вставка расходов по за€вке в информ
 		'<h1>'.($accrual_sum ? 'ќбща€ сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Ќачислений нет.').'</h1>'.
 		_zayav_expense_html($arr, $accrual_sum);
 }
+function _zayav_expense_sort($arr) {
+	$send = array();
+	foreach(_zayavExpense(0, 'sort') as $i)
+		foreach($arr as $id => $r)
+			if($i == $r['category_id'])
+				$send[$id] = $r;
+	return $send;
+}
 function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вки при внесении в базу
 	$v = trim($v);
 	if(empty($v))
@@ -1564,6 +1576,7 @@ function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вк
 	return implode(',', $send);
 }
 function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) {//вывод таблицы расходов по за€вке
+	$arr = _zayav_expense_sort($arr);
 	$expense_sum = 0;
 	$send = '<table class="ze-spisok">';
 	foreach($arr as $arr_id => $r) {
@@ -1584,14 +1597,14 @@ function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) 
 				}
 			}
 			if(!$line)
-				$tr = ' class="'.($new ? 'new' : 'del').'"';
+				$tr = ' '.($new ? 'new' : 'del');
 		}
 
 		$sum = round($r['sum'], 2);
 		$expense_sum += $sum;
 		$ze = _zayavExpense($r['category_id'], 'all');
 		$send .=
-			'<tr'.$tr.'>'.
+			'<tr class="l'.$tr.'">'.
 				'<td class="name">'.$ze['name'].
 				'<td'.$changeDop.'>'.
 					($ze['txt'] ? $r['txt'] : '').
@@ -1616,6 +1629,7 @@ function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) 
 	return $send;
 }
 function _zayav_expense_json($arr) {//расходы по за€вке в формате json
+	$arr = _zayav_expense_sort($arr);
 	$json = array();
 	foreach($arr as $r) {
 		$ze = _zayavExpense($r['category_id'], 'all');
@@ -1645,7 +1659,6 @@ function _zayav_expense_array($v) {//расходы по за€вке в формате array
 			_cena($ex[3])
 		);
 	}
-
 	return $array;
 }
 function _zayav_expense_worker_balans($old, $new) {//внесение балансов сотрудников, если мен€ютс€

@@ -177,6 +177,8 @@ function zpPrint($sheet, $list) {
 		$sheet->setCellValue('A'.$line, $r['zayav_id'] && $r['dogovor_id'] ? $r['dogovor_n'] : '');
 		$sheet->setCellValue('B'.$line, $r['zayav_id'] ? utf8(htmlspecialchars_decode($r['zayav_adres'])) : '');
 		$sheet->setCellValue('C'.$line, $r['zayav_id'] ? utf8(htmlspecialchars_decode($r['zayav_name'])) : '');
+//		$sheet->getStyle('C'.$line.':C'.$line)->getFill()->getStartColor()->setRGB('4444FF');
+		$sheet->getCellByColumnAndRow(2, $line)->getHyperlink()->setUrl((LOCAL ? 'http://'.DOMAIN.URL.'&p=zayav&d=info&&id=' : APP_URL.'#zayav_').$r['zayav_id']); //Вставка ссылки на заявку
 		$sheet->setCellValue('D'.$line, $r['zayav_id'] && $r['zayav_status_day'] != '0000-00-00' ? _dataDog($r['zayav_status_day']) : '');
 		$sheet->setCellValue('E'.$line, $r['sum']);
 		$sheet->setCellValue('F'.$line, utf8($r['category_id'] ? _zayavExpense($r['category_id']) : $r['about']));

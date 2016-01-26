@@ -16,10 +16,15 @@
 	padding:2px 10px;
 	border:#e8eee8 solid 1px;
 	background-color:#efe;
+	cursor:pointer;
 }
-#salary-acc-show{float:right;margin-top:5px}
+#salary-worker h4 a{float:right;margin-top:5px}
 #salary-worker h4 div{margin:5px 0}
 #salary-worker #spisok-acc ._spisok{margin-top:-1px}
+#salary-worker #spisok-acc:not(.acc-show) #sp{display:none}
+#salary-worker #spisok-acc:not(.acc-show) #hid{display:none}
+#salary-worker #spisok-acc.acc-show #podr{display:none}
+
 #salary-worker .type{width:65px}
 #salary-worker .list{background-color:#f7f7f7}
 #salary-worker .list .sum{color:#888}

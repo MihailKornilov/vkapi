@@ -326,6 +326,7 @@
 #_zayav-expense .img_edit:hover{background-position:2px -13px}
 #_zayav-expense table *{font-size:10px}
 #_zayav-expense table{width:100%;margin-top:-1px;border-collapse:collapse}
+#_zayav-expense tr.l:hover{background-color:#ffffe8}
 #_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px}
 #_zayav-expense .name{width:100px}
 #_zayav-expense .sum{text-align:right;width:50px;white-space:nowrap;cursor:default}

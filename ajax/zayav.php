@@ -880,6 +880,9 @@ switch(@$_POST['op']) {
 		$old = _zayav_expense_array(implode(',', $arr));
 		$new = _zayav_expense_array($expense);
 
+		sort($old);
+		sort($new);
+
 		if($old != $new) {
 			$toDelete = array();
 			foreach($old as $r)
@@ -965,12 +968,13 @@ switch(@$_POST['op']) {
 
 			_zayavBalansUpdate($zayav_id);
 
-			_history(array(
-				'type_id' => 30,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
-			));
+			if($old != $new)
+				_history(array(
+					'type_id' => 30,
+					'client_id' => $z['client_id'],
+					'zayav_id' => $zayav_id,
+					'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
+				));
 		}
 
 		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));

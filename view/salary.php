@@ -261,6 +261,8 @@ function salary_worker($v) {
 
 	define('WORKER_OK', true);//для вывода фильтра
 
+	$acc_show = $filter['acc_show'] ? ' class="acc-show"' : '';
+
 	return
 	'<script type="text/javascript">'.
 		'var SALARY={'.
@@ -280,7 +282,7 @@ function salary_worker($v) {
 		'<h2>'.
 		'<h1>Ставка: <em>'.salaryWorkerRate($filter['id']).'</em></h1>'.
 		salary_worker_client($filter['id']).
-		'<div id="spisok-acc">'.salary_worker_acc($filter).'</div>'.
+		'<div id="spisok-acc"'.$acc_show.'>'.salary_worker_acc($filter).'</div>'.
 		'<div id="spisok-list">'.salary_worker_list($filter).'</div>'.
 		'<div id="spisok-zp">'.salary_worker_zp($filter).'</div>'.
 	'</div>';
@@ -401,7 +403,8 @@ function salary_worker_acc($v) {
 		'<h4>'.
 			(!$allCount ?
 				'<div>Записей нет.</div>' :
-				'<a id="salary-acc-show">подробно</a>'.
+				'<a id="podr">подробно</a>'.
+				'<a id="hid">скрыть подробности</a>'.
 				'<div><u>Всего <b>'.$allCount.'</b> запис'._end($allCount, 'ь', 'и', 'ей').'. Общая сумма <b>'._sumSpace($accSum + $zayavSum + $dSum).'</b> руб.</u></div>'
 			).
 			($accSum ? '<div>Начисления: <b>'.count($accrual).'</b> на сумму<b> '._sumSpace($accSum).'</b> руб.</div>' : '').
@@ -409,16 +412,18 @@ function salary_worker_acc($v) {
 			($dSum ? '<div>Вычеты: <b>'.count($deduct).'</b> на сумму<b> '._sumSpace($dSum).'</b> руб.</div>' : '').
 		'</h4>'.
 
-		'<table class="_spisok'.($filter['acc_show'] ? '' : ' dn').'">'.
-			'<tr>'.
-				'<th>'.($chAllShow ? _check('check_all') : '').
-				'<th>Вид'.
-				'<th>Сумма'.
-				'<th>Описание'.
-				'<th>Дата'.
-				'<th>'.
-			$send.
-		'</table>';
+		'<div id="sp">'.
+			'<table class="_spisok">'.
+				'<tr>'.
+					'<th>'.($chAllShow ? _check('check_all') : '').
+					'<th>Вид'.
+					'<th>Сумма'.
+					'<th>Описание'.
+					'<th>Дата'.
+					'<th>'.
+				$send.
+			'</table>'.
+		'</div>';
 	return $send;
 }
 function salary_worker_list($v) {

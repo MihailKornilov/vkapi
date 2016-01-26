@@ -1725,13 +1725,6 @@ $(document)
 	.on('mouseenter', '.salary .show', function() {
 		$(this).removeClass('show');
 	})
-	.on('click', '#salary-acc-show', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
-		var t = $(this),
-			n = t.parent().next(),
-			v = n.hasClass('dn');
-			n[(v ? 'remove' : 'add') + 'Class']('dn');
-			t.html(v ? 'скрыть' : 'подробно');
-	})
 	.on('click', '.worker-acc-del', function() {
 		_dialogDel({
 			id:$(this).attr('val'),
@@ -1757,6 +1750,17 @@ $(document)
 			func:_salarySpisok
 		});
 	})
+	.on('click', '#salary-worker h4', function() {//показ-скрытие списка с начислениями
+		var t = $(this),
+			p = t.parent(),
+			sp = p.find('#sp'),
+			v = p.hasClass('acc-show');
+			p[(v ? 'remove' : 'add') + 'Class']('acc-show');
+		if(v)
+			sp.show().slideUp();
+		else
+			sp.hide().slideDown();
+	})
 	.on('click', '#salary-worker #spisok-list .img_xls', function() {//открытие листа выдачи з/п
 		var v = $(this).attr('val');
 		location.href = URL + '&p=print&d=salary_list&id=' + v;
@@ -1770,7 +1774,6 @@ $(document)
 			func:_salarySpisok
 		});
 	})
-
 
 	.ready(function() {
 		if($('#money-schet').length) {

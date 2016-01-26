@@ -1343,7 +1343,7 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'service'.$ws_id);//виды деятельности
 	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
 	xcache_unset(CACHE_PREFIX.'product'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'product_sub'.$ws_id);
 
@@ -2103,7 +2103,7 @@ function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
 	foreach($attach as $r) {
 		foreach($arrIds[$r['id']] as $id) {
 			$arr[$id] += array(
-				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'">'.$r['name'].'</a>',
+				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>',
 			);
 		}
 	}
