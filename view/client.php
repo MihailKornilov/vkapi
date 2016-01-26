@@ -609,10 +609,7 @@ function _clientInfo() {//вывод информации о клиенте
 				'org_inn:"'.addslashes($c['org_inn']).'",'.
 				'org_kpp:"'.addslashes($c['org_kpp']).'",'.
 				'person:'._clientInfoPerson($client_id, 'json').','.
-
-				'zayav_type_count:'._service('active_count').','.
-				'zayav_types:'._service('js').','.//виды заявок, используемые в приложении (для внесения новой заявки)
-				'zayav_types_client:'._service('js_client', $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
+				'service_client:'._service('js_client', $client_id).//виды заявок, которые вносились для клиента (для фильтра заявок)
 			'},'.
 			_service('const_js', $type_id).';'.
 		'</script>'.

@@ -45,9 +45,9 @@ var _zayavSpisok = function(v, id) {
 	},
 	_zayavAddMenu = function() {
 		var sp = '';
-		for(var i in CLIENT.zayav_types)
+		for(var i in SERVICE_ACTIVE_ASS)
 			sp +=   '<div class="u" val="' + i + '">' +
-						'<span>' + CLIENT.zayav_types[i] + '</span>' +
+						'<span>' + SERVICE_ACTIVE_ASS[i] + '</span>' +
 					'</div>';
 
 		var html = '<div id="_client-zayav-add-tab">' +
@@ -444,6 +444,41 @@ var _zayavSpisok = function(v, id) {
 					dialog.close();
 					_msg();
 					document.location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_zayavTypeChange = function() {//Изменение категории заявки
+		var html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Категория заявки:' +
+						'<td><input type="hidden" id="type_id" value="' + ZAYAV_TYPE_ID + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Изменение категории заявки',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#type_id')._select({
+			width:200,
+			spisok:_toSpisok(SERVICE_ACTIVE_ASS)
+		});
+
+		function submit() {
+			var send = {
+				op:'zayav_type_change',
+				zayav_id:ZI.id,
+				type_id:$('#type_id').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
 				} else
 					dialog.abort();
 			}, 'json');
@@ -884,7 +919,7 @@ $(document)
 	})
 	.on('click', '#_zayav-add,#_zayav-info #edit', _zayavEdit)
 	.on('click', '#_client-zayav-add', function() {
-		if(CLIENT.zayav_type_count > 1)
+		if(SERVICE_ACTIVE_COUNT > 1)
 			return _zayavAddMenu();
 		_zayavEdit();
 	})
@@ -1020,6 +1055,11 @@ $(document)
 			var name = [0], action = [0];
 
 			name.push('Редактировать данные заявки'); action.push(_zayavEdit);
+
+			if(SERVICE_ACTIVE_COUNT > 1) {
+				name.push('Изменить категорию заявки');
+				action.push(_zayavTypeChange);
+			}
 
 			if(ZAYAV_INFO_CARTRIDGE) {
 				name.push('Добавить картриджи');

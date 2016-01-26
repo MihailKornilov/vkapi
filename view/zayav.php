@@ -1716,7 +1716,7 @@ function _service($i=false, $id=0) {
 		$arr = _serviceConstSet($arr);
 		xcache_set($key, $arr, 86400);
 	}
-//_pre($arr);
+
 	if($i == 'menu')
 		return _serviceMenu($arr);
 
@@ -1743,6 +1743,9 @@ function _service($i=false, $id=0) {
 
 	if($i == 'const_js')
 		return _serviceConstJs($arr[$id]['const']);
+
+	if($i == 'name')
+		return $arr[$id]['name'];
 
 	return false;
 }

@@ -546,7 +546,7 @@ $(document)
 			$('#zayav-type-id')._radio({
 				light:1,
 				right:0,
-				spisok:_toSpisok(CLIENT.zayav_types_client),
+				spisok:_toSpisok(CLIENT.service_client),
 				func:_clientZayavSpisok
 			});
 		}

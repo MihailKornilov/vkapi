@@ -487,6 +487,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		_globalValuesJS();
 
 		$send['on'] = $active;
 		jsonSuccess($send);
@@ -517,6 +518,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		_globalValuesJS();
 
 		jsonSuccess();
 		break;

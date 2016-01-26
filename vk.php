@@ -1301,6 +1301,8 @@ function _globalValuesJS($ws_id=WS_ID) {//—оставление файла global_values.js, ис
 													AND `ws_id` IN (".$ws_id.",0)
 													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
 //		_service('const_js').','.
+		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных за€вок в организации
+		"\n".'SERVICE_ACTIVE_ASS='._service('js').','.              //виды активных за€вок в организации
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=1", GLOBAL_MYSQL_CONNECT).','.

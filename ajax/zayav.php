@@ -380,6 +380,32 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'zayav_type_change':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		if($z['type_id'] == $type_id)
+			jsonError();
+
+		$sql = "UPDATE `_zayav`
+				SET `type_id`=".$type_id."
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 72,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => '<table>'._historyChange('Категория', _service('name', $z['type_id']), _service('name', $type_id)).'</table>'
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'zayav_day_finish':
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
