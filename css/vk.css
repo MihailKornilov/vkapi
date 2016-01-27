@@ -632,6 +632,9 @@ a.add:hover{text-decoration:underline;color:#357}
 	font-weight:bold;
 	white-space:nowrap;
 }
+._spisok .sum.acc{color:#07a}
+._spisok .sum.pay{color:#090}
+._spisok .sum.red{color:#c33}
 ._spisok .type{color:#770}
 ._spisok .dtime{
 	width:70px;

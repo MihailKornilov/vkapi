@@ -889,10 +889,10 @@ function _txt($v, $utf8=0) {
 }//_txt
 function _br($v) {//вставка br в текст при нахождении enter
 	return str_replace("\n", '<br />', $v);
-}//_br
+}
 function _daNet($v) {//$v: 1 -> да, 0 -> нет
 	return $v ? 'да' : 'нет';
-}//_daNet
+}
 function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	$v = array(
 		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : ''//id записи
@@ -933,13 +933,16 @@ function _ids($ids, $return_arr=0) {//проверка корректности списка id, составлен
 					return false;
 	}
 	return $return_arr ? $arr : implode(',', $arr);
-}//_ids
+}
 function _idsGet($arr, $i='id') {//возвращение из массива списка id через запятую
 	$ids = array();
 	foreach($arr as $r)
 		if(!empty($r[$i]))
 			$ids[] = $r[$i];
 	return empty($ids) ? 0 : implode(',', array_unique($ids));
+}
+function _keys($arr) {//возвращение ключей через запятую
+	return implode(',', array_keys($arr));
 }
 function _mon($v) {//проверка даты в формате 2015-10, если не соответствует, возврат текущей даты
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_YEARMONTH, $v))

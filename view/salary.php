@@ -103,7 +103,7 @@ function _salaryPeriod($v=false) {
 	$arr = array(
 		1 => 'месяц',
 		2 => 'неделя',
-		3 => 'день'
+		3 => 'ежедневно'
 	);
 	if($v == false)
 		return $arr;
@@ -188,7 +188,8 @@ function salaryFilter($v) {
 		'mon' => _num(@$v['mon']) ? intval($v['mon']) : intval(strftime('%m')),
 		'year' => _num(@$v['year']) ? intval($v['year']) : intval(strftime('%Y')),
 		'acc_id' => _num(@$v['acc_id']),
-		'acc_show' => _bool(@$v['acc_show']) //показывать сразу список начислений
+		'acc_show' => _bool(@$v['acc_show']), //показывать сразу список начислений
+		'list_type' => 'html' //в каком виде возвращать листы выдачи зп: html, js
 	);
 	$v['month'] = _monthDef($v['mon'], 1).' '.$v['year'];
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
@@ -271,7 +272,8 @@ function salary_worker($v) {
 			'mon:'.$filter['mon'].','.
 			'rate_sum:'._viewer($filter['id'], 'rate_sum').','.
 			'rate_period:'._viewer($filter['id'], 'rate_period').','.
-			'rate_day:'._viewer($filter['id'], 'rate_day').
+			'rate_day:'._viewer($filter['id'], 'rate_day').','.
+			'list:'.salary_worker_list(array('list_type'=>'js') + $filter).
 		'};'.
 	'</script>'.
 	'<div id="salary-worker">'.
@@ -311,9 +313,7 @@ function salary_worker_client($worker_id) {//блок связи с клиентом
 
 	return '';
 }
-function salary_worker_acc($v) {
-	$filter = salaryFilter($v);
-
+function salary_worker_acc($filter) {
 	$sql = "SELECT
 				*,
 				'Начисление' `type`,
@@ -427,51 +427,98 @@ function salary_worker_acc($v) {
 	return $send;
 }
 function salary_worker_list($v) {
-	$filter = salaryFilter($v);
-
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 `pay`
 			FROM `_salary_list`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
-			  AND `worker_id`=".$filter['id']."
-			  AND `year`=".$filter['year']."
-			  AND `mon`=".$filter['mon']."
-			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+			  AND `worker_id`=".$v['id']."
+			  AND `year`=".$v['year']."
+			  AND `mon`=".$v['mon']."
+			ORDER BY `id` DESC";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	if($v['list_type'] == 'js') {
+		$send = array();
+		foreach($spisok as $r)
+			$send[$r['id']] = 'Лист выдачи з/п №'.$r['nomer'];
+		return _selJson($send);
+	}
+
+	if($v['list_type'] == 'array') {
+		$send = array();
+		foreach($spisok as $r)
+			$send[$r['id']] = 'Лист выдачи з/п №'.$r['nomer'];
+		return _sel($send);
+	}
+
+	if(!$spisok)
 		return '';
+
+	$sql = "SELECT
+				`salary_list_id`,
+				SUM(`sum`) `sum`
+			FROM `_money_expense`
+			WHERE `salary_list_id` IN (".implode(',', array_keys($spisok)).")
+			  AND !`deleted`
+			GROUP BY `salary_list_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['salary_list_id']]['pay'] = _cena($r['sum']);
+
+	//есть ли выдачи зп, которые не являются авансовыми. Для возможности удаления листа
+	$sql = "SELECT COUNT(`id`)
+			FROM `_money_expense`
+			WHERE !`deleted`
+			  AND !`salary_avans`
+			  AND `salary_list_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `salary_list_id`";
+	$payNoAvans = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
 	$send =
 		'<h3><b>Листы выдачи з/п</b></h3>'.
 		'<table class="_spisok">'.
 			'<tr><th>Наименование'.
 				'<th>К выдаче'.
-				'<th>Дата создания'.
+				'<th>Выдано'.
+				'<th>Дата'.
 				'<th>';
-	$n = 1;
-	foreach($spisok as $r)
+	foreach($spisok as $r) {
+		$diff = $r['sum'] != $r['pay'] ? ' red' : '';
 		$send .=
 			'<tr><td class="about">'.
-					'<a class="img_xls" val="'.$r['id'].'">Лист выдачи з/п '.($n++).'</a>'.
-				'<td class="sum">'._cena($r['sum']).
+					'<a class="img_xls" val="'.$r['id'].'">Лист выдачи з/п №'.$r['nomer'].'</a>'.
+				'<td class="sum acc">'._sumSpace(_cena($r['sum'])).
+				'<td class="sum pay'.$diff.'">'.($r['pay'] ? _sumSpace($r['pay']) : '').
 				'<td class="dtime">'.FullData($r['dtime_add']).
-				'<td class="ed">'._iconDel($r + array('class'=>'salary-list-del'));
+				'<td class="ed">'._iconDel($r + array('class'=>'salary-list-del','nodel'=>$payNoAvans));
+	}
 	$send .= '</table>';
 	return $send;
 }
 function salary_worker_zp($v) {
-	$filter = salaryFilter($v);
-
 	$sql = "SELECT *
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `worker_id`=".$filter['id']."
-			  AND `year`=".$filter['year']."
-			  AND `mon`=".$filter['mon']."
+			  AND `worker_id`=".$v['id']."
+			  AND `year`=".$v['year']."
+			  AND `mon`=".$v['mon']."
 			ORDER BY `id` DESC";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
+
+	$list = array();
+	if($ids = _idsGet($spisok, 'salary_list_id')) {
+		$sql = "SELECT
+					`id`,
+					`nomer`
+				FROM `_salary_list`
+				WHERE `id` IN (".$ids.")";
+		$list = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	}
 
 	$zp = '';
 	$summa = 0;
@@ -479,15 +526,25 @@ function salary_worker_zp($v) {
 		$sum = _cena($r['sum']);
 		$summa += $sum;
 		$zp .= '<tr>'.
-			'<td class="sum">'.$sum.
-			'<td class="about"><span class="type">'._invoice($r['invoice_id']).(empty($r['about']) ? '' : ':').'</span> '.$r['about'].
+			'<td class="sum">'._sumSpace($sum).
+			'<td class="about">'.
+				'<span class="type">'.
+					_invoice($r['invoice_id']).(empty($r['about']) ? '' : ':').
+				'</span> '.
+				$r['about'].
+				($r['salary_list_id'] ?
+					'<div class="nl">'.
+						'Лист выдачи з/п №'.$list[$r['salary_list_id']].
+						($r['salary_avans'] ? ', аванс' : '').
+					'.</div>'
+				: '').
 			'<td class="dtime">'.FullDataTime($r['dtime_add']).
-			'<td class="ed">'._iconDel($r + array('class'=>'worker-zp-del'));
+			'<td class="ed">'._iconEdit($r)._iconDel($r);
 	}
 	$send =
 		'<h3>'.
-			'<b>З/п за '.$filter['month'].'</b>:'.
-			'<span><a class="worker-zp-add">Выдать з/п</a> :: Сумма: <b>'.$summa.'</b> руб.</span>'.
+			'<b>З/п за '.$v['month'].'</b>:'.
+			'<span>Сумма: <b>'.$summa.'</b> руб.</span>'.
 		'</h3>'.
 		'<table class="_spisok">'.
 			'<tr><th>Сумма'.

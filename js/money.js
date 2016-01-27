@@ -640,6 +640,7 @@ var _accrualAdd = function() {
 				$('.headName em').html(MONTH_DEF[send.mon] + ' ' + send.year);
 				$('._balans-show').html(res.balans);
 				$('#spisok-list').html(res.list);
+				SALARY.list = res.list_array;
 				$('#spisok-acc').html(res.acc);
 				$('#spisok-zp').html(res.zp);
 				$('#month-list').html(res.month);
@@ -684,18 +685,19 @@ var _accrualAdd = function() {
 		}
 	},
 	_salaryWorkerRateSet = function() {//установка ставки сотрудника
-		var html =
+		var period = SALARY.rate_period ? SALARY.rate_period : 1,
+			html =
 			'<div class="_info">' +
 				'После установки ставки сотруднику указанная сумма будет автоматически начисляться ' +
 				'на его баланс в определённый день выбранной периодичностью. ' +
 			'</div>' +
 			'<table class="_dialog-tab" id="salary-rate-set-tab">' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + (SALARY.rate_sum ? SALARY.rate_sum : '') + '" /> руб.' +
-				'<tr><td class="label">Период:<td><input type="hidden" id="period" value="' + SALARY.rate_period + '" />' +
-				'<tr class="tr-day' + (SALARY.rate_period == 3 ? ' dn' : '') + '">' +
+				'<tr><td class="label">Период:<td><input type="hidden" id="period" value="' + period + '" />' +
+				'<tr class="tr-day' + (period > 2 ? ' dn' : '') + '">' +
 					'<td class="label">День начисления:' +
-					'<td><div class="div-day' + (SALARY.rate_period != 1 ? ' dn' : '') + '"><input type="text" id="day" maxlength="2" value="' + SALARY.rate_day + '" /></div>' +
-						'<div class="div-week' + (SALARY.rate_period != 2 ? ' dn' : '') + '"><input type="hidden" id="day_week" value="' + SALARY.rate_day + '" /></div>' +
+					'<td><div class="div-day' + (period != 1 ? ' dn' : '') + '"><input type="text" id="day" maxlength="2" value="' + SALARY.rate_day + '" /></div>' +
+						'<div class="div-week' + (period != 2 ? ' dn' : '') + '"><input type="hidden" id="day_week" value="' + SALARY.rate_day + '" /></div>' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
@@ -709,7 +711,7 @@ var _accrualAdd = function() {
 		$('#sum').focus();
 		$('#sum,#day').keyEnter(submit);
 		$('#period')._select({
-			width:70,
+			width:100,
 			spisok:SALARY_PERIOD_SPISOK,
 			func:function(id) {
 				$('#day_week')._select(1);
@@ -762,11 +764,10 @@ var _accrualAdd = function() {
 	_salaryWorkerAccAdd = function() {//внесение произвольного начисления зп сотрудника
 		var html =
 			'<table class="_dialog-tab">' +
+				'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+				'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
 				'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="50">' +
-				'<tr><td class="label">Месяц:' +
-					'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
-						'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
 			'</table>',
 			dialog = _dialog({
 				head:'Внесение начисления для сотрудника',
@@ -776,22 +777,14 @@ var _accrualAdd = function() {
 
 		$('#sum').focus();
 		$('#sum,#about').keyEnter(submit);
-		$('#tabmon')._select({
-			width:80,
-			spisok:_toSpisok(MONTH_DEF)
-		});
-		$('#tabyear')._select({
-			width:60,
-			spisok:_toSpisok(_yearAss(SALARY.year))
-		});
 		function submit() {
 			var send = {
 				op:'salary_accrual_add',
 				worker_id:SALARY.worker_id,
 				sum:_cena($('#sum').val()),
 				about:$.trim($('#about').val()),
-				mon:$('#tabmon').val(),
-				year:$('#tabyear').val()
+				mon:SALARY.mon,
+				year:SALARY.year
 			};
 			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
@@ -816,11 +809,10 @@ var _accrualAdd = function() {
 	_salaryWorkerDeductAdd = function() {//внесение вычета из зп сотрудника
 		var html =
 			'<table class="_dialog-tab">' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
-				'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="50">' +
-				'<tr><td class="label">Месяц:' +
-					'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
-						'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
+				'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+				'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+				'<tr><td class="label">Описание:<td><input type="text" id="about" />' +
 			'</table>',
 			dialog = _dialog({
 				head:'Внесение вычета из зарплаты',
@@ -830,22 +822,14 @@ var _accrualAdd = function() {
 
 		$('#sum').focus();
 		$('#sum,#about').keyEnter(submit);
-		$('#tabmon')._select({
-			width:80,
-			spisok:_toSpisok(MONTH_DEF)
-		});
-		$('#tabyear')._select({
-			width:60,
-			spisok:_toSpisok(_yearAss(SALARY.year))
-		});
 		function submit() {
 			var send = {
 				op:'salary_deduct_add',
 				worker_id:SALARY.worker_id,
 				sum:_cena($('#sum').val()),
 				about:$.trim($('#about').val()),
-				mon:$('#tabmon').val(),
-				year:$('#tabyear').val()
+				mon:SALARY.mon,
+				year:SALARY.year
 			};
 			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
@@ -870,12 +854,12 @@ var _accrualAdd = function() {
 		var html =
 				'<div id="salary-list-tab">' +
 					'<div class="_info">' +
-						'Для создания листа выдачи з/п сначала необходимо выбрать начисления.' +
+						'Для формирования листа выдачи з/п сначала необходимо выбрать начисления.' +
 					'</div>' +
 				'</div>',
 			dialog = _dialog({
 				padding:30,
-				width:300,
+				width:305,
 				head:'Создание листа выдачи з/п',
 				content:html,
 				butSubmit:'',
@@ -889,17 +873,20 @@ var _accrualAdd = function() {
 		var html =
 				'<div id="salary-list-tab">' +
 					'<div class="_info">' +
-						'<b>Создание листа выдачи з/п</b>' +
+						'<h1>Создание листа выдачи з/п</h1>' +
 						'После формирования листа выдачи з/п все ' +
 						'выделенные галочками начисления и вычеты станут фиксированными, ' +
 						'то есть их нельзя будет изменить.' +
 					'</div>' +
 					'<table>' +
-						'<tr><td class="label r">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
-						'<tr><td class="label r">Выбрано записей:<td><b>' + _checkAll('count') + '</b>' +
-						'<tr><td class="label r">Сумма:<td><b>' + _checkAll('sum') + '</b> руб.' +
-						'<tr><td class="label r">Месяц:<td>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year +
+						'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+						'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
+						'<tr><td class="label">Выбрано записей:<td>' + _checkAll('count') +
+						'<tr><td class="label">Сумма:<td><b>' + _checkAll('sum') + '</b> руб.' +
 					'</table>' +
+					'<div class="_info">' +
+						'Все ранее выданные з/п в этом месяце, которые не привязаны к листам выдачи, попадут в <b>текущий лист</b> и будут отмечены как <b>авансы</b>.' +
+					'</div>' +
 				'</div>',
 			dialog = _dialog({
 				width:330,
@@ -927,67 +914,85 @@ var _accrualAdd = function() {
 			}, 'json');
 		}
 	},
-	_salaryWorkerZpAdd = function() {//внесение зп сотруднику
+	_salaryWorkerZpAdd = function(o) {//внесение/редактировыние зп сотрудника
+		o = $.extend({
+			id:0,
+			invoice_id:INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0,
+			sum:'',
+			about:'',
+			salary_list_id:0
+		}, o);
+
 		var html =
 				'<table class="_dialog-tab">' +
-					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" />' +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"> руб.' +
-					'<tr><td class="label">Месяц:' +
-						'<td><input type="hidden" id="tabmon" value="' + SALARY.mon + '" /> ' +
-							'<input type="hidden" id="tabyear" value="' + SALARY.year + '" />' +
-					'<tr><td class="label">Описание:<td><input type="text" id="about">' +
+					'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+					'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
+					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + o.invoice_id + '" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
+//					'<tr><td class="label">Аванс:<td><input type="hidden" id="avans" />' +
+					'<tr><td class="label">Комментарий:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
+					'<tr' + (SALARY.list.length ? '' : ' class="dn"') + '>' +
+						'<td class="label">Лист выдачи:' +
+						'<td><input type="hidden" id="salary_list_id" value="' + o.salary_list_id + '" />' +
 				'</table>',
 			dialog = _dialog({
-				head:'Выдача зарплаты сотруднику',
+				width:380,
+				padding:20,
+				head:(o.id ? 'Редактирование' : 'Выдача') + ' зарплаты',
 				content:html,
-				submit:submit
+				submit:submit,
+				butSubmit:o.id ? 'Сохранить' : 'Выдать'
 			});
 
 		$('#sum').focus();
 		$('#invoice_id')._select({
-			title0:'Не выбран',
+			width:218,
+			title0:'счёт не выбран',
 			spisok:INVOICE_SPISOK,
+			disabled:o.id,
 			func:function() {
 				$('#sum').focus();
 			}
 		});
 		$('#sum,#about').keyEnter(submit);
-		$('#tabmon')._select({
-			width:80,
-			spisok:_toSpisok(MONTH_DEF)
-		});
-		$('#tabyear')._select({
-			width:60,
-			spisok:_toSpisok(_yearAss(SALARY.year))
+//		$('#avans')._check();
+		$('#salary_list_id')._select({
+			width:218,
+			title0:'не выбран',
+			spisok:SALARY.list
 		});
 
 		function submit() {
 			var send = {
-				op:'expense_add',
+				op:'expense_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
 				category_id:1,
 				worker_id:SALARY.worker_id,
 				invoice_id:_num($('#invoice_id').val()),
 				sum:_cena($('#sum').val()),
 				about:$('#about').val(),
-				mon:$('#tabmon').val(),
-				year:$('#tabyear').val()
+				salary_list_id:_num($('#salary_list_id').val()),
+				mon:SALARY.mon,
+				year:SALARY.year
 			};
-			if(!send.invoice_id)
+			if(!send.invoice_id) {
 				dialog.err('Укажите с какого счёта производится выдача');
-			else if(!send.sum) {
+				return;
+			}
+			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Выдача зарплаты произведена');
-						_salarySpisok();
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					_salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	},
 
@@ -1741,8 +1746,26 @@ $(document)
 			func:_salarySpisok
 		});
 	})
-	.on('click', '.worker-zp-add', _salaryWorkerZpAdd)
-	.on('click', '.worker-zp-del', function() {
+	.on('click', '#salary-worker #spisok-zp .img_edit', function() {
+		var dialog = _dialog({
+				width:380,
+				head:'Редактирование выданной з/п сотрудника',
+				load:1,
+				butSubmit:''
+			}),
+			send = {
+				op:'expense_load',
+				id:$(this).attr('val')
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.close();
+				_salaryWorkerZpAdd(res.arr);
+			} else
+				dialog.loadError();
+		}, 'json');
+	})
+	.on('click', '#salary-worker #spisok-zp .img_del', function() {
 		_dialogDel({
 			id:$(this).attr('val'),
 			head:'зарплаты',

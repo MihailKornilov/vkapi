@@ -34,11 +34,13 @@
 #salary-worker #spisok-list .img_xls{width:120px;padding:2px 0 0 20px}
 #salary-worker #spisok-list .sum{width:60px}
 #salary-worker #spisok-zp{margin-top:20px}
+#salary-worker #spisok-zp .nl{font-size:10px;color:#080;margin-top:3px}
 #salary-worker h3{margin-bottom:3px}
 #salary-worker h3 span{float:right}
 
-#salary-list-tab ._info b{display:block;margin-bottom:3px;text-align:center}
-#salary-list-tab table{border-spacing:8px;margin:0 0 15px 30px}
+#salary-list-tab ._info h1{display:block;margin-bottom:3px;text-align:center}
+#salary-list-tab table{border-spacing:10px;margin:0 0 15px 30px}
+#salary-list-tab .label{text-align:right}
 
 
 #salary-rate-set-tab .label{width:100px}

@@ -809,7 +809,7 @@ function expense_spisok($v=array()) {
 	foreach($expense as $r)
 		$send['spisok'] .=
 			'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
-				'<td class="sum"><b>'.abs($r['sum']).'</b>'.
+				'<td class="sum"><b>'._sumSpace($r['sum']).'</b>'.
 				'<td>'.expenseAbout($r).
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconEdit($r)._iconDel($r);

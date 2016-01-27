@@ -236,9 +236,8 @@ function zpPrint($sheet, $list) {
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `worker_id`=".WORKER_ID."
-			  AND `year`=".LIST_YEAR."
-			  AND `mon`=".LIST_MON."
+			  AND `salary_avans`
+			  AND `salary_list_id`=".LIST_ID."
 			ORDER BY `id` DESC";
 	if($avans = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
 		$sheet->setCellValue('A'.$line, 'Выдан аванс:');

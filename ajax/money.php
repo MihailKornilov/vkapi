@@ -510,6 +510,7 @@ switch(@$_POST['op']) {
 
 		$worker_id = _num($_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
+		$salary_list_id = _num(@$_POST['salary_list_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
@@ -523,6 +524,7 @@ switch(@$_POST['op']) {
 					`invoice_id`,
 					`category_id`,
 					`worker_id`,
+					`salary_list_id`,
 					`attach_id`,
 					`year`,
 					`mon`,
@@ -535,6 +537,7 @@ switch(@$_POST['op']) {
 					".$invoice_id.",
 					".$category_id.",
 					".$worker_id.",
+					".$salary_list_id.",
 					".$attach_id.",
 					".$year.",
 					".$mon.",
@@ -587,7 +590,8 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$worker_id = _num($_POST['worker_id']);
-		$attach_id = _num($_POST['attach_id']);
+		$attach_id = _num(@$_POST['attach_id']);
+		$salary_list_id = _num(@$_POST['salary_list_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
@@ -607,6 +611,7 @@ switch(@$_POST['op']) {
 					`category_id`=".$category_id.",
 					`worker_id`=".$worker_id.",
 					`attach_id`=".$attach_id.",
+					`salary_list_id`=".$salary_list_id.",
 					`year`=".$year.",
 					`mon`=".$mon."
 				WHERE `id`=".$id;
@@ -638,9 +643,11 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT
+					`id`,
 					`category_id`,
 					`invoice_id`,
 					`worker_id`,
+					`salary_list_id`,
 					`attach_id`,
 					`sum`,
 					`about`,
@@ -1358,10 +1365,12 @@ switch(@$_POST['op']) {
 
 	case 'salary_spisok':
 		$send['balans'] = salaryWorkerBalans(_num($_POST['id']), 1);
-		$send['list'] = utf8(salary_worker_list($_POST));
-		$send['acc'] = utf8(salary_worker_acc($_POST));
-		$send['zp'] = utf8(salary_worker_zp($_POST));
-		$send['month'] = utf8(salary_month_list($_POST));
+		$filter = salaryFilter($_POST);
+		$send['list'] = utf8(salary_worker_list($filter));
+		$send['list_array'] = salary_worker_list(array('list_type'=>'array') + $filter);
+		$send['acc'] = utf8(salary_worker_acc($filter));
+		$send['zp'] = utf8(salary_worker_zp($filter));
+		$send['month'] = utf8(salary_month_list($filter));
 		jsonSuccess($send);
 		break;
 	case 'salary_balans_set'://установка баланса сотрудника
@@ -1438,12 +1447,10 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
 
-		$changes =
-			_historyChange('Сумма', _cena($r['salary_rate_sum']), $sum).
-			_historyChange('Период', $r['salary_rate_period'], $period, _salaryPeriod($r['salary_rate_period']), _salaryPeriod($period)).
-			_historyChange('День', $r['salary_rate_day'], $day, $r['salary_rate_day'] ? $r['salary_rate_day'] : '', $day ? $day : '');
-
-		if($changes)
+		if($changes =
+			_historyChange('Сумма', _cena($r['salary_rate_sum']) ? _cena($r['salary_rate_sum']) : '', $sum ? $sum : '').
+			_historyChange('Период', $r['salary_rate_period'] ? _salaryPeriod($r['salary_rate_period']) : '', _salaryPeriod($period)).
+			_historyChange('День', $r['salary_rate_day'] ? $r['salary_rate_day'] : '', $day ? $day : ''))
 			_history(array(
 				'type_id' => 35,
 				'worker_id' => $worker_id,
@@ -1713,6 +1720,7 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_salary_list` (
 					`app_id`,
 					`ws_id`,
+					`nomer`,
 					`worker_id`,
 					`sum`,
 					`year`,
@@ -1721,6 +1729,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
+					"._maxSql('_salary_list', 'nomer', 1).",
 					".$worker_id.",
 					".$sum.",
 					'".$year."',
@@ -1751,6 +1760,19 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
+		//Привязка листа выдачи к авансам
+		$sql = "UPDATE `_money_expense`
+				SET `salary_list_id`=".$insert_id.",
+					`salary_avans`=1
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `worker_id`=".$worker_id."
+				  AND `year`=".$year."
+				  AND `mon`=".$mon."
+				  AND !`deleted`
+				  AND !`salary_list_id`";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 		_history(array(
 			'type_id' => 87,
 			'worker_id' => $worker_id,
@@ -1775,6 +1797,14 @@ switch(@$_POST['op']) {
 		if(TODAY != substr($r['dtime_add'], 0, 10))
 			jsonError();
 
+		$sql = "SELECT COUNT(`id`)
+				FROM `_money_expense`
+				WHERE !`deleted`
+				  AND !`salary_avans`
+				  AND `salary_list_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('По листу выдачи уже произведена оплата');
+
 		$sql = "UPDATE `_salary_accrual` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1782,6 +1812,9 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$sql = "UPDATE `_zayav_expense` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_money_expense` SET `salary_list_id`=0 WHERE `salary_list_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$sql = "DELETE FROM `_salary_list` WHERE `id`=".$id;
