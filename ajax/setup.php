@@ -295,6 +295,45 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_SALARY_BONUS'://Начисления бонусов
+		$_POST['h1'] = 1043;
+		$_POST['h0'] = 1044;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
+	case 'salary_bonus_sum'://установка баланса сотрудника
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+
+		if(!$sum = _cena($_POST['sum']))
+			jsonError('Некорректно введено знаяение');
+
+		if(!$r = _viewerWorkerQuery($worker_id))
+			jsonError('Сотрудника не существует');
+
+		if($r['salary_bonus_sum'] == $sum)
+			jsonError('Значение не было изменено');
+
+		$sql = "UPDATE `_vkuser`
+				SET `salary_bonus_sum`=".$sum."
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `viewer_id`=".$worker_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
+
+		_history(array(
+			'type_id' => 1045,
+			'worker_id' => $worker_id,
+			'v1' => $sum
+		));
+
+		jsonSuccess();
+		break;
 	case 'RULE_APP_ENTER'://разрешать сотруднику вход в приложение
 		$_POST['h1'] = 1002;
 		$_POST['h0'] = 1003;

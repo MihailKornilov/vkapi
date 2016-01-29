@@ -44,6 +44,15 @@
 #setup_rule .rtab{border-spacing:8px}
 #setup_rule .lab{width:100px;text-align:right}
 #setup_rule .rtab input{width:230px}
+#RULE_SALARY_BONUS_check{margin-bottom:-3px}
+#setup_rule #salary_bonus_sum{
+	width:30px;
+	margin:0 3px 0 5px;
+	text-align:right;
+	position:relative;
+}
+
+
 
 #RULE_APP_ENTER_check{margin:5px 0 10px 166px}
 #setup_rule #div-app-enter .label{width:150px;text-align:right}

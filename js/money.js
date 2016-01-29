@@ -920,6 +920,7 @@ var _accrualAdd = function() {
 			invoice_id:INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0,
 			sum:'',
 			about:'',
+			salary_avans:0,
 			salary_list_id:0
 		}, o);
 
@@ -929,7 +930,7 @@ var _accrualAdd = function() {
 					'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
 					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + o.invoice_id + '" />' +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
-//					'<tr><td class="label">Аванс:<td><input type="hidden" id="avans" />' +
+					'<tr><td class="label">Аванс:<td><input type="hidden" id="salary_avans" value="' + o.salary_avans + '" />' +
 					'<tr><td class="label">Комментарий:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
 					'<tr' + (SALARY.list.length ? '' : ' class="dn"') + '>' +
 						'<td class="label">Лист выдачи:' +
@@ -955,7 +956,7 @@ var _accrualAdd = function() {
 			}
 		});
 		$('#sum,#about').keyEnter(submit);
-//		$('#avans')._check();
+		$('#salary_avans')._check();
 		$('#salary_list_id')._select({
 			width:218,
 			title0:'не выбран',
@@ -971,6 +972,7 @@ var _accrualAdd = function() {
 				invoice_id:_num($('#invoice_id').val()),
 				sum:_cena($('#sum').val()),
 				about:$('#about').val(),
+				salary_avans:_bool($('#salary_avans').val()),
 				salary_list_id:_num($('#salary_list_id').val()),
 				mon:SALARY.mon,
 				year:SALARY.year

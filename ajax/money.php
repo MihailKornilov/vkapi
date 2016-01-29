@@ -510,6 +510,7 @@ switch(@$_POST['op']) {
 
 		$worker_id = _num($_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
+		$salary_avans = _bool(@$_POST['salary_avans']);
 		$salary_list_id = _num(@$_POST['salary_list_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
@@ -524,6 +525,7 @@ switch(@$_POST['op']) {
 					`invoice_id`,
 					`category_id`,
 					`worker_id`,
+					`salary_avans`,
 					`salary_list_id`,
 					`attach_id`,
 					`year`,
@@ -537,6 +539,7 @@ switch(@$_POST['op']) {
 					".$invoice_id.",
 					".$category_id.",
 					".$worker_id.",
+					".$salary_avans.",
 					".$salary_list_id.",
 					".$attach_id.",
 					".$year.",
@@ -591,6 +594,7 @@ switch(@$_POST['op']) {
 
 		$worker_id = _num($_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
+		$salary_avans = _bool(@$_POST['salary_avans']);
 		$salary_list_id = _num(@$_POST['salary_list_id']);
 		$mon = _num($_POST['mon']);
 		$year = _num($_POST['year']);
@@ -611,6 +615,7 @@ switch(@$_POST['op']) {
 					`category_id`=".$category_id.",
 					`worker_id`=".$worker_id.",
 					`attach_id`=".$attach_id.",
+					`salary_avans`=".$salary_avans.",
 					`salary_list_id`=".$salary_list_id.",
 					`year`=".$year.",
 					`mon`=".$mon."
@@ -620,13 +625,26 @@ switch(@$_POST['op']) {
 		$mon_old = $r['mon'] ? _monthDef($r['mon']).' '.$r['year'] : '';
 		$mon_new = $mon ? _monthDef($mon).' '.$year : '';
 
-		$changes =
+		$list = array();
+		if($salary_list_id || $r['salary_list_id']) {
+			$sql = "SELECT
+						`id`,
+						`nomer`
+					FROM `_salary_list`
+					WHERE `id` IN (".$salary_list_id.",".$r['salary_list_id'].")";
+			$list = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+
+		if($changes =
 			_historyChange('Категория', $r['category_id'] ? _expense($r['category_id']) : '', $category_id ? _expense($category_id) : '').
 			_historyChange('Описание', $r['about'], $about).
 			_historyChange('Сотрудник', $r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '', $worker_id ? _viewer($worker_id, 'viewer_name') : '').
-			_historyChange('Месяц', $mon_old, $mon_new);
-
-		if($changes)
+			_historyChange('Аванс', _daNet($r['salary_avans']),  _daNet($salary_avans)).
+			_historyChange('Лист выдачи',
+					$r['salary_list_id'] ? '№'.$list[$r['salary_list_id']] : '',
+					$salary_list_id ? '№'.$list[$salary_list_id] : '').
+			_historyChange('Месяц', $mon_old, $mon_new))
 			_history(array(
 				'type_id' => 23,
 				'invoice_id' => $r['invoice_id'],
@@ -647,6 +665,7 @@ switch(@$_POST['op']) {
 					`category_id`,
 					`invoice_id`,
 					`worker_id`,
+					`salary_avans`,
 					`salary_list_id`,
 					`attach_id`,
 					`sum`,

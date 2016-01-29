@@ -817,6 +817,47 @@ $(document)
 				}
 			});
 			$('#RULE_SALARY_SHOW')._check(setupRuleCheck);
+			$('#RULE_SALARY_BONUS')._check(function(v, id) {
+				var t = $(this);
+				$('#' + id + '_check').next()[(v ? 'remove' : 'add') + 'Class']('vh');
+				setupRuleCheck(v, id);
+				$('#salary_bonus_sum').focus()
+			});
+			$('#salary_bonus_sum').keyEnter(function() {
+				var o = $('#salary_bonus_sum'),
+					send = {
+						op:'salary_bonus_sum',
+						worker_id:RULE_VIEWER_ID,
+						sum:_cena(o.val())
+					};
+
+				if(!send.sum || send.sum > 100)
+					return err('Некорректно введено значение');
+
+				o.attr('disabled', 'disabled');
+
+				$.post(AJAX_MAIN, send, function(res) {
+					o.attr('disabled', false);
+					if(res.success)
+						_msg();
+					else {
+						err(res.text);
+						o.focus();
+					}
+				}, 'json');
+
+				function err(msg) {
+					o.vkHint({
+						msg:'<span class="red">' + msg + '</span>',
+						top:-80,
+						left:-9,
+						indent:40,
+						show:1,
+						remove:1
+					});
+					return false;
+				}
+			});
 			$('#RULE_APP_ENTER')._check(function(v, id) {
 				$('#div-app-enter')[(v ? 'remove' : 'add') + 'Class']('dn');
 				setupRuleCheck(v, id);

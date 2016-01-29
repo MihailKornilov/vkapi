@@ -480,17 +480,19 @@ function salary_worker_list($v) {
 		'<h3><b>Листы выдачи з/п</b></h3>'.
 		'<table class="_spisok">'.
 			'<tr><th>Наименование'.
-				'<th>К выдаче'.
 				'<th>Выдано'.
+				'<th>Остаток'.
 				'<th>Дата'.
 				'<th>';
 	foreach($spisok as $r) {
-		$diff = $r['sum'] != $r['pay'] ? ' red' : '';
+		$diff = $r['sum'] - $r['pay'];
 		$send .=
 			'<tr><td class="about">'.
 					'<a class="img_xls" val="'.$r['id'].'">Лист выдачи з/п №'.$r['nomer'].'</a>'.
-				'<td class="sum acc">'._sumSpace(_cena($r['sum'])).
-				'<td class="sum pay'.$diff.'">'.($r['pay'] ? _sumSpace($r['pay']) : '').
+					'</br>'.
+					'на сумму <b>'._sumSpace(_cena($r['sum'])).'</b> руб.'.
+				'<td class="sum pay">'.($r['pay'] ? _sumSpace($r['pay']) : '').
+				'<td class="sum grey">'.($diff ? _sumSpace(_cena($diff)) : '').
 				'<td class="dtime">'.FullData($r['dtime_add']).
 				'<td class="ed">'._iconDel($r + array('class'=>'salary-list-del','nodel'=>$payNoAvans));
 	}

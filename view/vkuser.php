@@ -247,7 +247,8 @@ function _viewerFormat($u) {//формирование данных пользователя
 		'balans_start' => round($u['salary_balans_start'], 2),
 		'rate_sum' => _cena($u['salary_rate_sum']),
 		'rate_period' => $u['salary_rate_period'],
-		'rate_day' => $u['salary_rate_day']
+		'rate_day' => $u['salary_rate_day'],
+		'bonus_sum' => _cena($u['salary_bonus_sum'])
 	);
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
