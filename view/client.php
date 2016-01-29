@@ -48,6 +48,8 @@ function client_list($v) {// страница со списком клиентов
 	                        _check('dolg', 'Должники', $v['dolg']).
 							_check('opl', 'Внесена предоплата', $v['opl']).
 							_check('worker', 'Привязка к сотруднику', $v['worker']).
+							'<div class="f-label mt20">Напоминания</div>'.
+							'<input type="hidden" id="remind" value="'.$v['remind'].'" />'.
 						'</div>'.
 			'</table>'.
 		'</div>';
@@ -60,7 +62,8 @@ function clientFilter($v) {
 		'dolg' => 0,
 		'worker' => 0,
 		'opl' => 0,
-		'category_id' => 0
+		'category_id' => 0,
+		'remind' => 0
 	);
 	$filter = array(
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
@@ -70,6 +73,7 @@ function clientFilter($v) {
 		'worker' => _bool(@$v['worker']),
 		'opl' => _bool(@$v['opl']),
 		'category_id' => _num(@$v['category_id']),
+		'remind' => _num(@$v['remind']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -108,6 +112,16 @@ function client_data($v=array()) {// список клиентов
 			$cond .= " AND `category_id`=".$filter['category_id'];
 		if($filter['worker'])
 			$cond .= " AND `worker_id`";
+		if($filter['remind']) {
+			$not = $filter['remind'] == 2 ? ' NOT' : '';
+			$sql = "SELECT `client_id`
+					FROM `_remind`
+					WHERE `app_id`=".APP_ID."
+					 AND `ws_id`=".WS_ID."
+					 AND `client_id`
+					 AND `status`=1";
+			$cond .= " AND `id`".$not." IN (".query_ids($sql, GLOBAL_MYSQL_CONNECT).")";
+		}
 		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
 			$sql = "SELECT SUM(`balans`)

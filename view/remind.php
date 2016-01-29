@@ -403,7 +403,7 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 			'};'.
 		'</script>';
 
-	if(empty($data['spisok']))
+	if(!$data['all'])
 		return $send;
 
 	return

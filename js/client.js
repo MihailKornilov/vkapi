@@ -399,16 +399,12 @@ $(document)
 		_scroll('set', $(this).attr('id'));
 	})
 	.on('click', '#client #filter_clear', function() {
-		$('#find')._search('clear');
-		$('#category_id')._radio(0);
-		$('#dolg')._check(0);
-		$('#opl')._check(0);
-		$('#worker')._check(0);
-		CLIENT.category_id = 0;
-		CLIENT.find = '';
-		CLIENT.dolg = 0;
-		CLIENT.opl = 0;
-		CLIENT.worker = 0;
+		$('#find')._search('clear');    CLIENT.find = '';
+		$('#category_id')._radio(0);    CLIENT.category_id = 0;
+		$('#dolg')._check(0);           CLIENT.dolg = 0;
+		$('#opl')._check(0);            CLIENT.opl = 0;
+		$('#worker')._check(0);         CLIENT.worker = 0;
+		$('#remind')._select(0);        CLIENT.remind = 0;
 		_clientSpisok();
 	})
 	.on('mouseenter', '#client .comm', function() {
@@ -512,6 +508,15 @@ $(document)
 				left:-183,
 				indent:20,
 				delayShow:1000
+			});
+			$('#remind')._select({
+				width: 140,
+				title0: 'не важно',
+				spisok: [
+					{uid:1,title:'есть'},
+					{uid:2,title:'нет'}
+				],
+				func: _clientSpisok
 			});
 		}
 		if($('#client-info').length) {
