@@ -1,23 +1,13 @@
 <?php
-function _remind() {
-	$data = _remind_spisok();
-	return array(
-		'list' => _remind_list($data),
-		'spisok' => $data['spisok'],
-		'right' => _remind_right()
-	);
-}//_remind()
-function _remind_list($data) {
-	return
-		'<div id="_remind">'.
-			'<table class="tabLR">'.
-				'<tr><td class="left">'.$data['spisok'].
-					'<td class="right">'.
-						'<div id="buttonCreate" class="_remind-add"><a>Новое напоминание</a></div>'.
-						_remind_right().
-			'</table>'.
-		'</div>';
-}//_remind_list()
+function _remind($i='spisok', $v=array()) {
+	switch($i) {
+		case 'spisok':
+			$data = _remind_spisok($v);
+			return $data['spisok'];
+		case 'right': return _remind_right();
+	}
+	return '';
+}
 function _remind_stat() {
 	if(!SA)
 		return '';
@@ -72,7 +62,7 @@ function _remind_stat() {
 			'<td class="count">'._remind_stat_count(0, 'week').
 			'<td class="count">'._remind_stat_count(0, strftime('%Y-%m-')).
 	'</table>';
-}//_remind_stat()
+}
 function _remind_stat_count($status, $period=TODAY) {
 	$cont = " AND `dtime_add` LIKE '".$period."%'";
 	if($period == 'week')
@@ -86,12 +76,18 @@ function _remind_stat_count($status, $period=TODAY) {
 			  ".$cont;
 	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
 	return $c ? $c : '';
-}//_remind_stat_count()
+}
 function _remind_right() {
+	$list = array(
+		9 => 'Сегодня'.(_remindTodayCount() ? '<em>'._remindTodayCount().'</em>' : ''),
+		1 => 'Активные<em>'._remindActiveCount().'</em>',
+		2 => 'Выполнены',
+		3 => 'Отменены'
+	);
 	return
 		'<div class="findHead">Категории напоминаний</div>'.
-		_radio('_remind-status', array(1=>'Активные',2=>'Выполнены',0=>'Отменены'), 1, 1);
-}//_remind_right()
+		_radio('status', $list, 9, 1);
+}
 function _remind_history_add($v) {
 	$v = array(
 		'remind_id' => $v['remind_id'],
@@ -117,21 +113,37 @@ function _remind_history_add($v) {
 				".VIEWER_ID."
 			)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
-}//_remind_history_add()
-function _remindActiveSet() { //Получение количества активных напоминаний
+}
+function _remindTodayCount($plus_b=0) { //Получение количества напоминаний на сегодня
+	if(defined('REMIND_ACTIVE_COUNT')) {
+		if($plus_b)
+			return REMIND_ACTIVE_COUNT ? ' <b>+'.REMIND_ACTIVE_COUNT.'</b>' : '';
+		return REMIND_ACTIVE_COUNT;
+	}
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `status`=1
 			  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
+	define('REMIND_ACTIVE_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
+
+	return _remindTodayCount($plus_b);
+}
+function _remindActiveCount() { //количество активных напоминаний
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status`=1";
 	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
-	define('REMIND_ACTIVE', $count > 0 ? ' <b>+'.$count.'</b>' : '');
-}//_remindActiveSet()
+
+	return $count ? $count : '';
+}
 function _remindDayLeft($status, $d) {//подсчёт оставшихся дней
 	if($status == 2)
 		return 'Выполнено';
-	if($status == 0)
+	if($status == 3)
 		return 'Отменено';
 	$dayLeft = floor((strtotime($d) - TODAY_UNIXTIME) / 3600 / 24);
 	if($dayLeft < 0)
@@ -145,11 +157,11 @@ function _remindDayLeft($status, $d) {//подсчёт оставшихся дней
 		case 1: return 'Выполнить завтра';
 		case 2: return 'Выполнить послезавтра';
 	}
-}//_remindDayLeft()
+}
 function _remindDayLeftBg($status, $d) {//цвета для подсветки
 	if($status == 2)
 		return '9f9';
-	if($status == 0)
+	if($status == 3)
 		return 'ddd';
 	$dayLeft = floor((strtotime($d) - TODAY_UNIXTIME) / 3600 / 24);
 	if($dayLeft < 0)
@@ -157,32 +169,32 @@ function _remindDayLeftBg($status, $d) {//цвета для подсветки
 	if($dayLeft == 0)
 		return 'ffa';
 	return 'ddf';
-}//_remindDayLeftBg()
+}
 function _remindFilter($v) {
 	return array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
-		'client_id' => _num(@$v['client_id']) ? $v['client_id'] : 0,
+		'client_id' => _num(@$v['client_id']),
 		'zayav_id' => _num(@$v['zayav_id']),
-		'day' => !empty($v['day']) ? $v['day'] : '',
-		'status' => isset($v['status']) && preg_match(REGEXP_NUMERIC, $v['status']) ? intval($v['status']) : 1
+		'status' => _num(@$v['status']) ? _num($v['status']) : 9
 	);
-}//_remindFilter()
-function _remind_spisok($v=array(), $i='all') {
+}
+function _remind_spisok($v=array()) {
 	$filter = _remindFilter($v);
-
-	$page = $filter['page'];
-	$limit = $filter['limit'];
-	$start = ($page - 1) * $limit;
+	$filter = _filterJs('REMIND', $filter);
 
 	define('CLIENT_OR_ZAYAV', $filter['client_id'] || $filter['zayav_id']);
+	define('REMIND_TODAY', !CLIENT_OR_ZAYAV && $filter['status'] == 9);
+	define('REMIND_TODAY_MSG', REMIND_TODAY ? ' на сегодня' : '');
+	define('REMIND_ACTIVE', !CLIENT_OR_ZAYAV && !REMIND_TODAY);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID.
-			(CLIENT_OR_ZAYAV ? '' : " AND `status`=".$filter['status']);
+		 AND `ws_id`=".WS_ID;
 
-	if($filter['day'])
-		$cond .= " AND `day` LIKE '".$filter['day']."%'";
+	if(REMIND_TODAY)
+		$cond .= " AND `status`=1 AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
+	if(REMIND_ACTIVE)
+		$cond .= " AND `status`=".$filter['status'];
 	if($filter['client_id'])
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['zayav_id'])
@@ -190,48 +202,35 @@ function _remind_spisok($v=array(), $i='all') {
 
 
 	$send = array(
-		'spisok' => '',
-		'filter' => $filter,
+		'all' => 0,
+		'spisok' => $filter['js'],
 		'active' => 0,
 		'active_spisok' => array(),
-		'hidden' => 0
+		'hidden' => 0,
+		'filter' => $filter
 	);
 
-	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `_remind` WHERE ".$cond, GLOBAL_MYSQL_CONNECT);
-	if(!$send['all']) {
-		$send += array(
-			'spisok' => ($filter['zayav_id'] ? '&nbsp;&nbsp;Напоминаний нет.' : '<div class="_empty">Напоминаний не найдено.</div>')
-		);
-		if($i == 'all')
-			return $send;
-		return $send[$i];
+	$sql = "SELECT COUNT(*)
+			FROM `_remind`
+			WHERE ".$cond;
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		$send['spisok'] .= '<div class="_empty">Напоминаний'.REMIND_TODAY_MSG.' нет.</div>';
+		return $send;
 	}
 
-	$all = $send['all'];
+	$send['all'] = $all;
 
 	$sql = "SELECT *
 			FROM `_remind`
 			WHERE ".$cond."
 			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id` DESC' : '`day`')."
-			LIMIT ".$start.",".$limit;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	$remind = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$r['history'] = array();
-		$remind[$r['id']] = $r;
-	}
+			LIMIT "._startLimit($filter);
+	$remind = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
+	$remind = _remindHistory($remind);
 	$remind = _clientValToList($remind);
 	$remind = _zayavValToList($remind);
-
-	//внесение истории
-	$sql = "SELECT *
-			FROM `_remind_history`
-			WHERE `remind_id` IN (".implode(',', array_keys($remind)).")
-			ORDER BY `id` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$remind[$r['remind_id']]['history'][] = $r;
+	$remind = _dogovorValToList($remind);
 
 	foreach($remind as $r) {
 		if($r['status'] == 1) {
@@ -243,59 +242,76 @@ function _remind_spisok($v=array(), $i='all') {
 					'about:"'.addslashes(_br($r['about'])).'"'.
 				'}';
 		}
-		$send['spisok'] .=
-			'<div class="_remind-unit'.(($filter['zayav_id'] || $filter['client_id']) && $r['status'] != 1 ? ' dn' : '').'" val="'.$r['id'].'">'.
-				'<input type="hidden" class="ruday" value="'.$r['day'].'" />'.
-				'<div class="head'.($r['status'] == 1 ? ' hd-edit' : '').'" style="background-color:#'._remindDayLeftBg($r['status'], $r['day']).'">'.
-					'<div class="hdtxt">'.$r['txt'].'</div>'.
-					'<div class="hd-about">'.nl2br($r['about']).'</div>'.
-//					($r['status'] == 1 ? '<div class="img_edit'._tooltip('Редактировать', -50).'</div>' : '').
-				'</div>'.
-				'<table class="to">'.
-					($r['client_id'] && !$filter['client_id'] && !$filter['zayav_id'] ?
-						'<tr><td class="label">Клиент:<td>'.$r['client_link'].($r['client_phone'] ? ', '.$r['client_phone'] : '')
-					: '').
-					($r['zayav_id'] && !$filter['zayav_id'] ?
-						'<tr><td class="label">Заявка:<td>'.$r['zayav_link']
-					: '').
-				'</table>'.
-				'<div class="day_left">'.
-					_remindDayLeft($r['status'], $r['day']).
-					'<a class="ruhist">История</a>'.
-					($r['status'] == 1 ? '<tt> :: </tt><a class="action"">Действие</a>' : '').
-				'</div>'.
-				'<div class="hist">'._remind_history_show($r).'</div>'.
-			'</div>';
 	}
 
-	$send['hidden'] = $send['all'] - $send['active'];//скрытые напоминания
+	$send['hidden'] = $all - $send['active'];//скрытые напоминания
 
-	if($page == 1) {
-		$send['spisok'] .=
-			'<input type="hidden" id="remind_filter_status" value="'.$filter['status'].'" />'.
-			'<input type="hidden" id="remind_filter_zayav_id" value="'.$filter['zayav_id'].'" />';
+	if($filter['page'] == 1) {
 		if(!$filter['zayav_id']) {
 			$c = $filter['client_id'] ? $send['active'] : $all;
-			$send['spisok'] =
-				(!$filter['client_id'] ? _remind_stat() : '').
+			$send['spisok'] .=
 				'<div id="_remind-head">' .
-					($c ? 'Показано '.$c.' напоминани'._end($c, 'е', 'я', 'й') : 'Активных напоминаний нет.').
+					($c ? 'Показано '.$c.' напоминани'._end($c, 'е', 'я', 'й').REMIND_TODAY_MSG : 'Активных напоминаний нет.').
 					($filter['client_id'] && $send['hidden'] ? '<a id="_remind-show-all">Показать скрытые: '.$send['hidden'].'</a>' : '').
-				'</div>'.$send['spisok'];
+				'</div>';
 		}
 	}
+
+
+	foreach($remind as $r)
+		$send['spisok'] .= _remind_unit($r, $filter);
+
 
 	$send['spisok'] .=
 		_next($filter + array(
 			'type' => 5,
-			'id' => '_remind-next',
 			'all' => $all
 		));
 
-	if($i == 'all')
-		return $send;
-	return $send[$i];
-}//_remind_spisok()
+	return $send;
+}
+function _remindHistory($arr) {//добавление истории напоминаний в массив
+	foreach($arr as $id => $r)
+		$arr[$id]['history'] = array();
+
+	$sql = "SELECT *
+			FROM `_remind_history`
+			WHERE `remind_id` IN ("._keys($arr).")
+			ORDER BY `id` DESC";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['remind_id']]['history'][] = $r;
+
+	return $arr;
+}
+function _remind_unit($r, $filter) {
+	return
+	'<div class="_remind-unit'.(($filter['zayav_id'] || $filter['client_id']) && $r['status'] != 1 ? ' dn' : '').'" val="'.$r['id'].'">'.
+		'<input type="hidden" class="ruday" value="'.$r['day'].'" />'.
+		'<div class="head'.($r['status'] == 1 ? ' hd-edit' : '').'" style="background-color:#'._remindDayLeftBg($r['status'], $r['day']).'">'.
+			'<div class="hdtxt">'.$r['txt'].'</div>'.
+			'<div class="hd-about">'.nl2br($r['about']).'</div>'.
+		'</div>'.
+		'<table class="to">'.
+			($r['client_id'] && !$filter['client_id'] && !$filter['zayav_id'] ?
+				'<tr><td class="label top">Клиент:'.
+					'<td>'.$r['client_link'].
+						($r['client_phone'] ? ', '.$r['client_phone'] : '').
+						($r['client_balans'] < 0 ? '<br />Баланс: <b class="dolg">'.$r['client_balans'].'</b>' : '')
+			: '').
+			($r['zayav_id'] && !$filter['zayav_id'] ?
+				'<tr><td class="label top">Заявка:<td>'.$r['zayav_link_name'].
+				($r['dogovor_id'] ? ', договор '.$r['dogovor_line'] : '')
+			: '').
+		'</table>'.
+		'<div class="day_left">'.
+			_remindDayLeft($r['status'], $r['day']).
+			'<a class="ruhist">История</a>'.
+			($r['status'] == 1 ? '<tt> :: </tt><a class="action"">Действие</a>' : '').
+		'</div>'.
+		'<div class="hist">'._remind_history_show($r).'</div>'.
+	'</div>';
+}
 function _remind_history_show($v) {//отображение истории напоминаний
 	$send = '<table>';
 
@@ -320,7 +336,7 @@ function _remind_history_show($v) {//отображение истории напоминаний
 								($r['txt'] ? '.<br />Причина: <b>'.$r['txt'].'</b>' : '');
 							break;
 						case 2: $about = 'выполнил'.($sex1 ? 'а' : '').' напоминание'; break;
-						case 0: $about = 'отменил'.($sex1 ? 'а' : '').' напоминание'; break;
+						case 3: $about = 'отменил'.($sex1 ? 'а' : '').' напоминание'; break;
 					}
 				$send .=
 					'<tr><td>' .
@@ -334,7 +350,7 @@ function _remind_history_show($v) {//отображение истории напоминаний
 	$send .= '</table>';
 
 	return $send;
-}//_remind_history_show()
+}
 function _remind_add($v) {
 	if($v['zayav_id'] && !@$v['client_id']) {
 		$sql = "SELECT `client_id`
@@ -372,10 +388,10 @@ function _remind_add($v) {
 		'remind_id' => $insert_id,
 		'day' => $v['day']
 	));
-}//_remind_add()
+}
 function _remind_zayav($zayav_id) {//вывод напоминаний в заявке
 	return '<div id="_remind-zayav">'._remind_zayav_spisok($zayav_id).'</div>';
-}//_remind_zayav()
+}
 function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 	$data = _remind_spisok(array('zayav_id'=>$zayav_id));
 
@@ -397,8 +413,8 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 			'<div class="img_add _remind-add'._tooltip('Новое напоминание', -60).'</div>'.
 			($data['hidden'] ? '<a id="_remind-show-all">Показать все: '.$data['hidden'].'</a>' : '').
 		'</div>'.
-		'<div id="remind-spisok">'.$data['spisok'].'</div>';
-}//_remind_zayav_spisok()
+		'<div id="_remind-spisok">'.$data['spisok'].'</div>';
+}
 function _remind_active_to_ready($ids) {//отметка выбранных активных напоминаний выполненными
 	$sql = "SELECT *
 			FROM `_remind`
@@ -417,4 +433,4 @@ function _remind_active_to_ready($ids) {//отметка выбранных активных напоминаний
 			'reason' => 'внесён платёж по заявке'
 		));
 	}
-}//_remind_active_to_ready()
+}

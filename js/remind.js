@@ -24,7 +24,6 @@ var _remindAdd = function() {
 		function submit() {
 			var send = {
 				op:'remind_add',
-				from:window.ZI ? 'zayav' : (window.CLIENT ? 'client' : ''),
 				client_id:$('#client_id').val(),
 				zayav_id:$('#zayav_id').val(),
 				txt:$.trim($('#txt').val()),
@@ -34,42 +33,26 @@ var _remindAdd = function() {
 			if(!send.txt) {
 				dialog.err('Не указано содержание задачи');
 				$('#txt').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Напоминание внесено');
-						switch(send.from) {
-							case 'zayav':
-								$('#_remind-zayav').html(res.html);
-								REMIND.active++;
-								break;
-							case 'client':
-								$('#remind-spisok').html(res.html);
-								break;
-							default: $('td.left').html(res.html);
-						}
-
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					_remindSpisok();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
+
 		return false;
 	},
-	remindFilter = function(v, id) {
-		return {
-			op:'remind_spisok',
-			status:id == '_remind-status' ? $('#_remind-status').val() : $('#remind_filter_status').val()
-		};
-	},
-	remindSpisok = function(v, id) {
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_MAIN, remindFilter(v, id), function(res) {
-			$('#mainLinks').removeClass('busy');
+	_remindSpisok = function(v, id) {
+		_filterSpisok(REMIND, v, id);
+		$.post(AJAX_MAIN, REMIND, function(res) {
 			if(res.success)
-				$('.left').html(res.html);
+				$('#_remind-spisok').html(res.spisok);
 		}, 'json');
 	};
 
@@ -95,7 +78,7 @@ $(document)
 						'Выполнено' +
 						'<div class="about">Задание выполнено успешно.</div>' +
 					'</div>' +
-					'<div class="st c0" val="0">' +
+					'<div class="st c3" val="3">' +
 						'Отмена' +
 						'<div class="about">Отмена напоминания по какой-либо причине.</div>' +
 					'</div>' +
@@ -132,7 +115,7 @@ $(document)
 		$('.st').click(function() {
 			var	v = $(this).attr('val');
 			if(v == 1) {
-				$('.c2,.c0').hide();
+				$('.c2,.c3').hide();
 				$('#ra-tab').show();
 				dialog.butSubmit('Применить');
 			} else {
@@ -155,24 +138,22 @@ $(document)
 				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Данные изменены!');
-						$(send.from ? '#remind-spisok' : 'td.left').html(res.html);
+						_msg();
+						_remindSpisok();
 					}
 				}, 'json');
 		}
 	})
 	.on('click', '._remind-unit .hd-edit', function() {
 		var t = $(this),
-			p = t;
-		while(!p.hasClass('_remind-unit'))
-			p = p.parent();
-		var id = p.attr('val'),
-			head = p.find('.hdtxt').html(),
-			about = p.find('.hd-about').html().replace(/<br>/g, ''),
+			p = _parent(t, '._remind-unit'),
+			id = p.attr('val'),
+			head = p.find('.hdtxt'),
+			about = p.find('.hd-about'),
 			html =
 				'<table id="_remind-head-edit">' +
-					'<tr><td class="label">Задача:<td><input type="text" id="hdtxt" value="' + head + '" />' +
-					'<tr><td class="label top">Подробно:<td><textarea id="hd-about">' + about + '</textarea>' +
+					'<tr><td class="label">Задача:<td><input type="text" id="hdtxt" value="' + head.html() + '" />' +
+					'<tr><td class="label top">Подробно:<td><textarea id="hd-about">' + about.html().replace(/<br>/g, '') + '</textarea>' +
 				'</table>',
 			dialog = _dialog({
 				width:420,
@@ -181,46 +162,38 @@ $(document)
 				butSubmit:'Сохранить',
 				submit:submit
 			});
+
 		$('#hdtxt').focus().keyEnter(submit);
 		$('#hd-about').autosize();
+
 		function submit() {
 			var send = {
 				op:'remind_head_edit',
-				from:window.ZI ? 'zayav' : (window.CLIENT ? 'client' : ''),
 				id:id,
 				txt:$('#hdtxt').val(),
 				about:$('#hd-about').val()
 			};
-			if(!send.txt) dialog.err('Не указано содержание задачи');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if (res.success) {
-						dialog.close();
-						_msg('Данные изменены');
-						$(send.from ? '#remind-spisok' : 'td.left').html(res.html);
-					} else
-						dialog.abort();
-				}, 'json');
+
+			if(!send.txt) {
+				dialog.err('Не указано содержание задачи');
+				head.focus();
+				return;
 			}
+
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if (res.success) {
+					dialog.close();
+					_msg();
+					head.html(send.txt);
+					about.html(send.about.replace(/\n/g, '<br>'));
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	})
 	.on('click', '._remind-unit .ruhist', function() {
 		$(this).parent().next().slideToggle(300);
-	})
-	.on('click', '#_remind-next', function() {
-		var next = $(this),
-			send = remindFilter();
-			send.page = $(this).attr('val');
-		if(next.hasClass('busy'))
-			return;
-		next.addClass('busy');
-		$.post(AJAX_MAIN, send, function (res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
 	})
 	.on('click', '#_remind-show-all', function() {
 		$('._remind-unit').slideDown(200);
@@ -228,6 +201,6 @@ $(document)
 	})
 
 	.ready(function() {
-		if($('#_remind-status').length)
-			$('#_remind-status')._radio(remindSpisok);
+		if($('#report.remind').length)
+			$('#status')._radio(_remindSpisok);
 	});

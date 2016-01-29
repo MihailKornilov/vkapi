@@ -81,6 +81,10 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 						'<span'.($r['deleted'] ? ' class="deleted"' : '').'>№'.$r['nomer'].'</span>'.
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
+				'zayav_link_name' =>
+					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">'.
+						'<b'.($r['deleted'] ? ' class="deleted"' : '').'>'.$r['name'].'</b>'.
+					'</a>',
 				'zayav_color' => //подсветка заявки на основании статуса
 					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link color"'._zayavStatus($r['status'], 'bg').'>'.
 						'№'.$r['nomer'].
@@ -637,7 +641,7 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 				'dogovor_data' => _dataDog($r['data_create']).' г.',
 				'dogovor_sum' => _cena($r['sum']),
 				'dogovor_avans' => _sumSpace(_cena($r['avans'])),
-				'dogovor_line' => '<span class="'._tooltip('Сумма: '._cena($r['sum']).' руб.', -3).
+				'dogovor_line' => '<span class="dogovor_line '._tooltip('Сумма: '._cena($r['sum']).' руб.', -3).
 									'<b>№'.$r['nomer'].'</b>'.
 									' от '._dataDog($r['data_create']).
 								  '</span>'

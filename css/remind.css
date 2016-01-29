@@ -1,6 +1,7 @@
 /* Напомниания */
-#_remind .left{padding:0 8px}
-#_remind ._empty{margin-top:8px}
+#_remind-spisok{margin-bottom:8px}
+#_remind-spisok ._empty{margin-top:10px}
+
 
 ._remind-add-tab{border-spacing:10px}
 ._remind-add-tab .label{width:100px;text-align:right}
@@ -12,8 +13,9 @@
 ._remind-unit .hd-edit{cursor:pointer}
 ._remind-unit .hdtxt{font:bold 12px Tahoma;color:#444}
 ._remind-unit .hd-about{color:#555;margin:2px 0 0 12px}
-._remind-unit .to{border-spacing:2px;margin:4px 6px}
+._remind-unit .to{border-spacing:4px;margin:2px 4px}
 ._remind-unit .label{width:45px}
+._remind-unit .dolg{color:#a33}
 ._remind-unit .dur{margin-left:10px;color:#777}
 ._remind-unit .day_left{margin:4px 8px;color:#884}
 ._remind-unit .oday{color:#999;margin-left:10px}
@@ -49,9 +51,9 @@
 #_remind-action-tab .about{color:#777;margin-top:3px}
 #_remind-action-tab .label{color:#444;margin:10px 0 3px 20px}
 #_remind-action-tab #day_calendar{color:#444;margin-left:20px}
-#_remind-action-tab .c0{background-color:#eee}
 #_remind-action-tab .c1{background-color:#ddf}
 #_remind-action-tab .c2{background-color:#CFC}
+#_remind-action-tab .c3{background-color:#eee}
 #_remind-action-tab #ra-tab{border-spacing:8px;display:none}
 #_remind-action-tab.busy *{color:#aaa;background-color:#f8f8f8}
 

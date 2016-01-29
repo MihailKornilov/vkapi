@@ -14,35 +14,24 @@ switch(@$_POST['op']) {
 
 		_remind_add($_POST);
 
-		switch($_POST['from']) {
-			case 'zayav': $send['html'] = utf8(_remind_zayav($_POST['zayav_id'])); break;
-			case 'client':
-				$remind = _remind_spisok(array('client_id'=>$_POST['client_id']));
-				$send['html'] = utf8($remind['spisok']);
-				break;
-			default: $send['html'] = utf8(_remind_spisok(array(), 'spisok'));
-
-		}
-
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'remind_action':
 		if(!$id = _num($_POST['id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
+		if(!$status = _num($_POST['status']))
 			jsonError();
 		if(!preg_match(REGEXP_DATE, $_POST['day']) && !$_POST['day'])
 			jsonError();
 
 		$day = $_POST['day'];
-		$status = intval($_POST['status']);
 		$reason = _txt($_POST['reason']);
 
 		//Изменять можно только активные напоминания
 		$sql = "SELECT *
 				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
-				  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
+				  AND `ws_id`=".WS_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -64,15 +53,13 @@ switch(@$_POST['op']) {
 
 			//Обновление списка причин
 			if($status == 1) {
-				$sql = "SELECT `id`
+				$sql = "SELECT IFNULL(`id`,0)
 				        FROM `_remind_reason`
 						WHERE `app_id`=".APP_ID."
-						  ".(defined('WS_ID') ? " AND `ws_id`=".WS_ID : '')."
-						  AND `txt`='".addslashes($reason)."'";
+						  AND `ws_id`=".WS_ID."
+						  AND `txt`='".addslashes($reason)."'
+						LIMIT 1";
 				$reason_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
-
-				if(!$reason_id)
-					$reason_id = 0;
 
 				$sql = "INSERT INTO `_remind_reason` (
 							`id`,
@@ -82,22 +69,14 @@ switch(@$_POST['op']) {
 						) VALUES (
 							".$reason_id.",
 							".APP_ID.",
-							".(defined('WS_ID') ? WS_ID : 0).",
+							".WS_ID.",
 							'".addslashes($reason)."'
 						) ON DUPLICATE KEY UPDATE
 							`count`=`count`+1";
 				query($sql, GLOBAL_MYSQL_CONNECT);
 			}
 		}
-
-		$v = array();
-		if($_POST['from'] == 'client')
-			$v['client_id'] = $r['client_id'];
-		if($_POST['from'] == 'zayav')
-			$v['zayav_id'] = $r['zayav_id'];
-		$send['html'] = utf8(_remind_spisok($v, 'spisok'));
-
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'remind_reason_spisok':
 		$sql = "SELECT `id`,`txt`
@@ -134,17 +113,10 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$v = array();
-		if($_POST['from'] == 'client')
-			$v['client_id'] = $r['client_id'];
-		if($_POST['from'] == 'zayav')
-			$v['zayav_id'] = $r['zayav_id'];
-		$send['html'] = utf8(_remind_spisok($v, 'spisok'));
-
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'remind_spisok':
-		$send['html'] = utf8(_remind_spisok($_POST, 'spisok'));
+		$send['spisok'] = utf8(_remind('spisok', $_POST));
 		jsonSuccess($send);
 		break;
 }

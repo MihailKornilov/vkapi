@@ -649,7 +649,7 @@ function _clientInfo() {//вывод информации о клиенте
 						_clientDopContent('zayav', $zayav).
 						_clientDopContent('accrual', $accrual).
 						_clientDopContent('income', $income).
-						_clientDopContent('remind', $remind).
+						_clientDopContent('_remind', $remind).
 						_clientDopContent('history', $hist).
 					'<td class="right">'.
 						_clientDopRight('zayav', $zayav, _clientInfoZayavRight($client_id)).

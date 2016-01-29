@@ -394,24 +394,19 @@ function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa')
 		return '';
 
-	_remindActiveSet(); //REMIND_ACTIVE
-
 	$link = '';
 	foreach(_menuCache() as $r)
 		if($r['show']) {
 			$sel = $r['p'] == $_GET['p'] ? ' class="sel"' : '';
-//			$cart = $r['p'] == 'zayav' && @$_GET['from'] == 'cartridge' ? '&d=cartridge' : '';//возврат на страницу с картриджами из заявки
+			if($r['p'] == 'report')
+				$r['name'] .= _remindTodayCount(1);
 			$link .=
 				'<a href="'.URL.'&p='.$r['p'].'"'.$sel.'>'.
 					$r['name'].
 				'</a>';
 		}
 
-	return
-		'<div id="_menu">'.
-			$link.
-			pageHelpIcon().
-		'</div>';
+	return '<div id="_menu">'.$link.'</div>';
 }
 
 
@@ -421,7 +416,7 @@ function _report() {
 	$d1 = '';
 	$pages = array(
 		'history' => 'История действий',
-		'remind' => 'Напоминания'.REMIND_ACTIVE.'<div class="img_add _remind-add"></div>',
+		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
 		'month' => 'Отчёт за месяц',//todo Evrookna
 		'salary' => 'З/п сотрудников'
 	);
@@ -453,9 +448,10 @@ function _report() {
 			$right .= _history_right();
 			break;
 		case 'remind':
-			$remind = _remind();
-			$left = $remind['spisok'];
-			$right .= $remind['right'];
+			$left =
+				_remind_stat().
+				'<div id="_remind-spisok">'._remind('spisok').'</div>';
+			$right .= _remind('right');
 			break;
 		case 'month'://todo Evrookna
 			if(APP_ID != 3978722)
@@ -1370,22 +1366,6 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
 		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 	}
-}
-
-function pageHelpIcon() {
-	return '';
-	$page[] = $_GET['p'];
-	if(!empty($_GET['d']))
-		$page[] = $_GET['d'];
-	if(!empty($_GET['d1']))
-		$page[] = $_GET['d1'];
-	if(!empty($_GET['id']))
-		$page[] = 'id';
-	$page = implode('_', $page);
-	$id = query_value("SELECT `id` FROM `pagehelp` WHERE `page`='".$page."' LIMIT 1");
-	return
-		($id ? '<div class="img_pagehelp" val="'.$id.'"></div>' : '').
-		(SA && !$id ? '<div class="pagehelp_create" val="'.$page.'">Добавить подсказку</div>' : '');
 }
 
 function _check($id, $txt='', $v=0, $light=false) {
