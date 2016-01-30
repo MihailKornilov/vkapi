@@ -99,9 +99,9 @@ _appAuth();
 _dbConnect('GLOBAL_');
 _dbConnect();
 if(!CRON) {
+	_setup_global();
 	_getVkUser();
 	_ws();
-	_setupApp();
 	_pinCheck();
 	_hashRead();
 } else
@@ -183,9 +183,9 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		'<script type="text/javascript" src="'.API_HTML.'/js/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//ѕеременные _global дл€ всех приложений
-		'<script type="text/javascript" src="'.API_HTML.'/js/global_values.js?'.GLOBAL_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
 
-		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_'.WS_ID.'_values.js?'.WS_VALUES.'"></script>'.
+		(WS_ID ? '<script type="text/javascript" src="'.API_HTML.'/js/values/ws_'.WS_ID.'.js?'.WS_VALUES.'"></script>' : '').
 
 (PIN_ENTER ? '' :
 
@@ -259,12 +259,10 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 function _ws($i='all') {//ѕолучение данных об организации
 	_wsOneCheck();
 
-	if(!WS_ID) {
-		define('WS_ACCESS', 0);
-		return false;
-	}
+	if(!WS_ID)
+		die(_header()._noauth('Ќет прив€зки к организации.')._footer());
 
-	$key = CACHE_PREFIX.'ws_'.WS_ID;
+	$key = CACHE_PREFIX.'ws'.WS_ID;
 	$ws = xcache_get($key);
 	if(empty($ws)) {
 		$sql = "SELECT *
@@ -272,15 +270,13 @@ function _ws($i='all') {//ѕолучение данных об организации
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".WS_ID."
 				  AND !`deleted`";
-		if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
-			define('WS_ACCESS', 0);
-			return false;
-		}
+		if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			die(_header()._noauth('Ќевозможно прочитать данные организации дл€ кеша.')._footer());
 		xcache_set($key, $ws, 86400);
 	}
 
-	if(!defined('WS_ACCESS'))
-		define('WS_ACCESS', 1);
+	if(!defined('WS_VALUES'))
+		define('WS_VALUES', $ws['js_values']);
 
 	if($i == 'all')
 		return $ws;
@@ -294,7 +290,10 @@ function _wsOneCheck() {
 	// ѕроверка наличи€ в базе данных хот€ бы об одной организации.
 	// ≈сли нет и если пользователь €вл€етс€ суперадминистратором, то внесение организации.
 	// ѕрименение текущему пользователю id внесЄнной организации и назначение его администратором.
-	if(!WS_ID && SA) {
+	if(!SA)
+		return;
+
+	if(!WS_ID) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_ws`
 				WHERE `app_id`=".APP_ID."
@@ -326,7 +325,9 @@ function _wsOneCheck() {
 					WHERE `app_id`=".APP_ID."
 					  AND `viewer_id`=".VIEWER_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);
+			die(_header()._noauth('—оздана нова€ организаци€.<br />ѕерезайдите в приложение.')._footer());
 		}
+		die(_header()._noauth('Ќет прив€зки к организации при проверке.')._footer());
 	}
 }
 
@@ -583,12 +584,49 @@ function _footer() {
 	mysql_close();
 
 	return
-		_debug().
-		'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
-//		$_SESSION[PIN_TIME_KEY].
-		'</div></body></html>';
+				_debug().
+				'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+			'</div>'.
+			_footerYandexMetrika().
+		'</body></html>';
 }
+function _footerYandexMetrika() {
+	if(LOCAL || SA)
+		return '';
 
+	return
+	'<!-- Yandex.Metrika counter -->'.
+		'<script type="text/javascript">'.
+		    '(function (d, w, c) {'.
+		        '(w[c] = w[c] || []).push(function() {'.
+		            'try {'.
+		                'w.yaCounter35023590 = new Ya.Metrika({'.
+		                    'id:35023590,'.
+		                    'clickmap:true,'.
+		                    'trackLinks:true,'.
+		                    'accurateTrackBounce:true,'.
+		                    'webvisor:true,'.
+		                    'trackHash:true,'.
+		                    'ut:"noindex"'.
+		                '});'.
+		            '} catch(e) { }'.
+		        '});'.
+
+		        'var n = d.getElementsByTagName("script")[0],'.
+		            's = d.createElement("script"),'.
+		            'f = function () { n.parentNode.insertBefore(s, n); };'.
+		        's.type = "text/javascript";'.
+		        's.async = true;'.
+		        's.src = "https://mc.yandex.ru/metrika/watch.js";'.
+
+		        'if (w.opera == "[object Opera]") {'.
+		            'd.addEventListener("DOMContentLoaded", f, false);'.
+		        '} else { f(); }'.
+		    '})(document, window, "yandex_metrika_callbacks");'.
+		'</script>'.
+		'<noscript><div><img src="https://mc.yandex.ru/watch/35023590?ut=noindex" style="position:absolute; left:-9999px;" /></div></noscript>'.
+	'<!-- /Yandex.Metrika counter -->';
+}
 function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
 		'v' => 5.21,
@@ -1204,7 +1242,7 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource
 		$v[] = $n.':['.implode(',', $sp).']';
 	return '{'.implode(',', $v).'}';
 }
-function _globalValuesJS($ws_id=WS_ID) {//—оставление файла global_values.js, используемый во всех приложени€х
+function _globalJsValues() {//—оставление файла global.js, используемый во всех приложени€х
 	//одинаковые дл€ всех приложений:
 	$save =
 		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
@@ -1249,18 +1287,16 @@ function _globalValuesJS($ws_id=WS_ID) {//—оставление файла global_values.js, ис
 				'{uid:125,title:"—аратов"},'.
 				'{uid:151,title:"”фа"},'.
 				'{uid:158,title:"„ел€бинск"}];';
-	$fp = fopen(API_PATH.'/js/global_values.js', 'w+');
+	$fp = fopen(API_PATH.'/js/values/global.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
-	//обновление значени€ версии файлов global_values.js
-	$sql = "UPDATE `_setup`
+	$sql = "UPDATE `_setup_global`
 			SET `value`=`value`+1
-			WHERE `app_id`=".APP_ID."
-			  AND `key`='GLOBAL_VALUES'";
+			WHERE `key`='GLOBAL_VALUES'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
-
-	//дл€ конкретного приложени€
+}
+function _wsJsValues($ws_id=WS_ID) {//дл€ конкретного организации
 	$save = 'var'.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_invoice`
@@ -1286,6 +1322,7 @@ function _globalValuesJS($ws_id=WS_ID) {//—оставление файла global_values.js, ис
 											 WHERE `app_id`=".APP_ID."
 											   AND `ws_id`=".$ws_id."
 											   AND `worker`
+											   AND `viewer_id`!=982006
 											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'WORKER_SPISOK=_toSpisok(WORKER_ASS),'.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
@@ -1313,27 +1350,24 @@ function _globalValuesJS($ws_id=WS_ID) {//—оставление файла global_values.js, ис
 		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
 
 
-	$fp = fopen(APP_PATH.'/js/ws_'.$ws_id.'_values.js', 'w+');
+	$fp = fopen(API_PATH.'/js/values/ws_'.$ws_id.'.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
-
-	//обновление значени€ версии файлов global_values.js и ws_values.js
-	$sql = "UPDATE `_setup`
-			SET `value`=`value`+1
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
-			  AND `key`='WS_VALUES'";
+	//обновление значени€ версии файла ws_N.js
+	$sql = "UPDATE `_ws`
+			SET `js_values`=`js_values`+1
+			WHERE `id`=".$ws_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	xcache_unset(CACHE_PREFIX.'setup'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'ws'.$ws_id);
 }
 
 function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
+	xcache_unset(CACHE_PREFIX.'setup_global');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu_app');//значени€ дл€ разделов меню дл€ конкретного приложени€
 	xcache_unset(CACHE_PREFIX.'menu_sort');//отсортированный список разделов меню с настройками
-	xcache_unset(CACHE_PREFIX.'setup'.$ws_id);//глобальные настройки приложени€ конкретной организации
 	xcache_unset(CACHE_PREFIX.'setup_color');//цвета
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию дл€ руководител€
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию дл€ сотрудников

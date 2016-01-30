@@ -22,4 +22,10 @@ if(!function_exists('_cacheClear')) {
 	}
 }
 
+if(!function_exists('_appScripts')) {
+	function _appScripts() {
+		return '';
+	}
+}
+
 

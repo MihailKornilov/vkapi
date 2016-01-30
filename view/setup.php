@@ -1,59 +1,15 @@
 <?php
-// --- vk Global ---
-function _setupApp() {//применение настроек приложения и проверка на присутствие обязательных настроек
-	//получение данных настроек приложения из кеша
-	$key = CACHE_PREFIX.'setup'.WS_ID;
+// --- Global ---
+function _setup_global() {//получение констант-параметров для всех приложений
+	$key = CACHE_PREFIX.'setup_global';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT `key`,`value`
-				FROM `_setup`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID;
+		$sql = "SELECT `key`,`value` FROM `_setup_global`";
 		$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
 		xcache_set($key, $arr, 86400);
 	}
 	foreach($arr as $key => $value)
 		define($key, $value);
-
-	// Проверка наличия обязательных настроек:
-	_setupValue('VERSION', 0, 'Версия скриптов и стилей');
-	_setupValue('GLOBAL_VALUES', 0, 'Версия файла global_values.js');
-	_setupValue('WS_VALUES', 0, 'Версия файла ws_'.WS_ID.'_values.js');
-	_setupValue('G_VALUES', 0, 'Версия файла G_values.js');
 }
-function _setupValue($key, $v='', $about='') {//получение значения настройки и внесение, если её нет в таблице базы
-	if(defined($key))
-		return true;
-	$sql = "SELECT `value`
-			FROM `_setup`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `key`='".$key."'
-			LIMIT 1";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(!mysql_num_rows($q)) {
-		$sql = "INSERT INTO `_setup` (
-					`app_id`,
-					`ws_id`,
-					`key`,
-					`value`,
-					`about`
-				) VALUES (
-					".APP_ID.",
-					".WS_ID.",
-					'".strtoupper($key)."',
-					'".addslashes($v)."',
-					'".addslashes($about)."'
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		return _setupValue($key);
-	}
-	$r = mysql_fetch_assoc($q);
-	define($key, $r['value']);
-
-	return $r['value'];
-}
-
-
 
 
 

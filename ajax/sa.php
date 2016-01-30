@@ -422,7 +422,7 @@ switch(@$_POST['op']) {
 		sa_zayav_type_link();
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok());
 		jsonSuccess($send);
@@ -455,7 +455,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		sa_zayav_type_link();
 		$send['html'] = utf8(sa_zayav_pole_spisok());
@@ -487,7 +487,7 @@ switch(@$_POST['op']) {
 		}
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		jsonSuccess();
 		break;
@@ -527,7 +527,7 @@ switch(@$_POST['op']) {
 		}
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		jsonSuccess();
 		break;
@@ -551,7 +551,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_globalValuesJS();
+		_wsJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
@@ -575,7 +575,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_globalValuesJS();
+		_wsJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
@@ -600,7 +600,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_globalValuesJS();
+		_wsJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);

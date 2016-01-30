@@ -160,7 +160,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1024,
@@ -201,7 +201,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1025,
@@ -526,7 +526,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		$send['on'] = $active;
 		jsonSuccess($send);
@@ -557,7 +557,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		jsonSuccess();
 		break;
@@ -596,7 +596,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1022,
@@ -640,7 +640,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		//формирование списка сотрудников, которым доступен счёт
 		$old = array();
@@ -696,7 +696,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1019,
@@ -731,7 +731,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
@@ -771,7 +771,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1020,
@@ -798,7 +798,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1037,
@@ -828,7 +828,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		if($changes = _historyChange('Наименование', $r['name'], $name))
 			_history(array(
@@ -860,7 +860,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1039,
@@ -893,7 +893,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1040,
@@ -920,7 +920,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		if($changes = _historyChange('Наименование', $r['name'], $name))
 			_history(array(
@@ -947,7 +947,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1042,
@@ -982,7 +982,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1027,
@@ -1016,7 +1016,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
@@ -1050,7 +1050,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_globalValuesJS();
+		_globalJsValues();
 
 		_history(array(
 			'type_id' => 1029,

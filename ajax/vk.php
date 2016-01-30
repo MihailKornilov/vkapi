@@ -21,16 +21,19 @@ switch(@$_POST['op']) {
 	case 'cache_clear':
 		if(!SA)
 			jsonError();
-		_globalValuesJS();
-		_globalCacheClear();
-		_cacheClear();
 
-		//обновление значения скриптов и стилей приложения
-		$sql = "UPDATE `_setup`
-				SET `value`=`value`+1
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND `key`='VERSION'";
+		_globalCacheClear();
+		_globalJsValues();
+		_wsJsValues();
+
+		_cacheClear();//todo для удаления
+
+		//обновление значений всех параметров всех приложений
+		$sql = "UPDATE `_setup_global` SET `value`=`value`+1";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//обновление значений js всех организаций
+		$sql = "UPDATE `_ws` SET `js_values`=`js_values`+1";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		jsonSuccess();
@@ -114,7 +117,7 @@ switch(@$_POST['op']) {
 
 		_globalCacheClear();
 		_cacheClear();
-		_globalValuesJS();
+		_wsJsValues();
 
 		jsonSuccess();
 		break;
