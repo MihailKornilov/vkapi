@@ -397,7 +397,7 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 
 	$send =
 		'<script type="text/javascript">'.
-			'var REMIND={'.
+			'var ZAYAV_REMIND={'.
 				'active:'.$data['active'].','.
 				'active_spisok:['.implode(',', $data['active_spisok']).']'.
 			'};'.

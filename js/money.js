@@ -132,9 +132,9 @@ var _accrualAdd = function() {
 					'</div>'
 				: '') +
 
-				(REMIND.active ?
+				(ZAYAV_REMIND.active ?
 					'<div id="remind-div">' +
-						'<h1>≈сть ' + REMIND.active + ' активн' + _end(REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(REMIND.active, ['е', '€', 'й']) + '.</h1>' +
+						'<h1>≈сть ' + ZAYAV_REMIND.active + ' активн' + _end(ZAYAV_REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(ZAYAV_REMIND.active, ['е', '€', 'й']) + '.</h1>' +
 						'<h2>ѕоставье галочку напоминанию, если его нужно отметить выполненным.</h2>' +
 						incomeRemind() +
 					'</div>'
@@ -188,8 +188,8 @@ var _accrualAdd = function() {
 				zayavPlace(function() {
 					$('#remind-div').slideDown(300);
 				});
-			for(var n = 0; n < REMIND.active_spisok.length; n++) {
-				var i = REMIND.active_spisok[n];
+			for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
+				var i = ZAYAV_REMIND.active_spisok[n];
 				$('#ui' + i.id)._check({
 					name:'выполнено',
 					light:1
@@ -201,8 +201,8 @@ var _accrualAdd = function() {
 
 		function incomeRemind() {//активные напоминани€
 			var send = '';
-			for(var n = 0; n < REMIND.active_spisok.length; n++) {
-				var i = REMIND.active_spisok[n];
+			for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
+				var i = ZAYAV_REMIND.active_spisok[n];
 				send +=
 					'<div class="remind-iu">' +
 						'<h3>' + i.txt + '</h3>' +
@@ -215,8 +215,8 @@ var _accrualAdd = function() {
 		function submit() {
 			var remind = [];
 			if(zayav)
-				for(var n = 0; n < REMIND.active_spisok.length; n++) {
-					var i = REMIND.active_spisok[n];
+				for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
+					var i = ZAYAV_REMIND.active_spisok[n];
 					if(_num($('#ui' + i.id).val()))
 						remind.push(i.id);
 				}
