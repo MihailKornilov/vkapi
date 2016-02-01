@@ -189,19 +189,20 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
 
 		//баланс для расчётного счёта
-		_balans(array(
-			'action_id' => 1,
-			'invoice_id' => $invoice_id,
-			'sum' => $sum,
-			'income_id' => $insert_id
-		));
+		if(!$confirm)
+			_balans(array(
+				'action_id' => 1,
+				'invoice_id' => $invoice_id,
+				'sum' => $sum,
+				'income_id' => $insert_id
+			));
 
 		$about = ($prepay ? 'предоплата' : '').
 				 ($prepay && $about ? '. ' : '').
 				 $about;
 
 		//баланс для клиента
-		if($client_id)
+		if($client_id && !$confirm)
 			_balans(array(
 				'action_id' => 27,
 				'client_id' => $client_id,
@@ -351,6 +352,53 @@ switch(@$_POST['op']) {
 		));
 
 		jsonSuccess();
+		break;
+	case 'income_confirm'://подтверждение поступления на счёт
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `confirm`=1
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_income`
+				SET `confirm`=2,
+					`confirm_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 11,
+			'invoice_id' => $r['invoice_id'],
+			'income_id' => $r['id'],
+			'sum' => $r['sum']
+		));
+
+		if($r['client_id'])
+			_balans(array(
+				'action_id' => 42,
+				'client_id' => $r['client_id'],
+				'income_id' => $r['id'],
+				'sum' => $r['sum']
+			));
+
+/*
+		_history(array(
+			'type_id' => 79,
+			'invoice_id' => $r['invoice_id'],
+			'v1' => _cena($r['sum']),
+			'v2' => $r['about'],
+			'v3' => $dtime
+		));
+*/
+		$send['dtime'] = utf8(FullDataTime());
+		jsonSuccess($send);
 		break;
 
 	case 'refund_add'://внесение возврата

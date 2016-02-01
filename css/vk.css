@@ -959,7 +959,7 @@ a.add:hover{text-decoration:underline;color:#357}
 
 /* новая кнопка ВКонтакте */
 button.vk{
-	padding: 6px 16px 7px 16px;
+	padding: 6px 16px 7px;
 	zoom: 1;
 	cursor: pointer;
 	white-space: nowrap;
@@ -984,6 +984,7 @@ button.vk{
 button.vk:not(._busy):hover{background-color:#6d8cb0}
 button.vk:active{padding:7px 16px 6px 16px;}
 button.vk._busy{color:transparent}
+button.vk.small{padding: 3px 10px 4px}
 
 
 /* Заметки */

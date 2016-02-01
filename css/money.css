@@ -37,6 +37,7 @@
 ._income-unit .confirmed{color:#090;font-size:10px}
 ._income-unit .refund{float:right;color:red}
 ._income-unit:not(:hover) .refund{display:none}
+._income-unit .vk{float:right;margin-top:3px}
 
 
 /* Внесение платежа */

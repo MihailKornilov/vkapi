@@ -160,7 +160,11 @@ var _accrualAdd = function() {
 				$('#confirm')._check(0);
 			}
 		});
-		$('#confirm')._check();
+		$('#confirm')._check({
+			func:function() {
+				$('#sum').focus();
+			}
+		});
 		$('#confirm_check').vkHint({
 			width:210,
 			msg:'Установите галочку, если платёж нужно внести, но требуется подтверждение о его поступлении на счёт.',
@@ -1527,6 +1531,44 @@ $(document)
 					p.addClass('ref');
 					p.find('.refund').remove();
 					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '._income-unit .vk.small', function() {
+		var t = $(this),
+			p = _parent(t),
+			o = t.attr('val').split('#'),
+			html =
+				'<div class="_info">' +
+					'После подтверждения платёж будет считаться поступившим на расчётный счёт.' +
+				'</div>' +
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Расчётный счёт:<td><u>' + INVOICE_ASS[o[1]] + '</u>' +
+					'<tr><td class="label">Сумма:<td><b>' + o[2] + '</b> руб.' +
+					'<tr><td class="label">Дата платежа:<td>' + o[3] +
+				'</table>',
+			dialog = _dialog({
+				width:320,
+				head:'Подтверждение поступления на счёт',
+				content:html,
+				butSubmit:'Подтвердить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'income_confirm',
+				id:o[0]
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					p.find('button').remove();
+					p.find('.confirm')
+						.after('<div class="confirmed">Подтверждён ' + res.dtime + '</div>')
+						.remove();
 				} else
 					dialog.abort();
 			}, 'json');

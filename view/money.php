@@ -475,9 +475,13 @@ function incomeAbout($r, $filter=array()) {
 		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 	if($r['dogovor_id'])
 		$about .= 'Авансовый платёж по договору <u>'.$r['dogovor_nomer'].'</u> от '.$r['dogovor_data'];
-	if($r['confirm'])
-		$about .= '<div class="confirm">Ожидает подтверждения</div>';
-	if($r['confirm_dtime'] != '0000-00-00 00:00:00')
+	if($r['confirm'] == 1)
+		$about .=
+			'<button val="'.$r['id'].'#'.$r['invoice_id'].'#'._sumSpace($r['sum']).'#'.FullDataTime($r['dtime_add']).'" class="vk small'._tooltip('Подтвердить поступление на счёт', -67).
+				'подтвердить'.
+			'</button>'.
+			'<div class="confirm">Ожидает подтверждения</div>';
+	if($r['confirm'] == 2)
 		$about .= '<div class="confirmed">Подтверждён '.FullDataTime($r['confirm_dtime']).'</div>';
 
 	$refund = !@$r['no_refund_show'] && !$r['refund_id'] && !$r['client_id'] && !$r['zp_id'] ?
@@ -1090,7 +1094,7 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
-			  AND !`confirm`
+			  AND `confirm` NOT IN (1,3)
 			  AND !`deleted`
 			  AND `invoice_id`=".$invoice_id;
 	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
