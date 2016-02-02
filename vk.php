@@ -172,6 +172,7 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
+				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
 				'APP_ID='.APP_ID.','.
 				'WS_ID='.WS_ID.','.
 				'APP_HTML="'.APP_HTML.'",'.

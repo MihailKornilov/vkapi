@@ -624,6 +624,256 @@ var _accrualAdd = function() {
 		}, 'json');
 	},
 
+	_invoiceEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:'',
+			about:'',
+			income:0,
+			transfer:0,
+			visible:''
+		}, o);
+
+		var html =
+			'<table id="invoice-edit-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
+				'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
+				'<tr><td class="label">Подтверждение поступления:<td><input type="hidden" id="income" value="' + o.income + '" />' +
+				'<tr><td class="label">Подтверждение перевода:<td><input type="hidden" id="transfer" value="' + o.transfer + '" />' +
+				'<tr><td class="label topi">Видимость для сотрудников:<td><input type="hidden" id="visible" value="' + o.visible + '" />' +
+			'</table>',
+		dialog = _dialog({
+			top:40,
+			width:430,
+			content:html,
+			head:o.id ? 'Редактирование счёта' : 'Внесение нового расчётного счёта',
+			butSubmit:o.id ? 'Сохранить' : 'Внести',
+			submit:submit
+		});
+
+		$('#name').focus().keyEnter(submit);
+		$('#about').autosize();
+		$('#income')._check();
+		$('#income_check').vkHint({
+			msg:'Возможность требовать подтверждение поступления средств на счёт',
+			width:180,
+			top:-84,
+			left:-85,
+			delayShow:500
+		});
+		$('#transfer')._check();
+		$('#visible')._select({
+			width:218,
+			title0:'Сотрудники не выбраны',
+			multiselect:1,
+			spisok:_toSpisok(WORKER_ASS)
+		});
+		function submit() {
+			var send = {
+				op:o.id ? 'invoice_edit' : 'invoice_add',
+				id:o.id,
+				name:$('#name').val(),
+				about:$('#about').val(),
+				income:$('#income').val(),
+				transfer:$('#transfer').val(),
+				visible:$('#visible').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg();
+					location.reload();
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
+	},
+	_invoiceTransfer = function(from) {
+		var t = $(this),
+			html = '<table class="_dialog-tab">' +
+					'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + from + '" />' +
+					'<tr><td class="label">На счёт:<td><input type="hidden" id="to" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
+					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Перевод между счетами',
+				content:html,
+				butSubmit:'Перевести',
+				submit:submit
+			});
+		$('#from')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK
+		});
+		$('#to')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'invoice_transfer_add',
+				from:_num($('#from').val()),
+				to:_num($('#to').val()),
+				sum:_cena($('#sum').val()),
+				about:$('#about').val()
+			};
+			if(!send.from) {
+				dialog.err('Выберите счёт-отправитель');
+				return;
+			}
+			if(!send.to) {
+				dialog.err('Выберите счёт-получатель');
+				return;
+			}
+			if(send.from == send.to) {
+				dialog.err('Счета не могут совпадать');
+				return;
+			}
+			if(!send.sum) {
+				dialog.err('Некорректно введена сумма');
+				$('#sum').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.i);
+					$('#transfer-spisok').html(res.t);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_invoiceBalansSet = function(invoice_id) {
+		var html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
+					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" /> руб.' +
+				'</table>';
+		var dialog = _dialog({
+			width:270,
+			head:'Установка текущей суммы счёта',
+			content:html,
+			butSubmit:'Установить',
+			submit:submit
+		});
+
+		$('#sum').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'invoice_set',
+				invoice_id:invoice_id,
+				sum:$('#sum').val()
+			};
+			if(send.sum != 0 && !_cena(send.sum)) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_invoiceReset = function(invoice_id) {
+		var html = 'Сумма на счёте <b>' + INVOICE_ASS[invoice_id] + '</b> будет сброшена.',
+			dialog = _dialog({
+				head:'Сброс суммы счёта',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'invoice_reset',
+				invoice_id:invoice_id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_invoiceClose = function(invoice_id, ost) {
+		var html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
+				(ost ?
+					'<tr><td class="label">Остаток:<td><b>' + ost + '</b> руб.' +
+					'<tr><td class="label">Перевести остаток на счёт:<td><input type="hidden" id="invoice_to" />'
+				: '') +
+				'</table>',
+			dialog = _dialog({
+				width:420,
+				head:'Закрытие счёта',
+				content:html,
+				butSubmit:'Закрыть счёт',
+				submit:submit
+			});
+
+		$('#invoice_to')._select({
+			width:200,
+			title0:'Счёт не выбран',
+			spisok:_copySel(INVOICE_SPISOK, invoice_id)
+		});
+
+		function submit() {
+			var send = {
+				op:'invoice_close',
+				invoice_id:invoice_id,
+				invoice_to:ost ? _num($('#invoice_to').val()) : 0
+			};
+			if(ost && !send.invoice_to) {
+				dialog.err('Не указан номер счёта-получателя');
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+
 	_salarySpisok = function(v, id) {
 		if(id == 'year') {
 			v = SALARY.year > v ? 12 : 1;
@@ -1635,72 +1885,75 @@ $(document)
 		_schetInfo({id:$(this).attr('val')});
 	})
 
-	.on('click', '.invoice-set', function() {
+	.on('click', '#money-invoice .add', _invoiceEdit)
+	.on('click', '#money-invoice .img_setup', function() {
 		var t = $(this),
-			invoice_id = t.attr('val'),
-			html =
-				'<table class="_dialog-tab">' +
-					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
-					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" /> руб.' +
-				'</table>';
-		var dialog = _dialog({
-			width:270,
-			head:'Установка текущей суммы счёта',
-			content:html,
-			butSubmit:'Установить',
-			submit:submit
-		});
-
-		$('#sum').focus().keyEnter(submit);
-
-		function submit() {
-			var send = {
-				op:'invoice_set',
-				invoice_id:invoice_id,
-				sum:$('#sum').val()
-			};
-			if(send.sum != 0 && !_cena(send.sum)) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('#invoice-spisok').html(res.html);
-						dialog.close();
-						_msg('Начальная сумма установлена');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
-	.on('click', '.invoice-reset', function() {
-		var t = $(this),
-			invoice_id = t.attr('val'),
-			html = 'Сумма на счёте <b>' + INVOICE_ASS[invoice_id] + '</b> будет сброшена.',
+			p = _parent(t),
+			id = _num(t.attr('val')),
+			name = p.find('.name b').html(),
+			balans = p.find('.balans b').html(),
+			html = '<div id="invoice-setup-tab">' +
+						'<table>' +
+							'<tr><td class="label">Расчётный счёт:<td><b>' + name + '</b>' +
+							'<tr><td class="label">Текущий баланс:<td>' + (balans ? '<b>' + balans + '</b> руб.' : 'не установлен') +
+						'</table>' +
+						'<div class="u" val="1">' +
+							'<h1>Перевод между счетами</h1>' +
+							'<h2>Перевести денежные средства на другой расчётный счёт.</h2>' +
+						'</div>' +
+				(VIEWER_ADMIN ?
+						'<div class="u" val="2">' +
+							'<h1>Вывести деньги</h1>' +
+							'<h2>Произвести вывод денежных средств из организации.</h2>' +
+						'</div>' +
+						'<div class="u" val="3">' +
+							'<h1>Установить текущую сумму</h1>' +
+							'<h2>Установить сумму, которая соответствует фактической сумме на расчётном счёте или наличию денег в кассе.</h2>' +
+						'</div>' +
+					(balans ?
+						'<div class="u" val="4">' +
+							'<h1>Сброс суммы</h1>' +
+							'<h2>Текущая сумма на счёте будет сброшена, но все операции по счёту, история действий будут доступны. Нужно если вы не хотите контролировать данный расчётный счёт.</h2>' +
+						'</div>'
+					: '') +
+						'<div class="u" val="5">' +
+							'<h1>Редактировать счёт</h1>' +
+							'<h2>Изменить название счёта и его описание. Настроить видимость для сотрудников и права.</h2>' +
+						'</div>' +
+						'<div class="u" val="6">' +
+							'<h1>Закрыть счёт</h1>' +
+							'<h2>При закрытии счёта остаток будет переведён на другой расчётный счёт.</h2>' +
+						'</div>'
+				: '') +
+					'</div>',
 			dialog = _dialog({
-				head:'Сброс суммы счёта',
+				top:30,
+				width:400,
+				head:'Выполнение операции над счётом',
 				content:html,
-				butSubmit:'Применить',
-				submit:submit
+				butSubmit:'',
+				butCancel:'Закрыть'
 			});
 
-		function submit() {
-			var send = {
-				op:'invoice_reset',
-				invoice_id:invoice_id
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#invoice-spisok').html(res.html);
-					dialog.close();
-					_msg('Сумма сброшена');
-				} else
-					dialog.abort();
-			}, 'json');
-		}
+		$('#invoice-setup-tab .u').click(function() {
+			dialog.close();
+			switch(_num($(this).attr('val'))) {
+				case 1: _invoiceTransfer(id); break;
+				case 3: _invoiceBalansSet(id); break;
+				case 4: _invoiceReset(id); break;
+				case 5:
+					_invoiceEdit({
+						id:id,
+						name:name,
+						about:p.find('.about').html(),
+						income:p.find('.confirm_income').val(),
+						transfer:p.find('.confirm_transfer').val(),
+						visible:p.find('.visible_id').val()
+					});
+					break;
+				case 6: _invoiceClose(id, balans == '0' ? 0 : balans); break;
+			}
+		});
 	})
 	.on('click', '#transfer-spisok ._next', function() {
 		var next = $(this),
@@ -1854,72 +2107,6 @@ $(document)
 			$('#passpaid')._radio(_schetSpisok);
 			_schetAction();
 			_nextCallback = _schetAction;
-		}
-		if($('#money-invoice').length) {
-			$('#transfer-add').click(function() {
-				var t = $(this),
-					from = INVOICE_SPISOK[0] ? INVOICE_SPISOK[0].uid : 0,
-					to = INVOICE_SPISOK[1] ? INVOICE_SPISOK[1].uid : 0,
-					html = '<table class="_dialog-tab">' +
-							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + from + '" />' +
-							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="' + to + '" />' +
-							'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
-							'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
-						'</table>',
-					dialog = _dialog({
-						width:350,
-						head:'Перевод между счетами',
-						content:html,
-						butSubmit:'Применить',
-						submit:submit
-					});
-				$('#from')._select({
-					width:218,
-					title0:'Не выбран',
-					spisok:INVOICE_SPISOK
-				});
-				$('#to')._select({
-					width:218,
-					title0:'Не выбран',
-					spisok:INVOICE_SPISOK
-				});
-				$('#sum').focus();
-				$('#sum,#about').keyEnter(submit);
-				function submit() {
-					var send = {
-						op:'invoice_transfer_add',
-						from:_num($('#from').val()),
-						to:_num($('#to').val()),
-						sum:_cena($('#sum').val()),
-						about:$('#about').val()
-					};
-					if(!send.from) dialog.err('Выберите счёт-отправитель');
-					else if(!send.to) dialog.err('Выберите счёт-получатель');
-					else if(send.from == send.to) dialog.err('Выберите другой счёт');
-					else if(!send.sum) {
-						dialog.err('Некорректно введена сумма');
-						$('#sum').focus();
-					} else {
-						dialog.process();
-						$.post(AJAX_MAIN, send, function(res) {
-							if(res.success) {
-								$('#invoice-spisok').html(res.i);
-								$('#transfer-spisok').html(res.t);
-								dialog.close();
-								_msg('Перевод произведён');
-							} else
-								dialog.abort();
-						}, 'json');
-					}
-				}
-			});
-		}
-		if($('#invoice-info').length) {
-			$('#invoice-info .link').click(function() {
-				$('#invoice-info .link').removeClass('sel');
-				var i = $(this).addClass('sel').index() - 1;
-				$('.ih-cont').hide().eq(i).show();
-			});
 		}
 		if($('#salary-worker').length) {
 			$('#action')._dropdown({

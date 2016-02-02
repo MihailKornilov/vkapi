@@ -388,15 +388,13 @@ switch(@$_POST['op']) {
 				'sum' => $r['sum']
 			));
 
-/*
 		_history(array(
-			'type_id' => 79,
+			'type_id' => 43,
 			'invoice_id' => $r['invoice_id'],
-			'v1' => _cena($r['sum']),
-			'v2' => $r['about'],
-			'v3' => $dtime
+			'zayav_id' => $r['zayav_id'],
+			'v1' => _cena($r['sum'])
 		));
-*/
+
 		$send['dtime'] = utf8(FullDataTime());
 		jsonSuccess($send);
 		break;
@@ -1238,6 +1236,114 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'invoice_add':
+		if(!RULE_SETUP_INVOICE)
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$income = _bool($_POST['income']);
+		$transfer = _bool($_POST['transfer']);
+		if(($visible = _ids($_POST['visible'])) == false && $_POST['visible'] != 0)
+			jsonError();
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_money_invoice` (
+					`app_id`,
+					`ws_id`,
+					`name`,
+					`about`,
+					`confirm_income`,
+					`confirm_transfer`,
+					`visible`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					'".addslashes($name)."',
+					'".addslashes($about)."',
+					".$income.",
+					".$transfer.",
+					'".$visible."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1022,
+			'v1' => $name
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_edit':
+		if(!RULE_SETUP_INVOICE)
+			jsonError();
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$income = _bool($_POST['income']);
+		$transfer = _bool($_POST['transfer']);
+		if(($visible = _ids($_POST['visible'])) == false && $_POST['visible'] != 0)
+			jsonError();
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted` AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice`
+				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."',
+					`confirm_income`=".$income.",
+					`confirm_transfer`=".$transfer.",
+					`visible`='".$visible."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+		_wsJsValues();
+
+		//формирование списка сотрудников, которым доступен счёт
+		$old = array();
+		if($r['visible'])
+			foreach(explode(',', $r['visible']) as $i)
+				$old[] = _viewer($i, 'viewer_name');
+		$old = implode('<br />', $old);
+
+		$new = array();
+		if($visible)
+			foreach(explode(',', $visible) as $i)
+				$new[] = _viewer($i, 'viewer_name');
+		$new = implode('<br />', $new);
+
+		if($changes =
+			_historyChange('Наименование', $r['name'], $name).
+			_historyChange('Описание', _br($r['about']), _br($about)).
+			_historyChange('Подтверждение поступления на счёт', _daNet($r['confirm_income']), _daNet($income)).
+			_historyChange('Подтверждение перевода', _daNet($r['confirm_transfer']), _daNet($transfer)).
+			_historyChange('Видимость для сотрудников', $old, $new))
+			_history(array(
+				'type_id' => 1023,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
 	case 'invoice_set':
 		if(!RULE_SETUP_INVOICE)
 			jsonError();
@@ -1306,6 +1412,82 @@ switch(@$_POST['op']) {
 
 		_history(array(
 			'type_id' => 53,
+			'invoice_id' => $invoice_id
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_close':
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+
+		$invoice_to = _num($_POST['invoice_to']);
+
+		if($invoice_id == $invoice_to) // если счета одинаковые
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$invoice_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if($balans = _invoiceBalans($invoice_id)) {//перевод средств, если деньги остались на закрываемом счёте
+			if(!$invoice_to)
+				jsonError();
+
+			$sql = "INSERT INTO `_money_invoice_transfer` (
+						`app_id`,
+						`ws_id`,
+						`invoice_id_from`,
+						`invoice_id_to`,
+						`sum`,
+						`about`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".WS_ID.",
+						".$invoice_id.",
+						".$invoice_to.",
+						".$balans.",
+						'закрыт счёт \""._invoice($invoice_id)."\"',
+						".VIEWER_ID."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			$insert_id = query_insert_id('_money_invoice_transfer', GLOBAL_MYSQL_CONNECT);
+
+			//история баланса для счёта-отправителя (который закрывается)
+			_balans(array(
+				'action_id' => 4,
+				'invoice_id' => $invoice_id,
+				'sum' => $balans,
+				'invoice_transfer_id' => $insert_id
+			));
+
+			//история баланса для счёта-получателя
+			_balans(array(
+				'action_id' => 4,
+				'invoice_id' => $invoice_to,
+				'sum' => $balans,
+				'invoice_transfer_id' => $insert_id
+			));
+		}
+
+		$sql = "UPDATE `_money_invoice` SET `deleted`=1 WHERE `id`=".$invoice_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+		_wsJsValues();
+
+		_balans(array(
+			'action_id' => 15,//закрытие
 			'invoice_id' => $invoice_id
 		));
 

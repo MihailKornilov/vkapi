@@ -363,6 +363,16 @@ var VK_SCROLL = 0,
 		$('#_wait')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
+	_copySel = function(arr, id) {//копирование массива для селекта. Если указан id - игнорируется
+		var send = [];
+		for(var n = 0; n < arr.length; n++) {
+			var sp = arr[n];
+			if(sp.uid == id)
+				continue;
+			send.push(sp);
+		}
+		return send;
+	},
 	_dialog = function(o) {
 		var t = $(this),
 			id = t.attr('id');

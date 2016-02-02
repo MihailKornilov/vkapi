@@ -97,24 +97,6 @@
 #setup-service-edit textarea{width:400px}
 
 
-
-/* Расчётные счета */
-#setup_invoice .name{vertical-align:top}
-#setup_invoice .name div{font-weight:bold}
-#setup_invoice .name h6{
-	text-align:right;
-	font-size:10px;
-	color:#d44;
-}
-#setup_invoice pre{color:#777;font-size:10px;margin:3px 7px}
-#setup_invoice .visible{width:110px;vertical-align:top}
-#setup_invoice .ed{
-	padding-top:6px;
-	vertical-align:top;
-}
-
-
-
 /* Категории расходов */
 #setup_expense td.name{cursor:move}
 #setup_expense .worker_use{width:80px;text-align:center}

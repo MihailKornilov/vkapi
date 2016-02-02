@@ -29,7 +29,6 @@ function _setup() {
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
 		'service' => 'Виды деятельности',
-		'invoice' => 'Расчётные счета',
 		'expense' => 'Категории расходов',
 		'zayav_expense' => 'SA: Расходы по заявке',
 		'product' => 'Виды изделий'
@@ -49,9 +48,6 @@ function _setup() {
 
 	if(_service('count') < 2)
 		unset($page['service']);
-
-	if(!RULE_SETUP_INVOICE)
-		unset($page['invoice']);
 
 	if(!SA)
 		unset($page['zayav_expense']);
@@ -352,63 +348,6 @@ function setup_service() {
 		'<div class="headName">Виды деятельности</div>'.
 		$send.
 	'</div>';
-}
-
-function setup_invoice() {
-	if(!RULE_SETUP_INVOICE)
-		return _err('Недостаточно прав: настройки счетов или видов платежей');
-	return
-		'<div id="setup_invoice">'.
-			'<div class="headName">Управление счетами<a class="add">Новый счёт</a></div>'.
-			'<div class="spisok">'.setup_invoice_spisok().'</div>'.
-		'</div>';
-}
-function setup_invoice_spisok() {
-	$sql = "SELECT *
-			FROM `_money_invoice`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
-			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(!mysql_num_rows($q))
-		return 'Список пуст.';
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$r['worker'] = array();
-		if($r['visible'])
-			foreach(explode(',', $r['visible']) as $i)
-				$r['worker'][] = _viewer($i, 'viewer_name');
-		$spisok[$r['id']] = $r;
-	}
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th>Наименование'.
-			'<th>Видимость<br />для сотрудников'.
-			'<th>';
-	foreach($spisok as $id => $r)
-		$send .=
-			'<tr val="'.$id.'">'.
-				'<td class="name">'.
-					'<div>'.$r['name'].'</div>'.
-					'<pre>'.$r['about'].'</pre>'.
-					($r['confirm_income'] ? '<h6>Подтверждения поступления на счёт</h6>' : '').
-					($r['confirm_transfer'] ? '<h6>Требовать подтверждение переводов</h6>' : '').
-				'<td class="visible">'.
-					implode('<br />', $r['worker']).
-				'<td class="ed">'.
-					'<div class="img_edit"></div>'.
-					'<div class="img_del"></div>'.
-
-			'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
-			'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
-			'<input type="hidden" class="visible_id" value="'.(empty($r['worker']) ? 0 : $r['visible']).'" />';
-
-	$send .= '</table>';
-
-	return $send;
 }
 
 function setup_expense() {
