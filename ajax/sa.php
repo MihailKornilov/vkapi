@@ -560,7 +560,7 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-				$predlog = _txt($_POST['predlog']);
+		$predlog = _txt($_POST['predlog']);
 		$name = _txt($_POST['name']);
 
 		if(empty($predlog))
@@ -605,7 +605,66 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
 		break;
-/*
+
+	case 'sa_app_add':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$title = _txt($_POST['title']);
+		$name = _txt($_POST['name']);
+		$secret = _txt($_POST['secret']);
+
+		if(empty($title))
+			jsonError();
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_app` (
+					`id`,
+					`title`,
+					`name`,
+					`secret`
+				) VALUES (
+					".$id.",
+					'".addslashes($title)."',
+					'".addslashes($name)."',
+					'".addslashes($secret)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		$send['html'] = utf8(sa_app_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_app_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$title = _txt($_POST['title']);
+		$name = _txt($_POST['name']);
+		$secret = _txt($_POST['secret']);
+
+		if(empty($title))
+			jsonError();
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `_app`
+				SET `title`='".addslashes($title)."',
+					`name`='".addslashes($name)."',
+					`secret`='".addslashes($secret)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		$send['html'] = utf8(sa_app_spisok());
+		jsonSuccess($send);
+		break;
+
+
+	/*
 	case 'sa_user_action':
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();

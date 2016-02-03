@@ -248,6 +248,71 @@ var balansCategory = function(arr) {
 				}
 			}, 'json');
 		}
+	},
+	saAppEdit = function(o) {
+		o = $.extend({
+			id:'',
+			title:'',
+			name:'',
+			secret:''
+		}, o);
+
+		var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label"><b>app_id</b>:<td><input id="app_id" type="text" value="' + o.id + '"' + (o.id ? ' disabled' : '') + ' />' +
+					'<tr><td class="label">title:<td><input id="title" type="text" value="' + o.title + '" />' +
+					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label">secret:<td><input id="secret" type="text" value="' + o.secret + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Изменение' : 'Добавление нового') + ' приложения',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'sa_app_' + (o.id ? 'edit' : 'add'),
+				id:_num(o.id ? o.id : $('#app_id').val()),
+				title:$('#title').val(),
+				name:$('#name').val(),
+				secret:$('#secret').val()
+			};
+			if(!send.id) {
+				dialog.err('Не корректный app_id');
+				$('#app_id').focus();
+				return;
+			}
+			if(!send.title) {
+				dialog.err('Не указан title');
+				$('#title').focus();
+				return;
+			}
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			if(!send.secret) {
+				dialog.err('Не указан secret');
+				$('#secret').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
 	};
 
 $(document)
@@ -558,6 +623,18 @@ $(document)
 			func:function(res) {
 				$('#spisok').html(res.html);
 			}
+		});
+	})
+
+	.on('click', '#sa-app .add', saAppEdit)
+	.on('click', '#sa-app .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saAppEdit({
+			id:t.attr('val'),
+			title:p.find('.title').html(),
+			name:p.find('.name').html(),
+			secret:p.find('.secret').val()
 		});
 	})
 

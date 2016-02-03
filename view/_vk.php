@@ -14,11 +14,28 @@ CREATE TABLE IF NOT EXISTS `pagehelp` (
 */
 
 define('TIME', microtime(true));
-define('GLOBAL_DIR', dirname(__FILE__));
+define('GLOBAL_DIR', dirname(dirname(__FILE__)));
 define('GLOBAL_DIR_AJAX', GLOBAL_DIR.'/ajax');
 
+setlocale(LC_ALL, 'ru_RU.CP1251');
+setlocale(LC_NUMERIC, 'en_US');
+
+define('DOMAIN', $_SERVER['SERVER_NAME']);
+define('LOCAL', DOMAIN != 'nyandoma.ru');
+
 require_once GLOBAL_DIR.'/syncro.php';
-require_once GLOBAL_DIR.'/view/vkuser.php';
+
+require_once GLOBAL_DIR.'/view/_value_regexp.php';
+
+require_once GLOBAL_DIR.'/view/_mysql.php';
+require_once GLOBAL_DIR.'/view/_vkuser.php';
+require_once GLOBAL_DIR.'/view/_note.php';
+require_once GLOBAL_DIR.'/view/_image.php';
+require_once GLOBAL_DIR.'/view/_date.php';
+require_once GLOBAL_DIR.'/view/_attach.php';
+require_once GLOBAL_DIR.'/view/_calendar.php';
+require_once GLOBAL_DIR.'/view/_debug.php';
+
 require_once GLOBAL_DIR.'/view/client.php';
 require_once GLOBAL_DIR.'/view/zayav.php';
 require_once GLOBAL_DIR.'/view/money.php';
@@ -27,122 +44,71 @@ require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
-require_once GLOBAL_DIR.'/view/note.php';
 
 
-setlocale(LC_ALL, 'ru_RU.CP1251');
-setlocale(LC_NUMERIC, 'en_US');
+function _const() {
+	if(!$app_id = _num(@$_GET['app_id']))
+		_appError();
+	if(!$viewer_id = _num(@$_GET['viewer_id']))
+		_appError();
 
-define('REGEXP_NUMERIC',    '/^[0-9]{1,20}$/i');
-define('REGEXP_INTEGER',    '/^-?[0-9]{1,20}$/i');
-define('REGEXP_CENA',       '/^[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
-define('REGEXP_CENA_MINUS', '/^-?[0-9]{1,10}(.[0-9]{1,2})?(,[0-9]{1,2})?$/i');
-define('REGEXP_BOOL',       '/^[0-1]$/');
-define('REGEXP_DATE',       '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
-define('REGEXP_YEAR',       '/^[0-9]{4}$/');
-define('REGEXP_YEARMONTH',  '/^[0-9]{4}-[0-9]{2}$/');
-define('REGEXP_WORD',       '/^[a-z0-9]{1,20}$/i');
-define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,30}$/i');
-define('REGEXP_WORDFIND',   '/^[a-zA-Zа-яА-Я0-9,\.; ]{1,}$/i');
+	define('VIEWER_ID', $viewer_id);
+	define('APP_ID', $app_id);
+	define('CACHE_PREFIX', 'CACHE_'.$app_id.'_');
 
-define('DOMAIN', $_SERVER['SERVER_NAME']);
-define('LOCAL', DOMAIN != 'nyandoma.ru');
-define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
+	session_name('app'.APP_ID);
+	session_start();
 
-if(!defined('CRON'))
-	define('CRON', !empty($_GET['cron']));
+	define('APP_NAME', _app('name'));
 
-$SA[982006] = 1; // Корнилов Михаил
-//$SA[1382858] = 1; // Серёга Ш.
-$SA[166424274] = 1; // тестовая запись
-define('SA', isset($SA[@$_GET['viewer_id']]));
+	define('VIEWER_MAX', 2147000001);
+	define('CRON_MAIL', 'mihan_k@mail.ru');
 
-//setcookie('sa_viewer_id', '', time() - 3600, '/');
-//вход из админа в другую мастерскую от имени другого пользователя
-define('SA_VIEWER_ID', SA && _num(@$_COOKIE['sa_viewer_id']) ? $_COOKIE['sa_viewer_id'] : 0);
-define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : _num(@$_GET['viewer_id']));
+	define('TODAY', strftime('%Y-%m-%d'));
+	define('TODAY_UNIXTIME', strtotime(TODAY));
 
-if(!VIEWER_ID && !CRON)
-	die('Error: not correct viewer_id.');
+	define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
-define('COOKIE_PREFIX', APP_ID.'_'.VIEWER_ID.'_');
-define('VALUES', TIME.
-				 '&viewer_id='.@$_GET['viewer_id'].
-				 '&auth_key='.@$_GET['auth_key'].
-				 '&access_token='.@$_GET['access_token']);
-define('URL', APP_HTML.'/index.php?'.VALUES);
-define('TODAY', strftime('%Y-%m-%d'));
-define('TODAY_UNIXTIME', strtotime(TODAY));
+	$SA[982006] = 1;    // Корнилов Михаил
+	//$SA[1382858] = 1; // Серёга Ш.
+	$SA[166424274] = 1; // тестовая запись
+	define('SA', isset($SA[VIEWER_ID]));
 
-define('AJAX_MAIN', APP_HTML.'/ajax/main.php?'.VALUES.'&ajax=1');
-define('AJAX', !empty($_GET['ajax']));//производится ли запрос аjax
-define('APP_URL', 'http://vk.com/app'.APP_ID);
+	define('VALUES', TIME.
+					 '&app_id='.@$_GET['app_id'].
+					 '&viewer_id='.@$_GET['viewer_id'].
+					 '&auth_key='.@$_GET['auth_key']
+		  );
+	//'&access_token='.@$_GET['access_token'] todo временно отключен
+	define('URL', API_HTML.'/index.php?'.VALUES);
+	define('AJAX_MAIN', API_HTML.'/ajax.php?'.VALUES);
+	define('APP_URL', 'http://vk.com/app'.APP_ID);
 
-define('VIEWER_MAX', 2147000001);
-define('CRON_MAIL', 'mihan_k@mail.ru');
 
-if(SA || CRON) {
-	error_reporting(E_ALL);
-	ini_set('display_errors', true);
-	ini_set('display_startup_errors', true);
-}
-
-if(!CRON) //Включает работу куков в IE через фрейм
-	header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
-
-define('DEBUG', SA && !empty($_COOKIE['debug']));
-
-session_name('app'.APP_ID);
-session_start();
-
-_appAuth();
-_dbConnect('GLOBAL_');
-_dbConnect();
-if(!CRON) {
-	_setup_global();
-	_getVkUser();
-	_ws();
-	_pinCheck();
-	_hashRead();
-} else
-	define('WS_ID', 0);
-
-define('ATTACH_PATH', GLOBAL_PATH.'.attach/'.APP_ID.'/ws_'.WS_ID.'/');
-define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID.'/ws_'.WS_ID.'/');
-
-define('PATH_DOGOVOR', APP_PATH.'/files/dogovor/');
-define('LINK_DOGOVOR', APP_HTML.'/files/dogovor/');
-
-function _pre($v) {// вывод в debug разобранного массива
-	if(empty($v))
-		return '';
-	$pre = '';
-	foreach($v as $k => $r)
-		$pre .= '<div class="un"><b>'.$k.':</b>'._pre_arr($r).'</div>';
-	define('ARRAY_PRE', $pre);
-	return $pre;
-}
-function _pre_arr($v) {// проверка, является ли переменная массивом. Если да, то обработка массива.
-	if(is_array($v)) {
-		$send = '';
-		foreach($v as $k => $r)
-			$send .= '<div class="el"><b>'.$k.':</b>'._pre_arr($r).'</div>';
-		return $send;
+	if(SA) {
+		error_reporting(E_ALL);
+		ini_set('display_errors', true);
+		ini_set('display_startup_errors', true);
 	}
-	return $v;
-}
 
+	define('DEBUG', SA && !empty($_COOKIE['debug']));
+	define('COOKIE_PREFIX', APP_ID.'_'.VIEWER_ID.'_');
+
+//	define('ATTACH_PATH', GLOBAL_PATH.'.attach/'.APP_ID.'/ws_'.WS_ID.'/');
+//	define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID.'/ws_'.WS_ID.'/');
+
+//	define('PATH_DOGOVOR', APP_PATH.'/files/dogovor/');
+//	define('LINK_DOGOVOR', APP_HTML.'/files/dogovor/');
+}
 
 function _header() {
-	if(AJAX)
-		return '';
 	return
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
 
 		'<head>'.
 			'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
-			'<title>'.APP_NAME.' - Приложение '.APP_ID.'</title>'.
+			'<title>'.APP_NAME.'</title>'.
 
 			_api_scripts().
 			(PIN_ENTER ? '' : _appScripts()).
@@ -151,7 +117,6 @@ function _header() {
 		'<body>'.
 			'<div id="frameBody">'.
 				'<iframe id="frameHidden" name="frameHidden"></iframe>';
-//			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
 }
 function _api_scripts() {//скрипты и стили, которые вставляются в html
 	define('MIN', DEBUG ? '' : '.min');
@@ -162,7 +127,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-ui.min.js"></script>'.
-		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
+//		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
@@ -175,7 +140,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
 				'APP_ID='.APP_ID.','.
 				'WS_ID='.WS_ID.','.
-				'APP_HTML="'.APP_HTML.'",'.
+				'API_HTML="'.API_HTML.'",'.
+				(defined('APP_HTML') ? 'APP_HTML="'.APP_HTML.'",' : '').
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
@@ -251,10 +217,136 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 				case 'balans':      return sa_balans();
 				case 'zayav':       return sa_zayav();
 				case 'color':       return sa_color();
+
+				case 'app':         return sa_app();
 			}
 	}
 
 	return '';
+}
+
+function _footer() {
+	$getArr = array(
+		'start' => 1,
+		'api_url' => 1,
+		'api_id' => 1,
+		'api_settings' => 1,
+		'viewer_id' => 1,
+		'viewer_type' => 1,
+		'sid' => 1,
+		'secret' => 1,
+		'access_token' => 1,
+		'user_id' => 1,
+		'group_id' => 1,
+		'is_app_user' => 1,
+		'auth_key' => 1,
+		'language' => 1,
+		'parent_language' => 1,
+		'ad_info' => 1,
+		'is_secure' => 1,
+		'referrer' => 1,
+		'lc_name' => 1,
+		'hash' => 1
+	);
+
+	$v = array();
+	foreach($_GET as $k => $val) {
+		if(isset($getArr[$k]) || empty($_GET[$k]))
+			continue;
+		$v[] = '"'.$k.'":"'.$val.'"';
+	}
+
+	mysql_close();
+
+	return
+				_debug().
+				'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+			'</div>'.
+			_footerYandexMetrika().
+		'</body></html>';
+}
+function _footerYandexMetrika() {
+	if(LOCAL || SA)
+		return '';
+
+	return
+	'<!-- Yandex.Metrika counter -->'.
+		'<script type="text/javascript">'.
+		    '(function (d, w, c) {'.
+		        '(w[c] = w[c] || []).push(function() {'.
+		            'try {'.
+		                'w.yaCounter35023590 = new Ya.Metrika({'.
+		                    'id:35023590,'.
+		                    'clickmap:true,'.
+		                    'trackLinks:true,'.
+		                    'accurateTrackBounce:true,'.
+		                    'webvisor:true,'.
+		                    'trackHash:true,'.
+		                    'ut:"noindex"'.
+		                '});'.
+		            '} catch(e) { }'.
+		        '});'.
+
+		        'var n = d.getElementsByTagName("script")[0],'.
+		            's = d.createElement("script"),'.
+		            'f = function () { n.parentNode.insertBefore(s, n); };'.
+		        's.type = "text/javascript";'.
+		        's.async = true;'.
+		        's.src = "https://mc.yandex.ru/metrika/watch.js";'.
+
+		        'if (w.opera == "[object Opera]") {'.
+		            'd.addEventListener("DOMContentLoaded", f, false);'.
+		        '} else { f(); }'.
+		    '})(document, window, "yandex_metrika_callbacks");'.
+		'</script>'.
+		'<noscript><div><img src="https://mc.yandex.ru/watch/35023590?ut=noindex" style="position:absolute; left:-9999px;" /></div></noscript>'.
+	'<!-- /Yandex.Metrika counter -->';
+}
+
+function _app($i='all') {//Получение данных о приложении
+	$key = CACHE_PREFIX.'app'.APP_ID;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_app`
+				WHERE `id`=".APP_ID;
+		if(!$arr = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			_appError('Невозможно прочитать данные приложения для кеша.');
+		xcache_set($key, $arr, 86400);
+	}
+
+	if($i == 'all')
+		return $arr;
+
+	if(!isset($arr[$i]))
+		return '_app: неизвестный ключ <b>'.$i.'</b>';
+
+	return $arr[$i];
+}
+function _appAuth() {//Проверка авторизации в приложении
+	if(LOCAL)
+		return;
+	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'._app('secret')))
+		_appError('Ошибка авторизации приложения.');
+}
+function _appError($msg='Приложение не было загружено.') {//вывод сообщения об ошибке приложения и выход
+	$html =
+		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
+		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
+			'<head>'.
+				'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
+				'<title>Error</title>'.
+
+				'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk.min.css" />'.
+
+			'</head>'.
+			'<body>'.
+				'<div id="frameBody">'.
+					'<iframe id="frameHidden" name="frameHidden"></iframe>'.
+					_noauth($msg).
+				'</div>'.
+			'</body>'.
+		'</html>';
+	die($html);
 }
 
 function _ws($i='all') {//Получение данных об организации
@@ -331,6 +423,7 @@ function _wsOneCheck() {
 		die(_header()._noauth('Нет привязки к организации при проверке.')._footer());
 	}
 }
+
 
 
 /* Разделы главного меню */
@@ -411,7 +504,6 @@ function _menu() {//разделы основного меню
 	return '<div id="_menu">'.$link.'</div>';
 }
 
-
 /* Секция отчётов - report */
 function _report() {
 	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
@@ -483,151 +575,7 @@ function _report() {
 }
 
 
-function _debug() {
-	if(!SA)
-		return '';
 
-	global $sqlQuery, $sqlTime;
-
-	$pre = '&pre_p='.@$_GET['p'].
-			(empty($_GET['d']) ? '' : '&pre_d='.$_GET['d']).
-			(empty($_GET['d1']) ? '' : '&pre_d1='.$_GET['d1']).
-			(empty($_GET['id']) ? '' : '&pre_id='.$_GET['id']);
-
-	$send =
-		'<div id="admin">'.
-			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">SA</a> :: ' : '').
-			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
-			'<a id="cookie_clear">Очисить cookie</a> :: '.
-			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
-			'<a href="http://'.DOMAIN.APP_HTML.'/_sxdump" target="_blank">sxd</a> :: '.
-			'sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).') :: '.
-			'php '.round(microtime(true) - TIME, 3).' :: '.
-			'js <em></em>'.
-		'</div>';
-	if(DEBUG) {
-		$get = '';
-		ksort($_GET);
-		foreach($_GET as $i => $v)
-			$get .= '<b>'.$i.'</b>='.$v.'<br />';
-		$get .= '<textarea>http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'].'</textarea>';
-
-		$send .=
-		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
-			'<h1>+</h1>'.
-			'<h2><div class="dmenu">'.
-					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
-					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'._debug_cookie_count().'</b></a>'.
-					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.
-					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
-					(defined('ARRAY_PRE') ? '<a'.(@$_COOKIE['debug_pg'] == 'pre' ? ' class="sel"' : '').' val="pre">pre</a>' : '').
-				'</div>'.
-				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
-				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.
-					'<a id="cookie_update">Обновить</a>'.
-					'<div id="cookie_spisok">'._debug_cookie().'</div>'.
-				'</div>'.
-				'<div class="pg get'.(@$_COOKIE['debug_pg'] == 'get' ? '' : ' dn').'">'.$get.'</div>'.
-				'<div class="pg ajax'.(@$_COOKIE['debug_pg'] == 'ajax' ? '' : ' dn').'">&nbsp;</div>'.
-				(defined('ARRAY_PRE') ? '<div class="pg pre'.(@$_COOKIE['debug_pg'] == 'pre' ? '' : ' dn').'">'.ARRAY_PRE.'</div>' : '').
-			'</h2>'.
-		'</div>';
-	}
-	return $send;
-}
-function _debug_cookie_count() {
-	$count = 0;
-	if(!empty($_COOKIE))
-		foreach($_COOKIE as $key => $val)
-			if(strpos($key, 'debug') !== 0)
-				$count++;
-	return $count ? $count : '';
-}
-function _debug_cookie() {
-	$cookie = '';
-	if(!empty($_COOKIE))
-		foreach($_COOKIE as $key => $val)
-			if(strpos($key, 'debug') !== 0)
-				$cookie .= '<p><b>'.$key.'</b> '.$val;
-	return $cookie;
-}
-function _footer() {
-	$getArr = array(
-		'start' => 1,
-		'api_url' => 1,
-		'api_id' => 1,
-		'api_settings' => 1,
-		'viewer_id' => 1,
-		'viewer_type' => 1,
-		'sid' => 1,
-		'secret' => 1,
-		'access_token' => 1,
-		'user_id' => 1,
-		'group_id' => 1,
-		'is_app_user' => 1,
-		'auth_key' => 1,
-		'language' => 1,
-		'parent_language' => 1,
-		'ad_info' => 1,
-		'is_secure' => 1,
-		'referrer' => 1,
-		'lc_name' => 1,
-		'hash' => 1
-	);
-
-	$v = array();
-	foreach($_GET as $k => $val) {
-		if(isset($getArr[$k]) || empty($_GET[$k]))
-			continue;
-		$v[] = '"'.$k.'":"'.$val.'"';
-	}
-
-	mysql_close();
-
-	return
-				_debug().
-				'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
-			'</div>'.
-			_footerYandexMetrika().
-		'</body></html>';
-}
-function _footerYandexMetrika() {
-	if(LOCAL || SA)
-		return '';
-
-	return
-	'<!-- Yandex.Metrika counter -->'.
-		'<script type="text/javascript">'.
-		    '(function (d, w, c) {'.
-		        '(w[c] = w[c] || []).push(function() {'.
-		            'try {'.
-		                'w.yaCounter35023590 = new Ya.Metrika({'.
-		                    'id:35023590,'.
-		                    'clickmap:true,'.
-		                    'trackLinks:true,'.
-		                    'accurateTrackBounce:true,'.
-		                    'webvisor:true,'.
-		                    'trackHash:true,'.
-		                    'ut:"noindex"'.
-		                '});'.
-		            '} catch(e) { }'.
-		        '});'.
-
-		        'var n = d.getElementsByTagName("script")[0],'.
-		            's = d.createElement("script"),'.
-		            'f = function () { n.parentNode.insertBefore(s, n); };'.
-		        's.type = "text/javascript";'.
-		        's.async = true;'.
-		        's.src = "https://mc.yandex.ru/metrika/watch.js";'.
-
-		        'if (w.opera == "[object Opera]") {'.
-		            'd.addEventListener("DOMContentLoaded", f, false);'.
-		        '} else { f(); }'.
-		    '})(document, window, "yandex_metrika_callbacks");'.
-		'</script>'.
-		'<noscript><div><img src="https://mc.yandex.ru/watch/35023590?ut=noindex" style="position:absolute; left:-9999px;" /></div></noscript>'.
-	'<!-- /Yandex.Metrika counter -->';
-}
 function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
 		'v' => 5.21,
@@ -676,9 +624,6 @@ function jsonDebugParam() {//возвращение дополнительных параметров json, если вк
 }
 
 function _hashRead() {
-	if(AJAX)
-		return;
-
 	if(PIN_ENTER) { // Если требуется пин-код, hash сохраняется в cookie
 		setcookie('hash', empty($_GET['hash']) ? @$_COOKIE['hash'] : $_GET['hash'], time() + 2592000, '/');
 		return;
@@ -767,12 +712,6 @@ function _hashFilter($name) {//формирование элементов фильтра из cookie или адре
 	return $v;
 }
 
-function _appAuth() {//проверка авторизации в приложении
-	if(LOCAL || CRON || SA_VIEWER_ID)
-		return;
-	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'.SECRET))
-		die('Ошибка авторизации приложения. Попробуйте снова: <a href="//vk.com/app'.APP_ID.'">vk.com/app'.APP_ID.'</a>.');
-}
 function _noauth($msg='Не удалось выполнить вход в приложение.') {
 	return '<div class="noauth"><div>'.$msg.'</div></div>';
 }
@@ -781,8 +720,6 @@ function _err($msg='Ошибка') {
 }
 function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 	if(!PIN)
-		return;
-	if(AJAX)
 		return;
 	if(!PIN_ENTER) {
 		$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
@@ -795,111 +732,14 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 		_header().
 		'<div id="pin-enter">'.
 			'Пин: '.
-			'<input type="password" id="pin" maxlength="10"> '.
-			'<div class="vkButton"><button>Ok</button></div>'.
+			'<input type="password" id="pin" maxlength="10">'.
+			'<button class="vk" onclick="pinEnter()">Вход</button>'.
 			'<div class="red">&nbsp;</div>'.
+			'<script type="text/javascript">pinLoad()</script>'.
 		'</div>'.
 		_footer();
 
 	die($html);
-}
-
-function _dbConnect($prefix='') {
-	global $sqlQuery;
-	$sqlQuery = array();
-	$conn = mysql_connect(
-				constant($prefix.'MYSQL_HOST'),
-				constant($prefix.'MYSQL_USER'),
-				constant($prefix.'MYSQL_PASS'),
-				1
-			) or die("Can't connect to database");
-	mysql_select_db(constant($prefix.'MYSQL_DATABASE'), $conn) or die("Can't select database");
-	query('SET NAMES `'.constant($prefix.'MYSQL_NAMES').'`', $conn);
-	define($prefix.'MYSQL_CONNECT', $conn);
-}
-function query($sql, $resource_id=MYSQL_CONNECT) {
-	global $sqlQuery, $sqlTime;
-	$t = microtime(true);
-	$res = mysql_query($sql, $resource_id ? $resource_id : MYSQL_CONNECT) or die($sql.'<br />'.mysql_error());
-	$t = microtime(true) - $t;
-
-	$sqlTime += $t;
-	$t = round($t, 3);
-	$sqlQuery[] = '<li><a class="sql-un">'.trim(str_replace ('	', '',  $sql)).'</a><b class="t'.($t > 0.05 ? ' long' : '').'">'.$t.'</b>';
-	if(mysql_insert_id() && strpos(strtoupper($sql), 'INSERT INTO') !== false)
-		return mysql_insert_id();
-	return $res;
-}
-function query_value($sql, $resource_id=MYSQL_CONNECT) {
-	$q = query($sql, $resource_id);
-	if(!$r = mysql_fetch_row($q))
-		return 0;
-	return $r[0];
-}
-function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
-	$q = query($sql, $resource_id);
-	if(!$r = mysql_fetch_assoc($q))
-		return array();
-	return $r;
-}
-function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
-	$send = array();
-	$q = query($sql, $resource_id);
-	while($r = mysql_fetch_row($q))
-		$send[$r[0]] = preg_match(REGEXP_NUMERIC, $r[1]) ? intval($r[1]) : $r[1];
-	return $send;
-}
-function query_arr($sql, $resource_id=MYSQL_CONNECT) {//Массив, где ключами является id
-	$send = array();
-	$q = query($sql, $resource_id);
-	while($r = mysql_fetch_assoc($q))
-		$send[$r['id']] = $r;
-	return $send;
-}
-function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
-	$send = array();
-	$q = query($sql, $resource_id);
-	while($sp = mysql_fetch_row($q))
-		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
-	return '['.implode(',',$send).']';
-}
-function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
-	$send = array();
-	$q = query($sql, $resource_id);
-	while($r = mysql_fetch_array($q))
-		$send[] = '{'.
-			'uid:'.$r[0].','.
-			'title:"'._viewer($r[0], 'viewer_name').'"'.
-		'}';
-	return '['.implode(',',$send).']';
-}
-function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select при отправке через ajax
-	$send = array();
-	$q = query($sql, $resource_id);
-	while($sp = mysql_fetch_row($q))
-		$send[] = array(
-			'uid' => $sp[0],
-			'title' => utf8(addslashes(htmlspecialchars_decode($sp[1])))
-		);
-	return $send;
-}
-function query_assJson($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив js
-	$q = query($sql, $resource_id);
-	$send = array();
-	while($sp = mysql_fetch_row($q))
-		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
-	return '{'.implode(',', $send).'}';
-}
-function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
-	$q = query($sql, $resource_id);
-	$send = array();
-	while($sp = mysql_fetch_row($q))
-		$send[] = $sp[0];
-	return empty($send) ? 0 : implode(',', array_unique($send));
-}
-function query_insert_id($tab, $resource_id=MYSQL_CONNECT) {//id последнего внесённого элемента
-	$sql = "SELECT `id` FROM `".$tab."` ORDER BY `id` DESC LIMIT 1";
-	return query_value($sql, $resource_id);
 }
 
 function _num($v) {
@@ -1091,6 +931,60 @@ function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу 
 	return $send;
 }
 
+function _arr($arr, $i=false) {//Последовательный массив
+	$send = array();
+	foreach($arr as $r) {
+		$v = $i === false ? $r : $r[$i];
+		$send[] = preg_match(REGEXP_CENA, $v) ? _cena($v) : utf8(htmlspecialchars_decode($v));
+	}
+	return $send;
+}
+
+function _sel($arr) {
+	$send = array();
+	foreach($arr as $uid => $title) {
+		$send[] = array(
+			'uid' => $uid,
+			'title' => utf8($title)
+		);
+	}
+	return $send;
+}
+function _selJson($arr) {
+	$send = array();
+	foreach($arr as $uid => $title) {
+		$content = '';
+		if(is_array($title)) {
+			$r = $title;
+			$title = $r['title'];
+			$content = isset($r['content']) ? $r['content'] : '';
+		}
+		$send[] = '{'.
+			'uid:'.$uid.','.
+			'title:"'.addslashes($title).'"'.
+			($content ? ',content:"'.addslashes($content).'"' : '').
+		'}';
+	}
+	return '['.implode(',',$send).']';
+}
+function _assJson($arr) {//Ассоциативный массив
+	$send = array();
+	foreach($arr as $id => $v)
+		$send[] =
+			(preg_match(REGEXP_NUMERIC, $id) ? $id : '"'.$id.'"').
+			':'.
+			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
+	return '{'.implode(',', $send).'}';
+}
+function _arrJson($arr, $i=false) {//Последовательный массив
+	$send = array();
+	foreach($arr as $r) {
+		$v = $i === false ? $r : $r[$i];
+		$send[] = preg_match(REGEXP_CENA, $v) ? $v : '"'.addslashes(htmlspecialchars_decode($v)).'"';
+	}
+	return '['.implode(',', $send).']';
+}
+
 function _filterJs($name, $filter) {//формирование условий поиска в формате js
 	$filter += array(
 		'js_name' => $name,
@@ -1165,60 +1059,6 @@ function _next($v) {//вывод ссылки на догрузку списка
 	return
 		$send.
 		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
-}
-
-function _arr($arr, $i=false) {//Последовательный массив
-	$send = array();
-	foreach($arr as $r) {
-		$v = $i === false ? $r : $r[$i];
-		$send[] = preg_match(REGEXP_CENA, $v) ? _cena($v) : utf8(htmlspecialchars_decode($v));
-	}
-	return $send;
-}
-
-function _sel($arr) {
-	$send = array();
-	foreach($arr as $uid => $title) {
-		$send[] = array(
-			'uid' => $uid,
-			'title' => utf8($title)
-		);
-	}
-	return $send;
-}
-function _selJson($arr) {
-	$send = array();
-	foreach($arr as $uid => $title) {
-		$content = '';
-		if(is_array($title)) {
-			$r = $title;
-			$title = $r['title'];
-			$content = isset($r['content']) ? $r['content'] : '';
-		}
-		$send[] = '{'.
-			'uid:'.$uid.','.
-			'title:"'.addslashes($title).'"'.
-			($content ? ',content:"'.addslashes($content).'"' : '').
-		'}';
-	}
-	return '['.implode(',',$send).']';
-}
-function _assJson($arr) {//Ассоциативный массив
-	$send = array();
-	foreach($arr as $id => $v)
-		$send[] =
-			(preg_match(REGEXP_NUMERIC, $id) ? $id : '"'.$id.'"').
-			':'.
-			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
-	return '{'.implode(',', $send).'}';
-}
-function _arrJson($arr, $i=false) {//Последовательный массив
-	$send = array();
-	foreach($arr as $r) {
-		$v = $i === false ? $r : $r[$i];
-		$send[] = preg_match(REGEXP_CENA, $v) ? $v : '"'.addslashes(htmlspecialchars_decode($v)).'"';
-	}
-	return '['.implode(',', $send).']';
 }
 
 function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT, $ws=0) {//ассоциативный список подкатегорий
@@ -1486,128 +1326,6 @@ function _rightLink($id, $spisok, $val=0) {
 	'</div>';
 }
 
-function _monthFull($n=0) {
-	$mon = array(
-		1 => 'января',
-		2 => 'февраля',
-		3 => 'марта',
-		4 => 'апреля',
-		5 => 'мая',
-		6 => 'июня',
-		7 => 'июля',
-		8 => 'августа',
-		9 => 'сентября',
-		10 => 'октября',
-		11 => 'ноября',
-		12 => 'декабря'
-	);
-	return $n ? $mon[intval($n)] : $mon;
-}
-function _monthDef($n=0, $firstUp=false) {
-	$mon = array(
-		1 => 'январь',
-		2 => 'февраль',
-		3 => 'март',
-		4 => 'апрель',
-		5 => 'май',
-		6 => 'июнь',
-		7 => 'июль',
-		8 => 'август',
-		9 => 'сентябрь',
-		10 => 'октябрь',
-		11 => 'ноябрь',
-		12 => 'декабрь'
-	);
-	if(!$n) {
-		if($firstUp)
-			foreach($mon as $k => $m)
-				$mon[$k][0] = strtoupper($m);
-		return $mon;
-	}
-	$send = $mon[intval($n)];
-	if($firstUp)
-		$send[0] = strtoupper($send[0]);
-	return $send;
-}
-function _monthCut($n) {
-	$mon = array(
-		0 => '',
-		1 => 'янв',
-		2 => 'фев',
-		3 => 'мар',
-		4 => 'апр',
-		5 => 'май',
-		6 => 'июн',
-		7 => 'июл',
-		8 => 'авг',
-		9 => 'сен',
-		10 => 'окт',
-		11 => 'ноя',
-		12 => 'дек'
-	);
-	return $mon[intval($n)];
-}
-function _week($n) {
-	$week = array(
-		1 => 'пн',
-		2 => 'вт',
-		3 => 'ср',
-		4 => 'чт',
-		5 => 'пт',
-		6 => 'сб',
-		0 => 'вс'
-	);
-	return $week[intval($n)];
-}
-function FullData($v=0, $noyear=0, $cut=0, $week=0) {//пт. 14 апреля 2010
-	if(!$v)
-		$v = curTime();
-	$d = explode('-', $v);
-	return
-		($week ? _week(date('w', strtotime($v))).'. ' : '').
-		abs($d[2]).' '.
-		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
-		(!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
-}
-function FullDataTime($v=0, $cut=0) {//14 апреля 2010 в 12:45
-	if(!$v)
-		$v = curTime();
-	$arr = explode(' ', $v);
-	$d = explode('-', $arr[0]);
-	if(!intval($arr[0]) || empty($arr[1]) || empty($d[1]) || empty($d[2]))
-		return '';
-	$t = explode(':',$arr[1]);
-	if(empty($t[1]) || empty($t[2]))
-		return '';
-	return
-		abs($d[2]).' '.
-		($cut ? _monthCut($d[1]) : _monthFull($d[1])).
-		(date('Y') == $d[0] ? '' : ' '.$d[0]).
-		' в '.$t[0].':'.$t[1];
-}
-function _curMonday() { //Понедельник в текущей неделе
-	// Номер текущего дня недели
-	$time = time();
-	$curDay = date("w", $time);
-	if($curDay == 0) $curDay = 7;
-	// Приведение дня к понедельнику
-	$time -= 86400 * ($curDay - 1);
-	return strftime('%Y-%m-%d', $time);
-}
-function _curSunday() { //Воскресенье в текущей неделе
-	$time = time();
-	$curDay = date("w", $time);
-	if($curDay == 0) $curDay = 7;
-	$time += 86400 * (7 - $curDay);
-	return strftime('%Y-%m-%d', $time);
-
-}
-function _dataDog($v) {//формат даты как для договора
-	$ex = explode(' ', $v);
-	$d = explode('-', $ex[0]);
-	return $d[2].'/'.$d[1].'/'.$d[0];
-}
-
 function _engRusChar($word) { //Перевод символов раскладки с английского на русский
 	$char = array(
 		'`' => 'ё',
@@ -1795,392 +1513,6 @@ function _payType($type_id=false) {//вид расчёта
 	if($type_id === false)
 		return $arr;
 	return isset($arr[$type_id]) ? $arr[$type_id] : '';
-}
-
-function _calendarFilter($data=array()) {
-	$data = array(
-		'upd' => empty($data['upd']), // Обновлять существующий календать? (при перемотке масяцев)
-		'month' => empty($data['month']) ? strftime('%Y-%m') : $data['month'],
-		'sel' => empty($data['sel']) ? '' : $data['sel'],
-		'days' => empty($data['days']) ? array() : $data['days'],
-		'func' => empty($data['func']) ? '' : $data['func'],
-		'noweek' => empty($data['noweek']) ? 0 : 1,
-		'norewind' => !empty($data['norewind'])
-	);
-	$ex = explode('-', $data['month']);
-	$SHOW_YEAR = $ex[0];
-	$SHOW_MON = $ex[1];
-	$days = $data['days'];
-
-	$back = $SHOW_MON - 1;
-	$back = !$back ? ($SHOW_YEAR - 1).'-12' : $SHOW_YEAR.'-'.($back < 10 ? 0 : '').$back;
-	$next = $SHOW_MON + 1;
-	$next = $next > 12 ? ($SHOW_YEAR + 1).'-01' : $SHOW_YEAR.'-'.($next < 10 ? 0 : '').$next;
-
-	$send =
-	($data['upd'] ?
-		'<div class="_calendarFilter">'.
-			'<input type="hidden" class="func" value="'.$data['func'].'" />'.
-			'<input type="hidden" class="noweek" value="'.$data['noweek'].'" />'.
-			'<input type="hidden" class="selected" value="'.$data['sel'].'" />'.
-		'<div class="content">'
-	: '').
-		'<table class="data">'.
-			'<tr>'.($data['norewind'] ? '' : '<td class="ch" val="'.$back.'">&laquo;').
-				'<td><a val="'.$data['month'].'"'.($data['month'] == $data['sel'] ? ' class="sel"' : '').'>'._monthDef($SHOW_MON).'</a> '.
-					($data['norewind'] ? '' :
-						'<a val="'.$SHOW_YEAR.'"'.($SHOW_YEAR == $data['sel'] ? ' class="sel"' : '').'>'.$SHOW_YEAR.'</a>'.
-					'<td class="ch" val="'.$next.'">&raquo;').
-		'</table>'.
-		'<table class="month">'.
-			'<tr class="week-name">'.
-				($data['noweek'] ? '' :'<th>&nbsp;').
-				'<td>пн<td>вт<td>ср<td>чт<td>пт<td>сб<td>вс';
-
-	$unix = strtotime($data['month'].'-01');
-	$dayCount = date('t', $unix);   // Количество дней в месяце
-	$week = date('w', $unix);       // Номер первого дня недели
-	if(!$week)
-		$week = 7;
-
-	$curDay = strftime('%Y-%m-%d');
-	$curUnix = strtotime($curDay); // Текущий день для выделения прошедших дней
-	$weekNum = intval(date('W', $unix));    // Номер недели с начала месяца
-
-	$range = _calendarWeek($data['month'].'-01');
-	$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
-		($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.$weekNum);
-	for($n = $week; $n > 1; $n--, $send .= '<td>'); // Вставка пустых полей, если первый день недели не понедельник
-	for($n = 1; $n <= $dayCount; $n++) {
-		$day = $data['month'].'-'.($n < 10 ? '0' : '').$n;
-		$cur = $curDay == $day ? ' cur' : '';
-		$on = empty($days[$day]) ? '' : ' on';
-		$old = $unix + $n * 86400 <= $curUnix ? ' old' : '';
-		$sel = $day == $data['sel'] ? ' sel' : '';
-		$val = $on ? ' val="'.$day.'"' : '';
-		$send .= '<td class="d '.$cur.$on.$old.$sel.'"'.$val.'>'.$n;
-		$week++;
-		if($week > 7)
-			$week = 1;
-		if($week == 1 && $n < $dayCount) {
-			$range = _calendarWeek($data['month'].'-'.($n + 1 < 10 ? 0 : '').($n + 1));
-			$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
-				($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.(++$weekNum));
-		}
-	}
-	if($week > 1)
-		for($n = $week; $n <= 7; $n++, $send .= '<td>'); // Вставка пустых полей, если день заканчивается не воскресеньем
-	$send .= '</table>'.($data['upd'] ? '</div></div>' : '');
-
-	return $send;
-}
-function _calendarDataCheck($data) {
-	if(empty($data))
-		return false;
-	if(preg_match(REGEXP_DATE, $data) || preg_match(REGEXP_YEARMONTH, $data) || preg_match(REGEXP_YEAR, $data))
-		return true;
-	$ex = explode(':', $data);
-	if(preg_match(REGEXP_DATE, $ex[0]) && preg_match(REGEXP_DATE, @$ex[1]))
-		return true;
-	return false;
-}
-function _calendarPeriod($data) {// Формирование периода для элементов массива запросившего фильтра
-	$send = array(
-		'period' => $data,
-		'day' => '',
-		'from' => '',
-		'to' => ''
-	);
-	if(!_calendarDataCheck($data))
-		return $send;
-	$ex = explode(':', $data);
-	if(empty($ex[1]))
-		return array('day'=>$ex[0]) + $send;
-	return array(
-		'from' => $ex[0],
-		'to' => $ex[1]
-	) + $send;
-}
-function _calendarWeek($day=0) {// Формирование периода за неделю недели
-	if(!$day)
-		$day = strftime('%Y-%m-%d');
-	$d = explode('-', $day);
-	$month = $d[0].'-'.$d[1];
-
-	$unix = strtotime($day);
-	$dayCount = date('t', $unix);   // Количество дней в месяце
-	$week = date('w', $unix);
-	if(!$week)
-		$week = 7;
-
-	$dayStart = $d[2] - $week + 1; // Номер первого дня недели
-	if($dayStart < 1) {
-		$back = $d[1] - 1;
-		$back = !$back ? ($d[0] - 1).'-12' : $d[0].'-'.($back < 10 ? 0 : '').$back;
-		$start = $back.'-'.(date('t', strtotime($back.'-01')) + $dayStart);
-	} else
-		$start = $month.'-'.($dayStart < 10 ? 0 : '').$dayStart;
-
-	$dayEnd = 7 - $week + $d[2]; // Номер последнего дня недели
-	if($dayEnd > $dayCount) {
-		$next = $d[1] + 1;
-		$next = $next > 12 ? ($d[0] + 1).'-01' : $d[0].'-'.($next < 10 ? 0 : '').$next;
-		$end = $next.'-0'.($dayEnd - $dayCount);
-	} else
-		$end = $month.'-'.($dayEnd < 10 ? 0 : '').$dayEnd;
-
-	return $start.':'.$end;
-}
-function _period($v=0, $action='get') {// Формирование периода для элементов массива запросившего фильтра
-	/*
-		$i: get, sql
-	*/
-
-	if(empty($v))
-		$v = _calendarWeek();
-
-	switch($action) {
-		case 'get': return $v;
-		case 'sql':
-			$ex = explode(':', $v);
-			if(empty($ex[1]))
-				return " AND `dtime_add` LIKE '".$v."%'";
-			return " AND `dtime_add`>='".$ex[0]." 00:00:00' AND `dtime_add`<='".$ex[1]." 23:59:59'";
-		default: return '';
-	}
-}
-
-function _imageAdd($v=array()) {
-	$v = array(
-		'txt' => empty($v['txt']) ? 'Добавить изображение' : $v['txt'],
-		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner'],
-		'max' => empty($v['max']) || !_num($v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
-	);
-	return
-		'<div class="_image-spisok">'._imageSpisok($v['owner']).'</div>'.
-		'<div class="_image-error"></div>'.
-		'<div class="_image-add">'.
-			'<div class="_busy">&nbsp;</div>'.
-			'<form method="post" action="'.AJAX_MAIN.'" enctype="multipart/form-data" target="_image-frame">'.
-				'<input type="file" name="f1" />'.
-				'<input type="file" name="f2" class="f2" />'.
-				'<input type="file" name="f3" class="f3" />'.
-				'<input type="hidden" name="op" value="image_add" />'.
-				'<input type="hidden" name="owner" value="'.$v['owner'].'" />'.
-				'<input type="hidden" name="max" value="'.$v['max'].'" />'.
-			'</form>'.
-			'<span>'.$v['txt'].'</span>'.
-			'<iframe name="_image-frame"></iframe>'.
-		'</div>';
-}
-function _imageSpisok($owner) {
-	if(!$owner)
-		return '';
-	$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$owner."' ORDER BY `sort`";
-	$q = query($sql);
-	$send = '';
-	while($r = mysql_fetch_assoc($q))
-		$send .= '<a class="_iview" val="'.$r['id'].'">'.
-					'<div class="del'._tooltip('Удалить', -29).'<em></em></div>'.
-					'<img src="'.$r['path'].$r['small_name'].'" />'.
-				'</a>';
-	return $send;
-}
-function _imageCookie($v) {//Установка cookie после загрузки изображения и выход
-	if(isset($v['error']))
-		$cookie = 'error_'.$v['error'];
-	else {
-		$cookie = 'uploaded_';
-		setcookie('_param', $v['link'].'_'.$v['id'].'_'.$v['max'], time() + 3600, '/');
-	}
-	setcookie('_upload', $cookie, time() + 3600, '/');
-	exit;
-}
-function _imageNameCreate() {
-	$arr = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0');
-	$name = '';
-	for($i = 0; $i < 10; $i++)
-		$name .= $arr[rand(0,35)];
-	return $name;
-}
-function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изображения с сохранением пропорций
-	$x = $x_new;
-	$y = $y_new;
-	// если ширина больше или равна высоте
-	if ($x_cur >= $y_cur) {
-		if ($x > $x_cur) { $x = $x_cur; } // если новая ширина больше, чем исходная, то X остаётся исходным
-		$y = round($y_cur / $x_cur * $x);
-		if ($y > $y_new) { // если новая высота в итоге осталась меньше исходной, то подравнивание по Y
-			$y = $y_new;
-			$x = round($x_cur / $y_cur * $y);
-		}
-	}
-
-	// если выстоа больше ширины
-	if ($y_cur > $x_cur) {
-		if ($y > $y_cur) { $y = $y_cur; } // если новая высота больше, чем исходная, то Y остаётся исходным
-		$x = round($x_cur / $y_cur * $y);
-		if ($x > $x_new) { // если новая ширина в итоге осталась меньше исходной, то подравнивание по X
-			$x = $x_new;
-			$y = round($y_cur / $x_cur * $x);
-		}
-	}
-
-	return array(
-		'x' => $x,
-		'y' => $y
-	);
-}
-function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие изображения
-	$send = _imageResize($x_cur, $y_cur, $x_new, $y_new);
-
-	$im_new = imagecreatetruecolor($send['x'], $send['y']);
-	imagecopyresampled($im_new, $im, 0, 0, 0, 0, $send['x'], $send['y'], $x_cur, $y_cur);
-	imagejpeg($im_new, $name, 80);
-	imagedestroy($im_new);
-
-	return $send;
-}
-function _imageGet($v) {
-	$v = array(
-		'owner' => $v['owner'],
-		'size' => isset($v['size']) ? $v['size'] : 's',
-		'x' => isset($v['x']) ? $v['x'] : 10000,
-		'y' => isset($v['y']) ? $v['y'] : 10000,
-		'view' => isset($v['view']),
-		'class' => isset($v['class']) ? $v['class'] : ''
-	);
-
-	$ownerArray = is_array($v['owner']);
-	if(!$ownerArray)
-		$v['owner'] = array($v['owner']);
-
-	if(empty($v['owner']))
-		return array();
-
-	$v['owner'] = array_unique($v['owner']);
-	$owner = array();
-	foreach($v['owner'] as $val)
-		$owner[] = preg_replace('/(\w+)/', '"$1"', $val, 1);
-
-	$size = $v['size'] == 's' ? 'small' : 'big';
-	$sql = "SELECT *
-			FROM `images`
-			WHERE !`deleted`
-			  AND !`sort`
-			  AND `owner` IN (".implode(',', $owner).")";
-	$q = query($sql);
-	$img = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$s = 0;
-		if($v['x'] != 10000 || $v['y'] != 10000)
-			$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $v['x'], $v['y']);
-		$img[$r['owner']] = array(
-			'id' => $r['id'],
-			'img' => '<img src="'.$r['path'].$r[$size.'_name'].'" '.
-						($v['view'] ? 'class="_iview" val="'.$r['id'].'" ' : '').
-						($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').
-					 '/>'
-		);
-	}
-	$s = 0;
-	if($v['x'] != 10000 || $v['y'] != 10000)
-		$s = _imageResize(!$size ? 80 : 200, !$size ? 80 : 200, $v['x'], $v['y']);
-	foreach($v['owner'] as $val)
-		if(empty($img[$val]))
-			$img[$val] = array(
-				'id' => 0,
-				'img' => '<img src="'.API_HTML.'/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
-			);
-
-	if($ownerArray)
-		return $img;
-
-	$img = array_shift($img);
-	return $img['img'];
-}
-
-function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
-	$ids = array();
-	$arrIds = array();
-	foreach($arr as $key => $r)
-		if(!empty($r['attach_id'])) {
-			$ids[$r['attach_id']] = 1;
-			$arrIds[$r['attach_id']][] = $key;
-		}
-	if(empty($ids))
-		return $arr;
-
-	$sql = "SELECT *
-			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-	foreach($attach as $r) {
-		foreach($arrIds[$r['id']] as $id) {
-			$arr[$id] += array(
-				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>',
-			);
-		}
-	}
-
-	return $arr;
-}
-function _attachJs($v=array()) {//получение ссылок на файлы в javascript
-	$v = array(
-		'id' => _num(@$v['id']),
-		'array' => _num(@$v['array']), //передача списка массивом через ajax
-		'zayav_id' => _num(@$v['zayav_id'])
-	);
-
-	$sql = "SELECT *
-			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID.
-			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
-			($v['id'] ? " AND `id`=".$v['id'] : '');
-	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
-	$send = array();
-	$array = array();
-	foreach($attach as $r) {
-		$send[] =
-			$r['id'].':{'.
-				'name:"'.addslashes($r['name']).'",'.
-				'link:"'.addslashes($r['link']).'",'.
-				'size:'.$r['size'].
-			'}';
-		$array[intval($r['id'])] = array(
-			'name' => utf8($r['name']),
-			'link' => $r['link'],
-			'size' => $r['size']
-		);
-	}
-
-	if($v['array'])
-		return $array;
-
-	return
-	'<script type="text/javascript">'.
-		'var ATTACH={'.implode(',', $send).'};'.
-	'</script>';
-}
-function _attachArr($id) {//получение данных о файле в формате json для ajax
-	$sql = "SELECT *
-			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `id`=".$id;
-	if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-		return array(
-			'name' => utf8($r['name']),
-			'link' => $r['link'],
-			'size' => $r['size']
-		);
-
-	return array();
 }
 
 function _color($color_id, $color_dop=0) {

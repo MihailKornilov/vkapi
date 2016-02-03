@@ -45,7 +45,7 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 
 	$u['new'] = $new;
 	return $u;
-}//_viewer()
+}
 */
 
 /*
@@ -85,11 +85,10 @@ function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате и
 		return 'viewer: неизвестный ключ <b>'.$i.'</b>';
 
 	return $i ? $u[$i] : $u;
-}//_viewer()
+}
 function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из кеша
 	$key = CACHE_PREFIX.'viewer_'.$viewer_id;
-	$u = xcache_get($key);
-	if(empty($u)) {
+	if(!$u = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_vkuser`
 				WHERE `app_id`=".APP_ID."
@@ -99,10 +98,10 @@ function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из 
 		xcache_set($key, $u, 86400);
 	}
 	return $u;
-}//_viewerCache()
+}
 function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Контакта
 	if(LOCAL)
-		die('Error: not load vk user <b>'.$viewer_id.'</b> in LOCAL version.');
+		_appError('Not load vk user <b>'.$viewer_id.'</b> in LOCAL version.');
 
 	$res = _vkapi('users.get', array(
 		'user_ids' => $viewer_id,
@@ -172,7 +171,7 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	return _viewerCache($viewer_id);
-}//_viewerUpdate()
+}
 function _viewerValToList($arr) {//вставка данных о пользователях контакта в массив по viewer_id_add и worker_id
 	$viewer_ids = array(); //Сбор id пользователей
 	$viewer_ass = array(); //Присвоение каждому id пользователя списка элементов, которые относятся к нему
@@ -215,7 +214,7 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 	}
 
 	return $arr;
-}//_viewerValToList()
+}
 function _viewerFormat($u) {//формирование данных пользователя
 	$send = array(
 		'viewer_app_id' => $u['app_id'],
@@ -256,7 +255,7 @@ function _viewerFormat($u) {//формирование данных пользователя
 	$send['viewer_link_zp'] = '<a href="'.URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
 
 	return $send;
-}//_viewerFormat()
+}
 
 function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника конкретной организации, проверка на существование
 	$sql = "SELECT *
@@ -266,7 +265,7 @@ function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника
 			  AND `worker`
 			  AND `viewer_id`=".$viewer_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
-}//_viewerWorkerQuery()
+}
 
 
 function _viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
@@ -306,7 +305,7 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 				  AND `viewer_id`=".VIEWER_ID;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 	}
-}//_getVkUser()
+}
 
 
 /*
@@ -385,7 +384,7 @@ function _viewerRuleDefault($viewer_id=VIEWER_ID) {
 	}
 
 	return _viewer($viewer_id, 'viewer_admin') ? $rule_admin : $rule_worker;
-}//_viewerRuleDefault()
+}
 function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	// 1. Проверка на правильность внесённых прав в базе для выбранного пользователя
 	// 2. Формирование констант прав, если это текущий пользователь
@@ -440,4 +439,4 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	}
 
 	return $i && isset($rule[$i]) ? $rule[$i] : $rule;
-}//_viewerRule()
+}

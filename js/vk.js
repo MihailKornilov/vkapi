@@ -39,8 +39,8 @@ var VK_SCROLL = 0,
 		11:'но€бр€',
 		12:'декабр€'
 	},
-	URL = APP_HTML + '/index.php?' + VALUES,
-	AJAX_MAIN = APP_HTML + '/ajax/main.php?' + VALUES + '&ajax=1',
+	URL = API_HTML + '/index.php?' + VALUES,
+	AJAX_MAIN = API_HTML + '/ajax.php?' + VALUES,
 	hashLoc,
 	hashSet = function(hash) {
 		if(!hash && !hash.p)
@@ -114,6 +114,14 @@ var VK_SCROLL = 0,
 				});
 
 		return _num(_cookie(key));
+	},
+	pinLoad = function() {
+		$('#pin')
+			.focus()
+			.keydown(function() {
+				$('.red').html('&nbsp;');
+			})
+			.keyEnter(pinEnter);
 	},
 	pinEnter = function() {
 		var send = {
@@ -2658,18 +2666,6 @@ $(document)
 		VK.addCallback('onScroll', function(top) {
 			VK_SCROLL = top;
 		});
-
-
-
-		if($('#pin-enter').length) {
-			$('#pin')
-				.focus()
-				.keydown(function() {
-					$('.red').html('&nbsp;');
-				})
-				.keyEnter(pinEnter);
-			$('.vkButton').click(pinEnter);
-		}
 	});
 
 

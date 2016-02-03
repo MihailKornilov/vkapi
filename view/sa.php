@@ -1,13 +1,20 @@
 <?php
-function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
+function sa_appCount() {
+	$sql = "SELECT COUNT(`id`) FROM `_app`";
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+}
+function sa_wsCount() {
+	$sql = "SELECT COUNT(`id`) FROM `_ws` WHERE `app_id`=".APP_ID;
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+}
+function sa_userCount() {
 	$sql = "SELECT COUNT(`viewer_id`)
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID;
-	$userCount = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+}
 
-	$sql = "SELECT COUNT(`id`) FROM `_ws` WHERE `app_id`=".APP_ID;
-	$wsCount = query_value($sql, GLOBAL_MYSQL_CONNECT);
-
+function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
 	return
 	'<div class="path">'.sa_cookie_back().'Администрирование</div>'.
 	'<div id="sa-index">'.
@@ -20,9 +27,10 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
 		'<br />'.
 
-		'<div><b>Организации и сотрудники:</b></div>'.
-		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</a>'.
-		'<a href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</a>'.
+		'<h1>App:</h1>'.
+		'<a href="'.URL.'&p=sa&d=app">Приложения ('.sa_appCount().')</a>'.
+		'<a href="'.URL.'&p=sa&d=ws">Организации ('.sa_wsCount().')</a>'.
+		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.sa_userCount().')</a>'.
 		'<br />'.
 
 		(function_exists('sa_index') ? sa_index() : '').
@@ -547,6 +555,50 @@ function sa_color_spisok() {
 	$send .= '</table>';
 	return $send;
 }
+
+
+function sa_app() {
+	return
+		sa_path('Приложения').
+		'<div id="sa-app">'.
+			'<div class="headName">'.
+				'Приложения'.
+				'<a class="add">Новое приложение</a>'.
+			'</div>'.
+			'<div id="spisok">'.sa_app_spisok().'</div>'.
+		'</div>';
+}
+function sa_app_spisok() {
+	$sql = "SELECT
+				*
+			FROM `_app`
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Приложений нет.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>app_id'.
+				'<th>Название'.
+				'<th>title'.
+				'<th>Кол-во<br />организаций'.
+				'<th>Дата создания'.
+				'<th>';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr>'.
+				'<td class="id">'.$r['id'].
+					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
+				'<td class="name">'.$r['name'].
+				'<td class="title">'.$r['title'].
+				'<td class="ws">'.
+				'<td class="dtime">'._dtimeAdd($r).
+				'<td class="ed">'._iconEdit($r);
+	}
+	$send .= '</table>';
+	return $send;
+}
+
 
 
 

@@ -48,9 +48,10 @@ table{border:0;border-spacing:0}
 
 
 
-#pin-enter{margin:80px;text-align:center}
-#pin-enter input{width:70px;padding:5px}
+#pin-enter{margin:90px 0 90px 230px}
+#pin-enter input{width:70px;padding:5px 5px 6px}
 #pin-enter .red{margin-top:10px}
+#pin-enter .vk{position:absolute;margin-left:5px}
 
 
 

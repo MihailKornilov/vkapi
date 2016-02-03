@@ -127,6 +127,14 @@
 
 
 
+/* приложения */
+#sa-app{min-height:300px}
+#sa-app #spisok{margin:10px 20px}
+#sa-app .id{width:50px;text-align:right}
+#sa-app .name{width:180px}
+
+
+
 /* организации */
 #sa-ws{padding:10px 15px}
 #sa-ws .count{margin-bottom:5px}
