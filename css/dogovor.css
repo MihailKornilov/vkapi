@@ -1,0 +1,58 @@
+.head-name{text-align:center;font:bold 10pt arial;margin-top:68pt;margin-bottom:13pt}
+.city_data{width:100%;font:bold 10pt arial;margin-bottom:10pt}
+.city_data th{text-align:right}
+.p-head{font:bold 10pt arial;margin-bottom:5pt;margin-left:30pt}
+.paragraph{text-align:justify;font:10pt arial;margin-bottom:12pt}
+.paragraph p{text-indent:30pt;margin:0}
+.rekvisit,.podpis{width:100%;font:10pt arial}
+.rekvisit td{width:50%;vertical-align:top}
+.podpis-head,.mp{font:10pt arial;margin-top:35pt;margin-bottom:15pt}
+.podpis td{width:50%;font:10pt arial}
+
+.ekz{font:12pt arial;text-align:right;margin-top:15pt}
+.act-head{
+	font:bold 16pt arial;
+	text-align:center;
+	margin-top:16pt;
+	margin-bottom:10pt;
+}
+.act-tab{font:12pt arial}
+.act-tab .label{width:70pt}
+.act-tab .title{width:160pt}
+.act-inf{font:bold 12pt arial;margin:10pt 0}
+.act-p{font:12pt arial;text-align:justify;margin-top:15px}
+.act-p p{margin:0}
+.cut-line{
+	font:10pt arial;
+	margin-top:20pt;
+	border-bottom:#444 dashed .4pt;
+	text-indent:370pt;
+}
+.time-dost{font:bold 12pt arial;text-align:right;margin-top:10px}
+
+
+.org-name{font:12pt times new roman}
+.org-name b{font-size:14pt}
+.cash-rekvisit,.cash-rekvisit td{font:bold 12pt times new roman}
+.cash-rekvisit table{border-collapse:collapse;width:100%}
+.cash-rekvisit th{text-align:right}
+.head{font:bold 18pt times new roman;text-align:center;margin-top:16pt}
+.shop{font:bold italic 12pt times new roman;text-align:center;text-decoration:underline}
+.shop-about{font:11pt times new roman;text-align:center;margin-bottom:10pt}
+.tab{border-collapse:collapse;width:100%}
+.tab th,.tab td{border:#000 .5pt solid}
+.tab th{font:bold italic 11pt times new roman;text-align:center;padding:6pt 2pt}
+.tab td{padding:4pt}
+.nomer{width:30pt;text-align:center}
+.count{width:70pt;text-align:center}
+.sum{width:70pt;text-align:right}
+.summa{width:70pt;text-align:right}
+.summa-propis{
+	font:bold 11pt times new roman;
+	margin-top:12pt;
+	border-bottom:#000 solid 2pt;
+	padding-bottom:1pt;
+}
+.cash-podpis td{width:220pt;font:12pt times new roman}
+.prod-bot{font:10pt times new roman;margin-left:80pt}
+.r-bot{font:10pt times new roman}

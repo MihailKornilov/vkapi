@@ -880,7 +880,7 @@ function _zayavDogovor($z) {//отображение номера договора
 	$title = 'от '._dataDog($r['data_create']).' г. на сумму '._cena($r['sum']).' руб.';
 
 	return '<b class="dogn'._tooltip($title, -7, 'l').'№'.$r['nomer'].'</b> '.
-			'<a href="'.LINK_DOGOVOR.$r['link'].'.doc" class="img_word'._tooltip('Распечатать', -41).'</a>';
+			'<a href="'.LINK_DOGOVOR.'/'.$r['link'].'.doc" class="img_word'._tooltip('Распечатать', -41).'</a>';
 }
 function _zayavDogovorJs($z) {
 	if(!$z['dogovor_id']) {
@@ -1180,6 +1180,9 @@ function _zayavDogovorPrint($v) {
 		$doc->newPage();
 		$doc->addParagraph(_incomeReceipt($income_id));
 	}
+
+	if(!is_dir(PATH_DOGOVOR))
+		mkdir(PATH_DOGOVOR, 0777, true);
 
 	$doc->output($v['link'], @$v['save'] ? PATH_DOGOVOR : '');
 }
