@@ -573,7 +573,7 @@ function _incomeReceiptPrint() {//печать товарного чека для платежа
 	$doc = new clsMsDocGenerator(
 		$pageOrientation = 'PORTRAIT',
 		$pageType = 'A4',
-		$cssFile = DOCUMENT_ROOT.'/css/dogovor.css',
+		$cssFile = GLOBAL_DIR.'/css/dogovor.css',
 		$topMargin = 1,
 		$rightMargin = 2,
 		$bottomMargin = 1,
@@ -624,6 +624,7 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 function expense() {
 	$data = expense_spisok();
 	return
+		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
 		'<table class="tabLR" id="money-expense">'.
 			'<tr><td class="left">'.
 					'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.

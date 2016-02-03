@@ -1026,7 +1026,7 @@ function _zayavDogovorPrint($v) {
 	$doc = new clsMsDocGenerator(
 		$pageOrientation = 'PORTRAIT',
 		$pageType = 'A4',
-		$cssFile = DOCUMENT_ROOT.'/css/dogovor.css',
+		$cssFile = GLOBAL_DIR.'/css/dogovor.css',
 		$topMargin = 1,
 		$rightMargin = 2,
 		$bottomMargin = 1,

@@ -733,7 +733,7 @@ switch(@$_POST['op']) {
 
 		_zayavBalansUpdate($v['zayav_id']);
 
-		unlink(PATH_DOGOVOR.$dog['link'].'.doc');
+		unlink(PATH_DOGOVOR.'/'.$dog['link'].'.doc');
 
 		$changes =
 			_historyChange('ิศฮ', $dog['fio'], $v['fio']).

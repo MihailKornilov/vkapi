@@ -3,6 +3,7 @@ require_once 'view/_vk.php';
 require_once 'view/_nofunc.php';
 
 _dbConnect('GLOBAL_');  //подключение к базе данных
+define('MYSQL_CONNECT', GLOBAL_MYSQL_CONNECT);
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
 _getVkUser();           //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода

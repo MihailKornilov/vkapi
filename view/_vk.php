@@ -47,7 +47,7 @@ require_once GLOBAL_DIR.'/view/sa.php';
 
 
 function _const() {
-	if(!$app_id = _num(@$_GET['app_id']))
+	if(!$app_id = _num(@$_GET['api_id']))
 		_appError();
 	if(!$viewer_id = _num(@$_GET['viewer_id']))
 		_appError();
@@ -75,8 +75,8 @@ function _const() {
 	define('SA', isset($SA[VIEWER_ID]));
 
 	define('VALUES', TIME.
-					 '&app_id='.@$_GET['app_id'].
-					 '&viewer_id='.@$_GET['viewer_id'].
+					 '&api_id='.APP_ID.
+					 '&viewer_id='.VIEWER_ID.
 					 '&auth_key='.@$_GET['auth_key']
 		  );
 	//'&access_token='.@$_GET['access_token'] todo временно отключен
@@ -94,11 +94,11 @@ function _const() {
 	define('DEBUG', SA && !empty($_COOKIE['debug']));
 	define('COOKIE_PREFIX', APP_ID.'_'.VIEWER_ID.'_');
 
-//	define('ATTACH_PATH', GLOBAL_PATH.'.attach/'.APP_ID.'/ws_'.WS_ID.'/');
-//	define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID.'/ws_'.WS_ID.'/');
+	define('ATTACH_PATH', GLOBAL_PATH.'/.attach/'.APP_ID);
+	define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID);
 
-//	define('PATH_DOGOVOR', APP_PATH.'/files/dogovor/');
-//	define('LINK_DOGOVOR', APP_HTML.'/files/dogovor/');
+	define('PATH_DOGOVOR', ATTACH_PATH.'/dogovor');
+	define('LINK_DOGOVOR', ATTACH_HTML.'/dogovor');
 }
 
 function _header() {
@@ -127,7 +127,6 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-ui.min.js"></script>'.
-//		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
@@ -336,7 +335,19 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 				'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
 				'<title>Error</title>'.
 
+
+				'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
+				'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+
+				'<script type="text/javascript">'.
+					'var VIEWER_ID='.VIEWER_ID.','.
+						'APP_ID='.APP_ID.','.
+						'API_HTML="'.API_HTML.'",'.
+						'VALUES="'.VALUES.'";'.
+				'</script>'.
+
 				'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk.min.css" />'.
+				'<script type="text/javascript" src="'.API_HTML.'/js/vk.min.js"></script>'.
 
 			'</head>'.
 			'<body>'.
@@ -511,12 +522,9 @@ function _report() {
 	$pages = array(
 		'history' => 'История действий',
 		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
-		'month' => 'Отчёт за месяц',//todo Evrookna
 		'salary' => 'З/п сотрудников'
 	);
 
-	if(APP_ID != 3978722)//todo Evrookna
-		unset($pages['month']);
 
 	if(!RULE_HISTORY_VIEW) {
 		unset($pages['history']);
@@ -546,11 +554,6 @@ function _report() {
 				_remind_stat().
 				'<div id="_remind-spisok">'._remind('spisok').'</div>';
 			$right .= _remind('right');
-			break;
-		case 'month'://todo Evrookna
-			if(APP_ID != 3978722)
-				break;
-			$left = report_month();
 			break;
 		case 'salary':
 			$left = _salary();
@@ -1205,6 +1208,7 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 }
 
 function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
+	xcache_unset(CACHE_PREFIX.'app'.APP_ID);  //данные приложения
 	xcache_unset(CACHE_PREFIX.'setup_global');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
@@ -1546,9 +1550,6 @@ function _print_document() {//вывод на печать документов
 			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
 			break;
 		case 'receipt': _incomeReceiptPrint(); break;
-		case 'report_month'://Евроокна
-			require_once DOCUMENT_ROOT.'/view/report_month.php';
-			break;
 		case 'salary_list':
 			require_once GLOBAL_DIR.'/view/xsl/salary_list.php';
 			break;

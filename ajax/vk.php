@@ -188,10 +188,11 @@ switch(@$_POST['op']) {
 				break;
 			default: setcookie('_attached', 2, time() + 3600, '/'); exit;
 		}
-		if(!is_dir(ATTACH_PATH))
-			mkdir(ATTACH_PATH, 0777, true);
+		$dir = ATTACH_PATH.'/ws_'.WS_ID;
+		if(!is_dir($dir))
+			mkdir($dir, 0777, true);
 		$fname = time().'_'.translit(trim($f['name'])); //имя файла, сохраняемое на диск
-		if(move_uploaded_file($f['tmp_name'], ATTACH_PATH.'/'.$fname)) {
+		if(move_uploaded_file($f['tmp_name'], $dir.'/'.$fname)) {
 			$sql = "INSERT INTO `_attach` (
 						`app_id`,
 						`ws_id`,
@@ -204,7 +205,7 @@ switch(@$_POST['op']) {
 						".WS_ID.",
 						'".addslashes(trim($f['name']))."',
 						".$f['size'].",
-						'".addslashes(ATTACH_HTML.$fname)."',
+						'".addslashes(ATTACH_HTML.'/ws_'.WS_ID.'/'.$fname)."',
 						".VIEWER_ID."
 					)";
 			query($sql, GLOBAL_MYSQL_CONNECT);

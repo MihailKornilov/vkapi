@@ -623,12 +623,14 @@ switch(@$_POST['op']) {
 					`id`,
 					`title`,
 					`name`,
-					`secret`
+					`secret`,
+					`viewer_id`
 				) VALUES (
 					".$id.",
 					'".addslashes($title)."',
 					'".addslashes($name)."',
-					'".addslashes($secret)."'
+					'".addslashes($secret)."',
+					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

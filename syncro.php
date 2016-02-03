@@ -8,4 +8,4 @@ define('GLOBAL_MYSQL_NAMES', 'cp1251');
 define('API_HTML', '/.vkapp/.api');
 define('API_PATH', 'c:/www/nyandoma'.API_HTML);
 
-define('GLOBAL_PATH', 'c:/www/nyandoma/.vkapp/'); //начальный путь для всех приложений
+define('GLOBAL_PATH', 'c:/www/nyandoma/.vkapp'); //начальный путь для всех приложений
