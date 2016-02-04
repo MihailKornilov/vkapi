@@ -39,8 +39,6 @@ var VK_SCROLL = 0,
 		11:'ноября',
 		12:'декабря'
 	},
-	URL = API_HTML + '/index.php?' + VALUES,
-	AJAX_MAIN = API_HTML + '/ajax.php?' + VALUES,
 	hashLoc,
 	hashSet = function(hash) {
 		if(!hash && !hash.p)
@@ -76,6 +74,52 @@ var VK_SCROLL = 0,
 		if(s)
 			VK.callMethod('setLocation', hashLoc);
 	},
+
+	scannerWord = '',
+	scannerTime = 0,
+	scannerTimer,
+	scannerDialog,
+	scannerDialogShow = false,
+	charSpisok = {
+		48:'0',
+		49:1,
+		50:2,
+		51:3,
+		52:4,
+		53:5,
+		54:6,
+		55:7,
+		56:8,
+		57:9,
+		65:'A',
+		66:'B',
+		67:'C',
+		68:'D',
+		69:'E',
+		70:'F',
+		71:'G',
+		72:'H',
+		73:'I',
+		74:'J',
+		75:'K',
+		76:'L',
+		77:'M',
+		78:'N',
+		79:'O',
+		80:'P',
+		81:'Q',
+		82:'R',
+		83:'S',
+		84:'T',
+		85:'U',
+		86:'V',
+		87:'W',
+		88:'X',
+		89:'Y',
+		90:'Z',
+		189:'-'
+	},
+
 	_scroll = function(action, unit) {//сохранение и возврат скролла для конкретной страницы, если необходимо
 		var p = _cookie('p'),
 			d = _cookie('d');
@@ -2261,6 +2305,76 @@ $(document)
 			butCancel:'Закрыть'
 		});
 		d.content.find('textarea').autosize();
+	})
+
+	.keydown(function(e) {//действие на сканер
+		if(scannerDialogShow)
+			return;
+//		if($('#scanner').length < 1)$('body').prepend('<div id="scanner"></div>');window.sc = $('#scanner');
+		if(e.keyCode == 13) {
+			var d = (new Date()).getTime(),
+				time = d - scannerTime;
+			if(scannerWord.length > 5 && time < 300) {
+				scannerDialogShow = true;
+				scannerTimer = setTimeout(timeStop, 500);
+				scannerDialog = _dialog({
+					head:'Сканер штрих-кода',
+					width:250,
+					content:'Получен код: <b>' + scannerWord + '</b>',
+					butSubmit:'Поиск'
+				});
+				var send = {
+					op:'scanner_word',
+					word:scannerWord
+				};
+				scannerDialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						if(e.target.localName == 'input') {
+							scannerDialog.close();
+							return;
+						}
+						if(_cookie('p') == 'zayav' && _cookie('d') == 'add') {
+							$('#' + (res.imei ? 'imei' : 'serial')).val(send.word);
+							scannerDialog.close();
+							return;
+						}
+						if(res.zayav_id)
+							document.location.href = URL + '&p=zayav&d=info&id=' + res.zayav_id;
+						else {
+							var client_id = _cookie('p') == 'client' && _cookie('d') == 'info' ? _cookie('id') : 0;
+							document.location.href =
+								URL +
+								'&p=zayav&d=add&' + (res.imei ? 'imei' : 'serial') + '=' + send.word +
+								(client_id ? '&back=client&id=' + client_id : '');
+						}
+					} else
+						scannerDialog.abort();
+				}, 'json');
+			}
+//			sc.append('<br /> - Enter<br />len = ' + scannerWord.length + '<br />time = ' + time + '<br />');
+		} else {
+			if(scannerDialog) {
+				scannerDialog.close();
+				scannerDialog = undefined;
+			}
+			if(scannerTimer)
+				clearTimeout(scannerTimer);
+			scannerTimer = setTimeout(timeStop, 500);
+			if(!scannerWord)
+				scannerTime = (new Date()).getTime();
+			scannerWord += charSpisok[e.keyCode] ||  '';
+//			sc.append((charSpisok[e.keyCode] ||  '') + ' = ' + e.keyCode + ' - ' + ((new Date()).getTime() - scannerTime) + '<br />');
+		}
+		function timeStop() {
+			scannerWord = '';
+			scannerTime = 0;
+			if(scannerTimer)
+				clearTimeout(scannerTimer);
+			scannerTimer = undefined;
+			scannerDialogShow = false;
+//			sc.append('<br /> - Clear<br />');
+		}
 	})
 
 	.on('click', '#check_all_check', function() {//выборка всех чекбоксов, которые стоят ниже

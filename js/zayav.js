@@ -1071,9 +1071,9 @@ $(document)
 				action.push(function() {
 					if(WS_ID == 3) {
 						if(ZAYAV_INFO_CARTRIDGE)
-							location.href = APP_HTML + '/view/kvit_cartridge.php?' + VALUES + '&id=' + ZI.id;
+							location.href = URL + '&p=print&d=kvit_cartridge&id=' + ZI.id;
 						else
-							location.href = APP_HTML + '/view/kvit_comtex.php?' + VALUES + '&id=' + ZI.id;
+							location.href = URL + '&p=print&d=kvit_comtex&id=' + ZI.id;
 					} else
 						zayavKvit();
 				});

@@ -682,4 +682,31 @@ switch(@$_POST['op']) {
 		}
 		jsonSuccess($send);
 		break;
+
+	case 'scanner_word':
+		$word = _txt($_POST['word']);
+
+		if(empty($word))
+			jsonError();
+
+		if(!preg_match(REGEXP_WORD, $word))
+			jsonError();
+
+		$send = array();
+
+		$sql = "SELECT `id`
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND (`imei`='".$word."'
+				   OR `serial`='".$word."'
+				   OR `barcode`='".substr($word, 0, 12)."')";
+		if($id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+			$send['zayav_id'] = $id;
+		else
+			if(preg_match(REGEXP_NUMERIC, $word) && strlen($word) == 15)
+				$send['imei'] = 1;
+
+		jsonSuccess($send);
+		break;
 }

@@ -1,0 +1,115 @@
+<?php
+function kvit_head() {
+	return
+	'<table class="head">'.
+		'<tr><td>'.BARCODE.
+			'<td class="rekvisit">'.
+				'<h1>'._wsType(WS_TYPE).' «<b>'._ws('name').'</b>»</h1>'.
+				'<h1>Адрес: '._ws('adres_yur').'.</h1>'.
+				'<h2>Телефон: '._ws('phone').'. Время работы: '._ws('time_work').'.</h2>'.
+	'</table>';
+}//kvit_head()
+function kvit_name($nomer, $barcode=0) {
+	return
+		'<div class="name">'.
+			($barcode ? BARCODE : '').
+			'Квитанция №'.$nomer.
+		'</div>';
+}//kvit_name()
+function kvit_content($k) {
+	return
+	'<table class="content_tab">'.
+		'<tr><td>'.
+
+			'<table class="content">'.
+				'<tr><td class="label">Дата приёма:<td>'.FullData($k['dtime']).
+				'<tr><td class="label">Устройство:'.
+					'<td>'._deviceName($k['device_id']).
+						'<b>'._vendorName($k['vendor_id'])._modelName($k['model_id']).'</b>'.
+				($k['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($k['color_id'], $k['color_dop']) : '').
+				($k['imei'] ? '<tr><td class="label">IMEI:<td>'.$k['imei'] : '').
+				($k['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$k['serial'] : '').
+				($k['equip'] ? '<tr><td class="label">Комплектация:<td>'.zayavEquipSpisok($k['equip']) : '').
+			'</table>'.
+			'<div class="line"></div>'.
+			'<table class="content">'.
+				'<tr><td class="label">Заказчик:<td>'.$k['client_fio'].
+				'<tr><td class="label">Контактные телефоны:<td>'.$k['client_telefon'].
+			'</table>'.
+			'<div class="line"></div>'.
+			'<table class="content">'.
+				'<tr><td class="label fault">Неисправность со слов Заказчика:'.
+				'<tr><td>'.$k['defect'].
+			'</table>'.
+
+		'<td class="image">'.$k['image'].
+	'</table>';
+}//kvit_content()
+function kvit_conditions() {
+	return
+	'<div class="conditions">'.
+		'<div class="label">Условия проведения ремонта:</div>'.
+		'<ul><li>Диагностика оборудования, принятого в ремонт, производится бесплатно;'.
+			'<li>Стороны предварительно договариваются о стоимости ремонта в устной форме;'.
+			'<li>'._wsType(WS_TYPE).' устраняет только заявленные неисправности;'.
+			'<li>Настоятельно рекомендуем Вам сохранять все данные, хранящиеся в памяти изделия, на других носителях;'.
+			'<li>'._wsType(WS_TYPE).' не несет ответственности за возможную потерю информации на устройствах хранения и записи данных;'.
+			'<li>После окончания ремонта сотрудник '._wsType(WS_TYPE, 2).' сообщает Заказчику о готовности;'.
+			'<li>Аппараты, невостребованные в течение 3 месяцев после уведомления Заказчика о готовности или невозможности ремонта, '.
+				'могут быть реализованы в установленном законом порядке для погашения задолженности Заказчика перед '._wsType(WS_TYPE, 2).';'.
+			'<li>Срок гарантии составляет 30 дней с момента выдачи изделия Заказчику;'.
+			'<li>На аппараты, подвергшиеся воздействию влаги, удару, гарантийные обязательства не распространяются.'.
+		'</ul>'.
+	'</div>';
+}//kvit_conditions()
+function kvit_podpis($bottom=0) {
+	return
+	'<div class="podpis'.($bottom ? ' bottom' : '').'">'.
+		'<h1>С условиями ремонта согласен(а).<span>Подпись Заказчика: ________________________________</span></h1>'.
+		'<h2>Аппарат принял: __________________________ ('._viewer(VIEWER_ID, 'viewer_name').')'.
+			'<em>'.FullData(curTime()).'</em>'.
+		'</h2>'.
+	'</div>';
+}//kvit_podpis()
+function kvit_cut() {
+	return '<div class="cut">линия отреза</div>';
+}//kvit_cut()
+
+if(!$id = _num($_GET['id']))
+	die('Неверный id квитанции.');
+
+$sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
+if(!$k = query_assoc($sql))
+	die('Квитанции не существует.');
+
+if(!$z = _zayavQuery($k['zayav_id']))
+	die('Заявки не существует.');
+
+define('BARCODE', '<img src="'.API_HTML.'/barcode/barcode.php?code='.$z['barcode'].'&encoding=ean&mode=gif" />');
+
+
+echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
+	'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
+	'<head>'.
+		'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
+		'<title>Квитанция по заявке №'.$k['nomer'].'</title>'.
+		'<link href="'.APP_HTML.'/css/kvit_html'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+	'</head>'.
+	'<body>'.
+		'<img src="'.API_HTML.'/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
+		kvit_head().
+		kvit_name($k['nomer']).
+		kvit_content($k).
+		kvit_conditions().
+		kvit_podpis().
+		kvit_cut().
+		kvit_name($k['nomer'], 1).
+		kvit_content($k).
+		kvit_podpis(1).
+	'</body>'.
+	'</html>';
+
+
+exit;
+
+

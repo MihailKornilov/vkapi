@@ -80,10 +80,17 @@ function _const() {
 					 '&auth_key='.@$_GET['auth_key']
 		  );
 	//'&access_token='.@$_GET['access_token'] todo временно отключен
-	define('URL', API_HTML.'/index.php?'.VALUES);
-	define('AJAX_MAIN', API_HTML.'/ajax.php?'.VALUES);
-	define('APP_URL', 'http://vk.com/app'.APP_ID);
+	//define('URL', API_HTML.'/index.php?'.VALUES);
 
+	if(!defined('SCRIPT_NAME'))
+		define('SCRIPT_NAME', 'index.php');
+	define('URL', API_HTML.'/'.SCRIPT_NAME.'?'.VALUES);
+
+	if(!defined('SCRIPT_AJAX'))
+		define('SCRIPT_AJAX', 'ajax.php');
+	define('AJAX_MAIN', API_HTML.'/'.SCRIPT_AJAX.'?'.VALUES);
+
+	define('APP_URL', 'http://vk.com/app'.APP_ID);
 
 	if(SA) {
 		error_reporting(E_ALL);
@@ -139,8 +146,8 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
 				'APP_ID='.APP_ID.','.
 				'WS_ID='.WS_ID.','.
-				'API_HTML="'.API_HTML.'",'.
-				(defined('APP_HTML') ? 'APP_HTML="'.APP_HTML.'",' : '').
+				'URL="'.URL.'",'.
+				'AJAX_MAIN="'.AJAX_MAIN.'",'.
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
@@ -1546,6 +1553,15 @@ function _print_document() {//вывод на печать документов
 	require_once GLOBAL_DIR.'/word/clsMsDocGenerator.php';
 
 	switch(@$_GET['d']) {
+		case 'kvit_html':
+			require_once GLOBAL_DIR.'/view/xsl/kvit_html.php';
+			break;
+		case 'kvit_comtex':
+			require_once GLOBAL_DIR.'/view/xsl/kvit_comtex.php';
+			break;
+		case 'kvit_cartridge':
+			require_once GLOBAL_DIR.'/view/xsl/kvit_cartridge.php';
+			break;
 		case 'schet':
 			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
 			break;
