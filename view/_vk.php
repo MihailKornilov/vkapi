@@ -129,7 +129,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 	define('MIN', DEBUG ? '' : '.min');
 	return
 		//Отслеживание ошибок в скриптах
-		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js?'.VERSION.'"></script>' : '').
+		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js"></script>' : '').
 
 		//Стороние скрипты
 		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
@@ -371,18 +371,17 @@ function _ws($i='all') {//Получение данных об организации
 	_wsOneCheck();
 
 	if(!WS_ID)
-		die(_header()._noauth('Нет привязки к организации.')._footer());
+		_appError('Нет привязки к организации.');
 
 	$key = CACHE_PREFIX.'ws'.WS_ID;
-	$ws = xcache_get($key);
-	if(empty($ws)) {
+	if(!$ws = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_ws`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".WS_ID."
 				  AND !`deleted`";
 		if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			die(_header()._noauth('Невозможно прочитать данные организации для кеша.')._footer());
+			_appError('Невозможно прочитать данные организации для кеша.');
 		xcache_set($key, $ws, 86400);
 	}
 
@@ -436,9 +435,9 @@ function _wsOneCheck() {
 					WHERE `app_id`=".APP_ID."
 					  AND `viewer_id`=".VIEWER_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);
-			die(_header()._noauth('Создана новая организация.<br />Перезайдите в приложение.')._footer());
+			_appError('SA: Создана новая организация.<br />Перезайдите в приложение.');
 		}
-		die(_header()._noauth('Нет привязки к организации при проверке.')._footer());
+		_appError('SA: нет привязки к организации при проверке.');
 	}
 }
 

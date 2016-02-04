@@ -296,7 +296,7 @@ function income_top($sel) { //Условия поиска сверху для платежей
 					'<input type="hidden" id="worker_id" />'.
 					'<div class="f-label">Дополнительно</div>'.
 					_check('prepay', 'предоплата', 0, 1).
-					_check('schet_id', 'платежи по счетам', 0, 1).
+					_check('schet', 'платежи по счетам', 0, 1).
 					_check('deleted', '+ удалённые платежи', 0, 1).
 					_check('deleted_only', 'показать только удалённые', 0, 1).
 				'<td id="mi-calendar">'.
@@ -361,7 +361,8 @@ function incomeFilter($v) {
 		'invoice_id' => _num(@$v['invoice_id']),
 		'client_id' => _num(@$v['client_id']),
 		'zayav_id' => _num(@$v['zayav_id']),
-		'schet_id' => _num(@$v['schet_id']),
+		'schet' => _bool(@$v['schet']),     //показывать только платежи по счетам на оптату
+		'schet_id' => _num(@$v['schet_id']),//платежи по конкретному счёту на оплату
 		'worker_id' => _num(@$v['worker_id']),
 		'prepay' => _bool(@$v['prepay']),
 		'deleted' => _bool(@$v['deleted']),
@@ -384,15 +385,17 @@ function income_spisok($filter=array()) {
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['zayav_id'])
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
-	if($filter['schet_id'])
+	if($filter['schet'])
 		$cond .= " AND `schet_id`";
+	if($filter['schet_id'])
+		$cond .= " AND `schet_id`=".$filter['schet_id'];
 	if($filter['prepay'])
 		$cond .= " AND `prepay`";
 	if(!$filter['deleted'])
 		$cond .= " AND !`deleted`";
 	elseif($filter['deleted_only'])
 		$cond .= " AND `deleted`";
-	if(!$filter['client_id'] && !$filter['zayav_id'])
+	if(!$filter['client_id'] && !$filter['zayav_id'] && !$filter['schet_id'])
 		$cond .= _period($filter['period'], 'sql');
 
 	$sql = "SELECT
@@ -582,6 +585,41 @@ function _incomeReceiptPrint() {//печать товарного чека для платежа
 	$doc->addParagraph(_incomeReceipt($id));
 	$doc->output(time().'-income-receipt-'.$id.'.doc');
 	mysql_close();
+}
+function income_schet_spisok($schet) {//список платежей по конкретному счёту на оплату
+	$sql = "SELECT *
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `schet_id`=".$schet['id']."
+			ORDER BY `id` DESC";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return '<div id="no-pay">По данному счёту платежи не производились.</div>';
+
+	$sum = 0;
+	$send = '<table class="_spisok">';
+	foreach($spisok as $r) {
+		$send .= '<tr>'.
+			'<td class="sum">'._sumSpace($r['sum']).
+			'<td><span class="type">'._invoice($r['invoice_id']).':</span> день оплаты: '.FullData($r['schet_paid_day'], 1).
+			'<td class="dtime">'._dtimeAdd($r);
+		$sum += _cena($r['sum']);
+	}
+
+	$send .= '</table>';
+
+	$count = count($spisok);
+	$diff = $schet['sum'] - $sum;
+	return
+	'<div>'.
+		'Всего <b>'.$count.'</b> плат'._end($count, 'ёж', 'ежа', 'ей').' на сумму <b>'._sumSpace($sum).'</b> руб.'.
+		($diff > 0 ?
+			'<span class="diff">Недоплачено <b>'._sumSpace($diff).'</b> руб.</span>'
+			:
+			'<span class="diff full">Оплачено полностью.</span>'
+		).
+	'</div>'.
+	$send;
 }
 
 /* --- расходы --- */
@@ -1048,8 +1086,7 @@ function income_insert($v) {
 
 function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	$key = CACHE_PREFIX.'invoice'.WS_ID;
-	$arr = xcache_get($key);
-	if(empty($arr)) {
+	if(!$arr = xcache_get($key)) {
 		$arr = array();
 		$sql = "SELECT *
 				FROM `_money_invoice`
@@ -1063,8 +1100,8 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 			$vw = array();
 			$r['worker'] = array();
 			if($r['visible'])
-				foreach(explode(',', $r['visible']) as $i)
-					$vw[] = _viewer($i, 'viewer_name');
+				foreach(explode(',', $r['visible']) as $k)
+					$vw[] = _viewer($k, 'viewer_name');
 			$r['visible_worker'] = implode('<br />', $vw);
 
 			$arr[$r['id']] = $r;

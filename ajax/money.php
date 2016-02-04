@@ -799,6 +799,9 @@ switch(@$_POST['op']) {
 		if(!$schet = _schetQuery($id, 1))
 			jsonError();
 
+		//сегодня создан счёт или нет - для возможности редактирования
+		$noedit = TODAY == substr($schet['dtime_add'], 0, 10) ? 0 : 1;
+
 		$sql = "SELECT *
 				FROM `_schet_content`
 				WHERE `schet_id`=".$id."
@@ -825,7 +828,7 @@ switch(@$_POST['op']) {
 
 			$r['name'] = utf8($r['name']);
 			$r['cost'] = _cena($r['cost']);
-			$r['readonly'] = _bool($r['readonly']);
+			$r['readonly'] = _num($r['readonly']) + $noedit;
 			$arr[] = $r;
 		}
 		$html .= '</table>';
@@ -855,12 +858,14 @@ switch(@$_POST['op']) {
 		$send['act'] = _bool($schet['act']);
 		$send['pass'] = _bool($schet['pass']);
 		$send['paid'] = _num(_cena($schet['paid_sum']) && $schet['paid_sum'] >= $schet['sum']);
+		$send['income'] = utf8(income_schet_spisok($schet));
 		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
 		$send['nomer'] = utf8('СЦ'.$schet['nomer']);
 		$send['ot'] = utf8(' от '.FullData($schet['date_create']).' г.');
 		$send['html'] = utf8($html);
 		$send['itog'] = utf8('Всего наименований <b>'.$n.'</b>, на сумму <b>'._sumSpace($sum).'</b> руб.');
 		$send['arr'] = $arr;
+		$send['noedit'] = $noedit;
 		$send['del'] = _bool($schet['deleted']);
 		$hist = _history(array('schet_id'=>$id));
 		$send['hist'] = _num($hist['all']);

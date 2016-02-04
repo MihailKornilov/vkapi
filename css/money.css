@@ -182,9 +182,25 @@
 	font-size:12px;
 	margin:5px 0 10px
 }
-#_schet-info #dop td{width:410px;vertical-align:top;padding-top:10px}
-#_schet-info #dop td div{margin:5px 0 0 10px;color:#555}
-#_schet-info #dop td div#deleted{
+#_schet-info #dop-td{width:410px;vertical-align:top;padding-top:10px}
+#_schet-info .doc{margin:5px 0 0 10px;color:#555}
+#_schet-info #income{margin-top:20px}
+#_schet-info #income ._spisok{margin-top:4px}
+#_schet-info #income #no-pay{
+	display:inline-block;
+	padding:5px 12px;
+	background-color:#f8f8dd;
+	color:#555;
+}
+#_schet-info #income .diff{
+	margin-left:20px;
+	display:inline-block;
+	padding:3px 8px;
+	background-color:#fdd;
+	color:#922;
+}
+#_schet-info #income .full{background-color:#cfc;color:#070}
+#_schet-info #deleted{
 	margin-top:15px;
 	border:#dcc solid 1px;
 	background-color:#fee;

@@ -302,7 +302,7 @@ var _accrualAdd = function() {
 			spisok:INCOME_WORKER,
 			func:incomeSpisok
 		});
-		$('#schet_id')._check(incomeSpisok);
+		$('#schet')._check(incomeSpisok);
 		$('#prepay')._check(incomeSpisok);
 		$('#deleted')._check(function(v, id) {
 			$('#deleted_only_check')[v ? 'show' : 'hide']();
@@ -1297,9 +1297,10 @@ var _accrualAdd = function() {
 					res.html +
 					'<h2>' + res.itog + '</h2>' +
 					'<table id="dop">' +
-						'<tr><td>' +
-								(res.nakl ? '<div>&bull; Накладная</div>' : '') +
-								(res.act ? '<div>&bull; Акт выполненных работ</div>' : '') +
+						'<tr><td id="dop-td">' +
+								(res.nakl ? '<div class="doc">&bull; Накладная</div>' : '') +
+								(res.act ? '<div class="doc">&bull; Акт выполненных работ</div>' : '') +
+								'<div id="income">' + res.income + '</div>' +
 								(res.del ? '<div id="deleted">Счёт был удалён</div>' : '') +
 							'<th>' +
 	   (!res.del && !res.paid ? '<a id="schet-edit">Редактировать счёт</a>' : '') +
@@ -1363,12 +1364,11 @@ var _accrualAdd = function() {
 			date_create:'',
 			nakl:0,
 			act:0,
+			noedit:0,
 			func:function() {
 				location.reload();
 			}
 		}, o);
-
-		o.nomer = o.schet_id ? 'СЧЁТ № ' + o.nomer : 'НОВЫЙ СЧЁТ';
 
 		var spisok = '';
 		for(var n = 0; n < o.arr.length; n++) {
@@ -1378,6 +1378,11 @@ var _accrualAdd = function() {
 		}
 		var html =
 				'<div id="_schet-info">' +
+		(o.noedit ? '<div class="_info">' +
+						'<b>Внимание!</b> Редактирование данного счёта ограничено.<br />' +
+						'Вы не можете изменить сумму счёта, удалить или добавить новые позиции.' +
+					'</div>'
+		: '') +
 					'<table class="tab">' +
 						'<tr><td class="label r top">Плательщик:<td>' + o.client +
 (o.zayav_spisok.length ? '<tr><td class="label r">Заявка:<td><input type="hidden" id="zayav_id" value="' + o.zayav_id + '" />' : '') +
@@ -1386,7 +1391,7 @@ var _accrualAdd = function() {
 							'<td><input id="nakl" type="hidden" value="' + o.nakl + '" />' +
 								'<input id="act" type="hidden" value="' + o.act + '" />' +
 					'</table>' +
-					'<h1>' + o.nomer + '</h1>' +
+					'<h1>' + (o.schet_id ? 'СЧЁТ № ' + o.nomer : 'НОВЫЙ СЧЁТ') + '</h1>' +
 					'<table class="_spisok">' +
 						'<tr><th>№' +
 							'<th>Наименование товара' +
@@ -1395,7 +1400,7 @@ var _accrualAdd = function() {
 							'<th>Сумма' +
 							'<th>' +
 						spisok +
-						'<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию' +
+		  (!o.noedit ? '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию' : '') +
 					'</table>' +
 					'<h3></h3>' +
 				'</div>',

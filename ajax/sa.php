@@ -634,8 +634,6 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'app');
-
 		$send['html'] = utf8(sa_app_spisok());
 		jsonSuccess($send);
 		break;
@@ -659,7 +657,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'app');
+		xcache_unset(CACHE_PREFIX.'app'.$id);
 
 		$send['html'] = utf8(sa_app_spisok());
 		jsonSuccess($send);
