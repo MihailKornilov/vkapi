@@ -1391,6 +1391,7 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 }
 
 function _balans($v) {//внесение записи о балансе
+	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
 	$ws_id = _num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID;
 	$category_id = _balansAction($v['action_id'], 'category_id');
 	$unit_id = 0;
@@ -1453,7 +1454,7 @@ function _balans($v) {//внесение записи о балансе
 
 				`viewer_id_add`
 			) VALUES (
-				".APP_ID.",
+				".$app_id.",
 				".$ws_id.",
 
 				".$category_id.",

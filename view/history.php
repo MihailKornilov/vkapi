@@ -7,6 +7,8 @@ function _history($v=array()) {
 }
 
 function _history_insert($v=array()) {//внесение истории действий
+	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
+	$ws_id = _num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID;
 	$client_id = _num(@$v['client_id']);
 	$zayav_id = _num(@$v['zayav_id']);
 
@@ -38,8 +40,8 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				`viewer_id_add`
 			) VALUES (
-				".APP_ID.",
-				".(_num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID).",
+				".$app_id.",
+				".$ws_id.",
 
 				".$v['type_id'].",
 

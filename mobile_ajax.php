@@ -10,7 +10,6 @@ require_once(DOCUMENT_ROOT.'/view/ws_setup.php');
 require_once 'view/_nofunc.php';
 
 
-_dbConnect('GLOBAL_');  //подключение к базе данных
 _dbConnect();  //подключение к базе mobile
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации

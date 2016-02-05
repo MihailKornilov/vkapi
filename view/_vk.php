@@ -45,6 +45,11 @@ require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/sa.php';
 
+_dbConnect('GLOBAL_');  //подключение к базе данных
+
+
+
+
 
 function _const() {
 	if(!$app_id = _num(@$_GET['api_id']))
@@ -54,7 +59,7 @@ function _const() {
 
 	define('VIEWER_ID', $viewer_id);
 	define('APP_ID', $app_id);
-	define('CACHE_PREFIX', 'CACHE_'.$app_id.'_');
+	define('CACHE_PREFIX', 'CACHE_'.APP_ID.'_');
 
 	session_name('app'.APP_ID);
 	session_start();
@@ -62,7 +67,6 @@ function _const() {
 	define('APP_NAME', _app('name'));
 
 	define('VIEWER_MAX', 2147000001);
-	define('CRON_MAIL', 'mihan_k@mail.ru');
 
 	define('TODAY', strftime('%Y-%m-%d'));
 	define('TODAY_UNIXTIME', strtotime(TODAY));
@@ -80,7 +84,6 @@ function _const() {
 					 '&auth_key='.@$_GET['auth_key']
 		  );
 	//'&access_token='.@$_GET['access_token'] todo временно отключен
-	//define('URL', API_HTML.'/index.php?'.VALUES);
 
 	if(!defined('SCRIPT_NAME'))
 		define('SCRIPT_NAME', 'index.php');

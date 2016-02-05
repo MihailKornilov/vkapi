@@ -252,7 +252,7 @@ function _viewerFormat($u) {//формирование данных пользователя
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
 	$send['viewer_link_photo'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_photo'].'</a>';
-	$send['viewer_link_zp'] = '<a href="'.URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
+	$send['viewer_link_zp'] = '<a href="'.@URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
 
 	return $send;
 }
