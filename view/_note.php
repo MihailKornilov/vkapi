@@ -8,7 +8,7 @@ function _noteQuery($note_id, $withDeleted=false) {//запрос данных по заметке
 			  ".$withDeleted."
 			  AND `id`=".$note_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
-}///_noteQuery()
+}
 function _noteFilter($v) {
 	return array(
 		'p' => empty($v['p']) ? @$_GET['p'] : _txt($v['p']),
@@ -18,7 +18,7 @@ function _noteFilter($v) {
 		'comment' => _bool(@$v['comment']),
 		'txt' => @$v['txt']
 	);
-}//_noteFilter()
+}
 function _noteArr($v) {//запрос массива заметок (дл€ общего списка, либо отдельно дл€ количества)
 	$sql = "SELECT
 				*,
@@ -31,7 +31,7 @@ function _noteArr($v) {//запрос массива заметок (дл€ общего списка, либо отдельн
 			  AND `page_id`=".$v['id']."
 			ORDER BY `id` DESC";
 	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
-}//_noteArr()
+}
 function _note($v=array()) {
 	$v = _noteFilter($v);
 
@@ -52,13 +52,13 @@ function _note($v=array()) {
 		'</div>'.
 		_noteSpisok($arr).
 	'</div>';
-}//_note()
+}
 function _noteCount($arr) {//количество заметок
 	if(!empty($arr['p']))//получение списка заметок (дл€ обновлени€ количества при внесении или удалении)
 		$arr = _noteArr($arr);
 	$count = count($arr);
 	return $count ? '¬сего '.$count.' замет'._end($count, 'ка', 'ки','ок') : '«аметок нет';
-}//_noteCount()
+}
 function _noteSpisok($arr) {//список заметок
 	if(empty($arr))
 		return '';
@@ -73,7 +73,7 @@ function _noteSpisok($arr) {//список заметок
 		$send .= _noteUnit($r);
 	}
 	return $send;
-}//_noteSpisok()
+}
 function _noteUnit($r) {
 	$n = _num(@$r['n']);//пор€дковый номер. ƒл€ определени€ первого элемента списка.
 	$goComm = $r['comment_count'] ? ' омментарии ('.$r['comment_count'].')' : ' омментировать';
@@ -85,7 +85,7 @@ function _noteUnit($r) {
 				'<td class="nu-i">'.
 					'<div class="img_del nu-del'._tooltip('”далить заметку', -98, 'r').'</div>'.
 					'<h3>'.$r['viewer_link'].'</h3>'.
-					'<h4>'._br($r['txt']).'</h4>'.
+					'<h4>'.wordwrap(_br($r['txt']), 45, '<br />', true).'</h4>'.
 					'<h5>'.
 						FullDataTime($r['dtime_add'], 1).
 						($n ? '<a class="nu-go-comm'.($r['comment_count'] ? ' ex' : '').'">'.$goComm.'</a>' : '').
@@ -97,7 +97,7 @@ function _noteUnit($r) {
 					'</h6>'.
 		'</table>'.
 	'</div>';
-}//_noteUnit()
+}
 
 function _noteCommentSpisok($arr) {//прикрепление к списку заметок список комментариев
 	$sql = "SELECT *
@@ -114,7 +114,7 @@ function _noteCommentSpisok($arr) {//прикрепление к списку заметок список коммен
 		$arr[$r['note_id']]['comment'] .= _noteCommentUnit($r);
 
 	return $arr;
-}//_noteCommentSpisok()
+}
 function _noteCommentUnit($r) {
 	return
 	'<div class="cu" val="'.$r['id'].'">'.
@@ -123,11 +123,11 @@ function _noteCommentUnit($r) {
 			'<tr><td class="cu-photo">'.$r['viewer_photo'].
 				'<td class="cu-i">'.$r['viewer_link'].
 					'<div class="img_del cu-del'._tooltip('”далить комментарий', -126, 'r').'</div>'.
-					'<h4>'._br($r['txt']).'</h4>'.
+					'<h4>'.wordwrap(_br($r['txt']), 40, '<br />', true).'</h4>'.
 					'<h5>'.FullDataTime($r['dtime_add'], 1).'</h5>'.
 		'</table>'.
 	'</div>';
-}//_noteCommentUnit()
+}
 function _noteCommentCountUpdate($note_id) {//обновление количества комментариев к заметке
 	$sql = "SELECT COUNT(`id`)
 			FROM `_note_comment`
@@ -146,7 +146,7 @@ function _noteCommentCountUpdate($note_id) {//обновление количества комментариев
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	return $count;
-}//_noteCommentCountUpdate()
+}
 
 function _noteAdd($v) {//внесение новой заметки
 	if(empty($v['p']))
@@ -178,7 +178,7 @@ function _noteAdd($v) {//внесение новой заметки
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	return true;
-}//_noteAdd()
+}
 function _noteCommentAdd($v) {//внесение комментари€ к заметке
 	$sql = "SELECT `id`
 			FROM `_note`

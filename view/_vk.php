@@ -1561,6 +1561,9 @@ function _print_document() {//вывод на печать документов
 		case 'kvit_cartridge':
 			require_once GLOBAL_DIR.'/view/xsl/kvit_cartridge.php';
 			break;
+		case 'zp_zakaz':
+			require_once GLOBAL_DIR.'/view/xsl/zp_zakaz.php';
+			break;
 		case 'schet':
 			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
 			break;
