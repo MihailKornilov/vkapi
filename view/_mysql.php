@@ -96,3 +96,123 @@ function query_insert_id($tab, $resource_id=MYSQL_CONNECT) {//id последнего внес
 	$sql = "SELECT `id` FROM `".$tab."` ORDER BY `id` DESC LIMIT 1";
 	return query_value($sql, $resource_id);
 }
+
+function _dbDump() {
+	define('INSERT_COUNT_MAX', 500); //записей в одном INSERT
+	define('DUMP_NAME', GLOBAL_MYSQL_DATABASE.'_'.strftime('%Y-%m-%d_%H-%M-%S').'.sql');//только название файла
+	define('DUMP_FILE', API_PATH.'/'.DUMP_NAME); //полный путь с названием
+	define('DUMP_FILE_ZIP', DUMP_FILE.'.zip');   //полный путь запакованного файла с названием
+	define('DUMP_NAME_ZIP', DUMP_NAME.'.zip');   //название запакованного файла
+
+	$spisok = array();
+	$sql = "SHOW TABLES";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_row($q))
+		$spisok[] = $r[0];
+
+	if(empty($spisok))
+		return false;
+
+	$fp = fopen(DUMP_FILE, 'w+');
+	fwrite($fp, "                                                  \n\n");
+	fwrite($fp, "SET NAMES `cp1251`;\n\n");
+
+	foreach($spisok as $r)
+		_dbDumpTable($fp, $r);
+
+	fclose($fp);
+
+	_dbDumpTime();
+	_dbDumpZip();
+	_dbDumpMail();
+
+	unlink(DUMP_FILE);
+
+	return true;
+}
+function _dbDumpTable($fp, $table) {
+	fwrite($fp, "DROP TABLE IF EXISTS `".$table."`;\n");
+
+	$sql = "SHOW CREATE TABLE `".$table."`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$r = mysql_fetch_row($q);
+	fwrite($fp, $r[1].";\n");
+
+	$values = array();
+	$sql = "SELECT * FROM `".$table."`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$count = 0;
+	while($row = mysql_fetch_row($q)) {
+		$count++;
+
+		$cols = array();
+		foreach($row as $col)
+			$cols[] = preg_match(REGEXP_NUMERIC, $col) ? $col : '\''.addslashes($col).'\'';
+		$values[] = '('.implode(',', $cols).')';
+
+		if($count >= INSERT_COUNT_MAX) {
+			$count = _dbDumpInsert($fp, $table, $values);
+			$values = array();
+		}
+	}
+	_dbDumpInsert($fp, $table, $values);
+	fwrite($fp, "\n\n\n");
+}
+function _dbDumpInsert($fp, $table, $values) {
+	if(empty($values))
+		return 0;
+
+	$insert = "INSERT INTO `".$table."` VALUES \n".implode(",\n", $values).";\n";
+	fwrite($fp, $insert);
+	return 0;
+}
+function _dbDumpTime() {//вставка даты и времени выполнени€ в начало дампа
+	$fp = fopen(DUMP_FILE, 'r+');
+	fwrite($fp, "#Dump created ".curTime()."\n");
+	fwrite($fp, "#Time: ".round(microtime(true) - TIME, 3)."\n\n");
+	fclose($fp);
+	return true;
+}
+function _dbDumpZip() {//создание архива базы
+	$zip = new ZipArchive();
+	if($zip->open(DUMP_FILE_ZIP, ZIPARCHIVE::CREATE) !== true) {
+	    echo 'Error while creating archive file';
+	    return false;
+	}
+	$zip->addFile(DUMP_FILE, DUMP_NAME);
+	$zip->close();
+
+	return true;
+}
+function _dbDumpMail() {//отправка архива на почту
+	//чтение содержани€ архива
+	$file = fopen(DUMP_FILE_ZIP, 'r');
+	$size = filesize(DUMP_FILE_ZIP);//получение размера файла
+	$text = fread($file, $size);
+	fclose($file);
+
+	$from = 'global@dump';
+	$subject = GLOBAL_MYSQL_DATABASE.' dump'; //“ема
+	$boundary = '---'; //–азделитель
+
+	$headers = "From: $from\nReply-To: $from\n".
+			   'Content-Type: multipart/mixed; boundary="'.$boundary.'"';
+	$body =
+		"--$boundary\n".
+		"Content-type: text/html; charset='windows-1251'\n".
+		"Content-Transfer-Encoding: quoted-printablenn".
+		"Content-Disposition: attachment;filename==?windows-1251?B?".base64_encode(DUMP_NAME_ZIP)."?=\n\n".
+
+		//текст сообщени€
+		"Size: "._sumSpace($size)." bytes.\n".
+		"Time: ".round(microtime(true) - TIME, 3)."\n".
+
+		"--$boundary\n".
+		"Content-Type: application/octet-stream;name==?windows-1251?B?".base64_encode(DUMP_NAME_ZIP)."?=\n".
+		"Content-Transfer-Encoding: base64\n".
+		"Content-Disposition: attachment;filename==?windows-1251?B?".base64_encode(DUMP_NAME_ZIP)."?=\n\n".
+		chunk_split(base64_encode($text))."\n".
+		'--'.$boundary ."--\n";
+	if(mail(CRON_MAIL, $subject, $body, $headers))
+		unlink(DUMP_FILE_ZIP);
+}

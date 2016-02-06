@@ -48,9 +48,6 @@ require_once GLOBAL_DIR.'/view/sa.php';
 _dbConnect('GLOBAL_');  //подключение к базе данных
 
 
-
-
-
 function _const() {
 	if(!$app_id = _num(@$_GET['api_id']))
 		_appError();
@@ -1320,7 +1317,6 @@ function _tooltip($msg, $left=0, $ugolSide='') {
 
 function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
 function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
-function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
 function mb_ucfirst($txt) {//делание заклавной первую букву текста
 	mb_internal_encoding('UTF-8');
 	$txt = utf8($txt);

@@ -120,3 +120,4 @@ function _dataDog($v) {//формат даты как для договора
 	$d = explode('-', $ex[0]);
 	return $d[2].'/'.$d[1].'/'.$d[0];
 }
+function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
