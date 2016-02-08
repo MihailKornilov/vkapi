@@ -73,6 +73,8 @@ function _week($n) {
 	return $week[intval($n)];
 }
 function FullData($v=0, $noyear=0, $cut=0, $week=0) {//пт. 14 апреля 2010
+	if($v == '0000-00-00 00:00:00')
+		return '';
 	if(!$v)
 		$v = curTime();
 	$d = explode('-', $v);

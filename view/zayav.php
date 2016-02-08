@@ -54,6 +54,12 @@ function _zayavStatus($id=false, $i='name') {
 		return '<span class="red">неизвестный id статуса: <b>'.$id.'</b></span>';
 	}
 
+	if(!$id) {
+		if($i == 'bg')
+			return '';
+		return '<span class="red">статус отсутствует</span>';
+	}
+
 	if($i == 'name')
 		return $arr[$id]['name'];
 
@@ -412,7 +418,7 @@ function _zayav_spisok($v) {
 //				$cond .= " AND `day_finish`='".$filter['finish']."'";
 		}
 		if($filter['diagnost'])
-			$cond .= " AND `status`=1 AND `diagnost`";
+			$cond .= " AND `status_id`=1 AND `diagnost`";
 		if($filter['paytype'])
 			$cond .= " AND `pay_type`=".$filter['paytype'];
 		if($filter['noschet'])
@@ -487,7 +493,7 @@ function _zayav_spisok($v) {
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
-				  AND `status`
+				  AND `status_id`
 				  AND `nomer`=".$nomer;
 		if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
 			$all++;
