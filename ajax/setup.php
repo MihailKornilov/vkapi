@@ -295,6 +295,15 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_SALARY_ZAYAV_ON_PAY'://Начислять з/п по заявке при отсутствии долга
+		$_POST['h1'] = 1046;
+		$_POST['h0'] = 1047;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
 	case 'RULE_SALARY_BONUS'://Начисления бонусов
 		$_POST['h1'] = 1043;
 		$_POST['h0'] = 1044;
@@ -847,66 +856,92 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'setup_zayav_expense_add':
-		if(!SA)
-			jsonError();
-
+	case 'setup_zayav_status_add':
 		$name = _txt($_POST['name']);
-		$dop = _num($_POST['dop']);
+		$about = _txt($_POST['about']);
+		$color = _txt($_POST['color']);
+		$default = _bool($_POST['default']);
+		$day_fact = _bool($_POST['day_fact']);
 
 		if(empty($name))
 			jsonError();
 
-		$sql = "INSERT INTO `_zayav_expense_category` (
+		if(strlen($color) != 6)
+			jsonError();
+
+		setupZayavStatusDefaultDrop($default);
+
+		$sql = "INSERT INTO `_zayav_status` (
 					`app_id`,
+					`ws_id`,
 					`name`,
-					`dop`,
+					`about`,
+					`color`,
+					`default`,
+					`day_fact`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
+					".WS_ID.",
 					'".addslashes($name)."',
-					".$dop.",
-					"._maxSql('_zayav_expense_category')."
+					'".addslashes($about)."',
+					'".$color."',
+					".$default.",
+					".$day_fact.",
+					"._maxSql('_zayav_status')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_globalJsValues();
-
+		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
+		_wsJsValues();
+/*
 		_history(array(
 			'type_id' => 1027,
 			'v1' => $name
 		));
-
-		$send['html'] = utf8(setup_zayav_expense_spisok());
+*/
+		$send['html'] = utf8(setup_zayav_status_spisok());
 		jsonSuccess($send);
 		break;
-	case 'setup_zayav_expense_edit':
-		if(!SA)
-			jsonError();
-
+	case 'setup_zayav_status_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
-		$dop = _num($_POST['dop']);
+		$about = _txt($_POST['about']);
+		$color = _txt($_POST['color']);
+		$default = _bool($_POST['default']);
+		$day_fact = _bool($_POST['day_fact']);
 
 		if(empty($name))
 			jsonError();
 
-		$sql = "SELECT * FROM `_zayav_expense_category` WHERE `id`=".$id;
+		if(strlen($color) != 6)
+			jsonError();
+
+		setupZayavStatusDefaultDrop($default);
+
+		$sql = "SELECT *
+				FROM `_zayav_status`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "UPDATE `_zayav_expense_category`
+		$sql = "UPDATE `_zayav_status`
 				SET `name`='".addslashes($name)."',
-					`dop`=".$dop."
+					`about`='".addslashes($about)."',
+					`color`='".$color."',
+					`default`='".$default."',
+					`day_fact`='".$day_fact."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_globalJsValues();
-
+		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
+		_wsJsValues();
+/*
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
 			_historyChange('Дополнительное поле', $r['dop'], $dop, _zayavExpenseDop($r['dop']), _zayavExpenseDop($dop));
@@ -916,26 +951,28 @@ switch(@$_POST['op']) {
 				'v1' => $name,
 				'v2' => '<table>'.$changes.'</table>'
 			));
-
-		$send['html'] = utf8(setup_zayav_expense_spisok());
+*/
+		$send['html'] = utf8(setup_zayav_status_spisok());
 		jsonSuccess($send);
 		break;
-	case 'setup_zayav_expense_del':
-		if(!SA)
-			jsonError();
-
+	case 'setup_zayav_status_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `_zayav_expense_category` WHERE `id`=".$id;
+		$sql = "SELECT *
+				FROM `_zayav_status`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT COUNT(`id`) FROM `_zayav_expense` WHERE `category_id`=".$id;
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `status`=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "DELETE FROM `_zayav_expense_category` WHERE `id`=".$id;
+		$sql = "UPDATE `_zayav_status` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
@@ -950,4 +987,103 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_zayav_action_add':
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_action` (
+					`app_id`,
+					`ws_id`,
+					`name`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					'".addslashes($name)."',
+					"._maxSql('_zayav_action')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_action'.WS_ID);
+		_wsJsValues();
+/*
+		_history(array(
+			'type_id' => 1027,
+			'v1' => $name
+		));
+*/
+		$send['html'] = utf8(setup_zayav_action_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_zayav_action_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_action`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_action`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_action'.WS_ID);
+		_wsJsValues();
+/*
+		$changes =
+			_historyChange('Наименование', $r['name'], $name).
+			_historyChange('Дополнительное поле', $r['dop'], $dop, _zayavExpenseDop($r['dop']), _zayavExpenseDop($dop));
+		if($changes)
+			_history(array(
+				'type_id' => 1028,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+*/
+		$send['html'] = utf8(setup_zayav_action_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_zayav_action_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_status`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `status`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_status` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		_globalJsValues();
+
+		_history(array(
+			'type_id' => 1029,
+			'v1' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
 }

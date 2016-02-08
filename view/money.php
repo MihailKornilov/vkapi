@@ -508,13 +508,7 @@ function _incomeReceipt($id) {//товарный чек для платежа
 			  AND `id`=".$id;
 	$money = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
-	$sql = "SELECT *
-			FROM `_zayav`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
-			  AND `id`=".$money['zayav_id'];
-	$zayav = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = _zayavQuery($money['zayav_id']);
 
 	$sql = "SELECT *
 			FROM `_zayav_dogovor`

@@ -30,6 +30,7 @@ function _setup() {
 		'rekvisit' => 'Реквизиты организации',
 		'service' => 'Виды деятельности',
 		'expense' => 'Категории расходов',
+		'zayav_status' => 'Статусы заявок',
 		'zayav_expense' => 'SA: Расходы по заявке',
 		'product' => 'Виды изделий'
 	) + (function_exists('setup') ? setup() : array());
@@ -168,6 +169,7 @@ function setup_worker_rule($viewer_id) {
 		'<div class="headName">Дополнительные настройки</div>'.
 		'<table class="rtab">'.
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
+			'<tr><td class="lab"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', 'Начислять з/п по заявке при отсутствии долга', $rule['RULE_SALARY_ZAYAV_ON_PAY']).
 /*
 			'<tr><td class="lab">Начислять бонусы:'.
 				'<td>'._check('RULE_SALARY_BONUS', '', $rule['RULE_SALARY_BONUS']).
@@ -408,6 +410,202 @@ function setup_expense_spisok() {
 	$send .= '</dl>';
 	return $send;
 }
+
+
+function setup_zayav_status() {
+	return
+		'<div id="setup_zayav_status">'.
+			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
+			'<div id="status-spisok">'.setup_zayav_status_spisok().'</div>'.
+			'<div class="headName">Следующие шаги<a class="add action-add">Добавить</a></div>'.
+			'<div id="action-spisok">'.setup_zayav_action_spisok().'</div>'.
+		'</div>'.
+		'<script type="text/javascript">'.
+			'var '._service('const_js', _service('current')).';'.
+		'</script>';
+}
+function setup_zayav_status_spisok() {
+	_service('const_define', _service('current'));
+
+	$sql = "SELECT
+	            *,
+	            '' `zayav`
+			FROM `_zayav_status`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		$spisok = setup_zayav_status_default();
+
+	$sql = "SELECT
+				`status_id`,
+				COUNT(*) `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status_id`
+			GROUP BY `status_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['status_id']]['zayav'] = $r['count'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="zayav">Заявки'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_zayav_status">';
+
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name'.($r['default'] ? ' b' : '').'" style="background-color:#'.$r['color'].'" val="'.$r['color'].'">'.
+						'<span>'.$r['name'].'</span>'.
+						'<div class="about">'.$r['about'].'</div>'.
+					(ZAYAV_INFO_STATUS_DAY && $r['day_fact'] ?
+		                '<div class="dop">Уточнять фактический день</div>'
+					: '').
+					'<td class="zayav">'.$r['zayav'].
+					'<td class="ed">'.
+						_iconEdit($r + array('class'=>'status-edit')).
+						_iconDel($r).
+			'</table>'.
+			'<input type="hidden" class="day_fact" value="'.$r['day_fact'].'" />';
+	$send .= '</dl>';
+	return $send;
+}
+function setup_zayav_status_default() {//формирование списка статусов по умолчанию
+	$sql = "SELECT *
+			FROM `_zayav_status_default`
+			ORDER BY `id`";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$values = array();
+	foreach($spisok as $id => $r)
+		$values[] = "(
+			".APP_ID.",
+			".WS_ID.",
+			'".$r['name']."',
+			'".$r['about']."',
+			'".$r['color']."',
+			".$r['default'].",
+			".$id.",
+			".$id."
+		)";
+
+	$sql = "INSERT INTO `_zayav_status` (
+				`app_id`,
+				`ws_id`,
+				`name`,
+				`about`,
+				`color`,
+				`default`,
+				`sort`,
+				`id_old`
+			) VALUES ".implode(',', $values);
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	//применение новых статусов к заявкам
+	$sql = "UPDATE `_zayav` `z`
+			SET `status_id`=(
+
+				SELECT `id`
+				FROM `_zayav_status`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id_old`=`z`.`status_id`
+				LIMIT 1
+
+			)
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `status_id`";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	//применение новых статусов к заявкам
+	$sql = "UPDATE `_history` `h`
+			SET `v1`=(
+					SELECT `id`
+					FROM `_zayav_status`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `id_old`=`h`.`v1`
+					LIMIT 1
+				),
+				`v2`=(
+					SELECT `id`
+					FROM `_zayav_status`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `id_old`=`h`.`v2`
+					LIMIT 1
+				)
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `type_id`=71";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
+	_wsJsValues();
+
+	$sql = "SELECT
+	            *,
+	            '' `zayav`
+			FROM `_zayav_status`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			ORDER BY `sort`";
+	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+}
+function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, если устанавливается новое умолчание
+	if(!$default)
+		return false;
+
+	$sql = "UPDATE `_zayav_status`
+			SET `default`=0
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `default`";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	return true;
+}
+function setup_zayav_action_spisok() {
+	$sql = "SELECT
+	            *,
+	            '' `zayav`
+			FROM `_zayav_action`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Следующие шаги не определены';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="zayav">Заявки'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_zayav_action">';
+
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="zayav">'.$r['zayav'].
+					'<td class="ed">'.
+						_iconEdit($r + array('class'=>'action-edit')).
+						_iconDel($r).
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}
+
 
 function setup_product() {
 	return

@@ -154,14 +154,10 @@
 	margin-bottom:10px;
 }
 #zayav-status .st:hover{border-color:#BBD}
-#zayav-status .c1{background-color:#E8E8FF}
-#zayav-status .c2{background-color:#CFC}
-#zayav-status .c3{background-color:#FDD}
 #zayav-status .about{color:#777;margin-top:3px}
 #zayav-status .label{color:#444;margin:10px 0 3px 20px}
-#zayav-status #day_calendar{color:#444;margin-left:20px}
 #zayav-status #zs-tab{border-spacing:8px;display:none}
-#zayav-status #reason{width:200px}
+#zayav-status #zs-comm{width:280px;height:30px}
 
 
 /* диалог заключения договора */
@@ -231,10 +227,10 @@
 #zayav-status-button h1 {
 	display:inline-block;
 	border:#DDD solid 1px;
-	width:170px;
 	text-align:center;
-	padding:2px 0 3px 0;
+	padding:4px 12px 5px;
 	color:#777;
+	min-width:200px;
 	cursor:pointer;
 }
 #zayav-status-button h1:hover{border-color:#bbd; color:#444}

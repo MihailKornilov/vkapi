@@ -310,36 +310,35 @@ var _zayavSpisok = function(v, id) {
 		}
 	},
 	_zayavStatus = function() {//Изменение статуса заявки
+		var spisok = '';
+		for(var i in ZAYAV_STATUS_NAME_ASS) {
+			if(i == ZI.status_id)
+				continue;
+			spisok += '<div class="st" val="' + i + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[i] + '">' +
+						 ZAYAV_STATUS_NAME_ASS[i] +
+						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[i] + '</div>' +
+					  '</div>'
+		}
+
 		var html =
 			'<div id="zayav-status">' +
-		(ZI.status != 1 ?
-				'<div class="st c1" val="1">' +
-					'Ожидает выполнения' +
-					'<div class="about">Возобновление работы по заявке.</div>' +
-				'</div>'
-		: '') +
-		(ZI.status != 2 ?
-				'<div class="st c2" val="2">' +
-					'Выполнено' +
-					'<div class="about">' +
-						'Заявка выполнена успешно.<br />' +
-						'Не забудьте расписать расходы по заявке, проверьте начисления.<br />' +
-						'Добавьте напоминание, если необходимо.' +
-					'</div>' +
-				(ZAYAV_INFO_STATUS_DAY ?
-					'<div class="label">Уточните день выполнения:</div>' +
-					'<input type="hidden" id="day" value="' + ZI.status_day + '">'
-				: '') +
-				'</div>'
-		: '') +
-		(ZI.status != 3 ?
-				'<div class="st c3" val="3">' +
-					'Заявка отменена' +
-					'<div class="about">Отмена заявки по какой-либо причине.</div>' +
-				'</div>'
-		: '') +
+				spisok +
 				'<input type="hidden" id="zs-status" />' +
 				'<table id="zs-tab">' +
+				(ZAYAV_INFO_STATUS_DAY ?
+					'<tr class="tr-day-fact dn">' +
+						'<td class="label r">Фактический день:' +
+						'<td><input type="hidden" id="day" value="' + ZI.status_day + '" />'
+				: '') +
+					'<tr><td class="label r topi">Комментарий:' +
+						'<td><textarea id="zs-comm"></textarea>' +
+					'<tr><td class="label r">Следующий шаг:' +
+						'<td><input type="hidden" id="action_id" />' +
+				'</table>' +
+			'</div>',
+
+/*
+
 			(ZAYAV_INFO_DEVICE ?
 					'<tr><td class="label r topi">Местонахождение устройства:<td><input type="hidden" id="device-place" value="-1" />'
 			: '') +
@@ -350,30 +349,27 @@ var _zayavSpisok = function(v, id) {
 						'<td><input type="hidden" id="zs-day_finish" value="0000-00-00" />' +
 							'<div class="day-finish-link no-save"><span>не указан</span></div>'
 			: '') +
-					'<tr id="zs-reason" class="dn">' +
-						'<td class="label r topi">Причина отмены:' +
-						'<td><textarea id="reason"></textarea>' +
 
-				'</table>' +
 
-			'</div>',
+		if(ZAYAV_INFO_DEVICE)
+			zayavPlace();
+*/
 
 			dialog = _dialog({
 				top:30,
-				width:420,
+				width:460,
 				head:'Изменение статуса заявки',
 				content:html,
 				butSubmit:'',
 				submit:submit
 			});
 
-		if(ZAYAV_INFO_STATUS_DAY)
-			$('#day')._calendar({lost:1});
-
-		if(ZAYAV_INFO_DEVICE)
-			zayavPlace();
-
-		$('#reason').autosize();
+		$('#action_id')._select({
+			width:250,
+			title0:'не выбран',
+			spisok:_toSpisok(ZAYAV_ACTION_NAME_ASS)
+		});
+		$('#zs-comm').autosize();
 
 		$('.st').click(function() {
 			var t = $(this),
@@ -381,7 +377,21 @@ var _zayavSpisok = function(v, id) {
 			t.parent().find('.st').hide();
 			t.show();
 			$('#zs-status').val(v);
+
 			$('#zs-tab').show();
+			$('#zs-comm').focus();
+
+			if(ZAYAV_STATUS_DAY_FACT_ASS[v]) {
+				$('#day')._calendar({lost:1});
+				$('.tr-day-fact').removeClass('dn');
+			}
+
+
+			dialog.butSubmit('Применить');
+		});
+
+
+/*
 			if(v == 1) {
 				if(ZAYAV_INFO_SROK)
 					$('#zs-srok').removeClass('dn');
@@ -391,25 +401,22 @@ var _zayavSpisok = function(v, id) {
 			}
 			if(v == 2 && !ZAYAV_INFO_DEVICE)
 				submit();
-			if(v == 3) {
-				$('#zs-reason').removeClass('dn');
-				$('#reason').focus();
-			}
-			dialog.butSubmit('Сохранить');
-		});
+
+*/
 
 		function submit() {
 			var send = {
 				op:'zayav_status',
 				zayav_id:ZI.id,
-				status:_num($('#zs-status').val()),
+				status_id:_num($('#zs-status').val()),
 				status_day:'0000-00-00',
+				action_id:_num($('#action_id').val()),
 				place:0,
 				place_other:'',
 				day_finish:'0000-00-00',
-				reason:$('#reason').val()
+				comm:$('#zs-comm').val()
 			};
-
+/*
 			if(ZAYAV_INFO_DEVICE) {
 				send.place = $('#device-place').val() * 1;
 				send.place_other = $('#place_other').val();
@@ -429,13 +436,9 @@ var _zayavSpisok = function(v, id) {
 					return;
 				}
 			}
+*/
 
-			if(send.status == 3 && !send.reason) {
-				dialog.err('Укажите причину отмены');
-				return;
-			}
-
-			if(ZAYAV_INFO_STATUS_DAY && send.status == 2)
+			if(ZAYAV_INFO_STATUS_DAY && ZAYAV_STATUS_DAY_FACT_ASS[send.status_id])
 				send.status_day = $('#day').val();
 
 			dialog.process();

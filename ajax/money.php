@@ -150,13 +150,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		if($zayav_id) {
-			$sql = "SELECT *
-					FROM `_zayav`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND !`deleted`
-					  AND `id`=".$zayav_id;
-			if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			if(!$r = _zayavQuery($zayav_id))
 				jsonError();
 			$client_id = $r['client_id'];
 		}
@@ -217,6 +211,9 @@ switch(@$_POST['op']) {
 			//отметка выбранных активных напоминаних выполненными
 			if($remind_ids)
 				_remind_active_to_ready($remind_ids);
+
+			//проверка, если за€вка оплачена полностью, перенести з/п сотрудника из неактивного списка, если такие есть
+			_salaryZayavCheck($zayav_id);
 		}
 
 		_history(array(
@@ -409,13 +406,7 @@ switch(@$_POST['op']) {
 		if(!$about = _txt($_POST['about']))
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_zayav`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
 		$sql = "INSERT INTO `_money_refund` (
@@ -891,13 +882,7 @@ switch(@$_POST['op']) {
 		}
 
 		if($zayav_id) {
-			$sql = "SELECT *
-					FROM `_zayav`
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
-					  AND !`deleted`
-					  AND `id`=".$zayav_id;
-			if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			if(!$z = _zayavQuery($zayav_id))
 				jsonError();
 			$client_id = $z['client_id'];
 		}
@@ -1623,6 +1608,7 @@ switch(@$_POST['op']) {
 		$send['list'] = utf8(salary_worker_list($filter));
 		$send['list_array'] = salary_worker_list(array('list_type'=>'array') + $filter);
 		$send['acc'] = utf8(salary_worker_acc($filter));
+		$send['noacc'] = utf8(salary_worker_noacc($filter));
 		$send['zp'] = utf8(salary_worker_zp($filter));
 		$send['month'] = utf8(salary_month_list($filter));
 		jsonSuccess($send);
@@ -1753,7 +1739,8 @@ switch(@$_POST['op']) {
  		_balans(array(
 			'action_id' => 19,
 			'worker_id' => $worker_id,
-			'sum' => $sum
+			'sum' => $sum,
+			'about' => $about
 		));
 
 		_history(array(
@@ -2080,6 +2067,119 @@ switch(@$_POST['op']) {
 			'v1' => round($r['sum'], 2),
 			'v2' => _monthDef($r['mon']).' '.$r['year']
 		));
+
+		jsonSuccess();
+		break;
+	case 'salary_noacc_recalc'://перерасчЄт баланса сотрудника по неактивным начислени€м
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+
+		$onPay = _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY');
+		$balansStart = salaryWorkerBalans($worker_id);
+
+		$changes = '';
+
+		//удаление начислений зп по удалЄнным за€вкам
+		$sql = "SELECT `id`
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `deleted`";
+		if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+			$sql = "DELETE FROM `_zayav_expense`
+					WHERE `worker_id`=".$worker_id."
+					  AND `zayav_id` IN (".$ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			if(mysql_affected_rows())
+				$changes .= '<tr><td>”далены начислени€ из удалЄнных за€вок:<td>'.mysql_affected_rows();
+		}
+
+		//список всех за€вок, у которых есть долг
+		$sql = "SELECT `id`
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `sum_dolg`<0";
+		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+		if($onPay) {
+			//перенос начислений по за€вкам, у которых есть долги, в неактивный список
+			$sql = "UPDATE `_zayav_expense`
+					SET `year`=0,
+						`mon`=0
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND `worker_id`=".$worker_id."
+					  AND !`salary_list_id`
+					  AND `year`
+					  AND `mon`
+					  AND `zayav_id` IN (".$ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			if(mysql_affected_rows())
+				$changes .= '<tr><td>ѕеренесены начислени€ по за€вкам<br />в неактивный список, у которых есть долги:<td>'.mysql_affected_rows();
+		}
+
+		//id за€вкок из неактивного списка
+		$sql = "SELECT `zayav_id`
+				FROM `_zayav_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `worker_id`=".$worker_id."
+				  AND (!`year` OR !`mon`)";
+		if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+			$rec = 0;//количество восстановленных начислений
+			//за€вки, у которых нет долгов, уход€т из неактивного списка в любом случае
+			$sql = "SELECT `id`
+					FROM `_zayav`
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
+					  AND !`deleted`
+					  AND `id` IN (".$ids.")
+					  AND `sum_accrual`-`sum_pay`<=0";
+			if($zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+				$sql = "UPDATE `_zayav_expense`
+						SET `year`=".strftime('%Y').",
+							`mon`=".strftime('%m')."
+						WHERE `worker_id`=".$worker_id."
+						  AND `zayav_id` IN (".$zayav_ids.")";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+				$rec = mysql_affected_rows();
+			}
+
+			if(!$onPay) {//перенос начислений по за€вкам из неактивного списка в текущий мес€ц (галочка не установлена)
+				$sql = "UPDATE `_zayav_expense`
+						SET `year`=".strftime('%Y').",
+							`mon`=".strftime('%m')."
+						WHERE `worker_id`=".$worker_id."
+						  AND `zayav_id` IN (".$ids.")";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+				$rec += mysql_affected_rows();
+			}
+
+			if($rec)
+				$changes .= '<tr><td>¬осстановлены начислени€ по за€вкам<br />из неактивнго списка, у которых нет долгов:<td>'.$rec;
+		}
+
+		$balansEnd = salaryWorkerBalans($worker_id);
+
+		if($balansStart != $balansEnd) {
+			_balans(array(
+				'action_id' => 43,
+				'worker_id' => $worker_id,
+				'about' => ' орректировка начислений по за€вкам с долгами.'
+			));
+			$changes .= '<tr><td>»зменилс€ баланс сотрудника:<td>'.$balansStart.' -> '.$balansEnd;
+		}
+
+		if($changes)
+			_history(array(
+				'type_id' => 500,
+				'worker_id' => $worker_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;

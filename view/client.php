@@ -182,10 +182,7 @@ function client_data($v=array()) {// список клиентов
 
 	$spisok = array();
 	$sql = "SELECT *,
-				   0 `zayav_count`,
-				   0 `zayav_wait`,
-				   0 `zayav_ready`,
-				   0 `zayav_fail`,
+				   '' `zayav`,
 				   '' `comm`,
 				   '' `fio`,
 				   '' `phone`,
@@ -284,9 +281,7 @@ function client_data($v=array()) {// список клиентов
 					'<tr><td>'.$left.
 						'<td class="r-td">'.
 							($r['comm'] ? '<div class="comm" val="'.$r['comm'].'"></div>' : '').
-							($r['zayav_wait'] ? '<div class="z-wait'._tooltip('Ожидающие заявки', -60).$r['zayav_wait'].'</div>' : '').
-							($r['zayav_ready'] ? '<div class="z-ready'._tooltip('Выполненные заявки', -63).$r['zayav_ready'].'</div>' : '').
-							($r['zayav_fail'] ? '<div class="z-fail'._tooltip('Отменённые заявки', -59).$r['zayav_fail'].'</div>' : '').
+							$r['zayav'].
 							(round($r['balans'], 2) ?
 								'<div style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'" class="balans'.
 									_tooltip('Баланс', -15).

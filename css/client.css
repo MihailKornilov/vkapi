@@ -62,18 +62,15 @@
 #client .l-tab{border-spacing:2px;width:340px}
 #client .r-td{vertical-align:top;text-align:right}
 #client .label{width:75px}
-#client .z-wait,
-#client .z-ready,
-#client .z-fail{
+#client .z-count{
 	display:inline-block;
 	font-weight:bold;
 	padding:3px 7px;
 	color:#555;
 	cursor:default;
 }
-#client .z-wait{background-color:#E8E8FF}
-#client .z-ready{background-color:#CFC}
-#client .z-fail{background-color:#FDD}
+#client .z-count:hover{text-decoration:none}
+#client .z-count.link{cursor:pointer}
 #client .balans{font-weight:bold;margin-top:2px;cursor:default}
 #client .post{margin-left:4px;font-size:10px;color:#777}
 #client .unit em{background-color:#FFC;border-bottom:#FE2 solid 1px}

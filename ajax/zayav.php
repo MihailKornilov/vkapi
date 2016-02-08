@@ -70,6 +70,7 @@ switch(@$_POST['op']) {
 					`pay_type`,
 					`day_finish`,
 
+					`status_id`,
 					`status_dtime`,
 
 					`barcode`,
@@ -100,6 +101,7 @@ switch(@$_POST['op']) {
 					".$pay_type.",
 					'".$day_finish."',
 
+					"._zayavStatus('default').",
 					current_timestamp,
 
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
@@ -328,7 +330,7 @@ switch(@$_POST['op']) {
 	case 'zayav_status':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$status = _num($_POST['status']))
+		if(!$status_id = _num($_POST['status_id']))
 			jsonError();
 
 		if(!$z = _zayavQuery($zayav_id))
@@ -338,44 +340,54 @@ switch(@$_POST['op']) {
 
 		$place_id = _num($_POST['place']);
 		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
-		if(ZAYAV_INFO_DEVICE && !$place_id && !$place_other)
-			jsonError();
+//		if(ZAYAV_INFO_DEVICE && !$place_id && !$place_other)
+//			jsonError();
 
 		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
 			jsonError();
 		$day_finish = $_POST['day_finish'];
 
 		$status_day = $_POST['status_day'];
-		$reason = $status == 3 ? 'ѕричина: '._txt($_POST['reason']) : '';
+		$action_id = _num($_POST['action_id']);
+		$comm = _txt($_POST['comm']);
 
-		if(ZAYAV_INFO_SROK && $status == 1 && $day_finish == '0000-00-00')
-			jsonError();
+//		if(ZAYAV_INFO_SROK && $status_id == 1 && $day_finish == '0000-00-00')
+//			jsonError();
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
-		if($z['status'] == $status)
+		if($z['status_id'] == $status_id)
 			jsonError();
 
 		$sql = "UPDATE `_zayav`
-				SET `status`=".$status.",
+				SET `status_id`=".$status_id.",
 					`status_dtime`=CURRENT_TIMESTAMP,
-					`status_day`='".$status_day."'
+					`status_day`='".$status_day."',
+					`action_id`=".$action_id."
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		if(ZAYAV_INFO_DEVICE)
-			zayavPlaceCheck($zayav_id, $place_id, $place_other);
+//		if(ZAYAV_INFO_DEVICE)
+//			zayavPlaceCheck($zayav_id, $place_id, $place_other);
 
-		_zayavDayFinishChange($zayav_id, $day_finish);
+//		_zayavDayFinishChange($zayav_id, $day_finish);
+
+		_note(array(
+			'add' => 1,
+			'comment' => 1,
+			'p' => 'zayav',
+			'id' => $zayav_id,
+			'txt' => $comm
+		));
 
 		_history(array(
 			'type_id' => 71,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => $z['status'],
-			'v2' => $status,
-			'v3' => $reason
+			'v1' => $z['status_id'],
+			'v2' => $status_id
+//			'v3' => $reason
 		));
 
 		jsonSuccess();
@@ -841,13 +853,7 @@ switch(@$_POST['op']) {
 		if($expense === false)
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_zayav`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
 		$sql = "SELECT *
@@ -905,6 +911,19 @@ switch(@$_POST['op']) {
 					$txt = _txt($r[2]);
 				if($ze['attach'] && !preg_match(REGEXP_NUMERIC, $r[2]))
 					$txt = _txt(substr($r[2], 1));
+
+				$worker_id = $ze['worker'] ? _num($r[2]) : 0;
+				$mon = intval(strftime('%m'));
+				$year = strftime('%Y');
+
+				//если стоит галочка "Ќе начисл€ть по за€вкам с долгами" и есть долг по за€вке
+				if($worker_id && _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY')) {
+					if($z['sum_accrual'] - $z['sum_pay'] > 0) {
+						$mon = 0;
+						$year = 0;
+					}
+				}
+
 				$sql = "INSERT INTO `_zayav_expense` (
 							`id`,
 							`app_id`,
@@ -926,12 +945,12 @@ switch(@$_POST['op']) {
 							".$zayav_id.",
 							".$r[1].",
 							'".addslashes($txt)."',
-							".($ze['worker'] ? _num($r[2]) : 0).",
+							".$worker_id.",
 							".($ze['zp'] ? _num($r[2]) : 0).",
 							".($ze['attach'] ? _num($r[2]) : 0).",
 							".$r[3].",
-							".intval(strftime('%m')).",
-							".strftime('%Y').",
+							".$mon.",
+							".$year.",
 							".VIEWER_ID."
 						) ON DUPLICATE KEY UPDATE
 							`category_id`=VALUES(`category_id`),
@@ -939,7 +958,9 @@ switch(@$_POST['op']) {
 							`zp_id`=VALUES(`zp_id`),
 							`worker_id`=VALUES(`worker_id`),
 							`attach_id`=VALUES(`attach_id`),
-							`sum`=VALUES(`sum`)";
+							`sum`=VALUES(`sum`),
+							`mon`=VALUES(`mon`),
+							`year`=VALUES(`year`)";
 				query($sql, GLOBAL_MYSQL_CONNECT);
 
 				unset($toDelete[$r[0]]);
@@ -961,7 +982,7 @@ switch(@$_POST['op']) {
 			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 			$arrNew = _attachValToList($arrNew);
 
-			_zayav_expense_worker_balans($arrOld, $arrNew);
+			_zayav_expense_worker_balans($z, $arrOld, $arrNew);
 
 			$old = _zayav_expense_html($arrOld, false, $arrNew);
 			$new = _zayav_expense_html($arrNew, false, $arrOld, true);

@@ -104,10 +104,9 @@ function zp_accrual() {//начисление ставки сотрудникам
 
 function _cronMailSend() {
 	if($content = ob_get_contents()) {
-		$content =
-			BR.BR."----".BR.
-			"Время выполнения: ".round(microtime(true) - TIME, 3).
-			$content;
+		$content .=
+			BR.BR.'----'.BR.
+			'Время выполнения: '.round(microtime(true) - TIME, 3);
 		mail(CRON_MAIL, 'Cron', $content);
 	}
 }

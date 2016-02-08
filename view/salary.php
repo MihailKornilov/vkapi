@@ -200,6 +200,7 @@ function salaryFilter($v) {
 }
 function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение текущего баланса зп сотрудника
 	$start = _viewer($worker_id, 'balans_start');
+	$onPay = _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY');
 
 	//произвольные начисления
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -214,6 +215,7 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".$ws_id."
+			  ".($onPay ? 'AND `year` AND `mon`' : '')."
 			  AND `worker_id`=".$worker_id;
 	$zayav = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -286,6 +288,7 @@ function salary_worker($v) {
 		'<h1>Ставка: <em>'.salaryWorkerRate($filter['id']).'</em></h1>'.
 		salary_worker_client($filter['id']).
 		'<div id="spisok-acc"'.$acc_show.'>'.salary_worker_acc($filter).'</div>'.
+		'<div id="spisok-noacc">'.salary_worker_noacc($filter).'</div>'.
 		'<div id="spisok-list">'.salary_worker_list($filter).'</div>'.
 		'<div id="spisok-zp">'.salary_worker_zp($filter).'</div>'.
 	'</div>';
@@ -362,10 +365,10 @@ function salary_worker_acc($filter) {
 	krsort($spisok);
 
 	$send = '';
-	$accSum = 0;
-	$zayavSum = 0;
-	$dSum = 0;
-	$chAllShow = 0;//показывать галочку для выделения всех начислений
+	$accSum = 0;    //сумма произвольных начислений
+	$zayavSum = 0;  //сумма начислений по заявкам
+	$dSum = 0;      //сумма вычетов
+	$chAllShow = 0; //показывать галочку для выделения всех начислений
 	foreach($spisok as $r) {
 		$show = $filter['acc_id'] == $r['id'] ? ' show' : '';
 		$list = $r['salary_list_id'] ? ' list' : '';
@@ -425,6 +428,70 @@ function salary_worker_acc($filter) {
 				$send.
 			'</table>'.
 		'</div>';
+	return $send;
+}
+function salary_worker_noacc($filter) {//неактивные начисления по заявкам
+	//показываются только в текущем месяце
+	if($filter['year'] != strftime('%Y') || $filter['mon'] != strftime('%m'))
+		return '';
+
+	$sql = "SELECT *
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`=".$filter['id']."
+			  AND (!`year` OR !`mon`)";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$spisok = _zayavValToList($spisok);
+
+	$send = '';
+	$accSum = 0;
+	$zayav_ids = '';
+	foreach($spisok as $r) {
+		$show = $filter['acc_id'] == $r['id'] ? ' show' : '';
+
+		$send .=
+			'<tr class="noacc'.$show.'">'.
+				'<td class="sum">'.round($r['sum'], 2).
+				'<td class="about">'.$r['zayav_color'].$r['zayav_dolg'].
+				'<td class="dtime">'.FullDataTime($r['dtime_add']);
+
+		$accSum += $r['sum'];
+		$zayav_ids .= ','.$r['zayav_id'];
+	}
+
+	//сумма долга по заявкам
+	$sql = "SELECT *
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `id` IN (0".$zayav_ids.")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$zayavDolgSum = 0;
+	while($r = mysql_fetch_assoc($q)) {
+		$dolg = $r['sum_accrual'] - $r['sum_pay'];
+		$zayavDolgSum += $dolg > 0 ? $dolg : 0;
+	}
+
+	$send =
+		'<h3><b>Не начислено по заявкам</b>'.
+			(VIEWER_ADMIN ? '<a id="noacc-recalc">Пересчитать</a>' : '').
+		'</h3>'.
+		'<table id="noacc-count">'.
+			'<tr><td class="c">'.count($spisok).'<td>запис'._end(count($spisok), 'ь', 'и', 'ей').'.'.
+			'<tr><td class="c">'._sumSpace($accSum).'<td> руб. не начислено.'.
+			'<tr><td class="c">'._sumSpace($zayavDolgSum).'<td> руб. сумма долга по заявкам.'.
+		'</table>'.
+		'<table class="_spisok">'.
+			'<tr>'.
+				'<th>Сумма'.
+				'<th>Заявка'.
+				'<th>Дата'.
+			$send.
+		'</table>';
+
 	return $send;
 }
 function salary_worker_list($v) {
@@ -559,3 +626,64 @@ function salary_worker_zp($v) {
 
 	return $send;
 }
+
+function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полностью, перенести з/п сотрудника из неактивного списка, если такие есть
+	if(!$z = _zayavQuery($zayav_id))
+		return;
+
+	$sql = "SELECT *
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `zayav_id`=".$zayav_id."
+			  AND `worker_id`
+			  AND !`salary_list_id`
+			  AND (!`year` OR !`mon`)";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return;
+
+	$dolg = $z['sum_accrual'] - $z['sum_pay'] > 0;
+
+	//_viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY')
+
+	foreach($spisok as $r) {
+		if(!$dolg) {
+			$sql = "UPDATE `_zayav_expense`
+					SET `year`=".strftime('%Y').",
+						`mon`=".strftime('%m')."
+					WHERE `id`=".$r['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			_balans(array(
+				'action_id' => 19,
+				'worker_id' => $r['worker_id'],
+				'zayav_id' => $r['zayav_id'],
+				'sum' => $r['sum'],
+				'about' => 'Оплачен долг по заявке.'
+			));
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

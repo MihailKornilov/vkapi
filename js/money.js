@@ -874,6 +874,35 @@ var _accrualAdd = function() {
 		}
 	},
 
+
+	_salaryNoAccRecalcHint = function() {
+		$('#noacc-recalc').vkHint({
+			width:330,
+			top:-48,
+			left:16,
+			ugol:'right',
+			indent:30,
+			msg:'<b>Произвести перерасчёт начислений з/п по заявкам.</b>' +
+				'<br />' +
+				'Перерасчёт будет произведёт с учётом настройки <u>Начислять з/п по заявке при отсутствии долга.</u>' +
+				'<br />' +
+				'<br />' +
+				'Если галочка <b>установлена</b>, будут найдены все начисления по неоплаченным заявкам за весь период, ' +
+				'которые не внесены в листы выдачи зп, и помещены в данный список.' +
+				'<br />' +
+				'<br />' +
+				'Если галочка <b>не установлена</b>, все начисления из неактивного списка будут перенесены в текущий месяц.' +
+				'<br />' +
+				'<br />' +
+				'Начисления з/п по заявкам, которые были оплачены, будут перемещены из неактивного списка в текущий месяц <b>в любом случае</b>.' +
+				'<br />' +
+				'<br />' +
+				'Все начисления з/п в удалённых заявках будут удалены, если таковые будут найдены.' +
+				'<br />' +
+				'<br />' +
+				'Будет сделан перерасчёт баланса з/п сотрудника, и если сумма изменится, будет сделана запись в истории балансов.'
+		});
+	},
 	_salarySpisok = function(v, id) {
 		if(id == 'year') {
 			v = SALARY.year > v ? 12 : 1;
@@ -896,8 +925,10 @@ var _accrualAdd = function() {
 				$('#spisok-list').html(res.list);
 				SALARY.list = res.list_array;
 				$('#spisok-acc').html(res.acc);
+				$('#spisok-noacc').html(res.noacc);
 				$('#spisok-zp').html(res.zp);
 				$('#month-list').html(res.month);
+				_salaryNoAccRecalcHint();
 			}
 		}, 'json');
 	},
@@ -1250,6 +1281,18 @@ var _accrualAdd = function() {
 					dialog.abort();
 			}, 'json');
 		}
+	},
+	_salaryWorkerNoAccRecalc = function() {//перерасчёт начислений з/п по заявкам
+		var send = {
+				op:'salary_noacc_recalc',
+				worker_id:SALARY.worker_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				location.reload();
+			}
+		}, 'json');
 	},
 
 	_schetInfo = function(o) {
@@ -2099,6 +2142,7 @@ $(document)
 			func:_salarySpisok
 		});
 	})
+	.on('click', '#noacc-recalc', _salaryWorkerNoAccRecalc)
 
 	.ready(function() {
 		if($('#money-schet').length) {
@@ -2114,17 +2158,21 @@ $(document)
 			_nextCallback = _schetAction;
 		}
 		if($('#salary-worker').length) {
-			$('#action')._dropdown({
-				head:'Действие',
-				nosel:1,
-				spisok:[
+			var sp = [
 					{uid:1, title:'Установить баланс'},
 					{uid:2, title:'Изменить ставку'},
 					{uid:3, title:'Начислить'},
 					{uid:4, title:'Внести вычет'},
 					{uid:5, title:'Сформировать лист выдачи з/п'},
-					{uid:6, title:'Выдать з/п'}
-				],
+					{uid:6, title:'Выдать з/п'},
+					{uid:7, title:'Пересчитать начисления по заявкам'}
+				];
+			if(!VIEWER_ADMIN)
+				sp.pop();
+			$('#action')._dropdown({
+				head:'Действие',
+				nosel:1,
+				spisok:sp,
 				func:function(v) {
 					switch(v) {
 						case 1: _salaryWorkerBalansSet(); break;
@@ -2133,10 +2181,12 @@ $(document)
 						case 4: _salaryWorkerDeductAdd(); break;
 						case 5: _salaryWorkerListCreate(); break;
 						case 6: _salaryWorkerZpAdd(); break;
+						case 7: _salaryWorkerNoAccRecalc(); break;
 					}
 				}
 			});
 			$('#year').years({func:_salarySpisok});
 			$('#salmon')._radio({func:_salarySpisok});
+			_salaryNoAccRecalcHint();
 		}
 	});

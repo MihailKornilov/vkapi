@@ -779,10 +779,11 @@ function _daNet($v) {//$v: 1 -> да, 0 -> нет
 }
 function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	$v = array(
-		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : ''//id записи
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
 	);
 
-	return '<div'.$v['id'].' class="img_edit'._tooltip('Изменить', -52, 'r').'</div>';
+	return '<div'.$v['id'].' class="img_edit'.$v['class']._tooltip('Изменить', -52, 'r').'</div>';
 }
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
@@ -1195,6 +1196,33 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=2", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_ATTACH='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=4", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_NAME_ASS='.query_assJson("SELECT `id`,`name`
+													 FROM `_zayav_status`
+													 WHERE `app_id`=".APP_ID."
+													   AND `ws_id`=".WS_ID."
+													   AND !`deleted`
+													 ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
+														 FROM `_zayav_status`
+														 WHERE `app_id`=".APP_ID."
+														   AND `ws_id`=".WS_ID."
+														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_COLOR_ASS='.query_assJson("  SELECT `id`,`color`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_ABOUT_ASS='._br(query_assJson("  SELECT `id`,`about`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT)).','.
+		"\n".'ZAYAV_ACTION_NAME_ASS='.query_assJson("SELECT `id`,`name`
+													 FROM `_zayav_action`
+													 WHERE `app_id`=".APP_ID."
+													   AND `ws_id`=".WS_ID."
+													   AND !`deleted`
+													 ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." AND `ws_id`=".$ws_id." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
 		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
@@ -1228,6 +1256,8 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'zayav_status'.$ws_id);//статусы заявки
+	xcache_unset(CACHE_PREFIX.'zayav_action'.$ws_id);//следующие шаги заявки
 	xcache_unset(CACHE_PREFIX.'product'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'product_sub'.$ws_id);
 
