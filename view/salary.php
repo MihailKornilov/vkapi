@@ -49,9 +49,30 @@ function _salary_spisok() {
 			  AND `worker_id`
 			GROUP BY `worker_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		if(isset($worker[$r['worker_id']]))
-			$worker[$r['worker_id']]['balans'] += $r['sum'];
+	while($r = mysql_fetch_assoc($q)) {
+		if(!isset($worker[$r['worker_id']]))
+			continue;
+		$worker[$r['worker_id']]['balans'] += $r['sum'];
+	}
+
+	//Неначисления по заявкам
+	$sql = "SELECT
+ 				`worker_id`,
+				IFNULL(SUM(`sum`),0) AS `sum`
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`
+			  AND (!`year` OR !`mon`)
+			GROUP BY `worker_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		if(!isset($worker[$r['worker_id']]))
+			continue;
+		if(!_viewerRule($r['worker_id'], 'RULE_SALARY_ZAYAV_ON_PAY'))
+			continue;
+		$worker[$r['worker_id']]['balans'] -= $r['sum'];
+	}
 
 	//вычеты
 	$sql = "SELECT
@@ -463,17 +484,13 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 	}
 
 	//сумма долга по заявкам
-	$sql = "SELECT *
+	$sql = "SELECT IFNULL(SUM(`sum_dolg`),0)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
+			  AND `sum_dolg`<0
 			  AND `id` IN (0".$zayav_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	$zayavDolgSum = 0;
-	while($r = mysql_fetch_assoc($q)) {
-		$dolg = $r['sum_accrual'] - $r['sum_pay'];
-		$zayavDolgSum += $dolg > 0 ? $dolg : 0;
-	}
+	$zayavDolgSum = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
 
 	$send =
 		'<h3><b>Не начислено по заявкам</b>'.
