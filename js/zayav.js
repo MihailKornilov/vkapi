@@ -311,12 +311,13 @@ var _zayavSpisok = function(v, id) {
 	},
 	_zayavStatus = function() {//Изменение статуса заявки
 		var spisok = '';
-		for(var i in ZAYAV_STATUS_NAME_ASS) {
-			if(i == ZI.status_id)
+		for(var i = 0; i < ZAYAV_STATUS_NAME_SPISOK.length; i++) {
+			var sp = ZAYAV_STATUS_NAME_SPISOK[i];
+			if(sp.uid == ZI.status_id)
 				continue;
-			spisok += '<div class="st" val="' + i + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[i] + '">' +
-						 ZAYAV_STATUS_NAME_ASS[i] +
-						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[i] + '</div>' +
+			spisok += '<div class="st" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
+						 sp.title +
+						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[sp.uid] + '</div>' +
 					  '</div>'
 		}
 
@@ -331,8 +332,8 @@ var _zayavSpisok = function(v, id) {
 						'<td><input type="hidden" id="day" value="' + ZI.status_day + '" />'
 				: '') +
 					'<tr><td class="label r topi">Комментарий:' +
-						'<td><textarea id="zs-comm"></textarea>' +
-					'<tr><td class="label r">Следующий шаг:' +
+						'<td><textarea id="zs-comm" placeholder="не обязательно"></textarea>' +
+					'<tr class="dn"><td class="label r">Следующий шаг:' +
 						'<td><input type="hidden" id="action_id" />' +
 				'</table>' +
 			'</div>',
@@ -376,6 +377,7 @@ var _zayavSpisok = function(v, id) {
 				v = t.attr('val');
 			t.parent().find('.st').hide();
 			t.show();
+			t.find('.about').hide();
 			$('#zs-status').val(v);
 
 			$('#zs-tab').show();

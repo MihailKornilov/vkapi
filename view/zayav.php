@@ -36,7 +36,9 @@ function _zayavStatus($id=false, $i='name') {
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
+				  AND `type_id`="._service('current')."
 				  AND `status_id`
+				  AND !`deleted`
 				GROUP BY `status_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q)) {

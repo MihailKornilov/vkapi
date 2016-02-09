@@ -1196,12 +1196,13 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=2", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_EXPENSE_ATTACH='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=4", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_NAME_ASS='.query_assJson("SELECT `id`,`name`
-													 FROM `_zayav_status`
-													 WHERE `app_id`=".APP_ID."
-													   AND `ws_id`=".WS_ID."
-													   AND !`deleted`
-													 ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_NAME_SPISOK='.query_selJson("SELECT `id`,`name`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND !`deleted`
+														ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_NAME_ASS=_toAss(ZAYAV_STATUS_NAME_SPISOK),'.
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
 														 FROM `_zayav_status`
 														 WHERE `app_id`=".APP_ID."

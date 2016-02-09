@@ -417,8 +417,8 @@ function setup_zayav_status() {
 		'<div id="setup_zayav_status">'.
 			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
 			'<div id="status-spisok">'.setup_zayav_status_spisok().'</div>'.
-			'<div class="headName">Следующие шаги<a class="add action-add">Добавить</a></div>'.
-			'<div id="action-spisok">'.setup_zayav_action_spisok().'</div>'.
+//			'<div class="headName">Следующие шаги<a class="add action-add">Добавить</a></div>'.
+//			'<div id="action-spisok">'.setup_zayav_action_spisok().'</div>'.
 		'</div>'.
 		'<script type="text/javascript">'.
 			'var '._service('const_js', _service('current')).';'.
