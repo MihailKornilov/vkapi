@@ -106,6 +106,7 @@
 
 /* Статусы заявок */
 #setup_zayav_status #status-spisok{margin-bottom:30px}
+#setup_zayav_status ._spisok{margin-top:2px}
 #setup_zayav_status td.name{cursor:move}
 #setup_zayav_status .name span{font-size:12px}
 #setup_zayav_status .b span{font-weight:bold}
@@ -122,7 +123,6 @@
 	color:#b33;
 	margin-top:2px
 }
-#setup_zayav_status .zayav{width:55px;text-align:center}
 #setup_zayav_status .ed{width:35px}
 
 .zayav-status-tab #name{width:280px}

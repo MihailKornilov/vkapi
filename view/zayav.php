@@ -15,7 +15,8 @@ function _zayavStatus($id=false, $i='name') {
 					`name`,
 					`color`,
 					`default`,
-					`day_fact`
+					`day_fact`,
+					0 `count`
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
@@ -29,9 +30,25 @@ function _zayavStatus($id=false, $i='name') {
 
 	//фильтр для списка заявок
 	if($id == 'menu') {
+		$sql = "SELECT
+					`status_id`,
+					COUNT(*) `count`
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `status_id`
+				GROUP BY `status_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			$arr[$r['status_id']]['count'] = $r['count'];
+		}
+
 		$menu[0] = 'Любой статус';
-		foreach($arr as $r)
-			$menu[$r['id']] = $r['name'];
+		foreach($arr as $r) {
+			if(!$r['count'])
+				continue;
+			$menu[$r['id']] = $r['name'].' <b>'.$r['count'].'</b>';
+		}
 		return $menu;
 	}
 
@@ -317,10 +334,6 @@ function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
 	$v = $data['filter'];
 
-//	$status = _zayavStatus('menu');
-//	if(ZAYAV_INFO_SROK)
-//		$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
-
 	return
 	'<div id="_zayav">'.
 		_service('menu').
@@ -343,10 +356,10 @@ function _zayav_list($v=array()) {
 						  _radio('paytype', array(0=>'Не важно',1=>'Наличный',2=>'Безналиный'), $v['paytype'], 1)
   : '').
 
- (ZAYAV_INFO_DIAGNOST ? _check('diagnost', 'Диагностика', $v['diagnost']) : '').
+// (ZAYAV_INFO_DIAGNOST ? _check('diagnost', 'Диагностика', $v['diagnost']) : '').
 
 (ZAYAV_FILTER_NOSCHET ? _check('noschet', 'Счёт не выписан', $v['noschet']) : '').
-   (ZAYAV_FILTER_DIFF ? _check('diff', 'Неоплаченные заявки', $v['diff']) : '').
+//   (ZAYAV_FILTER_DIFF ? _check('diff', 'Неоплаченные заявки', $v['diff']) : '').
 
   (ZAYAV_INFO_PRODUCT ? '<div class="findHead">Изделия</div>'.
 						'<input type="hidden" id="product_id" value="'.$v['product_id'].'" />'.
@@ -359,10 +372,10 @@ function _zayav_list($v=array()) {
 
    (ZAYAV_INFO_DEVICE ? '<div class="findHead">Устройство</div>'.
 						'<div id="dev"></div>'.
-
+/*
 						'<div class="findHead">Заказаны запчасти</div>'.
 						_radio('zpzakaz', array(0=>'Не важно',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
-
+*/
 						'<div class="findHead">Нахождение устройства</div>'.
 						'<input type="hidden" id="place" value="'.$v['place'].'" />'
    : '').

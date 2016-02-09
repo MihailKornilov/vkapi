@@ -438,22 +438,9 @@ function setup_zayav_status_spisok() {
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		$spisok = setup_zayav_status_default();
 
-	$sql = "SELECT
-				`status_id`,
-				COUNT(*) `count`
-			FROM `_zayav`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND `status_id`
-			GROUP BY `status_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['status_id']]['zayav'] = $r['count'];
-
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="zayav">Заявки'.
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_zayav_status">';
@@ -467,7 +454,6 @@ function setup_zayav_status_spisok() {
 					(ZAYAV_INFO_STATUS_DAY && $r['day_fact'] ?
 		                '<div class="dop">Уточнять фактический день</div>'
 					: '').
-					'<td class="zayav">'.$r['zayav'].
 					'<td class="ed">'.
 						_iconEdit($r + array('class'=>'status-edit')).
 						_iconDel($r).
