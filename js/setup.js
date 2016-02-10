@@ -83,7 +83,7 @@ var setupRuleCheck = function(v, id) {
 						'<td class="label">Не использовать повторно:' +
 						'<td><input type="hidden" id="nouse" value="' + o.nouse + '" />' +
 					'<tr><td class="label topi">Следующие статусы:<td><input type="hidden" id="next" value="' + o.next + '" />' +
-					'<tr><td class="label topi"><td><input type="hidden" id="next_ids" value="' + o.next_ids + '" />' +
+					'<tr class="tr-next-ids' + (o.next ? '' : ' dn') + '"><td class="label topi"><td><input type="hidden" id="next_ids" value="' + o.next_ids + '" />' +
 					'<tr><td><td>' +
 					'<tr><td><td><b>Действия при выборе статуса</b>' +
 					'<tr><td><td><input type="hidden" id="executer" value="' + o.executer + '" />' +
@@ -134,8 +134,8 @@ var setupRuleCheck = function(v, id) {
 				{uid:0, title:'Все'},
 				{uid:1, title:'Выборочные'}
 			],
-			func:function() {
-				$('#new-tab').slideDown(300);
+			func:function(v) {
+				$('.tr-next-ids')[v ? 'show' : 'hide']();
 			}
 		});
 
@@ -150,6 +150,7 @@ var setupRuleCheck = function(v, id) {
 		}
 		$('#next_ids')._select({
 			width:258,
+			title0:'следующие статусы не выбраны',
 			spisok:spisok,
 			multiselect:1
 		});
@@ -196,6 +197,8 @@ var setupRuleCheck = function(v, id) {
 				$('#name').focus();
 				return;
 			}
+			if(!_num($('#next').val()))
+				send.next_ids = 0;
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
