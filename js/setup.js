@@ -61,10 +61,11 @@ var setupRuleCheck = function(v, id) {
 			id:0,
 			name:'',
 			about:'',
-			color:'ffffff',
+			color:'fff',
 			default:0,
 			nouse:0,
-			result:0,
+			next:0,
+			next_ids:0,
 			srok:0,
 			executer:0,
 			accrual:0,
@@ -76,12 +77,13 @@ var setupRuleCheck = function(v, id) {
 				'<table class="setup-status-tab bs10">' +
 					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + o.name + '" />' +
 					'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr><td class="label">Цвет:<td><input type="text" id="color" value="' + o.color + '" />' +
+					'<tr><td class="label topi">Цвет:<td><div id="color" val="' + o.color + '" style="background-color:#' + o.color + '"></div>' +
 					'<tr><td class="label">По умолчанию:<td><input type="hidden" id="default" value="' + o.default + '" />' +
 					'<tr class="tr-nouse' + (o.default ? '' : ' dn') + '">' +
 						'<td class="label">Не использовать повторно:' +
 						'<td><input type="hidden" id="nouse" value="' + o.nouse + '" />' +
-					'<tr><td class="label">Является результатом:<td><input type="hidden" id="result" value="' + o.result + '" />' +
+					'<tr><td class="label topi">Следующие статусы:<td><input type="hidden" id="next" value="' + o.next + '" />' +
+					'<tr><td class="label topi"><td><input type="hidden" id="next_ids" value="' + o.next_ids + '" />' +
 					'<tr><td><td>' +
 					'<tr><td><td><b>Действия при выборе статуса</b>' +
 					'<tr><td><td><input type="hidden" id="executer" value="' + o.executer + '" />' +
@@ -103,12 +105,7 @@ var setupRuleCheck = function(v, id) {
 
 		$('#name').focus().keyEnter(submit);
 		$('#about').autosize();
-		$('#color').keyup(function() {
-			var t = $(this),
-				v = t.val();
-			v = v.length == 6 ? v : 'ffffff';
-			t.css('background-color','#' + v);
-		}).trigger('keyup');
+		$('#color').click(setupZayavStatusColor);
 		$('#default')._check({
 			func:function(v) {
 				$('#nouse')._check(0);
@@ -131,14 +128,32 @@ var setupRuleCheck = function(v, id) {
 				'данный статус нельзя будет<br />' +
 				'выбрать снова.'
 		});
-		$('#result')._check();
-		$('#result_check').vkHint({
-			top:-70,
-			left:-100,
-			width:210,
-			msg:'При смене этого статуса<br />' +
-				'выбор результата не показывается.'
+		$('#next')._radio({
+			light:1,
+			spisok:[
+				{uid:0, title:'Все'},
+				{uid:1, title:'Выборочные'}
+			],
+			func:function() {
+				$('#new-tab').slideDown(300);
+			}
 		});
+
+		var spisok = [];
+		for(var i = 0; i < ZAYAV_STATUS_NAME_SPISOK.length; i++) {
+			var sp = ZAYAV_STATUS_NAME_SPISOK[i];
+			if(sp.uid == o.id)
+				continue;
+			if(ZAYAV_STATUS_NOUSE_ASS[sp.uid])
+				continue;
+			spisok.push(sp);
+		}
+		$('#next_ids')._select({
+			width:258,
+			spisok:spisok,
+			multiselect:1
+		});
+
 		$('#day_fact')._check({
 			name:'уточнять фактический день',
 			light:1
@@ -166,10 +181,10 @@ var setupRuleCheck = function(v, id) {
 				id:o.id,
 				name:$('#name').val(),
 				about:$('#about').val(),
-				color:$('#color').val(),
+				color:$('#color').attr('val'),
 				default:$('#default').val(),
 				nouse:$('#nouse').val(),
-				result:$('#result').val(),
+				next_ids:$('#next_ids').val(),
 				executer:$('#executer').val(),
 				srok:$('#srok').val(),
 				accrual:$('#accrual').val(),
@@ -192,6 +207,40 @@ var setupRuleCheck = function(v, id) {
 					dialog.abort();
 			}, 'json');
 		}
+	},
+	setupZayavStatusColor = function() {//Выбор цвета для статуса заявки
+		//8 9 a b c d e f
+		var
+		//	col = ['f', 'c', '9', '6'],
+		//	col = ['f', 'd', 'b', '9'],
+			col = ['f', 'c', '9'],
+			bg = '',
+			i = 0;
+		for(var r = 0; r < col.length; r++)
+			for(var g = 0; g < col.length; g++)
+				for(var b = 0; b < col.length; b++) {
+					var rgb = col[r] + col[g] + col[b];
+					bg += '<div class="bg" val="' + rgb + '" style="background-color:#' + rgb + '"></div>';
+				}
+
+		var html =
+			'<div id="setup-status-color-tab">' +
+				bg +
+			'</div>',
+		dialog = _dialog({
+			width:600,
+			head:'Выбор цвета для статуса',
+			content:html,
+			butSubmit:'',
+			butCancel:'Закрыть'
+		});
+		$('.bg').click(function() {
+			dialog.close();
+			var color = $(this).attr('val');
+			$('#color')
+				.css('background-color', '#' +color)
+				.attr('val', color);
+		});
 	};
 
 $(document)
@@ -501,7 +550,8 @@ $(document)
 			color:t.find('.name').attr('val'),
 			default:t.find('.name').hasClass('b') ? 1 : 0,
 			nouse:t.find('.nouse').val(),
-			result:t.find('.result').val(),
+			next:t.find('.next').val().length > 1 ? 1 : 0,
+			next_ids:t.find('.next').val(),
 			srok:t.find('.srok').val(),
 			executer:t.find('.executer').val(),
 			accrual:t.find('.accrual').val(),

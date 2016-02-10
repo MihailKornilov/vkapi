@@ -127,7 +127,23 @@
 .setup-status-tab .label{width:150px;text-align:right}
 .setup-status-tab #name{width:250px}
 .setup-status-tab #about{width:250px}
+.setup-status-tab #color{
+	display:inline-block;
+	width:255px;
+	height:50px;
+	border:#ddd solid 1px;
+	cursor:pointer;
+}
 
+#setup-status-color-tab .bg{
+	display:inline-block;
+	width:56px;
+	height:56px;
+	margin:3px;
+	border:#ddd solid 1px;
+	cursor:pointer;
+	text-align:center;
+}
 
 
 /* Виды изделий */

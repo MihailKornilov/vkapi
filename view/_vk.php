@@ -1219,12 +1219,7 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 														  AND `ws_id`=".WS_ID."
 														  AND `nouse`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_RESULT_ASS='.query_assJson(" SELECT `id`,`result`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
-														  AND `result`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_NEXT='.setup_zayav_status_next_js().','.
 		"\n".'ZAYAV_STATUS_EXECUTER_ASS='.query_assJson("  SELECT `id`,`executer`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."

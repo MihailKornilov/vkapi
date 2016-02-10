@@ -427,7 +427,7 @@ function setup_zayav_status_spisok() {
 
 	$sql = "SELECT
 	            *,
-	            '' `zayav`
+	            0 `next`
 			FROM `_zayav_status`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
@@ -435,6 +435,8 @@ function setup_zayav_status_spisok() {
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		$spisok = setup_zayav_status_default();
+
+	$spisok = setup_zayav_status_next($spisok);
 
 	$send =
 		'<table class="_spisok">'.
@@ -450,7 +452,6 @@ function setup_zayav_status_spisok() {
 						'<span>'.$r['name'].'</span>'.
 						'<div class="about">'.$r['about'].'</div>'.
 		 ($r['nouse'] ? '<div class="dop">Не использовать повторно</div>' : '').
-		($r['result'] ? '<div class="dop">Является результатом</div>' : '').
 	  ($r['executer'] ? '<div class="dop">Указывать исполнителя</div>' : '').
 		  ($r['srok'] ? '<div class="dop">Уточнять срок</div>' : '').
 	  ($r['day_fact'] ? '<div class="dop">Уточнять фактический день</div>' : '').
@@ -461,13 +462,14 @@ function setup_zayav_status_spisok() {
 						_iconDel($r).
 			'</table>'.
 			'<input type="hidden" class="nouse" value="'.$r['nouse'].'" />'.
-			'<input type="hidden" class="result" value="'.$r['result'].'" />'.
+			'<input type="hidden" class="next" value="'.$r['next'].'" />'.
 			'<input type="hidden" class="executer" value="'.$r['executer'].'" />'.
 			'<input type="hidden" class="srok" value="'.$r['srok'].'" />'.
 			'<input type="hidden" class="accrual" value="'.$r['accrual'].'" />'.
 			'<input type="hidden" class="remind" value="'.$r['remind'].'" />'.
 			'<input type="hidden" class="day_fact" value="'.$r['day_fact'].'" />';
 	$send .= '</dl>';
+	setup_zayav_status_next_js();
 	return $send;
 }
 function setup_zayav_status_default() {//формирование списка статусов по умолчанию
@@ -546,13 +548,45 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 
 	$sql = "SELECT
 	            *,
-	            '' `zayav`
+	            0 `next`
 			FROM `_zayav_status`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			ORDER BY `sort`";
 	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+}
+function setup_zayav_status_next($spisok) {//получение ids следующих статусов
+	$sql = "SELECT *
+			FROM `_zayav_status_next`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['status_id']]['next'] .= ','.$r['next_id'];
+
+	foreach($spisok as $id => $r)
+		if($r['next'])
+			$spisok[$id]['next'] = substr($r['next'], 2, strlen($r['next']) - 2);
+
+	return $spisok;
+}
+function setup_zayav_status_next_js() {//получение ids следующих статусов для values
+	$spisok = array();
+	$sql = "SELECT *
+			FROM `_zayav_status_next`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['status_id']][$r['next_id']] = 1;
+
+	if(!$spisok)
+		return '{}';
+
+	return str_replace('"', '', json_encode($spisok));
 }
 function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, если устанавливается новое умолчание
 	if(!$default)

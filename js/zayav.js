@@ -313,6 +313,8 @@ var _zayavSpisok = function(v, id) {
 				continue;
 			if(ZAYAV_STATUS_NOUSE_ASS[sp.uid])
 				continue;
+			if(ZAYAV_STATUS_NEXT[ZI.status_id] && !ZAYAV_STATUS_NEXT[ZI.status_id][sp.uid])
+				continue;
 			spisok += '<div class="st sp" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
 						 sp.title +
 						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[sp.uid] + '</div>' +
@@ -326,10 +328,9 @@ var _zayavSpisok = function(v, id) {
 						'<td><div class="current" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[ZI.status_id] + '">' +
 								ZAYAV_STATUS_NAME_ASS[ZI.status_id] +
 							'</div>' +
-					'<tr id="tr-result"><td class="label topi">Результат:<td><input type="hidden" id="result" />' +
 				'</table>' +
 
-				'<div id="new-tab" class="dn">' +
+				'<div id="new-tab">' +
 					'<input type="hidden" id="status-new" />' +
 					'<table class="bs10">' +
 						'<tr><td class="label topi">Новый статус:<td>' + spisok +
@@ -383,20 +384,7 @@ var _zayavSpisok = function(v, id) {
 				submit:submit
 			});
 
-		if(ZAYAV_STATUS_RESULT_ASS[ZI.status_id]) {
-			$('#new-tab').slideDown(300);
-			$('#tr-result').addClass('dn');
-		} else
-			$('#result')._radio({
-				light:1,
-				spisok:[
-					{uid:1, title:'Успешный'},
-					{uid:2, title:'Неуспешный'}
-				],
-				func:function() {
-					$('#new-tab').slideDown(300);
-				}
-			});
+		$('#new-tab').slideDown(300);
 		$('#zs-executer_id')._select({
 				width:170,
 				title0:'не назначен',

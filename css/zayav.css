@@ -147,6 +147,7 @@
 #zayav-status{padding-top:10px}
 #zayav-status .label{width:150px;text-align:right}
 #zayav-status #new-tab{
+	display:none;
 	background-color:#ffe;
 	border-top:#fbfbda solid 1px;
 	padding-top:10px;

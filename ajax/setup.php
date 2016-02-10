@@ -862,7 +862,6 @@ switch(@$_POST['op']) {
 		$color = _txt($_POST['color']);
 		$default = _bool($_POST['default']);
 		$nouse = _bool($_POST['nouse']);
-		$result = _bool($_POST['result']);
 		$executer = _bool($_POST['executer']);
 		$srok = _bool($_POST['srok']);
 		$accrual = _bool($_POST['accrual']);
@@ -885,7 +884,6 @@ switch(@$_POST['op']) {
 					`color`,
 					`default`,
 					`nouse`,
-					`result`,
 					`srok`,
 					`executer`,
 					`accrual`,
@@ -900,7 +898,6 @@ switch(@$_POST['op']) {
 					'".$color."',
 					".$default.",
 					".$nouse.",
-					".$result.",
 					".$srok.",
 					".$executer.",
 					".$accrual.",
@@ -930,7 +927,6 @@ switch(@$_POST['op']) {
 		$color = _txt($_POST['color']);
 		$default = _bool($_POST['default']);
 		$nouse = _bool($_POST['nouse']);
-		$result = _bool($_POST['result']);
 		$srok = _bool($_POST['srok']);
 		$executer = _bool($_POST['executer']);
 		$accrual = _bool($_POST['accrual']);
@@ -938,9 +934,6 @@ switch(@$_POST['op']) {
 		$day_fact = _bool($_POST['day_fact']);
 
 		if(empty($name))
-			jsonError();
-
-		if(strlen($color) != 6)
 			jsonError();
 
 		setupZayavStatusDefaultDrop($default);
@@ -960,7 +953,6 @@ switch(@$_POST['op']) {
 					`color`='".$color."',
 					`default`='".$default."',
 					`nouse`='".$nouse."',
-					`result`='".$result."',
 					`srok`='".$srok."',
 					`executer`='".$executer."',
 					`accrual`='".$accrual."',
@@ -968,6 +960,27 @@ switch(@$_POST['op']) {
 					`day_fact`='".$day_fact."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_zayav_status_next` WHERE `status_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		if($ids = _ids($_POST['next_ids'], 1)) {
+			$values = array();
+			foreach($ids as $i)
+				$values[] = "(
+					".APP_ID.",
+					".WS_ID.",
+					".$id.",
+					".$i."
+				)";
+			$sql = "INSERT INTO `_zayav_status_next` (
+						`app_id`,
+						`ws_id`,
+						`status_id`,
+						`next_id`
+					) VALUES ".implode(',', $values);
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
 
 		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
 		_wsJsValues();
