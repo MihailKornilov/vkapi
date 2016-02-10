@@ -15,6 +15,8 @@ function _zayavStatus($id=false, $i='name') {
 					`name`,
 					`color`,
 					`default`,
+					`executer`,
+					`srok`,
 					`day_fact`,
 					0 `count`
 				FROM `_zayav_status`
@@ -85,6 +87,12 @@ function _zayavStatus($id=false, $i='name') {
 	if($i == 'color')
 		return $arr[$id]['color'];
 
+	if($i == 'executer')
+		return _bool($arr[$id]['executer']);
+
+	if($i == 'srok')
+		return _bool($arr[$id]['srok']);
+
 	if($i == 'day_fact')
 		return _bool($arr[$id]['day_fact']);
 
@@ -93,52 +101,24 @@ function _zayavStatus($id=false, $i='name') {
 
 	return '<span class="red">неизвестный ключ статуса: <b>'.$i.'</b></span>';
 }
-function _zayavStatusButton($z, $class='status') {
+function _zayavStatusButton($z) {
 	if($z['status_day'] == '0000-00-00')
 		$z['status_day'] = $z['status_dtime'];
+
+	$dop = '';
+	if(_zayavStatus($z['status_id'], 'executer'))
+		$dop .= '<tr><td class="label r">Исполнитель:'.
+					'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />';
+	if(_zayavStatus($z['status_id'], 'srok'))
+		$dop .= '<tr><td class="label r">Срок:<td>'._zayavSrok($z['srok']);
+	$dop = $dop ? '<table id="status-button-tab">'.$dop.'</table>' : '';
+
 	return
-		'<div id="zayav-status-button">'.
-			'<h1'._zayavStatus($z['status_id'], 'bg').' class="'.$class.'">'.
-				'<b>'._zayavStatus($z['status_id']).'</b> '.
-				(_zayavStatus($z['status_id'], 'day_fact') ? FullData($z['status_'.(ZAYAV_INFO_STATUS_DAY ? 'day' : 'dtime')], 1) : '').
-				_zayavAction($z['action_id']).
-			'</h1>'.
+		'<div id="zayav-status-button"'._zayavStatus($z['status_id'], 'bg').'>'.
+			'<b class="hd">'._zayavStatus($z['status_id']).'</b> '.
+			(_zayavStatus($z['status_id'], 'day_fact') ? FullData($z['status_'.(ZAYAV_INFO_STATUS_DAY ? 'day' : 'dtime')], 1) : '').
+			$dop.
 		'</div>';
-}
-function _zayavAction($id=false, $i='name') {
-	$key = CACHE_PREFIX.'zayav_action'.WS_ID;
-	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT
-					`id`,
-					`name`
-				FROM `_zayav_action`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
-				ORDER BY `sort`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-			xcache_set($key, $arr, 86400);
-	}
-
-	if($id == 'all')
-		return $arr;
-
-	if($id == 'select') {
-		$send = array();
-		foreach($arr as $r)
-			$send[$r['id']] = $r['name'];
-		return _selJson($send);
-	}
-
-	if($id && !isset($arr[$id]))
-		return '<span class="red">неизвестный id статуса: <b>'.$id.'</b></span>';
-
-	if($i == 'name') {
-		if(!$id)
-			return '';
-		return '<br />'.$arr[$id]['name'];
-	}
-
-	return '<span class="red">неизвестный ключ статуса: <b>'.$i.'</b></span>';
 }
 function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 	$ids = array();
@@ -252,25 +232,6 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 
 	return $spisok;
 }
-function _zayavStatusChange($zayav_id, $status_id) {
-	$z = _zayavQuery($zayav_id);
-
-	if($z['status_id'] != $status_id) {
-		$sql = "UPDATE `_zayav`
-				SET `status_id`=".$status_id.",
-					`status_dtime`=CURRENT_TIMESTAMP
-				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		_history(array(
-			'type_id' => 71,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'v1' => $z['status_id'],
-			'v2' => $status_id,
-		));
-	}
-}
-
 
 function _zayavFilter($v) {
 	$default = array(
@@ -282,7 +243,6 @@ function _zayavFilter($v) {
 		'desc' => 0,
 		'status' => 0,
 		'finish' => '0000-00-00',
-		'diagnost' => 0,
 		'diff' => 0,
 		'executer_id' => 0,
 		'product_id' => 0,
@@ -306,7 +266,6 @@ function _zayavFilter($v) {
 		'desc' => _bool(@$v['desc']),
 		'status' => _num(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
-		'diagnost' => _bool(@$v['diagnost']),
 		'diff' => _bool(@$v['diff']),
 		'executer_id' => intval(@$v['executer_id']),
 		'product_id' => _num(@$v['product_id']),
@@ -357,8 +316,6 @@ function _zayav_list($v=array()) {
   (ZAYAV_INFO_PAY_TYPE ? '<div class="findHead">Расчёт</div>'.
 						  _radio('paytype', array(0=>'Не важно',1=>'Наличный',2=>'Безналиный'), $v['paytype'], 1)
   : '').
-
-// (ZAYAV_INFO_DIAGNOST ? _check('diagnost', 'Диагностика', $v['diagnost']) : '').
 
 (ZAYAV_FILTER_NOSCHET ? _check('noschet', 'Счёт не выписан', $v['noschet']) : '').
 //   (ZAYAV_FILTER_DIFF ? _check('diff', 'Неоплаченные заявки', $v['diff']) : '').
@@ -430,10 +387,8 @@ function _zayav_spisok($v) {
 		if($filter['status']) {
 			$cond .= " AND `status_id`=".$filter['status'];
 //			if($filter['status'] == 1 && $filter['finish'] != '0000-00-00')
-//				$cond .= " AND `day_finish`='".$filter['finish']."'";
+//				$cond .= " AND `srok`='".$filter['finish']."'";
 		}
-		if($filter['diagnost'])
-			$cond .= " AND `status_id`=1 AND `diagnost`";
 		if($filter['paytype'])
 			$cond .= " AND `pay_type`=".$filter['paytype'];
 		if($filter['noschet'])
@@ -790,7 +745,6 @@ function _zayav_info() {
 				'serial:"'.addslashes($z['serial']).'",'.
 				'color_id:'.$z['color_id'].','.
 				'color_dop:'.$z['color_dop'].','.
-				'diagnost:'.$z['diagnost'].','.
 				'sum_cost:'.$z['sum_cost'].','.
 				'pay_type:'.$z['pay_type'].','.
 				'todel:'._zayavToDel($zayav_id).','.//показывать пункт для удаления заявки
@@ -841,17 +795,7 @@ function _zayav_info() {
 	  ($z['sum_cost'] ? '<tr><td class="label">Стоимость:<td><b>'.$z['sum_cost'].'</b> руб.' : '').
 	  ($z['pay_type'] ? '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']) : '').
 
-	 (ZAYAV_INFO_SROK ? '<tr><td class="label">Срок:<td>'._zayavFinish($z['day_finish']) : '').
-
- (ZAYAV_INFO_EXECUTER ? '<tr><td class="label">Исполнитель:'.
-							'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />'
-					: '').
-
-//  ($z['status'] == 1 && $z['diagnost'] ?
-//					'<tr><td colspan="2">'._button('diagnost-ready', 'Внести результаты диагностики', 300)
-//  : '').
-
-						'<tr><td class="label">Статус:<td>'._zayavStatusButton($z).
+						'<tr><td class="label topi">Статус:<td>'._zayavStatusButton($z).
 
  (ZAYAV_INFO_DOCUMENT ? '<tr><td class="label">Документ:<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />' : '').
 
@@ -1439,14 +1383,14 @@ function _zayavProductValToList($arr) {//вставка данных изделий в массив заявок
 }
 
 /* Срок выполнения заявки */
-function _zayavFinish($day='0000-00-00') {
+function _zayavSrok($day='0000-00-00') {
 	return
-		'<input type="hidden" id="day_finish" value="'.$day.'" />'.
-		'<div class="day-finish-link">'.
+		'<input type="hidden" id="srok" value="'.$day.'" />'.
+		'<div class="srok-link">'.
 			'<span>'.($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1)).'</span>'.
 		'</div>';
 }
-function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
+function _zayavSrokCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 	if(!$mon)
 		$mon = $selDay != '0000-00-00' ? substr($selDay, 0, 7) : strftime('%Y-%m');
 	$day = $mon.'-01';
@@ -1460,7 +1404,7 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 	$next = $next > 12 ? ($SHOW_YEAR + 1).'-01' : $SHOW_YEAR.'-'.($next < 10 ? 0 : '').$next;
 
 	$send =
-		'<div id="zayav-finish-calendar">'.
+		'<div id="zayav-srok-calendar">'.
 			'<table id="fc-head">'.
 				'<tr><td class="ch" val="'.$back.'">&laquo;'.
 					'<td><span>'._monthDef($SHOW_MON).' '.$SHOW_YEAR.'</span> '.
@@ -1471,15 +1415,15 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 					'<td>пн<td>вт<td>ср<td>чт<td>пт<td>сб<td>вс';
 
 	$sql = "SELECT
-				DATE_FORMAT(`day_finish`,'%Y-%m-%d') AS `day`,
+				DATE_FORMAT(`srok`,'%Y-%m-%d') AS `day`,
 				COUNT(`id`) AS `count`
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `status_id`="._zayavStatus('default')."
-			  AND `day_finish` LIKE ('".$mon."%')
-			GROUP BY DATE_FORMAT(`day_finish`,'%d')";
+			  AND `srok` LIKE ('".$mon."%')
+			GROUP BY DATE_FORMAT(`srok`,'%d')";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$days = array();
 	while($r = mysql_fetch_assoc($q))

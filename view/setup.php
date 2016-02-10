@@ -417,8 +417,6 @@ function setup_zayav_status() {
 		'<div id="setup_zayav_status">'.
 			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
 			'<div id="status-spisok">'.setup_zayav_status_spisok().'</div>'.
-//			'<div class="headName">Следующие шаги<a class="add action-add">Добавить</a></div>'.
-//			'<div id="action-spisok">'.setup_zayav_action_spisok().'</div>'.
 		'</div>'.
 		'<script type="text/javascript">'.
 			'var '._service('const_js', _service('current')).';'.
@@ -451,13 +449,23 @@ function setup_zayav_status_spisok() {
 				'<tr><td class="name'.($r['default'] ? ' b' : '').'" style="background-color:#'.$r['color'].'" val="'.$r['color'].'">'.
 						'<span>'.$r['name'].'</span>'.
 						'<div class="about">'.$r['about'].'</div>'.
-					(ZAYAV_INFO_STATUS_DAY && $r['day_fact'] ?
-		                '<div class="dop">Уточнять фактический день</div>'
-					: '').
+		 ($r['nouse'] ? '<div class="dop">Не использовать повторно</div>' : '').
+		($r['result'] ? '<div class="dop">Является результатом</div>' : '').
+	  ($r['executer'] ? '<div class="dop">Указывать исполнителя</div>' : '').
+		  ($r['srok'] ? '<div class="dop">Уточнять срок</div>' : '').
+	  ($r['day_fact'] ? '<div class="dop">Уточнять фактический день</div>' : '').
+	   ($r['accrual'] ? '<div class="dop">Вносить начисление</div>' : '').
+		($r['remind'] ? '<div class="dop">Добавлять напоминание</div>' : '').
 					'<td class="ed">'.
 						_iconEdit($r + array('class'=>'status-edit')).
 						_iconDel($r).
 			'</table>'.
+			'<input type="hidden" class="nouse" value="'.$r['nouse'].'" />'.
+			'<input type="hidden" class="result" value="'.$r['result'].'" />'.
+			'<input type="hidden" class="executer" value="'.$r['executer'].'" />'.
+			'<input type="hidden" class="srok" value="'.$r['srok'].'" />'.
+			'<input type="hidden" class="accrual" value="'.$r['accrual'].'" />'.
+			'<input type="hidden" class="remind" value="'.$r['remind'].'" />'.
 			'<input type="hidden" class="day_fact" value="'.$r['day_fact'].'" />';
 	$send .= '</dl>';
 	return $send;
@@ -551,45 +559,14 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 		return false;
 
 	$sql = "UPDATE `_zayav_status`
-			SET `default`=0
+			SET `default`=0,
+				`nouse`=0
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `default`";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	return true;
-}
-function setup_zayav_action_spisok() {
-	$sql = "SELECT
-	            *,
-	            '' `zayav`
-			FROM `_zayav_action`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			  AND !`deleted`
-			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return 'Следующие шаги не определены';
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="name">Наименование'.
-				'<th class="zayav">Заявки'.
-				'<th class="ed">'.
-		'</table>'.
-		'<dl class="_sort" val="_zayav_action">';
-
-	foreach($spisok as $r)
-		$send .= '<dd val="'.$r['id'].'">'.
-			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
-					'<td class="zayav">'.$r['zayav'].
-					'<td class="ed">'.
-						_iconEdit($r + array('class'=>'action-edit')).
-						_iconDel($r).
-			'</table>';
-	$send .= '</dl>';
-	return $send;
 }
 
 

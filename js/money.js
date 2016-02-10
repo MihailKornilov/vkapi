@@ -1,108 +1,42 @@
 var _accrualAdd = function() {
 		var html =
-			'<div id="_accrual-add">' +
-				'<table class="tab">' +
-	(window.ZI ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-					'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="about" />' +
-				'</table>' +
-
-				'<div id="status-div">' +
-					'<table class="tab">' +
-						'<tr><td class="label topi">Статус заявки: <td><input type="hidden" id="acc_status" />' +
-					'</table>' +
-				'</div>' +
-
-				'<div id="remind-div">' +
-					'<table class="tab">' +
-						'<tr><td class="label topi">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-						'<tr class="remind-tr"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Позвонить и сообщить о готовности" />' +
-						'<tr class="remind-tr"><td class="label">Дата:<td><input type="hidden" id="remind-day" />' +
-					'</table>' +
-				'</div>' +
-			'</div>';
+			'<table id="_accrual-add">' +
+				'<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+				'<tr><td class="label">Примечание:<td><input type="text" id="about" placeholder="не обязательно" />' +
+			'</table>';
 
 		var dialog = _dialog({
-			top:30,
-			mb:60,
 			width:480,
 			head:'Внесение начисления',
-			padding:0,
 			content:html,
-			butSubmit:'Далее...',
-			submit:toStatus
+			submit:submit
 		});
 
 		$('#sum').focus();
-		$('#acc_status')._radio({
-			light:1,
-			spisok:ZI.status_sel,
-			func:function() {
-				$('#remind-div').slideDown(300);
-			}
-		});
-		$('#acc_remind')._radio({
-			light:1,
-			block:0,
-			spisok:[
-				{uid:1,title:'да'},
-				{uid:2,title:'нет'}
-			],
-			func:function(v) {
-				$('.remind-tr')[v == 1 ? 'show' : 'hide']();
-				dialog.submit(submit);
-				dialog.butSubmit('Внести');
-			}
-		});
-		$('#remind-day')._calendar();
+		$('#sum,#about').keyEnter(submit);
 
-		function toStatus() {
-			if(!_cena($('#sum').val())) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-				return false;
-			}
-			if($('#status-div').is(':hidden')) {
-				$('#status-div').slideDown(300);
-				return false;
-			}
-			if(!_num($('#acc_status').val())) {
-				dialog.err('Укажите статус заявки');
-				return false;
-			}
-			if(!_num($('#acc_remind').val())) {
-				dialog.err('Выберите, нужно ли добавлять напоминание');
-				return false;
-			}
-		}
 		function submit() {
 			var send = {
 					op:'accrual_add',
-					zayav_id:window.ZI ? ZI.id : 0,
-					sum:$('#sum').val(),
-					about:$('#about').val(),
-					zayav_status:$('#acc_status').val(),
-					remind:_num($('#acc_remind').val()) == 1 ? 1 : 0,
-					remind_txt:$('#remind-txt').val(),
-					remind_day:$('#remind-day').val()
+					zayav_id:ZI.id,
+					sum:_cena($('#sum').val()),
+					about:$('#about').val()
 				};
-			if(!_cena(send.sum)) {
+			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
-			} else if(send.remind && !send.remind_txt) {
-				dialog.err('Не указано содержание напоминания');
-				$('#remind-txt').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Начисление успешно произведено');
-						location.reload();
-					}
-				}, 'json');
+				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				dialog.abort();
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				}
+			}, 'json');
 		}
 	},
 

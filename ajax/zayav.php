@@ -22,17 +22,16 @@ switch(@$_POST['op']) {
 
 		$color_id = _num($_POST['color_id']);
 		$color_dop = _num($_POST['color_dop']);
-		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
 		$pay_type = _num($_POST['pay_type']);
-		$day_finish = $_POST['day_finish'];
+		$srok = $_POST['srok'];
 
 		_service('const_define', $type_id);
 
 		if(ZAYAV_INFO_DEVICE && !$device_id)
 			jsonError('Не выбрано устройство');
 
-		if(ZAYAV_INFO_SROK && $day_finish == '0000-00-00')
+		if(ZAYAV_INFO_SROK && $srok == '0000-00-00')
 			jsonError('Не указан срок выполнения заявки');
 
 		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
@@ -65,10 +64,9 @@ switch(@$_POST['op']) {
 
 					`color_id`,
 					`color_dop`,
-					`diagnost`,
 					`sum_cost`,
 					`pay_type`,
-					`day_finish`,
+					`srok`,
 
 					`status_id`,
 					`status_dtime`,
@@ -96,10 +94,9 @@ switch(@$_POST['op']) {
 
 					".$color_id.",
 					".$color_dop.",
-					".$diagnost.",
 					".$sum_cost.",
 					".$pay_type.",
-					'".$day_finish."',
+					'".$srok."',
 
 					"._zayavStatus('default').",
 					current_timestamp,
@@ -109,6 +106,24 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$send['id'] = query_insert_id('_zayav', GLOBAL_MYSQL_CONNECT);
+
+		$sql = "INSERT INTO `_zayav_status_move` (
+					`app_id`,
+					`ws_id`,
+					`zayav_id`,
+					`status_id`,
+					`srok`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$send['id'].",
+					"._zayavStatus('default').",
+					'".$srok."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 
 		_zayavProductUpdate($send['id'], $_POST);
 		_zayavNameUpdate($send['id']);
@@ -150,7 +165,6 @@ switch(@$_POST['op']) {
 
 		$color_id = _num($_POST['color_id']);
 		$color_dop = _num($_POST['color_dop']);
-		$diagnost = _bool($_POST['diagnost']);
 		$sum_cost = _cena($_POST['sum_cost']);
 		$pay_type = _num($_POST['pay_type']);
 
@@ -184,7 +198,6 @@ switch(@$_POST['op']) {
 
 					`color_id`=".$color_id.",
 					`color_dop`=".$color_dop.",
-					`diagnost`=".$diagnost.",
 					`sum_cost`=".$sum_cost.",
 					`pay_type`=".$pay_type."
 				WHERE `id`=".$zayav_id;
@@ -246,7 +259,6 @@ switch(@$_POST['op']) {
 			_historyChange('IMEI', $z['imei'], $imei).
 			_historyChange('Серийный номер', $z['serial'], $serial).
 			_historyChange('Цвет', _color($z['color_id'], $z['color_dop']), _color($color_id, $color_dop)).
-			_historyChange('Диагностика', _daNet($z['diagnost']), _daNet($diagnost)).
 			_historyChange('Предварительная стоимость', _cena($z['sum_cost']), $sum_cost).
 			_historyChange('Расчёт', _payType($z['pay_type']), _payType($pay_type)))
 			_history(array(
@@ -343,15 +355,16 @@ switch(@$_POST['op']) {
 //		if(ZAYAV_INFO_DEVICE && !$place_id && !$place_other)
 //			jsonError();
 
-		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
+		$executer_id = _num($_POST['executer_id']);
+
+		if(!preg_match(REGEXP_DATE, $_POST['srok']))
 			jsonError();
-		$day_finish = $_POST['day_finish'];
+		$srok = $_POST['srok'];
 
 		$status_day = $_POST['status_day'];
-		$action_id = _num($_POST['action_id']);
 		$comm = _txt($_POST['comm']);
 
-//		if(ZAYAV_INFO_SROK && $status_id == 1 && $day_finish == '0000-00-00')
+//		if(ZAYAV_INFO_SROK && $status_id == 1 && $srok == '0000-00-00')
 //			jsonError();
 
 		if(!$z = _zayavQuery($zayav_id))
@@ -364,14 +377,40 @@ switch(@$_POST['op']) {
 				SET `status_id`=".$status_id.",
 					`status_dtime`=CURRENT_TIMESTAMP,
 					`status_day`='".$status_day."',
-					`action_id`=".$action_id."
+					`executer_id`=".$executer_id.",
+					`srok`='".$srok."'
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "INSERT INTO `_zayav_status_move` (
+					`app_id`,
+					`ws_id`,
+					`zayav_id`,
+					`status_id_old`,
+					`status_id`,
+					`executer_id`,
+					`srok`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$zayav_id.",
+					".$z['status_id'].",
+					".$status_id.",
+					".$executer_id.",
+					'".$srok."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+
 
 //		if(ZAYAV_INFO_DEVICE)
 //			zayavPlaceCheck($zayav_id, $place_id, $place_other);
 
-//		_zayavDayFinishChange($zayav_id, $day_finish);
+		_accrualAdd($z, $_POST['accrual_sum']);
+
+		_zayavStatusRemindAdd($zayav_id);
 
 		_note(array(
 			'add' => 1,
@@ -419,27 +458,27 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'zayav_day_finish':
+	case 'zayav_srok':
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
 		$day = $_POST['day'];
 		$zayav_spisok = _bool($_POST['zayav_spisok']);
 
-		$send['html'] = utf8(_zayavFinishCalendar($day, '', $zayav_spisok));
+		$send['html'] = utf8(_zayavSrokCalendar($day, '', $zayav_spisok));
 		jsonSuccess($send);
 		break;
-	case 'zayav_day_finish_next':
+	case 'zayav_srok_next':
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
 		$day = $_POST['day'];
 		$zayav_spisok = _bool($_POST['zayav_spisok']);
 
-		$send['html'] = utf8(_zayavFinishCalendar($day, $_POST['mon'], $zayav_spisok));
+		$send['html'] = utf8(_zayavSrokCalendar($day, $_POST['mon'], $zayav_spisok));
 		jsonSuccess($send);
 		break;
-	case 'zayav_day_finish_save':
+	case 'zayav_srok_save':
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
@@ -448,7 +487,7 @@ switch(@$_POST['op']) {
 		$save = _bool($_POST['save']);
 
 		if($zayav_id && $save)
-			if(!_zayavDayFinishChange($zayav_id, $day))
+			if(!_zayavSrokChange($zayav_id, $day))
 				jsonError();
 
 		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
@@ -1122,12 +1161,12 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 		));
 	}
 }
-function _zayavDayFinishChange($zayav_id, $day) {//изменение срока выполнения
+function _zayavSrokChange($zayav_id, $day) {//изменение срока выполнения
 	if(!$z = _zayavQuery($zayav_id))
 		return false;
-	if($day != $z['day_finish'] && $day != '0000-00-00') {
+	if($day != $z['srok'] && $day != '0000-00-00') {
 		$sql = "UPDATE `_zayav`
-				SET `day_finish`='".$day."'
+				SET `srok`='".$day."'
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		_history(array(
@@ -1136,11 +1175,29 @@ function _zayavDayFinishChange($zayav_id, $day) {//изменение срока выполнения
 			'zayav_id' => $zayav_id,
 			'v1' => '<table><tr>'.
 				'<th>Срок:'.
-					'<td>'.($z['day_finish'] == '0000-00-00' ? 'не указан' : FullData($z['day_finish'], 0, 1, 1)).
+					'<td>'.($z['srok'] == '0000-00-00' ? 'не указан' : FullData($z['srok'], 0, 1, 1)).
 					'<td>»'.
 					'<td>'.FullData($day, 0, 1, 1).
 				'</table>'
 		));
 	}
 	return true;
+}
+function _zayavStatusRemindAdd($zayav_id) {//внесение напоминания при изменении статуса заявки
+	if(!_bool($_POST['remind']))
+		return;
+
+	$remind_txt = _txt($_POST['remind_txt']);
+	$remind_day = _txt($_POST['remind_day']);
+
+	if(!$remind_txt)
+		return;
+	if(!preg_match(REGEXP_DATE, $remind_day))
+		return;
+
+	_remind_add(array(
+		'zayav_id' => $zayav_id,
+		'txt' => $remind_txt,
+		'day' => $remind_day
+	));
 }

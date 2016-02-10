@@ -1203,11 +1203,6 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 														  AND !`deleted`
 														ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_NAME_ASS=_toAss(ZAYAV_STATUS_NAME_SPISOK),'.
-		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
-														 FROM `_zayav_status`
-														 WHERE `app_id`=".APP_ID."
-														   AND `ws_id`=".WS_ID."
-														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_COLOR_ASS='.query_assJson("  SELECT `id`,`color`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
@@ -1218,12 +1213,48 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 														WHERE `app_id`=".APP_ID."
 														  AND `ws_id`=".WS_ID."
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT)).','.
-		"\n".'ZAYAV_ACTION_NAME_ASS='.query_assJson("SELECT `id`,`name`
-													 FROM `_zayav_action`
-													 WHERE `app_id`=".APP_ID."
-													   AND `ws_id`=".WS_ID."
-													   AND !`deleted`
-													 ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_NOUSE_ASS='.query_assJson("  SELECT `id`,`nouse`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `nouse`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_RESULT_ASS='.query_assJson(" SELECT `id`,`result`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `result`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_EXECUTER_ASS='.query_assJson("  SELECT `id`,`executer`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `executer`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_SROK_ASS='.query_assJson("  SELECT `id`,`srok`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `srok`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_ACCRUAL_ASS='.query_assJson("  SELECT `id`,`accrual`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `accrual`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_REMIND_ASS='.query_assJson("  SELECT `id`,`remind`
+														FROM `_zayav_status`
+														WHERE `app_id`=".APP_ID."
+														  AND `ws_id`=".WS_ID."
+														  AND `remind`
+														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
+														 FROM `_zayav_status`
+														 WHERE `app_id`=".APP_ID."
+														   AND `ws_id`=".WS_ID."
+														   AND `day_fact`
+														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." AND `ws_id`=".$ws_id." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
 		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
@@ -1258,7 +1289,6 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
 	xcache_unset(CACHE_PREFIX.'zayav_status'.$ws_id);//статусы заявки
-	xcache_unset(CACHE_PREFIX.'zayav_action'.$ws_id);//следующие шаги заявки
 	xcache_unset(CACHE_PREFIX.'product'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'product_sub'.$ws_id);
 

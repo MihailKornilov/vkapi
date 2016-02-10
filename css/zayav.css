@@ -16,7 +16,7 @@
 	#_zayav .rightLink a:not(.sel) #srok{display:none}
 	#_zayav #srok,#_zayav #srok *{font-size:10px}
 	#_zayav #srok{margin-top:8px}
-	#_zayav .day-finish-link{color:#BCDCFF}
+	#_zayav .srok-link{color:#BCDCFF}
 #_zayav #deleted_check{margin-top:20px}
 #_zayav #deleted-only-div{margin-top:5px}
 #_zayav ._empty{margin:10px}
@@ -118,7 +118,7 @@
 #_zayav-info .headName ._dropdown{float:right}
 #_zayav-info ._info{margin-bottom:5px}
 #_zayav-info #tab{border-spacing:8px}
-#_zayav-info .label{width:70px}
+#_zayav-info .label{width:50px}
 #_zayav-info #added{
 	font-size:10px;
 	color:#999;
@@ -144,21 +144,38 @@
 #_zayav-accrual{margin-top :10px}
 
 /* Статус заявки */
-#zayav-status{margin:10px}
-#zayav-status .st{
-	padding:10px 15px;
-	font-size:13px;
+#zayav-status{padding-top:10px}
+#zayav-status .label{width:150px;text-align:right}
+#zayav-status #new-tab{
+	background-color:#ffe;
+	border-top:#fbfbda solid 1px;
+	padding-top:10px;
+}
+#zayav-status #zs-tab{
+	background-color:#ffd;
+	border-top:#fafac9 solid 1px;
+	padding:10px 0;
+}
+#zayav-status .current{
+	display:inline-block;
 	font-weight:bold;
+	padding:5px 12px;
 	border:#ddd solid 1px;
 	color:#357;
-	cursor:pointer;
+}
+#zayav-status .st{
+	padding:5px 12px;
+	font-weight:bold;
+	border:#ddd solid 1px;
+	color:#468;
 	margin-bottom:10px;
 }
-#zayav-status .st:hover{border-color:#BBD}
-#zayav-status .about{color:#777;margin-top:3px}
-#zayav-status .label{color:#444;margin:10px 0 3px 20px}
-#zayav-status #zs-tab{border-spacing:8px;display:none}
+#zayav-status .sp{cursor:pointer}
+#zayav-status .sp:hover{border-color:#BBD}
+#zayav-status .about{font-size:10px;color:#777;margin-top:3px}
 #zayav-status #zs-comm{width:280px;height:30px}
+#zayav-status .tr-remind{display:none}
+#zayav-status #remind-txt{width:280px}
 
 
 /* диалог заключения договора */
@@ -225,37 +242,37 @@
 
 
 /* Цветная кнопка статуса заявки  */
-#zayav-status-button h1 {
+#zayav-status-button{
 	display:inline-block;
 	border:#DDD solid 1px;
-	text-align:center;
-	padding:4px 12px 5px;
+	padding:4px 15px 5px;
 	color:#777;
-	min-width:200px;
+	min-width:150px;
 	cursor:pointer;
 }
-#zayav-status-button h1:hover{border-color:#bbd; color:#444}
-
+#zayav-status-button:hover{border-color:#bbd; color:#444}
+#zayav-status-button b.hd{font-size:12px;margin:0 4px}
+#status-button-tab{border-spacing:4px;margin-top:8px}
 
 
 
 
 /* Календарь заявок */
-#zayav-finish-calendar #fc-head{width:100%}
-#zayav-finish-calendar #fc-head td{padding:10px;text-align:center}
-#zayav-finish-calendar #fc-head td.ch{
+#zayav-srok-calendar #fc-head{width:100%}
+#zayav-srok-calendar #fc-head td{padding:10px;text-align:center}
+#zayav-srok-calendar #fc-head td.ch{
 	width:47px;
 	cursor:pointer;
 	font-size:18px;
 	font-weight:bold;
 	color:#aaa;
 }
-#zayav-finish-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
-#zayav-finish-calendar #fc-head span{font-size:14px}
-#zayav-finish-calendar #fc-head._busy span{visibility:hidden}
-#zayav-finish-calendar #fc-mon{width:100%;border-collapse:collapse}
-#zayav-finish-calendar #fc-mon td{border:#ddd solid 1px}
-#zayav-finish-calendar #week-name td{
+#zayav-srok-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
+#zayav-srok-calendar #fc-head span{font-size:14px}
+#zayav-srok-calendar #fc-head._busy span{visibility:hidden}
+#zayav-srok-calendar #fc-mon{width:100%;border-collapse:collapse}
+#zayav-srok-calendar #fc-mon td{border:#ddd solid 1px}
+#zayav-srok-calendar #week-name td{
 	font-weight:bold;
 	font-size:13px;
 	background-color:#eee;
@@ -263,11 +280,11 @@
 	text-align:center;
 	padding:10px;
 }
-#zayav-finish-calendar td.d{width:47px;height:40px;text-align:center}
-#zayav-finish-calendar td.d.old{background-color:#f8f8f8;color:#888}
-#zayav-finish-calendar td.d.sel{background-color:#ffb}
-#zayav-finish-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
-#zayav-finish-calendar td.d b{
+#zayav-srok-calendar td.d{width:47px;height:40px;text-align:center}
+#zayav-srok-calendar td.d.old{background-color:#f8f8f8;color:#888}
+#zayav-srok-calendar td.d.sel{background-color:#ffb}
+#zayav-srok-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
+#zayav-srok-calendar td.d b{
 	display:inline-block;
 	font-size:13px;
 	padding:1px 5px;
@@ -275,7 +292,7 @@
 	background-color:#dfd;
 	color:#080;
 }
-#zayav-finish-calendar #fc-cancel{
+#zayav-srok-calendar #fc-cancel{
 	border:#cec solid 1px;
 	padding:10px;
 	text-align:center;
@@ -284,12 +301,12 @@
 	cursor:pointer;
 	color:#555;
 }
-#zayav-finish-calendar #fc-cancel:hover{background-color:#afa}
-#zayav-finish-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
+#zayav-srok-calendar #fc-cancel:hover{background-color:#afa}
+#zayav-srok-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
 
-.day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
-.day-finish-link:hover{text-decoration:underline}
-.day-finish-link._busy span{visibility:hidden}
+.srok-link{display:inline-block;cursor:pointer;color:#2B587A}
+.srok-link:hover{text-decoration:underline}
+.srok-link._busy span{visibility:hidden}
 
 
 

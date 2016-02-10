@@ -47,6 +47,48 @@ function _money() {
 		$content;
 }
 
+function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
+	if(!_cena($sum))
+		return;
+
+	$sql = "INSERT INTO `_money_accrual` (
+				`app_id`,
+				`ws_id`,
+				`zayav_id`,
+				`client_id`,
+				`sum`,
+				`about`,
+				`viewer_id_add`
+			) VALUES (
+				".APP_ID.",
+				".WS_ID.",
+				".$z['id'].",
+				".$z['client_id'].",
+				".$sum.",
+				'".addslashes($about)."',
+				".VIEWER_ID."
+			)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	//внесение баланса для клиента
+	_balans(array(
+		'action_id' => 25,
+		'client_id' => $z['client_id'],
+		'zayav_id' => $z['id'],
+		'sum' => $sum,
+		'about' => $about
+	));
+
+	_history(array(
+		'type_id' => 74,
+		'client_id' => $z['client_id'],
+		'zayav_id' => $z['id'],
+		'v1' => $sum,
+		'v2' => $about
+	));
+
+	_zayavBalansUpdate($z['id']);
+}
 function _accrualFilter($v) {
 	$send = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,

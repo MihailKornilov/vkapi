@@ -1,76 +1,17 @@
 <?php
 switch(@$_POST['op']) {
 	case 'accrual_add':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
 		$about = _txt($_POST['about']);
-		$zayav_id = _num($_POST['zayav_id']);
-		$zayav_status = _num($_POST['zayav_status']);
-		$client_id = 0;
 
-		$remind_txt = _txt($_POST['remind_txt']);
-		$remind_day = _txt($_POST['remind_day']);
-		if($remind = _bool($_POST['remind'])) {
-			if(!$remind_txt)
-				jsonError();
-			if(!preg_match(REGEXP_DATE, $remind_day))
-				jsonError();
-		}
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
 
-		if($zayav_id) {
-			if(!$z = _zayavQuery($zayav_id))
-				jsonError();
-			$client_id = $z['client_id'];
-		}
-
-		$sql = "INSERT INTO `_money_accrual` (
-					`app_id`,
-					`ws_id`,
-					`zayav_id`,
-					`client_id`,
-					`sum`,
-					`about`,
-					`viewer_id_add`
-				) VALUES (
-					".APP_ID.",
-					".WS_ID.",
-					".$zayav_id.",
-					".$client_id.",
-					".$sum.",
-					'".addslashes($about)."',
-					".VIEWER_ID."
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 25,
-			'client_id' => $client_id,
-			'zayav_id' => $zayav_id,
-			'sum' => $sum,
-			'about' => $about
-		));
-
-		_history(array(
-			'type_id' => 74,
-			'client_id' => $client_id,
-			'zayav_id' => $zayav_id,
-			'v1' => $sum,
-			'v2' => $about
-		));
-
-		//Обновление статуса заявки, если изменялся
-		_zayavStatusChange($zayav_id, $zayav_status);//todo используется только в mobile
-		_zayavBalansUpdate($zayav_id);
-
-		//Внесение напоминания, если есть
-		if($remind)
-			_remind_add(array(
-				'zayav_id' => $zayav_id,
-				'txt' => $remind_txt,
-				'day' => $remind_day
-			));
+		_accrualAdd($z, $sum, $about);
 
 		jsonSuccess();
 		break;

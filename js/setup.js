@@ -9,23 +9,23 @@ var setupRuleCheck = function(v, id) {
 			_msg('Сохранено');
 	}, 'json');
 },
-	setupZayavExpense = function(arr) {
-		arr = $.extend({
+	setupZayavExpense = function(o) {
+		o = $.extend({
 			id:0,
 			name:'',
 			dop:0
-		}, arr);
+		}, o);
 
 		var html =
 				'<table id="setup-tab">' +
-					'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + arr.name + '" />' +
-					'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" value="' + arr.dop + '" />' +
+					'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" value="' + o.dop + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
-				head:(arr.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода заявки',
+				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода заявки',
 				content:html,
-				butSubmit:arr.id ? 'Сохранить' : 'Внести',
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
 				submit:submit
 			});
 
@@ -34,8 +34,8 @@ var setupRuleCheck = function(v, id) {
 
 		function submit() {
 			var send = {
-				op:'setup_zayav_expense_' + (arr.id ? 'edit' : 'add'),
-				id:arr.id,
+				op:'setup_zayav_expense_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
 				name:$('#name').val(),
 				dop:$('#dop').val()
 			};
@@ -56,44 +56,65 @@ var setupRuleCheck = function(v, id) {
 			}
 		}
 	},
-	setupZayavStatus = function(arr) {
-		arr = $.extend({
+	setupZayavStatus = function(o) {
+		o = $.extend({
 			id:0,
 			name:'',
 			about:'',
 			color:'ffffff',
 			default:0,
+			nouse:0,
+			result:0,
+			srok:0,
+			executer:0,
+			accrual:0,
+			remind:0,
 			day_fact:0
-		}, arr);
+		}, o);
 
 		var html =
-				'<table id="setup-tab">' +
-					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + arr.name + '" />' +
-					'<tr><td class="label topi">Описание:<td><textarea id="about">' + arr.about + '</textarea>' +
-					'<tr><td class="label">Цвет:<td><input id="color" type="text" value="' + arr.color + '" />' +
-					'<tr><td class="label">По умолчанию:<td><input id="default" type="hidden" value="' + arr.default + '" />' +
+				'<table class="setup-status-tab bs10">' +
+					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
+					'<tr><td class="label">Цвет:<td><input type="text" id="color" value="' + o.color + '" />' +
+					'<tr><td class="label">По умолчанию:<td><input type="hidden" id="default" value="' + o.default + '" />' +
+					'<tr class="tr-nouse' + (o.default ? '' : ' dn') + '">' +
+						'<td class="label">Не использовать повторно:' +
+						'<td><input type="hidden" id="nouse" value="' + o.nouse + '" />' +
+					'<tr><td class="label">Является результатом:<td><input type="hidden" id="result" value="' + o.result + '" />' +
+					'<tr><td><td>' +
+					'<tr><td><td><b>Действия при выборе статуса</b>' +
+					'<tr><td><td><input type="hidden" id="executer" value="' + o.executer + '" />' +
+					'<tr><td><td><input type="hidden" id="srok" value="' + o.srok + '" />' +
 					'<tr' + (ZAYAV_INFO_STATUS_DAY ? '' : ' class="dn"') + '>' +
 						'<td class="label">' +
-						'<td><input id="day_fact" type="hidden" value="' + arr.day_fact + '" />' +
+						'<td><input id="day_fact" type="hidden" value="' + o.day_fact + '" />' +
+					'<tr><td><td><input type="hidden" id="accrual" value="' + o.accrual + '" />' +
+					'<tr><td><td><input type="hidden" id="remind" value="' + o.remind + '" />' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
-				width:400,
-				head:(arr.id ? 'Редактирование' : 'Добавление нового' ) + ' статуса заявки',
+				width:480,
+				head:(o.id ? 'Редактирование' : 'Добавление нового' ) + ' статуса заявки',
 				content:html,
-				butSubmit:arr.id ? 'Сохранить' : 'Внести',
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit).width(250);
-		$('#about').autosize().width(250);
+		$('#name').focus().keyEnter(submit);
+		$('#about').autosize();
 		$('#color').keyup(function() {
 			var t = $(this),
 				v = t.val();
 			v = v.length == 6 ? v : 'ffffff';
 			t.css('background-color','#' + v);
 		}).trigger('keyup');
-		$('#default')._check();
+		$('#default')._check({
+			func:function(v) {
+				$('#nouse')._check(0);
+				$('.tr-nouse')[(v ? 'remove' : 'add') + 'Class']('dn');
+			}
+		});
 		$('#default_check').vkHint({
 			top:-70,
 			left:-100,
@@ -101,19 +122,58 @@ var setupRuleCheck = function(v, id) {
 			msg:'Автоматически присваивать данный<br />' +
 				'статус при внесении новой заявки.'
 		});
+		$('#nouse')._check();
+		$('#nouse_check').vkHint({
+			top:-83,
+			left:-86,
+			width:180,
+			msg:'После выбора другого статуса<br />' +
+				'данный статус нельзя будет<br />' +
+				'выбрать снова.'
+		});
+		$('#result')._check();
+		$('#result_check').vkHint({
+			top:-70,
+			left:-100,
+			width:210,
+			msg:'При смене этого статуса<br />' +
+				'выбор результата не показывается.'
+		});
 		$('#day_fact')._check({
 			name:'уточнять фактический день',
+			light:1
+		});
+		$('#executer')._check({
+			name:'указывать исполнителя',
+			light:1
+		});
+		$('#srok')._check({
+			name:'уточнять срок',
+			light:1
+		});
+		$('#accrual')._check({
+			name:'вносить начисление',
+			light:1
+		});
+		$('#remind')._check({
+			name:'добавлять напоминание',
 			light:1
 		});
 
 		function submit() {
 			var send = {
-				op:'setup_zayav_status_' + (arr.id ? 'edit' : 'add'),
-				id:arr.id,
+				op:'setup_zayav_status_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
 				name:$('#name').val(),
 				about:$('#about').val(),
 				color:$('#color').val(),
 				default:$('#default').val(),
+				nouse:$('#nouse').val(),
+				result:$('#result').val(),
+				executer:$('#executer').val(),
+				srok:$('#srok').val(),
+				accrual:$('#accrual').val(),
+				remind:$('#remind').val(),
 				day_fact:$('#day_fact').val()
 			};
 			if(!send.name) {
@@ -125,49 +185,6 @@ var setupRuleCheck = function(v, id) {
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#status-spisok').html(res.html);
-					dialog.close();
-					_msg();
-					sortable();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
-	setupZayavAction = function(arr) {
-		arr = $.extend({
-			id:0,
-			name:''
-		}, arr);
-
-		var html =
-				'<table id="setup-tab">' +
-					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + arr.name + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:400,
-				head:(arr.id ? 'Редактирование' : 'Добавление' ) + ' следующего шага заявки',
-				content:html,
-				butSubmit:arr.id ? 'Сохранить' : 'Внести',
-				submit:submit
-			});
-
-		$('#name').focus().keyEnter(submit).width(270);
-
-		function submit() {
-			var send = {
-				op:'setup_zayav_action_' + (arr.id ? 'edit' : 'add'),
-				id:arr.id,
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#action-spisok').html(res.html);
 					dialog.close();
 					_msg();
 					sortable();
@@ -483,30 +500,16 @@ $(document)
 			about:t.find('.about').html(),
 			color:t.find('.name').attr('val'),
 			default:t.find('.name').hasClass('b') ? 1 : 0,
+			nouse:t.find('.nouse').val(),
+			result:t.find('.result').val(),
+			srok:t.find('.srok').val(),
+			executer:t.find('.executer').val(),
+			accrual:t.find('.accrual').val(),
+			remind:t.find('.remind').val(),
 			day_fact:t.find('.day_fact').val()
 		});
 	})
 	.on('click', '#setup_zayav_status .status-del', function() {
-		_dialogDel({
-			id:_parent($(this), 'DD').attr('val'),
-			head:'статуса заявки',
-			op:'setup_zayav_status_del',
-			func:function(res) {
-				$('#status-spisok').html(res.html);
-				sortable();
-			}
-		});
-	})
-
-	.on('click', '#setup_zayav_status .action-add', setupZayavAction)
-	.on('click', '#setup_zayav_status .action-edit', function() {
-		var t = _parent($(this), 'DD');
-		setupZayavAction({
-			id:t.attr('val'),
-			name:t.find('.name').html()
-		});
-	})
-	.on('click', '#setup_zayav_status .action-del', function() {
 		_dialogDel({
 			id:_parent($(this), 'DD').attr('val'),
 			head:'статуса заявки',

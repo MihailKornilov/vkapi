@@ -117,14 +117,16 @@
 	white-space:pre-line;
 }
 #setup_zayav_status .dop{
-	float:right;
+	text-align:right;
 	font-size:10px;
 	color:#b33;
 	margin-top:2px
 }
 #setup_zayav_status .ed{width:35px}
 
-.zayav-status-tab #name{width:280px}
+.setup-status-tab .label{width:150px;text-align:right}
+.setup-status-tab #name{width:250px}
+.setup-status-tab #about{width:250px}
 
 
 

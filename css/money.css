@@ -1,11 +1,7 @@
 /* Начисления */
-#_accrual-add .tab{border-spacing:8px;padding:15px 0}
-#_accrual-add .label{width:140px;text-align:right}
-#_accrual-add #about{width:230px}
-#_accrual-add #status-div{display:none;background-color:#f8f8f0}
-#_accrual-add #remind-div{display:none;background-color:#f4f4da}
-#_accrual-add .remind-tr{display:none}
-#_accrual-add #remind-txt{width:230px}
+#_accrual-add{border-spacing:10px}
+#_accrual-add .label{width:90px;text-align:right}
+#_accrual-add #about{width:270px}
 
 ._accrual-unit .sum{color:#07a;cursor:default}
 

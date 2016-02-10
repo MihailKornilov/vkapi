@@ -109,9 +109,8 @@ var _zayavSpisok = function(v, id) {
 				serial:'',
 				color_id:0,
 				color_dop:0,
-				day_finish:'0000-00-00',
+				srok:'0000-00-00',
 				place:-1,
-				diagnost:0,
 				sum_cost:'',
 				pay_type:0
 			}, window.ZI || {});
@@ -141,7 +140,6 @@ var _zayavSpisok = function(v, id) {
 					'<tr' + (!o.id && ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
 						'<td class="label top">Местонахождение устройства<br />после внесения заявки:' +
 						'<td><input type="hidden" id="device-place" value="' + o.place + '" />' +
-					'<tr' + (ZAYAV_INFO_DIAGNOST ?'' : ' class="dn"') + '><td class="label">Диагностика:<td><input type="hidden" id="za-diagnost" value="' + o.diagnost + '" />' +
 					'<tr' + (ZAYAV_INFO_SUM_COST ?'' : ' class="dn"') + '><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="sum_cost" value="' + (o.sum_cost ? o.sum_cost : '') + '" /> руб.' +
 					'<tr' + (ZAYAV_INFO_PAY_TYPE ?'' : ' class="dn"') + '><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" value="' + o.pay_type + '" />' +
 
@@ -151,8 +149,8 @@ var _zayavSpisok = function(v, id) {
 
 				(!o.id && ZAYAV_INFO_SROK ?
 					'<tr><td class="label top">Срок:' +
-						'<td><input type="hidden" id="za-day_finish" value="' + o.day_finish + '" />' +
-							'<div class="day-finish-link">' +
+						'<td><input type="hidden" id="za-srok" value="' + o.srok + '" />' +
+							'<div class="srok-link">' +
 								'<span>не указан</span>' +
 							'</div>'
 				: '') +
@@ -214,7 +212,6 @@ var _zayavSpisok = function(v, id) {
 			color_id:o.color_id,
 			color_dop:o.color_dop
 		});
-		$('#za-diagnost')._check();
 		$('#pay_type')._radio({
 			light:1,
 			spisok:PAY_TYPE
@@ -244,11 +241,10 @@ var _zayavSpisok = function(v, id) {
 					color_dop:$('#color_dop').val(),
 					place:$('#device-place').val(),
 					place_other:$.trim($('#place_other').val()),
-					diagnost:$('#za-diagnost').val(),
 					sum_cost:$('#sum_cost').val(),
 					pay_type:_num($('#pay_type').val()),
 					note:$('#note').val(),
-					day_finish:'0000-00-00'
+					srok:'0000-00-00'
 				};
 
 			if(!send.client_id) {
@@ -280,8 +276,8 @@ var _zayavSpisok = function(v, id) {
 			}
 
 			if(!o.id && ZAYAV_INFO_SROK) {
-				send.day_finish = $('#za-day_finish').val();
-				if(send.day_finish == '0000-00-00') {
+				send.srok = $('#za-srok').val();
+				if(send.srok == '0000-00-00') {
 					dialog.err('Не указан срок');
 					return;
 				}
@@ -315,7 +311,9 @@ var _zayavSpisok = function(v, id) {
 			var sp = ZAYAV_STATUS_NAME_SPISOK[i];
 			if(sp.uid == ZI.status_id)
 				continue;
-			spisok += '<div class="st" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
+			if(ZAYAV_STATUS_NOUSE_ASS[sp.uid])
+				continue;
+			spisok += '<div class="st sp" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
 						 sp.title +
 						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[sp.uid] + '</div>' +
 					  '</div>'
@@ -323,34 +321,53 @@ var _zayavSpisok = function(v, id) {
 
 		var html =
 			'<div id="zayav-status">' +
-				spisok +
-				'<input type="hidden" id="zs-status" />' +
-				'<table id="zs-tab">' +
-				(ZAYAV_INFO_STATUS_DAY ?
-					'<tr class="tr-day-fact dn">' +
-						'<td class="label r">Фактический день:' +
-						'<td><input type="hidden" id="day" value="' + ZI.status_day + '" />'
-				: '') +
-					'<tr><td class="label r topi">Комментарий:' +
-						'<td><textarea id="zs-comm" placeholder="не обязательно"></textarea>' +
-					'<tr class="dn"><td class="label r">Следующий шаг:' +
-						'<td><input type="hidden" id="action_id" />' +
+				'<table class="bs10">' +
+					'<tr><td class="label">Текущий статус:' +
+						'<td><div class="current" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[ZI.status_id] + '">' +
+								ZAYAV_STATUS_NAME_ASS[ZI.status_id] +
+							'</div>' +
+					'<tr id="tr-result"><td class="label topi">Результат:<td><input type="hidden" id="result" />' +
 				'</table>' +
+
+				'<div id="new-tab" class="dn">' +
+					'<input type="hidden" id="status-new" />' +
+					'<table class="bs10">' +
+						'<tr><td class="label topi">Новый статус:<td>' + spisok +
+					'</table>' +
+				'</div>' +
+
+				'<div id="zs-tab" class="dn">' +
+					'<table class="bs10">' +
+					(ZAYAV_INFO_STATUS_DAY ?
+						'<tr class="tr-day-fact dn">' +
+							'<td class="label">Фактический день:' +
+							'<td><input type="hidden" id="day" value="' + ZI.status_day + '" />'
+					: '') +
+
+						'<tr class="tr-executer dn"><td class="label">Назначить исполнителя:<td><input type="hidden" id="zs-executer_id" />' +
+
+						'<tr class="tr-srok dn">' +
+							'<td class="label">Указать срок выполнения:' +
+							'<td><input type="hidden" id="za-srok" value="0000-00-00" />' +
+								'<div class="srok-link no-save"><span>не указан</span></div>' +
+
+						'<tr><td class="label topi">Комментарий:' +
+							'<td><textarea id="zs-comm" placeholder="не обязательно"></textarea>' +
+
+						'<tr class="tr-accrual dn"><td class="label">Начислить:<td><input type="text" class="money" id="accrual-sum" /> руб.' +
+
+						'<tr class="tr-rem dn"><td class="label">Добавить напоминание:<td><input type="hidden" id="zs-remind" />' +
+						'<tr class="tr-remind"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Позвонить и сообщить о результате" />' +
+						'<tr class="tr-remind"><td class="label">Дата:<td><input type="hidden" id="remind-day" />' +
+					'</table>' +
+				'</div>' +
+
 			'</div>',
 
 /*
-
 			(ZAYAV_INFO_DEVICE ?
 					'<tr><td class="label r topi">Местонахождение устройства:<td><input type="hidden" id="device-place" value="-1" />'
 			: '') +
-
-			(ZAYAV_INFO_SROK ?
-					'<tr id="zs-srok" class="dn">' +
-						'<td class="label r">Срок выполнения:' +
-						'<td><input type="hidden" id="zs-day_finish" value="0000-00-00" />' +
-							'<div class="day-finish-link no-save"><span>не указан</span></div>'
-			: '') +
-
 
 		if(ZAYAV_INFO_DEVICE)
 			zayavPlace();
@@ -358,65 +375,88 @@ var _zayavSpisok = function(v, id) {
 
 			dialog = _dialog({
 				top:30,
-				width:460,
+				width:500,
+				padding:0,
 				head:'Изменение статуса заявки',
 				content:html,
 				butSubmit:'',
 				submit:submit
 			});
 
-		$('#action_id')._select({
-			width:250,
-			title0:'не выбран',
-			spisok:_toSpisok(ZAYAV_ACTION_NAME_ASS)
-		});
+		if(ZAYAV_STATUS_RESULT_ASS[ZI.status_id]) {
+			$('#new-tab').slideDown(300);
+			$('#tr-result').addClass('dn');
+		} else
+			$('#result')._radio({
+				light:1,
+				spisok:[
+					{uid:1, title:'Успешный'},
+					{uid:2, title:'Неуспешный'}
+				],
+				func:function() {
+					$('#new-tab').slideDown(300);
+				}
+			});
+		$('#zs-executer_id')._select({
+				width:170,
+				title0:'не назначен',
+				spisok:WORKER_SPISOK
+			});
 		$('#zs-comm').autosize();
-
+		$('#zs-remind')._check({
+			func:function(v) {
+				$('.tr-remind')[v ? 'show' : 'hide']();
+			}
+		});
+		$('#remind-day')._calendar();
 		$('.st').click(function() {
 			var t = $(this),
 				v = t.attr('val');
-			t.parent().find('.st').hide();
-			t.show();
-			t.find('.about').hide();
-			$('#zs-status').val(v);
 
-			$('#zs-tab').show();
-			$('#zs-comm').focus();
+			$('#status-new').val(v);
+
+			t.removeClass('sp');
+			t.find('.about').slideUp(300);
+			t.parent().find('.sp').slideUp(300, function() {
+				$('#zs-tab').slideDown();
+				$('#zs-comm').focus();
+			});
 
 			if(ZAYAV_STATUS_DAY_FACT_ASS[v]) {
 				$('#day')._calendar({lost:1});
 				$('.tr-day-fact').removeClass('dn');
 			}
 
+			if(ZAYAV_STATUS_EXECUTER_ASS[v])
+				$('.tr-executer').removeClass('dn');
+
+			if(ZAYAV_STATUS_SROK_ASS[v])
+				$('.tr-srok').removeClass('dn');
+
+			if(ZAYAV_STATUS_ACCRUAL_ASS[v])
+				$('.tr-accrual').removeClass('dn');
+
+			if(ZAYAV_STATUS_REMIND_ASS[v])
+				$('.tr-rem').removeClass('dn');
 
 			dialog.butSubmit('Применить');
 		});
-
-
-/*
-			if(v == 1) {
-				if(ZAYAV_INFO_SROK)
-					$('#zs-srok').removeClass('dn');
-				else
-					if(!ZAYAV_INFO_DEVICE)
-						submit();
-			}
-			if(v == 2 && !ZAYAV_INFO_DEVICE)
-				submit();
-
-*/
 
 		function submit() {
 			var send = {
 				op:'zayav_status',
 				zayav_id:ZI.id,
-				status_id:_num($('#zs-status').val()),
+				status_id:_num($('#status-new').val()),
 				status_day:'0000-00-00',
-				action_id:_num($('#action_id').val()),
 				place:0,
 				place_other:'',
-				day_finish:'0000-00-00',
-				comm:$('#zs-comm').val()
+				executer_id:_num($('#zs-executer_id').val()),
+				srok:'0000-00-00',
+				comm:$('#zs-comm').val(),
+				accrual_sum:$('#accrual-sum').val(),
+				remind:_bool($('#zs-remind').val()),
+				remind_txt:$('#remind-txt').val(),
+				remind_day:$('#remind-day').val()
 			};
 /*
 			if(ZAYAV_INFO_DEVICE) {
@@ -431,17 +471,37 @@ var _zayavSpisok = function(v, id) {
 				}
 			}
 
-			if(ZAYAV_INFO_SROK && send.status == 1) {
-				send.day_finish = $('#zs-day_finish').val();
-				if(send.day_finish == '0000-00-00') {
-					dialog.err('Не указан срок выполнения');
-					return;
-				}
-			}
 */
 
 			if(ZAYAV_INFO_STATUS_DAY && ZAYAV_STATUS_DAY_FACT_ASS[send.status_id])
 				send.status_day = $('#day').val();
+
+			if(ZAYAV_STATUS_EXECUTER_ASS[send.status_id] && !send.executer_id) {
+				dialog.err('Не назначен исполнитель');
+				return;
+			}
+
+			if(ZAYAV_STATUS_SROK_ASS[send.status_id]) {
+				send.srok = $('#za-srok').val();
+				if(send.srok == '0000-00-00') {
+					dialog.err('Не указан срок выполнения');
+					return;
+				}
+			}
+
+			if(ZAYAV_STATUS_ACCRUAL_ASS[send.status_id])
+				if(send.accrual_sum && send.accrual_sum != 0 && !_cena(send.accrual_sum)) {
+					dialog.err('Некорректно указано начисление');
+					$('#accrual-sum').focus();
+					return;
+				}
+
+			if(ZAYAV_STATUS_REMIND_ASS[send.status_id])
+				if(send.remind && !send.remind_txt) {
+					dialog.err('Не указано содержание напоминания');
+					$('#remind-txt').focus();
+					return;
+				}
 
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -877,11 +937,10 @@ $(document)
 		$('#desc')._check(0);           ZAYAV.desc = 0;
 		$('#status').rightLink(0);		ZAYAV.status = 0;
 
-		$('#day_finish').val('0000-00-00');
-		$('.day-finish-link span').html('не указан');
+		$('#srok').val('0000-00-00');
+		$('.srok-link span').html('не указан');
 		ZAYAV.finish = '0000-00-00';
 
-		$('#diagnost')._check(0);		ZAYAV.diagnost = 0;
 		$('#diff')._check(0);			ZAYAV.diff = 0;
 		$('#paytype')._radio(0);		ZAYAV.paytype = 0;
 		$('#noschet')._check(0);		ZAYAV.noschet = 0;
@@ -929,9 +988,9 @@ $(document)
 		_zayavEdit();
 	})
 
-	.on('click', '#zayav-status-button .status', _zayavStatus)
+	.on('click', '#zayav-status-button', _zayavStatus)
 
-	.on('click', '.day-finish-link', function(e) {//открытие календаря заявок
+	.on('click', '.srok-link', function(e) {//открытие календаря заявок
 		e.stopPropagation();
 		var t = $(this),
 			save = t.hasClass('no-save') ? 0 : 1;
@@ -945,8 +1004,8 @@ $(document)
 				butSubmit:''
 			}),
 			send = {
-				op:'zayav_day_finish',
-				day:$('#day_finish').val() || $('#za-day_finish').val(),
+				op:'zayav_srok',
+				day:$('#srok').val() || $('#za-srok').val(),
 				zayav_spisok:$('#_zayav').length
 			};
 		$.post(AJAX_MAIN, send, function(res) {
@@ -956,14 +1015,14 @@ $(document)
 				dialog.loadError();
 		}, 'json');
 		$(document)
-			.off('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel')
-			.on('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel', function() {
+			.off('click', '#zayav-srok-calendar td.d:not(.old),#fc-cancel,.fc-old-sel')
+			.on('click', '#zayav-srok-calendar td.d:not(.old),#fc-cancel,.fc-old-sel', function() {
 				if(t.hasClass('_busy'))
 					return;
 				dialog.close();
 				t.addClass('_busy');
 				send = {
-					op:'zayav_day_finish_save',
+					op:'zayav_srok_save',
 					day:$(this).attr('val'),
 					zayav_id:window.ZI ? ZI.id : 0,
 					save:save
@@ -979,19 +1038,19 @@ $(document)
 				}, 'json');
 			});
 	})
-	.on('click', '#zayav-finish-calendar .ch', function() {//перемотка календаря заявок
+	.on('click', '#zayav-srok-calendar .ch', function() {//перемотка календаря заявок
 		if($('#fc-head').hasClass('_busy'))
 			return;
 		$('#fc-head').addClass('_busy');
 		var send = {
-			op:'zayav_day_finish_next',
+			op:'zayav_srok_next',
 			mon:$(this).attr('val'),
-			day:$('#day_finish').val(),
+			day:$('#srok').val(),
 			zayav_spisok:$('#_zayav').length
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
-				$('#zayav-finish-calendar').after(res.html).remove();
+				$('#zayav-srok-calendar').after(res.html).remove();
 			else
 				$('#fc-head').removeClass('_busy');
 		}, 'json');
@@ -1013,7 +1072,6 @@ $(document)
 			$('#sort')._radio(_zayavSpisok);
 			$('#desc')._check(_zayavSpisok);
 			$('#status').rightLink(_zayavSpisok);
-			$('#diagnost')._check(_zayavSpisok);
 			$('#diff')._check(_zayavSpisok);
 			$('#paytype')._radio(_zayavSpisok);
 			$('#noschet')._check(_zayavSpisok);
@@ -1143,7 +1201,7 @@ $(document)
 					}
 				});
 			$('#executer_id')._dropdown({
-				title0: 'не указан',
+				title0:'не назначен',
 				spisok: WORKER_SPISOK,
 				func: function (v, id) {
 					var td = $('#' + id).parent(),
@@ -1159,13 +1217,6 @@ $(document)
 							_msg('Исполнитель изменён');
 					}, 'json');
 				}
-			});
-			$('#executer_id_dropdown').vkHint({
-				msg: 'Сотрудник, который назначен на выполнение данной заявки.',
-				delayShow: 1000,
-				width: 150,
-				top: -79,
-				left: -50
 			});
 			$('#attach_id')._attach({
 				zayav_id:ZI.id,

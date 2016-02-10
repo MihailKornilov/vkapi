@@ -1255,15 +1255,18 @@ $.fn._dropdown = function(o) {
 			list = dropdown.find('.ddlist'),
 			ddsel = list.find('.ddsel'),
 			ddu = list.find('.ddu');
-		aHead.click(function() {
+		aHead.click(function(e) {
+			e.stopPropagation();
 			delayClear();
 			list.show();
 		});
-		ddsel.click(function() {
+		ddsel.click(function(e) {
+			e.stopPropagation();
 			delayClear();
 			list.hide();
 		});
-		ddu.click(function() {
+		ddu.click(function(e) {
+			e.stopPropagation();
 			var th = $(this),
 				v = parseInt(th.attr('val'));
 			setVal(v);

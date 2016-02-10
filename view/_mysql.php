@@ -55,7 +55,10 @@ function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($sp = mysql_fetch_row($q))
-		$send[] = '{uid:'.$sp[0].',title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"}';
+		$send[] = '{'.
+			'uid:'.$sp[0].','.
+			'title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"'.
+		'}';
 	return '['.implode(',',$send).']';
 }
 function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
