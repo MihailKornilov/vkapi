@@ -82,6 +82,7 @@ function _history_spisok($v=array()) {
 	$filter = _filterJs('HISTORY', $filter);
 
 	define('PAGE1', $filter['page'] == 1);
+	define('HIST_LOCAL', $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id']); //история конкретных объектов
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID.
@@ -101,8 +102,10 @@ function _history_spisok($v=array()) {
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
 	if($filter['schet_id'])
 		$cond .= " AND `schet_id`=".$filter['schet_id'];
+	if(!HIST_LOCAL && RULE_HISTORY_VIEW == 1)
+		$cond .= " AND `viewer_id_add`=".VIEWER_ID;
 
-	$add = $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id'] ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
+	$add = HIST_LOCAL ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
 	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -258,13 +261,16 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 	$v = array(
 		'client_id' => _num(@$v['client_id'])
 	);
+
+	define('VIEWER_ID_ONLY', !$v['client_id'] && RULE_HISTORY_VIEW == 1);
+
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `_history`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `viewer_id_add`".
 			  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
-	$worker = query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
+	$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
 
 	$sql = "SELECT
 	            `cat`.`id`,
@@ -279,13 +285,15 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 			  AND `h`.`type_id`=`ids`.`type_id`
 			  AND `cat`.`js_use`
 			  ".($v['client_id'] ? " AND `h`.`client_id`=".$v['client_id'] : '')."
+			  ".(VIEWER_ID_ONLY ? " AND `h`.`viewer_id_add`=".VIEWER_ID : '')."
 			GROUP BY `cat`.`id`
 			ORDER BY `cat`.`sort`";
 	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 	return
+	(!VIEWER_ID_ONLY ?
 		'<div class="findHead">Действия сотрудника</div>'.
-		'<input type="hidden" id="viewer_id_add" />'.
-
+		'<input type="hidden" id="viewer_id_add" />'
+	: '').
 		(strlen($category) > 2 ? '<div class="findHead">Категория</div>' : '').
 		'<input type="hidden" id="category_id" />'.
 

@@ -416,7 +416,7 @@ switch(@$_POST['op']) {
 			'type_id' => 1012,
 			'worker_id' => $viewer_id,
 			'v1' => '<table>'.
-						_historyChange('Видит историю действий:', $arr[$old], $arr[$new]).
+						_historyChange('Видит историю действий', $arr[$old], $arr[$new]).
 					'</table>'
 		));
 
