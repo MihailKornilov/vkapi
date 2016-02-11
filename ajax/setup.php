@@ -391,11 +391,35 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'RULE_HISTORY_VIEW'://разрешать сотруднику просматривать историю действий
-		$_POST['h1'] = 1012;
-		$_POST['h0'] = 1013;
-
-		if(!setup_worker_rule_save($_POST))
+		if(!RULE_SETUP_RULES)
 			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$new = _num($_POST['v']);
+
+		$arr = array(
+			0 => 'нет',
+			1 => 'только свою',
+			2 => 'всю историю'
+		);
+
+		$old = _viewerRule($viewer_id, 'RULE_HISTORY_VIEW');
+
+		if($old == $new)
+			jsonError();
+
+		_workerRuleQuery($viewer_id, 'RULE_HISTORY_VIEW', $new);
+
+		_history(array(
+			'type_id' => 1012,
+			'worker_id' => $viewer_id,
+			'v1' => '<table>'.
+						_historyChange('Видит историю действий:', $arr[$old], $arr[$new]).
+					'</table>'
+		));
+
 
 		jsonSuccess();
 		break;

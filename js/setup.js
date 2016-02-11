@@ -969,7 +969,14 @@ $(document)
 			$('#RULE_SETUP_RULES')._check(setupRuleCheck);
 			$('#RULE_SETUP_REKVISIT')._check(setupRuleCheck);
 			$('#RULE_SETUP_INVOICE')._check(setupRuleCheck);
-			$('#RULE_HISTORY_VIEW')._check(setupRuleCheck);
+			$('#RULE_HISTORY_VIEW')._dropdown({
+				spisok:[
+					{uid:0,title:'нет'},
+					{uid:1,title:'только свою'},
+					{uid:2,title:'всю историю'}
+				],
+				func:setupRuleCheck
+			});
 			$('#RULE_INVOICE_TRANSFER')._check(setupRuleCheck);
 			$('#RULE_INCOME_VIEW')._check(setupRuleCheck);
 			$('#pin-clear').click(function() {
