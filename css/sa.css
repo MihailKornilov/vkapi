@@ -44,7 +44,7 @@
 #sa-rule-tab textarea{width:250px}
 #sa-rule #spisok{margin:20px}
 #sa-rule .key{width:320px}
-#sa-rule .about{color:#777;margin-left:10px}
+#sa-rule .about{color:#777;margin-left:10px;white-space:pre-line}
 #sa-rule .admin{text-align:center}
 #sa-rule .worker{text-align:center}
 #sa-rule td._busy ._check{visibility:hidden}
