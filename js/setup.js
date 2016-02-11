@@ -373,6 +373,61 @@ $(document)
 		}
 	})
 
+	.on('click', '.history-view-worker-all', function() {//изменение прав истории действий сразу дл€ всех сотрудников
+		var spisok = '';
+		for(var n = 0; n < WORKER_SPISOK.length; n++) {
+			var sp = WORKER_SPISOK[n];
+			if(sp.uid >= VIEWER_MAX)
+				continue;
+			spisok += '<tr><td class="label w150">' + sp.title + ':' +
+						  '<td><input type="hidden" id="hv' + sp.uid + '" value="' + RULE_HISTORY_ALL[sp.uid] + '" />';
+		}
+		var html =
+				'<center><b>¬идимость истории действий:</b></center>' +
+				'<table id="setup-tab">' +
+					spisok +
+				'</table>',
+			dialog = _dialog({
+				head:'ѕрава истории действий',
+				content:html,
+				butSubmit:'—охранить',
+				submit:submit
+			}),
+			inp = $('#setup-tab').find('input');
+
+		for(n = 0; n < inp.length; n++)
+			inp.eq(n)._dropdown({
+				spisok:[
+					{uid:0,title:'нет'},
+					{uid:1,title:'только свою'},
+					{uid:2,title:'всю историю'}
+				]
+			});
+
+		function submit() {
+			var v = [];
+			for(n = 0; n < inp.length; n++) {
+				var eq = inp.eq(n),
+					id = eq.attr('id').split('hv')[1];
+				v.push(id + ':' + eq.val());
+			}
+
+			var send = {
+				op:'setup_history_view_worker_all',
+				v:v.join()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 	.on('click', '.service-toggle', function() {
 		var t = $(this),
 			p = _parent(t, '.unit'),

@@ -1096,7 +1096,8 @@ function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource
 function _globalJsValues() {//Составление файла global.js, используемый во всех приложениях
 	//одинаковые для всех приложений:
 	$save =
-		 'var CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
+		 'var VIEWER_MAX='.VIEWER_MAX.','.
+		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
  		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
@@ -1168,14 +1169,14 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 														  AND `ws_id`=".$ws_id."
 												          AND `confirm_transfer`
 												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'WORKER_ASS='.query_assJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
-											 FROM `_vkuser`
-											 WHERE `app_id`=".APP_ID."
-											   AND `ws_id`=".$ws_id."
-											   AND `worker`
-											   AND `viewer_id`!=982006
-											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'WORKER_SPISOK=_toSpisok(WORKER_ASS),'.
+		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
+										  FROM `_vkuser`
+										  WHERE `app_id`=".APP_ID."
+										    AND `ws_id`=".$ws_id."
+											AND `worker`
+											AND `viewer_id`!=982006
+										  ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'WORKER_ASS=_toAss(WORKER_SPISOK),'.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_expense_category`

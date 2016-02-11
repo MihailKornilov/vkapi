@@ -390,7 +390,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'RULE_HISTORY_VIEW'://разрешать сотруднику просматривать историю действий
+	case 'RULE_HISTORY_VIEW'://видит историю действий
 		if(!RULE_SETUP_RULES)
 			jsonError();
 
@@ -398,12 +398,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$new = _num($_POST['v']);
-
-		$arr = array(
-			0 => 'нет',
-			1 => 'только свою',
-			2 => 'всю историю'
-		);
 
 		$old = _viewerRule($viewer_id, 'RULE_HISTORY_VIEW');
 
@@ -416,10 +410,46 @@ switch(@$_POST['op']) {
 			'type_id' => 1012,
 			'worker_id' => $viewer_id,
 			'v1' => '<table>'.
-						_historyChange('Видит историю действий', $arr[$old], $arr[$new]).
+						_historyChange('Видит историю действий', _ruleHistoryView($old), _ruleHistoryView($new)).
 					'</table>'
 		));
 
+		jsonSuccess();
+		break;
+	case 'setup_history_view_worker_all'://видимость истории действий для всех сотрудников
+		if(!RULE_SETUP_RULES)
+			jsonError();
+
+		if(!$values = $_POST['v'])
+			jsonError();
+
+		$changes = '';
+
+		foreach(explode(',', $values) as $v) {
+			$ex = explode(':', $v);
+
+
+			if(!$viewer_id = _num($ex[0]))
+				jsonError();
+			if(!preg_match(REGEXP_NUMERIC, $ex[1]) || $ex[1] > 2)
+				jsonError();
+
+			$new = _num($ex[1]);
+			$old = _viewerRule($viewer_id, 'RULE_HISTORY_VIEW');
+
+			if($old == $new)
+				continue;
+
+			_workerRuleQuery($viewer_id, 'RULE_HISTORY_VIEW', $new);
+
+			$changes .= _historyChange(_viewer($viewer_id, 'viewer_name'), _ruleHistoryView($old), _ruleHistoryView($new));
+		}
+
+		if($changes)
+			_history(array(
+				'type_id' => 1013,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;

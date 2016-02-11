@@ -145,8 +145,20 @@ function setup_worker_rule($viewer_id) {
 		return _err('Пользователь <b>'.$u['viewer_name'].'</b><br />уже не является сотрудником.');
 
 	$rule = _viewerRule($viewer_id);
+
+	//видимость истории действий всех сотрудников
+	$sql = "SELECT `viewer_id`,`value`
+			FROM `_vkuser_rule`
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='RULE_HISTORY_VIEW'
+			  AND `viewer_id`<".VIEWER_MAX;
+	$hist_worker_all = query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+
 	return
-	'<script type="text/javascript">var RULE_VIEWER_ID='.$viewer_id.';</script>'.
+	'<script type="text/javascript">'.
+		'var RULE_VIEWER_ID='.$viewer_id.','.
+			'RULE_HISTORY_ALL='.$hist_worker_all.';'.
+	'</script>'.
 	'<div id="setup_rule">'.
 		(!$u['viewer_admin'] ? '<div class="img_del'._tooltip('Удалить сотрудника', -119, 'r').'</div>' : '').
 		'<table class="utab">'.
@@ -204,7 +216,8 @@ function setup_worker_rule($viewer_id) {
 						'</div>'.
 						_check('RULE_SETUP_REKVISIT', 'Реквизиты организации', $rule['RULE_SETUP_REKVISIT']).
 						_check('RULE_SETUP_INVOICE', 'Расчётные счета', $rule['RULE_SETUP_INVOICE']).
-				'<tr><td class="label">Видит историю действий:<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
+				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить права всех сотрудников', -20).'Видит историю действий</a>:'.
+					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
 				'<tr><td class="label">Видит историю переводов по расчётным счетам:<td>'._check('RULE_INVOICE_TRANSFER', '', $rule['RULE_INVOICE_TRANSFER']).
 				'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
 			'</table>'.
@@ -280,6 +293,21 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 
 	xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 	xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
+}
+function _ruleHistoryView($id=false) {
+	$arr = array(
+		0 => 'нет',
+		1 => 'только свою',
+		2 => 'всю историю'
+	);
+
+	if($id === false)
+		return $arr;
+
+	if(!isset($arr[$id]))
+		return 'неизвестный id';
+
+	return $arr[$id];
 }
 
 function setup_rekvisit() {

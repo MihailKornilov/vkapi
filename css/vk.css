@@ -1156,6 +1156,8 @@ button.vk.small{padding: 3px 10px 4px}
 
 
 /* Короткие стили */
+.w100{width:100px}
+.w150{width:150px}
 .mt20{margin-top:20px}
 .bs10{border-spacing:10px}
 .red{color:#E22}
