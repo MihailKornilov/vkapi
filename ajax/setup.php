@@ -471,6 +471,32 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_SETUP_ZAYAV_STATUS'://разрешать сотруднику настраивать статусы заявок
+		if(!RULE_SETUP_RULES)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$new = _num($_POST['v']);
+
+		$old = _viewerRule($viewer_id, 'RULE_SETUP_ZAYAV_STATUS');
+
+		if($old == $new)
+			jsonError();
+
+		_workerRuleQuery($viewer_id, 'RULE_SETUP_ZAYAV_STATUS', $new);
+
+		_history(array(
+			'type_id' => 1012,
+			'worker_id' => $viewer_id,
+			'v1' => '<table>'.
+						_historyChange('Настройка статусов заявок', _daNet($old), _daNet($new)).
+					'</table>'
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'RULE_MY_PAY_SHOW_PERIOD'://мои настройки: показывать платежи: за день, неделю, месяц
 		_workerRuleQuery(VIEWER_ID, 'RULE_MY_PAY_SHOW_PERIOD', _num($_POST['v']));
@@ -911,6 +937,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_zayav_status_add':
+		if(!RULE_SETUP_ZAYAV_STATUS)
+			jsonError();
+
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$color = _txt($_POST['color']);
@@ -974,6 +1003,8 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'setup_zayav_status_edit':
+		if(!RULE_SETUP_ZAYAV_STATUS)
+			jsonError();
 		if(!$id = _num($_POST['id']))
 			jsonError();
 

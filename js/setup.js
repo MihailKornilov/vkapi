@@ -1024,6 +1024,7 @@ $(document)
 			$('#RULE_SETUP_RULES')._check(setupRuleCheck);
 			$('#RULE_SETUP_REKVISIT')._check(setupRuleCheck);
 			$('#RULE_SETUP_INVOICE')._check(setupRuleCheck);
+			$('#RULE_SETUP_ZAYAV_STATUS')._check(setupRuleCheck);
 			$('#RULE_HISTORY_VIEW')._dropdown({
 				spisok:[
 					{uid:0,title:'нет'},

@@ -47,6 +47,9 @@ function _setup() {
 	if(!RULE_SETUP_REKVISIT)
 		unset($page['rekvisit']);
 
+	if(!RULE_SETUP_ZAYAV_STATUS)
+		unset($page['zayav_status']);
+
 	if(_service('count') < 2)
 		unset($page['service']);
 
@@ -178,6 +181,7 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td><td><div class="vkButton" id="w-save"><button>Сохранить</button></div>'.
 		'</table>'.
 
+	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
 		'<div class="headName">Дополнительные настройки</div>'.
 		'<table class="rtab">'.
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
@@ -192,7 +196,7 @@ function setup_worker_rule($viewer_id) {
 		'</table>'.
 
 
-	(!$u['viewer_admin'] && $u['pin'] ?
+	($u['pin'] ?
 		'<div class="headName">Пин-код</div>'.
 		'<div class="vkButton" id="pin-clear"><button>Сбросить пин-код</button></div>'
 	: '').
@@ -204,7 +208,6 @@ function setup_worker_rule($viewer_id) {
 			'</table.
 */
 
-	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
 		'<div class="headName">Права в приложении</div>'.
 			_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
 			'<table class="rtab'.($rule['RULE_APP_ENTER'] ? '' : ' dn').'" id="div-app-enter">'.
@@ -216,6 +219,7 @@ function setup_worker_rule($viewer_id) {
 						'</div>'.
 						_check('RULE_SETUP_REKVISIT', 'Реквизиты организации', $rule['RULE_SETUP_REKVISIT']).
 						_check('RULE_SETUP_INVOICE', 'Расчётные счета', $rule['RULE_SETUP_INVOICE']).
+						_check('RULE_SETUP_ZAYAV_STATUS', 'Статусы заявок', $rule['RULE_SETUP_ZAYAV_STATUS']).
 				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить права всех сотрудников', -20).'Видит историю действий</a>:'.
 					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
 				'<tr><td class="label">Видит историю переводов по расчётным счетам:<td>'._check('RULE_INVOICE_TRANSFER', '', $rule['RULE_INVOICE_TRANSFER']).
