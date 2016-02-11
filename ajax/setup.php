@@ -871,9 +871,6 @@ switch(@$_POST['op']) {
 		if(empty($name))
 			jsonError();
 
-		if(strlen($color) != 6)
-			jsonError();
-
 		setupZayavStatusDefaultDrop($default);
 
 		$sql = "INSERT INTO `_zayav_status` (
@@ -906,6 +903,10 @@ switch(@$_POST['op']) {
 					"._maxSql('_zayav_status')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$id = query_insert_id('_zayav_status', GLOBAL_MYSQL_CONNECT);
+
+		setup_status_next_insert($id, $_POST);
 
 		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
 		_wsJsValues();
@@ -963,24 +964,7 @@ switch(@$_POST['op']) {
 
 		$sql = "DELETE FROM `_zayav_status_next` WHERE `status_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		if($ids = _ids($_POST['next_ids'], 1)) {
-			$values = array();
-			foreach($ids as $i)
-				$values[] = "(
-					".APP_ID.",
-					".WS_ID.",
-					".$id.",
-					".$i."
-				)";
-			$sql = "INSERT INTO `_zayav_status_next` (
-						`app_id`,
-						`ws_id`,
-						`status_id`,
-						`next_id`
-					) VALUES ".implode(',', $values);
-			query($sql, GLOBAL_MYSQL_CONNECT);
-		}
+		setup_status_next_insert($id, $_POST);
 
 		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
 		_wsJsValues();
@@ -1029,4 +1013,25 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(setup_zayav_expense_spisok());
 		jsonSuccess($send);
 		break;
+}
+
+function setup_status_next_insert($status_id, $post) {
+	if(!$ids = _ids($post['next_ids'], 1))
+		return;
+
+	$values = array();
+	foreach($ids as $i)
+		$values[] = "(
+			".APP_ID.",
+			".WS_ID.",
+			".$status_id.",
+			".$i."
+		)";
+	$sql = "INSERT INTO `_zayav_status_next` (
+				`app_id`,
+				`ws_id`,
+				`status_id`,
+				`next_id`
+			) VALUES ".implode(',', $values);
+	query($sql, GLOBAL_MYSQL_CONNECT);
 }

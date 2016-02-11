@@ -719,7 +719,7 @@ function _zayav_info() {
 	$z['sum_pay'] = _cena($z['sum_pay']);
 
 	//разница начислений и платежей
-	$sum_diff = $z['sum_dolg'] ? ($z['sum_dolg'] < 0 ? 'недоплачено ' : 'переплачено ').abs($z['sum_dolg']).' руб.' : '';
+	$sum_diff = abs($z['sum_dolg']) ? ($z['sum_dolg'] < 0 ? 'недоплачено ' : 'переплачено ').abs($z['sum_dolg']).' руб.' : '';
 
 	return
 	_attachJs(array('zayav_id'=>$zayav_id)).
