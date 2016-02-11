@@ -36,12 +36,13 @@ function _money() {
 		case 'schet': $content = _schet(); break;
 		case 'invoice': $content = invoice(); break;
 	}
+
 	return
 		'<div id="dopLinks">'.
 			'<a class="link'.($d == 'income' ? ' sel' : '').'" href="'.URL.'&p=money&d=income">Платежи</a>'.
 			'<a class="link'.($d == 'expense' ? ' sel' : '').'" href="'.URL.'&p=money&d=expense">Расходы</a>'.
 			'<a class="link'.($d == 'refund' ? ' sel' : '').'" href="'.URL.'&p=money&d=refund">Возвраты</a>'.
-			'<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>'.
+			(_schetCount() ? '<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>' : '').
 			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета</a>'.
 		'</div>'.
 		$content;
@@ -1764,6 +1765,13 @@ function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
 			  ($withDeleted ? '' : ' AND !`deleted`')."
 			  AND `id`=".$id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _schetCount() {//количество счетов в приложении (для показа ссылки на счета)
+	$sql = "SELECT COUNT(*)
+			FROM `_schet`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID;
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
 }
 function _schetValToList($arr) {//данные о счёте, подставляемые в список
 	$ids = array();

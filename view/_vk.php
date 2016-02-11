@@ -265,11 +265,12 @@ function _footer() {
 	mysql_close();
 
 	return
-				_debug().
-				'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
-			'</div>'.
-			_footerYandexMetrika().
-		'</body></html>';
+			_debug().
+			'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+		'</div>'.
+//		_footerYandexMetrika().
+		_footerGoogleAnalytics().
+	'</body></html>';
 }
 function _footerYandexMetrika() {
 	if(LOCAL || SA)
@@ -307,6 +308,21 @@ function _footerYandexMetrika() {
 		'</script>'.
 		'<noscript><div><img src="https://mc.yandex.ru/watch/35023590?ut=noindex" style="position:absolute; left:-9999px;" /></div></noscript>'.
 	'<!-- /Yandex.Metrika counter -->';
+}
+function _footerGoogleAnalytics() {
+	if(LOCAL || SA)
+		return '';
+
+	return
+	'<script>'.
+		"(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){".
+		"(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),".
+		"m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)".
+		"})(window,document,'script','//www.google-analytics.com/analytics.js','ga');".
+
+		"ga('create', 'UA-73713608-1', 'auto');".
+		"ga('send', 'pageview');".
+	"</script>";
 }
 
 function _app($i='all') {//Получение данных о приложении
