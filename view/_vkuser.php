@@ -290,6 +290,7 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 	define('VIEWER_CITY_ID', $u['viewer_city_id']);
 
 	define('PIN', !empty($u['pin']));
+	define('PIN_LEN', strlen($u['pin']));
 	define('PIN_TIME_KEY', APP_ID.'pin_time_'.VIEWER_ID);
 	define('PIN_TIME_LEN', 3600); // длительность в секундах действия пинкода
 	define('PIN_TIME', empty($_SESSION[PIN_TIME_KEY]) ? 0 : $_SESSION[PIN_TIME_KEY]);

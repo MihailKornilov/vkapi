@@ -159,11 +159,15 @@ var VK_SCROLL = 0,
 
 		return _num(_cookie(key));
 	},
-	pinLoad = function() {
+	pinLoad = function(i) {
 		$('#pin')
 			.focus()
 			.keydown(function() {
 				$('.red').html('&nbsp;');
+			})
+			.keyup(function() {
+				if($(this).val().length * 7 == i)
+					pinEnter();
 			})
 			.keyEnter(pinEnter);
 	},
@@ -173,7 +177,7 @@ var VK_SCROLL = 0,
 			pin:$.trim($('#pin').val())
 		};
 		if(send.pin && send.pin.length > 2) {
-			$('.vkButton').addClass('busy');
+			$('.vk').addClass('_busy');
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success)
 					location.href = URL +
@@ -181,7 +185,7 @@ var VK_SCROLL = 0,
 									'&d=' + _cookie('d') +
 									'&id=' + _cookie('id');
 				else {
-					$('.vkButton').removeClass('busy');
+					$('.vk').removeClass('_busy');
 					$('#pin').val('').focus();
 					$('.red').html(res.text);
 				}

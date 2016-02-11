@@ -744,7 +744,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуетс€
 			'<input type="password" id="pin" maxlength="10">'.
 			'<button class="vk" onclick="pinEnter()">¬ход</button>'.
 			'<div class="red">&nbsp;</div>'.
-			'<script type="text/javascript">pinLoad()</script>'.
+			'<script type="text/javascript">pinLoad('.(PIN_LEN * 7).')</script>'.
 		'</div>'.
 		_footer();
 
