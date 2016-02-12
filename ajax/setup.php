@@ -1098,6 +1098,109 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(setup_zayav_expense_spisok());
 		jsonSuccess($send);
 		break;
+
+	case 'setup_zayav_expense_add':
+		if(!SA)
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$dop = _num($_POST['dop']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_expense_category` (
+					`app_id`,
+					`name`,
+					`dop`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					".$dop.",
+					"._maxSql('_zayav_expense_category')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1027,
+			'v1' => $name
+		));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_zayav_expense_edit':
+		if(!SA)
+			jsonError();
+
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$dop = _num($_POST['dop']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT * FROM `_zayav_expense_category` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_expense_category`
+				SET `name`='".addslashes($name)."',
+					`dop`=".$dop."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		_wsJsValues();
+
+		$changes =
+			_historyChange('Наименование', $r['name'], $name).
+			_historyChange('Дополнительное поле', $r['dop'], $dop, _zayavExpenseDop($r['dop']), _zayavExpenseDop($dop));
+		if($changes)
+			_history(array(
+				'type_id' => 1028,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_zayav_expense_del':
+		if(!SA)
+			jsonError();
+
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_zayav_expense_category` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav_expense` WHERE `category_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_expense_category` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1029,
+			'v1' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
 }
 
 function setup_status_next_insert($status_id, $post) {

@@ -1129,7 +1129,7 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
-				ORDER BY `id`";
+				ORDER BY `sort`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q)) {
 			$r['start'] = round($r['start'], 2);
