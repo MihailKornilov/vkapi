@@ -1134,12 +1134,15 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 		while($r = mysql_fetch_assoc($q)) {
 			$r['start'] = round($r['start'], 2);
 
-			$vw = array();
-			$r['worker'] = array();
+			$vw = array();//список имён сотрудников
+			$ass = array();//массив id сотрудников, которым доступен счёт для просмотра
 			if($r['visible'])
-				foreach(explode(',', $r['visible']) as $k)
+				foreach(explode(',', $r['visible']) as $k) {
 					$vw[] = _viewer($k, 'viewer_name');
+					$ass[$k] = 1;
+				}
 			$r['visible_worker'] = implode('<br />', $vw);
+			$r['viewer_visible_ass'] = $ass;
 
 			$arr[$r['id']] = $r;
 		}
@@ -1150,6 +1153,19 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	//все счета
 	if(!$id)
 		return $arr;
+
+	//получение ids сотрудников, которым видны счета для js
+	if($id == 'visible_js') {
+		$spisok = array();
+
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['viewer_visible_ass'];
+
+		if(!$spisok)
+			return '{}';
+
+		return str_replace('"', '', json_encode($spisok));
+	}
 
 	//некорректный id счёта
 	if(!_num($id))
@@ -1162,6 +1178,9 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	//возврат данных всех счетов
 	if($i == 'all')
 		return $arr[$id];
+
+	if($i == 'viewer_visible') //видимость для текущего сотрудника
+		return _bool(@$arr[$id]['viewer_visible_ass'][VIEWER_ID]);
 
 	//неизвестный ключ счёта
 	if(!isset($arr[$id][$i]))
@@ -1221,12 +1240,29 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 
 	return round($income - $expense - $refund - $from + $to - $start, 2);
 }
+function _invoiceVisibleJs() {//получение ids сотрудников, которым видны счета
+	$spisok = array();
+	$sql = "SELECT *
+			FROM `_zayav_status_next`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			ORDER BY `id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['status_id']][$r['next_id']] = 1;
+
+	if(!$spisok)
+		return '{}';
+
+	return str_replace('"', '', json_encode($spisok));
+}
+
 function invoice() {//страница со списком счетов и переводами между счетами
 	return
 		'<div id="money-invoice">'.
 			'<div class="headName">'.
 				'Расчётные счета'.
-(VIEWER_ADMIN ? '<a class="add">Новый счёт</a>' : '').
+(RULE_SETUP_INVOICE ? '<a class="add">Новый счёт</a>' : '').
 			'</div>'.
 			'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
 		(RULE_INVOICE_TRANSFER ?
@@ -1236,31 +1272,33 @@ function invoice() {//страница со списком счетов и переводами между счетами
 		'</div>';
 }
 function invoice_spisok() {
-	if(!$invoice = _invoice())
+	if(!_invoice())
 		return 'Счета не определены.';
 
-	$send = '<dl'.(VIEWER_ADMIN ? ' class="_sort" val="_money_invoice"' : '').'>';
-	foreach($invoice as $r) {
+	$send = '<dl'.(RULE_SETUP_INVOICE ? ' class="_sort" val="_money_invoice"' : '').'>';
+	foreach(_invoice() as $r) {
 		if($r['deleted'])
+			continue;
+		if(!RULE_SETUP_INVOICE && !_invoice($r['id'], 'viewer_visible'))
 			continue;
 
 		$send .= '<dd val="'.$r['id'].'">'.
 		'<table class="_spisok">'.
 			'<tr>'.
-				'<td class="name'.(VIEWER_ADMIN ? ' move' : '').'">'.
+				'<td class="name'.(RULE_SETUP_INVOICE ? ' move' : '').'">'.
 					'<b>'.$r['name'].'</b>'.
 					'<div class="about">'.$r['about'].'</div>'.
-(VIEWER_ADMIN && $r['confirm_income'] ? '<h6>Подтверждение поступления на счёт</h6>' : '').
-(VIEWER_ADMIN && $r['confirm_transfer'] ? '<h6>Подтверждение переводов</h6>' : '').
-(VIEWER_ADMIN ? '<td class="worker">'.$r['visible_worker'] : '').
+(RULE_SETUP_INVOICE && $r['confirm_income'] ? '<h6>Подтверждение поступления на счёт</h6>' : '').
+(RULE_SETUP_INVOICE && $r['confirm_transfer'] ? '<h6>Подтверждение переводов</h6>' : '').
+(RULE_SETUP_INVOICE ? '<td class="worker">'.$r['visible_worker'] : '').
 				'<td class="balans"><b>'.($r['start'] != -1 ? _sumSpace(_invoiceBalans($r['id'])).'</b> руб.' : '').
 				'<td class="ed">'.
 					'<div val="'.$r['id'].'" class="img_setup'._tooltip('Выполнить операцию над счётом', -195, 'r').'</div>'.
 					'<div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'.
-			(VIEWER_ADMIN ?
+			(RULE_SETUP_INVOICE ?
 				'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
 				'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
-				'<input type="hidden" class="visible_id" value="'.(empty($r['worker']) ? 0 : $r['visible']).'" />'
+				'<input type="hidden" class="visible_id" value="'.(empty($r['visible']) ? 0 : $r['visible']).'" />'
 			: '').
 		'</table>';
 	}

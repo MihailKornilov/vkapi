@@ -49,7 +49,7 @@ var _accrualAdd = function() {
 				'<table class="tab">' +
 		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
 		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceVisible(1) + '" />' +
 					'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 		   (zayav ? '<tr><td class="label">Предоплата:<td>' : '') +
@@ -77,17 +77,18 @@ var _accrualAdd = function() {
 
 			'</div>';
 		var dialog = _dialog({
-			top:zayav ? 30 : 60,
-			width:460,
-			head:'Внесение платежа',
-			padding:0,
-			content:html,
-			submit:submit
-		});
+				top:zayav ? 30 : 60,
+				width:460,
+				head:'Внесение платежа',
+				padding:0,
+				content:html,
+				submit:submit
+			});
+
 		$('#invoice_id-add')._select({
 			width:218,
 			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
+			spisok:_invoiceVisible(),
 			func:function(id) {
 				$('#sum').focus();
 				$('.tr_confirm')[(INVOICE_CONFIRM_INCOME[id] ? 'remove' : 'add') + 'Class']('dn');
@@ -264,7 +265,7 @@ var _accrualAdd = function() {
 			'</div>' +
 			'<table id="_refund-add-tab">' +
 				'<tr><td class="label">Клиент:<td>' + ZI.client_link +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + _invoiceVisible(1) + '" />' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 				'<tr><td class="label">Причина:<td><input type="text" id="about" />' +
 			'</table>',
@@ -280,7 +281,7 @@ var _accrualAdd = function() {
 		$('#invoice_id')._select({
 			width:200,
 			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
+			spisok:_invoiceVisible(),
 			func:function(v) {
 				$('#sum').focus();
 			}
@@ -332,34 +333,34 @@ var _accrualAdd = function() {
 		}, 'json');
 	},
 
-	_expenseTab = function(dialog, arr) {//таблица для внесения или редактирования расхода
-		arr = $.extend({
+	_expenseTab = function(dialog, o) {//таблица для внесения или редактирования расхода
+		o = $.extend({
 			id:0,
 			category_id:0,
-			invoice_id:INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0,
+			invoice_id:_invoiceVisible(1),
 			worker_id:0,
 			attach_id:0,
 			sum:'',
 			about:'',
 			mon:(new Date).getMonth() + 1,
 			year:(new Date).getFullYear()
-		}, arr);
+		}, o);
 
-		ATTACH[arr.attach_id] = arr.attach;
+		ATTACH[o.attach_id] = o.attach;
 
 		var html =
 			'<table id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" value="' + arr.category_id + '" />' +
+				'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
 						'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
-				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id-add" value="' + arr.worker_id + '" />' +
+				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id-add" value="' + o.worker_id + '" />' +
 				'<tr class="tr-work dn"><td class="label">Месяц:' +
-					'<td><input type="hidden" id="tabmon" value="' + arr.mon + '" /> ' +
-						'<input type="hidden" id="tabyear" value="' + arr.year + '" />' +
-				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + arr.about + '" />' +
-				'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + arr.attach_id + '" />' +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + arr.invoice_id + '" />' +
+					'<td><input type="hidden" id="tabmon" value="' + o.mon + '" /> ' +
+						'<input type="hidden" id="tabyear" value="' + o.year + '" />' +
+				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + o.about + '" />' +
+				'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + o.attach_id + '" />' +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + o.invoice_id + '" />' +
 				'<tr><td class="label">Сумма:' +
-					'<td><input type="text" id="sum" class="money" value="' + arr.sum + '"' + (arr.id ? ' disabled' : '') + ' /> руб.' +
+					'<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
 			'</table>';
 		dialog.content.html(html);
 		dialog.submit(submit);
@@ -373,21 +374,21 @@ var _accrualAdd = function() {
 				$('.tr-work')[(EXPENSE_WORKER_USE[id] ? 'remove' : 'add') + 'Class']('dn');
 			}
 		});
-		$('.tr-work')[(EXPENSE_WORKER_USE[arr.category_id] ? 'remove' : 'add') + 'Class']('dn');
+		$('.tr-work')[(EXPENSE_WORKER_USE[o.category_id] ? 'remove' : 'add') + 'Class']('dn');
 		$('#worker_id-add')._select({
 			width:200,
 			title0:'Не выбран',
-			spisok:arr.id ? EXPENSE_WORKER : WORKER_SPISOK
+			spisok:o.id ? EXPENSE_WORKER : WORKER_SPISOK
 		});
 		$('#about').focus();
 		$('#invoice_id-add')._select({
 			width:200,
 			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
+			spisok:o.id ? INVOICE_SPISOK : _invoiceVisible(),
 			func:function() {
 				$('#sum').focus();
 			},
-			disabled:arr.id
+			disabled:o.id
 		});
 		$('#tabmon')._select({
 			width:80,
@@ -395,7 +396,7 @@ var _accrualAdd = function() {
 		});
 		$('#tabyear')._select({
 			width:60,
-			spisok:_toSpisok(_yearAss(arr.year))
+			spisok:_toSpisok(_yearAss(o.year))
 		});
 		$('#attach_id-add')._attach();
 
@@ -403,8 +404,8 @@ var _accrualAdd = function() {
 
 		function submit() {
 			var send = {
-				id:arr.id,
-				op:arr.id ? 'expense_edit' : 'expense_add',
+				id:o.id,
+				op:o.id ? 'expense_edit' : 'expense_add',
 				category_id:_num($('#category_id-add').val()),
 				worker_id:$('#worker_id-add').val(),
 				attach_id:$('#attach_id-add').val(),
@@ -807,7 +808,22 @@ var _accrualAdd = function() {
 			}, 'json');
 		}
 	},
-
+	_invoiceVisible = function(def) {//составление списка счетов, которые может выбрать сотрудник
+		if(window.IVD) {//INVOICE_VISIBLE_DEFINED
+			if(def)
+				return IVD.length ? IVD[0].uid : 0;
+			return IVD;
+		}
+		var send = [];
+		for(var n = 0; n < INVOICE_SPISOK.length; n++) {
+			var sp = INVOICE_SPISOK[n];
+			if(!INVOICE_VISIBLE[sp.uid][VIEWER_ID])
+				continue;
+			send.push(sp);
+		}
+		window.IVD = send;
+		return _invoiceVisible(def);
+	},
 
 	_salaryNoAccRecalcHint = function() {
 		$('#noacc-recalc').vkHint({

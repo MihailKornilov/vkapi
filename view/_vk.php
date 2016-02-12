@@ -1185,6 +1185,7 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 														  AND `ws_id`=".$ws_id."
 												          AND `confirm_transfer`
 												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'INVOICE_VISIBLE='._invoice('visible_js').','.
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
 										  FROM `_vkuser`
 										  WHERE `app_id`=".APP_ID."

@@ -1317,7 +1317,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'invoice_reset':
-		if(!VIEWER_ADMIN)
+		if(!RULE_SETUP_INVOICE)
 			jsonError();
 		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
@@ -1350,7 +1350,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'invoice_close':
-		if(!VIEWER_ADMIN)
+		if(!RULE_SETUP_INVOICE)
 			jsonError();
 		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
