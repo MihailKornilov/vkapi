@@ -385,10 +385,11 @@ var _zayavSpisok = function(v, id) {
 			});
 
 		$('#new-tab').slideDown(300);
+
 		$('#zs-executer_id')._select({
 				width:170,
 				title0:'не назначен',
-				spisok:WORKER_SPISOK
+				spisok:_zayavExecuter()
 			});
 		$('#zs-comm').autosize();
 		$('#zs-remind')._check({
@@ -536,6 +537,19 @@ var _zayavSpisok = function(v, id) {
 					dialog.abort();
 			}, 'json');
 		}
+	},
+	_zayavExecuter = function() {//составление списка исполнителей
+		if(window.RE)//RULE_EXECUTER
+			return RE;
+
+		var send = [];
+		for(var n = 0; n < WORKER_SPISOK.length; n++) {
+			var sp = WORKER_SPISOK[n];
+			if(WORKER_EXECUTER[sp.uid])
+				send.push(sp);
+		}
+		window.RE = send;
+		return _zayavExecuter();
 	},
 
 	_zayavDogovorCreate = function() {
@@ -1190,7 +1204,7 @@ $(document)
 				});
 			$('#executer_id')._dropdown({
 				title0:'не назначен',
-				spisok: WORKER_SPISOK,
+				spisok: _zayavExecuter(),
 				func: function (v, id) {
 					var td = $('#' + id).parent(),
 						send = {

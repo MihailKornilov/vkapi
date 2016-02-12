@@ -1263,6 +1263,22 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			WHERE `id`=".$zayav_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
+function _zayavExecuterJs() {//список сотрудников, которые могут быть исполнителями
+	$sql = "SELECT `viewer_id`
+			FROM `_vkuser`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker`";
+	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT `viewer_id`,1
+			FROM `_vkuser_rule`
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='RULE_EXECUTER'
+			  AND `value`
+			  AND `viewer_id` IN (".$ids.")";
+	return query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+}
 
 
 /* Кеширование видов изделий */

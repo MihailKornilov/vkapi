@@ -295,6 +295,33 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_EXECUTER'://может быть исполнителем
+		if(!RULE_SETUP_RULES)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$new = _num($_POST['v']);
+
+		$old = _viewerRule($viewer_id, 'RULE_EXECUTER');
+
+		if($old == $new)
+			jsonError();
+
+		_workerRuleQuery($viewer_id, 'RULE_EXECUTER', $new);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1012,
+			'worker_id' => $viewer_id,
+			'v1' => '<table>'.
+						_historyChange('ћожет быть исполнителем за€вок', _daNet($old), _daNet($new)).
+					'</table>'
+		));
+
+		jsonSuccess();
+		break;
 	case 'RULE_SALARY_ZAYAV_ON_PAY'://Ќачисл€ть з/п по за€вке при отсутствии долга
 		$_POST['h1'] = 1046;
 		$_POST['h0'] = 1047;

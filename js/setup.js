@@ -970,6 +970,7 @@ $(document)
 				}
 			});
 			$('#RULE_SALARY_SHOW')._check(setupRuleCheck);
+			$('#RULE_EXECUTER')._check(setupRuleCheck);
 			$('#RULE_SALARY_ZAYAV_ON_PAY')._check(setupRuleCheck);
 			$('#RULE_SALARY_BONUS')._check(function(v, id) {
 				var t = $(this);

@@ -1194,6 +1194,7 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 											AND `viewer_id`!=982006
 										  ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'WORKER_ASS=_toAss(WORKER_SPISOK),'.
+		"\n".'WORKER_EXECUTER='._zayavExecuterJs().','.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_expense_category`

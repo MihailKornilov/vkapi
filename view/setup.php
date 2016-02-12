@@ -181,10 +181,11 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td><td><div class="vkButton" id="w-save"><button>Сохранить</button></div>'.
 		'</table>'.
 
-	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX && RULE_SETUP_RULES ?
+	(RULE_SETUP_RULES ?
 		'<div class="headName">Дополнительные настройки</div>'.
 		'<table class="rtab">'.
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
+			'<tr><td class="lab"><td>'._check('RULE_EXECUTER', 'Может быть исполнителем заявок', $rule['RULE_EXECUTER']).
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', 'Начислять з/п по заявке при отсутствии долга', $rule['RULE_SALARY_ZAYAV_ON_PAY']).
 /*
 			'<tr><td class="lab">Начислять бонусы:'.
@@ -195,6 +196,7 @@ function setup_worker_rule($viewer_id) {
 */
 		'</table>'.
 
+	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX ?
 
 	($u['pin'] ?
 		'<div class="headName">Пин-код</div>'.
@@ -226,6 +228,9 @@ function setup_worker_rule($viewer_id) {
 				'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
 			'</table>'.
 		'</div>'
+
+	: '')
+
 	: '').
 
 	'</div>';
