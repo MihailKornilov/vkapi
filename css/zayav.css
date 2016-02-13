@@ -52,6 +52,12 @@
 ._zayav-unit .schet-link{margin-bottom:-5px}
 ._zayav-unit.deleted{background-color:#ddd;opacity:.7}
 ._zayav-unit.deleted .name{color:#777}
+._zayav-unit .status{
+	padding:4px;
+	font-weight:bold;
+	text-align:right;
+	text-shadow:#555 0 0 6px;
+}
 
 /*
 .zayav_unit .image{
@@ -63,6 +69,45 @@
 	background-color:#FFF;
 }
 */
+
+
+#zayav-status-filter{position:relative}
+#zayav-status-filter #any{
+	padding:5px 12px;
+	color:#FFF;
+	background:#6B8EB5;
+	border:#39659C solid 1px;
+	cursor:pointer;
+}
+#zayav-status-filter.us #any{display:none}
+#zayav-status-filter #sel{
+	padding:5px 12px;
+	color:#000;
+	border:#ccc solid 1px;
+	cursor:pointer;
+}
+#zayav-status-filter:not(.us) #sel{display:none}
+#zayav-status-filter #status-tab{display:none}
+#zayav-status-filter table{
+	position:absolute;
+	right:0;
+	top:0;
+	z-index:1000;
+	border-spacing:1px;
+	background:#aaa;
+	box-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+#zayav-status-filter tr{background:#fff;cursor:pointer}
+#zayav-status-filter td{padding:8px 60px 8px 8px;white-space:nowrap}
+#zayav-status-filter td:hover{background-color:#fff}
+#zayav-status-filter em{
+	color:#777;
+	font-weight:bold;
+	position:absolute;
+	right:8px;
+}
+
+
 
 /* Внесение новой заявки из клиента - список видов заявок */
 #_client-zayav-add-tab .u{

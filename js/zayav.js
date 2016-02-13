@@ -937,7 +937,7 @@ $(document)
 		$('#find')._search('clear');    ZAYAV.find = '';
 		$('#sort')._radio(1);           ZAYAV.sort = 1;
 		$('#desc')._check(0);           ZAYAV.desc = 0;
-		$('#status').rightLink(0);		ZAYAV.status = 0;
+		$('#zayav-status-filter').removeClass('us');		ZAYAV.status = 0;
 
 		$('#srok').val('0000-00-00');
 		$('.srok-link span').html('не указан');
@@ -962,6 +962,28 @@ $(document)
 		$('#deleted_only')._check(0);	ZAYAV.deleted_only = 0;
 
 		_zayavSpisok();
+	})
+
+	.on('click', '#zayav-status-filter #sel,#zayav-status-filter #any', function() {
+		var t = $(this).parent(),
+			tab = t.find('#status-tab');
+
+		tab.show();
+		t.addClass('us');
+		$(document).on('click.status_tab', function() {
+			tab.hide();
+			$(document).off('click.status_tab');
+		});
+	})
+	.on('click', '#zayav-status-filter td', function() {
+		var id = _num($(this).attr('val'));
+		ZAYAV.status = id;
+		_zayavSpisok();
+		$('#zayav-status-filter')[(id ? 'add' : 'remove') + 'Class']('us');
+
+		$('#sel')
+			.html(ZAYAV_STATUS_NAME_ASS[id])
+			.css('background', '#' + ZAYAV_STATUS_COLOR_ASS[id]);
 	})
 	.on('click', '._zayav-unit', function() {
 		var id = $(this).attr('val');

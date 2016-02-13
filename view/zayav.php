@@ -27,11 +27,8 @@ function _zayavStatus($id=false, $i='name') {
 			xcache_set($key, $arr, 86400);
 	}
 
-	if($id == 'all')
-		return $arr;
-
 	//фильтр для списка заявок
-	if($id == 'menu') {
+	if($i == 'filter') {
 		$sql = "SELECT
 					`status_id`,
 					COUNT(*) `count`
@@ -43,18 +40,34 @@ function _zayavStatus($id=false, $i='name') {
 				  AND !`deleted`
 				GROUP BY `status_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		while($r = mysql_fetch_assoc($q)) {
+		while($r = mysql_fetch_assoc($q))
 			$arr[$r['status_id']]['count'] = $r['count'];
-		}
 
-		$menu[0] = 'Любой статус';
+		$filter = '';
 		foreach($arr as $r) {
 			if(!$r['count'])
 				continue;
-			$menu[$r['id']] = $r['name'].' <b>'.$r['count'].'</b>';
+			$filter .=
+				'<tr style="background-color:#'.$r['color'].'">'.
+					'<td val="'.$r['id'].'">'.
+						$r['name'].
+						'<em>'.$r['count'].'</em>';
 		}
-		return $menu;
+		return
+			'<div id="zayav-status-filter"'.($id ? ' class="us"' : '').'">'.
+				'<div id="any">Любой статус</div>'.
+				'<div id="sel"'.($id ? ' style="background:#'.$arr[$id]['color'].'"' : '').'>'.($id ? $arr[$id]['name'] : '').'</div>'.
+				'<div id="status-tab">'.
+					'<table>'.
+						'<tr><td val="0"><b>Любой статус</b>'.
+						$filter.
+					'</table>'.
+				'</div>'.
+			'</div>';
 	}
+
+	if($id == 'all')
+		return $arr;
 
 	if($id == 'select') {
 		$send = array();
@@ -294,7 +307,7 @@ function _zayavFilter($v) {
 function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
 	$v = $data['filter'];
-
+//_pre(_zayavStatus($v['status'], 'filter'));
 	return
 	'<div id="_zayav">'.
 		_service('menu').
@@ -311,7 +324,7 @@ function _zayav_list($v=array()) {
 					_check('desc', 'Обратный порядок', $v['desc']).
 					'<div class="condLost'.(!empty($v['find']) ? ' dn' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
-						_rightLink('status', _zayavStatus('menu'), $v['status']).
+						_zayavStatus($v['status'], 'filter').
 
   (ZAYAV_INFO_PAY_TYPE ? '<div class="findHead">Расчёт</div>'.
 						  _radio('paytype', array(0=>'Не важно',1=>'Наличный',2=>'Безналиный'), $v['paytype'], 1)
@@ -595,6 +608,7 @@ function _zayav_spisok($v) {
 	         ($r['schet'] ? '<tr><td class="label topi">Счета:<td>'.$r['schet'] : '').
 				'</table>'.
 				'<div class="note">'.$r['note'].'</div>'.
+				'<div class="status" style="color:#'._zayavStatus($r['status_id'], 'color').'">'._zayavStatus($r['status_id']).'</div>'.
 			'</div>';
 	}
 
