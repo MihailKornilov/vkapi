@@ -461,12 +461,6 @@ var _accrualAdd = function() {
 			spisok:EXPENSE_SPISOK,
 			func:expenseSpisok
 		});
-		$('#worker_id')._select({
-			width:140,
-			title0:'Все сотрудники',
-			spisok:EXPENSE_WORKER,
-			func:expenseSpisok
-		});
 		$('#year').years({func:expenseSpisok});
 		$('#mon')._radio({
 			spisok:EXPENSE_MON,
@@ -477,6 +471,8 @@ var _accrualAdd = function() {
 		_expenseGraf();
 	},
 	_expenseGraf = function() {
+		if(!VIEWER_ADMIN)
+			return;
 		$('#container').highcharts({
 	        chart: {
 	            type: 'bar',
