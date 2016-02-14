@@ -1,4 +1,7 @@
 <?php
+if(!SA)
+	jsonError();
+
 switch(@$_POST['op']) {
 	case 'sa_menu_add':
 		$name = _txt($_POST['name']);

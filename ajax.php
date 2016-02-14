@@ -26,6 +26,7 @@ require_once GLOBAL_DIR_AJAX.'/money.php';
 require_once GLOBAL_DIR_AJAX.'/remind.php';
 require_once GLOBAL_DIR_AJAX.'/history.php';
 require_once GLOBAL_DIR_AJAX.'/setup.php';
+require_once GLOBAL_DIR_AJAX.'/manual.php';
 require_once GLOBAL_DIR_AJAX.'/sa.php';
 
 jsonError();

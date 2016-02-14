@@ -43,6 +43,7 @@ require_once GLOBAL_DIR.'/view/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
+require_once GLOBAL_DIR.'/view/manual.php';
 require_once GLOBAL_DIR.'/view/sa.php';
 
 _dbConnect('GLOBAL_');  //подключение к базе данных
@@ -192,6 +193,12 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		'<script type="text/javascript" src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
 	: '').
 
+		//–уководство
+	(@$_GET['p'] == 'manual' ?
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/manual'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/manual'.MIN.'.js?'.VERSION.'"></script>'
+	: '').
+
 		//—уперадмин (SA)
 	(@$_GET['p'] == 'sa' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/sa'.MIN.'.css?'.VERSION.'" />'.
@@ -212,8 +219,13 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 		case 'money':  return _money();
 		case 'report': return _report();
 		case 'setup':  return _setup();
+		case 'manual': return _manual();
 		case 'print':  _print_document(); exit;
 		case 'sa':
+			if(!SA) {
+				header('Location:'.URL);
+				exit;
+			}
 			switch(@$_GET['d']) {
 				default:            return sa_global_index();
 				case 'menu':        return sa_menu();
@@ -519,11 +531,13 @@ function _menuCache() {//получение списка разделов меню из кеша
 	return $sort;
 }
 function _menu() {//разделы основного меню
-	if(@$_GET['p'] == 'sa')
-		return '';
+	if(@$_GET['p'] == 'sa') return '';
+	if(@$_GET['p'] == 'manual') return '';
 
 	$link = '';
-	foreach(_menuCache() as $r)
+	foreach(_menuCache() as $r) {
+		if($r['p'] == 'manual' && !SA)
+			continue;
 		if($r['show']) {
 			$sel = $r['p'] == $_GET['p'] ? ' class="sel"' : '';
 			if($r['p'] == 'report')
@@ -533,6 +547,7 @@ function _menu() {//разделы основного меню
 					$r['name'].
 				'</a>';
 		}
+	}
 
 	return '<div id="_menu">'.$link.'</div>';
 }
