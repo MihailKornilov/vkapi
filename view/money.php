@@ -1315,9 +1315,11 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 		 AND `ws_id`=".WS_ID."
 		 AND !`deleted`";
 
+	if(RULE_INVOICE_TRANSFER == 1)
+		$cond .= " AND `viewer_id_add`=".VIEWER_ID;
+
 	$sql = "SELECT COUNT(*) FROM `_money_invoice_transfer` WHERE ".$cond;
-	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
-	if(!$all)
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Переводов нет.';
 
 	$sql = "SELECT *

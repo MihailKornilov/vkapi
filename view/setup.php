@@ -224,7 +224,8 @@ function setup_worker_rule($viewer_id) {
 						_check('RULE_SETUP_ZAYAV_STATUS', 'Статусы заявок', $rule['RULE_SETUP_ZAYAV_STATUS']).
 				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить права всех сотрудников', -20).'Видит историю действий</a>:'.
 					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
-				'<tr><td class="label">Видит историю переводов по расчётным счетам:<td>'._check('RULE_INVOICE_TRANSFER', '', $rule['RULE_INVOICE_TRANSFER']).
+				'<tr><td class="label">Видит переводы<br />по расчётным счетам:'.
+					'<td><input type="hidden" id="RULE_INVOICE_TRANSFER" value="'.$rule['RULE_INVOICE_TRANSFER'].'" />'.
 				'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
 			'</table>'.
 		'</div>'
@@ -308,6 +309,21 @@ function _ruleHistoryView($id=false) {
 		0 => 'нет',
 		1 => 'только свою',
 		2 => 'всю историю'
+	);
+
+	if($id === false)
+		return $arr;
+
+	if(!isset($arr[$id]))
+		return 'неизвестный id';
+
+	return $arr[$id];
+}
+function _ruleInvoiceTransfer($id=false) {
+	$arr = array(
+		0 => 'нет',
+		1 => 'только свои',
+		2 => 'все'
 	);
 
 	if($id === false)

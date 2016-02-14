@@ -481,11 +481,28 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'RULE_INVOICE_TRANSFER'://разрешать сотруднику видеть историю переводов по расчётным счетам
-		$_POST['h1'] = 1014;
-		$_POST['h0'] = 1015;
-
-		if(!setup_worker_rule_save($_POST))
+		if(!RULE_SETUP_RULES)
 			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$new = _num($_POST['v']);
+
+		$old = _viewerRule($viewer_id, 'RULE_INVOICE_TRANSFER');
+
+		if($old == $new)
+			jsonError();
+
+		_workerRuleQuery($viewer_id, 'RULE_INVOICE_TRANSFER', $new);
+
+		_history(array(
+			'type_id' => 1012,
+			'worker_id' => $viewer_id,
+			'v1' => '<table>'.
+						_historyChange('Видит переводы по расчётным счетам ', _ruleHistoryView($old), _ruleHistoryView($new)).
+					'</table>'
+		));
 
 		jsonSuccess();
 		break;
