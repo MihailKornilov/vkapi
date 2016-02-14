@@ -1030,6 +1030,7 @@ $(document)
 				spisok:RULE_HISTORY_SPISOK,
 				func:setupRuleCheck
 			});
+			$('#RULE_INVOICE_HISTORY')._check(setupRuleCheck);
 			$('#RULE_INVOICE_TRANSFER')._dropdown({
 				spisok:RULE_INVOICE_TRANSFER_SPISOK,
 				func:setupRuleCheck

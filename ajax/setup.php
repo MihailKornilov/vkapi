@@ -480,6 +480,15 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_INVOICE_HISTORY'://разрешать сотруднику видеть историю расчётных счетов
+		$_POST['h1'] = 1014;
+		$_POST['h0'] = 1015;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
 	case 'RULE_INVOICE_TRANSFER'://разрешать сотруднику видеть историю переводов по расчётным счетам
 		if(!RULE_SETUP_RULES)
 			jsonError();
@@ -506,7 +515,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'RULE_INCOME_VIEW'://разрешать сотруднику видеть историю платежей
+	case 'RULE_INCOME_VIEW'://разрешать сотруднику видеть список платежей
 		$_POST['h1'] = 1016;
 		$_POST['h0'] = 1017;
 

@@ -1294,12 +1294,15 @@ function invoice_spisok() {
 				'<td class="balans"><b>'.($r['start'] != -1 ? _sumSpace(_invoiceBalans($r['id'])).'</b> руб.' : '').
 				'<td class="ed">'.
 					'<div val="'.$r['id'].'" class="img_setup'._tooltip('Выполнить операцию над счётом', -195, 'r').'</div>'.
-					'<div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'.
-			(RULE_SETUP_INVOICE ?
+(RULE_INVOICE_HISTORY ?
+					'<div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'
+: '').
+
+(RULE_SETUP_INVOICE ?
 				'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
 				'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
 				'<input type="hidden" class="visible_id" value="'.(empty($r['visible']) ? 0 : $r['visible']).'" />'
-			: '').
+: '').
 		'</table>';
 	}
 	$send .= '</dl>';
