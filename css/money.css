@@ -94,6 +94,7 @@
 
 /* Расчётные счета */
 #money-invoice .headName{margin:15px 10px}
+#money-invoice ._info{margin:10px 10px 20px}
 #invoice-spisok{margin:10px 10px 25px}
 #invoice-spisok ._spisok{margin:1px 0 0 20px;width:560px}
 #invoice-spisok ._spisok:hover{background-color:#ffd}
@@ -128,6 +129,9 @@
 #invoice-spisok .img_note{margin-bottom:-2px}
 
 #transfer-spisok{margin:-10px 10px 10px}
+#transfer-spisok .confirm{font-size:10px;color:#090}
+#transfer-spisok .confirm.no{color:red}
+#transfer-spisok .vk{float:right}
 
 #invoice-setup-tab table{border-spacing:10px}
 #invoice-setup-tab .u{

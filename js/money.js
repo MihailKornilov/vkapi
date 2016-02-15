@@ -556,7 +556,7 @@ var _accrualAdd = function() {
 
 				'<tr><td class="label">' +
 						'Подтверждение перевода:' +
-						'<em>Требовать подтверждение, если на этот расчётный счёт был совершён перевод.</em>' +
+						'<em>Требовать подтверждение, если по этому расчётному счёту был совершён перевод.</em>' +
 					'<td><input type="hidden" id="transfer_confirm" value="' + o.transfer_confirm + '" />' +
 
 				'<tr><td class="label topi">' +
@@ -1996,6 +1996,39 @@ $(document)
 				$('#transfer-spisok').html(res.t);
 			}
 		});
+	})
+	.on('click', '#transfer-spisok .vk.small', function() {
+		var t = $(this),
+			p = _parent(t),
+			o = t.attr('val').split('#'),
+			html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Со счёта:<td><u>' + INVOICE_ASS[o[1]] + '</u>' +
+					'<tr><td class="label">На счёт:<td><u>' + INVOICE_ASS[o[2]] + '</u>' +
+					'<tr><td class="label">Сумма:<td><b>' + o[3] + '</b> руб.' +
+					'<tr><td class="label">Дата перевода:<td>' + o[4] +
+				'</table>',
+			dialog = _dialog({
+				width:320,
+				head:'Подтверждение перевода',
+				content:html,
+				butSubmit:'Подтвердить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'invoice_transfer_confirm',
+				id:o[0]
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#transfer-spisok').html(res.t);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 
 	.on('click', '#_balans_next', function() {

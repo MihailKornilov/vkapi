@@ -542,6 +542,8 @@ function _menu() {//разделы основного меню
 			$sel = $r['p'] == $_GET['p'] ? ' class="sel"' : '';
 			if($r['p'] == 'report')
 				$r['name'] .= _remindTodayCount(1);
+			if($r['p'] == 'money')
+				$r['name'] .= _invoiceTransferConfirmCount(1);
 			$link .=
 				'<a href="'.URL.'&p='.$r['p'].'"'.$sel.'>'.
 					$r['name'].

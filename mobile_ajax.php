@@ -42,9 +42,10 @@ require_once GLOBAL_DIR_AJAX.'/remind.php';
 require_once GLOBAL_DIR_AJAX.'/history.php';
 require_once GLOBAL_DIR_AJAX.'/setup.php';
 require_once GLOBAL_DIR_AJAX.'/manual.php';
-require_once GLOBAL_DIR_AJAX.'/sa.php';
 
 require_once DOCUMENT_ROOT.'/ajax/ws.php';
 require_once DOCUMENT_ROOT.'/ajax/setup.php';
+
+require_once GLOBAL_DIR_AJAX.'/sa.php';
 
 jsonError();

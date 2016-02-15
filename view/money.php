@@ -43,7 +43,7 @@ function _money() {
 			'<a class="link'.($d == 'expense' ? ' sel' : '').'" href="'.URL.'&p=money&d=expense">Расходы</a>'.
 			'<a class="link'.($d == 'refund' ? ' sel' : '').'" href="'.URL.'&p=money&d=refund">Возвраты</a>'.
 			(_schetCount() ? '<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>' : '').
-			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета</a>'.
+			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета'._invoiceTransferConfirmCount(1).'</a>'.
 		'</div>'.
 		$content;
 }
@@ -1264,10 +1264,16 @@ function invoice() {//страница со списком счетов и переводами между счетами
 (RULE_SETUP_INVOICE ? '<a class="add">Новый счёт</a>' : '').
 		'</div>'.
 
+(_invoiceTransferConfirmCount() ?
+		'<div class="_info">'.
+			'Есть переводы, требующие подтверждения: <b>'._invoiceTransferConfirmCount().'</b>. '.
+		'</div>'
+: '').
+
 		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
 
 (RULE_INVOICE_TRANSFER ?
-		'<div class="headName">История переводов между счетами</div>'.
+		'<div class="headName">Переводы между счетами</div>'.
 		'<div id="transfer-spisok">'.invoice_transfer_spisok().'</div>'
 : '').
 
@@ -1317,6 +1323,26 @@ function invoice_spisok() {
 	$send .= '</dl>';
 	return $send;
 }
+function _invoiceTransferConfirmCount($plus_b=0) { //Получение количества переводов по счетам, которые необходимо подтвердить
+	if(!VIEWER_ADMIN)
+		return 0;
+
+	if(defined('INVOICE_TRANSFER_CONFIRM_COUNT')) {
+		if($plus_b)
+			return INVOICE_TRANSFER_CONFIRM_COUNT ? ' <b>+'.INVOICE_TRANSFER_CONFIRM_COUNT.'</b>' : '';
+		return INVOICE_TRANSFER_CONFIRM_COUNT;
+	}
+
+	$sql = "SELECT COUNT(`id`)
+			FROM `_money_invoice_transfer`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `confirm`=1";
+	define('INVOICE_TRANSFER_CONFIRM_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
+
+	return _invoiceTransferConfirmCount($plus_b);
+}
 function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -1349,15 +1375,37 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 				'<th>Подробно'.
 				'<th>Дата'.
 				'<th>';
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
+		$confirm = '';
+		if($r['confirm']) {
+			$class = '';
+			$ne = '';
+			$button = '';
+			if($r['confirm'] == 1) {
+				$class = ' no';
+				$ne = 'не ';
+				$button =
+					'<button val="'.$r['id'].
+								'#'.$r['invoice_id_from'].
+								'#'.$r['invoice_id_to'].
+								'#'._sumSpace($r['sum']).
+								'#'.FullDataTime($r['dtime_add']).'" '.
+							'class="vk small'._tooltip('Подтвердить перевод', -35).
+						'подтвердить'.
+					'</button>';
+			}
+			$confirm = $r['about'] ? '<br />' : '';
+			$confirm .= '<span class="confirm'.$class.'">'.$ne.'подтверждено</span>'.$button;
+		}
 		$send .=
 			'<tr>'.
 				'<td class="sum">'._sumSpace($r['sum']).
 				'<td><span class="type">'._invoice($r['invoice_id_from']).'</span>'.
 				'<td><span class="type">'._invoice($r['invoice_id_to']).'</span>'.
-				'<td class="about">'.$r['about'].
+				'<td class="about">'.$r['about'].$confirm.
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconDel($r);
+	}
 
 	$send .= _next($filter + array(
 			'all' => $all,

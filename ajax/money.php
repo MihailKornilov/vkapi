@@ -1450,6 +1450,8 @@ switch(@$_POST['op']) {
 		if($from == $to)
 			jsonError();
 
+		$confirm = _invoice($from, 'transfer_confirm') || _invoice($to, 'transfer_confirm') ? 1 : 0;
+
 		$sql = "INSERT INTO `_money_invoice_transfer` (
 					`app_id`,
 					`ws_id`,
@@ -1457,6 +1459,7 @@ switch(@$_POST['op']) {
 					`invoice_id_to`,
 					`sum`,
 					`about`,
+					`confirm`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
@@ -1465,6 +1468,7 @@ switch(@$_POST['op']) {
 					".$to.",
 					".$sum.",
 					'".addslashes($about)."',
+					".$confirm.",
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -1497,6 +1501,36 @@ switch(@$_POST['op']) {
 		$send['t'] = utf8(invoice_transfer_spisok());
 		jsonSuccess($send);
 		break;
+	case 'invoice_transfer_confirm':
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice_transfer`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `confirm`=1
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice_transfer`
+				SET `confirm`=2
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 89,
+			'v1' => _sumSpace($r['sum']),
+			'v2' => _invoice($r['invoice_id_from']),
+			'v3' => _invoice($r['invoice_id_to'])
+		));
+
+		$send['t'] = utf8(invoice_transfer_spisok());
+		jsonSuccess($send);
+		break;
 	case 'invoice_transfer_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();
@@ -1506,6 +1540,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
+				  AND `confirm`!=2
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
