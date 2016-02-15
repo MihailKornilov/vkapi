@@ -969,7 +969,7 @@ $(document)
 			tab = t.find('#status-tab');
 
 		tab.show();
-		t.addClass('us');
+
 		$(document).on('click.status_tab', function() {
 			tab.hide();
 			$(document).off('click.status_tab');

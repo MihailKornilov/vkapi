@@ -1779,6 +1779,7 @@ function balans_show_spisok($filter) {
 		$sql = "SELECT * FROM `_money_expense` WHERE `id` IN (".$expense_ids.")";
 		$expense = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		$expense = _viewer($expense);
+		$expense = _attachValToList($expense);
 	}
 
 	$send['spisok'] = !PAGE1 ? '' :
