@@ -294,8 +294,8 @@ function sa_rule_spisok() {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th>Константа'.
-				'<th>Значение<br />для админа'.
-				'<th>Значение<br />для сотрудника'.
+				'<th>Админ'.
+				'<th>Сотрудник'.
 				'<th>';
 	foreach($spisok as $r)
 		$send .=
@@ -303,11 +303,9 @@ function sa_rule_spisok() {
 				'<td class="key">'.
 					'<b>'.$r['key'].'</b>'.
 					'<div class="about">'.$r['about'].'</div>'.
-				'<td class="admin">'._check('admin'.$r['id'], '', $r['value_admin']).
-				'<td class="worker">'._check('worker'.$r['id'], '', $r['value_worker']).
-				'<td class="set">'.
-					'<div class="img_edit" val="'.$r['id'].'"></div>';
-	//'<div class="img_del"></div>';
+				'<td class="admin"><input type="text" id="admin'.$r['id'].'" value="'.$r['value_admin'].'" maxlength="3" />'.
+				'<td class="worker"><input type="text" id="worker'.$r['id'].'" value="'.$r['value_worker'].'" maxlength="3" />'.
+				'<td class="ed">'._iconEdit($r);
 	$send .= '</table>';
 
 	return $send;

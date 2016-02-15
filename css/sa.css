@@ -47,7 +47,13 @@
 #sa-rule .about{color:#777;margin-left:10px;white-space:pre-line}
 #sa-rule .admin{text-align:center}
 #sa-rule .worker{text-align:center}
-#sa-rule td._busy ._check{visibility:hidden}
+#sa-rule input{
+	width:30px;
+	text-align:center;
+	font-weight:bold;
+	color:#090;
+}
+#sa-rule ._busy input{visibility:hidden}
 
 
 

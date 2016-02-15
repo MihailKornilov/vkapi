@@ -512,24 +512,27 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#sa-rule ._check', function() {
+	.on('keyup', '#sa-rule input', function(e) {
+		if(e.keyCode != 13)
+			return;
+
 		var t = $(this),
 			td = t.parent(),
-			check = $('#' + t.find('input').attr('id')),
 			send = {
 				op:'sa_rule_flag',
 				id:td.parent().attr('val'),
 				value_name: td.attr('class'),
-				v:_num(check.val())
+				v:_num(t.val())
 			};
 		if(td.hasClass('_busy'))
 			return;
 		td.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
 			td.removeClass('_busy');
-			if(res.error)
-				check._check(send.v ? 0 : 1);
-
+			if(res.success) {
+				_msg();
+				t.val(res.v);
+			}
 		}, 'json');
 	})
 
@@ -732,7 +735,6 @@ $(document)
 			}
 		}, 'json');
 	})
-
 
 	.ready(function() {
 		if($('#sa-history').length) {

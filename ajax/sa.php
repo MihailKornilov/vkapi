@@ -243,7 +243,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$value_name = _txt($_POST['value_name']);
-		$v = _bool($_POST['v']);
+		$v = _num($_POST['v']);
 
 		if($value_name != 'admin' && $value_name != 'worker')
 			jsonError();
@@ -257,9 +257,28 @@ switch(@$_POST['op']) {
 		        WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		//обнуление значения данной настройки по всем администраторам
+		if($value_name == 'admin') {
+			$sql = "SELECT `viewer_id`
+					FROM `_vkuser`
+					WHERE `admin`";
+			$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+			$sql = "DELETE FROM `_vkuser_rule`
+					WHERE `key`='".$r['key']."'
+					  AND `viewer_id` IN (".$ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			foreach(_ids($ids, 1) as $viewer_id) {
+				xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+				xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
+			}
+		}
+
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');
 
+		$send['v'] = $v;
 		$send['html'] = utf8(sa_rule_spisok());
 		jsonSuccess($send);
 		break;
