@@ -1325,7 +1325,7 @@ function invoice_spisok() {
 }
 function _invoiceTransferConfirmCount($plus_b=0) { //Получение количества переводов по счетам, которые необходимо подтвердить
 	if(!VIEWER_ADMIN)
-		return 0;
+		return $plus_b ? '' : 0;
 
 	if(defined('INVOICE_TRANSFER_CONFIRM_COUNT')) {
 		if($plus_b)
@@ -1385,6 +1385,7 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 				$class = ' no';
 				$ne = 'не ';
 				$button =
+				(VIEWER_ADMIN ?
 					'<button val="'.$r['id'].
 								'#'.$r['invoice_id_from'].
 								'#'.$r['invoice_id_to'].
@@ -1392,7 +1393,8 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 								'#'.FullDataTime($r['dtime_add']).'" '.
 							'class="vk small'._tooltip('Подтвердить перевод', -35).
 						'подтвердить'.
-					'</button>';
+					'</button>'
+				: '');
 			}
 			$confirm = $r['about'] ? '<br />' : '';
 			$confirm .= '<span class="confirm'.$class.'">'.$ne.'подтверждено</span>'.$button;

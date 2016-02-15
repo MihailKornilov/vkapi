@@ -1824,6 +1824,7 @@ $(document)
 				op:'income_confirm',
 				id:o[0]
 			};
+			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
@@ -2020,6 +2021,7 @@ $(document)
 				op:'invoice_transfer_confirm',
 				id:o[0]
 			};
+			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#transfer-spisok').html(res.t);
