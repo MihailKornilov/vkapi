@@ -917,8 +917,8 @@ $(document)
 			$('#RULE_MY_PAY_SHOW_PERIOD')._select({
 				spisok:[
 					{uid:1,title:'за текущий день'},
-					{uid:0,title:'за текущую неделю'},
-					{uid:2,title:'за текущий мес€ц'}
+					{uid:2,title:'за текущую неделю'},
+					{uid:3,title:'за текущий мес€ц'}
 				],
 				func:setupRuleCheck
 			});

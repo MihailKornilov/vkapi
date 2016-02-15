@@ -8,9 +8,9 @@ function _money() {
 				case 'income':
 				default:
 					switch(@RULE_MY_PAY_SHOW_PERIOD) {
-						case 1: $period = TODAY; break;
-						case 2: $period = substr(TODAY, 0,7); break;
-						default: $period = _period();
+						case 1: $period = TODAY; break;             //1 - день
+						default: $period = _period(); break;        //2 - недел€
+						case 3: $period = substr(TODAY, 0,7); break;//3 - мес€ц
 					}
 					$content = income_day($period);
 					break;
