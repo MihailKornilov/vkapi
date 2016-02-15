@@ -944,6 +944,24 @@ switch(@$_POST['op']) {
 			$arrOld = _attachValToList($arrOld);
 
 			foreach($new as $r) {
+				$mon = intval(strftime('%m'));
+				$year = strftime('%Y');
+
+				//пропускать, если есть привязка к листу выдачи зп
+				if($r[0]) {
+					$sql = "SELECT *
+							FROM `_zayav_expense`
+							WHERE `id`=".$r[0];
+					if($zeEx = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+						if($zeEx['salary_list_id']) {
+							unset($toDelete[$r[0]]);
+							continue;
+						}
+						$mon = $zeEx['mon'];
+						$year = $zeEx['year'];
+					}
+				}
+
 				$ze = _zayavExpense($r[1], 'all');
 				$txt = '';
 				if($ze['txt'])
@@ -952,16 +970,13 @@ switch(@$_POST['op']) {
 					$txt = _txt(substr($r[2], 1));
 
 				$worker_id = $ze['worker'] ? _num($r[2]) : 0;
-				$mon = intval(strftime('%m'));
-				$year = strftime('%Y');
 
 				//если стоит галочка "Не начислять по заявкам с долгами" и есть долг по заявке
-				if($worker_id && _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY')) {
+				if($worker_id && _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY'))
 					if($z['sum_accrual'] - $z['sum_pay'] > 0) {
 						$mon = 0;
 						$year = 0;
 					}
-				}
 
 				$sql = "INSERT INTO `_zayav_expense` (
 							`id`,
