@@ -95,7 +95,7 @@
 /* Расчётные счета */
 #money-invoice .headName{margin:15px 10px}
 #invoice-spisok{margin:10px 10px 25px}
-#invoice-spisok ._spisok{margin:1px 0 0 20px;width:520px}
+#invoice-spisok ._spisok{margin:1px 0 0 20px;width:560px}
 #invoice-spisok ._spisok:hover{background-color:#ffd}
 #invoice-spisok .name{vertical-align:top}
 #invoice-spisok .move{cursor:move}
@@ -109,9 +109,22 @@
 	font-size:10px;
 	color:#d44;
 }
-#invoice-spisok .worker{vertical-align:top;width:120px}
-#invoice-spisok .balans{text-align:right;width:100px;white-space:nowrap}
-#invoice-spisok .ed{width:14px;text-align:right}
+#invoice-spisok .worker{vertical-align:top;width:160px}
+#invoice-spisok h4{font-size:10px;font-weight:bold;color:#555}
+#invoice-spisok h5{font-size:10px;margin:0 0 5px 10px;color:#777}
+#invoice-spisok .balans{
+	text-align:right;
+	width:100px;
+	white-space:nowrap;
+	vertical-align:top;
+	padding-top:6px;
+}
+#invoice-spisok .ed{
+	width:14px;
+	text-align:right;
+	vertical-align:top;
+	padding-top:8px;
+}
 #invoice-spisok .img_note{margin-bottom:-2px}
 
 #transfer-spisok{margin:-10px 10px 10px}
@@ -128,8 +141,8 @@
 #invoice-setup-tab h2{color:#777;margin:3px 10px}
 #invoice-setup-tab .u:hover{background-color:#f4f6f7}
 
-#invoice-edit-tab{border-spacing:10px}
-#invoice-edit-tab .label{text-align:right}
+#invoice-edit-tab{border-spacing:12px}
+#invoice-edit-tab .label{width:220px;text-align:right}
 #invoice-edit-tab #name{width:210px}
 #invoice-edit-tab textarea{width:210px;height:50px}
 

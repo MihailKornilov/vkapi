@@ -712,7 +712,7 @@ function expense() {
 			'var ATTACH={},'.
 (VIEWER_ADMIN ? 'GRAF='.expense_graf($data['filter']).',' : '').
 				'EXPENSE_MON='._selJson(expenseMonthSum()).';'.
-			'expenseLoad();'.
+			'_expenseLoad();'.
 		'</script>';
 }
 function expenseFilter($v) {
@@ -1116,15 +1116,14 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 		while($r = mysql_fetch_assoc($q)) {
 			$r['start'] = round($r['start'], 2);
 
-			$vw = array();//список имЄн сотрудников
-			$ass = array();//массив id сотрудников, которым доступен счЄт дл€ просмотра
-			if($r['visible'])
-				foreach(explode(',', $r['visible']) as $k) {
-					$vw[] = _viewer($k, 'viewer_name');
-					$ass[$k] = 1;
-				}
-			$r['visible_worker'] = implode('<br />', $vw);
-			$r['viewer_visible_ass'] = $ass;
+			$r['visible_worker'] = _invoiceWorker($r['visible']);//список сотрудников, которым виден счЄт
+			$r['visible_ass'] = _invoiceWorkerAss($r['visible']);
+
+			$r['income_insert_worker'] = _invoiceWorker($r['income_insert']);//список сотрудников, которые могут вносить платежи
+			$r['income_insert_ass'] = _invoiceWorkerAss($r['income_insert']);
+
+			$r['expense_insert_worker'] = _invoiceWorker($r['expense_insert']);//список сотрудников, которые могут вносить расходы
+			$r['expense_insert_ass'] = _invoiceWorkerAss($r['expense_insert']);
 
 			$arr[$r['id']] = $r;
 		}
@@ -1136,12 +1135,25 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	if(!$id)
 		return $arr;
 
-	//получение ids сотрудников, которым видны счета дл€ js
-	if($id == 'visible_js') {
+	//получение ids сотрудников, которые могут вносить платежи по доступным счетам дл€ js
+	if($id == 'income_insert_js') {
 		$spisok = array();
 
 		foreach($arr as $r)
-			$spisok[$r['id']] = $r['viewer_visible_ass'];
+			$spisok[$r['id']] = $r['income_insert_ass'];
+
+		if(!$spisok)
+			return '{}';
+
+		return str_replace('"', '', json_encode($spisok));
+	}
+
+	//получение ids сотрудников, которые могут вносить расходы по доступным счетам дл€ js
+	if($id == 'expense_insert_js') {
+		$spisok = array();
+
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['expense_insert_ass'];
 
 		if(!$spisok)
 			return '{}';
@@ -1161,14 +1173,35 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	if($i == 'all')
 		return $arr[$id];
 
-	if($i == 'viewer_visible') //видимость дл€ текущего сотрудника
-		return _bool(@$arr[$id]['viewer_visible_ass'][VIEWER_ID]);
+	//видимость дл€ текущего сотрудника
+	if($i == 'viewer_visible')
+		return _bool(@$arr[$id]['visible_ass'][VIEWER_ID]);
 
 	//неизвестный ключ счЄта
 	if(!isset($arr[$id][$i]))
 		return '<span class="red">неизвестный ключ счЄта: <b>'.$i.'</b></span>';
 
 	return $arr[$id][$i];
+}
+function _invoiceWorker($worker_ids) {//получение списка имЄн сотрудников
+	if(!$worker_ids)
+		return '';
+
+	$vw = array();//список имЄн сотрудников
+	foreach(explode(',', $worker_ids) as $k)
+		$vw[] = _viewer($k, 'viewer_name');
+
+	return implode('<br />', $vw);
+}
+function _invoiceWorkerAss($worker_ids) {//получение ассоциативного списка id сотрудников
+	if(!$worker_ids)
+		return array();
+
+	$ass = array();
+	foreach(explode(',', $worker_ids) as $k)
+		$ass[$k] = 1;
+
+	return $ass;
 }
 function _invoiceBalans($invoice_id, $start=false) {// ѕолучение текущего баланса счЄта
 	if($start === false)
@@ -1222,36 +1255,23 @@ function _invoiceBalans($invoice_id, $start=false) {// ѕолучение текущего баланс
 
 	return round($income - $expense - $refund - $from + $to - $start, 2);
 }
-function _invoiceVisibleJs() {//получение ids сотрудников, которым видны счета
-	$spisok = array();
-	$sql = "SELECT *
-			FROM `_zayav_status_next`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
-			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['status_id']][$r['next_id']] = 1;
-
-	if(!$spisok)
-		return '{}';
-
-	return str_replace('"', '', json_encode($spisok));
-}
 
 function invoice() {//страница со списком счетов и переводами между счетами
 	return
-		'<div id="money-invoice">'.
-			'<div class="headName">'.
-				'–асчЄтные счета'.
+	'<div id="money-invoice">'.
+		'<div class="headName">'.
+			'–асчЄтные счета'.
 (RULE_SETUP_INVOICE ? '<a class="add">Ќовый счЄт</a>' : '').
-			'</div>'.
-			'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
-		(RULE_INVOICE_TRANSFER ?
-			'<div class="headName">»стори€ переводов между счетами</div>'.
-			'<div id="transfer-spisok">'.invoice_transfer_spisok().'</div>'
-		: '').
-		'</div>';
+		'</div>'.
+
+		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
+
+(RULE_INVOICE_TRANSFER ?
+		'<div class="headName">»стори€ переводов между счетами</div>'.
+		'<div id="transfer-spisok">'.invoice_transfer_spisok().'</div>'
+: '').
+
+	'</div>';
 }
 function invoice_spisok() {
 	if(!_invoice())
@@ -1270,9 +1290,14 @@ function invoice_spisok() {
 				'<td class="name'.(RULE_SETUP_INVOICE ? ' move' : '').'">'.
 					'<b>'.$r['name'].'</b>'.
 					'<div class="about">'.$r['about'].'</div>'.
-(RULE_SETUP_INVOICE && $r['confirm_income'] ? '<h6>ѕодтверждение поступлени€ на счЄт</h6>' : '').
-(RULE_SETUP_INVOICE && $r['confirm_transfer'] ? '<h6>ѕодтверждение переводов</h6>' : '').
-(RULE_SETUP_INVOICE ? '<td class="worker">'.$r['visible_worker'] : '').
+(RULE_SETUP_INVOICE && $r['income_confirm'] ? '<h6>ѕодтверждение поступлени€ на счЄт</h6>' : '').
+(RULE_SETUP_INVOICE && $r['transfer_confirm'] ? '<h6>ѕодтверждение переводов</h6>' : '').
+(RULE_SETUP_INVOICE ?
+				'<td class="worker">'.
+					($r['visible'] ? '<h4>¬идимость дл€ сотрудников:</h4><h5>'.$r['visible_worker'].'<h5>' : '').
+					($r['income_insert'] ? '<h4>ћогут вносить платежи:</h4><h5>'.$r['income_insert_worker'].'<h5>' : '').
+					($r['expense_insert'] ? '<h4>ћогут вносить расходы:</h4><h5>'.$r['expense_insert_worker'].'<h5>' : '')
+: '').
 				'<td class="balans"><b>'.($r['start'] != -1 ? _sumSpace(_invoiceBalans($r['id'])).'</b> руб.' : '').
 				'<td class="ed">'.
 					'<div val="'.$r['id'].'" class="img_setup'._tooltip('¬ыполнить операцию над счЄтом', -195, 'r').'</div>'.
@@ -1281,9 +1306,11 @@ function invoice_spisok() {
 : '').
 
 (RULE_SETUP_INVOICE ?
-				'<input type="hidden" class="confirm_income" value="'.$r['confirm_income'].'" />'.
-				'<input type="hidden" class="confirm_transfer" value="'.$r['confirm_transfer'].'" />'.
-				'<input type="hidden" class="visible_id" value="'.(empty($r['visible']) ? 0 : $r['visible']).'" />'
+				'<input type="hidden" class="visible" value="'.$r['visible'].'" />'.
+				'<input type="hidden" class="income_confirm" value="'.$r['income_confirm'].'" />'.
+				'<input type="hidden" class="transfer_confirm" value="'.$r['transfer_confirm'].'" />'.
+				'<input type="hidden" class="income_insert" value="'.$r['income_insert'].'" />'.
+				'<input type="hidden" class="expense_insert" value="'.$r['expense_insert'].'" />'
 : '').
 		'</table>';
 	}

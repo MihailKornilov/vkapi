@@ -1194,15 +1194,16 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 													  FROM `_money_invoice`
 													  WHERE `app_id`=".APP_ID."
 														AND `ws_id`=".$ws_id."
-														AND `confirm_income`
+														AND `income_confirm`
 														AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_CONFIRM_TRANSFER='.query_assJson("SELECT `id`,1
 														FROM `_money_invoice`
 														WHERE `app_id`=".APP_ID."
 														  AND `ws_id`=".$ws_id."
-												          AND `confirm_transfer`
+												          AND `transfer_confirm`
 												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'INVOICE_VISIBLE='._invoice('visible_js').','.
+		"\n".'INVOICE_INCOME_INSERT='._invoice('income_insert_js').','.
+		"\n".'INVOICE_EXPENSE_INSERT='._invoice('expense_insert_js').','.
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
 										  FROM `_vkuser`
 										  WHERE `app_id`=".APP_ID."
@@ -1218,12 +1219,6 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 											  WHERE `app_id` IN (".APP_ID.",0)
 											    AND `ws_id` IN (".$ws_id.",0)
 											  ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'EXPENSE_WORKER_USE='.query_assJson("SELECT `id`,1
-												  FROM `_money_expense_category`
-												  WHERE `app_id` IN (".APP_ID.",0)
-													AND `ws_id` IN (".$ws_id.",0)
-													AND `worker_use`", GLOBAL_MYSQL_CONNECT).','.
-//		_service('const_js').','.
 		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных заявок в организации
 		"\n".'SERVICE_ACTIVE_ASS='._service('js').','.              //виды активных заявок в организации
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.

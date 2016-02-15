@@ -487,12 +487,12 @@ switch(@$_POST['op']) {
 		if(!$category_id && empty($about))
 			jsonError();
 
-		$worker_id = _num($_POST['worker_id']);
+		$worker_id = _num(@$_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
 		$salary_avans = _bool(@$_POST['salary_avans']);
 		$salary_list_id = _num(@$_POST['salary_list_id']);
-		$mon = _num($_POST['mon']);
-		$year = _num($_POST['year']);
+		$mon = _num(@$_POST['mon']);
+		$year = _num(@$_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
@@ -1174,9 +1174,13 @@ switch(@$_POST['op']) {
 
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
-		$income = _bool($_POST['income']);
-		$transfer = _bool($_POST['transfer']);
 		if(($visible = _ids($_POST['visible'])) == false && $_POST['visible'] != 0)
+			jsonError();
+		$income_confirm = _bool($_POST['income_confirm']);
+		$transfer_confirm = _bool($_POST['transfer_confirm']);
+		if(($income_insert = _ids($_POST['income_insert'])) == false && $_POST['income_insert'] != 0)
+			jsonError();
+		if(($expense_insert = _ids($_POST['expense_insert'])) == false && $_POST['expense_insert'] != 0)
 			jsonError();
 
 		if(empty($name))
@@ -1187,17 +1191,21 @@ switch(@$_POST['op']) {
 					`ws_id`,
 					`name`,
 					`about`,
-					`confirm_income`,
-					`confirm_transfer`,
-					`visible`
+					`visible`,
+					`income_confirm`,
+					`transfer_confirm`,
+					`transfer_confirm`,
+					`transfer_confirm`
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
-					".$income.",
-					".$transfer.",
-					'".$visible."'
+					'".$visible."',
+					".$income_confirm.",
+					".$transfer_confirm.",
+					'".$income_insert."',
+					'".$expense_insert."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1220,9 +1228,13 @@ switch(@$_POST['op']) {
 
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
-		$income = _bool($_POST['income']);
-		$transfer = _bool($_POST['transfer']);
 		if(($visible = _ids($_POST['visible'])) == false && $_POST['visible'] != 0)
+			jsonError();
+		$income_confirm = _bool($_POST['income_confirm']);
+		$transfer_confirm = _bool($_POST['transfer_confirm']);
+		if(($income_insert = _ids($_POST['income_insert'])) == false && $_POST['income_insert'] != 0)
+			jsonError();
+		if(($expense_insert = _ids($_POST['expense_insert'])) == false && $_POST['expense_insert'] != 0)
 			jsonError();
 
 		if(empty($name))
@@ -1236,37 +1248,32 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
+		$visible_old = _invoice($id, 'visible_worker');
+		$income_insert_old = _invoice($id, 'income_insert_worker');
+		$expense_insert_old = _invoice($id, 'expense_insert_worker');
+
 		$sql = "UPDATE `_money_invoice`
 				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
-					`confirm_income`=".$income.",
-					`confirm_transfer`=".$transfer.",
-					`visible`='".$visible."'
+					`visible`='".$visible."',
+					`income_confirm`=".$income_confirm.",
+					`transfer_confirm`=".$transfer_confirm.",
+					`income_insert`='".$income_insert."',
+					`expense_insert`='".$expense_insert."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 		_wsJsValues();
 
-		//формирование списка сотрудников, которым доступен счёт
-		$old = array();
-		if($r['visible'])
-			foreach(explode(',', $r['visible']) as $i)
-				$old[] = _viewer($i, 'viewer_name');
-		$old = implode('<br />', $old);
-
-		$new = array();
-		if($visible)
-			foreach(explode(',', $visible) as $i)
-				$new[] = _viewer($i, 'viewer_name');
-		$new = implode('<br />', $new);
-
 		if($changes =
 			_historyChange('Наименование', $r['name'], $name).
 			_historyChange('Описание', _br($r['about']), _br($about)).
-			_historyChange('Подтверждение поступления на счёт', _daNet($r['confirm_income']), _daNet($income)).
-			_historyChange('Подтверждение перевода', _daNet($r['confirm_transfer']), _daNet($transfer)).
-			_historyChange('Видимость для сотрудников', $old, $new))
+			_historyChange('Видимость для сотрудников', $visible_old, _invoice($id, 'visible_worker')).
+			_historyChange('Подтверждение поступления на счёт', _daNet($r['income_confirm']), _daNet($income_confirm)).
+			_historyChange('Подтверждение перевода', _daNet($r['transfer_confirm']), _daNet($transfer_confirm)).
+			_historyChange('Внесение платежей и возвратов', $income_insert_old, _invoice($id, 'income_insert_worker')).
+			_historyChange('Внесение расходов и выдача з/п', $expense_insert_old, _invoice($id, 'expense_insert_worker')))
 			_history(array(
 				'type_id' => 1023,
 				'v1' => $name,
