@@ -8,7 +8,7 @@ function _manual_path() {//путь
 	'<div class="path">'.
 		'<a href="'.URL.'">'._app('name').'</a>'.
 		' » '.
-		'Руководство'.
+		'Руководство пользователя'.
 	'</div>';
 }
 function _manual_main() {//главная страница
@@ -22,14 +22,43 @@ function _manual_main() {//главная страница
 	'</div>';
 }
 function _manual_part() {//главная страница
-	$sql = "SELECT * FROM `_manual_part` ORDER BY `sort`";
+	$sql = "SELECT
+				*,
+				'' `sub`
+			FROM `_manual_part`
+			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Разделов нет.';
 
+	$spisok = _manual_part_sub($spisok);
+
 	$send = '';
 	foreach($spisok as $r) {
-		$send .= '<a class="part">'.$r['name'].'</a>';
+		$send .=
+			'<div class="part">'.
+				'<a class="part-head">'.
+					'<span class="name">'.$r['name'].'</span>'.
+					'<div val="'.$r['id'].'" class="img_add m30 part-sub-add'._tooltip('Новый подраздел', -58).'</div>'.
+				'</a>'.
+				'<div class="part-sub">'.
+					$r['sub'].
+				'</div>'.
+			'</div>';
 	}
 
 	return $send;
+}
+function _manual_part_sub($spisok) {//присвоение подразделов к разделам
+	$sql = "SELECT * FROM `_manual_part_sub` ORDER BY `sort`";
+	if(!$sub = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return $spisok;
+
+	foreach($sub as $r) {
+		$spisok[$r['part_id']]['sub'] .=
+			'<a>'.
+				$r['name'].
+			'</a>';
+	}
+
+	return $spisok;
 }

@@ -4,9 +4,16 @@
 #manual .part{
 	display:inline-block;
 	width:265px;
+	margin-top:10px;
+}
+#manual .part-head{display:block;padding:5px 10px}
+#manual .part-head:hover{background:#f2f8ff}
+#manual .part .name{
 	font-size:12px;
 	font-weight:bold;
 	color:#476586;
-	padding:8px 10px;
 }
-#manual .part:hover{background:#f2f8ff}
+#manual .part .img_add{float:right;position:relative;top:2px;right:15px}
+#manual .part:not(:hover) .img_add{display:none}
+#manual .part-sub{margin:-3px 0 0 20px}
+#manual .part-sub a{display:block;font-weight:bold}
