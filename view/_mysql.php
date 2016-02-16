@@ -141,6 +141,13 @@ function _dbDumpTable($fp, $table) {
 	$r = mysql_fetch_row($q);
 	fwrite($fp, $r[1].";\n");
 
+	//получение форматов столбцов
+	$sql = "DESCRIBE `".$table."`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$desc = array();
+	while($r = mysql_fetch_assoc($q))
+		array_push($desc, $r['Type']);
+
 	$values = array();
 	$sql = "SELECT * FROM `".$table."`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -149,8 +156,16 @@ function _dbDumpTable($fp, $table) {
 		$count++;
 
 		$cols = array();
-		foreach($row as $col)
-			$cols[] = preg_match(REGEXP_NUMERIC, $col) ? $col : '\''.addslashes($col).'\'';
+		foreach($row as $n => $col)
+			switch($desc[$n]) {
+				case 'tinyint(3) unsigned': $cols[] = intval($col); break;
+				case 'smallint(5) unsigned': $cols[] = intval($col); break;
+				case 'int(10) unsigned': $cols[] = intval($col); break;
+				case 'decimal(11,2)': $cols[] = round($col, 2); break;
+				case 'decimal(11,2) unsigned': $cols[] = round($col, 2); break;
+				default: $cols[] = '\'' . addslashes($col) . '\'';
+			}
+
 		$values[] = '('.implode(',', $cols).')';
 
 		if($count >= INSERT_COUNT_MAX) {
@@ -161,7 +176,7 @@ function _dbDumpTable($fp, $table) {
 	_dbDumpInsert($fp, $table, $values);
 	fwrite($fp, "\n\n\n");
 }
-function _dbDumpInsert($fp, $table, $values) {
+function _dbDumpInsert($fp, $table, $values) {//внесение блока INSERT в файл
 	if(empty($values))
 		return 0;
 

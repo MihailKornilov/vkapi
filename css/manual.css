@@ -5,6 +5,7 @@
 	display:inline-block;
 	width:265px;
 	margin-top:10px;
+	vertical-align:top;
 }
 #manual .part-head{display:block;padding:5px 10px}
 #manual .part-head:hover{background:#f2f8ff}
