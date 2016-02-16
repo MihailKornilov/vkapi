@@ -539,13 +539,13 @@ function _menu() {//разделы основного меню
 		if($r['p'] == 'manual' && !SA)
 			continue;
 		if($r['show']) {
-			$sel = $r['p'] == $_GET['p'] ? ' class="sel"' : '';
+			$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
 			if($r['p'] == 'report')
 				$r['name'] .= _remindTodayCount(1);
 			if($r['p'] == 'money')
 				$r['name'] .= _invoiceTransferConfirmCount(1);
 			$link .=
-				'<a href="'.URL.'&p='.$r['p'].'"'.$sel.'>'.
+				'<a class="p'.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
 					$r['name'].
 				'</a>';
 		}
@@ -1307,6 +1307,8 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
 	xcache_unset(CACHE_PREFIX.'menu_sort');//отсортированный список разделов меню с настройками
+	xcache_unset(CACHE_PREFIX.'manual_part');//разделы мануала
+	xcache_unset(CACHE_PREFIX.'manual_part_sub');//подразделы мануала
 	xcache_unset(CACHE_PREFIX.'setup_color');//цвета
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников

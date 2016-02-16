@@ -522,16 +522,17 @@ a.add:hover{text-decoration:underline;color:#357}
 
 /* Главное меню */
 #_menu{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
-#_menu a{
+#_menu a.p{
 	display:inline-block;
 	margin-left:5px;
 	padding:5px 10px;
 	color:#31618C;
 	border-radius:4px 4px 0 0;
 }
-#_menu a:hover{text-decoration:none}
-#_menu a:not(.sel):hover{background-color:#DEE3EF}
-#_menu .sel{color:#FFF;background-color:#31618C}
+#_menu a.p:hover{text-decoration:none}
+#_menu a.p:not(.sel):hover{background-color:#DEE3EF}
+#_menu a.p.sel{color:#FFF;background-color:#31618C}
+#_menu a.back{float:right;position:relative;top:5px;right:10px}
 #_menu._busy{background-position:right 18px}
 
 

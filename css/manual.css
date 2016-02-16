@@ -1,6 +1,7 @@
 #manual{margin:10px}
 #manual h1{font-weight:bold;font-size:13px}
-#manual #part-spisok{margin:10px 15px}
+#manual #manual-add{float:right}
+#manual #part-spisok{margin:0 15px 10px}
 #manual .part{
 	display:inline-block;
 	width:265px;
@@ -14,7 +15,16 @@
 	font-weight:bold;
 	color:#476586;
 }
-#manual .part .img_add{float:right;position:relative;top:2px;right:15px}
-#manual .part:not(:hover) .img_add{display:none}
 #manual .part-sub{margin:-3px 0 0 20px}
 #manual .part-sub a{display:block;font-weight:bold}
+
+/* Внесение новой страницы */
+#manual-page-add #name{width:417px;font-weight:bold}
+#manual-page-add #content{width:495px;height:200px}
+
+
+
+
+
+
+
