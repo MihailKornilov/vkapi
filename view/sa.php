@@ -74,6 +74,7 @@ function sa_menu() {//управление историей действий
 function sa_menu_spisok() {
 	$sql = "SELECT
 				`ma`.`id`,
+				`m`.`id` `menu_id`,
 				`m`.`name`,
 				`m`.`p`,
 				`ma`.`show`
@@ -94,15 +95,15 @@ function sa_menu_spisok() {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Название'.
-				'<th class="p">Текст для ссылки'.
-				'<th class="show">Показывать<br />в приложении'.
+				'<th class="p">Link'.
+				'<th class="show">App<br />show'.
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_menu_app">';
 	foreach($spisok as $r)
 		$send .= '<dd val="'.$r['id'].'">'.
 		'<table class="_spisok">'.
-			'<tr><td class="name">'.$r['name'].
+			'<tr><td class="name" val="'.$r['menu_id'].'">'.$r['name'].
 				'<td class="p">'.$r['p'].
 				'<td class="show">'._check('show'.$r['id'], '', $r['show']).
 				'<td class="ed">'._iconEdit($r).

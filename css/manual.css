@@ -2,10 +2,10 @@
 #manual h1{font-weight:bold;font-size:13px}
 #manual #manual-add{}
 #manual #page-add{font-weight:bold}
-#manual #part-spisok{margin:0 15px 10px}
+#manual #part-spisok{margin:0 15px 30px}
 #manual .part{
 	display:inline-block;
-	width:265px;
+	width:285px;
 	margin-top:10px;
 	vertical-align:top;
 }
@@ -21,6 +21,14 @@
 
 
 #manual-part #left{vertical-align:top;padding:15px 20px}
+#manual-part #no-access{
+	padding:10px 15px;
+	margin-bottom:10px;
+	background:#ffe8e8;
+	color:#955;
+}
+#manual-part a.back{display:inline-block;margin-bottom:10px;color:#9ab}
+#manual-part a.back:hover{text-decoration:none;color:#357}
 #manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
 #manual-part textarea{display:none}
 
@@ -56,6 +64,7 @@
     color: #ced7e0;
     font-size: 10px;
 }
+#manual-part .noaccess{background:#ffe8e8}
 #manual-part .right{width:150px}
 
 

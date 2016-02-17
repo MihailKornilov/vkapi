@@ -1,6 +1,7 @@
 var _manualPageEdit = function(o) {//внесение новой страницы
 		o = $.extend({
 			id:0,
+			access:0,
 			part_id:0,
 			part_sub_id:0,
 			name:'',
@@ -10,12 +11,13 @@ var _manualPageEdit = function(o) {//внесение новой страницы
 		var t = $(this),
 			html =
 				'<table id="manual-page-add" class="_dialog-tab">' +
+					'<tr><td><td><input type="hidden" id="access" value="' + o.access + '" />' +
 					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
 					'<tr><td class="label">Подраздел:<td><input type="hidden" id="part_sub_id" value="' + o.part_sub_id + '" />' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Содержание:' +
 						'<td><b>&lt;div class="_info"></b> - информационный блок жёлтого цвета<br />' +
-							'<b>&lt;p></b> - параграф с отступами 5px сверху и снизу<br />' +
+							'<b>&lt;p></b> - параграф с отступами<br />' +
 							'<b>&lt;b></b> - жирный шрифт<br />' +
 							'<b>&lt;ul>&lt;li> &lt;/ul></b> - маркированный список<br />' +
 							'<b>&lt;h6></b> - текст в сером блоке<br />' +
@@ -30,6 +32,10 @@ var _manualPageEdit = function(o) {//внесение новой страницы
 				submit:submit
 			});
 
+		$('#access')._check({
+			light:1,
+			name:'страница доступна для просмотра'
+		});
 		$('#part_id')._select({
 			width:218,
 			title0:'Раздел не выбран',
@@ -56,6 +62,7 @@ var _manualPageEdit = function(o) {//внесение новой страницы
 			var send = {
 				op:'manual_page_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
+				access:$('#access').val(),
 				part_id:_num($('#part_id').val()),
 				part_sub_id:$('#part_sub_id').val(),
 				name:$('#name').val(),
@@ -172,8 +179,9 @@ $(document)
 			p = $('#manual-part');
 		_manualPageEdit({
 			id:o[0],
-			part_id:o[1],
-			part_sub_id:o[2],
+			access:o[1],
+			part_id:o[2],
+			part_sub_id:o[3],
 			name:p.find('h1').html(),
 			content:p.find('textarea').html()
 		});

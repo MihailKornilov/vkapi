@@ -28,6 +28,37 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_menu_spisok());
 		jsonSuccess($send);
 		break;
+	case 'sa_menu_edit'://редактирование раздела главного меню
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$p = _txt($_POST['p']);
+
+		if(!$name || !$p)
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_menu`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_menu`
+				SET `name`='".addslashes($name)."',
+					`p`='".addslashes($p)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'menu');
+		xcache_unset(CACHE_PREFIX.'menu_app');
+		xcache_unset(CACHE_PREFIX.'menu_sort');
+
+		_menuCache();
+
+		$send['html'] = utf8(sa_menu_spisok());
+		jsonSuccess($send);
+		break;
 	case 'sa_menu_show':
 		if(!$id = _num($_POST['id']))
 			jsonError();

@@ -187,18 +187,11 @@ function _manual_content() {//содержание с левой стороны
 	if($id = _num(@$_GET['page_id']))
 		return _manual_page($id);
 
-
 	$part_id = _manualPart('default');
 
 	//если в разделе всего одна страница, то переход сразу на неЄ
-	$sql = "SELECT *
-			FROM `_manual`
-			WHERE `part_id`=".$part_id;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(mysql_num_rows($q) == 1) {
-		$r = mysql_fetch_assoc($q);
-		return _manual_page($r['id']);
-	}
+	if($page_id = _manualPageCountInPart($part_id))
+		return _manual_page($page_id);
 
 	return
 	'<h1>'._manualPart($part_id).'</h1>'.
@@ -207,7 +200,8 @@ function _manual_content() {//содержание с левой стороны
 function _manual_page_spisok($part_id) {
 	$sql = "SELECT *
 			FROM `_manual`
-			WHERE `part_id`=".$part_id."
+			WHERE `part_id`=".$part_id.
+	 (!SA ? " AND `access`" : '')."
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '—траниц нет.';
@@ -215,27 +209,53 @@ function _manual_page_spisok($part_id) {
 	$end = end($spisok);
 	$send = '';
 	foreach($spisok as $r) {
+		$noborder = $r['id'] == $end['id'] ? ' noborder' : '';
+		$noaccess = $r['access'] ? '' : ' noaccess';
 		$send .=
-			'<div class="page-unit'.($r['id'] == $end['id'] ? ' noborder' : '').'">'.
+			'<div class="page-unit'.$noborder.$noaccess.'">'.
 				'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
 			'</div>';
 	}
 
 	return $send;
 }
+function _manualPageCountInPart($part_id) {//если количество страниц в мануале = 1, возврат id этой страницы
+	if(defined('MANUAL_PAGE_ONE_IN_PART'))
+		return MANUAL_PAGE_ONE_IN_PART;
+
+	$page_id = 0;
+
+	$sql = "SELECT *
+			FROM `_manual`
+			WHERE `part_id`=".$part_id.
+	 (!SA ? " AND `access`" : '');
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(mysql_num_rows($q) == 1) {
+		$r = mysql_fetch_assoc($q);
+		$page_id = $r['id'];
+	}
+
+	define('MANUAL_PAGE_ONE_IN_PART', $page_id);
+	return $page_id;
+}
 function _manual_page($id) {//отображение страницы мануала
 	$sql = "SELECT *
 			FROM `_manual`
-			WHERE `id`=".$id;
+			WHERE `id`=".$id.
+	 (!SA ? " AND `access`" : '');
 	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		return _err('—траницы не существует.');
 
 	$_GET['part_id'] = $r['part_id'];
 
 	return
+	(SA && !$r['access'] ? '<div id="no-access">—траница недоступна дл€ просмотра.</div>' : '').
+	(!_manualPageCountInPart($r['part_id']) ?
+		'<a class="back" href="'.URL.'&p=manual&d=part&part_id='.$r['part_id'].'"><< назад к разделу <b>'._manualPart($r['part_id']).'</b></a>'
+	: '').
 	(SA ?
 		_iconDel($r).
-		'<div class="img_edit" val="'.$r['id'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
+		'<div class="img_edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
 		'<textarea>'.$r['content'].'</textarea>'
 	: '').
 	'<h1>'.$r['name'].'</h1>'.

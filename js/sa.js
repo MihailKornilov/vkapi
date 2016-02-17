@@ -1,4 +1,55 @@
-var balansCategory = function(arr) {
+var saMenuEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:'',
+			p:''
+		}, o);
+
+		var html =
+				'<table class="sa-tab" id="sa-menu-tab">' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label">p:<td><input type="text" id="p" value="' + o.p + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Внесение нового') + ' раздела меню',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+		$('#name,#p').keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'sa_menu_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				p:$('#p').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			if(!send.p) {
+				dialog.err('Не указан link');
+				$('#p').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Внесено');
+					$('#spisok').html(res.html);
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	balansCategory = function(arr) {
 			arr = $.extend({
 				id:0,
 				name:''
@@ -316,43 +367,14 @@ var balansCategory = function(arr) {
 	};
 
 $(document)
-	.on('click', '#sa-menu .add', function() {
-		var html =
-				'<table class="sa-tab" id="sa-menu-tab">' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" />' +
-					'<tr><td class="label">p:<td><input type="text" id="p" />' +
-				'</table>',
-			dialog = _dialog({
-				head:'Внесение нового раздела меню',
-				content:html,
-				submit:submit
-			});
-
-		$('#name').focus();
-		$('#name,#p').keyEnter(submit);
-
-		function submit() {
-			var send = {
-				op:'sa_menu_add',
-				name:$('#name').val(),
-				p:$('#p').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Внесено');
-						$('#spisok').html(res.html);
-						sortable();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
+	.on('click', '#sa-menu .add', saMenuEdit)
+	.on('click', '#sa-menu .img_edit', function() {
+		var t = _parent($(this), 'DD');
+		saMenuEdit({
+			id:t.find('.name').attr('val'),
+			name:t.find('.name').html(),
+			p:t.find('.p').html()
+		});
 	})
 	.on('click', '#sa-menu ._check', function() {//скрытие-показ разделов меню
 		var t = $(this),

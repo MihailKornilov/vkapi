@@ -57,6 +57,7 @@ switch(@$_POST['op']) {
 		$part_sub_id = _num($_POST['part_sub_id']);
 		$name = _txt($_POST['name']);
 		$content = win1251(trim($_POST['content']));
+		$access = _bool($_POST['access']);
 
 		if(!$name)
 			jsonError();
@@ -66,12 +67,14 @@ switch(@$_POST['op']) {
 					`part_sub_id`,
 					`name`,
 					`content`,
+					`access`,
 					`sort`
 				) VALUES (
 					".$part_id.",
 					".$part_sub_id.",
 					'".addslashes($name)."',
 					'".addslashes($content)."',
+					".$access.",
 					"._maxSql('_manual')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -91,6 +94,7 @@ switch(@$_POST['op']) {
 		$part_sub_id = _num($_POST['part_sub_id']);
 		$name = _txt($_POST['name']);
 		$content = win1251(trim($_POST['content']));
+		$access = _bool($_POST['access']);
 
 		if(!$name)
 			jsonError();
@@ -105,7 +109,8 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_manual`
 				SET `part_id`=".$part_id.",
 					`part_sub_id`=".$part_sub_id.",
-					`name`='".addslashes($name)."'
+					`name`='".addslashes($name)."',
+					`access`=".$access."
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
