@@ -16,7 +16,21 @@
 	color:#476586;
 }
 #manual .part-sub{margin:-3px 0 0 20px}
-#manual .part-sub a{display:block;font-weight:bold}
+#manual .part-sub a{display:block;margin:2px 0}
+
+
+#manual-part #left{vertical-align:top;padding:15px 20px}
+#manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
+#manual-part .page-unit{padding:8px 0}
+#manual-part .page-unit:not(.noborder){border-bottom:1px solid #ebedf0}
+#manual-part .page-unit a{margin-left:7px}
+#manual-part .page-unit:before{
+	content: "\2022";
+    color: #ced7e0;
+    font-size: 10px;
+}
+#manual-part .right{width:150px}
+
 
 /* Внесение новой страницы */
 #manual-page-add #name{width:417px;font-weight:bold}
