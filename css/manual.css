@@ -21,6 +21,30 @@
 
 #manual-part #left{vertical-align:top;padding:15px 20px}
 #manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
+#manual-part textarea{display:none}
+
+#manual-part ul{margin:-10px 0 5px 10px}
+#manual-part li{color:#555;list-style-type:none;margin:3px 0}
+#manual-part li:before{
+	content: "\2022";
+    color: #789EC6;
+}
+#manual-part h6{
+	background:#F5F7F8;
+	border-left:#C9D8DF solid 9px;
+	border-bottom:#EBEFF2 solid 2px;
+	padding:11px;
+	margin:10px 0;
+}
+#manual-part #created{
+	margin-top:30px;
+	color:#999;
+	font-size:10px;
+	text-align:right;
+}
+
+
+#manual-part .img_edit{float:right}
 #manual-part .page-unit{padding:8px 0}
 #manual-part .page-unit:not(.noborder){border-bottom:1px solid #ebedf0}
 #manual-part .page-unit a{margin-left:7px}

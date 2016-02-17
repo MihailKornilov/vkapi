@@ -1,9 +1,9 @@
 <?php
+if(!SA)
+	jsonError();
+
 switch(@$_POST['op']) {
 	case 'manual_part_add'://внесение нового раздела
-		if(!SA)
-			return;
-
 		$name = _txt($_POST['name']);
 
 		if(!$name)
@@ -25,9 +25,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_part_sub_add'://внесение нового подраздела
-		if(!SA)
-			return;
-
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
@@ -54,9 +51,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_page_add'://внесение новой страницы
-		if(!SA)
-			return;
-
 		if(!$part_id = _num($_POST['part_id']))
 			jsonError();
 
@@ -82,7 +76,49 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$send['html'] = utf8(_manual_part());
+		$insert_id = query_insert_id('_manual', GLOBAL_MYSQL_CONNECT);
+
+		$send['id'] = $insert_id;
+
+		jsonSuccess($send);
+		break;
+	case 'manual_page_edit'://редактирование страницы мануала
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$part_id = _num($_POST['part_id']))
+			jsonError();
+
+		$part_sub_id = _num($_POST['part_sub_id']);
+		$name = _txt($_POST['name']);
+		$content = win1251(trim($_POST['content']));
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_manual`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+
+		$sql = "UPDATE `_manual`
+				SET `part_id`=".$part_id.",
+					`part_sub_id`=".$part_sub_id.",
+					`name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		if($r['content'] != $content) {
+			$sql = "UPDATE `_manual`
+					SET `content`='".addslashes($content)."',
+						`count_upd`=`count_upd`+1,
+						`dtime_upd`=CURRENT_TIMESTAMP
+					WHERE `id`=".$id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		$send['id'] = $id;
 
 		jsonSuccess($send);
 		break;

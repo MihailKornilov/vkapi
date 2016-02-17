@@ -1,3 +1,86 @@
+var _manualPageEdit = function(o) {//внесение новой страницы
+		o = $.extend({
+			id:0,
+			part_id:0,
+			part_sub_id:0,
+			name:'',
+			content:''
+		}, o);
+
+		var t = $(this),
+			html =
+				'<table id="manual-page-add" class="_dialog-tab">' +
+					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
+					'<tr><td class="label">Подраздел:<td><input type="hidden" id="part_sub_id" value="' + o.part_sub_id + '" />' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label top">Содержание:' +
+						'<td><b>&lt;div class="_info"></b> - информационный блок жёлтого цвета<br />' +
+							'<b>&lt;b></b> - жирный шрифт<br />' +
+							'<b>&lt;ul>&lt;li> &lt;/ul></b> - маркированный список<br />' +
+							'<b>&lt;h6></b> - текст в сером блоке<br />' +
+					'<tr><td colspan="2"><textarea id="content">' + o.content + '</textarea>' +
+				'</table>',
+			dialog = _dialog({
+				top:20,
+				width:546,
+				head:(o.id ? 'Редактирование' : 'Внесение новой') + ' страницы мануала',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#part_id')._select({
+			width:218,
+			title0:'Раздел не выбран',
+			spisok:MANUAL_PART_SPISOK,
+			func:function(v) {
+				$('#part_sub_id')
+					._select(0)
+					._select(MANUAL_PART_SUB_SPISOK[v] || []);
+				$('#name').focus()
+			}
+		});
+		$('#part_sub_id')._select({
+			width:218,
+			title0:'Подраздел не выбран',
+			spisok:[],
+			func:function() {
+				$('#name').focus()
+			}
+		});
+		$('#name').focus().keyEnter(submit);
+		$('#content').autosize();
+
+		function submit() {
+			var send = {
+				op:'manual_page_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				part_id:_num($('#part_id').val()),
+				part_sub_id:$('#part_sub_id').val(),
+				name:$('#name').val(),
+				content:$('#content').val()
+			};
+			if(!send.part_id) {
+				dialog.err('Не выбран раздел');
+				return;
+			}
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.href = URL + '&p=manual&d=part&page_id=' + res.id;
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	};
+
 $(document)
 	.on('click', '#manual #part-add', function() {
 		var html =
@@ -75,72 +158,16 @@ $(document)
 			}, 'json');
 		}
 	})
-	.on('click', '#manual #page-add', function() {//внесение новой страницы
-		var t = $(this),
-			html =
-				'<table id="manual-page-add" class="_dialog-tab">' +
-					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" />' +
-					'<tr><td class="label">Подраздел:<td><input type="hidden" id="part_sub_id" />' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" />' +
-					'<tr><td class="label">Содержание:<td>' +
-					'<tr><td colspan="2"><textarea id="content"></textarea>' +
-				'</table>',
-			dialog = _dialog({
-				top:20,
-				width:546,
-				head:'Внесение новой страницы мануала',
-				content:html,
-				submit:submit
-			});
-
-		$('#part_id')._select({
-			width:218,
-			title0:'Раздел не выбран',
-			spisok:MANUAL_PART_SPISOK,
-			func:function(v) {
-				$('#part_sub_id')
-					._select(0)
-					._select(MANUAL_PART_SUB_SPISOK[v] || []);
-				$('#name').focus()
-			}
+	.on('click', '#manual #page-add', _manualPageEdit)
+	.on('click', '#manual-part .img_edit', function() {
+		var o = $(this).attr('val').split('#'),
+			p = $('#manual-part');
+		_manualPageEdit({
+			id:o[0],
+			part_id:o[1],
+			part_sub_id:o[2],
+			name:p.find('h1').html(),
+			content:p.find('textarea').html()
 		});
-		$('#part_sub_id')._select({
-			width:218,
-			title0:'Подраздел не выбран',
-			spisok:[],
-			func:function() {
-				$('#name').focus()
-			}
-		});
-		$('#name').focus().keyEnter(submit);
-		$('#content').autosize();
-
-		function submit() {
-			var send = {
-				op:'manual_page_add',
-				part_id:_num($('#part_id').val()),
-				part_sub_id:$('#part_sub_id').val(),
-				name:$('#name').val(),
-				content:$('#content').val()
-			};
-			if(!send.part_id) {
-				dialog.err('Не выбран раздел');
-				return;
-			}
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					$('#part-spisok').html(res.html);
-				} else
-					dialog.abort();
-			}, 'json');
-		}
 	});
 

@@ -174,6 +174,7 @@ function _manual_path() {//путь
 	$part_id = _manualPart('default');
 
 	return
+	_manual_part_js().
 	_manualMenu().
 	'<div id="manual-part">'.
 		'<table class="tabLR">'.
@@ -220,6 +221,17 @@ function _manual_page($id) {//отображение страницы мануала
 		return _err('Страницы не существует.');
 
 	return
+	(SA ?
+		'<div class="img_edit" val="'.$r['id'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
+		'<textarea>'.$r['content'].'</textarea>'
+	: '').
 	'<h1>'.$r['name'].'</h1>'.
-	'<h2>'.$r['content'].'</h2>';
+	'<h2>'._br($r['content']).'</h2>'.
+	'<div id="created">'.
+		'Страница создана '.FullDataTime($r['dtime_add']).'.'.
+		($r['count_upd'] ?
+			'<br />Всего был'._end($r['count_upd'], 'а', 'о').' '.$r['count_upd'].' редакци'._end($r['count_upd'], 'я', 'и', 'й').', '.
+			'последняя '.FullDataTime($r['dtime_upd']).'.'
+		: '').
+	'</div>';
 }
