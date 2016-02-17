@@ -1,6 +1,7 @@
 #manual{margin:10px}
 #manual h1{font-weight:bold;font-size:13px}
-#manual #manual-add{float:right}
+#manual #manual-add{}
+#manual #page-add{font-weight:bold}
 #manual #part-spisok{margin:0 15px 10px}
 #manual .part{
 	display:inline-block;
@@ -23,6 +24,7 @@
 #manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
 #manual-part textarea{display:none}
 
+#manual-part p{margin:3px 0 8px}
 #manual-part ul{margin:-10px 0 5px 10px}
 #manual-part li{color:#555;list-style-type:none;margin:3px 0}
 #manual-part li:before{
@@ -45,6 +47,7 @@
 
 
 #manual-part .img_edit{float:right}
+#manual-part .img_del{float:right}
 #manual-part .page-unit{padding:8px 0}
 #manual-part .page-unit:not(.noborder){border-bottom:1px solid #ebedf0}
 #manual-part .page-unit a{margin-left:7px}

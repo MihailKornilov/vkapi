@@ -25,7 +25,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_part_sub_add'://внесение нового подраздела
-		if(!$id = _num($_POST['id']))
+		if(!$part_id = _num($_POST['id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
@@ -38,7 +38,7 @@ switch(@$_POST['op']) {
 					`name`,
 					`sort`
 				) VALUES (
-					".$id.",
+					".$part_id.",
 					'".addslashes($name)."',
 					"._maxSql('_manual_part_sub')."
 				)";
@@ -119,6 +119,24 @@ switch(@$_POST['op']) {
 		}
 
 		$send['id'] = $id;
+
+		jsonSuccess($send);
+		break;
+	case 'manual_page_del'://удаление страницы мануала
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_manual`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+
+		$sql = "DELETE FROM `_manual` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['part_id'] = $r['part_id'];
 
 		jsonSuccess($send);
 		break;

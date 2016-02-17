@@ -102,7 +102,10 @@ function _manual_main() {//главная страница
 	return
 	_manualMenu().
 	'<div id="manual">'.
-		'<h1>Содержание'._manual_menu_add().'</h1>'.
+		'<div class="_info">'.
+			'<b>Мануал</b> - это руководство по грамотной и эффективной работе в приложении.'.
+		'</div>'.
+		_manual_menu_add().
 		'<div id="part-spisok">'._manual_part().'</div>'.
 	'</div>'.
 	_manual_part_js();
@@ -170,25 +173,32 @@ function _manual_part_js() {
 }
 
 function _manual_path() {//путь
-	$left = _manual_content();
-	$part_id = _manualPart('default');
-
 	return
 	_manual_part_js().
 	_manualMenu().
 	'<div id="manual-part">'.
 		'<table class="tabLR">'.
-			'<tr><td id="left">'.$left.
-				'<td class="right">'._manualPart($part_id, 'menu').
+			'<tr><td id="left">'._manual_content().
+				'<td class="right">'._manualPart(_manualPart('default'), 'menu').
 		'</table>'.
 	'</div>';
 }
 function _manual_content() {//содержание с левой стороны
-	$part_id = _manualPart('default');
-
 	if($id = _num(@$_GET['page_id']))
 		return _manual_page($id);
 
+
+	$part_id = _manualPart('default');
+
+	//если в разделе всего одна страница, то переход сразу на неё
+	$sql = "SELECT *
+			FROM `_manual`
+			WHERE `part_id`=".$part_id;
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	if(mysql_num_rows($q) == 1) {
+		$r = mysql_fetch_assoc($q);
+		return _manual_page($r['id']);
+	}
 
 	return
 	'<h1>'._manualPart($part_id).'</h1>'.
@@ -220,8 +230,11 @@ function _manual_page($id) {//отображение страницы мануала
 	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		return _err('Страницы не существует.');
 
+	$_GET['part_id'] = $r['part_id'];
+
 	return
 	(SA ?
+		_iconDel($r).
 		'<div class="img_edit" val="'.$r['id'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
 		'<textarea>'.$r['content'].'</textarea>'
 	: '').

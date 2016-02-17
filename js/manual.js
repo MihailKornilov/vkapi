@@ -15,6 +15,7 @@ var _manualPageEdit = function(o) {//внесение новой страницы
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Содержание:' +
 						'<td><b>&lt;div class="_info"></b> - информационный блок жёлтого цвета<br />' +
+							'<b>&lt;p></b> - параграф с отступами 5px сверху и снизу<br />' +
 							'<b>&lt;b></b> - жирный шрифт<br />' +
 							'<b>&lt;ul>&lt;li> &lt;/ul></b> - маркированный список<br />' +
 							'<b>&lt;h6></b> - текст в сером блоке<br />' +
@@ -120,7 +121,7 @@ $(document)
 		var t = $(this),
 			html =
 				'<table class="_dialog-tab">' +
-					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" />' +
+					'<tr><td class="label">Раздел:<td><input type="hidden" id="s-part_id" />' +
 					'<tr><td class="label">Подраздел:<td><input type="text" id="name" />' +
 				'</table>',
 			dialog = _dialog({
@@ -129,21 +130,28 @@ $(document)
 				submit:submit
 			});
 
-		$('#part_id')._select({
+		$('#s-part_id')._select({
 			width:218,
 			title0:'Раздел не выбран',
-			spisok:MANUAL_PART_SPISOK
+			spisok:MANUAL_PART_SPISOK,
+			func:function() {
+				$('#name').focus()
+			}
 		});
 		$('#name').focus().keyEnter(submit);
 
 		function submit() {
 			var send = {
 				op:'manual_part_sub_add',
-				id:$('#part_id').val(),
+				part_id:_num($('#s-part_id').val()),
 				name:$('#name').val()
 			};
+			if(!send.part_id) {
+				dialog.err('Не выбран раздел');
+				return;
+			}
 			if(!send.name) {
-				dialog.err('Не указано название');
+				dialog.err('Не указано название подраздела');
 				$('#name').focus();
 				return;
 			}
@@ -168,6 +176,17 @@ $(document)
 			part_sub_id:o[2],
 			name:p.find('h1').html(),
 			content:p.find('textarea').html()
+		});
+	})
+	.on('click', '#manual-part .img_del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'страницы мануала',
+			op:'manual_page_del',
+			func:function(res) {
+				location.href = URL + '&p=manual&d=part&part_id=' + res.part_id;
+			}
 		});
 	});
 
