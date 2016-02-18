@@ -1,7 +1,7 @@
 <?php
 function _manual() {
 	if(@$_GET['d'] == 'part')
-		return _manual_path();
+		return _manual_part();
 
 	return _manual_main();
 }
@@ -11,7 +11,8 @@ function _manualPart($id=false, $i='name') {
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					`id`,
-					`name`
+					`name`,
+					`access`
 				FROM `_manual_part`
 				ORDER BY `sort`";
 		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
@@ -24,6 +25,8 @@ function _manualPart($id=false, $i='name') {
 
 		$send = '';
 		foreach($arr as $r) {
+			if(!SA && !$r['access'])
+				continue;
 			$sel = $id == $r['id'] ? ' class="sel"' : '';
 			$send .= '<a'.$sel.' href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.$r['name'].'</a>';
 		}
@@ -45,6 +48,9 @@ function _manualPart($id=false, $i='name') {
 
 	if($i == 'name')
 		return $arr[$id]['name'];
+
+	if($i == 'access')
+		return _bool($arr[$id]['access']);
 
 	return '<span class="red">неизвестный ключ раздела мануала: <b>'.$i.'</b></span>';
 }
@@ -106,15 +112,16 @@ function _manual_main() {//главная страница
 			'<b>Мануал</b> - это руководство по грамотной и эффективной работе в приложении.'.
 		'</div>'.
 		_manual_menu_add().
-		'<div id="part-spisok">'._manual_part().'</div>'.
+		'<div id="part-spisok">'._manual_main_spisok().'</div>'.
 	'</div>'.
 	_manual_part_js();
 }
-function _manual_part() {//главная страница
+function _manual_main_spisok() {//главная страница
 	$sql = "SELECT
 				*,
 				'' `sub`
-			FROM `_manual_part`
+			FROM `_manual_part`".
+   (!SA ? " WHERE `access`" : '')."
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Разделов нет.';
@@ -123,8 +130,9 @@ function _manual_part() {//главная страница
 
 	$send = '';
 	foreach($spisok as $r) {
+		$noaccess = $r['access'] ? '' : ' noaccess';
 		$send .=
-			'<div class="part">'.
+			'<div class="part'.$noaccess.'">'.
 				'<a class="part-head" href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.
 					'<span class="name">'.$r['name'].'</span>'.
 				'</a>'.
@@ -172,7 +180,7 @@ function _manual_part_js() {
 	'</script>';
 }
 
-function _manual_path() {//путь
+function _manual_part() {//разделы
 	return
 	_manual_part_js().
 	_manualMenu().
@@ -185,15 +193,25 @@ function _manual_path() {//путь
 }
 function _manual_content() {//содержание с левой стороны
 	if($id = _num(@$_GET['page_id']))
-		return _manual_page($id);
+		return _manual_page_info($id);
 
 	$part_id = _manualPart('default');
 
 	//если в разделе всего одна страница, то переход сразу на неё
 	if($page_id = _manualPageCountInPart($part_id))
-		return _manual_page($page_id);
+		return _manual_page_info($page_id);
+
+	$access = _manualPart($part_id, 'access');
+
+	if(!SA && !$access)
+		return 'Раздела нет.';
 
 	return
+	(SA && !$access ? '<div id="no-access">Раздел недоступен для просмотра.</div>' : '').
+	(SA ?
+		_iconDel(array('id'=>$part_id,'class'=>'manual-part-del')).
+		'<div class="img_edit manual-part-edit" val="'.$part_id.'#'.addslashes(_manualPart($part_id)).'#'.$access.'"></div>'
+	: '').
 	'<h1>'._manualPart($part_id).'</h1>'.
 	_manual_page_spisok($part_id);
 }
@@ -238,7 +256,7 @@ function _manualPageCountInPart($part_id) {//если количество страниц в мануале =
 	define('MANUAL_PAGE_ONE_IN_PART', $page_id);
 	return $page_id;
 }
-function _manual_page($id) {//отображение страницы мануала
+function _manual_page_info($id) {//отображение страницы мануала
 	$sql = "SELECT *
 			FROM `_manual`
 			WHERE `id`=".$id.
@@ -254,8 +272,8 @@ function _manual_page($id) {//отображение страницы мануала
 		'<a class="back" href="'.URL.'&p=manual&d=part&part_id='.$r['part_id'].'"><< назад к разделу <b>'._manualPart($r['part_id']).'</b></a>'
 	: '').
 	(SA ?
-		_iconDel($r).
-		'<div class="img_edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
+		_iconDel(array('dtime_add'=>'','class'=>'manual-page-del') + $r).
+		'<div class="img_edit manual-page-edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
 		'<textarea>'.$r['content'].'</textarea>'
 	: '').
 	'<h1>'.$r['name'].'</h1>'.

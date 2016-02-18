@@ -5,27 +5,87 @@ if(!SA)
 switch(@$_POST['op']) {
 	case 'manual_part_add'://внесение нового раздела
 		$name = _txt($_POST['name']);
+		$access = _bool($_POST['access']);
 
 		if(!$name)
 			jsonError();
 
 		$sql = "INSERT INTO `_manual_part` (
 					`name`,
+					`access`,
 					`sort`
 				) VALUES (
 					'".addslashes($name)."',
+					'".addslashes($access)."',
 					"._maxSql('_manual_part')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'manual_part');
 
-		$send['html'] = utf8(_manual_part());
+		$send['html'] = utf8(_manual_main_spisok());
 
 		jsonSuccess($send);
 		break;
+	case 'manual_part_edit'://редактирование раздела
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$access = _bool($_POST['access']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_manual_part`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_manual_part`
+				SET `name`='".addslashes($name)."',
+					`access`=".$access."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'manual_part');
+		xcache_unset(CACHE_PREFIX.'manual_part_sub');
+
+		$send['id'] = $id;
+		jsonSuccess($send);
+		break;
+	case 'manual_part_del'://удаление страницы мануала
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_manual_part`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		//проверка на наличие страниц в разделе
+		$sql = "SELECT COUNT(*)
+				FROM `_manual`
+				WHERE `part_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_manual_part` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_manual_part_sub` WHERE `part_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'manual_part');
+		xcache_unset(CACHE_PREFIX.'manual_part_sub');
+
+		jsonSuccess();
+		break;
+
 	case 'manual_part_sub_add'://внесение нового подраздела
-		if(!$part_id = _num($_POST['id']))
+		if(!$part_id = _num($_POST['part_id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
@@ -46,10 +106,11 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'manual_part_sub');
 
-		$send['html'] = utf8(_manual_part());
+		$send['html'] = utf8(_manual_main_spisok());
 
 		jsonSuccess($send);
 		break;
+
 	case 'manual_page_add'://внесение новой страницы
 		if(!$part_id = _num($_POST['part_id']))
 			jsonError();

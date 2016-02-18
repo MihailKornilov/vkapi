@@ -1,4 +1,51 @@
-var _manualPageEdit = function(o) {//внесение новой страницы
+var _manualPartEdit = function(o) {
+		o = $.extend({
+			id:0,
+			access:0,
+			name:''
+		}, o);
+		var html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td><td><input type="hidden" id="access" value="' + o.access + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Внесение нового') + ' раздела',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+		$('#access')._check({
+			light:1,
+			name:'раздел доступен для просмотра'
+		});
+
+		function submit() {
+			var send = {
+				op:'manual_part_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				access:$('#access').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+},
+	_manualPageEdit = function(o) {//внесение новой страницы
 		o = $.extend({
 			id:0,
 			access:0,
@@ -90,40 +137,16 @@ var _manualPageEdit = function(o) {//внесение новой страницы
 	};
 
 $(document)
-	.on('click', '#manual #part-add', function() {
-		var html =
-				'<table class="_dialog-tab">' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" />' +
-				'</table>',
-			dialog = _dialog({
-				head:'Внесение нового раздела',
-				content:html,
-				submit:submit
-			});
-
-		$('#name').focus().keyEnter(submit);
-
-		function submit() {
-			var send = {
-				op:'manual_part_add',
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					$('#part-spisok').html(res.html);
-				} else
-					dialog.abort();
-			}, 'json');
-		}
+	.on('click', '#manual #part-add', _manualPartEdit)
+	.on('click', '.manual-part-edit', function() {
+		var o = $(this).attr('val').split('#');
+		_manualPartEdit({
+			id:o[0],
+			name:o[1],
+			access:o[2]
+		});
 	})
+
 	.on('click', '#manual #part-sub-add', function() {//внесение нового подраздела
 		var t = $(this),
 			html =
@@ -173,8 +196,20 @@ $(document)
 			}, 'json');
 		}
 	})
+	.on('click', '.manual-part-del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'раздела мануала',
+			op:'manual_part_del',
+			func:function(res) {
+				location.href = URL + '&p=manual';
+			}
+		});
+	})
+
 	.on('click', '#manual #page-add', _manualPageEdit)
-	.on('click', '#manual-part .img_edit', function() {
+	.on('click', '.manual-page-edit', function() {
 		var o = $(this).attr('val').split('#'),
 			p = $('#manual-part');
 		_manualPageEdit({
@@ -186,7 +221,7 @@ $(document)
 			content:p.find('textarea').html()
 		});
 	})
-	.on('click', '#manual-part .img_del', function() {
+	.on('click', '.manual-page-del', function() {
 		var t = $(this);
 		_dialogDel({
 			id:t.attr('val'),
