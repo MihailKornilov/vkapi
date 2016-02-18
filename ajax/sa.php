@@ -5,6 +5,7 @@ if(!SA)
 switch(@$_POST['op']) {
 	case 'sa_menu_add':
 		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
 		$p = _txt($_POST['p']);
 
 		if(!$name)
@@ -12,9 +13,11 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_menu` (
 					`name`,
+					`about`,
 					`p`
 				) VALUES (
 					'".addslashes($name)."',
+					'".addslashes($about)."',
 					'".strtolower(addslashes($p))."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -33,6 +36,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
 		$p = _txt($_POST['p']);
 
 		if(!$name || !$p)
@@ -46,6 +50,7 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_menu`
 				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."',
 					`p`='".addslashes($p)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);

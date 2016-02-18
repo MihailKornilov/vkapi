@@ -76,6 +76,7 @@ function sa_menu_spisok() {
 				`ma`.`id`,
 				`m`.`id` `menu_id`,
 				`m`.`name`,
+				`m`.`about`,
 				`m`.`p`,
 				`ma`.`show`
 			FROM
@@ -103,7 +104,9 @@ function sa_menu_spisok() {
 	foreach($spisok as $r)
 		$send .= '<dd val="'.$r['id'].'">'.
 		'<table class="_spisok">'.
-			'<tr><td class="name" val="'.$r['menu_id'].'">'.$r['name'].
+			'<tr><td class="name" val="'.$r['menu_id'].'">'.
+					'<span>'.$r['name'].'</span>'.
+					'<div class="about">'.$r['about'].'</div>'.
 				'<td class="p">'.$r['p'].
 				'<td class="show">'._check('show'.$r['id'], '', $r['show']).
 				'<td class="ed">'._iconEdit($r).

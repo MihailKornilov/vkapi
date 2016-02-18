@@ -518,6 +518,14 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
+/* Информация о нововведении в верхней части приложения */
+#_info-top{
+	padding:12px 15px;
+	background:#ffd;
+	border-bottom:#f8f8c8 solid 1px;
+	font-size:12px;
+}
+#_info-top .img_del{float:right}
 
 
 /* Главное меню */
@@ -532,10 +540,26 @@ a.add:hover{text-decoration:underline;color:#357}
 #_menu a.p:hover{text-decoration:none}
 #_menu a.p:not(.sel):hover{background-color:#DEE3EF}
 #_menu a.p.sel{color:#FFF;background-color:#31618C}
+#_menu a.main{
+	background-image:url(data:image/gif;base64,R0lGODlhCwAZAJEAAAAAAP///zFhjP///yH5BAEAAAMALAAAAAALABkAAAIclI8yy+0/koQUylSz3rz7DzbBSJZBKJomyqhmAQA7);
+	background-repeat:no-repeat;
+	background-position:6px 9px;
+}
+#_menu a.main.sel{background-position:6px -9px}
 #_menu a.back{float:right;position:relative;top:5px;right:10px}
 #_menu._busy{background-position:right 18px}
 
 
+#_menu-main{padding:1px 15px 20px;background:#F0F2F5}
+#_menu-main .mu{
+	margin:15px 0;
+	padding:10px 15px;
+	background:#fff;
+	border-radius:2px;
+	box-shadow: 0 1px 2px rgba(6, 33, 63, 0.13);
+}
+#_menu-main .mu a{font-size:12px;font-weight:bold}
+#_menu-main .about{color:#888}
 
 
 

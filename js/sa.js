@@ -2,12 +2,14 @@ var saMenuEdit = function(o) {
 		o = $.extend({
 			id:0,
 			name:'',
+			about:'',
 			p:''
 		}, o);
 
 		var html =
 				'<table class="sa-tab" id="sa-menu-tab">' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr><td class="label">p:<td><input type="text" id="p" value="' + o.p + '" />' +
 				'</table>',
 			dialog = _dialog({
@@ -19,12 +21,14 @@ var saMenuEdit = function(o) {
 
 		$('#name').focus();
 		$('#name,#p').keyEnter(submit);
+		$('#about').autosize();
 
 		function submit() {
 			var send = {
 				op:'sa_menu_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
 				name:$('#name').val(),
+				about:$('#about').val(),
 				p:$('#p').val()
 			};
 			if(!send.name) {
@@ -372,7 +376,8 @@ $(document)
 		var t = _parent($(this), 'DD');
 		saMenuEdit({
 			id:t.find('.name').attr('val'),
-			name:t.find('.name').html(),
+			name:t.find('.name span').html(),
+			about:t.find('.about').html(),
 			p:t.find('.p').html()
 		});
 	})

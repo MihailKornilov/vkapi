@@ -214,6 +214,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
 	switch(@$_GET['p']) {
+		case 'main': return _menuMain();
 		case 'client': return _clientCase();
 		case 'zayav':  return _zayav();
 		case 'money':  return _money();
@@ -530,28 +531,54 @@ function _menuCache() {//получение списка разделов меню из кеша
 
 	return $sort;
 }
+function _menuInfoTop() {//информационное сообщение сверху страницы
+	return
+	'<div id="_info-top">'.
+		'<div class="img_del"></div>'.
+		'Новое нововведение. Почитайте здесь.'.
+	'</div>';
+}
 function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa') return '';
 	if(@$_GET['p'] == 'manual') return '';
 
 	$link = '';
 	foreach(_menuCache() as $r) {
-		if($r['p'] == 'manual' && !SA)
+		if($r['p'] == 'manual')
 			continue;
 		if($r['show']) {
 			$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
+			$main = $r['p'] == 'main' ? ' main' : '';
 			if($r['p'] == 'report')
 				$r['name'] .= _remindTodayCount(1);
 			if($r['p'] == 'money')
 				$r['name'] .= _invoiceTransferConfirmCount(1);
 			$link .=
-				'<a class="p'.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
-					$r['name'].
+				'<a class="p'.$main.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
+					($r['p'] == 'main' ? '&nbsp;' : $r['name']).
 				'</a>';
 		}
 	}
 
-	return '<div id="_menu">'.$link.'</div>';
+	return
+//	_menuInfoTop().
+	'<div id="_menu">'.$link.'</div>';
+}
+function _menuMain() {//список ссылок главной страницы
+	$send = '';
+	foreach(_menuCache() as $r) {
+		if($r['p'] == 'main')
+			continue;
+		if(!$r['show'])
+			continue;
+		$send .=
+		'<div class="mu">'.
+			'<a href="'.URL.'&p='.$r['p'].'">'.$r['name'].'</a>'.
+			'<div class="about">'.$r['about'].'</div>'.
+		'</div>';
+	}
+
+	return '<div id="_menu-main">'.$send.'</div>';
 }
 
 /* Секция отчётов - report */

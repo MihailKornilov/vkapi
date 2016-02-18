@@ -2393,6 +2393,10 @@ $(document)
 		_checkAll('change', v);
 	})
 
+	.on('click', '#_info-top .img_del', function() {//закрытие сообщения о нововведении
+		$(this).parent().slideUp();
+	})
+
 	.on('click focus', '._note TEXTAREA', function() {//разворачивание поля текста и показ кнопки
 		var t = $(this),
 			but = t.next(),

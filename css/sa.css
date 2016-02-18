@@ -13,6 +13,7 @@
 #sa-menu #spisok{margin:20px}
 #sa-menu ._spisok{margin-bottom:1px}
 #sa-menu .name{cursor:move}
+#sa-menu .about{color:#888;font-size:10px}
 #sa-menu .p{width:120px;text-align:center}
 #sa-menu .show{width:100px;text-align:center}
 
