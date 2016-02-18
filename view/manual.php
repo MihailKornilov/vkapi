@@ -1,7 +1,15 @@
 <?php
 function _manual() {
-	if(@$_GET['d'] == 'part')
+	if(@$_GET['d'] == 'new')
+		return _manual_new();
+
+	if(@$_GET['d'] == 'part') {
+		if(@$_GET['part_id'] == 1) {
+			$_GET['d'] = 'new';
+			return _manual_new();
+		}
 		return _manual_part();
+	}
 
 	return _manual_main();
 }
@@ -81,9 +89,10 @@ function _manualPartSub($id=false, $i='name') {
 function _manualMenu() {//разделы основного меню
 	$menu = array(
 		'main' => 'Мануал',
-		'part' => 'Разделы'
-//		'new' => 'Нововведения',
+		'part' => 'Разделы',
+		'new' => _manualPart(1)
 //		'dialog' => 'Обсуждения'
+//		'action' => 'События'
 	);
 
 	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
@@ -91,7 +100,7 @@ function _manualMenu() {//разделы основного меню
 
 	$link = '';
 	foreach($menu as $d => $name) {
-		$sel = $d == $_GET['d'] ? ' sel' : '';
+		$sel = $_GET['d'] == $d ? ' sel' : '';
 		$link .=
 			'<a class="p'.$sel.'" href="'.URL.'&p=manual&d='.$d.'">'.
 				$name.
@@ -274,7 +283,7 @@ function _manual_page_info($id) {//отображение страницы мануала
 	(SA ?
 		_iconDel(array('dtime_add'=>'','class'=>'manual-page-del') + $r).
 		'<div class="img_edit manual-page-edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
-		'<textarea>'.$r['content'].'</textarea>'
+		'<textarea id="orig">'.$r['content'].'</textarea>'
 	: '').
 	'<h1>'.$r['name'].'</h1>'.
 	'<h2>'._br($r['content']).'</h2>'.
@@ -284,5 +293,42 @@ function _manual_page_info($id) {//отображение страницы мануала
 			'<br />Всего был'._end($r['count_upd'], 'а', 'о').' '.$r['count_upd'].' редакци'._end($r['count_upd'], 'я', 'и', 'й').', '.
 			'последняя '.FullDataTime($r['dtime_upd']).'.'
 		: '').
+	'</div>'.
+	_note(array(
+		'p' => 'manual_page',
+		'id' => $id,
+		'noapp' => 1
+	));
+}
+
+function _manual_new() {
+	return
+	_manualMenu().
+	'<div id="manual-new">'.
+		'<div id="spisok">'._manual_new_spisok().'</div>'.
 	'</div>';
+}
+function _manual_new_spisok() {
+	$sql = "SELECT *
+			FROM `_manual`
+			WHERE `part_id`=1".
+	 (!SA ? " AND `access`" : '')."
+			ORDER BY `id` DESC";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Новостей нет.';
+
+	$end = end($spisok);
+	$send = '';
+	foreach($spisok as $r) {
+		$noborder = $r['id'] == $end['id'] ? ' noborder' : '';
+		$noaccess = $r['access'] ? '' : ' noaccess';
+		$send .=
+			'<div class="unit'.$noborder.$noaccess.'">'.
+				'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
+				'<div class="dtime">'.FullDataTime($r['dtime_add']).'</div>'.
+			'</div>';
+	}
+
+	return $send;
+
 }

@@ -21,7 +21,7 @@
 #manual .part-sub a{display:block;margin:2px 0}
 
 
-#manual-part #left{vertical-align:top;padding:15px 20px}
+#manual-part #left{vertical-align:top;padding:15px}
 #manual-part #no-access{
 	padding:10px 15px;
 	margin-bottom:10px;
@@ -31,7 +31,7 @@
 #manual-part a.back{display:inline-block;margin-bottom:10px;color:#9ab}
 #manual-part a.back:hover{text-decoration:none;color:#357}
 #manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
-#manual-part textarea{display:none}
+#manual-part #orig{display:none}
 
 #manual-part p{margin:3px 0 8px}
 #manual-part ul{margin:-10px 0 5px 10px}
@@ -74,6 +74,22 @@
 #manual-page-add #content{width:495px;height:200px}
 
 
+
+
+/* Список нововведений */
+#manual-new{margin:10px 20px;min-height:250px}
+#manual-new .unit{padding:15px 0}
+#manual-new .unit:not(.noborder){border-bottom:1px solid #ebedf0}
+#manual-new .unit a{
+	font-size:12px;
+	font-weight:bold;
+	color:#468;
+}
+#manual-new .unit .dtime{
+	float:right;
+	font-size:12px;
+	color:#888;
+}
 
 
 

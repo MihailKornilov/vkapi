@@ -2429,7 +2429,7 @@ $(document)
 		var t = $(this);
 		if(t.hasClass('_busy'))
 			return;
-		var val = t.parent().parent().attr('val').split('_'),
+		var val = t.parent().parent().attr('val').split('#'),
 			send = {
 				op:'note_add',
 				page_name:val[0],
@@ -2493,7 +2493,7 @@ $(document)
 		td.find('textarea').focus().autosize();
 		t.remove();
 	})
-	.on('click', '._note h6 .vk', function() {//внесение нового комментария
+	.on('click', '._note-comment-add .vk', function() {//внесение нового комментария
 		var t = $(this);
 		if(t.hasClass('_busy'))
 			return;

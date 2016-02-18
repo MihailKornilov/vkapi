@@ -1022,7 +1022,7 @@ button.vk.small{padding: 3px 10px 4px}
 
 /* Заметки */
 ._note{margin-top:15px}
-._note H1{
+._note-head{
 	background-color:#E1E7ED;
 	border-top:#D3DAE0 solid 1px;
 	border-bottom:#D8DFE5 solid 1px;
@@ -1060,7 +1060,7 @@ button.vk.small{padding: 3px 10px 4px}
 ._note H2{margin-top:7px}/* список комментариев */
 ._note .nu:not(:hover) H5 a:not(.ex){display:none}
 ._note .nu.busy H5 a{display:none}
-._note H6{background-color:#f1f1f1;padding:6px 14px 6px 6px;margin-top:4px}
+._note-comment-add{background-color:#f1f1f1;padding:6px 14px 6px 6px;margin-top:4px}
 /* комментарии */
 ._note .cu{padding-top:7px;margin-top:7px;border-top:#E9EDF1 solid 1px}
 ._note .cu.busy{background-color:#eee;opacity:.3}
