@@ -2395,6 +2395,15 @@ $(document)
 
 	.on('click', '#_info-top .img_del', function() {//закрытие сообщения о нововведении
 		$(this).parent().slideUp();
+
+		var send = {
+				op:'manual_answer',
+				manual_id:$(this).attr('val'),
+				val:2
+			};
+
+		$.post(AJAX_MAIN, send, function() {}, 'json');
+
 	})
 
 	.on('click focus', '._note TEXTAREA', function() {//разворачивание поля текста и показ кнопки

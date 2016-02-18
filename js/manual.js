@@ -231,5 +231,31 @@ $(document)
 				location.href = URL + '&p=manual&d=part&part_id=' + res.part_id;
 			}
 		});
+	})
+
+	.on('click', '#manual-part #page-but .vk', function() {//внесение нового подраздела
+		var t = $(this),
+			p = t.parent(),
+			o = t.attr('val').split('#'),
+			send = {
+				op:'manual_answer',
+				manual_id:o[0],
+				val:o[1]
+			};
+
+		if(p.hasClass('busy'))
+			return;
+
+		p.addClass('busy');
+		$.post(AJAX_MAIN, send, function() {
+			p.removeClass('busy');
+			if(res.success) {
+				p.parent().addClass('answered');
+				p.before(
+					'<b id="answer-ok">Спасибо за ваш ответ!</b>' +
+					(send.val == 4 ? '<br />Пожалуйста, укажите в заметках, что именно вам не понятно.' : '')
+				);
+			}
+		}, 'json');
 	});
 

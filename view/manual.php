@@ -294,11 +294,57 @@ function _manual_page_info($id) {//отображение страницы мануала
 			'последняя '.FullDataTime($r['dtime_upd']).'.'
 		: '').
 	'</div>'.
-	_note(array(
-		'p' => 'manual_page',
-		'id' => $id,
-		'noapp' => 1
-	));
+	_manual_page_bottom($id);
+}
+function _manual_page_bottom($id) {//отображение кнопок для ответа, либо заметок
+	return
+	'<div id="page-bottom" class="'._manual_answer($id).'">'.
+		'<div id="page-but">'.
+			'<button class="vk" val="'.$id.'#3">Все понятно</button>'.
+			'<button class="vk red" val="'.$id.'#4">Мне не понятно</button>'.
+			'<button class="vk grey" val="'.$id.'#5">Не интересно</button>'.
+		'</div>'.
+		_note(array(
+			'p' => 'manual_page',
+			'id' => $id,
+			'noapp' => 1
+		)).
+	'</div>';
+}
+function _manual_answer($id) {
+	$sql = "SELECT *
+			FROM `_manual_answer`
+			WHERE `manual_id`=".$id."
+			  AND `viewer_id`=".VIEWER_ID."
+			LIMIT 1";
+	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+		_manual_answer_insert($id);
+		return '';
+	}
+
+	return $r['val'] > 2 ? 'answered' : '';
+}
+function _manual_answer_insert($manual_id, $val=1) {
+	$sql = "SELECT `id`
+			FROM `_manual_answer`
+			WHERE `manual_id`=".$manual_id."
+			  AND `viewer_id`=".VIEWER_ID."
+			LIMIT 1";
+	$id = _num(query_value($sql, GLOBAL_MYSQL_CONNECT));
+
+	$sql = "INSERT INTO `_manual_answer` (
+				`id`,
+				`manual_id`,
+				`viewer_id`,
+				`val`
+			) VALUES (
+				".$id.",
+				".$manual_id.",
+				".VIEWER_ID.",
+				".$val."
+			) ON DUPLICATE KEY UPDATE
+				`val`=VALUES(`val`)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
 }
 
 function _manual_new() {
@@ -332,3 +378,40 @@ function _manual_new_spisok() {
 	return $send;
 
 }
+
+function _menuInfoTop() {//информационное сообщение сверху страницы
+	$sql = "SELECT *
+			FROM `_manual`
+			WHERE `part_id`=1
+			  AND `access`
+			ORDER BY `id` DESC
+			LIMIT 1";
+	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$sql = "SELECT COUNT(*)
+			FROM `_manual_answer`
+			WHERE `manual_id`=".$r['id']."
+			  AND `viewer_id`=".VIEWER_ID;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	return
+	'<div id="_info-top">'.
+		'<div class="img_del" val="'.$r['id'].'"></div>'.
+		'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
+	'</div>';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

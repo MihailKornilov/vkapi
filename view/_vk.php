@@ -531,13 +531,6 @@ function _menuCache() {//получение списка разделов меню из кеша
 
 	return $sort;
 }
-function _menuInfoTop() {//информационное сообщение сверху страницы
-	return
-	'<div id="_info-top">'.
-		'<div class="img_del"></div>'.
-		'Ќовое нововведение. ѕочитайте здесь.'.
-	'</div>';
-}
 function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa') return '';
 	if(@$_GET['p'] == 'manual') return '';
@@ -561,7 +554,7 @@ function _menu() {//разделы основного меню
 	}
 
 	return
-//	_menuInfoTop().
+	_menuInfoTop().
 	'<div id="_menu">'.$link.'</div>';
 }
 function _menuMain() {//список ссылок главной страницы

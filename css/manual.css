@@ -1,4 +1,4 @@
-#manual{margin:10px}
+#manual{margin:10px;min-height:250px}
 #manual h1{font-weight:bold;font-size:13px}
 #manual #manual-add{}
 #manual #page-add{font-weight:bold}
@@ -48,11 +48,17 @@
 	margin:10px 0;
 }
 #manual-part #created{
-	margin-top:30px;
+	margin-top:15px;
 	color:#999;
 	font-size:10px;
 	text-align:right;
 }
+#manual-part #page-bottom{margin-top:30px}
+#manual-part #page-but .vk{margin:0 5px;width:131px}
+#manual-part #page-bottom.answered #page-but{display:none}
+#manual-part #page-bottom:not(.answered) ._note{display:none}
+#manual-part #page-but.busy{opacity:.5}
+#manual-part #answer-ok{color:#292}
 
 
 #manual-part .img_edit{float:right}

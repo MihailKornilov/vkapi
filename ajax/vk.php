@@ -709,4 +709,21 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
+
+	case 'manual_answer'://применение ответа на странице мануала
+		if(!$manual_id = _num($_POST['manual_id']))
+			jsonError();
+
+		$val = _num($_POST['val']);
+
+		$sql = "SELECT *
+				FROM `_manual`
+				WHERE `id`=".$manual_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		_manual_answer_insert($manual_id, $val);
+
+		jsonSuccess();
+		break;
 }
