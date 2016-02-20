@@ -247,7 +247,7 @@ $(document)
 			return;
 
 		p.addClass('busy');
-		$.post(AJAX_MAIN, send, function() {
+		$.post(AJAX_MAIN, send, function(res) {
 			p.removeClass('busy');
 			if(res.success) {
 				p.parent().addClass('answered');
