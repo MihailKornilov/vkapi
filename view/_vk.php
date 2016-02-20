@@ -560,10 +560,14 @@ function _menu() {//разделы основного меню
 function _menuMain() {//список ссылок главной страницы
 	$send = '';
 	foreach(_menuCache() as $r) {
-		if($r['p'] == 'main')
-			continue;
 		if(!$r['show'])
 			continue;
+
+		if($r['p'] == 'main')
+			continue;
+
+		if($r['p'] == 'zayav')
+			$r['about'] .= _menuMainZayav();
 		$send .=
 		'<div class="mu">'.
 			'<a href="'.URL.'&p='.$r['p'].'">'.$r['name'].'</a>'.
@@ -573,6 +577,39 @@ function _menuMain() {//список ссылок главной страницы
 
 	return '<div id="_menu-main">'.$send.'</div>';
 }
+function _menuMainZayav() {//отчёт по количество заявок за день и неделю
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `dtime_add` LIKE '".TODAY." %'";
+	$today = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  "._period(0, 'sql');
+	$week = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `dtime_add` LIKE '".strftime('%Y-%m')."-%'";
+	$mon = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	return
+	'<table class="menu-count">'.
+		'<tr><td class="label r">Сегодня:<td><b>'.($today ? $today : '-').'</b>'.
+		'<tr><td class="label r">Текущая неделя:<td><b>'.($week ? $week : '-').'</b>'.
+		'<tr><td class="label r">'._monthDef(strftime('%m'), true).':<td><b>'.($mon ? $mon : '-').'</b>'.
+	'</table>';
+}
+
 
 /* Секция отчётов - report */
 function _report() {

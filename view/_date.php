@@ -34,12 +34,12 @@ function _monthDef($n=0, $firstUp=false) {
 	if(!$n) {
 		if($firstUp)
 			foreach($mon as $k => $m)
-				$mon[$k][0] = strtoupper($m);
+				$mon[$k][0] = mb_strtoupper($m);
 		return $mon;
 	}
 	$send = $mon[intval($n)];
 	if($firstUp)
-		$send[0] = strtoupper($send[0]);
+		$send[0] = mb_strtoupper($send[0]);
 	return $send;
 }
 function _monthCut($n) {
