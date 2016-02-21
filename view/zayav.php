@@ -1306,10 +1306,9 @@ function _zayavExecuterJs() {//список сотрудников, которые могут быть исполнител
 function _zayavImg($z) {
 	$sql = "SELECT *
 			FROM `_image`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`
+			WHERE !`deleted`
 			  AND !`sort`
-			  AND (`zayav_id`=".$z['id']." OR `model_id`=".$z['base_model_id'].")
+			  AND (`app_id` AND `zayav_id`=".$z['id']." OR !`app_id` AND `model_id`=".$z['base_model_id'].")
 			ORDER BY `zayav_id` DESC";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -1329,7 +1328,6 @@ function _zayavImg($z) {
 	'/>'.
 	_imageBut200('zayav_id:'.$z['id']);
 }
-
 
 /* Кеширование видов изделий */
 function _product($product_id=false) {//Список изделий для заявок

@@ -2633,7 +2633,6 @@ $(document)
 		window.frameHidden.onresize = _fbhs;
 
 		sortable();
-		imageSortable();
 
 		VK.callMethod('scrollWindow', _scroll());
 
