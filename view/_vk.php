@@ -105,6 +105,9 @@ function _const() {
 	define('ATTACH_PATH', GLOBAL_PATH.'/.attach/'.APP_ID);
 	define('ATTACH_HTML', '/.vkapp/.attach/'.APP_ID);
 
+	define('IMAGE_PATH', GLOBAL_PATH.'/.image/'.APP_ID);
+	define('IMAGE_HTML', '/.vkapp/.image/'.APP_ID);
+
 	define('PATH_DOGOVOR', ATTACH_PATH.'/dogovor');
 	define('LINK_DOGOVOR', ATTACH_HTML.'/dogovor');
 }
@@ -186,6 +189,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//З/п сотрудников
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/salary'.MIN.'.css?'.VERSION.'" />'.
 //		'<script type="text/javascript" src="'.API_HTML.'/js/salary'.MIN.'.js?'.VERSION.'"></script>'.
+
+		//Изображения
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/image'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Настройки
 	(@$_GET['p'] == 'setup' ?

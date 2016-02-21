@@ -104,71 +104,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'pagehelp_add':
-		if(!SA)
-			jsonError();
-		if(!preg_match(REGEXP_MYSQLTABLE, $_POST['page']))
-			jsonError();
-
-		$page = htmlspecialchars(trim($_POST['page']));
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$txt = win1251(trim($_POST['txt']));
-
-		if(empty($name))
-			jsonError();
-		if(query_value("SELECT `id` FROM `pagehelp` WHERE `page`='".$page."' LIMIT 1"))
-			jsonError();
-
-		$sql = "INSERT INTO `pagehelp` (
-					`page`,
-					`name`,
-					`txt`
-				) VALUES (
-					'".addslashes($page)."',
-					'".addslashes($name)."',
-					'".addslashes($txt)."'
-				)";
-		query($sql);
-		jsonSuccess();
-		break;
-	case 'pagehelp_get':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `pagehelp` WHERE `id`='".$id."' LIMIT 1";
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-		$send['page'] = $r['page'];
-		$send['name'] = utf8($r['name']);
-		$send['edit'] = (SA ? utf8('<a class="add">Редактировать</a>') : '');
-		$send['txt'] = utf8($r['txt']);
-		$send['dtime'] = utf8('<div class="pagehelp_show_dtime">Изменено '.FullDataTime($r['updated']).'</div>');
-		jsonSuccess($send);
-		break;
-	case 'pagehelp_edit':
-		if(!SA)
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-
-		$id = intval($_POST['id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$txt = win1251(trim($_POST['txt']));
-		if(empty($name))
-			jsonError();
-
-		$sql = "SELECT * FROM `pagehelp` WHERE `id`='".$id."' LIMIT 1";
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "UPDATE `pagehelp`
-				SET	`name`='".addslashes($name)."',
-					`txt`='".addslashes($txt)."'
-				WHERE `id`=".$id;
-		query($sql);
-		jsonSuccess();
-		break;
-
 	case 'attach_upload':
 		/*
 			Прикрепление файлов
@@ -539,135 +474,122 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'image_add'://добавление изображения
-		/*
-		Коды ошибок:
-			0 - неизвестная ошибка (или некорректный owner)
-			1 - неверный формат файла
-			2 - слишком маленькое изображение
-			3 - превышено количество закружаемых изображений
-		*/
+	case 'image_upload'://добавление изображения
+		$zayav_id = _num($_POST['zayav_id']);
+		$zp_id = _num($_POST['zp_id']);
 
-		if(empty($_POST['owner']) || !preg_match(REGEXP_WORD, $_POST['owner']))
-			_imageCookie(array('error'=>0));
-		if(empty($_POST['max']) || !preg_match(REGEXP_NUMERIC, $_POST['max']))
-			_imageCookie(array('error'=>0));
-
-		$owner = trim($_POST['owner']);
-		$max = intval($_POST['max']);
-		$fileName = $owner.'-'._imageNameCreate();
-
-		$f = $_FILES['f1']['name'] ? $_FILES['f1'] :
-			($_FILES['f2']['name'] ? $_FILES['f2'] : $_FILES['f3']);
+		$f = $_FILES['f1'];
 		$im = null;
-//		echo $f['type'];
+
+		//размер изображения не более 15 мб.
+		if($f['size'] > 15728640)
+			_imageCookie(4);
+
 		switch ($f['type']) {
 			case 'image/jpeg': $im = @imagecreatefromjpeg($f['tmp_name']); break;
 			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
 			case 'image/gif': $im = @imagecreatefromgif($f['tmp_name']); break;
 			case 'image/tiff':
-				$tmp = APP_PATH.'/files/tmp'.VIEWER_ID.'.jpg';
+				$tmp = IMAGE_PATH.'/'.VIEWER_ID.'.jpg';
 				$image = NewMagickWand(); // magickwand.org
 				MagickReadImage($image, $f['tmp_name']);
 				MagickSetImageFormat($image, 'jpg');
-				MagickWriteImage($image, $tmp); //Сохраняем результат
-				ClearMagickWand($image); //Удаляем и выгружаем полученное изображение из памяти
+				MagickWriteImage($image, $tmp); //сохранение результата
+				ClearMagickWand($image); //удаление и выгрузка полученного изображения из памяти
 				DestroyMagickWand($image);
 				$im = @imagecreatefromjpeg($tmp);
 				unlink($tmp);
 				break;
 		}
 
+
 		if(!$im)
-			_imageCookie(array('error'=>1));
+			_imageCookie(1);
 
 		$x = imagesx($im);
 		$y = imagesy($im);
 		if($x < 100 || $y < 100)
-			_imageCookie(array('error'=>2));
+			_imageCookie(2);
 
-		$small = _imageImCreate($im, $x, $y, 80, 80, APP_PATH.'/files/images/'.$fileName.'-s.jpg');
-		$big = _imageImCreate($im, $x, $y, 610, 610, APP_PATH.'/files/images/'.$fileName.'-b.jpg');
+		$fileName = time().'-'._imageNameCreate();
 
-		$sort = query_value("SELECT COUNT(`id`) FROM `images` WHERE !`deleted` AND `owner`='".$owner."' LIMIT 1");
-		if($sort + 1 > $max)
-			_imageCookie(array('error'=>3));
+		if(!is_dir(IMAGE_PATH))
+			mkdir(IMAGE_PATH, 0777, true);
 
-		$link = '/files/images/'.$fileName;
-		$sql = "INSERT INTO `images` (
-				  `path`,
-				  `small_name`,
-				  `small_x`,
-				  `small_y`,
-				  `big_name`,
-				  `big_x`,
-				  `big_y`,
-				  `owner`,
-				  `sort`,
-				  `viewer_id_add`
-			  ) VALUES (
-				  '".addslashes('//'.DOMAIN.APP_HTML.'/files/images/')."',
-				  '".$fileName."-s.jpg',
-				  ".$small['x'].",
-				  ".$small['y'].",
-				  '".$fileName."-b.jpg',
-				  ".$big['x'].",
-				  ".$big['y'].",
-				  '".$owner."',
-				  ".$sort.",
-				  ".VIEWER_ID."
-			  )";
-		query($sql);
+		$small = _imageImCreate($im, $x, $y, 80, 80, IMAGE_PATH.'/'.$fileName.'-s.jpg');
+		$big = _imageImCreate($im, $x, $y, 625, 625, IMAGE_PATH.'/'.$fileName.'-b.jpg');
 
-		_imageCookie(array(
-			'id' => mysql_insert_id(),
-			'link' => '//'.DOMAIN.APP_HTML.'/files/images/'.$fileName.'-s.jpg',
-			'max' => $sort + 2 > $max ? 1 : 0
-		));
-		break;
-	case 'image_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
+		$sql = "SELECT COUNT(`id`)
+				FROM `_image`
+				WHERE !`deleted`
+ ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
+	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
+				LIMIT 1";
+		$sort = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
+		$sql = "INSERT INTO `_image` (
+					`app_id`,
+					`ws_id`,
+					`path`,
 
-		query("UPDATE `images` SET `deleted`=1 WHERE `id`=".$id);
+					`small_name`,
+					`small_x`,
+					`small_y`,
+					`small_size`,
 
-		$ids = query_ids("SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$r['owner']."' ORDER BY `sort`");
-		if($ids)
-			foreach(explode(',', $ids) as $n => $id)
-				query("UPDATE `images` SET `sort`=".$n." WHERE `id`=".$id);
+					`big_name`,
+					`big_x`,
+					`big_y`,
+					`big_size`,
 
-		jsonSuccess();
-		break;
-	case 'image_sort':
-		if(empty($_POST['ids']))
-			jsonError();
+					`zayav_id`,
+					`zp_id`,
+					`sort`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					'".addslashes('//'.DOMAIN.IMAGE_HTML.'/')."',
 
-		$sort = explode(',', $_POST['ids']);
-		foreach($sort as $id)
-			if(!preg_match(REGEXP_NUMERIC, $id))
-				jsonError();
+					'".$fileName."-s.jpg',
+					".$small['x'].",
+					".$small['y'].",
+					".$small['size'].",
 
-		foreach($sort as $n => $id)
-			query("UPDATE `images` SET `sort`=".$n." WHERE `id`=".$id);
+					'".$fileName."-b.jpg',
+					".$big['x'].",
+					".$big['y'].",
+					".$big['size'].",
 
-		jsonSuccess();
+					'".$zayav_id."',
+					'".$zp_id."',
+					".$sort.",
+					".VIEWER_ID."
+			)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_imageCookie(7);
 		break;
 	case 'image_view':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `id`=".$id;
-		if(!$im = mysql_fetch_assoc(query($sql)))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND `id`=".$id;
+		if(!$im = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND `model_id`='".$im['model_id']."'
+				  AND `zayav_id`='".$im['zayav_id']."'
+				  AND `zp_id`='".$im['zp_id']."'
+				ORDER BY `sort`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		$n = 0; //определение порядкового номера просматриваемого изображения
-		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$im['owner']."' ORDER BY `sort`";
-		$q = query($sql);
 		$send['img'] = array();
 		while($r = mysql_fetch_assoc($q)) {
 			if($r['id'] == $im['id'])

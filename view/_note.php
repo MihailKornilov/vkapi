@@ -93,7 +93,7 @@ function _noteUnit($r) {
 					'<div class="_note-comment-add'.($n ? ' dn' : '').'">'.
 						'<textarea placeholder="Комментировать..."></textarea>'.
 						'<button class="vk dn">Добавить</button>'.
-					'</h6>'.
+					'</div>'.
 		'</table>'.
 	'</div>';
 }

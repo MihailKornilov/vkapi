@@ -307,7 +307,7 @@ function _zayavFilter($v) {
 function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
 	$v = $data['filter'];
-//_pre(_zayavStatus($v['status'], 'filter'));
+
 	return
 	'<div id="_zayav">'.
 		_service('menu').
@@ -535,14 +535,10 @@ function _zayav_spisok($v) {
 	$zayav = _zayavProductValToList($zayav);
 	$zayav = _schetToZayav($zayav);
 	$zayav = _zayavNote($zayav);
+	if(ZAYAV_INFO_DEVICE)
+		$zayav = _imageValToZayav($zayav);
 
 /*
-	$images = _imageGet(array(
-		'owner' => $images,
-		'view' => 1
-	));
-
-
 	//Запчасти
 	$sql = "SELECT `zayav_id`,`zp_id` FROM `zp_zakaz` WHERE `zayav_id` IN (".$zayavIds.")";
 	$q = query($sql);
@@ -587,6 +583,9 @@ function _zayav_spisok($v) {
 		$statusColor = $r['deleted'] ? '' : _zayavStatus($r['status_id'], 'bg');
 		$send['spisok'] .=
 			'<div class="_zayav-unit'.$deleted.'" id="u'.$id.'"'.$statusColor.' val="'.$r['id'].'">'.
+				'<table class="zu-main">'.
+					'<tr><td class="zu-td1">'.
+
 				'<div class="zd">'.
 					'#'.$r['nomer'].
 					'<div class="date-add">'.FullData($r['dtime_add'], 1).'</div>'.
@@ -598,6 +597,7 @@ function _zayav_spisok($v) {
 						'</div>'
 					: '').
 				'</div>'.
+
 				'<a class="name"><b>'.$r['name'].'</b></a>'.
 				'<table class="tab">'.
 			 ($r['count'] ? '<tr><td class="label">Количество:<td><b>'.$r['count'].'</b> шт.' : '').
@@ -608,7 +608,13 @@ function _zayav_spisok($v) {
 	         ($r['schet'] ? '<tr><td class="label topi">Счета:<td>'.$r['schet'] : '').
 				'</table>'.
 				'<div class="note">'.$r['note'].'</div>'.
-				'<div class="status" style="color:#'._zayavStatus($r['status_id'], 'color').'">'._zayavStatus($r['status_id']).'</div>'.
+				'<div class="status"'.($r['status_id'] ? ' style="color:#'._zayavStatus($r['status_id'], 'color').'"' : '').'>'._zayavStatus($r['status_id']).'</div>'.
+
+			(ZAYAV_INFO_DEVICE ?
+					'<td class="image"'.$statusColor.'>'.
+						'<span>'.$r['image_small'].'</span>'
+			: '').
+				'</table>'.
 			'</div>';
 	}
 
@@ -779,6 +785,7 @@ function _zayav_info() {
 
 	'</script>'.
 	'<div id="_zayav-info">'.
+//		'<a href="http://vk.com/app2031819?z=photo-29895201_393551018">123</a>'.
 		'<div id="dopLinks">'.
 			'<a class="link a-page sel">Информация</a>'.
 			'<a class="link" id="edit">Редактирование</a>'.
@@ -834,7 +841,10 @@ function _zayav_info() {
 					_note().
 
 				'<td id="right">'.
-(ZAYAV_INFO_DEVICE ? zayavInfoDevice($z) : '').
+			(ZAYAV_INFO_DEVICE ?
+					'<div id="foto">'._zayavImg($z).'</div>'.
+					zayavInfoDevice($z)
+			: '').
 
 		'</table>'.
 
@@ -1292,6 +1302,32 @@ function _zayavExecuterJs() {//список сотрудников, которые могут быть исполнител
 			  AND `value`
 			  AND `viewer_id` IN (".$ids.")";
 	return query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _zayavImg($z) {
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND !`sort`
+			  AND (`zayav_id`=".$z['id']." OR `model_id`=".$z['base_model_id'].")
+			ORDER BY `zayav_id` DESC";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if($r['zayav_id'] || $r['model_id'])
+			break;
+
+	if(!$r['id'])
+		return _imageNoFoto('zayav_id:'.$z['id']);
+
+	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
+	return
+	'<img class="_iview" '.
+		'val="'.$r['id'].'" '.
+		'width="'.$size['x'].'" '.
+		'height="'.$size['y'].'" '.
+		'src="'.$r['path'].$r['big_name'].'" '.
+	'/>'.
+	_imageBut200('zayav_id:'.$z['id']);
 }
 
 

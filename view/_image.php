@@ -1,56 +1,127 @@
 <?php
-function _imageAdd($v=array()) {
-	$v = array(
-		'txt' => empty($v['txt']) ? 'Добавить изображение' : $v['txt'],
-		'owner' => empty($v['owner']) || !preg_match(REGEXP_WORD, $v['owner']) ? '' : $v['owner'],
-		'max' => empty($v['max']) || !_num($v['owner']) ? 8 : $v['max'] // максимальное количество закружаемых изображений
-	);
-	return
-		'<div class="_image-spisok">'._imageSpisok($v['owner']).'</div>'.
-		'<div class="_image-error"></div>'.
-		'<div class="_image-add">'.
-			'<div class="_busy">&nbsp;</div>'.
-			'<form method="post" action="'.AJAX_MAIN.'" enctype="multipart/form-data" target="_image-frame">'.
-				'<input type="file" name="f1" />'.
-				'<input type="file" name="f2" class="f2" />'.
-				'<input type="file" name="f3" class="f3" />'.
-				'<input type="hidden" name="op" value="image_add" />'.
-				'<input type="hidden" name="owner" value="'.$v['owner'].'" />'.
-				'<input type="hidden" name="max" value="'.$v['max'].'" />'.
-			'</form>'.
-			'<span>'.$v['txt'].'</span>'.
-			'<iframe name="_image-frame"></iframe>'.
-		'</div>';
-}
-function _imageSpisok($owner) {
-	if(!$owner)
-		return '';
-	$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".$owner."' ORDER BY `sort`";
-	$q = query($sql);
-	$send = '';
+function _imageValToList($arr, $type_id) {//вставка изображений в массив на основании параметра
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND !`sort`
+			  AND `".$type_id."` IN ("._idsGet($arr).")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$send .= '<a class="_iview" val="'.$r['id'].'">'.
-					'<div class="del'._tooltip('Удалить', -29).'<em></em></div>'.
-					'<img src="'.$r['path'].$r['small_name'].'" />'.
-				'</a>';
-	return $send;
+		$arr[$r[$type_id]]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+
+	foreach($arr as $r)
+		if(!isset($r['image_small']))
+			$arr[$r['id']]['image_small'] = '<img src="'.API_HTML.'/img/nofoto-s.gif">';
+
+	return $arr;
 }
-function _imageCookie($v) {//Установка cookie после загрузки изображения и выход
-	if(isset($v['error']))
-		$cookie = 'error_'.$v['error'];
-	else {
-		$cookie = 'uploaded_';
-		setcookie('_param', $v['link'].'_'.$v['id'].'_'.$v['max'], time() + 3600, '/');
+function _imageValToZayav($arr) {//вставка изображений в массив заявок
+	//сначала присваиваются изображения самих заявок
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND !`sort`
+			  AND `zayav_id` IN ("._idsGet($arr).")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['zayav_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+
+	//далее изображения моделей устройств
+	if($ids = _idsGet($arr, 'base_model_id')) {
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND !`sort`
+				  AND `model_id` IN (".$ids.")";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			foreach($arr as $z) {
+				if(isset($z['image_small']))
+					continue;
+				if($r['model_id'] == $z['base_model_id'])
+					$arr[$z['id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+			}
+		}
 	}
-	setcookie('_upload', $cookie, time() + 3600, '/');
-	exit;
+
+	foreach($arr as $r)
+		if(!isset($r['image_small']))
+			$arr[$r['id']]['image_small'] = '<img src="'.API_HTML.'/img/nofoto-s.gif">';
+
+	return $arr;
 }
-function _imageNameCreate() {
-	$arr = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0');
-	$name = '';
-	for($i = 0; $i < 10; $i++)
-		$name .= $arr[rand(0,35)];
-	return $name;
+function _image200($v) {//показ изображения шириной 200
+	$cond = "!`deleted` AND !`sort`";
+	$js = ''; //параметр, который передаёт на кого будет загрузка изображения
+
+	//запчасти
+	if($zp_id = _num(@$v['zp_id'])) {
+		$cond .= " AND `zp_id`=".$zp_id;
+		$js = 'zp_id:'.$zp_id;
+	}
+
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE ".$cond."
+			LIMIT 1";
+	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return _imageNoFoto($js);
+
+	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
+	return
+	'<img class="_iview" '.
+		 'val="'.$r['id'].'" '.
+		 'width="'.$size['x'].'" '.
+		 'height="'.$size['y'].'" '.
+		 'src="'.$r['path'].$r['big_name'].'" '.
+	'/>'.
+	_imageBut200($js);
+}
+function _imageSmall($v) {//получение одного маленького изображения
+	$cond = "!`deleted` AND !`sort`";
+
+	//запчасти
+	if($zp_id = _num(@$v['zp_id']))
+		$cond .= " AND `zp_id`=".$zp_id;
+
+	//модель устройств
+	if($model_id = _num(@$v['model_id']))
+		$cond .= " AND `model_id`=".$model_id;
+
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE ".$cond."
+			LIMIT 1";
+	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return _imageNoFotoSmall();
+
+	return
+	'<img class="_iview" '.
+		 'val="'.$r['id'].'" '.
+		 'src="'.$r['path'].$r['small_name'].'" '.
+	'/>';
+}
+function _imageBut200($js) {//кнопка загрузки изображения шириной 200
+	return '<a id="_image-but-200" onclick="_imageAdd({'.$js.'})">Загрузить изображение</a>';
+}
+function _imageNoFoto($js) {//пустое изображение 200х200 с возможностью выбора загрузки файла
+	return
+	'<div id="_image-no-foto" onclick="_imageAdd({'.$js.'})">'.
+		'<a id="_image-but">Загрузить изображение</a>'.
+		'<img src="'.API_HTML.'/img/nofoto-b.gif" />'.
+	'</div>';
+}
+function _imageNoFotoSmall() {//пустое изображение 80х80
+	return '<img src="'.API_HTML.'/img/nofoto-s.gif" />';
+}
+function _imageX($x_cur, $y_cur, $x_new, $y_new) {//получение ширины картинки на основании исходных данных
+	$arr = _imageResize($x_cur, $y_cur, $x_new, $y_new);
+	return $arr['x'];
+}
+function _imageY($x_cur, $y_cur, $x_new, $y_new) {//получение высоты картинки на основании исходных данных
+	$arr = _imageResize($x_cur, $y_cur, $x_new, $y_new);
+	return $arr['y'];
 }
 function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изображения с сохранением пропорций
 	$x = $x_new;
@@ -65,7 +136,7 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изобр
 		}
 	}
 
-	// если выстоа больше ширины
+	// если высота больше ширины
 	if ($y_cur > $x_cur) {
 		if ($y > $y_cur) { $y = $y_cur; } // если новая высота больше, чем исходная, то Y остаётся исходным
 		$x = round($x_cur / $y_cur * $y);
@@ -80,6 +151,29 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) {//изменение размера изобр
 		'y' => $y
 	);
 }
+function _imageCookie($code) {//Установка cookie после загрузки изображения и выход
+	/*
+	Коды ошибок:
+		0 - загрузка в процессе
+		1 - неверный формат файла
+		2 - слишком маленькое изображение
+		3 - превышено количество загружаемых изображений
+		4 - превышен размер файла
+	*/
+
+	setcookie('_uploaded', $code, time() + 3600, '/');
+	if($code < 7)
+		exit;
+
+	exit;
+}
+function _imageNameCreate() {//формирование имени файла из случайных символов
+	$arr = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0');
+	$name = '';
+	for($i = 0; $i < 10; $i++)
+		$name .= $arr[rand(0,35)];
+	return $name;
+}
 function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие изображения
 	$send = _imageResize($x_cur, $y_cur, $x_new, $y_new);
 
@@ -88,63 +182,7 @@ function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие из
 	imagejpeg($im_new, $name, 80);
 	imagedestroy($im_new);
 
+	$send['size'] = filesize($name);
+
 	return $send;
-}
-function _imageGet($v) {
-	$v = array(
-		'owner' => $v['owner'],
-		'size' => isset($v['size']) ? $v['size'] : 's',
-		'x' => isset($v['x']) ? $v['x'] : 10000,
-		'y' => isset($v['y']) ? $v['y'] : 10000,
-		'view' => isset($v['view']),
-		'class' => isset($v['class']) ? $v['class'] : ''
-	);
-
-	$ownerArray = is_array($v['owner']);
-	if(!$ownerArray)
-		$v['owner'] = array($v['owner']);
-
-	if(empty($v['owner']))
-		return array();
-
-	$v['owner'] = array_unique($v['owner']);
-	$owner = array();
-	foreach($v['owner'] as $val)
-		$owner[] = preg_replace('/(\w+)/', '"$1"', $val, 1);
-
-	$size = $v['size'] == 's' ? 'small' : 'big';
-	$sql = "SELECT *
-			FROM `images`
-			WHERE !`deleted`
-			  AND !`sort`
-			  AND `owner` IN (".implode(',', $owner).")";
-	$q = query($sql);
-	$img = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$s = 0;
-		if($v['x'] != 10000 || $v['y'] != 10000)
-			$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $v['x'], $v['y']);
-		$img[$r['owner']] = array(
-			'id' => $r['id'],
-			'img' => '<img src="'.$r['path'].$r[$size.'_name'].'" '.
-						($v['view'] ? 'class="_iview" val="'.$r['id'].'" ' : '').
-						($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').
-					 '/>'
-		);
-	}
-	$s = 0;
-	if($v['x'] != 10000 || $v['y'] != 10000)
-		$s = _imageResize(!$size ? 80 : 200, !$size ? 80 : 200, $v['x'], $v['y']);
-	foreach($v['owner'] as $val)
-		if(empty($img[$val]))
-			$img[$val] = array(
-				'id' => 0,
-				'img' => '<img src="'.API_HTML.'/img/nofoto-'.$v['size'].'.gif" '.($s ? 'width="'.$s['x'].'" height="'.$s['y'].'" ' : '').' />'
-			);
-
-	if($ownerArray)
-		return $img;
-
-	$img = array_shift($img);
-	return $img['img'];
 }

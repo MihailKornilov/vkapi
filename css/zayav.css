@@ -58,18 +58,18 @@
 	text-align:right;
 	text-shadow:#555 0 0 6px;
 }
-
-/*
-.zayav_unit .image{
+._zayav-unit .zu-main{width:100%}
+._zayav-unit .zu-td1{vertical-align:top}
+._zayav-unit .image{
 	width:80px;
-	height:80px;
 	vertical-align:top;
 	text-align:center;
-	border-left:#DDD solid 1px;
+}
+._zayav-unit .image span{
+	display:inline-block;
+	width:80px;
 	background-color:#FFF;
 }
-*/
-
 
 #zayav-status-filter{position:relative}
 #zayav-status-filter #any{
@@ -176,6 +176,7 @@
 #_zayav-info .pay{color:#090;cursor:default}
 #_zayav-info #sum-diff{color:#888;margin-left:10px}
 #_zayav-info #right{vertical-align:top;padding:10px 0}
+#_zayav-info #foto{width:200px;text-align:center}
 #_zayav-info div.page{margin:0 10px}
 #_zayav-info #zayav-deleted{
 	background-color:#fdd;

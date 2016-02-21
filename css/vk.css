@@ -837,76 +837,6 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-._image-spisok{width:345px}
-._image-spisok a{position:relative;display:inline-block;margin:0 5px 5px 0}
-._image-spisok a:not(:hover) .del{display:none}
-._image-spisok a.deleting{opacity:.5}
-._image-spisok a.deleting .del{display:none}
-._image-spisok .del{position:absolute;right:0}
-._image-spisok .del em{
-	display:inline-block;
-	width:13px;
-	height:13px;
-	border-radius:3px;
-	background:#000 3px 3px no-repeat url("data:image/gif;base64,R0lGODlhBwAUAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHABQAAAMfKEKsTs8pBmeTdcl1qf9gKI5BQJUokaLl2TKsubJuAgA7");
-	opacity:.5;
-}
-._image-spisok .del em:hover{background-position:3px -10px}
-._image-error{display:none;margin:5px 0;color:red}
-._image-add{
-	display:inline-block;
-	position:relative;
-	background:transparent no-repeat 10px center url("data:image/gif;base64,R0lGODlhEAANAMQAAAAAAP///2F7omJ7omV/pWeApmyFq2uFqmuEqXSNsXmStnCKrm+JrXSOsnWPsnqTtnuUt////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABEALAAAAAAQAA0AAAU2YCSKQmmOqIgoUAs9RioMh2tDxiBERPPct4ej0AAaIQmj6HhDMV3OJ2QXEUghjNLiyuVGupEQADs=");
-	color:#2B587A;
-	padding:10px 10px 10px 32px;
-	cursor:pointer;
-	overflow:hidden;
-}
-._image-add:hover{background-color:#e9edf1}
-._image-add form{display:inline-block}
-._image-add input{
-	position:absolute;
-	top:2px;
-	left:0;
-	width:63px;
-	overflow:hidden;
-	z-index:2;
-	opacity:0;
-	cursor:pointer;
-}
-._image-add .f2{left:62px}
-._image-add .f3{left:124px}
-._image-add ._busy{position:absolute;width:30px}
-._image-add iframe{display:none}
-._image-add.busy span,._image-add.busy form{visibility:hidden}
-._image-add:not(.busy) ._busy{display:none}
-/* Просмотр изображений */
-._iview{cursor:pointer}
-#_image-view{
-	position:absolute;
-	top:0;
-	left:0;
-	width:625px;
-	background-color:#fff;
-	z-index:1000;
-}
-#_image-view .head em{
-	display:inline-block;
-	width:200px;
-	margin:11px 20px;
-	color:#45688e;
-	font-weight:bold;
-}
-#_image-view ._busy{background-position:left center}
-#_image-view .head a{float:right;display:block;padding:12px 25px}
-#_image-view .image{width:100%;min-height:400px;cursor:pointer}
-#_image-view .image td{text-align:center;vertical-align:middle}
-#_image-view .about{padding:20px 0}
-#_image-view .dtime{color:#777;margin-left:20px}
-#_image-view .hide{display:none}
-
-
-
 /* Перелистывание годов */
 .years{margin:6px 0;background-color:#E8E8E8;height:25px;cursor:pointer}
 .years TABLE{height:100%;width:100%}
@@ -1163,7 +1093,6 @@ button.vk.grey:hover{background-color:#999}
 #attach-add-tab h1:hover .vk{background-color:#6d8cb0}
 #attach-add-tab input[type="file"]{cursor:pointer}
 #attach-add-tab .vk{width:110px}
-#attach-add-tab iframe{display:none}
 #attach-add-tab #tab{border-spacing:10px}
 #attach-add-tab:not(.uploaded) #tab{display:none}
 #attach-add-tab #name{width:250px}
