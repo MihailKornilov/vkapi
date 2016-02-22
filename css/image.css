@@ -62,5 +62,29 @@
 
 /* Изображения для конкретного объекта */
 #_image-obj #im-add._busy span{visibility:hidden}
-#_image-obj #im-spisok img{margin-right:5px}
-
+#_image-obj #im-spisok a{
+	position:relative;
+	margin-right:3px;
+	display:inline-block;
+}
+#_image-obj #im-spisok a:not(:hover) .div-del{display:none}
+#_image-obj #im-spisok a:not(:hover) .img_minidel{display:none}
+#_image-obj #im-spisok a.busy .div-del{display:none}
+#_image-obj #im-spisok a.busy .img_minidel{display:none}
+#_image-obj #im-spisok a.busy{opacity:.4}
+#_image-obj #im-spisok .div-del{
+	position:absolute;
+	top:0;
+	right:0;
+	width:13px;
+	height:13px;
+	border-radius:3px;
+	background:#000;
+	opacity:.3;
+}
+#_image-obj #im-spisok .img_minidel{
+	position:absolute;
+	top:1px;
+	right:1px;
+	margin:0;
+}

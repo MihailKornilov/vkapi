@@ -192,7 +192,6 @@ a.add:hover{text-decoration:underline;color:#357}
 .img_galka:hover,
 .img_del:hover,
 .img_edit:hover,
-.img_minidel:hover,
 .img_rest:hover,
 .img_add:hover,
 .img_note:hover,
@@ -215,7 +214,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	background-image:url("data:image/gif;base64,R0lGODlhCwAbALMAAN/m7sDP3oumwqm80W2OsvDz93qYuePp8Nni63eWt2uNsf///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAALABsAAAQxcMlJK0XISowt79dXfVnIeee1laG2iKgrz3RNK4qL49bOU74c0FcJ9nZFyW+oQx5lEQA7");
 }
 .img_minidel{
-	background-image:url("data:image/gif;base64,R0lGODlhBwAeAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHAB4AAAMmSEO88wq+yeJq00lZb/1gKI5kaZ5oWgoVK7zE68osI7d0DN91TCQAOw==");
+	background-image:url("data:image/gif;base64,R0lGODlhBwAeAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHAB4AAAMjKEKsTs8pBmeTdcl1qf9gKI5kaZ4oOQzU6hKvu7YzI7OxTCcAOw==");
 	height:11px;
 	width:12px;
 	background-position:3px 2px;

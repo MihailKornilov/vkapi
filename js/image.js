@@ -113,7 +113,8 @@ $.fn._image = function(o) {
 
 	t.html(html);
 
-	var imAdd = t.find('a#im-add');
+	var imAdd = t.find('a#im-add'),
+		imSpisok = $('#im-spisok');
 
 	imAdd.click(function() {
 		o.func = spisokLoad;
@@ -127,13 +128,31 @@ $.fn._image = function(o) {
 		$.post(AJAX_MAIN, o, function(res) {
 			imAdd.removeClass('_busy');
 			if(res.success) {
-				$('#im-spisok').html(res.img);
-				$('#im-spisok img')
+				imSpisok.html(res.img);
+				imSpisok.find('a')
 					.off('contextmenu')
 					.contextmenu(function() {
 						$('#content').insertAtCaret('{img' + $(this).attr('val') + '}');
 						return false;
 					});
+				imSpisok.find('.img_minidel').click(function(e) {
+					e.stopPropagation();
+					var p = _parent($(this), 'A'),
+						send = {
+							op:'image_del',
+							id:p.attr('val')
+						};
+
+					if(p.hasClass('busy'))
+						return;
+					p.addClass('busy');
+
+					$.post(AJAX_MAIN, send, function(res) {
+						p.removeClass('busy')
+						if(res.success)
+							p.remove();
+					}, 'json');
+				});
 			}
 		}, 'json');
 	}

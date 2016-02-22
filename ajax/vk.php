@@ -628,11 +628,34 @@ switch(@$_POST['op']) {
 		$send['img'] = '';
 
 		foreach($arr as $r) {
-			$send['img'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+			$send['img'] .=
+			'<a class="_iview" val="'.$r['id'].'">'.
+				'<div class="div-del"></div>'.
+				'<div class="img_minidel'._tooltip(utf8('Удалить'), -29).'</div>'.
+				'<img src="'.$r['path'].$r['small_name'].'">'.
+			'</a>';
 		}
 
 		jsonSuccess($send);
 		break;
+	case 'image_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND `id`=".$id;
+		if(!$im = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_image`
+				SET `deleted`=1
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		jsonSuccess();
+		break;
+
 
 	case 'scanner_word':
 		$word = _txt($_POST['word']);
