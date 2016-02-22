@@ -1092,6 +1092,7 @@ button.vk.grey:hover{background-color:#999}
 #attach-add-tab h1:hover .vk{background-color:#6d8cb0}
 #attach-add-tab input[type="file"]{cursor:pointer}
 #attach-add-tab .vk{width:110px}
+#attach-add-tab iframe{display:none}
 #attach-add-tab #tab{border-spacing:10px}
 #attach-add-tab:not(.uploaded) #tab{display:none}
 #attach-add-tab #name{width:250px}
