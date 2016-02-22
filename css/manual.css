@@ -71,6 +71,8 @@
     color: #ced7e0;
     font-size: 10px;
 }
+#manual-part .image{text-align:center;margin:15px 0 5px}
+#manual-part .image img{box-shadow: 0 0 25px rgba(0,0,0,.5);}
 #manual-part .noaccess{background:#ffe8e8}
 #manual-part .right{width:150px}
 
@@ -78,8 +80,6 @@
 /* Внесение новой страницы */
 #manual-page-add #name{width:417px;font-weight:bold}
 #manual-page-add #content{width:495px;height:200px}
-
-
 
 
 /* Список нововведений */

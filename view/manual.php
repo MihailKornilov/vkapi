@@ -286,7 +286,7 @@ function _manual_page_info($id) {//отображение страницы мануала
 		'<textarea id="orig">'.$r['content'].'</textarea>'
 	: '').
 	'<h1>'.$r['name'].'</h1>'.
-	'<h2>'._br($r['content']).'</h2>'.
+	'<h2>'._br(_manual_page_image($r)).'</h2>'.
 	'<div id="created">'.
 		'—траница создана '.FullDataTime($r['dtime_add']).'.'.
 		($r['count_upd'] ?
@@ -295,6 +295,22 @@ function _manual_page_info($id) {//отображение страницы мануала
 		: '').
 	'</div>'.
 	_manual_page_bottom($id);
+}
+function _manual_page_image($m) {//вставка изображений в страницу мануала
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `manual_id`=".$m['id'];
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		$s = _imageResize($r['big_x'], $r['big_y'], 426, 400);
+		$m['content'] = str_replace(
+							'{img'.$r['id'].'}',
+							'<div class="image"><img class="_iview" val="'.$r['id'].'" width="'.$s['x'].'" height="'.$s['y'].'" src="'.$r['path'].$r['big_name'].'" /></div>',
+							$m['content']);
+	}
+
+	return $m['content'];
 }
 function _manual_page_bottom($id) {//отображение кнопок дл€ ответа, либо заметок
 	return

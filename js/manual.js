@@ -62,6 +62,7 @@ var _manualPartEdit = function(o) {
 					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
 					'<tr><td class="label">Подраздел:<td><input type="hidden" id="part_sub_id" value="' + o.part_sub_id + '" />' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+			(o.id ? '<tr><td class="label top">Изображения:<td id="img">' : '') +
 					'<tr><td class="label top">Содержание:' +
 						'<td><b>&lt;div class="_info"></b> - информационный блок жёлтого цвета<br />' +
 							'<b>&lt;p></b> - параграф с отступами<br />' +
@@ -103,7 +104,9 @@ var _manualPartEdit = function(o) {
 			}
 		});
 		$('#name').focus().keyEnter(submit);
+		$('#img')._image({manual_id:o.id});
 		$('#content').autosize();
+
 
 		function submit() {
 			var send = {

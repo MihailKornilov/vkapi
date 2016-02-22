@@ -477,6 +477,7 @@ switch(@$_POST['op']) {
 	case 'image_upload'://добавление изображения
 		$zayav_id = _num($_POST['zayav_id']);
 		$zp_id = _num($_POST['zp_id']);
+		$manual_id = _num($_POST['manual_id']);
 
 		$f = $_FILES['f1'];
 		$im = null;
@@ -524,6 +525,7 @@ switch(@$_POST['op']) {
 				WHERE !`deleted`
  ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
 	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
+".($manual_id ? " AND `manual_id`=".$manual_id : '')."
 				LIMIT 1";
 		$sort = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -544,6 +546,8 @@ switch(@$_POST['op']) {
 
 					`zayav_id`,
 					`zp_id`,
+					`manual_id`,
+
 					`sort`,
 					`viewer_id_add`
 				) VALUES (
@@ -563,6 +567,8 @@ switch(@$_POST['op']) {
 
 					'".$zayav_id."',
 					'".$zp_id."',
+					'".$manual_id."',
+
 					".$sort.",
 					".VIEWER_ID."
 			)";
@@ -584,9 +590,10 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_image`
 				WHERE !`deleted`
-				  AND `model_id`='".$im['model_id']."'
-				  AND `zayav_id`='".$im['zayav_id']."'
-				  AND `zp_id`='".$im['zp_id']."'
+				  AND `model_id`=".$im['model_id']."
+				  AND `zayav_id`=".$im['zayav_id']."
+				  AND `zp_id`=".$im['zp_id']."
+				  AND `manual_id`=".$im['manual_id']."
 				ORDER BY `sort`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		$n = 0; //определение порядкового номера просматриваемого изображения
@@ -602,6 +609,28 @@ switch(@$_POST['op']) {
 			);
 			$n++;
 		}
+		jsonSuccess($send);
+		break;
+	case 'image_obj_get':
+		$zayav_id = _num($_POST['zayav_id']);
+		$zp_id = _num($_POST['zp_id']);
+		$manual_id = _num($_POST['manual_id']);
+
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+ ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
+	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
+".($manual_id ? " AND `manual_id`=".$manual_id : '')."
+				ORDER BY `id`";
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['img'] = '';
+
+		foreach($arr as $r) {
+			$send['img'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+		}
+
 		jsonSuccess($send);
 		break;
 

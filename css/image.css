@@ -58,3 +58,9 @@
 #_image-add-tab .vk{width:150px}
 #_image-add-tab #image-error{color:red;margin-bottom:10px;text-align:center}
 #_image-add-tab iframe{display:none}
+
+
+/* Изображения для конкретного объекта */
+#_image-obj #im-add._busy span{visibility:hidden}
+#_image-obj #im-spisok img{margin-right:5px}
+

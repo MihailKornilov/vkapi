@@ -1,7 +1,11 @@
 var _imageAdd = function(o) {
 		o = $.extend({
 			zayav_id:0,
-			zp_id:0
+			zp_id:0,
+			manual_id:0,
+			func:function() {
+				location.reload();
+			}
 		}, o);
 
 		var html =
@@ -23,6 +27,7 @@ var _imageAdd = function(o) {
 						'<input type="file" name="f1" id="file" />' +
 						'<input type="hidden" name="zayav_id" value="' + o.zayav_id + '" />' +
 						'<input type="hidden" name="zp_id" value="' + o.zp_id + '" />' +
+						'<input type="hidden" name="manual_id" value="' + o.manual_id + '" />' +
 					'</form>' +
 					'<button class="vk">Выбрать изображение</button>' +
 				'</h1>' +
@@ -87,9 +92,54 @@ var _imageAdd = function(o) {
 			}
 
 			_msg('Изображение загружено');
-			location.reload();
+			dialog.close();
+			o.func();
 		}
-	};
+};
+
+$.fn._image = function(o) {
+	o = $.extend({
+		op:'image_obj_get',
+		zayav_id:0,
+		zp_id:0,
+		manual_id:0
+	}, o);
+
+	var t = $(this),
+		html = '<div id="_image-obj">' +
+			'<div id="im-spisok"></div>' +
+			'<a id="im-add" class="_busy"><span>загрузить изображение</span></a>' +
+		'</div>';
+
+	t.html(html);
+
+	var imAdd = t.find('a#im-add');
+
+	imAdd.click(function() {
+		o.func = spisokLoad;
+		_imageAdd(o);
+	});
+
+	spisokLoad();
+
+	function spisokLoad() {
+		o.func = undefined;
+		$.post(AJAX_MAIN, o, function(res) {
+			imAdd.removeClass('_busy');
+			if(res.success) {
+				$('#im-spisok').html(res.img);
+				$('#im-spisok img')
+					.off('contextmenu')
+					.contextmenu(function() {
+						$('#content').insertAtCaret('{img' + $(this).attr('val') + '}');
+						return false;
+					});
+			}
+		}, 'json');
+	}
+
+	return t;
+};
 
 $(document)
 	.on('click', '._iview', function(e) {
