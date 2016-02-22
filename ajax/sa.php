@@ -682,7 +682,7 @@ switch(@$_POST['op']) {
 					`title`,
 					`name`,
 					`secret`,
-					`viewer_id`
+					`viewer_id_add`
 				) VALUES (
 					".$id.",
 					'".addslashes($title)."',
