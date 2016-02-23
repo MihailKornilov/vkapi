@@ -587,25 +587,18 @@ switch(@$_POST['op']) {
 		if(!$im = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_image`
-				WHERE !`deleted`
-				  AND `model_id`=".$im['model_id']."
-				  AND `zayav_id`=".$im['zayav_id']."
-				  AND `zp_id`=".$im['zp_id']."
-				  AND `manual_id`=".$im['manual_id']."
-				ORDER BY `sort`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		$n = 0; //определение порядкового номера просматриваемого изображения
 		$send['img'] = array();
-		while($r = mysql_fetch_assoc($q)) {
+		foreach(_imageArr($id) as $r) {
 			if($r['id'] == $im['id'])
 				$send['n'] = $n;
 			$send['img'][] = array(
+				'id' => $r['id'],
 				'link' => $r['path'].$r['big_name'],
 				'x' => $r['big_x'],
 				'y' => $r['big_y'],
-				'dtime' => utf8(FullData($r['dtime_add'], 1))
+				'dtime' => utf8(FullData($r['dtime_add'], 1)),
+				'deleted' => 0
 			);
 			$n++;
 		}
@@ -642,17 +635,24 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_image`
-				WHERE !`deleted`
-				  AND `id`=".$id;
-		if(!$im = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!_imageQuery($id))
 			jsonError();
 
 		$sql = "UPDATE `_image`
 				SET `deleted`=1
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//обновление сортировки
+		$n = 0;
+		foreach(_imageArr($id, 1) as $r) {
+			if($r['deleted'])
+				continue;
+			$sql = "UPDATE `_image` SET `sort`=".$n." WHERE `id`=".$r['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			$n++;
+		}
+
 		jsonSuccess();
 		break;
 

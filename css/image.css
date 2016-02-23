@@ -20,8 +20,12 @@
 #_image-view .head a:hover{text-decoration:none;background:#f4f4f4}
 #_image-view .image{width:100%;min-height:400px;cursor:pointer}
 #_image-view .image td{text-align:center;vertical-align:middle}
-#_image-view .about{padding:20px 0}
-#_image-view .dtime{color:#777;margin-left:20px}
+#_image-view .about{padding:20px}
+#_image-view .dtime{color:#777}
+#_image-view #del{float:right}
+#_image-view.deleted #del{display:none}
+#_image-view #del-ok{float:right;color:#777}
+#_image-view:not(.deleted) #del-ok{display:none}
 #_image-view .hide{display:none}
 
 

@@ -347,6 +347,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	background-repeat:no-repeat;
 	background-position:center center;
 }
+._busy tt{visibility:hidden}
 /* кнопка отмена */
 .vkCancel{border:#B3B3B3 solid 1px;background:#E0E0E0}
 .vkCancel button {
@@ -1123,3 +1124,4 @@ button.vk.grey:hover{background-color:#999}
 .grey{color:#888}
 .dn{display:none}
 .vh{visibility:hidden}
+

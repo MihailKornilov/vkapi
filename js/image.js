@@ -148,7 +148,7 @@ $.fn._image = function(o) {
 					p.addClass('busy');
 
 					$.post(AJAX_MAIN, send, function(res) {
-						p.removeClass('busy')
+						p.removeClass('busy');
 						if(res.success)
 							p.remove();
 					}, 'json');
@@ -171,18 +171,27 @@ $(document)
 			t = t.find('img');
 		var html = '<div id="_image-view">' +
 					'<div class="head"><em class="_busy">&nbsp;</em><a>Закрыть</a></div>' +
-					'<table class="image"><tr><td><img src="' + t.attr('src').replace('-s.', '-b.') + '"></table>' +
-					'<div class="about"><div class="dtime"></div></div>' +
+					'<table class="image">' +
+						'<tr><td><img src="' + t.attr('src').replace('-s.', '-b.') + '" />' +
+					'</table>' +
+					'<div class="about">' +
+						'<a id="del"><tt>Удалить</tt></a>' +
+						'<div id="del-ok">Фотография удалена</div>' +
+						'<div class="dtime"></div>' +
+					'</div>' +
 					'<div class="hide"></div>' +
 				'</div>';
 		FB.append(html);
 
 		var iv = $('#_image-view'),
+			ivDel = iv.find('#del'),
 			spisok = [],
-			num = 1;
+			num = 1,
+			id_cur = id; //id текущего изображения
 		iHeightSet();
 		iv.find('.head a').click(iclose);
 		iv.find('img:first').on('load', iHeightSet);
+		ivDel.click(idel);
 		var send = {
 			op:'image_view',
 			id:id
@@ -196,7 +205,14 @@ $(document)
 				iclick();
 			}
 		}, 'json');
-
+/*
+		function iNumGet() {//получение порядокового номера на основании текущего id
+			for(var n = 0; n < spisok.length; n++)
+				if(spisok[n].id == id_cur)
+					return n;
+			return 0;
+		}
+*/
 		function ishow() {
 			var len = spisok.length,
 				numNext = num + 1 >= len ? 0 : num + 1,
@@ -209,6 +225,8 @@ $(document)
 				.attr('height', img.y)
 				.on('load', iHeightSet);
 			iv.find('.hide').html('<img src="' + spisok[numNext].link + '">');
+			iv[(img.deleted ? 'add' : 'remove') + 'Class']('deleted');
+			id_cur = img.id;
 		}
 		function iclick() {
 			iv.find('.image').on('click', function() {
@@ -232,6 +250,24 @@ $(document)
 		function iHeightSet() {
 			FOTO_HEIGHT = iv.height();
 			_fbhs();
+		}
+		function idel() {//удаление изображения
+			var send = {
+				op:'image_del',
+				id:id_cur
+			};
+
+			if(ivDel.hasClass('_busy'))
+				return;
+			ivDel.addClass('_busy');
+
+			$.post(AJAX_MAIN, send, function(res) {
+				ivDel.removeClass('_busy');
+				if(res.success) {
+					iv.addClass('deleted');
+					spisok[num].deleted = 1;
+				}
+			}, 'json');
 		}
 	});
 

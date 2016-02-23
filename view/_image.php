@@ -186,3 +186,26 @@ function _imageImCreate($im, $x_cur, $y_cur, $x_new, $y_new, $name) {//сжатие из
 
 	return $send;
 }
+
+function _imageQuery($id, $withDel=0) {//запрос данных одного изображения
+	$withDel = $withDel ? '' : ' AND !`deleted`';
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE `id`=".$id.$withDel;
+	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _imageArr($id, $withDel=0) {//массив изображений по критению
+	if(!$im = _imageQuery($id, $withDel))
+		return array();
+
+	$withDel = $withDel ? '' : ' AND !`deleted`';
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE `model_id`=".$im['model_id']."
+			  AND `zayav_id`=".$im['zayav_id']."
+			  AND `zp_id`=".$im['zp_id']."
+			  AND `manual_id`=".$im['manual_id']."
+			  ".$withDel."
+			ORDER BY `sort`";
+	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+}
