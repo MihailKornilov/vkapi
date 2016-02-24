@@ -1090,6 +1090,7 @@ switch(@$_POST['op']) {
 		$income_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
 
 		_schetPayCorrect($schet_id);
+		_zayavBalansUpdate($r['zayav_id']);
 
 		//баланс для расчётного счёта
 		_balans(array(

@@ -628,6 +628,7 @@ function income_schet_spisok($schet) {//список платежей по конкретному счёту на 
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `schet_id`=".$schet['id']."
 			ORDER BY `id` DESC";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
