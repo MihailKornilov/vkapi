@@ -972,7 +972,7 @@ function _zayavDogovorJs($z) {
 		'sum:'._cena($r['sum']).','.
 		'avans_hide:'.(TODAY == substr($r['dtime_add'], 0, 10) ? 0 : 1).','.
 		'avans_invoice_id:'.$invoice_id.','.
-		'avans_sum:'._cena($r['avans']);
+		'avans_sum:'.($invoice_id ? _cena($r['avans']) : '""');
 }
 function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 	if(!_num($v['id']) && $v['id'] != 0)

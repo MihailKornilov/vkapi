@@ -650,7 +650,7 @@ var _zayavSpisok = function(v, id) {
 				data_create:$('#data_create').val(),
 				sum:_cena($('#sum').val()),
 				invoice_id:_num($('#avans_invoice_id').val()),
-				avans:$('#avans_sum').val()
+				avans:_cena($('#avans_sum').val())
 			};
 			if(!send.fio) {
 				dialog.err('Не указано Фио клиента');
@@ -667,13 +667,13 @@ var _zayavSpisok = function(v, id) {
 				$('#sum').focus();
 				return false;
 			}
-			if(!send.avans_hide && send.avans && !_cena(send.avans)) {
-				dialog.err('Некорректно указан авансовый платёж');
-				$('#avans_sum').focus();
-				return false;
-			}
 			if(!send.avans_hide && send.avans && !send.invoice_id) {
 				dialog.err('Не указан счёт авансового платёжа');
+				return false;
+			}
+			if(!send.avans_hide && send.invoice_id && !send.avans) {
+				dialog.err('Некорректно указан авансовый платёж');
+				$('#avans_sum').focus();
 				return false;
 			}
 			return send;
