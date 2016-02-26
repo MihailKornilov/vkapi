@@ -1638,9 +1638,9 @@ function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вк
 
 	$send = array();
 
-	foreach(explode(',', $v) as $r) {
+	foreach(explode('###', $v) as $r) {
 		$u = array();
-		$ids = explode(':', $r);
+		$ids = explode('&&&', $r);
 		if($ids[0] != 0 && !_num($ids[0]))//id расхода
 			return false;
 		$u[] = _num($ids[0]);
@@ -1663,9 +1663,9 @@ function _zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вк
 			return false;
 		$u[] = _cena($ids[3]);
 
-		$send[] = implode(':', $u);
+		$send[] = implode('&&&', $u);
 	}
-	return implode(',', $send);
+	return implode('###', $send);
 }
 function _zayav_expense_html($arr, $accrual_sum=false, $diff=false, $new=false) {//вывод таблицы расходов по за€вке
 	$arr = _zayav_expense_sort($arr);
@@ -1742,8 +1742,8 @@ function _zayav_expense_array($v) {//расходы по за€вке в формате array
 	if(empty($v))
 		return array();
 	$array = array();
-	foreach(explode(',', $v) as $r) {
-		$ex = explode(':', $r);
+	foreach(explode('###', $v) as $r) {
+		$ex = explode('&&&', $r);
 		$array[] = array(
 			_num($ex[0]),
 			_num($ex[1]),

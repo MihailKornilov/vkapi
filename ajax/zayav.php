@@ -918,13 +918,13 @@ switch(@$_POST['op']) {
 			if($ze['attach'])
 				$dop = $r['attach_id'] ? $r['attach_id'] : '.'.$r['txt'];
 			$arr[] =
-				$r['id'].':'.
-				$r['category_id'].':'.
-				$dop.':'.
+				$r['id'].'&&&'.
+				$r['category_id'].'&&&'.
+				$dop.'&&&'.
 				_cena($r['sum']);
 		}
 
-		$old = _zayav_expense_array(implode(',', $arr));
+		$old = _zayav_expense_array(implode('###', $arr));
 		$new = _zayav_expense_array($expense);
 
 		sort($old);

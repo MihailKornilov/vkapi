@@ -878,13 +878,13 @@ var _zayavSpisok = function(v, id) {
 			}
 
 			send.push(
-				id + ':' +
-				cat_id + ':' +
-				dop + ':' +
+				id + '&&&' +
+				cat_id + '&&&' +
+				dop + '&&&' +
 				_cena(sum)
 			);
 		}
-		return send.join();
+		return send.join('###');
 	};
 
 $.fn.product = function(o) {
