@@ -22,7 +22,8 @@ function _noteArr($v) {//запрос массива заметок (для общего списка, либо отдельн
 
 	$sql = "SELECT
 				*,
-				'' `comment`
+				'' `comment`,
+				'' `image`
 			FROM `_note`
 			WHERE !`deleted`
 			  ".($v['noapp'] ? '' : "AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID)."
@@ -45,11 +46,19 @@ function _note($v=array()) {
 	return
 	'<div class="_note" val="'.$v['p'].'#'.$v['id'].'">'.
 		'<div class="_note-head">Заметки<tt>'._noteCount($arr).'</tt></div>'.
-		'<div class="add">'.
-			'<textarea placeholder="Добавить заметку..."></textarea>'.
-			'<button class="vk dn">Добавить</button>'.
-		'</div>'.
+		_noteArea().
 		_noteSpisok($arr).
+	'</div>';
+}
+function _noteArea($note_id=0, $ph='Добавить заметку...') {
+	return
+	'<div class="_note-area-add" id="_note-area-'.$note_id.'" val="'.$note_id.'">'.
+		'<div class="area">'.
+			'<div class="area-image" val="'._imageNameCreate().'"></div>'.
+			'<textarea class="_note-area" placeholder="'.$ph.'"></textarea>'.
+		'</div>'.
+		'<div class="_note-img"></div>'.
+		'<button class="vk">Добавить</button>'.
 	'</div>';
 }
 function _noteCount($arr) {//количество заметок
@@ -63,6 +72,7 @@ function _noteSpisok($arr) {//список заметок
 		return '';
 
 	$arr = _viewerValToList($arr);
+	$arr = _noteImage($arr);
 	$arr = _noteCommentSpisok($arr);
 
 	$send = '';
@@ -84,28 +94,28 @@ function _noteUnit($r) {
 				'<td class="nu-i">'.
 					'<div class="img_del nu-del'._tooltip('Удалить заметку', -98, 'r').'</div>'.
 					'<h3>'.$r['viewer_link'].'</h3>'.
-					'<h4>'.wordwrap(_br($r['txt']), 45, '<br />', true).'</h4>'.
+					'<h4>'.wordwrap(_br($r['txt']), 45, '<br />', true).$r['image'].'</h4>'.
 					'<h5>'.
 						FullDataTime($r['dtime_add'], 1).
 						($n ? '<a class="nu-go-comm'.($r['comment_count'] ? ' ex' : '').'">'.$goComm.'</a>' : '').
 					'</h5>'.
 					'<h2'.($n ? ' class="dn"' : '').'>'.@$r['comment'].'</h2>'.
-					'<div class="_note-comment-add'.($n ? ' dn' : '').'">'.
-						'<textarea placeholder="Комментировать..."></textarea>'.
-						'<button class="vk dn">Добавить</button>'.
-					'</div>'.
+					'<div'.($n ? ' class="dn"' : '').'>'._noteArea($r['id'], 'Комментировать...').'</div>'.
 		'</table>'.
 	'</div>';
 }
 
 function _noteCommentSpisok($arr) {//прикрепление к списку заметок список комментариев
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				'' `image`
 			FROM `_note_comment`
 			WHERE !`deleted`
-			  AND `note_id` IN (".implode(',', array_keys($arr)).")
+			  AND `note_id` IN ("._idsGet($arr).")
 			ORDER BY `id` ASC";
 	$comment = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 	$comment = _viewerValToList($comment);
+	$comment = _noteCommentImage($comment);
 
 	foreach($comment as $r)
 		$arr[$r['note_id']]['comment'] .= _noteCommentUnit($r);
@@ -120,7 +130,7 @@ function _noteCommentUnit($r) {
 			'<tr><td class="cu-photo">'.$r['viewer_photo'].
 				'<td class="cu-i">'.$r['viewer_link'].
 					'<div class="img_del cu-del'._tooltip('Удалить комментарий', -126, 'r').'</div>'.
-					'<h4>'.wordwrap(_br($r['txt']), 40, '<br />', true).'</h4>'.
+					'<h4>'.wordwrap(_br($r['txt']), 40, '<br />', true).$r['image'].'</h4>'.
 					'<h5>'.FullDataTime($r['dtime_add'], 1).'</h5>'.
 		'</table>'.
 	'</div>';
@@ -145,8 +155,8 @@ function _noteAdd($v) {//внесение новой заметки
 		return false;
 	if(strlen($v['p']) > 100)
 		return false;
-	if(empty($v['txt']))
-		return false;
+//	if(empty($v['txt']))
+//		return false;
 
 	//если разрешён комментарий, то попытка внесения комментария
 	if(!empty($v['comment']) && _noteCommentAdd($v))
@@ -216,4 +226,68 @@ function _noteLast($v) {
 			LIMIT 1";
 	$txt = query_value($sql, GLOBAL_MYSQL_CONNECT);
 	return $txt ? htmlspecialchars_decode($txt) : '';
+}
+
+function _noteImageCount($key) {//получение количества изображений по ключу
+	$sql = "SELECT COUNT(`id`)
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `key`='".$key."'";
+	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _noteImage($arr) {//вставка изображений в массив заметок
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `note_id` IN ("._idsGet($arr).")
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['note_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+
+	return $arr;
+}
+function _noteCommentImage($arr) {//вставка изображений в массив комментариев
+	if(empty($arr))
+		return array();
+
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `comment_id` IN ("._idsGet($arr).")
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['comment_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+
+	return $arr;
+}
+
+function _noteImageOne($note_id) {//получение изображений для конкретной заметки
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `note_id`=".$note_id."
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$image = '';
+	while($r = mysql_fetch_assoc($q))
+		$image .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+
+	return array('image'=>$image);
+
+}
+function _noteCommentImageOne($comment_id) {//получение изображений для конкретного комментария
+	$sql = "SELECT *
+			FROM `_image`
+			WHERE !`deleted`
+			  AND `comment_id`=".$comment_id."
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$image = '';
+	while($r = mysql_fetch_assoc($q))
+		$image .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+
+	return array('image'=>$image);
+
 }

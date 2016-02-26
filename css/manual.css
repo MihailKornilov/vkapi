@@ -72,7 +72,7 @@
     font-size: 10px;
 }
 #manual-part .image{text-align:center;margin:15px 0 5px}
-#manual-part .image img{box-shadow: 0 0 25px rgba(0,0,0,.5);}
+#manual-part .image img{box-shadow: 0 0 25px rgba(0,0,0,.5)}
 #manual-part .noaccess{background:#ffe8e8}
 #manual-part .right{width:150px}
 

@@ -205,6 +205,9 @@ function _imageArr($id, $withDel=0) {//массив изображений по критению
 			  AND `zayav_id`=".$im['zayav_id']."
 			  AND `zp_id`=".$im['zp_id']."
 			  AND `manual_id`=".$im['manual_id']."
+			  AND `note_id`=".$im['note_id']."
+			  AND `comment_id`=".$im['comment_id']."
+			  ".($im['key'] ? " AND `key`='".$im['key']."'" : '')."
 			  ".$withDel."
 			ORDER BY `sort`";
 	return query_arr($sql, GLOBAL_MYSQL_CONNECT);

@@ -286,12 +286,17 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$page_name = _txt($_POST['page_name']);
+		$txt = _txt($_POST['txt']);
+		$key = _txt(@$_POST['key']);
+
+		if(!$txt && !_noteImageCount($key))
+			jsonError();
 
 		if(!_note(array(
 			'add' => 1,
 			'p' => $page_name,
 			'id' => $page_id,
-			'txt' => _txt($_POST['txt'])
+			'txt' => $txt
 		)))
 			jsonError();
 
@@ -305,7 +310,14 @@ switch(@$_POST['op']) {
 				LIMIT 1";
 		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
-		$send['html'] = utf8(_noteUnit($r + _viewer()));
+		//прикрепление изображений, если есть
+		$sql = "UPDATE `_image`
+				SET `note_id`=".$r['id'].",
+					`key`=''
+				WHERE `key`='".$key."'";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(_noteUnit($r + _viewer() + _noteImageOne($r['id'])));
 		$send['count'] = utf8(_noteCount(array(
 			'p' => $page_name,
 			'id' => $page_id
@@ -360,8 +372,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$txt = _txt($_POST['txt']);
+		$key = _txt(@$_POST['key']);
 
-		if(empty($_POST['txt']))
+		if(!$txt && !_noteImageCount($key))
 			jsonError();
 
 		if(!$r = _noteQuery($note_id))
@@ -394,7 +407,14 @@ switch(@$_POST['op']) {
 				LIMIT 1";
 		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
-		$send['html'] = utf8(_noteCommentUnit($r + _viewer()));
+		//прикрепление изображений, если есть
+		$sql = "UPDATE `_image`
+				SET `comment_id`=".$r['id'].",
+					`key`=''
+				WHERE `key`='".$key."'";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(_noteCommentUnit($r + _viewer() + _noteCommentImageOne($r['id'])));
 		jsonSuccess($send);
 		break;
 	case 'note_comment_del'://удаление комментария
@@ -475,6 +495,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'image_upload'://добавление изображения
+		$key = _txt($_POST['key']);
 		$zayav_id = _num($_POST['zayav_id']);
 		$zp_id = _num($_POST['zp_id']);
 		$manual_id = _num($_POST['manual_id']);
@@ -523,6 +544,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_image`
 				WHERE !`deleted`
+	  ".($key ? " AND `key`='".$key."'" : '')."
  ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
 	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
@@ -548,6 +570,7 @@ switch(@$_POST['op']) {
 					`zp_id`,
 					`manual_id`,
 
+					`key`,
 					`sort`,
 					`viewer_id_add`
 				) VALUES (
@@ -569,6 +592,7 @@ switch(@$_POST['op']) {
 					'".$zp_id."',
 					'".$manual_id."',
 
+					'".addslashes($key)."',
 					".$sort.",
 					".VIEWER_ID."
 			)";
@@ -605,13 +629,15 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'image_obj_get':
-		$zayav_id = _num($_POST['zayav_id']);
-		$zp_id = _num($_POST['zp_id']);
-		$manual_id = _num($_POST['manual_id']);
+		$key = _txt(@$_POST['key']);
+		$zayav_id = _num(@$_POST['zayav_id']);
+		$zp_id = _num(@$_POST['zp_id']);
+		$manual_id = _num(@$_POST['manual_id']);
 
 		$sql = "SELECT *
 				FROM `_image`
 				WHERE !`deleted`
+	  ".($key ? " AND `key`='".$key."'" : '')."
  ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
 	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
@@ -622,7 +648,7 @@ switch(@$_POST['op']) {
 
 		foreach($arr as $r) {
 			$send['img'] .=
-			'<a class="_iview" val="'.$r['id'].'">'.
+			'<a class="_iview" val="'.$r['id'].($key ? '#'.$key : '').'">'.
 				'<div class="div-del"></div>'.
 				'<div class="img_minidel'._tooltip(utf8('Удалить'), -29).'</div>'.
 				'<img src="'.$r['path'].$r['small_name'].'">'.

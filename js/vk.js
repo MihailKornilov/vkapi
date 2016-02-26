@@ -459,7 +459,8 @@ var VK_SCROLL = 0,
 		butSubmit.find('button').click(function() {
 			o.submit();
 		});
-		bottom.find('.vkCancel').click(function() {
+		bottom.find('.vkCancel').click(function(e) {
+			e.stopPropagation();
 			o.cancel();
 			dialogClose();
 		});
@@ -2416,61 +2417,105 @@ $(document)
 
 	})
 
-	.on('click focus', '._note TEXTAREA', function() {//разворачивание поля текста и показ кнопки
+	.on('click focus', '._note-area', function(e) {//разворачивание поля текста и показ кнопки
+		e.stopPropagation();
 		var t = $(this),
-			but = t.next(),
-			v,
-			area = t.parent().attr('class') == 'add' ? '.add' : 'h6';
-		if(but.is(':hidden')) {
-			v = t.attr('placeholder');
-			t.attr('placeholder', '')
-			 .attr('val', v)
-			 .height(26)
-			 .autosize();
-			but.removeClass('dn');
-			t.keydown(function(e) {
-				if(e.ctrlKey && e.keyCode == 13) {
-					$('._note ' + area + ' .vk').trigger('click');
-				}
-			});
-		}
+			p = t.parent().parent();
+		if(p.hasClass('active'))
+			return;
+
+		p.addClass('active');
+
+		var ph = t.attr('placeholder'),
+			id = p.attr('id');
+
+		t.attr('placeholder', '')
+		 .height(28)
+		 .autosize()
+		 .keydown(function(e) {
+			if(e.ctrlKey && e.keyCode == 13)
+				p.find('.vk').trigger('click');
+		 });
+
+		$(document).on('click.' + id, function(e) {//сворачивание поля текста и скрытие кнопки
+			if(t.val())
+				return;
+			if(p.find('._note-img').html())
+				return;
+
+			$(document).off('click.' + id);
+
+			t.attr('placeholder', ph).height(14);
+			p.removeClass('active');
+		});
 	})
-	.on('blur', '._note TEXTAREA', function() {//сворачивание поля текста и скрытие кнопки
+	.on('click', '._note-area-add .area-image', function(e) {//нажатие на кнопку выбора изображения
+		e.stopPropagation();
 		var t = $(this),
-			val = t.attr('val');
-		if(!t.val()) {
-			t.attr('placeholder', val)
-			 .height(13)
-			 .next().addClass('dn');
-		}
+			img = t.parent().next(),
+			key = t.attr('val'),
+			send = {
+				op:'image_obj_get',
+				key:key
+			};
+		_imageAdd({
+			key:key,
+			func:function() {
+				img.addClass('_busy').html('&nbsp;');
+				$.post(AJAX_MAIN, send, function(res) {
+					img.removeClass('_busy').html(res.success ? res.img : '');
+					t.next().focus();
+				}, 'json');
+			}
+		});
 	})
-	.on('click', '._note .add .vk', function() {//внесение новой заметки
-		var t = $(this);
+	.on('click', '._note-area-add .vk', function(e) {//внесение новой заметки или комментария
+		e.stopPropagation();
+		var t = $(this),
+			p = t.parent(),
+			area = p.find('._note-area'),
+			note_id = _num(p.attr('val'));
+
+		area.focus();
+
 		if(t.hasClass('_busy'))
 			return;
-		var val = t.parent().parent().attr('val').split('#'),
+
+		var note = _parent(t, '._note').attr('val').split('#'),
 			send = {
-				op:'note_add',
-				page_name:val[0],
-				page_id:val[1],
-				txt:$.trim(t.prev().val())
+				op:note_id ? 'note_comment_add' : 'note_add',
+				page_name:note[0],
+				page_id:note[1],
+				note_id:note_id,
+				txt:$.trim(area.val()),
+				key:area.prev().attr('val')
 			};
-		if(!send.txt)
-			return;
+
 		t.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('_busy');
 			if(res.success) {
-				t.prev().val('').focus();
-				t.parent().after(res.html);
-				t.parent().parent().find('tt').html(res.count);
-				$('.nu.deleted').remove();
+				p.find('._note-img').html('');
+				area.val('').focus();
+				p[note_id ? 'before' : 'after'](res.html);
+				$('.nu.deleted,.cu.deleted').remove();
+				if(!note_id)
+					p.parent().find('tt').html(res.count);
 			}
 		}, 'json');
 	})
+	.on('click', '.nu-go-comm', function() {//показ поля для комментария
+		var t = $(this),
+			td = _parent(t, 'TD');
+		td.find('h2').removeClass('dn')
+		  .next().removeClass('dn');
+		td.find('textarea').focus().autosize();
+		t.remove();
+	})
+
 	.on('click', '._note .nu-del', function() {//удаление заметки
 		var t = $(this),
-			nu = _parent(t, 'TABLE').parent();
+			nu = _parent(t, '.nu-tab').parent();
 
 		if(nu.hasClass('busy'))
 			return;
@@ -2504,37 +2549,9 @@ $(document)
 				nu.removeClass('deleted');
 		}, 'json');
 	})
-	.on('click', '.nu-go-comm', function() {//показ поля для комментария
-		var t = $(this),
-			td = _parent(t, 'TD');
-		td.find('h2').removeClass('dn')
-		  .next().removeClass('dn');
-		td.find('textarea').focus().autosize();
-		t.remove();
-	})
-	.on('click', '._note-comment-add .vk', function() {//внесение нового комментария
-		var t = $(this);
-		if(t.hasClass('_busy'))
-			return;
-		var send = {
-				op:'note_comment_add',
-				note_id:_parent(t, 'TABLE').parent().attr('val'),
-				txt:$.trim(t.prev().val())
-			};
-		if(!send.txt)
-			return;
-		t.addClass('_busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('_busy');
-			if(res.success) {
-				t.prev().val('').focus();
-				t.parent().before(res.html);
-			}
-		}, 'json');
-	})
 	.on('click', '._note .cu-del', function() {//удаление комментария
 		var t = $(this),
-			cu = _parent(t, 'TABLE').parent();
+			cu = _parent(t, '.cu-tab').parent();
 
 		if(cu.hasClass('busy'))
 			return;

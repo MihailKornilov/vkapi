@@ -1,5 +1,6 @@
 var _imageAdd = function(o) {
 		o = $.extend({
+			key:0,//ключ по которому будет прикрепляться изображение, например, к заметке
 			zayav_id:0,
 			zp_id:0,
 			manual_id:0,
@@ -24,7 +25,8 @@ var _imageAdd = function(o) {
 				'<h1>' +
 					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="image-frame">' +
 						'<input type="hidden" name="op" value="image_upload" />' +
-						'<input type="file" name="f1" id="file" />' +
+						'<input type="file" name="f1" id="file" accept="image/jpeg,image/png,image/gif,image/tiff" />' +
+						'<input type="hidden" name="key" value="' + o.key + '" />' +
 						'<input type="hidden" name="zayav_id" value="' + o.zayav_id + '" />' +
 						'<input type="hidden" name="zp_id" value="' + o.zp_id + '" />' +
 						'<input type="hidden" name="manual_id" value="' + o.manual_id + '" />' +
@@ -135,24 +137,6 @@ $.fn._image = function(o) {
 						$('#content').insertAtCaret('{img' + $(this).attr('val') + '}');
 						return false;
 					});
-				imSpisok.find('.img_minidel').click(function(e) {
-					e.stopPropagation();
-					var p = _parent($(this), 'A'),
-						send = {
-							op:'image_del',
-							id:p.attr('val')
-						};
-
-					if(p.hasClass('busy'))
-						return;
-					p.addClass('busy');
-
-					$.post(AJAX_MAIN, send, function(res) {
-						p.removeClass('busy');
-						if(res.success)
-							p.remove();
-					}, 'json');
-				});
 			}
 		}, 'json');
 	}
@@ -165,7 +149,9 @@ $(document)
 		e.stopPropagation();
 		$('#_image-view').remove();
 		var t = $(this),
-			id = t.attr('val'),
+			val = t.attr('val').split('#'),
+			id = val[0],
+			key = val[1] || '',
 			scroll = VK_SCROLL;
 		if(t[0].tagName != 'IMG')
 			t = t.find('img');
@@ -194,7 +180,8 @@ $(document)
 		ivDel.click(idel);
 		var send = {
 			op:'image_view',
-			id:id
+			id:id,
+			key:key
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			iv.find('._busy').removeClass('_busy');
@@ -269,6 +256,24 @@ $(document)
 				}
 			}, 'json');
 		}
+	})
+	.on('click', 'a._iview .img_minidel', function(e) {
+		e.stopPropagation();
+		var p = _parent($(this), 'A'),
+			send = {
+				op:'image_del',
+				id:p.attr('val').split('#')[0]
+			};
+
+		if(p.hasClass('busy'))
+			return;
+		p.addClass('busy');
+
+		$.post(AJAX_MAIN, send, function(res) {
+			p.removeClass('busy');
+			if(res.success)
+				p.remove();
+		}, 'json');
 	});
 
 

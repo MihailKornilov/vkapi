@@ -966,13 +966,37 @@ button.vk.grey:hover{background-color:#999}
 	padding:3px 8px;
 }
 ._note TT{float:right;color:#777}
-._note .add{background-color:#f1f1f1;padding:8px 16px 8px 8px}
-._note TEXTAREA{
-	overflow:hidden;
-	width:100%;
-	border:#CCD solid 1px;
-	height:13px;
+._note-area-add{padding:7px;background-color:#f1f1f1}
+.nu ._note-area-add{margin-top:5px}
+._note .area{
+	position:relative;
+	border:#ccd solid 1px;
+	background:#fff;
+	padding:5px 30px 5px 6px;
 }
+._note .area-image{
+	position:absolute;
+	right:0;
+	width:28px;
+	height:28px;
+	overflow:hidden;
+	background:#fff url(../attach_photo.gif) no-repeat 6px 3px;
+	cursor:pointer;
+	opacity:.8;
+}
+._note .area-image:hover{opacity:1}
+._note ._note-area{
+	overflow:hidden;
+	border:none;
+	margin: 0;
+    padding: 0;
+	width:100%;
+}
+._note-img{min-width:80px}
+._note-img a._iview{margin-top:7px}
+._note-area-add:not(.active) .area-image{display:none}
+._note-area-add:not(.active) ._note-area{height:14px}
+._note-area-add:not(.active) .vk{display:none}
 ._note .vk{margin-top:8px}
 ._note .nu{padding:10px 0;border-bottom:#dae1e8 solid 1px}
 ._note .nu.busy{background-color:#eee;opacity:.3}
@@ -989,13 +1013,18 @@ button.vk.grey:hover{background-color:#999}
 ._note .nu.busy .nu-del{display:none}
 ._note H3 a{font-weight:bold}
 ._note H4{margin-top:3px}
+._note H4 ._iview{
+	display:block;
+	width:50%;
+	margin-top:8px;
+	box-shadow: 0 0 15px rgba(0,0,0,.5);
+}
 ._note H5{color:#999;font-size:10px;margin-top:6px}
 ._note H5 *{font-size:10px}
 ._note H5 a{margin-left:15px}
 ._note H2{margin-top:7px}/* список комментариев */
 ._note .nu:not(:hover) H5 a:not(.ex){display:none}
 ._note .nu.busy H5 a{display:none}
-._note-comment-add{background-color:#f1f1f1;padding:6px 14px 6px 6px;margin-top:4px}
 /* комментарии */
 ._note .cu{padding-top:7px;margin-top:7px;border-top:#E9EDF1 solid 1px}
 ._note .cu.busy{background-color:#eee;opacity:.3}
