@@ -1066,6 +1066,7 @@ switch(@$_POST['op']) {
 		$color = _txt($_POST['color']);
 		$default = _bool($_POST['default']);
 		$nouse = _bool($_POST['nouse']);
+		$hide = _bool($_POST['hide']);
 		$srok = _bool($_POST['srok']);
 		$executer = _bool($_POST['executer']);
 		$accrual = _bool($_POST['accrual']);
@@ -1090,13 +1091,14 @@ switch(@$_POST['op']) {
 				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
 					`color`='".$color."',
-					`default`='".$default."',
+					`default`=".$default.",
 					`nouse`='".$nouse."',
-					`srok`='".$srok."',
-					`executer`='".$executer."',
-					`accrual`='".$accrual."',
-					`remind`='".$remind."',
-					`day_fact`='".$day_fact."'
+					`hide`=".$hide.",
+					`srok`=".$srok.",
+					`executer`=".$executer.",
+					`accrual`=".$accrual.",
+					`remind`=".$remind.",
+					`day_fact`=".$day_fact."
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

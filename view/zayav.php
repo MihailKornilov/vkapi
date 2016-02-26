@@ -16,6 +16,7 @@ function _zayavStatus($id=false, $i='name') {
 					`color`,
 					`default`,
 					`executer`,
+					`hide`,
 					`srok`,
 					`day_fact`,
 					0 `count`
@@ -81,6 +82,17 @@ function _zayavStatus($id=false, $i='name') {
 		foreach($arr as $r)
 			if($r['default'])
 				return _num($r['id']);
+
+	//id статусов, которые скрываются из общего списка
+	if($id == 'hide_ids') {
+		$ids = array();
+		foreach($arr as $r)
+			if($r['hide'])
+				$ids[] = $r['id'];
+		if(empty($ids))
+			return 0;
+		return implode(',', $ids);
+	}
 
 	if($id && !isset($arr[$id])) {
 		if($i == 'bg')
@@ -256,7 +268,6 @@ function _zayavFilter($v) {
 		'desc' => 0,
 		'status' => 0,
 		'finish' => '0000-00-00',
-		'diff' => 0,
 		'executer_id' => 0,
 		'product_id' => 0,
 		'product_sub_id' => 0,
@@ -279,7 +290,6 @@ function _zayavFilter($v) {
 		'desc' => _bool(@$v['desc']),
 		'status' => _num(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
-		'diff' => _bool(@$v['diff']),
 		'executer_id' => intval(@$v['executer_id']),
 		'product_id' => _num(@$v['product_id']),
 		'product_sub_id' => _num(@$v['product_sub_id']),
@@ -331,7 +341,6 @@ function _zayav_list($v=array()) {
   : '').
 
 (ZAYAV_FILTER_NOSCHET ? _check('noschet', 'Счёт не выписан', $v['noschet']) : '').
-//   (ZAYAV_FILTER_DIFF ? _check('diff', 'Неоплаченные заявки', $v['diff']) : '').
 
   (ZAYAV_INFO_PRODUCT ? '<div class="findHead">Изделия</div>'.
 						'<input type="hidden" id="product_id" value="'.$v['product_id'].'" />'.
@@ -406,8 +415,6 @@ function _zayav_spisok($v) {
 			$cond .= " AND `pay_type`=".$filter['paytype'];
 		if($filter['noschet'])
 			$cond .= " AND !`schet_count`";
-		if($filter['diff'])
-			$cond .= " AND `sum_accrual`-`sum_pay`>0";
 		if($filter['executer_id'])
 			$cond .= " AND `executer_id`=".($filter['executer_id'] < 0 ? 0 : $filter['executer_id']);
 		if($filter['product_id']) {
@@ -456,6 +463,8 @@ function _zayav_spisok($v) {
 				$cond .= " AND !`deleted`";
 		}
 
+		if(_zayavStatus('hide_ids') && !$filter['status'])
+			$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 	}
 
 	$sql = "SELECT

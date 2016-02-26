@@ -68,9 +68,10 @@ var setupRuleCheck = function(v, id) {
 			next_ids:0,
 			srok:0,
 			executer:0,
+			day_fact:0,
 			accrual:0,
 			remind:0,
-			day_fact:0
+			hide:0
 		}, o);
 
 		var html =
@@ -84,13 +85,14 @@ var setupRuleCheck = function(v, id) {
 						'<td><input type="hidden" id="nouse" value="' + o.nouse + '" />' +
 					'<tr><td class="label topi">Следующие статусы:<td><input type="hidden" id="next" value="' + o.next + '" />' +
 					'<tr class="tr-next-ids' + (o.next ? '' : ' dn') + '"><td class="label topi"><td><input type="hidden" id="next_ids" value="' + o.next_ids + '" />' +
+					'<tr><td><td><input type="hidden" id="hide" value="' + o.hide + '" />' +
 					'<tr><td><td>' +
 					'<tr><td><td><b>Действия при выборе статуса</b>' +
 					'<tr><td><td><input type="hidden" id="executer" value="' + o.executer + '" />' +
 					'<tr><td><td><input type="hidden" id="srok" value="' + o.srok + '" />' +
 					'<tr' + (ZAYAV_INFO_STATUS_DAY ? '' : ' class="dn"') + '>' +
 						'<td class="label">' +
-						'<td><input id="day_fact" type="hidden" value="' + o.day_fact + '" />' +
+						'<td><input type="hidden" id="day_fact" value="' + o.day_fact + '" />' +
 					'<tr><td><td><input type="hidden" id="accrual" value="' + o.accrual + '" />' +
 					'<tr><td><td><input type="hidden" id="remind" value="' + o.remind + '" />' +
 				'</table>',
@@ -155,6 +157,11 @@ var setupRuleCheck = function(v, id) {
 			multiselect:1
 		});
 
+		$('#hide')._check({
+			name:'скрывать заявку из общего списка',
+			light:1
+		});
+
 		$('#day_fact')._check({
 			name:'уточнять фактический день',
 			light:1
@@ -168,11 +175,11 @@ var setupRuleCheck = function(v, id) {
 			light:1
 		});
 		$('#accrual')._check({
-			name:'вносить начисление',
+			name:'предлагать вносить начисление',
 			light:1
 		});
 		$('#remind')._check({
-			name:'добавлять напоминание',
+			name:'предлагать добавлять напоминание',
 			light:1
 		});
 
@@ -188,9 +195,10 @@ var setupRuleCheck = function(v, id) {
 				next_ids:$('#next_ids').val(),
 				executer:$('#executer').val(),
 				srok:$('#srok').val(),
+				day_fact:$('#day_fact').val(),
 				accrual:$('#accrual').val(),
 				remind:$('#remind').val(),
-				day_fact:$('#day_fact').val()
+				hide:$('#hide').val()
 			};
 			if(!send.name) {
 				dialog.err('Не указано название');
@@ -610,6 +618,7 @@ $(document)
 			nouse:t.find('.nouse').val(),
 			next:t.find('.next').val().length > 1 ? 1 : 0,
 			next_ids:t.find('.next').val(),
+			hide:t.find('.hide').val(),
 			srok:t.find('.srok').val(),
 			executer:t.find('.executer').val(),
 			accrual:t.find('.accrual').val(),

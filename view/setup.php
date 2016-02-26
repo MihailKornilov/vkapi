@@ -514,6 +514,7 @@ function setup_zayav_status_spisok() {
 						'<span>'.$r['name'].'</span>'.
 						'<div class="about">'.$r['about'].'</div>'.
 		 ($r['nouse'] ? '<div class="dop">Не использовать повторно</div>' : '').
+		  ($r['hide'] ? '<div class="dop">Скрывать заявку из общего списка</div>' : '').
 	  ($r['executer'] ? '<div class="dop">Указывать исполнителя</div>' : '').
 		  ($r['srok'] ? '<div class="dop">Уточнять срок</div>' : '').
 	  ($r['day_fact'] ? '<div class="dop">Уточнять фактический день</div>' : '').
@@ -524,6 +525,7 @@ function setup_zayav_status_spisok() {
 						_iconDel($r).
 			'</table>'.
 			'<input type="hidden" class="nouse" value="'.$r['nouse'].'" />'.
+			'<input type="hidden" class="hide" value="'.$r['hide'].'" />'.
 			'<input type="hidden" class="next" value="'.$r['next'].'" />'.
 			'<input type="hidden" class="executer" value="'.$r['executer'].'" />'.
 			'<input type="hidden" class="srok" value="'.$r['srok'].'" />'.

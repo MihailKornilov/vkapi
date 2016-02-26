@@ -943,7 +943,6 @@ $(document)
 		$('.srok-link span').html('не указан');
 		ZAYAV.finish = '0000-00-00';
 
-		$('#diff')._check(0);			ZAYAV.diff = 0;
 		$('#paytype')._radio(0);		ZAYAV.paytype = 0;
 		$('#noschet')._check(0);		ZAYAV.noschet = 0;
 		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
@@ -1096,7 +1095,6 @@ $(document)
 			$('#sort')._radio(_zayavSpisok);
 			$('#desc')._check(_zayavSpisok);
 			$('#status').rightLink(_zayavSpisok);
-			$('#diff')._check(_zayavSpisok);
 			$('#paytype')._radio(_zayavSpisok);
 			$('#noschet')._check(_zayavSpisok);
 			WORKER_SPISOK.push({uid: -1, title: 'Не назначен', content: '<b>Не назначен</b>'});
