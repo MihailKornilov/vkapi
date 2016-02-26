@@ -463,7 +463,7 @@ function _zayav_spisok($v) {
 				$cond .= " AND !`deleted`";
 		}
 
-		if(_zayavStatus('hide_ids') && !$filter['status'])
+		if(_zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
 			$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 	}
 
