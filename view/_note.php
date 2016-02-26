@@ -13,6 +13,7 @@ function _noteFilter($v) {
 		'noapp' => _bool(@$v['noapp']), //независимо от приложения - заметка будет показываться во всех приложениях
 		'last' => _bool(@$v['last']),
 		'add' => _bool(@$v['add']),
+		'empty' => _num(@$v['empty']), //возможность оставлять пустые комментарии (если присутсвует картинка)
 		'comment' => _bool(@$v['comment']),
 		'txt' => @$v['txt']
 	);
@@ -155,8 +156,8 @@ function _noteAdd($v) {//внесение новой заметки
 		return false;
 	if(strlen($v['p']) > 100)
 		return false;
-//	if(empty($v['txt']))
-//		return false;
+	if(!$v['empty'] && empty($v['txt']))
+		return false;
 
 	//если разрешён комментарий, то попытка внесения комментария
 	if(!empty($v['comment']) && _noteCommentAdd($v))

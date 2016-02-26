@@ -289,13 +289,15 @@ switch(@$_POST['op']) {
 		$txt = _txt($_POST['txt']);
 		$key = _txt(@$_POST['key']);
 
-		if(!$txt && !_noteImageCount($key))
+		$imageCount = _noteImageCount($key);
+		if(!$txt && !$imageCount)
 			jsonError();
 
 		if(!_note(array(
 			'add' => 1,
 			'p' => $page_name,
 			'id' => $page_id,
+			'empty' => $imageCount,
 			'txt' => $txt
 		)))
 			jsonError();
