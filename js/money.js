@@ -1,15 +1,22 @@
-var _accrualAdd = function() {
+var _accrualAdd = function(o) {
+		o = $.extend({
+			id:0,
+			sum:'',
+			about:''
+		}, o);
+
 		var html =
 			'<table id="_accrual-add">' +
 				'<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Примечание:<td><input type="text" id="about" placeholder="не обязательно" />' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum.split(' ').join('') + '" /> руб.' +
+				'<tr><td class="label">Примечание:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
 			'</table>';
 
 		var dialog = _dialog({
 			width:480,
-			head:'Внесение начисления',
+			head:(o.id ? 'Редактироваие' : 'Внесение') + ' начисления',
 			content:html,
+			butSubmit:o.id ? 'Сохранить' : 'Внести',
 			submit:submit
 		});
 
@@ -18,11 +25,12 @@ var _accrualAdd = function() {
 
 		function submit() {
 			var send = {
-					op:'accrual_add',
-					zayav_id:ZI.id,
-					sum:_cena($('#sum').val()),
-					about:$('#about').val()
-				};
+				op:'accrual_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				zayav_id:ZI.id,
+				sum:_cena($('#sum').val()),
+				about:$('#about').val()
+			};
 			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
@@ -1737,6 +1745,16 @@ var _accrualAdd = function() {
 
 $(document)
 	.on('click', '._accrual-add', _accrualAdd)
+	.on('click', '._accrual-edit', function() {
+		var t = $(this),
+			p = _parent(t);
+
+		_accrualAdd({
+			id:t.attr('val'),
+			sum:p.find('.sum').html(),
+			about:p.find('.about').html()
+		});
+	})
 	.on('click', '._accrual-del', function() {
 		var t = $(this);
 		_dialogDel({

@@ -15,6 +15,59 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'accrual_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		$sql = "SELECT *
+				FROM `_money_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if($r['dogovor_id'])
+			jsonError();
+		if($r['schet_id'])
+			jsonError();
+
+		$sql = "UPDATE `_money_accrual`
+				SET `sum`=".$sum.",
+					`about`='".addslashes($about)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//баланс клиента
+		if(_cena($r['sum']) != $sum)
+			_balans(array(
+				'action_id' => 37,
+				'client_id' => $r['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'sum_old' => $r['sum'],
+				'sum' => $sum,
+				'about' => $about
+			));
+
+		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavCheck($r['zayav_id']);
+
+		if($changes =
+			_historyChange('Сумма', _cena($r['sum']), $sum).
+			_historyChange('Описание', $r['about'], $about))
+			_history(array(
+				'type_id' => 90,
+				'zayav_id' => $r['zayav_id'],
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+		jsonSuccess();
+		break;
 	case 'accrual_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();

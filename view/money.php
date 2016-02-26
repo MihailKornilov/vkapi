@@ -80,6 +80,8 @@ function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 		'about' => $about
 	));
 
+	_zayavBalansUpdate($z['id']);
+
 	_history(array(
 		'type_id' => 74,
 		'client_id' => $z['client_id'],
@@ -88,7 +90,6 @@ function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 		'v2' => $about
 	));
 
-	_zayavBalansUpdate($z['id']);
 }
 function _accrualFilter($v) {
 	$send = array(
@@ -174,10 +175,14 @@ function _accrual_unit($r, $filter) {//строка начисления в таблице
 	return
 	'<tr class="_accrual-unit'.($r['deleted'] ? ' deleted' : '').'">'.
 		'<td class="sum">'._sumSpace($r['sum']).
-		'<td>'.trim($about).
+		'<td class="about">'.trim($about).
 		'<td class="dtime">'._dtimeAdd($r).
 		'<td class="ed">'.
 			(!$r['schet_id'] && !$r['dogovor_id'] ?
+				_iconEdit(array(
+					'id' => $r['id'],
+					'class' => '_accrual-edit'
+				)).
 				_iconDel(array(
 					'id' => $r['id'],
 					'class' => '_accrual-del'
@@ -2125,7 +2130,7 @@ function _zayavInfoMoney_spisok($zayav_id) {
 			'Платежи и возвраты'.
 			'<a class="add _refund-add'._tooltip('Произвести возврат денежных средств', -215, 'r').'Возврат</a>'.
 			'<em>::</em>'.
-			'<a class="add _income-add">Внести платёж</a>'.
+			'<a class="add _income-add">Принять платёж</a>'.
 		'</div>'.
 		'<table class="_spisok">'.$spisok.'</table>';
 }
