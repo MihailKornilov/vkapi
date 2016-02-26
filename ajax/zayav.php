@@ -783,6 +783,8 @@ switch(@$_POST['op']) {
 		_zayavDogovorPrint($dog['id']);
 
 		_zayavBalansUpdate($v['zayav_id']);
+		_salaryZayavCheck($v['zayav_id']);
+
 
 		unlink(PATH_DOGOVOR.'/'.$dog['link'].'.doc');
 

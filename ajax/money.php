@@ -42,6 +42,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavCheck($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(
