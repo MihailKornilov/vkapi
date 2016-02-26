@@ -980,7 +980,7 @@ button.vk.grey:hover{background-color:#999}
 	width:28px;
 	height:28px;
 	overflow:hidden;
-	background:#fff url(../attach_photo.gif) no-repeat 6px 3px;
+	background:#fff no-repeat 6px 3px url(data:image/gif;base64,R0lGODlhEAANAMQZAHGNrdjg6XWQsHKNrtvi6oefu3KOroaeuo6kvn+ZtnmUtJ+xyJ+xx3WRsaq7znGMrXeSsn2Xtq6+0ay90HaRsXiTs3qVtHiTsnuWtf///wAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABkALAAAAAAQAA0AAAVVYCZmzAOcwMOM7CJAV3xBwjISyNAoWO8rjQGCkKBULL4kxlKhFJHKqIVyUUpEE2UsGWFFktskS1v1VRwiRwVc7k0NBgq0F/Yxj9pDdI85BAp8SQUBIQA7);
 	cursor:pointer;
 	opacity:.8;
 }
