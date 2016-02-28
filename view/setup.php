@@ -187,13 +187,11 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
 			'<tr><td class="lab"><td>'._check('RULE_EXECUTER', 'Может быть исполнителем заявок', $rule['RULE_EXECUTER']).
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', 'Начислять з/п по заявке при отсутствии долга', $rule['RULE_SALARY_ZAYAV_ON_PAY']).
-/*
 			'<tr><td class="lab">Начислять бонусы:'.
 				'<td>'._check('RULE_SALARY_BONUS', '', $rule['RULE_SALARY_BONUS']).
 					'<span'.($rule['RULE_SALARY_BONUS'] ? '' : ' class="vh"').'>'.
 						'<input type="text" id="salary_bonus_sum" maxlength="5" value="'.$u['bonus_sum'].'" />%'.
 					'<span>'.
-*/
 		'</table>'.
 
 	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX ?

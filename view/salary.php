@@ -39,6 +39,20 @@ function _salary_spisok() {
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] += $r['sum'];
 
+	//бонусы
+	$sql = "SELECT
+ 				`worker_id`,
+				IFNULL(SUM(`sum`),0) AS `sum`
+			FROM `_salary_bonus`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`
+			GROUP BY `worker_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if(isset($worker[$r['worker_id']]))
+			$worker[$r['worker_id']]['balans'] += $r['sum'];
+
 	//Начисления по заявкам
 	$sql = "SELECT
  				`worker_id`,
@@ -231,6 +245,14 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 			  AND `worker_id`=".$worker_id;
 	$acc = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
+	//бонусы
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_salary_bonus`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".$ws_id."
+			  AND `worker_id`=".$worker_id;
+	$bonus = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
 	//начисления по заявкам
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_zayav_expense`
@@ -257,7 +279,7 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 			  AND !`deleted`";
 	$zp = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-	$balans = round($acc + $zayav - $deduct - $zp + $start, 2);
+	$balans = round($acc + $bonus + $zayav - $deduct - $zp + $start, 2);
 
 	if($color)
 		return '<b style="color:#'.($balans < 0 ? 'A00' : '090').'">'._sumSpace($balans).'</b>';
@@ -354,6 +376,19 @@ function salary_worker_acc($filter) {
 
 	$sql = "SELECT
 				*,
+				'Бонус' `type`,
+				'bonus' `class`
+			FROM `_salary_bonus`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`=".$filter['id']."
+			  AND `year`=".$filter['year']."
+			  AND `mon`=".$filter['mon'];
+	$bonus = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$bonus = _zayavValToList($bonus);
+
+	$sql = "SELECT
+				*,
 				-`sum` `sum`,
 				'Вычет' `type`,
 				'deduct' `class`,
@@ -377,16 +412,17 @@ function salary_worker_acc($filter) {
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
 	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-
 	$zayav = _zayavValToList($zayav);
 
 	$spisok = _arrayTimeGroup($accrual);
+	$spisok += _arrayTimeGroup($bonus, $spisok);
 	$spisok += _arrayTimeGroup($zayav, $spisok);
 	$spisok += _arrayTimeGroup($deduct, $spisok);
 	krsort($spisok);
 
 	$send = '';
 	$accSum = 0;    //сумма произвольных начислений
+	$bonusSum = 0;  //сумма бонусов
 	$zayavSum = 0;  //сумма начислений по заявкам
 	$dSum = 0;      //сумма вычетов
 	$chAllShow = 0; //показывать галочку для выделения всех начислений
@@ -414,15 +450,16 @@ function salary_worker_acc($filter) {
 				'<td class="dtime">'.FullDataTime($r['dtime_add']).
 				'<td class="ed">'.$del;
 
-		$accSum += (!$r['zayav_id'] && $r['sum'] > 0 ? $r['sum'] : 0);
-		$zayavSum += ($r['zayav_id'] ? $r['sum'] : 0);
-		$dSum += ($r['sum'] < 0 ? $r['sum'] : 0);
+		$accSum += $r['class'] == 'accrual' ? $r['sum'] : 0;
+		$bonusSum += $r['class'] == 'bonus' ? $r['sum'] : 0;
+		$dSum += $r['class'] == 'deduct' ? $r['sum'] : 0;
+		$zayavSum += $r['class'] == 'expense' ? $r['sum'] : 0;
 
 		if(!$list)
 			$chAllShow = 1;
 	}
 
-	$allCount = count($accrual) + count($deduct) + count($zayav);
+	$allCount = count($accrual) + count($bonus) + count($deduct) + count($zayav);
 	$send =
 		'<h3><b>Начисления и вычеты</b></h3>'.
 		'<h4>'.
@@ -430,9 +467,10 @@ function salary_worker_acc($filter) {
 				'<div>Записей нет.</div>' :
 				'<a id="podr">подробно</a>'.
 				'<a id="hid">скрыть подробности</a>'.
-				'<div><u>Всего <b>'.$allCount.'</b> запис'._end($allCount, 'ь', 'и', 'ей').'. Общая сумма <b>'._sumSpace($accSum + $zayavSum + $dSum).'</b> руб.</u></div>'
+				'<div><u>Всего <b>'.$allCount.'</b> запис'._end($allCount, 'ь', 'и', 'ей').'. Общая сумма <b>'._sumSpace($accSum + $bonusSum + $zayavSum + $dSum).'</b> руб.</u></div>'
 			).
 			($accSum ? '<div>Начисления: <b>'.count($accrual).'</b> на сумму<b> '._sumSpace($accSum).'</b> руб.</div>' : '').
+			($bonusSum ? '<div>Бонусы: <b>'.count($bonus).'</b> на сумму<b> '._sumSpace($bonusSum).'</b> руб.</div>' : '').
 			($zayavSum ? '<div>Заявки: <b>'.count($zayav).'</b> на сумму<b> '._sumSpace($zayavSum).'</b> руб.</div>' : '').
 			($dSum ? '<div>Вычеты: <b>'.count($deduct).'</b> на сумму<b> '._sumSpace($dSum).'</b> руб.</div>' : '').
 		'</h4>'.
@@ -679,27 +717,150 @@ function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полность
 		}
 	}
 }
+function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
+	if(!$z = _zayavQuery($zayav_id))
+		return;
 
+	//по заявке есть долг
+	define('BZDOLG', round($z['sum_dolg'], 1));
 
+	//прибыль заявки
+	define('PROFIT', _cena($z['sum_profit']));
 
+	$sql = "SELECT *
+			FROM `_vkuser_rule`
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='RULE_SALARY_BONUS'
+			  AND `value`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return;
 
+	foreach($spisok as $r) {
+		if(!$procent = _viewer($r['viewer_id'], 'bonus_sum'))
+			continue;
 
+		$sql = "SELECT *
+				FROM `_salary_bonus`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `zayav_id`=".$zayav_id."
+				  AND `worker_id`=".$r['viewer_id'];
+		$bonus = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
+		//удаление бонуса, если есть долг по заявке или нет прибыли
+		if($bonus && (BZDOLG || !PROFIT)) {
+			$sql = "DELETE FROM `_salary_bonus` WHERE `id`=".$bonus['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
 
+			_balans(array(
+				'action_id' => 47,
+				'worker_id' => $r['viewer_id'],
+				'zayav_id' => $zayav_id,
+				'sum' => $bonus['sum']
+			));
 
+			$reason = 'нет прибыли по заявке';
+			if(BZDOLG)
+				$reason = 'заявка оплачена не полностью';
 
+			_history(array(
+				'type_id' => 93,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'worker_id' => $r['viewer_id'],
+				'v1' => _cena($bonus['sum']),
+				'v2' => $reason
+			));
 
+			continue;
+		}
 
+		//если есть долг или нет прибыли - ничего не делается
+		if(BZDOLG || !PROFIT)
+			continue;
 
+		//если бонус привязан к листу выдачи - ничего не делается
+		if($bonus && $bonus['salary_list_id'])
+			continue;
 
+		$sum = round(PROFIT * $procent / 100, 2);
 
+		if($bonus && $bonus['sum'] != $sum) {
+			$sql = "UPDATE `_salary_bonus`
+					SET `zayav_profit`=".PROFIT.",
+						`procent`=".$procent.",
+						`sum`=".$sum."
+					WHERE `id`=".$bonus['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
 
+			_balans(array(
+				'action_id' => 46,
+				'worker_id' => $r['viewer_id'],
+				'zayav_id' => $zayav_id,
+				'sum_old' => $bonus['sum'],
+				'sum' => $sum
+			));
 
+			$reason = 'изменился расход по заявке';
+			if($bonus['procent'] != $procent)
+				$reason = 'изменился процент бонуса';
 
+			_history(array(
+				'type_id' => 92,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'worker_id' => $r['viewer_id'],
+				'v1' => '<table>'._historyChange('Сумма бонуса', _cena($bonus['sum']), $sum).'</table>',
+				'v2' => $reason
+			));
 
+			continue;
+		}
 
+		if($bonus)
+			continue;
 
+		$sql = "INSERT INTO `_salary_bonus` (
+					`app_id`,
+					`ws_id`,
+					`procent`,
+					`zayav_id`,
+					`zayav_profit`,
+					`worker_id`,
+					`sum`,
+					`mon`,
+					`year`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$procent.",
+					".$zayav_id.",
+					".PROFIT.",
+					".$r['viewer_id'].",
+					".$sum.",
+					".intval(strftime('%m')).",
+					".strftime('%Y').",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		_balans(array(
+			'action_id' => 45,
+			'worker_id' => $r['viewer_id'],
+			'zayav_id' => $zayav_id,
+			'sum' => $sum,
+			'about' => $procent.'%'
+		));
 
-
+		_history(array(
+			'type_id' => 91,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'worker_id' => $r['viewer_id'],
+			'v1' => $sum,
+			'v2' => $procent
+		));
+	}
+}
 

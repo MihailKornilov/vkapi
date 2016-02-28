@@ -1593,7 +1593,11 @@ function _zayavExpenseDop($id=false) {//дополнительное условие дл€ категории рас
 	return $id !== false ? $arr[$id] : $arr;
 }
 function _zayav_expense($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
-	return '<div id="_zayav-expense">'._zayav_expense_spisok($zayav_id).'</div>';
+	return
+	'<div id="_zayav-expense">'.
+		_zayav_expense_spisok($zayav_id).
+		_zayav_bonus_spisok($zayav_id).
+	'</div>';
 }
 function _zayav_expense_spisok($zayav_id) {//вставка расходов по за€вке в информацию о за€вке
 	$sql = "SELECT *
@@ -1816,6 +1820,29 @@ function _zayav_expense_worker_balans($z, $old, $new) {//внесение балансов сотру
 			'sum' => $r['sum']
 		));
 	}
+}
+function _zayav_bonus_spisok($zayav_id) {
+	$sql = "SELECT *
+			FROM `_salary_bonus`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `zayav_id`=".$zayav_id;
+	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	$send = '<table class="ze-spisok">';
+	foreach($arr as $r) {
+		$send .=
+			'<tr><td class="name">Ѕонус '._cena($r['procent']).'%'.
+				'<td><a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
+						_viewer($r['worker_id'], 'viewer_name').
+					'</a>'.
+				'<td class="sum">'._cena($r['sum']).' р.';
+	}
+
+	$send .= '</table>';
+
+	return $send;
 }
 
 /* ¬иды де€тельности */

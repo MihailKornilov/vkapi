@@ -13,6 +13,8 @@ switch(@$_POST['op']) {
 
 		_accrualAdd($z, $sum, $about);
 
+		_salaryZayavBonus($zayav_id);
+
 		jsonSuccess();
 		break;
 	case 'accrual_edit':
@@ -56,6 +58,7 @@ switch(@$_POST['op']) {
 
 		_zayavBalansUpdate($r['zayav_id']);
 		_salaryZayavCheck($r['zayav_id']);
+		_salaryZayavBonus($r['zayav_id']);
 
 		if($changes =
 			_historyChange('Сумма', _cena($r['sum']), $sum).
@@ -96,6 +99,7 @@ switch(@$_POST['op']) {
 
 		_zayavBalansUpdate($r['zayav_id']);
 		_salaryZayavCheck($r['zayav_id']);
+		_salaryZayavBonus($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(
@@ -209,6 +213,7 @@ switch(@$_POST['op']) {
 
 			//проверка, если заявка оплачена полностью, перенести з/п сотрудника из неактивного списка, если такие есть
 			_salaryZayavCheck($zayav_id);
+			_salaryZayavBonus($zayav_id);
 		}
 
 		_history(array(
@@ -246,6 +251,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavBonus($zayav_id);
 
 		//баланс для расчётного счёта
 		_balans(array(
@@ -428,6 +434,7 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_refund', GLOBAL_MYSQL_CONNECT);
 
 		_zayavBalansUpdate($zayav_id);
+		_salaryZayavBonus($zayav_id);
 
 		_balans(array(
 			'action_id' => 13,
@@ -485,6 +492,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavBonus($r['zayav_id']);
 
 		_balans(array(
 			'action_id' => 14,
@@ -1016,6 +1024,7 @@ switch(@$_POST['op']) {
 
 		_zayavBalansUpdate(_num(@$schet['zayav_id']));
 		_zayavBalansUpdate($zayav_id);
+		_salaryZayavBonus($zayav_id);
 
 		if($insert_id)
 			_history(array(
@@ -1145,6 +1154,7 @@ switch(@$_POST['op']) {
 
 		_schetPayCorrect($schet_id);
 		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavBonus($r['zayav_id']);
 
 		//баланс для расчётного счёта
 		_balans(array(
@@ -1203,6 +1213,7 @@ switch(@$_POST['op']) {
 
 		zayavCartridgeSchetDel($schet_id);
 		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavBonus($r['zayav_id']);
 
 		//внесение баланса для клиента
 		_balans(array(

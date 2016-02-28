@@ -412,6 +412,8 @@ switch(@$_POST['op']) {
 
 		_zayavStatusRemindAdd($zayav_id);
 
+		_salaryZayavBonus($zayav_id);
+
 		_note(array(
 			'add' => 1,
 			'comment' => 1,
@@ -639,6 +641,7 @@ switch(@$_POST['op']) {
 
 		_clientBalansUpdate($v['client_id']);
 		_zayavBalansUpdate($v['zayav_id']);
+		_salaryZayavBonus($v['zayav_id']);
 
 		_zayavDogovorPrint($dog_id);
 
@@ -784,6 +787,7 @@ switch(@$_POST['op']) {
 
 		_zayavBalansUpdate($v['zayav_id']);
 		_salaryZayavCheck($v['zayav_id']);
+		_salaryZayavBonus($v['zayav_id']);
 
 
 		unlink(PATH_DOGOVOR.'/'.$dog['link'].'.doc');
@@ -1044,6 +1048,7 @@ switch(@$_POST['op']) {
 			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
 
 			_zayavBalansUpdate($zayav_id);
+			_salaryZayavBonus($zayav_id);
 
 			if($old != $new)
 				_history(array(
