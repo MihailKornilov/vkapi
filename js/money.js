@@ -7,7 +7,7 @@ var _accrualAdd = function(o) {
 
 		var html =
 			'<table id="_accrual-add">' +
-				'<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
+                '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum.split(' ').join('') + '" /> руб.' +
 				'<tr><td class="label">Примечание:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
 			'</table>';

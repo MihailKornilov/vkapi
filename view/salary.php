@@ -168,7 +168,7 @@ function salary_month_list($v) {
 			GROUP BY `mon`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$acc[$r['mon']] = _cena($r['sum']);
+		$acc[$r['mon']] = round($r['sum']);
 
 	//произвольные начисления
 	$sql = "SELECT
@@ -182,7 +182,21 @@ function salary_month_list($v) {
 			GROUP BY `mon`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$acc[$r['mon']] += _cena($r['sum']);
+		$acc[$r['mon']] += round($r['sum']);
+
+	//бонусы
+	$sql = "SELECT
+	            `mon`,
+				SUM(`sum`) AS `sum`
+			FROM `_salary_bonus`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `worker_id`=".$filter['id']."
+			  AND `year`=".$filter['year']."
+			GROUP BY `mon`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$acc[$r['mon']] += round($r['sum']);
 
 	//вычеты
 	$sql = "SELECT
@@ -196,7 +210,7 @@ function salary_month_list($v) {
 			GROUP BY `mon`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$acc[$r['mon']] -= _cena($r['sum']);
+		$acc[$r['mon']] -= round($r['sum']);
 
 	//з/п
 	$sql = "SELECT
@@ -211,7 +225,7 @@ function salary_month_list($v) {
 			GROUP BY `mon`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$zp[$r['mon']] = _cena($r['sum']);
+		$zp[$r['mon']] = round($r['sum']);
 
 	$mon = array();
 	foreach(_monthDef(0, 1) as $i => $r)

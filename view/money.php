@@ -179,10 +179,10 @@ function _accrual_unit($r, $filter) {//строка начисления в таблице
 		'<td class="dtime">'._dtimeAdd($r).
 		'<td class="ed">'.
 			(!$r['schet_id'] && !$r['dogovor_id'] ?
-				_iconEdit(array(
+				(!@$filter['client_id'] ? _iconEdit(array(
 					'id' => $r['id'],
 					'class' => '_accrual-edit'
-				)).
+				)) : '').
 				_iconDel(array(
 					'id' => $r['id'],
 					'class' => '_accrual-del'
