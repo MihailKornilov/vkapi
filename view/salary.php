@@ -736,7 +736,7 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 		return;
 
 	foreach($spisok as $r) {
-		if(_viewer($r['viewer_id'], 'ws_id') != WS_ID)
+		if(_viewer($r['viewer_id'], 'viewer_ws_id') != WS_ID)
 			continue;
 		if(!$procent = _viewer($r['viewer_id'], 'bonus_sum'))
 			continue;
