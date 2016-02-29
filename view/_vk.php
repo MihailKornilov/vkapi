@@ -1285,6 +1285,7 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 											  WHERE `app_id` IN (".APP_ID.",0)
 											    AND `ws_id` IN (".$ws_id.",0)
 											  ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'EXPENSE_SUB_SPISOK='.Gvalues_obj('_money_expense_category_sub', '`category_id`,`name`', 'category_id', GLOBAL_MYSQL_CONNECT, 1).','.
 		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных заявок в организации
 		"\n".'SERVICE_ACTIVE_ASS='._service('js').','.              //виды активных заявок в организации
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
@@ -1381,6 +1382,7 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'service'.$ws_id);//виды деятельности
 	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'expense_sub'.$ws_id);//категории расходов организации
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
 	xcache_unset(CACHE_PREFIX.'zayav_status'.$ws_id);//статусы заявки
 	xcache_unset(CACHE_PREFIX.'product'.$ws_id);

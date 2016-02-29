@@ -842,7 +842,7 @@ switch(@$_POST['op']) {
 
 		_history(array(
 			'type_id' => 1048,
-			'v1' => $category_id,
+			'v1' => _expense($category_id),
 			'v2' => $name
 		));
 
@@ -878,7 +878,7 @@ switch(@$_POST['op']) {
 			_historyChange('Наименование', $r['name'], $name))
 			_history(array(
 				'type_id' => 1049,
-				'v1' => $r['category_id'],
+				'v1' => _expense($r['category_id']),
 				'v2' => '<table>'.$changes.'</table>'
 			));
 
@@ -913,7 +913,7 @@ switch(@$_POST['op']) {
 
 		_history(array(
 			'type_id' => 1050,
-			'v1' => $r['category_id'],
+			'v1' => _expense($r['category_id']),
 			'v2' => $r['name']
 		));
 

@@ -341,10 +341,25 @@ var _accrualAdd = function(o) {
 		}, 'json');
 	},
 
+	_expenseSub = function catSub(id, sub_id, add) {//показ-скрытие подкатегории расхода
+		add = add || '';
+		var sub = EXPENSE_SUB_SPISOK[id];
+		$('#category_sub_id' + add).val(_num(sub_id) || 0)._select(!sub ? 'remove' : {
+			width:add ? 258 : 140,
+			title0:add ? 'Подкатегория не указана' : 'Любая подкатегория',
+			spisok:sub,
+			func:function(v, id) {
+				if(add)
+					return;
+				_expenseSpisok(v, id);
+			}
+		});
+	},
 	_expenseTab = function(dialog, o) {//таблица для внесения или редактирования расхода
 		o = $.extend({
 			id:0,
 			category_id:0,
+			category_sub_id:0,
 			invoice_id:_invoiceExpenseInsert(1),
 			attach_id:0,
 			sum:'',
@@ -355,8 +370,9 @@ var _accrualAdd = function(o) {
 
 		var html =
 			'<table id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
-						'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
+				'<tr><td class="label topi">Категория:' +
+					'<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
+						'<input type="hidden" id="category_sub_id-add" value="' + o.category_sub_id + '" />' +
 				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + o.about + '" />' +
 				'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + o.attach_id + '" />' +
 				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + o.invoice_id + '" />' +
@@ -367,10 +383,15 @@ var _accrualAdd = function(o) {
 		dialog.submit(submit);
 
 		$('#category_id-add')._select({
-			width:200,
+			width:258,
+			bottom:5,
 			title0:'Не указана',
-			spisok:_copySel(EXPENSE_SPISOK, 1)
+			spisok:_copySel(EXPENSE_SPISOK, 1),
+			func:function(v, id) {
+				_expenseSub(v, 0, '-add');
+			}
 		});
+		_expenseSub(o.category_id, o.category_sub_id, '-add');
 		$('#about').focus();
 		$('#invoice_id-add')._select({
 			width:200,
@@ -390,6 +411,7 @@ var _accrualAdd = function(o) {
 				id:o.id,
 				op:o.id ? 'expense_edit' : 'expense_add',
 				category_id:_num($('#category_id-add').val()),
+				category_sub_id:_num($('#category_sub_id-add').val()),
 				attach_id:$('#attach_id-add').val(),
 				about:$('#about').val(),
 				invoice_id:_num($('#invoice_id-add').val()),
@@ -398,22 +420,26 @@ var _accrualAdd = function(o) {
 			if(!send.about && !send.category_id) {
 				dialog.err('Выберите категорию или укажите описание');
 				$('#about').focus();
-			} else if(!send.invoice_id)
+				return;
+			}
+			if(!send.invoice_id) {
 				dialog.err('Укажите с какого счёта производится оплата');
-			else if(!send.sum) {
+				return;
+			}
+			if(!send.sum) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg();
-						_expenseSpisok();
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					_expenseSpisok();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	},
 	_expenseLoad = function() {
@@ -430,16 +456,21 @@ var _accrualAdd = function(o) {
 			spisok:INVOICE_SPISOK,
 			func:_expenseSpisok
 		});
-		EXPENSE_SPISOK.push({
+		var spisok = _copySel(EXPENSE_SPISOK);
+		spisok.push({
 			uid:-1,
 			title:'Без категории',
 			content:'<b>Без категории</b>'
 		});
 		$('#category_id')._select({
 			width:140,
+			bottom:3,
 			title0:'Любая категория',
-			spisok:EXPENSE_SPISOK,
-			func:_expenseSpisok
+			spisok:spisok,
+			func:function(v, id) {
+				_expenseSub(v);
+				_expenseSpisok(v, id);
+			}
 		});
 		$('#year').years({func:_expenseSpisok});
 		$('#mon')._radio({

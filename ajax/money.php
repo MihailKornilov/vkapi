@@ -633,12 +633,13 @@ switch(@$_POST['op']) {
 		if(!$category_id && empty($about))
 			jsonError();
 
-		$worker_id = _num($_POST['worker_id']);
+		$category_sub_id = _num(@$_POST['category_sub_id']);
+		$worker_id = _num(@$_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
 		$salary_avans = _bool(@$_POST['salary_avans']);
 		$salary_list_id = _num(@$_POST['salary_list_id']);
-		$mon = _num($_POST['mon']);
-		$year = _num($_POST['year']);
+		$mon = _num(@$_POST['mon']);
+		$year = _num(@$_POST['year']);
 		if($category_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
@@ -654,6 +655,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_money_expense`
 				SET `about`='".addslashes($about)."',
 					`category_id`=".$category_id.",
+					`category_sub_id`=".$category_sub_id.",
 					`worker_id`=".$worker_id.",
 					`attach_id`=".$attach_id.",
 					`salary_avans`=".$salary_avans.",
@@ -678,7 +680,9 @@ switch(@$_POST['op']) {
 
 
 		if($changes =
-			_historyChange('Категория', $r['category_id'] ? _expense($r['category_id']) : '', $category_id ? _expense($category_id) : '').
+			_historyChange('Категория',
+				$r['category_id'] ? _expense($r['category_id']).($r['category_sub_id'] ? ': '._expenseSub($r['category_sub_id']) : '') : '',
+				$category_id ? _expense($category_id).($category_sub_id ? ': '._expenseSub($category_sub_id) : '') : '').
 			_historyChange('Описание', $r['about'], $about).
 			_historyChange('Сотрудник', $r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '', $worker_id ? _viewer($worker_id, 'viewer_name') : '').
 			_historyChange('Аванс', _daNet($r['salary_avans']),  _daNet($salary_avans)).
@@ -704,6 +708,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT
 					`id`,
 					`category_id`,
+					`category_sub_id`,
 					`invoice_id`,
 					`worker_id`,
 					`salary_avans`,

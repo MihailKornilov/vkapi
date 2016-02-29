@@ -702,6 +702,33 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 	//возврат данных конкретной категории расхода
 	return $arr[$id][$i];
 }
+function _expenseSub($id, $i='name') {//Список подкатегорий расходов
+	$key = CACHE_PREFIX.'expense_sub'.WS_ID;
+	$arr = xcache_get($key);
+	if(empty($arr)) {
+		$sql = "SELECT *
+				FROM `_money_expense_category_sub`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID;
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
+
+	//некорректный id категории
+	if(!_num($id))
+		return '';
+
+	//неизвестный id категории
+	if(!isset($arr[$id]))
+		return '<span class="red">неизвестный id <b>'.$id.'</b> подкатегории расхода</span>';
+
+	//неизвестный ключ категории
+	if(!isset($arr[$id][$i]))
+		return '<span class="red">неизвестный ключ подкатегории расхода: <b>'.$i.'</b></span>';
+
+	//возврат данных конкретной категории расхода
+	return $arr[$id][$i];
+}
 function expense() {
 	$data = expense_spisok();
 	return
@@ -727,17 +754,19 @@ function expenseFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'invoice_id' => _num(@$v['invoice_id']),
 		'category_id' => intval(@$v['category_id']),
+		'category_sub_id' => _num(@$v['category_sub_id']),
 		'year' => _year(@$v['year']),
 		'mon' => isset($v['mon']) ? _num($v['mon']) : _num(strftime('%m'))
 	);
 }
 function expense_right() {
 	return
-		'<div class="f-label">Счёт</div>'.
-		'<input type="hidden" id="invoice_id">'.
-
-		'<div class="findHead">Категория</div>'.
+		'<div class="f-label">Категория</div>'.
 		'<input type="hidden" id="category_id">'.
+		'<input type="hidden" id="category_sub_id">'.
+
+		'<div class="findHead">Счёт</div>'.
+		'<input type="hidden" id="invoice_id">'.
 
 		'<input type="hidden" id="year">'.
 		'<input type="hidden" id="mon" value="'._num(strftime('%m')).'">';
@@ -758,7 +787,8 @@ function expenseMonthSum($v=array()) {//список чекбоксов с месяцами и суммами ра
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".$filter['year']."-%'".
 		($filter['invoice_id'] ? " AND `invoice_id`=".$filter['invoice_id'] : '').
-		($filter['category_id'] ? " AND `category_id`=".($filter['category_id'] == -1 ? 0 : $filter['category_id']) : '')."
+		($filter['category_id'] ? " AND `category_id`=".($filter['category_id'] == -1 ? 0 : $filter['category_id']) : '').
+		($filter['category_sub_id'] ? " AND `category_sub_id`=".$filter['category_sub_id'] : '')."
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
 			ORDER BY `dtime_add` ASC";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -819,8 +849,11 @@ function expense_spisok($v=array()) {
 
 	if($filter['invoice_id'])
 		$cond .= " AND `invoice_id`=".$filter['invoice_id'];
-	if($filter['category_id'])
+	if($filter['category_id']) {
 		$cond .= " AND `category_id`=".($filter['category_id'] == -1 ? 0 : $filter['category_id']);
+		if($filter['category_sub_id'])
+			$cond .= " AND `category_sub_id`=".$filter['category_sub_id'];
+	}
 	$cond .= " AND `dtime_add` LIKE '".$filter['year']."-".($filter['mon'] < 10 ? 0 : '').$filter['mon']."-%'";
 
 	$sql = "SELECT
@@ -839,6 +872,7 @@ function expense_spisok($v=array()) {
 				'limit:'.$filter['limit'].','.
 				'invoice_id:'.$filter['invoice_id'].','.
 				'category_id:'.$filter['category_id'].','.
+				'category_sub_id:'.$filter['category_sub_id'].','.
 				'year:'.$filter['year'].','.
 				'mon:'.$filter['mon'].
 			'};'.
@@ -880,7 +914,8 @@ function expense_spisok($v=array()) {
 				'<td class="sum"><b>'._sumSpace($r['sum']).'</b>'.
 				'<td>'.expenseAbout($r).
 				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'._iconEdit($r)._iconDel($r);
+				'<td class="ed">'.
+					($r['category_id'] != 1 ? _iconEdit($r)._iconDel($r) : '');
 
 	$send['spisok'] .= _next($filter + array(
 			'all' => $all,
@@ -894,6 +929,7 @@ function expenseAbout($r) {//описание для расходов
 		'<span class="type">'._invoice($r['invoice_id']).'</span>: '.
 		($r['category_id'] ?
 			'<b class="cat">'._expense($r['category_id']).
+			($r['category_sub_id'] ? ': '._expenseSub($r['category_sub_id']) : '').
 			($r['about'] || $r['worker_id'] ? ': ' : '').'</b>'
 		: '').
 		($r['worker_id'] ?
