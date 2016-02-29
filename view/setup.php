@@ -38,6 +38,7 @@ function _setup() {
 	$sub = array(
 		'worker' => 'rule',
 		'service' => 'cartridge',
+		'expense' => 'sub',
 		'product' => 'sub'
 	);
 
@@ -422,19 +423,28 @@ function setup_expense() {
 		'</div>';
 }
 function setup_expense_spisok() {
-	$sql = "SELECT *,
+	$sql = "SELECT
+				*,
+				0 `sub`,
 				0 `count`
 			FROM `_money_expense_category`
 			WHERE (`app_id`=".APP_ID." OR !`app_id`)
 			  AND (`ws_id`=".WS_ID." OR !`ws_id`)
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(!mysql_num_rows($q))
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
 
-	$spisok = array();
+	//количество подкатегорий
+	$sql = "SELECT
+				DISTINCT `category_id`,
+				COUNT(`id`) `sub`
+			FROM `_money_expense_category_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			GROUP BY `category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
+		$spisok[$r['category_id']]['sub'] = $r['sub'];
 
 	$sql = "SELECT
 				DISTINCT `category_id`,
@@ -451,23 +461,69 @@ function setup_expense_spisok() {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="worker_use">Показывать<br />список<br />сотрудников'.
+				'<th class="sub">Кол-во<br />под-<br />категорий'.
 				'<th class="count">Кол-во<br />записей'.
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_money_expense_category">';
 
-	foreach($spisok as $r)
-		$send .= '<dd val="'.$r['id'].'">'.
+	foreach($spisok as $id => $r)
+		$send .= '<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
-					'<td class="worker_use">'.($r['worker_use'] ? 'да' : '').
+				'<tr><td class="td-name">'.
+						($id == 1 ? '<span class="name">'.$r['name'].'</span>' :
+									'<a class="name" href="'.URL.'&p=setup&d=expense&id='.$id.'">'.$r['name'].'</a>'
+						).
+					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
 					'<td class="count">'.($r['count'] ? $r['count'] : '').
 					'<td class="ed">'.
-						($r['ws_id'] ? '<div class="img_edit'._tooltip('Изменить', -33).'</div>' : '').
-						($r['ws_id'] && !$r['count'] ? '<div class="img_del"></div>' : '').
+						($id != 1 ? _iconEdit($r) : '').
+						($id != 1 && !$r['count'] ? _iconDel($r) : '').
 			'</table>';
 	$send .= '</dl>';
+	return $send;
+}
+function setup_expense_sub($id) {
+	$sql = "SELECT *
+			FROM `_money_expense_category`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `id`!=1
+			  AND `id`=".$id;
+	if(!$cat = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Категории id = '.$id.' не существует.';
+
+	return
+	'<script type="text/javascript">var CAT_ID='.$id.';</script>'.
+	'<div id="setup_expense_sub">'.
+		'<a href="'.URL.'&p=setup&d=expense"><< назад к категориям расходов</a>'.
+		'<div class="headName">Список подкатегорий расходов<a class="add">Добавить</a></div>'.
+		'<div id="cat-name">'.$cat['name'].'</div>'.
+		'<div id="spisok">'.setup_expense_sub_spisok($id).'</div>'.
+	'</div>';
+}
+function setup_expense_sub_spisok($id) {
+	$sql = "SELECT
+				*
+			FROM `_money_expense_category_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND `category_id`=".$id."
+			ORDER BY `name`";
+	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	if(empty($arr))
+		return 'Список пуст.';
+
+	$send = '<table class="_spisok">'.
+				 '<tr><th>Наименование'.
+					 '<th>';
+	foreach($arr as $r)
+		$send .= '<tr val="'.$r['id'].'">'.
+			 '<td class="name">'.$r['name'].
+			 '<td class="ed">'._iconEdit($r)._iconDel($r);
+
+	$send .= '</table>';
+
 	return $send;
 }
 

@@ -9,6 +9,93 @@ var setupRuleCheck = function(v, id) {
 			_msg('Сохранено');
 	}, 'json');
 },
+	setupExpenseEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table id="setup-tab">' +
+					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода организации',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'expense_category_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	setupExpenseSubEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table id="setup-tab">' +
+					'<tr><td class="label r">Категория:<td><b>' + $('#cat-name').html() + '</b>' +
+					'<tr><td class="label r">Подкатегория:<td><input id="name" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' подкатегории расхода организации',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'expense_category_sub_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				category_id:CAT_ID,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,
@@ -48,7 +135,7 @@ var setupRuleCheck = function(v, id) {
 					if(res.success) {
 						$('#spisok').html(res.html);
 						dialog.close();
-						_msg('Внесено!');
+						_msg();
 						sortable();
 					} else
 						dialog.abort();
@@ -494,84 +581,14 @@ $(document)
 		}
 	})
 
-	.on('click', '#setup_expense .add', function() {
-		var t = $(this),
-			html = '<table id="setup-tab">' +
-				'<tr><td class="label r">Наименование:<td><input id="name" type="text" />' +
-				'<tr><td class="label r">Список сотрудников:<td><input id="worker_use" type="hidden" />' +
-				'</table>',
-			dialog = _dialog({
-				width:400,
-				head:'Добавление новой категории расхода организации',
-				content:html,
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		$('#worker_use')._check();
-		function submit() {
-			var send = {
-				op:'expense_category_add',
-				name:$('#name').val(),
-				worker_use:$('#worker_use').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('#spisok').html(res.html);
-						dialog.close();
-						_msg('Внесено');
-						sortable();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
+	.on('click', '#setup_expense .add', setupExpenseEdit)
 	.on('click', '#setup_expense .img_edit', function() {
-		var t = _parent($(this), 'DD'),
-			id = t.attr('val'),
-			name = t.find('.name').html(),
-			worker_use = t.find('.worker_use').html() ? 1 : 0,
-			html = '<table id="setup-tab">' +
-				'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + name + '" />' +
-				'<tr><td class="label r">Список сотрудников:<td><input id="worker_use" type="hidden" value="' + worker_use + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:400,
-				head:'Редактирование категории расхода организации',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		$('#worker_use')._check();
-		function submit() {
-			var send = {
-				op:'expense_category_edit',
-				id:id,
-				name:$('#name').val(),
-				worker_use:$('#worker_use').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('#spisok').html(res.html);
-						dialog.close();
-						_msg('Сохранено!');
-						sortable();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
+		var t = _parent($(this), 'DD');
+		setupExpenseEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
+
 	})
 	.on('click', '#setup_expense .img_del', function() {
 		_dialogDel({
@@ -581,6 +598,26 @@ $(document)
 			func:function(res) {
 				$('#spisok').html(res.html);
 				sortable();
+			}
+		});
+	})
+
+	.on('click', '#setup_expense_sub .add', setupExpenseSubEdit)
+	.on('click', '#setup_expense_sub .img_edit', function() {
+		var t = _parent($(this));
+		setupExpenseSubEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
+
+	})
+	.on('click', '#setup_expense_sub .img_del', function() {
+		_dialogDel({
+			id:_parent($(this)).attr('val'),
+			head:'подкатегории расхода организации',
+			op:'expense_category_sub_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
 			}
 		});
 	})

@@ -98,10 +98,14 @@
 
 
 /* Категории расходов */
-#setup_expense td.name{cursor:move}
-#setup_expense .worker_use{width:80px;text-align:center}
+#setup_expense .td-name{cursor:move}
+#setup_expense .sub{width:65px;text-align:center}
 #setup_expense .count{width:55px;text-align:center}
 #setup_expense .ed{width:35px}
+
+#setup_expense_sub .headName{margin-top:10px}
+#setup_expense_sub #cat-name{font:bold 14px Tahoma}
+#setup_expense_sub #spisok{margin-top:10px}
 
 
 /* Статусы заявок */

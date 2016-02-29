@@ -706,7 +706,6 @@ switch(@$_POST['op']) {
 
 	case 'expense_category_add':
 		$name = _txt($_POST['name']);
-		$worker_use = _bool($_POST['worker_use']);
 
 		if(empty($name))
 			jsonError();
@@ -715,13 +714,11 @@ switch(@$_POST['op']) {
 					`app_id`,
 					`ws_id`,
 					`name`,
-					`worker_use`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
 					'".addslashes($name)."',
-					".$worker_use.",
 					"._maxSql('_money_expense_category')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -742,7 +739,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$name = _txt($_POST['name']);
-		$worker_use = _bool($_POST['worker_use']);
 
 		if(empty($name))
 			jsonError();
@@ -756,8 +752,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_money_expense_category`
-				SET `name`='".addslashes($name)."',
-					`worker_use`=".$worker_use."
+				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -765,8 +760,7 @@ switch(@$_POST['op']) {
 		_wsJsValues();
 
 		$changes =
-			_historyChange('Наименование', $r['name'], $name).
-			_historyChange('Список сотрудников', $r['worker_use'] ? 'да' : 'нет', $worker_use ? 'да' : 'нет');
+			_historyChange('Наименование', $r['name'], $name);
 
 		if($changes)
 			_history(array(
@@ -810,6 +804,120 @@ switch(@$_POST['op']) {
 		));
 
 		$send['html'] = utf8(setup_expense_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'expense_category_sub_add':
+		if(!$category_id = _num($_POST['category_id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_expense_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$category_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "INSERT INTO `_money_expense_category_sub` (
+					`app_id`,
+					`ws_id`,
+					`category_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					".WS_ID.",
+					".$category_id.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1048,
+			'v1' => $category_id,
+			'v2' => $name
+		));
+
+		$send['html'] = utf8(setup_expense_sub_spisok($category_id));
+		jsonSuccess($send);
+		break;
+	case 'expense_category_sub_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_expense_category_sub`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_expense_category_sub`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
+		_wsJsValues();
+
+		if($changes =
+			_historyChange('Наименование', $r['name'], $name))
+			_history(array(
+				'type_id' => 1049,
+				'v1' => $r['category_id'],
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_expense_sub_spisok($r['category_id']));
+		jsonSuccess($send);
+		break;
+	case 'expense_category_sub_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_expense_category_sub`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_money_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID."
+				  AND `category_sub_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_money_expense_category_sub` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
+		_wsJsValues();
+
+		_history(array(
+			'type_id' => 1050,
+			'v1' => $r['category_id'],
+			'v2' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_expense_sub_spisok($r['category_id']));
 		jsonSuccess($send);
 		break;
 
