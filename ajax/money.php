@@ -251,7 +251,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_zayavBalansUpdate($r['zayav_id']);
-		_salaryZayavBonus($zayav_id);
+		_salaryZayavBonus($r['zayav_id']);
 
 		//баланс для расчётного счёта
 		_balans(array(
