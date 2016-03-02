@@ -1265,8 +1265,8 @@ switch(@$_POST['op']) {
 					`visible`,
 					`income_confirm`,
 					`transfer_confirm`,
-					`transfer_confirm`,
-					`transfer_confirm`
+					`income_insert`,
+					`expense_insert`
 				) VALUES (
 					".APP_ID.",
 					".WS_ID.",
