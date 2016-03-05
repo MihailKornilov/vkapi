@@ -121,7 +121,7 @@ function setup_worker_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `worker`
-			  AND `viewer_id`!=982006
+			  AND !`hidden`
 			ORDER BY `dtime_add`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	$send = '';

@@ -710,8 +710,10 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 				'<td>'.$r['fio'].
 					  ($r['phone'] ? ', '.$r['phone'] : '').
 					  ($r['adres'] ? '<br /><span class="adres"><tt>јдрес:</tt> '.$r['adres'].'</span>' : '').
+					  ($r['poa_nomer'] ? '<div class="poa">ƒоверенность номер <b>'.$r['poa_nomer'].'</b> до '.FullData($r['poa_date_end']).'.</div>' : '').
 				'<td>'.($r['post'] ? '<u>'.$r['post'].'</u>' : '').
 				'<td class="td-person-ed">'.
+					'<div val="'.$r['id'].'" class="person-poa img_doc'._tooltip('ƒоверенность', -48).'</div>'.
 					'<div val="'.$r['id'].'" class="person-edit img_edit'._tooltip('»зменить', -33).'</div>'.
 					'<div val="'.$r['id'].'" class="person-del img_del'._tooltip('”далить', -29).'</div>';
 		$json[] =
@@ -724,7 +726,9 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 				'pasp_nomer:"'.addslashes($r['pasp_nomer']).'",'.
 				'pasp_adres:"'.addslashes($r['pasp_adres']).'",'.
 				'pasp_ovd:"'.addslashes($r['pasp_ovd']).'",'.
-				'pasp_data:"'.addslashes($r['pasp_data']).'"'.
+				'pasp_data:"'.addslashes($r['pasp_data']).'",'.
+				'poa_nomer:"'.addslashes($r['poa_nomer']).'",'.
+				'poa_date_end:"'.addslashes($r['poa_date_end']).'"'.
 			'}';
 		$array[$r['id']] = array(
 			'fio' => utf8($r['fio']),
@@ -777,6 +781,13 @@ function _clientInfoWorker($client_id) {//список сотрудников дл€ св€зки с клиент
 			  AND `id`!=".$client_id;
 	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
 
+	$sql = "SELECT `viewer_id`
+			FROM `_vkuser`
+			WHERE `app_id`=".APP_ID."
+			  AND `worker`
+			  AND `hidden`";
+	$hidden = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
 	$sql = "SELECT
 				`viewer_id`,
 				CONCAT(`first_name`,' ',`last_name`)
@@ -784,7 +795,7 @@ function _clientInfoWorker($client_id) {//список сотрудников дл€ св€зки с клиент
 	        WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 	          AND `worker`
-	          AND `viewer_id` NOT IN (".$ids.",982006)";
+	          AND `viewer_id` NOT IN (".$ids.",".$hidden.")";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 }
 

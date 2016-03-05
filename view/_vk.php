@@ -72,8 +72,8 @@ function _const() {
 	define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
 	$SA[982006] = 1;    // Корнилов Михаил
-	//$SA[1382858] = 1; // Серёга Ш.
-	$SA[166424274] = 1; // тестовая запись
+//	$SA[1382858] = 1; // Серёга Ш.
+//	$SA[166424274] = 1; // тестовая запись
 	define('SA', isset($SA[VIEWER_ID]));
 
 	define('VALUES', TIME.
@@ -1271,12 +1271,12 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'INVOICE_INCOME_INSERT='._invoice('income_insert_js').','.
 		"\n".'INVOICE_EXPENSE_INSERT='._invoice('expense_insert_js').','.
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
-										  FROM `_vkuser`
-										  WHERE `app_id`=".APP_ID."
-										    AND `ws_id`=".$ws_id."
-											AND `worker`
-											AND `viewer_id`!=982006
-										  ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
+											 FROM `_vkuser`
+											 WHERE `app_id`=".APP_ID."
+											   AND `ws_id`=".$ws_id."
+											   AND `worker`
+											   AND !`hidden`
+											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'WORKER_ASS=_toAss(WORKER_SPISOK),'.
 		"\n".'WORKER_EXECUTER='._zayavExecuterJs().','.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.

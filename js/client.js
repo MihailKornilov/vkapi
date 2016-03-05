@@ -466,6 +466,50 @@ $(document)
 			}
 		}
 	})
+	.on('click', '#client-info .person-poa', function() {//внесение доверенности
+		var id = $(this).attr('val'),
+			person = CLIENT.person[id],
+			html = '<table class="_dialog-tab">' +
+					'<tr><td class="label w125">Организация:<td><b>' + CLIENT.name + '</b>' +
+					'<tr><td class="label">Доверенное лицо:<td>' + person.fio +
+					'<tr><td class="label">Номер доверенности:<td><input type="text" id="nomer" class="money" value="' + person.nomer + '" />' +
+					'<tr><td class="label">Дата окончания:<td><input type="hidden" id="date_end" value="' + person.nomer + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:400,
+				head:'Внесение информации о доверености',
+				content:html,
+				submit:submit
+			});
+
+		$('#nomer').focus();
+		$('#date_end')._calendar();
+
+		function submit() {
+			var send = {
+				op:'client_poa_add',
+				person_id:id,
+				nomer:$('#nomer').val(),
+				date_end:$('#date_end').val()
+			};
+			if(!send.nomer) {
+				dialog.err('Не номер доверенности');
+				$('#nomer').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#person-spisok').html(res.html);
+					CLIENT.person = res.array;
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
 	.on('click', '#client-info .person-del', function() {
 		_dialogDel({
 			id:$(this).attr('val'),

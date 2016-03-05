@@ -338,6 +338,40 @@ switch(@$_POST['op']) {
 		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
 		jsonSuccess($send);
 		break;
+	case 'client_poa_add'://внесение информации о доверенности
+		if(!$person_id = _num($_POST['person_id']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['date_end']))
+			jsonError();
+
+		$nomer = _txt($_POST['nomer']);
+		$date_end = $_POST['date_end'];
+
+		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(!$c = _clientQuery($r['client_id']))
+			jsonError();
+
+		$sql = "UPDATE `_client_person`
+				SET `poa_nomer`='".addslashes($nomer)."',
+					`poa_date_end`='".$date_end."'
+				WHERE `id`=".$person_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_clientFindUpdate($r['client_id']);
+/*
+		_history(array(
+			'type_id' => 7,
+			'client_id' => $r['client_id'],
+			'v1' => $r['fio']
+		));
+*/
+		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
+		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		jsonSuccess($send);
+		break;
 	case 'client_zayav_spisok':
 		$_POST['limit'] = 10;
 		$data = zayav_spisok($_POST);

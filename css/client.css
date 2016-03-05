@@ -123,7 +123,9 @@
 #client-info #ci-person .n{width:15px;text-align:right;color:#777}
 #client-info #ci-person .adres{font-size:10px}
 #client-info #ci-person .adres tt{font-size:10px;color:#777}
-#client-info #ci-person .td-person-ed{width:35px}
+#client-info #ci-person .td-person-ed{width:35px;white-space:nowrap}
+#client-info #ci-person .poa{font-size:10px;color:#292}
+#client-info #ci-person .poa b{font-size:10px}
 
 #client-info .post{margin-left:4px;font-size:10px;color:#777}
 #client-info .added{

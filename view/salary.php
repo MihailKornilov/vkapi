@@ -21,7 +21,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `ws_id`=".WS_ID."
 			  AND `worker`
-			  AND `viewer_id`!=982006
+			  AND !`hidden`
 			ORDER BY `dtime_add`";
 	$worker = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
