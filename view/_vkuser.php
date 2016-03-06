@@ -218,7 +218,6 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 function _viewerFormat($u) {//формирование данных пользователя
 	$send = array(
 		'viewer_app_id' => $u['app_id'],
-		'viewer_ws_id' => $u['ws_id'],
 		'viewer_first_name' => $u['first_name'],
 		'viewer_last_name' => $u['last_name'],
 		'viewer_middle_name' => $u['middle_name'],
@@ -261,7 +260,6 @@ function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника
 	$sql = "SELECT *
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker`
 			  AND `viewer_id`=".$viewer_id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
@@ -282,7 +280,6 @@ function _viewerDeleted($viewer_id) {//Вывод сотрудника, который вносил запись с
 function _getVkUser() {//Получение данных о пользователе при запуске приложения
 	$u = _viewer();
 
-	define('WS_ID', $u['viewer_ws_id']);
 	define('VIEWER_NAME', $u['viewer_name']);
 	define('VIEWER_ADMIN', $u['viewer_admin']);
 	define('VIEWER_WORKER', $u['viewer_worker']);

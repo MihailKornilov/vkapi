@@ -149,7 +149,6 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 			'var VIEWER_ID='.VIEWER_ID.','.
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
 				'APP_ID='.APP_ID.','.
-				'WS_ID='.WS_ID.','.
 				'URL="'.URL.'",'.
 				'AJAX_MAIN="'.AJAX_MAIN.'",'.
 				'VALUES="'.VALUES.'";'.
@@ -162,7 +161,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Переменные _global для всех приложений
 		'<script type="text/javascript" src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
 
-		(WS_ID ? '<script type="text/javascript" src="'.API_HTML.'/js/values/ws_'.WS_ID.'.js?'.WS_VALUES.'"></script>' : '').
+		'<script type="text/javascript" src="'.API_HTML.'/js/values/app_'.APP_ID.'.js?'.APP_VALUES.'"></script>'.
 
 (PIN_ENTER ? '' :
 
@@ -356,6 +355,12 @@ function _app($i='all') {//Получение данных о приложении
 		xcache_set($key, $arr, 86400);
 	}
 
+	if(!defined('APP_VALUES')) {
+		define('APP_VALUES', $arr['js_values']);
+		define('WS_DEVS', $arr['devs']);        //todo на удаление
+		define('WS_TYPE', $arr['ws_type_id']);  //todo
+	}
+
 	if($i == 'all')
 		return $arr;
 
@@ -365,8 +370,11 @@ function _app($i='all') {//Получение данных о приложении
 	return $arr[$i];
 }
 function _appAuth() {//Проверка авторизации в приложении
+	_app();
+
 	if(LOCAL)
 		return;
+
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'._app('secret')))
 		_appError('Ошибка авторизации приложения.');
 }
@@ -402,81 +410,6 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 		'</html>';
 	die($html);
 }
-
-function _ws($i='all') {//Получение данных об организации
-	_wsOneCheck();
-
-	if(!WS_ID)
-		_appError('Нет привязки к организации.');
-
-	$key = CACHE_PREFIX.'ws'.WS_ID;
-	if(!$ws = xcache_get($key)) {
-		$sql = "SELECT *
-				FROM `_ws`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".WS_ID."
-				  AND !`deleted`";
-		if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			_appError('Невозможно прочитать данные организации для кеша.');
-		xcache_set($key, $ws, 86400);
-	}
-
-	if(!defined('WS_VALUES'))
-		define('WS_VALUES', $ws['js_values']);
-
-	if($i == 'all')
-		return $ws;
-
-	if(!isset($ws[$i]))
-		return '_ws: неизвестный ключ <b>'.$i.'</b>';
-
-	return $ws[$i];
-}
-function _wsOneCheck() {
-	// Проверка наличия в базе данных хотя бы об одной организации.
-	// Если нет и если пользователь является суперадминистратором, то внесение организации.
-	// Применение текущему пользователю id внесённой организации и назначение его администратором.
-	if(!SA)
-		return;
-
-	if(!WS_ID) {
-		$sql = "SELECT COUNT(`id`)
-				FROM `_ws`
-				WHERE `app_id`=".APP_ID."
-				  AND !`deleted`";
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT)) {
-			$sql = "INSERT INTO `_ws` (
-						`app_id`,
-						`admin_id`
-					) VALUES (
-						".APP_ID.",
-						".VIEWER_ID."
-					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
-
-			$insert_id = query_insert_id('_ws', GLOBAL_MYSQL_CONNECT);
-
-			$sql = "UPDATE `_vkuser`
-					SET `ws_id`=".$insert_id.",
-						`admin`=1,
-						`worker`=1
-					WHERE `app_id`=".APP_ID."
-					  AND `viewer_id`=".VIEWER_ID;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-
-			xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
-			xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
-
-			$sql = "DELETE FROM `_vkuser_rule`
-					WHERE `app_id`=".APP_ID."
-					  AND `viewer_id`=".VIEWER_ID;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-			_appError('SA: Создана новая организация.<br />Перезайдите в приложение.');
-		}
-		_appError('SA: нет привязки к организации при проверке.');
-	}
-}
-
 
 
 /* Разделы главного меню */
@@ -588,7 +521,6 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".TODAY." %'";
 	$today = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -596,7 +528,6 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  "._period(0, 'sql');
 	$week = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -604,7 +535,6 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".strftime('%Y-%m')."-%'";
 	$mon = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -1017,14 +947,14 @@ function _numToWord($num, $firstSymbolUp=false) {
 		$word[0] = strtoupper($word[0]);
 	return $word;
 }
-function _maxSql($table, $pole='sort', $ws=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
+function _maxSql($table, $pole='sort', $app=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	/*
 		$ws: учитывать приложение и организацию
 	*/
 	$sql = "SELECT IFNULL(MAX(`".$pole."`)+1,1)
 			FROM `".$table."`
 			WHERE `id`".
-			($ws ? " AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID : '');
+			($app ? " AND `app_id`=".APP_ID : '');
 	return query_value($sql, $resource_id);
 }
 function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу даты добавления
@@ -1168,8 +1098,8 @@ function _next($v) {//вывод ссылки на догрузку списка
 		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
 }
 
-function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT, $ws=0) {//ассоциативный список подкатегорий
-	$cond = $ws ? " AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID : '';
+function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT, $app=0) {//ассоциативный список подкатегорий
+	$cond = $app ? " AND `app_id`=".APP_ID : '';
 	$sql = "SELECT *
 			FROM `".$table."`
 			WHERE `id`".$cond."
@@ -1247,25 +1177,22 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
 			WHERE `key`='GLOBAL_VALUES'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
-function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
+function _appJsValues() {//для конкретного приложения
 	$save = 'var'.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_invoice`
 											  WHERE `app_id`=".APP_ID."
-												AND `ws_id`=".$ws_id."
 												AND !`deleted`
 											  ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
 		"\n".'INVOICE_CONFIRM_INCOME='.query_assJson("SELECT `id`,1
 													  FROM `_money_invoice`
 													  WHERE `app_id`=".APP_ID."
-														AND `ws_id`=".$ws_id."
 														AND `income_confirm`
 														AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_CONFIRM_TRANSFER='.query_assJson("SELECT `id`,1
 														FROM `_money_invoice`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".$ws_id."
 												          AND `transfer_confirm`
 												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_INCOME_INSERT='._invoice('income_insert_js').','.
@@ -1273,7 +1200,6 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
 											 FROM `_vkuser`
 											 WHERE `app_id`=".APP_ID."
-											   AND `ws_id`=".$ws_id."
 											   AND `worker`
 											   AND !`hidden`
 											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
@@ -1283,7 +1209,6 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
 											  FROM `_money_expense_category`
 											  WHERE `app_id` IN (".APP_ID.",0)
-											    AND `ws_id` IN (".$ws_id.",0)
 											  ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'EXPENSE_SUB_SPISOK='.Gvalues_obj('_money_expense_category_sub', '`category_id`,`name`', 'category_id', GLOBAL_MYSQL_CONNECT, 1).','.
 		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных заявок в организации
@@ -1297,77 +1222,68 @@ function _wsJsValues($ws_id=WS_ID) {//для конкретного организации
 		"\n".'ZAYAV_STATUS_NAME_SPISOK='.query_selJson("SELECT `id`,`name`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND !`deleted`
 														ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_NAME_ASS=_toAss(ZAYAV_STATUS_NAME_SPISOK),'.
 		"\n".'ZAYAV_STATUS_COLOR_ASS='.query_assJson("  SELECT `id`,`color`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_ABOUT_ASS='._br(query_assJson("  SELECT `id`,`about`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT)).','.
 		"\n".'ZAYAV_STATUS_NOUSE_ASS='.query_assJson("  SELECT `id`,`nouse`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND `nouse`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_NEXT='.setup_zayav_status_next_js().','.
 		"\n".'ZAYAV_STATUS_EXECUTER_ASS='.query_assJson("  SELECT `id`,`executer`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND `executer`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_SROK_ASS='.query_assJson("  SELECT `id`,`srok`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND `srok`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_ACCRUAL_ASS='.query_assJson("  SELECT `id`,`accrual`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND `accrual`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_REMIND_ASS='.query_assJson("  SELECT `id`,`remind`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
-														  AND `ws_id`=".WS_ID."
 														  AND `remind`
 														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
 														 FROM `_zayav_status`
 														 WHERE `app_id`=".APP_ID."
-														   AND `ws_id`=".WS_ID."
 														   AND `day_fact`
 														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." AND `ws_id`=".$ws_id." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
 		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
 
 
-	$fp = fopen(API_PATH.'/js/values/ws_'.$ws_id.'.js', 'w+');
+	$fp = fopen(API_PATH.'/js/values/app_'.APP_ID.'.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
-	//обновление значения версии файла ws_N.js
-	$sql = "UPDATE `_ws`
+	//обновление значения версии файла app_N.js
+	$sql = "UPDATE `_app`
 			SET `js_values`=`js_values`+1
-			WHERE `id`=".$ws_id;
+			WHERE `id`=".APP_ID;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	xcache_unset(CACHE_PREFIX.'ws'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'app'.APP_ID);
 }
 
-function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
-	xcache_unset(CACHE_PREFIX.'app'.APP_ID);  //данные приложения
+function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
+	xcache_unset(CACHE_PREFIX.'app'.$app_id);  //данные приложения
 	xcache_unset(CACHE_PREFIX.'setup_global');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
@@ -1378,15 +1294,14 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
-	xcache_unset(CACHE_PREFIX.'ws'.$ws_id);//данные организации
-	xcache_unset(CACHE_PREFIX.'service'.$ws_id);//виды деятельности
-	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);//расчётные счета
-	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'expense_sub'.$ws_id);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);//категории расходов заявки
-	xcache_unset(CACHE_PREFIX.'zayav_status'.$ws_id);//статусы заявки
-	xcache_unset(CACHE_PREFIX.'product'.$ws_id);
-	xcache_unset(CACHE_PREFIX.'product_sub'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'service'.$app_id);//виды деятельности
+	xcache_unset(CACHE_PREFIX.'invoice'.$app_id);//расчётные счета
+	xcache_unset(CACHE_PREFIX.'expense'.$app_id);//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'expense_sub'.$app_id);//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'zayav_expense'.$app_id);//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'zayav_status'.$app_id);//статусы заявки
+	xcache_unset(CACHE_PREFIX.'product'.$app_id);
+	xcache_unset(CACHE_PREFIX.'product_sub'.$app_id);
 
 
 	//сброс времени действия введённого пинкода
@@ -1399,8 +1314,7 @@ function _globalCacheClear($ws_id=WS_ID) {//очистка глобальных значений кеша
 	//очистка кеша сотрудников приложения
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
+			WHERE `app_id`=".$app_id."
 			  AND `worker`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {

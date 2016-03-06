@@ -479,7 +479,7 @@ switch(@$_POST['op']) {
 
 		sa_zayav_type_link();
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok());
@@ -512,7 +512,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
 		sa_zayav_type_link();
@@ -544,7 +544,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
 		jsonSuccess();
@@ -584,7 +584,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
 		jsonSuccess();
@@ -609,7 +609,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_wsJsValues();
+		_appJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
@@ -633,7 +633,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_wsJsValues();
+		_appJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
@@ -658,7 +658,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
-		_wsJsValues();
+		_appJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
@@ -669,24 +669,24 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$title = _txt($_POST['title']);
-		$name = _txt($_POST['name']);
+		$app_name = _txt($_POST['app_name']);
 		$secret = _txt($_POST['secret']);
 
 		if(empty($title))
 			jsonError();
-		if(empty($name))
+		if(empty($app_name))
 			jsonError();
 
 		$sql = "INSERT INTO `_app` (
 					`id`,
 					`title`,
-					`name`,
+					`app_name`,
 					`secret`,
 					`viewer_id_add`
 				) VALUES (
 					".$id.",
 					'".addslashes($title)."',
-					'".addslashes($name)."',
+					'".addslashes($app_name)."',
 					'".addslashes($secret)."',
 					".VIEWER_ID."
 				)";
@@ -700,17 +700,17 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$title = _txt($_POST['title']);
-		$name = _txt($_POST['name']);
+		$app_name = _txt($_POST['app_name']);
 		$secret = _txt($_POST['secret']);
 
 		if(empty($title))
 			jsonError();
-		if(empty($name))
+		if(empty($app_name))
 			jsonError();
 
 		$sql = "UPDATE `_app`
 				SET `title`='".addslashes($title)."',
-					`name`='".addslashes($name)."',
+					`app_name`='".addslashes($app_name)."',
 					`secret`='".addslashes($secret)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);

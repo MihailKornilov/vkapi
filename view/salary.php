@@ -19,7 +19,6 @@ function _salary_spisok() {
 				0 `balans`
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker`
 			  AND !`hidden`
 			ORDER BY `dtime_add`";
@@ -31,7 +30,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -45,7 +43,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -59,7 +56,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -75,7 +71,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			  AND (!`year` OR !`mon`)
 			GROUP BY `worker_id`";
@@ -94,7 +89,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -108,7 +102,6 @@ function _salary_spisok() {
 				IFNULL(SUM(`sum`),0) AS `sum`
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`
 			  AND !`deleted`
 			GROUP BY `worker_id`";
@@ -162,7 +155,6 @@ function salary_month_list($v) {
 				SUM(`sum`) AS `sum`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
@@ -176,7 +168,6 @@ function salary_month_list($v) {
 				SUM(`sum`) AS `sum`
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
@@ -190,7 +181,6 @@ function salary_month_list($v) {
 				SUM(`sum`) AS `sum`
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
@@ -204,7 +194,6 @@ function salary_month_list($v) {
 				SUM(`sum`) AS `sum`
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
@@ -218,7 +207,6 @@ function salary_month_list($v) {
 				SUM(`sum`) AS `sum`
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
@@ -247,7 +235,7 @@ function salaryFilter($v) {
 		$v['acc_show'] = 1;
 	return $v;
 }
-function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение текущего баланса зп сотрудника
+function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса зп сотрудника
 	$start = _viewer($worker_id, 'balans_start');
 	$onPay = _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY');
 
@@ -255,7 +243,6 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$acc = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -263,7 +250,6 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$bonus = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -271,7 +257,6 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
 			  ".($onPay ? 'AND `year` AND `mon`' : '')."
 			  AND `worker_id`=".$worker_id;
 	$zayav = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -280,7 +265,6 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id;
 	$deduct = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -288,7 +272,6 @@ function salaryWorkerBalans($worker_id, $color=0, $ws_id=WS_ID) {//получение тек
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".$ws_id."
 			  AND `worker_id`=".$worker_id."
 			  AND !`deleted`";
 	$zp = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -355,7 +338,6 @@ function salary_worker_client($worker_id) {//блок связи с клиентом
 	$sql = "SELECT *
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `worker_id`=".$worker_id."
 			LIMIT 1";
@@ -382,7 +364,6 @@ function salary_worker_acc($filter) {
 				0 `zayav_id`
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
@@ -394,7 +375,6 @@ function salary_worker_acc($filter) {
 				'bonus' `class`
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
@@ -409,7 +389,6 @@ function salary_worker_acc($filter) {
 				0 `zayav_id`
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
@@ -421,7 +400,6 @@ function salary_worker_acc($filter) {
 				'expense' `class`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
@@ -511,7 +489,6 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 	$sql = "SELECT *
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND (!`year` OR !`mon`)";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
@@ -539,7 +516,6 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 	$sql = "SELECT IFNULL(SUM(`sum_dolg`),0)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `sum_dolg`<0
 			  AND `id` IN (0".$zayav_ids.")";
 	$zayavDolgSum = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
@@ -569,7 +545,6 @@ function salary_worker_list($v) {
 				0 `pay`
 			FROM `_salary_list`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker_id`=".$v['id']."
 			  AND `year`=".$v['year']."
 			  AND `mon`=".$v['mon']."
@@ -639,7 +614,6 @@ function salary_worker_zp($v) {
 	$sql = "SELECT *
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `worker_id`=".$v['id']."
 			  AND `year`=".$v['year']."
@@ -702,7 +676,6 @@ function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полность
 	$sql = "SELECT *
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `zayav_id`=".$zayav_id."
 			  AND `worker_id`
 			  AND !`salary_list_id`
@@ -750,15 +723,12 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 		return;
 
 	foreach($spisok as $r) {
-		if(_viewer($r['viewer_id'], 'viewer_ws_id') != WS_ID)
-			continue;
 		if(!$procent = _viewer($r['viewer_id'], 'bonus_sum'))
 			continue;
 
 		$sql = "SELECT *
 				FROM `_salary_bonus`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `zayav_id`=".$zayav_id."
 				  AND `worker_id`=".$r['viewer_id'];
 		$bonus = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
@@ -838,7 +808,6 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 
 		$sql = "INSERT INTO `_salary_bonus` (
 					`app_id`,
-					`ws_id`,
 					`procent`,
 					`zayav_id`,
 					`zayav_profit`,
@@ -849,7 +818,6 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$procent.",
 					".$zayav_id.",
 					".PROFIT.",

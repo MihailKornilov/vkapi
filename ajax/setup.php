@@ -108,16 +108,13 @@ switch(@$_POST['op']) {
 					WHERE `app_id`=".APP_ID."
 					  AND `viewer_id`=".$viewer_id;
 			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
-				if($r['worker'] && $r['ws_id'] == WS_ID)
+				if($r['worker'])
 					jsonError('Этот пользователь уже является сотрудником Вашей организации');
-				if($r['worker'] && $r['ws_id'])
-					jsonError('Этот пользователь уже является сотрудником другой организации');
 			}
 
 			_viewer($viewer_id);
 			$sql = "UPDATE `_vkuser`
-					SET `ws_id`=".WS_ID.",
-						`worker`=1
+					SET `worker`=1
 					WHERE `app_id`=".APP_ID."
 					  AND `viewer_id`=".$viewer_id;
 			query($sql, GLOBAL_MYSQL_CONNECT);
@@ -138,7 +135,6 @@ switch(@$_POST['op']) {
 
 			$sql = "INSERT INTO `_vkuser` (
 						`app_id`,
-						`ws_id`,
 						`viewer_id`,
 						`first_name`,
 						`last_name`,
@@ -148,7 +144,6 @@ switch(@$_POST['op']) {
 						`worker`
 					) VALUES (
 						".APP_ID.",
-						".WS_ID.",
 						".$viewer_id.",
 						'".addslashes($first_name)."',
 						'".addslashes($last_name)."',
@@ -160,7 +155,7 @@ switch(@$_POST['op']) {
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1024,
@@ -185,12 +180,8 @@ switch(@$_POST['op']) {
 		if(!$u['viewer_worker'])
 			jsonError('Пользователь уже не является сотрудником');
 
-		if($u['viewer_ws_id'] != WS_ID)
-			jsonError('Сотрудник не из этой организации');
-
 		$sql = "UPDATE `_vkuser`
-				SET `ws_id`=0,
-					`worker`=0
+				SET `worker`=0
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -201,7 +192,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1025,
@@ -218,8 +209,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$u = _viewer($viewer_id);
-		if($u['viewer_ws_id'] != WS_ID)
-			jsonError();
 
 		$first_name = _txt($_POST['first_name']);
 		$last_name = _txt($_POST['last_name']);
@@ -264,9 +253,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$u = _viewer($viewer_id);
-		if($u['viewer_ws_id'] != WS_ID)
-			jsonError();
-
 		if(!$u['pin'])
 			jsonError();
 
@@ -310,7 +296,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		_workerRuleQuery($viewer_id, 'RULE_EXECUTER', $new);
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1012,
@@ -356,7 +342,6 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_vkuser`
 				SET `salary_bonus_sum`=".$sum."
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `viewer_id`=".$worker_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -580,13 +565,12 @@ switch(@$_POST['op']) {
 		$bank_account_corr = _txt($_POST['bank_account_corr']);
 
 		$sql = "SELECT *
-				FROM `_ws`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".WS_ID;
+				FROM `_app`
+				WHERE `id`=".APP_ID;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "UPDATE `_ws`
+		$sql = "UPDATE `_app`
 				SET `name`='".addslashes($name)."',
 					`name_yur`='".addslashes($name_yur)."',
 					`ogrn`='".addslashes($ogrn)."',
@@ -601,7 +585,7 @@ switch(@$_POST['op']) {
 					`bank_bik`='".addslashes($bank_bik)."',
 					`bank_account`='".addslashes($bank_account)."',
 					`bank_account_corr`='".addslashes($bank_account_corr)."'
-				WHERE `id`=".WS_ID;
+				WHERE `id`=".APP_ID;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$changes =
@@ -646,29 +630,25 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(*)
 				FROM `_zayav_type_active`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `type_id`=".$id;
 		if($active = !query_value($sql, GLOBAL_MYSQL_CONNECT)) {
 			$sql = "INSERT INTO `_zayav_type_active` (
 						`app_id`,
-						`ws_id`,
 						`type_id`
 					) VALUES (
 						".APP_ID.",
-						".WS_ID.",
 						".$id."
 					)";
 		} else {
 			$sql = "DELETE FROM `_zayav_type_active`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `type_id`=".$id;
 		}
 
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_appJsValues();
 
 		$send['on'] = $active;
 		jsonSuccess($send);
@@ -698,8 +678,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'service'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_appJsValues();
 
 		jsonSuccess();
 		break;
@@ -712,19 +692,17 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_expense_category` (
 					`app_id`,
-					`ws_id`,
 					`name`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					'".addslashes($name)."',
 					"._maxSql('_money_expense_category')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1019,
@@ -746,7 +724,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -756,8 +733,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		_appJsValues();
 
 		$changes =
 			_historyChange('Наименование', $r['name'], $name);
@@ -779,7 +756,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -787,7 +763,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `category_id`=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -795,8 +770,8 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_money_expense_category` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1020,
@@ -819,26 +794,23 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$category_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
 		$sql = "INSERT INTO `_money_expense_category_sub` (
 					`app_id`,
-					`ws_id`,
 					`category_id`,
 					`name`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$category_id.",
 					'".addslashes($name)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1048,
@@ -861,7 +833,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense_category_sub`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -871,8 +842,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		_appJsValues();
 
 		if($changes =
 			_historyChange('Наименование', $r['name'], $name))
@@ -892,7 +863,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense_category_sub`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -900,7 +870,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `category_sub_id`=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -908,8 +877,8 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_money_expense_category_sub` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1050,
@@ -927,17 +896,15 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_product` (
 					`app_id`,
-					`ws_id`,
 					`name`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					'".addslashes($name)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1037,
@@ -956,7 +923,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_product`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$product_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -966,8 +932,8 @@ switch(@$_POST['op']) {
 		        WHERE `id`=".$product_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
+		_appJsValues();
 
 		if($changes = _historyChange('Наименование', $r['name'], $name))
 			_history(array(
@@ -998,8 +964,8 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_product` WHERE `id`=".$product_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1039,
@@ -1020,19 +986,17 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_product_sub` (
 					`app_id`,
-					`ws_id`,
 					`product_id`,
 					`name`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$product_id.",
 					'".addslashes($name)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1040,
@@ -1058,8 +1022,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
+		_appJsValues();
 
 		if($changes = _historyChange('Наименование', $r['name'], $name))
 			_history(array(
@@ -1085,8 +1049,8 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_product_sub` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'product_sub'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1042,
@@ -1119,7 +1083,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_status` (
 					`app_id`,
-					`ws_id`,
 					`name`,
 					`about`,
 					`color`,
@@ -1133,7 +1096,6 @@ switch(@$_POST['op']) {
 					`sort`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
 					'".$color."',
@@ -1152,8 +1114,8 @@ switch(@$_POST['op']) {
 
 		setup_status_next_insert($id, $_POST);
 
-		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+		_appJsValues();
 /*
 		_history(array(
 			'type_id' => 1027,
@@ -1189,7 +1151,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1214,8 +1175,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		setup_status_next_insert($id, $_POST);
 
-		xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+		_appJsValues();
 /*
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
@@ -1237,7 +1198,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1251,7 +1211,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1029,
@@ -1286,7 +1246,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1027,
@@ -1320,7 +1280,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_wsJsValues();
+		_appJsValues();
 
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
@@ -1354,7 +1314,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
-		_wsJsValues();
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1029,
@@ -1374,13 +1334,11 @@ function setup_status_next_insert($status_id, $post) {
 	foreach($ids as $i)
 		$values[] = "(
 			".APP_ID.",
-			".WS_ID.",
 			".$status_id.",
 			".$i."
 		)";
 	$sql = "INSERT INTO `_zayav_status_next` (
 				`app_id`,
-				`ws_id`,
 				`status_id`,
 				`next_id`
 			) VALUES ".implode(',', $values);

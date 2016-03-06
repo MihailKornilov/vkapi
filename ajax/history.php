@@ -31,7 +31,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_history`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();

@@ -3,12 +3,8 @@ function sa_appCount() {
 	$sql = "SELECT COUNT(`id`) FROM `_app`";
 	return query_value($sql, GLOBAL_MYSQL_CONNECT);
 }
-function sa_wsCount() {
-	$sql = "SELECT COUNT(`id`) FROM `_ws` WHERE `app_id`=".APP_ID;
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
-}
 function sa_userCount() {
-	$sql = "SELECT COUNT(`viewer_id`)
+	$sql = "SELECT COUNT(*)
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID;
 	return query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -29,7 +25,6 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 
 		'<h1>App:</h1>'.
 		'<a href="'.URL.'&p=sa&d=app">Приложения ('.sa_appCount().')</a>'.
-		'<a href="'.URL.'&p=sa&d=ws">Организации ('.sa_wsCount().')</a>'.
 		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.sa_userCount().')</a>'.
 		'<br />'.
 
@@ -583,7 +578,6 @@ function sa_app_spisok() {
 			'<tr><th>app_id'.
 				'<th>Название'.
 				'<th>title'.
-				'<th>Кол-во<br />организаций'.
 				'<th>Дата создания'.
 				'<th>';
 	foreach($spisok as $r) {
@@ -591,9 +585,8 @@ function sa_app_spisok() {
 			'<tr>'.
 				'<td class="id">'.$r['id'].
 					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
-				'<td class="name">'.$r['name'].
+				'<td class="app_name">'.$r['app_name'].
 				'<td class="title">'.$r['title'].
-				'<td class="ws">'.
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconEdit($r);
 	}
@@ -709,7 +702,7 @@ function sa_ws_info($id) {
 
 	$counts = '';
 	foreach(sa_ws_tables() as $tab) {
-		$c = query_value("SELECT COUNT(`id`) FROM `".$tab."` WHERE `ws_id`=".$ws['id']);
+		$c = query_value("SELECT COUNT(`id`) FROM `".$tab."`");
 		if($c)
 			$counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>';
 	}
@@ -719,7 +712,6 @@ function sa_ws_info($id) {
 		$sql = "SELECT *
 				FROM `_vkuser`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".$ws['id']."
 				  AND `worker`
 				  AND `viewer_id`!=".$ws['admin_id'];
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -743,7 +735,7 @@ function sa_ws_info($id) {
 		'<div class="headName">Действия</div>'.
 		'<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['deleted'] ? 'Восстановить' : 'Деактивировать').' организацию</button></div>'.
 		'<br />'.
-		(!$ws['deleted'] && $ws['id'] != WS_ID ?
+		(!$ws['deleted'] ?
 			'<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту организацию</button></div><br />'
 		: '').
 		'<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление организации</button></div>'.

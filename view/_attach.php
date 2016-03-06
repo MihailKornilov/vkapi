@@ -13,7 +13,6 @@ function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
 	$sql = "SELECT *
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
 	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -36,8 +35,7 @@ function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 
 	$sql = "SELECT *
 			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID.
+			WHERE `app_id`=".APP_ID.
 			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
 			($v['id'] ? " AND `id`=".$v['id'] : '');
 	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -70,7 +68,6 @@ function _attachArr($id) {//получение данных о файле в формате json для ajax
 	$sql = "SELECT *
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `id`=".$id;
 	if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		return array(

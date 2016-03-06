@@ -16,7 +16,6 @@ function _remind_stat() {
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `dtime_add` LIKE '".TODAY."%'";
 	$newToday = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -24,7 +23,6 @@ function _remind_stat() {
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  "._period(0, 'sql');
 	$newWeek = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -32,7 +30,6 @@ function _remind_stat() {
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `dtime_add` LIKE '".strftime('%Y-%m-')."%'";
 	$newMonth = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -71,7 +68,6 @@ function _remind_stat_count($status, $period=TODAY) {
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind_history`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `status`=".$status."
 			  ".$cont;
 	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -97,7 +93,6 @@ function _remind_history_add($v) {
 	);
 	$sql = "INSERT INTO `_remind_history` (
 				`app_id`,
-				`ws_id`,
 				`remind_id`,
 				`status`,
 				`day`,
@@ -105,7 +100,6 @@ function _remind_history_add($v) {
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$v['remind_id'].",
 				".$v['status'].",
 				'".$v['day']."',
@@ -123,7 +117,6 @@ function _remindTodayCount($plus_b=0) { //Получение количества напоминаний на се
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `status`=1
 			  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
 	define('REMIND_ACTIVE_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
@@ -134,7 +127,6 @@ function _remindActiveCount() { //количество активных напоминаний
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `status`=1";
 	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -188,8 +180,7 @@ function _remind_spisok($v=array()) {
 	define('REMIND_TODAY_MSG', REMIND_TODAY ? ' на сегодня' : '');
 	define('REMIND_ACTIVE', !CLIENT_OR_ZAYAV && !REMIND_TODAY);
 
-	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID;
+	$cond = "`app_id`=".APP_ID;
 
 	if(REMIND_TODAY)
 		$cond .= " AND `status`=1 AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
@@ -361,7 +352,6 @@ function _remind_add($v) {
 
 	$sql = "INSERT INTO `_remind` (
 					`app_id`,
-					`ws_id`,
 					`client_id`,
 					`zayav_id`,
 					`txt`,
@@ -371,7 +361,6 @@ function _remind_add($v) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$v['client_id'].",
 					".$v['zayav_id'].",
 					'".addslashes($v['txt'])."',
@@ -419,7 +408,6 @@ function _remind_active_to_ready($ids) {//отметка выбранных активных напоминаний
 	$sql = "SELECT *
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `status`=1
 			  AND `id` IN (".$ids.")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);

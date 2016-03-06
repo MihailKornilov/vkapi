@@ -308,7 +308,7 @@ var saMenuEdit = function(o) {
 		o = $.extend({
 			id:'',
 			title:'',
-			name:'',
+			app_name:'',
 			secret:''
 		}, o);
 
@@ -316,7 +316,7 @@ var saMenuEdit = function(o) {
 				'<table class="sa-tab">' +
 					'<tr><td class="label"><b>app_id</b>:<td><input id="app_id" type="text" value="' + o.id + '"' + (o.id ? ' disabled' : '') + ' />' +
 					'<tr><td class="label">title:<td><input id="title" type="text" value="' + o.title + '" />' +
-					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label">Название:<td><input id="app_name" type="text" value="' + o.app_name + '" />' +
 					'<tr><td class="label">secret:<td><input id="secret" type="text" value="' + o.secret + '" />' +
 				'</table>',
 			dialog = _dialog({
@@ -326,14 +326,14 @@ var saMenuEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name').focus();
+		$('#app_name').focus();
 
 		function submit() {
 			var send = {
 				op:'sa_app_' + (o.id ? 'edit' : 'add'),
 				id:_num(o.id ? o.id : $('#app_id').val()),
 				title:$('#title').val(),
-				name:$('#name').val(),
+				app_name:$('#app_name').val(),
 				secret:$('#secret').val()
 			};
 			if(!send.id) {
@@ -346,9 +346,9 @@ var saMenuEdit = function(o) {
 				$('#title').focus();
 				return;
 			}
-			if(!send.name) {
+			if(!send.app_name) {
 				dialog.err('Не указано название');
-				$('#name').focus();
+				$('#app_name').focus();
 				return;
 			}
 			if(!send.secret) {
@@ -663,7 +663,7 @@ $(document)
 		saAppEdit({
 			id:t.attr('val'),
 			title:p.find('.title').html(),
-			name:p.find('.name').html(),
+			app_name:p.find('.app_name').html(),
 			secret:p.find('.secret').val()
 		});
 	})

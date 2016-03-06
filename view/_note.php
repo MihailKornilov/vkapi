@@ -27,7 +27,7 @@ function _noteArr($v) {//запрос массива заметок (для общего списка, либо отдельн
 				'' `image`
 			FROM `_note`
 			WHERE !`deleted`
-			  ".($v['noapp'] ? '' : "AND `app_id`=".APP_ID." AND `ws_id`=".WS_ID)."
+			  ".($v['noapp'] ? '' : "AND `app_id`=".APP_ID)."
 			  AND `page_name`='".$v['p']."'
 			  AND `page_id`=".$v['id']."
 			ORDER BY `id` DESC";
@@ -165,14 +165,12 @@ function _noteAdd($v) {//внесение новой заметки
 
 	$sql = "INSERT INTO `_note` (
 				`app_id`,
-				`ws_id`,
 				`page_name`,
 				`page_id`,
 				`txt`,
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				'".$v['p']."',
 				".$v['id'].",
 				'".addslashes($v['txt'])."',
@@ -186,7 +184,6 @@ function _noteCommentAdd($v) {//внесение комментария к заметке
 	$sql = "SELECT `id`
 			FROM `_note`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `page_name`='".$v['p']."'
 			  AND `page_id`="._num(@$v['id'])."
 			  AND !`deleted`
@@ -197,13 +194,11 @@ function _noteCommentAdd($v) {//внесение комментария к заметке
 
 	$sql = "INSERT INTO `_note_comment` (
 				`app_id`,
-				`ws_id`,
 				`note_id`,
 				`txt`,
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$note_id.",
 				'".addslashes($v['txt'])."',
 				".VIEWER_ID."
@@ -219,7 +214,6 @@ function _noteLast($v) {
 	$sql = "SELECT `txt`
 			FROM `_note`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `page_name`='".$v['p']."'
 			  AND `page_id`="._num(@$v['id'])."
 			  AND !`deleted`

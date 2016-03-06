@@ -31,7 +31,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -56,7 +55,6 @@ switch(@$_POST['op']) {
 				$sql = "SELECT IFNULL(`id`,0)
 				        FROM `_remind_reason`
 						WHERE `app_id`=".APP_ID."
-						  AND `ws_id`=".WS_ID."
 						  AND `txt`='".addslashes($reason)."'
 						LIMIT 1";
 				$reason_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -64,12 +62,10 @@ switch(@$_POST['op']) {
 				$sql = "INSERT INTO `_remind_reason` (
 							`id`,
 							`app_id`,
-							`ws_id`,
 							`txt`
 						) VALUES (
 							".$reason_id.",
 							".APP_ID.",
-							".WS_ID.",
 							'".addslashes($reason)."'
 						) ON DUPLICATE KEY UPDATE
 							`count`=`count`+1";
@@ -82,7 +78,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`,`txt`
 				FROM `_remind_reason`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				ORDER BY `count` DESC, `txt`";
 		$send['spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
 		jsonSuccess($send);
@@ -98,7 +93,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_remind`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))

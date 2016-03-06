@@ -4,9 +4,9 @@ function kvit_head() {
 	'<table class="head">'.
 		'<tr><td>'.BARCODE.
 			'<td class="rekvisit">'.
-				'<h1>'._wsType(WS_TYPE).' «<b>'._ws('name').'</b>»</h1>'.
-				'<h1>Адрес: '._ws('adres_yur').'.</h1>'.
-				'<h2>Телефон: '._ws('phone').'. Время работы: '._ws('time_work').'.</h2>'.
+				'<h1>'._wsType(WS_TYPE).' «<b>'._app('name').'</b>»</h1>'.
+				'<h1>Адрес: '._app('adres_yur').'.</h1>'.
+				'<h2>Телефон: '._app('phone').'. Время работы: '._app('time_work').'.</h2>'.
 	'</table>';
 }//kvit_head()
 function kvit_name($nomer, $barcode=0) {
@@ -79,7 +79,7 @@ function kvit_cut() {
 if(!$id = _num($_GET['id']))
 	die('Неверный id квитанции.');
 
-$sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
+$sql = "SELECT * FROM `zayav_kvit` WHERE `app_id`=".APP_ID." AND `id`=".$id;
 if(!$k = query_assoc($sql))
 	die('Квитанции не существует.');
 

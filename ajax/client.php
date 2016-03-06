@@ -13,7 +13,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_client`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`".
 			(!empty($val) ? " AND (`find` LIKE '%".$val."%')" : '').
 			($category_id ? " AND `category_id`=".$category_id : '').
@@ -82,7 +81,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_client` (
 					`app_id`,
-					`ws_id`,
 					`category_id`,
 					`org_name`,
 					`org_phone`,
@@ -93,7 +91,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$category_id.",
 					'".addslashes($org_name)."',
 					'".addslashes($org_phone)."',
@@ -145,7 +142,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT COUNT(`id`)
 					FROM `_client`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 			          AND `id`!=".$client_id."
 					  AND `worker_id`=".$worker_id;
 			if(query_value($sql, GLOBAL_MYSQL_CONNECT))

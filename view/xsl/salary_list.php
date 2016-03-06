@@ -146,7 +146,6 @@ function zpPrint($sheet, $list) {
 				`dtime_add`
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `salary_list_id`=".LIST_ID;
 	$accrual = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -159,7 +158,6 @@ function zpPrint($sheet, $list) {
 				`dtime_add`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `salary_list_id`=".LIST_ID;
 	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -211,7 +209,6 @@ function zpPrint($sheet, $list) {
 				`about`
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `salary_list_id`=".LIST_ID;
 	if($deduct = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
 		$sheet->setCellValue('A'.$line, 'Вычеты:');
@@ -234,7 +231,6 @@ function zpPrint($sheet, $list) {
 	$sql = "SELECT *
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `salary_avans`
 			  AND `salary_list_id`=".LIST_ID."
@@ -297,7 +293,6 @@ if(!LIST_ID)
 $sql = "SELECT *
 		FROM `_salary_list`
 		WHERE `app_id`=".APP_ID."
-		  AND `ws_id`=".WS_ID."
 		  AND `id`=".LIST_ID;
 if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 	die(win1251('Листа выдачи не существует.'));

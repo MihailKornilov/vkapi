@@ -54,7 +54,6 @@ function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 
 	$sql = "INSERT INTO `_money_accrual` (
 				`app_id`,
-				`ws_id`,
 				`zayav_id`,
 				`client_id`,
 				`sum`,
@@ -62,7 +61,6 @@ function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$z['id'].",
 				".$z['client_id'].",
 				".$sum.",
@@ -105,7 +103,6 @@ function _accrual_spisok($v=array()) {//список начислений
 	$filter = _filterJs('ACCRUAL', $filter);
 
 	$cond = "`app_id`=".APP_ID."
-	     AND `ws_id`=".WS_ID."
 	     AND !`deleted`";
 
 	if($filter['client_id'])
@@ -239,7 +236,6 @@ function _refund_spisok($filter=array()) {
 	$filter = _filterJs('REFUND', $filter);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID."
 		 AND !`deleted`";
 
 	if($filter['invoice_id'])
@@ -330,8 +326,7 @@ function _refund_right() {
 function income_top($sel) { //Условия поиска сверху для платежей
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `_money_income`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID;
+			WHERE `app_id`=".APP_ID;
 	$worker = query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
 
 	return
@@ -363,7 +358,6 @@ function income_days($mon=0) {//отметка дней в календаре, в которые вносились пл
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE ('".($mon ? $mon : strftime('%Y-%m'))."%')
 			GROUP BY DATE_FORMAT(`dtime_add`,'%d')";
@@ -423,7 +417,7 @@ function income_spisok($filter=array()) {
 	$filter = incomeFilter($filter);
 	$filter = _filterJs('INCOME', $filter);
 
-	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID;
+	$cond = "`app_id`=".APP_ID;
 
 	if($filter['invoice_id'])
 		$cond .= " AND `invoice_id`=".$filter['invoice_id'];
@@ -551,7 +545,6 @@ function _incomeReceipt($id) {//товарный чек для платежа
 	$sql = "SELECT *
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `id`=".$id;
 	$money = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
@@ -561,20 +554,19 @@ function _incomeReceipt($id) {//товарный чек для платежа
 	$sql = "SELECT *
 			FROM `_zayav_dogovor`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$money['zayav_id'];
 	$dog = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
 	return
-	'<div class="org-name">Общество с ограниченной ответственностью <b>«'._ws('name').'»</b></div>'.
+	'<div class="org-name">Общество с ограниченной ответственностью <b>«'._app('name').'»</b></div>'.
 	'<div class="cash-rekvisit">'.
-		'ИНН '._ws('inn').'<br />'.
-		'ОГРН '._ws('ogrn').'<br />'.
-		'КПП '._ws('kpp').'<br />'.
-		str_replace("\n", '<br />', _ws('adres_yur')).'<br />'.
+		'ИНН '._app('inn').'<br />'.
+		'ОГРН '._app('ogrn').'<br />'.
+		'КПП '._app('kpp').'<br />'.
+		str_replace("\n", '<br />', _app('adres_yur')).'<br />'.
 		'<table><tr>'.
-			'<td>Тел.: '._ws('phone').
+			'<td>Тел.: '._app('phone').
 			'<th>'.FullData($money['dtime_add']).' г.'.
 		'</table>'.
 	'</div>'.
@@ -606,11 +598,10 @@ function _incomeReceiptPrint() {//печать товарного чека для платежа
 		die('Некорректный id.');
 
 	$sql = "SELECT *
-		FROM `_money_income`
-		WHERE `app_id`=".APP_ID."
-		  AND `ws_id`=".WS_ID."
-		  AND !`deleted`
-		  AND `id`=".$id;
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".$id;
 
 	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		die('Платежа id='.$id.' не существует.');
@@ -632,7 +623,6 @@ function income_schet_spisok($schet) {//список платежей по конкретному счёту на 
 	$sql = "SELECT *
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `schet_id`=".$schet['id']."
 			ORDER BY `id` DESC";
@@ -667,13 +657,12 @@ function income_schet_spisok($schet) {//список платежей по конкретному счёту на 
 
 /* --- расходы --- */
 function _expense($id=0, $i='name') {//Список категорий расходов
-	$key = CACHE_PREFIX.'expense'.WS_ID;
+	$key = CACHE_PREFIX.'expense'.APP_ID;
 	$arr = xcache_get($key);
 	if(empty($arr)) {
 		$sql = "SELECT *
 				FROM `_money_expense_category`
-				WHERE (`app_id`=".APP_ID." OR !`app_id`)
-				  AND (`ws_id`=".WS_ID." OR !`ws_id`)
+				WHERE `app_id`=".APP_ID." OR !`app_id`
 				ORDER BY `sort`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		xcache_set($key, $arr, 86400);
@@ -703,13 +692,12 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 	return $arr[$id][$i];
 }
 function _expenseSub($id, $i='name') {//Список подкатегорий расходов
-	$key = CACHE_PREFIX.'expense_sub'.WS_ID;
+	$key = CACHE_PREFIX.'expense_sub'.APP_ID;
 	$arr = xcache_get($key);
 	if(empty($arr)) {
 		$sql = "SELECT *
 				FROM `_money_expense_category_sub`
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID;
+				WHERE `app_id`=".APP_ID;
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		xcache_set($key, $arr, 86400);
 	}
@@ -783,7 +771,6 @@ function expenseMonthSum($v=array()) {//список чекбоксов с месяцами и суммами ра
 				SUM(`sum`) AS `sum`
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".$filter['year']."-%'".
 		($filter['invoice_id'] ? " AND `invoice_id`=".$filter['invoice_id'] : '').
@@ -804,7 +791,6 @@ function expense_graf($filter, $i='json') {//список сумм расходов по категориям
 				0 `sum`
 			FROM `_money_expense_category`
 			WHERE `app_id` IN (".APP_ID.",0)
-			  AND `ws_id` IN(".WS_ID.",0)
 			ORDER BY `sort`";
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 	$spisok[0] = array(
@@ -845,7 +831,7 @@ function expense_spisok($v=array()) {
 
 	define('PAGE1', $filter['page'] == 1);
 
-	$cond = "`app_id`=".APP_ID." AND `ws_id`=".WS_ID." AND !`deleted`";
+	$cond = "`app_id`=".APP_ID." AND !`deleted`";
 
 	if($filter['invoice_id'])
 		$cond .= " AND `invoice_id`=".$filter['invoice_id'];
@@ -1146,13 +1132,12 @@ function income_insert($v) {
 
 
 function _invoice($id=0, $i='name') {//получение списка счетов из кеша
-	$key = CACHE_PREFIX.'invoice'.WS_ID;
+	$key = CACHE_PREFIX.'invoice'.APP_ID;
 	if(!$arr = xcache_get($key)) {
 		$arr = array();
 		$sql = "SELECT *
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				ORDER BY `sort`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
 		while($r = mysql_fetch_assoc($q)) {
@@ -1253,7 +1238,6 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `confirm` NOT IN (1,3)
 			  AND !`deleted`
 			  AND `invoice_id`=".$invoice_id;
@@ -1263,7 +1247,6 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `invoice_id`=".$invoice_id;
 	$expense = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -1272,7 +1255,6 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_refund`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `invoice_id`=".$invoice_id;
 	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -1281,7 +1263,6 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_invoice_transfer`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `invoice_id_from`=".$invoice_id;
 	$from = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -1290,7 +1271,6 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_invoice_transfer`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `invoice_id_to`=".$invoice_id;
 	$to = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -1378,7 +1358,6 @@ function _invoiceTransferConfirmCount($plus_b=0) { //Получение количества перево
 	$sql = "SELECT COUNT(`id`)
 			FROM `_money_invoice_transfer`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `confirm`=1";
 	define('INVOICE_TRANSFER_CONFIRM_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
@@ -1392,7 +1371,6 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 	);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID."
 		 AND !`deleted`";
 
 	if(RULE_INVOICE_TRANSFER == 1)
@@ -1481,7 +1459,6 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 					MAX(`id`)
 				FROM `_balans`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `category_id`=1
 				  AND `unit_id`=".$v['invoice_id']."
 				  AND `dtime_add` LIKE '".MONTH."%'
@@ -1498,7 +1475,6 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 				SUM(`sum`) AS `sum`
 			FROM `_balans`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `category_id`=1
 			  AND `unit_id`=".$v['invoice_id']."
 			  AND `sum`>0
@@ -1515,7 +1491,6 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 				SUM(`sum`) AS `sum`
 			FROM `_balans`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `category_id`=1
 			  AND `unit_id`=".$v['invoice_id']."
 			  AND `sum`<0
@@ -1533,7 +1508,6 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 	$sql = "SELECT `balans`
 			FROM `_balans`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `category_id`=1
 			  AND `unit_id`=".$v['invoice_id']."
 			  AND `dtime_add` LIKE '".$prev_month."%'
@@ -1573,7 +1547,6 @@ function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
 
 function _balans($v) {//внесение записи о балансе
 	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
-	$ws_id = _num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID;
 	$category_id = _balansAction($v['action_id'], 'category_id');
 	$unit_id = 0;
 	$balans = 0;
@@ -1610,13 +1583,12 @@ function _balans($v) {//внесение записи о балансе
 	//сотрудник
 	if(!empty($v['worker_id'])) {
 		$unit_id = _num($v['worker_id']);
-		$balans = salaryWorkerBalans($unit_id, 0, $ws_id);
+		$balans = salaryWorkerBalans($unit_id, 0);
 	}
 
 
 	$sql = "INSERT INTO `_balans` (
 				`app_id`,
-				`ws_id`,
 
 				`category_id`,
 				`unit_id`,
@@ -1636,7 +1608,6 @@ function _balans($v) {//внесение записи о балансе
 				`viewer_id_add`
 			) VALUES (
 				".$app_id.",
-				".$ws_id.",
 
 				".$category_id.",
 				".$unit_id.",
@@ -1727,7 +1698,6 @@ function balans_show_category($v) {
 			$sql = "SELECT *
 					FROM `_money_invoice`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id`=".$v['unit_id'];
 			if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 				return array(
@@ -1775,7 +1745,6 @@ function balans_show_spisok($filter) {
 	define('PAGE1', $filter['page'] == 1);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID."
 		 AND `category_id`=".$filter['category_id']."
 		 AND `unit_id`=".$filter['unit_id'];
 
@@ -1905,8 +1874,7 @@ function balans_show_spisok($filter) {
 function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
 	$sql = "SELECT *
 			FROM `_schet`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID.
+			WHERE `app_id`=".APP_ID.
 			  ($withDeleted ? '' : ' AND !`deleted`')."
 			  AND `id`=".$id;
 	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
@@ -1914,8 +1882,7 @@ function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
 function _schetCount() {//количество счетов в приложении (для показа ссылки на счета)
 	$sql = "SELECT COUNT(*)
 			FROM `_schet`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID;
+			WHERE `app_id`=".APP_ID;
 	return query_value($sql, GLOBAL_MYSQL_CONNECT);
 }
 function _schetValToList($arr) {//данные о счёте, подставляемые в список
@@ -1932,7 +1899,6 @@ function _schetValToList($arr) {//данные о счёте, подставляемые в список
 	            *
 			FROM `_schet`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -1978,7 +1944,6 @@ function _schet_spisok($v=array()) {
 	$filter = _filterJs('SCHET', $filter);
 
 	$cond = "`app_id`=".APP_ID."
-		 AND `ws_id`=".WS_ID."
 		 AND !`deleted`";
 
 	if($filter['find'])
@@ -2041,7 +2006,6 @@ function _schet_spisok($v=array()) {
 	$sql = "SELECT *
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `schet_id` IN (".implode(',', array_keys($spisok)).")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -2105,7 +2069,6 @@ function _schetPayCorrect($schet_id) {//поправка в счёте суммы платежей, которые
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `schet_id`=".$schet_id;
 	$sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -2118,7 +2081,6 @@ function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка зая
 	$sql = "SELECT *
 			FROM `_schet`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `zayav_id` IN (".implode(',', array_keys($zayav)).")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);

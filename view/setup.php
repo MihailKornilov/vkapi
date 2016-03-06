@@ -119,7 +119,6 @@ function setup_worker_spisok() {
 	$sql = "SELECT *
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `worker`
 			  AND !`hidden`
 			ORDER BY `dtime_add`";
@@ -142,9 +141,6 @@ function setup_worker_rule($viewer_id) {
 		return _err('Недостаточно прав: управление сотрудниками.');
 
 	$u = _viewer($viewer_id);
-	if($u['viewer_ws_id'] != WS_ID)
-		return _err('Сотрудника не существует.');
-
 	if(!$u['viewer_worker'])
 		return _err('Пользователь <b>'.$u['viewer_name'].'</b><br />уже не является сотрудником.');
 
@@ -252,9 +248,6 @@ function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	if($u['viewer_admin'] && $post['op'] != 'RULE_SALARY_SHOW')
 		return false;
 
-	if($u['viewer_ws_id'] != WS_ID)
-		return false;
-
 	$r = _viewerRule($viewer_id);
 	if(!isset($r[$post['op']]))
 		return false;
@@ -344,9 +337,8 @@ function setup_rekvisit() {
 		return _err('Недостаточно прав: Реквизиты организации');
 
 	$sql = "SELECT *
-			FROM `_ws`
-			WHERE `app_id`=".APP_ID."
-			  AND `id`=".WS_ID;
+			FROM `_app`
+			WHERE `id`=".APP_ID;
 	$g = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 	return
 		'<div id="setup_rekvisit">'.
@@ -386,8 +378,7 @@ function setup_service() {
 
 	$sql = "SELECT `type_id`
 			FROM `_zayav_type_active`
-			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID;
+			WHERE `app_id`=".APP_ID;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['type_id']]['active'] = 1;
@@ -428,8 +419,7 @@ function setup_expense_spisok() {
 				0 `sub`,
 				0 `count`
 			FROM `_money_expense_category`
-			WHERE (`app_id`=".APP_ID." OR !`app_id`)
-			  AND (`ws_id`=".WS_ID." OR !`ws_id`)
+			WHERE `app_id`=".APP_ID." OR !`app_id`
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
@@ -440,7 +430,6 @@ function setup_expense_spisok() {
 				COUNT(`id`) `sub`
 			FROM `_money_expense_category_sub`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			GROUP BY `category_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -451,7 +440,6 @@ function setup_expense_spisok() {
 				COUNT(`id`) `count`
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `category_id`
 			GROUP BY `category_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -487,7 +475,6 @@ function setup_expense_sub($id) {
 	$sql = "SELECT *
 			FROM `_money_expense_category`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `id`!=1
 			  AND `id`=".$id;
 	if(!$cat = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -507,7 +494,6 @@ function setup_expense_sub_spisok($id) {
 				*
 			FROM `_money_expense_category_sub`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `category_id`=".$id."
 			ORDER BY `name`";
 	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -546,7 +532,6 @@ function setup_zayav_status_spisok() {
 	            0 `next`
 			FROM `_zayav_status`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
@@ -600,7 +585,6 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 	foreach($spisok as $id => $r)
 		$values[] = "(
 			".APP_ID.",
-			".WS_ID.",
 			'".$r['name']."',
 			'".$r['about']."',
 			'".$r['color']."',
@@ -611,7 +595,6 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 
 	$sql = "INSERT INTO `_zayav_status` (
 				`app_id`,
-				`ws_id`,
 				`name`,
 				`about`,
 				`color`,
@@ -628,13 +611,11 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 				SELECT `id`
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id_old`=`z`.`status_id`
 				LIMIT 1
 
 			)
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `status_id`";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -644,7 +625,6 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 					SELECT `id`
 					FROM `_zayav_status`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id_old`=`h`.`v1`
 					LIMIT 1
 				),
@@ -652,24 +632,21 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 					SELECT `id`
 					FROM `_zayav_status`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id_old`=`h`.`v2`
 					LIMIT 1
 				)
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `type_id`=71";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	xcache_unset(CACHE_PREFIX.'zayav_status'.WS_ID);
-	_wsJsValues();
+	xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+	_appJsValues();
 
 	$sql = "SELECT
 	            *,
 	            0 `next`
 			FROM `_zayav_status`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			ORDER BY `sort`";
 	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -678,7 +655,6 @@ function setup_zayav_status_next($spisok) {//получение ids следующих статусов
 	$sql = "SELECT *
 			FROM `_zayav_status_next`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -695,7 +671,6 @@ function setup_zayav_status_next_js() {//получение ids следующих статусов для va
 	$sql = "SELECT *
 			FROM `_zayav_status_next`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			ORDER BY `id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -714,7 +689,6 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 			SET `default`=0,
 				`nouse`=0
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `default`";
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -736,7 +710,6 @@ function setup_product_spisok() {
 				0 `zayav`
 			FROM `_product`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			ORDER BY `name`";
 	$product = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 	if(empty($product))
@@ -746,7 +719,6 @@ function setup_product_spisok() {
 				   COUNT(`id`) AS `sub`
 			FROM `_product_sub`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			GROUP BY `product_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -756,7 +728,6 @@ function setup_product_spisok() {
 				   COUNT(`id`) AS `zayav`
 			FROM `_zayav_product`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			GROUP BY `product_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -781,7 +752,6 @@ function setup_product_sub($product_id) {
 	$sql = "SELECT *
 			FROM `_product`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `id`=".$product_id;
 	if(!$pr = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Изделия id = '.$product_id.' не существует.';
@@ -800,7 +770,6 @@ function setup_product_sub_spisok($product_id) {
 				0 `zayav`
 			FROM `_product_sub`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `product_id`=".$product_id."
 			ORDER BY `name`";
 	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -812,7 +781,6 @@ function setup_product_sub_spisok($product_id) {
 				COUNT(`id`) `zayav`
 			FROM `_zayav_product`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `product_id`=".$product_id."
 			  AND `product_sub_id`
 			GROUP BY `product_sub_id`";

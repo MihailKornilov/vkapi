@@ -42,7 +42,7 @@ function xls_zakaz($sheet) {
 				LEFT JOIN `zp_price` `p`
 				ON `c`.`price_id`=`p`.`id`
 			WHERE `c`.`price_id`
-			  AND `zz`.`ws_id`=".WS_ID."
+			  AND `zz`.`app_id`=".APP_ID."
 			GROUP BY `c`.`id`
 			ORDER BY `p`.`name`";
 	$q = query($sql);
@@ -87,7 +87,7 @@ function xls_zakaz($sheet) {
 				ON `c`.`base_model_id`=`m`.`id`
 
 			WHERE !`c`.`price_id`
-			  AND `zz`.`ws_id`=".WS_ID."
+			  AND `zz`.`app_id`=".APP_ID."
 			GROUP BY `c`.`id`
 			ORDER BY
 				`s`.`name`,

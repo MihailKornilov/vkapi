@@ -1154,7 +1154,7 @@ $(document)
 			if(ZAYAV_INFO_KVIT) {
 				name.push('<b>Распечатать квитанцию</b>');
 				action.push(function() {
-					if(WS_ID == 3) {
+					if(APP_ID == 3798718) {
 						if(ZAYAV_INFO_CARTRIDGE)
 							location.href = URL + '&p=print&d=kvit_cartridge&id=' + ZI.id;
 						else

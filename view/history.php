@@ -8,7 +8,6 @@ function _history($v=array()) {
 
 function _history_insert($v=array()) {//внесение истории действий
 	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
-	$ws_id = _num(@$v['ws_id']) ? _num($v['ws_id']) : WS_ID;
 	$client_id = _num(@$v['client_id']);
 	$zayav_id = _num(@$v['zayav_id']);
 
@@ -19,7 +18,6 @@ function _history_insert($v=array()) {//внесение истории действий
 
 	$sql = "INSERT INTO `_history` (
 				`app_id`,
-				`ws_id`,
 
 				`type_id`,
 
@@ -41,7 +39,6 @@ function _history_insert($v=array()) {//внесение истории действий
 				`viewer_id_add`
 			) VALUES (
 				".$app_id.",
-				".$ws_id.",
 
 				".$v['type_id'].",
 
@@ -85,9 +82,8 @@ function _history_spisok($v=array()) {
 	define('HIST_LOCAL', $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id']); //история конкретных объектов
 	$spisok = $filter['js'];
 
-	$cond = "`app_id`=".APP_ID.
+	$cond = "`app_id`=".APP_ID;
 //	   " AND `type_id` IN (20)".//todo удалить
-	   " AND `ws_id`=".WS_ID;
 
 	if($filter['viewer_id_add'])
 		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
@@ -267,7 +263,6 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `_history`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND `viewer_id_add`".
 			  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
 	$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
@@ -280,7 +275,6 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 				`_history_ids` `ids`,
 				`_history` `h`
 			WHERE `h`.`app_id`=".APP_ID."
-			  AND `h`.`ws_id`=".WS_ID."
 			  AND `cat`.`id`=`ids`.`category_id`
 			  AND `h`.`type_id`=`ids`.`type_id`
 			  AND `cat`.`js_use`

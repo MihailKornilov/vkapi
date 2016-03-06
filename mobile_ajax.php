@@ -14,15 +14,7 @@ _dbConnect();  //подключение к базе mobile
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
 _getVkUser();           //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода
-_ws();
 _setup_global();
-
-//глобальные константы для конкретной организации
-$sql = "SELECT * FROM `setup` WHERE `ws_id`=".WS_ID." LIMIT 1";
-$setup = query_assoc($sql);
-define('WS_DEVS', $setup['devs']);
-define('WS_TYPE', $setup['ws_type_id']);
-
 
 $nopin = array(
 	'pin_enter' => 1,

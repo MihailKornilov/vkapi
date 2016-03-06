@@ -28,7 +28,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_accrual`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -78,7 +77,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_accrual`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -156,7 +154,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_income` (
 				`app_id`,
-				`ws_id`,
 				`invoice_id`,
 				`sum`,
 				`about`,
@@ -167,7 +164,6 @@ switch(@$_POST['op']) {
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$invoice_id.",
 				".$sum.",
 				'".addslashes($about)."',
@@ -234,7 +230,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_income`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -299,7 +294,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_income`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND !`client_id`
 				  AND !`zp_id`
@@ -312,14 +306,12 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_refund` (
 					`app_id`,
-					`ws_id`,
 					`invoice_id`,
 					`sum`,
 					`about`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$r['invoice_id'].",
 					".$r['sum'].",
 					'".addslashes($about)."',
@@ -358,7 +350,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_income`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `confirm`=1
 				  AND `id`=".$id;
@@ -412,7 +403,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_refund` (
 					`app_id`,
-					`ws_id`,
 					`zayav_id`,
 					`client_id`,
 					`invoice_id`,
@@ -421,7 +411,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$zayav_id.",
 					".$z['client_id'].",
 					".$invoice_id.",
@@ -469,7 +458,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_refund`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -560,7 +548,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_expense` (
 					`app_id`,
-					`ws_id`,
 					`sum`,
 					`about`,
 					`invoice_id`,
@@ -574,7 +561,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$sum.",
 					'".addslashes($about)."',
 					".$invoice_id.",
@@ -646,7 +632,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -720,7 +705,6 @@ switch(@$_POST['op']) {
 					`mon`
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -740,7 +724,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -912,7 +895,6 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_schet` (
 					`id`,
 					`app_id`,
-					`ws_id`,
 					`nomer`,
 					`client_id`,
 					`zayav_id`,
@@ -924,7 +906,6 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".$schet_id.",
 					".APP_ID.",
-					".WS_ID.",
 					".(_maxSql('_schet', 'nomer', 1)).",
 					".$client_id.",
 					".$zayav_id.",
@@ -973,7 +954,6 @@ switch(@$_POST['op']) {
 		if($insert_id) {
 			$sql = "INSERT INTO `_money_accrual` (
 						`app_id`,
-						`ws_id`,
 						`schet_id`,
 						`client_id`,
 						`zayav_id`,
@@ -981,7 +961,6 @@ switch(@$_POST['op']) {
 						`viewer_id_add`
 					) VALUES (
 						".APP_ID.",
-						".WS_ID.",
 						".$schet_id.",
 						".$client_id.",
 						".$zayav_id.",
@@ -1003,7 +982,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT *
 					FROM `_money_accrual`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND !`deleted`
 					  AND `schet_id`=".$schet_id."
 					LIMIT 1";
@@ -1134,7 +1112,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_income` (
 				`app_id`,
-				`ws_id`,
 				`schet_id`,
 				`schet_paid_day`,
 				`invoice_id`,
@@ -1144,7 +1121,6 @@ switch(@$_POST['op']) {
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$schet_id.",
 				'".$day."',
 				".$invoice_id.",
@@ -1199,7 +1175,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT SUM(`sum`)
 				FROM `_money_income`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `schet_id`=".$schet_id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -1259,7 +1234,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_invoice` (
 					`app_id`,
-					`ws_id`,
 					`name`,
 					`about`,
 					`visible`,
@@ -1269,7 +1243,6 @@ switch(@$_POST['op']) {
 					`expense_insert`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
 					'".$visible."',
@@ -1280,8 +1253,8 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		_appJsValues();
 
 		_history(array(
 			'type_id' => 1022,
@@ -1314,7 +1287,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted` AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -1334,8 +1306,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		_appJsValues();
 
 		if($changes =
 			_historyChange('Наименование', $r['name'], $name).
@@ -1367,7 +1339,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$invoice_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1378,7 +1349,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$invoice_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
 
 		_balans(array(
 			'action_id' => 5,
@@ -1404,7 +1375,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$invoice_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1418,7 +1388,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$invoice_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
 
 		_history(array(
 			'type_id' => 53,
@@ -1442,7 +1412,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$invoice_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1454,7 +1423,6 @@ switch(@$_POST['op']) {
 
 			$sql = "INSERT INTO `_money_invoice_transfer` (
 						`app_id`,
-						`ws_id`,
 						`invoice_id_from`,
 						`invoice_id_to`,
 						`sum`,
@@ -1462,7 +1430,6 @@ switch(@$_POST['op']) {
 						`viewer_id_add`
 					) VALUES (
 						".APP_ID.",
-						".WS_ID.",
 						".$invoice_id.",
 						".$invoice_to.",
 						".$balans.",
@@ -1493,8 +1460,8 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_money_invoice` SET `deleted`=1 WHERE `id`=".$invoice_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		_wsJsValues();
+		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		_appJsValues();
 
 		_balans(array(
 			'action_id' => 15,//закрытие
@@ -1525,7 +1492,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_money_invoice_transfer` (
 					`app_id`,
-					`ws_id`,
 					`invoice_id_from`,
 					`invoice_id_to`,
 					`sum`,
@@ -1534,7 +1500,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$from.",
 					".$to.",
 					".$sum.",
@@ -1581,7 +1546,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice_transfer`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `confirm`=1
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1609,7 +1573,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice_transfer`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `confirm`!=2
 				  AND `id`=".$id;
@@ -1683,7 +1646,6 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_vkuser`
 				SET `salary_balans_start`=".$start."
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `viewer_id`=".$worker_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1736,7 +1698,6 @@ switch(@$_POST['op']) {
 		            `salary_rate_period`=".$period.",
 		            `salary_rate_day`=".$day."
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `viewer_id`=".$worker_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1772,7 +1733,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_salary_accrual` (
 					`app_id`,
-					`ws_id`,
 					`worker_id`,
 					`sum`,
 					`about`,
@@ -1781,7 +1741,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$worker_id.",
 					".$sum.",
 					'".addslashes($about)."',
@@ -1814,7 +1773,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_salary_accrual`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`salary_list_id`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1855,7 +1813,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_salary_deduct` (
 					`app_id`,
-					`ws_id`,
 					`worker_id`,
 					`sum`,
 					`about`,
@@ -1864,7 +1821,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$worker_id.",
 					".$sum.",
 					'".addslashes($about)."',
@@ -1896,7 +1852,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_salary_deduct`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`salary_list_id`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1961,7 +1916,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT COUNT(*)
 					FROM `_salary_accrual`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `salary_list_id`
 					  AND `id` IN (".$accrual_ids.")";
 			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -1970,7 +1924,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT IFNULL(SUM(`sum`), 0)
 					FROM `_salary_accrual`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id` IN (".$accrual_ids.")";
 			$accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
 		}
@@ -1978,7 +1931,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT COUNT(*)
 					FROM `_salary_deduct`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `salary_list_id`
 					  AND `id` IN (".$deduct_ids.")";
 			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -1987,7 +1939,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT IFNULL(SUM(`sum`), 0)
 					FROM `_salary_deduct`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id` IN (".$deduct_ids.")";
 			$deduct_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
 		}
@@ -1995,7 +1946,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT COUNT(*)
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `salary_list_id`
 					  AND `id` IN (".$expense_ids.")";
 			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -2004,7 +1954,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT IFNULL(SUM(`sum`), 0)
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `id` IN (".$expense_ids.")";
 			$expense_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
 		}
@@ -2015,7 +1964,6 @@ switch(@$_POST['op']) {
 		//Внесение листа выдачи
 		$sql = "INSERT INTO `_salary_list` (
 					`app_id`,
-					`ws_id`,
 					`nomer`,
 					`worker_id`,
 					`sum`,
@@ -2024,7 +1972,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					"._maxSql('_salary_list', 'nomer', 1).",
 					".$worker_id.",
 					".$sum.",
@@ -2061,7 +2008,6 @@ switch(@$_POST['op']) {
 				SET `salary_list_id`=".$insert_id.",
 					`salary_avans`=1
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `worker_id`=".$worker_id."
 				  AND `year`=".$year."
 				  AND `mon`=".$mon."
@@ -2085,7 +2031,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_salary_list`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
@@ -2140,7 +2085,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `deleted`";
 		if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
 			$sql = "DELETE FROM `_zayav_expense`
@@ -2155,7 +2099,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `sum_dolg`<0";
 		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
@@ -2166,7 +2109,6 @@ switch(@$_POST['op']) {
 					SET `year`=0,
 						`mon`=0
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `worker_id`=".$worker_id."
 					  AND !`salary_list_id`
 					  AND `year`
@@ -2181,7 +2123,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `zayav_id`
 				FROM `_zayav_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `worker_id`=".$worker_id."
 				  AND (!`year` OR !`mon`)";
 		if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
@@ -2190,7 +2131,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT `id`
 					FROM `_zayav`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND !`deleted`
 					  AND `id` IN (".$ids.")
 					  AND `sum_accrual`-`sum_pay`<=0";

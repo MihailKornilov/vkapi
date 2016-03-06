@@ -48,7 +48,6 @@ function zp_accrual() {//начисление ставки сотрудникам
 			continue;
 		$sql = "INSERT INTO `_salary_accrual` (
 					`app_id`,
-					`ws_id`,
 					`worker_id`,
 					`sum`,
 					`about`,
@@ -56,7 +55,6 @@ function zp_accrual() {//начисление ставки сотрудникам
 					`mon`
 				) VALUES (
 					".APP_ID.",
-					".$r['ws_id'].",
 					".$r['viewer_id'].",
 					".$r['salary_rate_sum'].",
 					'".$about."',
@@ -66,7 +64,6 @@ function zp_accrual() {//начисление ставки сотрудникам
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_balans(array(
-			'ws_id' => $r['ws_id'],
 			'action_id' => 19,
 			'worker_id' => $r['viewer_id'],
 			'sum' => $r['salary_rate_sum'],
@@ -74,7 +71,6 @@ function zp_accrual() {//начисление ставки сотрудникам
 		));
 
 		_history(array(
-			'ws_id' => $r['ws_id'],
 			'type_id' => 46,
 			'worker_id' => $r['viewer_id'],
 			'v1' => _cena($r['salary_rate_sum']),

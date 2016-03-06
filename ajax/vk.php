@@ -6,16 +6,16 @@ switch(@$_POST['op']) {
 
 		_globalCacheClear();
 		_globalJsValues();
-		_wsJsValues();
+		_appJsValues();
 
 		_cacheClear();//todo для удаления
 
-		//обновление значений всех параметров всех приложений
+		//обновление глобальных значений
 		$sql = "UPDATE `_setup_global` SET `value`=`value`+1";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		//обновление значений js всех организаций
-		$sql = "UPDATE `_ws` SET `js_values`=`js_values`+1";
+		//обновление значений js всех приложений по отдельности
+		$sql = "UPDATE `_app` SET `js_values`=`js_values`+1";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		jsonSuccess();
@@ -99,7 +99,7 @@ switch(@$_POST['op']) {
 
 		_globalCacheClear();
 		_cacheClear();
-		_wsJsValues();
+		_appJsValues();
 
 		jsonSuccess();
 		break;
@@ -123,24 +123,21 @@ switch(@$_POST['op']) {
 				break;
 			default: setcookie('_attached', 2, time() + 3600, '/'); exit;
 		}
-		$dir = ATTACH_PATH.'/ws_'.WS_ID;
-		if(!is_dir($dir))
-			mkdir($dir, 0777, true);
+		if(!is_dir(ATTACH_PATH))
+			mkdir(ATTACH_PATH, 0777, true);
 		$fname = time().'_'.translit(trim($f['name'])); //имя файла, сохраняемое на диск
-		if(move_uploaded_file($f['tmp_name'], $dir.'/'.$fname)) {
+		if(move_uploaded_file($f['tmp_name'], ATTACH_PATH.'/'.$fname)) {
 			$sql = "INSERT INTO `_attach` (
 						`app_id`,
-						`ws_id`,
 						`name`,
 						`size`,
 						`link`,
 						`viewer_id_add`
 					) VALUES (
 						".APP_ID.",
-						".WS_ID.",
 						'".addslashes(trim($f['name']))."',
 						".$f['size'].",
-						'".addslashes(ATTACH_HTML.'/ws_'.WS_ID.'/'.$fname)."',
+						'".addslashes(ATTACH_HTML.'/'.$fname)."',
 						".VIEWER_ID."
 					)";
 			query($sql, GLOBAL_MYSQL_CONNECT);
@@ -160,7 +157,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_attach`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -184,7 +180,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_attach`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -221,7 +216,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_attach`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -241,7 +235,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_attach`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -306,7 +299,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_note`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				ORDER BY `id` DESC
 				LIMIT 1";
@@ -384,13 +376,11 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_note_comment` (
 					`app_id`,
-					`ws_id`,
 					`note_id`,
 					`txt`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$note_id.",
 					'".addslashes($txt)."',
 					".VIEWER_ID."
@@ -402,7 +392,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_note_comment`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `note_id`=".$note_id."
 				ORDER BY `id` DESC
@@ -426,7 +415,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_note_comment`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -454,7 +442,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_note_comment`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -555,7 +542,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_image` (
 					`app_id`,
-					`ws_id`,
 					`path`,
 
 					`small_name`,
@@ -577,7 +563,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					'".addslashes('//'.DOMAIN.IMAGE_HTML.'/')."',
 
 					'".$fileName."-s.jpg',
@@ -699,7 +684,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND (`imei`='".$word."'
 				   OR `serial`='".$word."'
 				   OR `barcode`='".substr($word, 0, 12)."')";

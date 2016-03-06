@@ -690,7 +690,6 @@ if($s['zayav_id']) {
 	$sql = "SELECT *
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
-			  AND `ws_id`=".WS_ID."
 			  AND !`deleted`
 			  AND `id`=".$s['zayav_id'];
 	if(!query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -698,9 +697,8 @@ if($s['zayav_id']) {
 }
 
 $sql = "SELECT *
-		FROM `_ws`
-		WHERE `app_id`=".APP_ID."
-		  AND `id`=".WS_ID;
+		FROM `_app`
+		WHERE `id`=".APP_ID;
 $ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
 $page = 0;

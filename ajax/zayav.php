@@ -45,7 +45,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
-					`ws_id`,
 					`type_id`,
 					`client_id`,
 					`nomer`,
@@ -75,7 +74,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$type_id.",
 					".$client_id.",
 					"._maxSql('_zayav', 'nomer', 1).",
@@ -109,14 +107,12 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_status_move` (
 					`app_id`,
-					`ws_id`,
 					`zayav_id`,
 					`status_id`,
 					`srok`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$send['id'].",
 					"._zayavStatus('default').",
 					'".$srok."',
@@ -182,8 +178,8 @@ switch(@$_POST['op']) {
 		if(ZAYAV_INFO_COUNT && !$count)
 			jsonError();
 
-		$sql = "UPDATE `_zayav` SET
-					`client_id`=".$client_id.",
+		$sql = "UPDATE `_zayav`
+				SET `client_id`=".$client_id.",
 					`name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
 					`count`=".$count.",
@@ -207,21 +203,17 @@ switch(@$_POST['op']) {
 			$sql = "UPDATE `_money_accrual`
 					SET `client_id`=".$client_id."
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
 			$sql = "UPDATE `_money_income`
 					SET `client_id`=".$client_id."
-					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
 			$sql = "UPDATE `_money_refund`
 					SET `client_id`=".$client_id."
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
@@ -384,7 +376,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_status_move` (
 					`app_id`,
-					`ws_id`,
 					`zayav_id`,
 					`status_id_old`,
 					`status_id`,
@@ -393,7 +384,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$zayav_id.",
 					".$z['status_id'].",
 					".$status_id.",
@@ -508,7 +498,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT COUNT(*)
 					FROM `_vkuser`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `worker`
 					  AND `viewer_id`=".$executer_id;
 			if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -550,7 +539,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_zayav_dogovor`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `zayav_id`=".$v['zayav_id'];
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
@@ -561,7 +549,6 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_dogovor` (
 					`app_id`,
-					`ws_id`,
 					`nomer`,
 					`data_create`,
 					`zayav_id`,
@@ -579,7 +566,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$v['nomer'].",
 					'".$v['data_create']."',
 					".$v['zayav_id'].",
@@ -604,7 +590,6 @@ switch(@$_POST['op']) {
 		//Внесение начисления по договору
 		$sql = "INSERT INTO `_money_accrual` (
 					`app_id`,
-					`ws_id`,
 					`zayav_id`,
 					`client_id`,
 					`dogovor_id`,
@@ -612,7 +597,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$v['zayav_id'].",
 					".$v['client_id'].",
 					".$dog_id.",
@@ -662,7 +646,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_dogovor`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$v['id'];
 		if(!$dog = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -710,7 +693,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_income`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `dogovor_id`=".$dog['id']."
 				LIMIT 1";
@@ -904,7 +886,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `zayav_id`=".$zayav_id."
 				ORDER BY `id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -943,7 +924,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT *
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					ORDER BY `id`";
 			$arrOld = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -987,7 +967,6 @@ switch(@$_POST['op']) {
 				$sql = "INSERT INTO `_zayav_expense` (
 							`id`,
 							`app_id`,
-							`ws_id`,
 							`zayav_id`,
 							`category_id`,
 							`txt`,
@@ -1001,7 +980,6 @@ switch(@$_POST['op']) {
 						) VALUES (
 							".$r[0].",
 							".APP_ID.",
-							".WS_ID.",
 							".$zayav_id.",
 							".$r[1].",
 							'".addslashes($txt)."',
@@ -1036,7 +1014,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT *
 					FROM `_zayav_expense`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					ORDER BY `id`";
 			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -1076,14 +1053,12 @@ function _zayavProductUpdate($zayav_id, $p) {//внесение|обновление изделия для к
 
 	$sql = "INSERT INTO `_zayav_product` (
 				`app_id`,
-				`ws_id`,
 				`zayav_id`,
 				`product_id`,
 				`product_sub_id`,
 				`count`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$zayav_id.",
 				".$product_id.",
 				".$product_sub_id.",
@@ -1136,7 +1111,6 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 	if($v['avans']) {
 		$sql = "INSERT INTO `_money_income` (
 				`app_id`,
-				`ws_id`,
 				`invoice_id`,
 				`sum`,
 				`client_id`,
@@ -1145,7 +1119,6 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".WS_ID.",
 				".$v['invoice_id'].",
 				".$v['avans'].",
 				".$v['client_id'].",
