@@ -904,7 +904,7 @@ $.fn._calendar = function(o) {
 	}, o);
 
 	// если input hidden содежит дату, применение её
-	if (REGEXP_DATE.test(val)) {
+	if(REGEXP_DATE.test(val) && val != '0000-00-00') {
 		var r = val.split('-');
 		o.year = r[0];
 		o.mon = Math.abs(r[1]);
@@ -1359,13 +1359,16 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 		var html =
 			'<div id="attach-add-tab">' +
 				'<div class="_info">' +
-					'Типы файлов, которые возможно загрузить: ' +
-					'<b>xls</b>, ' +
-					'<b>xlsx</b>, ' +
-					'<b>doc</b>, ' +
-					'<b>docx</b>, ' +
-					'<b>pdf</b>, ' +
-					'<b>rtf</b>.' +
+					'<u>Поддерживаемые типы файлов:</u>' +
+					'<br />' +
+					'<br /><b>xls</b> - Microsoft Excel 97-2003' +
+					'<br /><b>xlsx</b> - Excel 2007' +
+					'<br /><b>doc</b> - Microsoft Word 97-2003' +
+					'<br /><b>docx</b> - Microsoft Word 2007' +
+					'<br /><b>rtf</b> - текстовый Word' +
+					'<br /><b>pdf</b> - Adobe Acrobat Reader' +
+					'<br /><b>jpg</b> - изображение в формате JPG' +
+					'<br /><b>png</b> - изображение в формате PNG' +
 				'</div>' +
 				'<h1>' +
 					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="attach-frame">' +

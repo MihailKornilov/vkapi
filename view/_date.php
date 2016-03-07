@@ -123,3 +123,18 @@ function _dataDog($v) {//формат даты как для договора
 	return $d[2].'/'.$d[1].'/'.$d[0];
 }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S'); }
+function _dateLost($v) {//проверка, прошла ли дата
+	$ex = explode(' ', $v);
+
+	if($ex[0] == '0000-00-00')
+		return true;
+
+	if(empty($ex[1]))
+		$ex[1] = '23:59:59';
+
+	$v = implode(' ', $ex);
+	if(strtotime($v) < strtotime(curTime()))
+		return true;
+
+	return false;
+}

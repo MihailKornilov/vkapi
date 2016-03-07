@@ -124,8 +124,17 @@
 #client-info #ci-person .adres{font-size:10px}
 #client-info #ci-person .adres tt{font-size:10px;color:#777}
 #client-info #ci-person .td-person-ed{width:35px;white-space:nowrap}
-#client-info #ci-person .poa{font-size:10px;color:#292}
+#client-info #ci-person .poa{
+	padding:2px 5px;
+	margin-top:3px;
+	font-size:10px;
+	color:#080;
+	background:#dfd;
+	line-height:1.5;
+}
+#client-info #ci-person .poa.lost{color:#700;background:#fee}
 #client-info #ci-person .poa b{font-size:10px}
+#client-info #ci-person .poa u{font-size:10px}
 
 #client-info .post{margin-left:4px;font-size:10px;color:#777}
 #client-info .added{
@@ -152,3 +161,20 @@
 #client-info #_remind-spisok{margin:10px}
 #client-info #history-spisok .result{font-weight:normal}
 #client-info #history-right{padding-bottom:180px}
+
+
+
+#client-poa .left{padding:10px}
+#client-poa .headName{margin:5px 0}
+
+.client-poa-unit{
+	margin:10px 0;
+	padding:7px 12px;
+	background:#dfd;
+}
+.client-poa-unit.lost{background:#fee}
+.client-poa-unit .name{font-size:12px}
+.client-poa-unit .tab{border-spacing:3px;margin-left:8px}
+.client-poa-unit .label{text-align:right}
+.client-poa-unit .fio{color:#555;font-weight:bold}
+

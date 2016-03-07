@@ -8,6 +8,7 @@ function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 		define($name, $key);
 	switch(@$_GET['d']) {
 		case 'info': return _clientInfo();
+		case 'poa': return _clientPoa();
 		default: return _client(_hashFilter('client'));
 	}
 }
@@ -584,6 +585,12 @@ function _clientInfo() {//вывод информации о клиенте
 	$remind = _remind_spisok(array('client_id'=>$client_id));
 	$hist = _history(array('client_id'=>$client_id,'limit'=>20));
 
+	$sql = "SELECT `poa_attach_id`
+			FROM `_client_person`
+			WHERE `client_id`=".$client_id."
+			  AND `poa_attach_id`";
+	$attach_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
 	return
 		'<script type="text/javascript">'.
 			'var CLIENT={'.
@@ -614,7 +621,7 @@ function _clientInfo() {//вывод информации о клиенте
 			'},'.
 			_service('const_js', $type_id).';'.
 		'</script>'.
-
+		_attachJs(array('id'=>$attach_ids)).
 		'<div id="client-info">'.
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
@@ -693,16 +700,26 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 	if(!_clientVal($client_id, 'org'))
 		array_shift($person);
 
+	$person = _attachValToList($person, 'poa_attach_id');
+
 	$html = '<table class="_spisok">';
 	$json = array();
 	$array = array();
 	foreach($person as $n => $r) {
+		$poaLost = _dateLost($r['poa_date_end']) ? ' lost' : '';
 		$html .=
 			'<tr><td class="n">'.($n + 1).
 				'<td>'.$r['fio'].
 					  ($r['phone'] ? ', '.$r['phone'] : '').
 					  ($r['adres'] ? '<br /><span class="adres"><tt>Адрес:</tt> '.$r['adres'].'</span>' : '').
-					  ($r['poa_nomer'] ? '<div class="poa">Доверенность номер <b>'.$r['poa_nomer'].'</b> до '.FullData($r['poa_date_end']).'.</div>' : '').
+					  ($r['poa_nomer'] ?
+						  '<div class="poa'.$poaLost.'">'.
+							  'Доверенность № <b>'.$r['poa_nomer'].'</b>.'.
+							  ($r['poa_attach_id'] ? '<br />'.$r['attach_link'] : '').
+							  '<br />Действительна до <u>'.FullData($r['poa_date_end']).'</u>.'.
+							  ($poaLost ? '<br /><b>Просрочена.</b>' : '').
+						  '</div>'
+					  : '').
 				'<td>'.($r['post'] ? '<u>'.$r['post'].'</u>' : '').
 				'<td class="td-person-ed">'.
 					'<div val="'.$r['id'].'" class="person-poa img_doc'._tooltip('Доверенность', -48).'</div>'.
@@ -720,7 +737,9 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 				'pasp_ovd:"'.addslashes($r['pasp_ovd']).'",'.
 				'pasp_data:"'.addslashes($r['pasp_data']).'",'.
 				'poa_nomer:"'.addslashes($r['poa_nomer']).'",'.
-				'poa_date_end:"'.addslashes($r['poa_date_end']).'"'.
+				'poa_date_begin:"'.addslashes($r['poa_date_begin']).'",'.
+				'poa_date_end:"'.addslashes($r['poa_date_end']).'",'.
+				'poa_attach_id:'.$r['poa_attach_id'].
 			'}';
 		$array[$r['id']] = array(
 			'fio' => utf8($r['fio']),
@@ -731,7 +750,11 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 			'pasp_nomer' => utf8($r['pasp_nomer']),
 			'pasp_adres' => utf8($r['pasp_adres']),
 			'pasp_ovd' => utf8($r['pasp_ovd']),
-			'pasp_data' => utf8($r['pasp_data'])
+			'pasp_data' => utf8($r['pasp_data']),
+			'poa_nomer' => utf8($r['poa_nomer']),
+			'poa_date_begin' => $r['poa_date_begin'],
+			'poa_date_end' => $r['poa_date_end'],
+			'poa_attach_id' => $r['poa_attach_id']
 		);
 	}
 	$html .= '</table>';
@@ -824,4 +847,72 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 }
 
 
+function _clientPoaFilter($v) {
+	return array(
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 30,
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+	);
+}
+function _clientPoa() {
+	$data = _clientPoaSpisok();
+	return
+	'<div id="client-poa">'.
+		'<table class="tabLR">'.
+			'<tr><td class="left">'.
+					'<div class="headName">Доверенности от организаций</div>'.
+					$data['spisok'].
+				'<td class="right">'.
+		'</table>'.
+	'</div>';
+}
+function _clientPoaSpisok($v=array()) {
+	$filter = clientFilter($v);
+	$filter = _filterJs('CLIENT_POA', $filter);
 
+	$cond = "`app_id`=".APP_ID."
+		 AND `poa_nomer`";
+
+	$sql = "SELECT COUNT(`id`) AS `all` FROM `_client_person` WHERE ".$cond;
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return array(
+			'all' => 0,
+			'result' => 'Доверенностей нет.',
+			'spisok' => $filter['js'].'<div class="_empty">Доверенностей нет.</div>',
+			'filter' => $filter
+		);
+
+	$send['all'] = $all;
+	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' доверенност'._end($all, 'ь', 'и', 'ей');
+	$send['filter'] = $filter;
+	$send['spisok'] = $filter['js'];
+
+	$sql = "SELECT *
+			FROM `_client_person`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT "._startLimit($filter);
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$spisok = _clientValToList($spisok);
+	$spisok = _attachValToList($spisok, 'poa_attach_id');
+
+	foreach($spisok as $r) {
+		$send['spisok'] .=
+			'<div class="client-poa-unit'.(_dateLost($r['poa_date_end']) ? ' lost' : '').'">'.
+				'<b class="name">Доверенность № '.$r['poa_nomer'].'</b>'.
+				'<table class="tab">'.
+					'<tr><td class="label">Организация:<td>'.$r['client_link'].
+					'<tr><td class="label">Доверенное лицо:<td class="fio">'.$r['fio'].
+					'<tr><td class="label">Дата выдачи:<td>'.FullData($r['poa_date_begin'], 1).
+					'<tr><td class="label">Дата окончания:<td>'.FullData($r['poa_date_end'], 1).
+					($r['poa_attach_id'] ? '<tr><td class="label">Файл:<td>'.$r['attach_link'] : '').
+				'</table>'.
+			'</div>';
+	}
+
+	 $send['spisok'] .= _next($filter + array(
+			'all' => $all
+		));
+
+	return $send;
+}

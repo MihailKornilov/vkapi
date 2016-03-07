@@ -337,11 +337,15 @@ switch(@$_POST['op']) {
 	case 'client_poa_add'://внесение информации о доверенности
 		if(!$person_id = _num($_POST['person_id']))
 			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['date_begin']))
+			jsonError();
 		if(!preg_match(REGEXP_DATE, $_POST['date_end']))
 			jsonError();
 
 		$nomer = _txt($_POST['nomer']);
+		$date_begin = $_POST['date_begin'];
 		$date_end = $_POST['date_end'];
+		$attach_id = _num($_POST['attach_id']);
 
 		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -352,18 +356,56 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_client_person`
 				SET `poa_nomer`='".addslashes($nomer)."',
-					`poa_date_end`='".$date_end."'
+					`poa_date_begin`='".$date_begin."',
+					`poa_date_end`='".$date_end."',
+					`poa_attach_id`=".$attach_id."
 				WHERE `id`=".$person_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_clientFindUpdate($r['client_id']);
-/*
+
+		if(!$r['poa_nomer'])
+			_history(array(
+				'type_id' => 94,
+				'client_id' => $r['client_id'],
+				'v1' => $nomer,
+				'v2' => FullData($date_end)
+			));
+
+		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
+		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		jsonSuccess($send);
+		break;
+	case 'client_poa_del'://удаление доверенности
+		if(!$person_id = _num($_POST['person_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(!$r['poa_nomer'])
+			jsonError();
+
+		if(!$c = _clientQuery($r['client_id']))
+			jsonError();
+
+		$sql = "UPDATE `_client_person`
+				SET `poa_nomer`='',
+					`poa_date_begin`='0000-00-00',
+					`poa_date_end`='0000-00-00',
+					`poa_attach_id`=0
+				WHERE `id`=".$person_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_clientFindUpdate($r['client_id']);
+
 		_history(array(
-			'type_id' => 7,
+			'type_id' => 95,
 			'client_id' => $r['client_id'],
-			'v1' => $r['fio']
+			'v1' => $r['poa_nomer']
 		));
-*/
+
 		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
 		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
 		jsonSuccess($send);
@@ -432,6 +474,7 @@ function _clientPersonInsert($v, $clientNew=false) {//внесение или обновление до
 
 	$sql = "INSERT INTO `_client_person` (
 				`id`,
+				`app_id`,
 				`client_id`,
 				`fio`,
 				`phone`,
@@ -444,6 +487,7 @@ function _clientPersonInsert($v, $clientNew=false) {//внесение или обновление до
 				`pasp_data`
 			) VALUES (
 				".$person_id.",
+				".APP_ID.",
 				".$client_id.",
 				'".addslashes($fio)."',
 				'".addslashes($phone)."',

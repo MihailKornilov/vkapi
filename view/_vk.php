@@ -506,11 +506,13 @@ function _menuMain() {//список ссылок главной страницы
 		if($r['p'] == 'main')
 			continue;
 
+		if($r['p'] == 'client')
+			$r['about'] .= '<a href="'.URL.'&p=client&d=poa">ƒоверенности</a>';
 		if($r['p'] == 'zayav')
 			$r['about'] .= _menuMainZayav();
 		$send .=
 		'<div class="mu">'.
-			'<a href="'.URL.'&p='.$r['p'].'">'.$r['name'].'</a>'.
+			'<a href="'.URL.'&p='.$r['p'].'" class="name">'.$r['name'].'</a>'.
 			'<div class="about">'.$r['about'].'</div>'.
 		'</div>';
 	}

@@ -120,6 +120,8 @@ switch(@$_POST['op']) {
 			case 'application/vnd.ms-excel':    //xls
 			case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':       //xlsx
 			case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': //docx
+			case 'image/jpeg':
+			case 'image/png':
 				break;
 			default: setcookie('_attached', 2, time() + 3600, '/'); exit;
 		}
@@ -496,7 +498,7 @@ switch(@$_POST['op']) {
 		if($f['size'] > 15728640)
 			_imageCookie(4);
 
-		switch ($f['type']) {
+		switch($f['type']) {
 			case 'image/jpeg': $im = @imagecreatefromjpeg($f['tmp_name']); break;
 			case 'image/png': $im = @imagecreatefrompng($f['tmp_name']); break;
 			case 'image/gif': $im = @imagecreatefromgif($f['tmp_name']); break;

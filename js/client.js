@@ -472,29 +472,47 @@ $(document)
 			html = '<table class="_dialog-tab">' +
 					'<tr><td class="label w125">Организация:<td><b>' + CLIENT.name + '</b>' +
 					'<tr><td class="label">Доверенное лицо:<td>' + person.fio +
-					'<tr><td class="label">Номер доверенности:<td><input type="text" id="nomer" class="money" value="' + person.nomer + '" />' +
-					'<tr><td class="label">Дата окончания:<td><input type="hidden" id="date_end" value="' + person.nomer + '" />' +
+					'<tr><td class="label">Номер доверенности:<td><input type="text" id="nomer" class="money" value="' + person.poa_nomer + '" />' +
+					'<tr><td class="label">Дата выдачи:<td><input type="hidden" id="date_begin" value="' + person.poa_date_begin + '" />' +
+					'<tr><td class="label">Дата окончания:<td><input type="hidden" id="date_end" value="' + person.poa_date_end + '" />' +
+					'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + person.poa_attach_id + '" />' +
+					'<tr><td><td>' +
+					'<tr><td><td><input type="hidden" id="poa-del" />' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
 				width:400,
-				head:'Внесение информации о доверености',
+				head:'Информация о доверенности',
 				content:html,
+				butSubmit:'Сохранить',
 				submit:submit
 			});
 
 		$('#nomer').focus();
-		$('#date_end')._calendar();
+		$('#date_begin')._calendar({lost:1});
+		$('#date_end')._calendar({lost:1});
+		$('#attach_id-add')._attach();
+		if(person.poa_nomer)
+			$('#poa-del')._check({
+				light:1,
+				name:'удалить доверенность',
+				func:function(v) {
+					dialog.butSubmit(v ? 'Удалить доверенность' : 'Сохранить');
+				}
+			});
 
 		function submit() {
-			var send = {
-				op:'client_poa_add',
-				person_id:id,
-				nomer:$('#nomer').val(),
-				date_end:$('#date_end').val()
-			};
-			if(!send.nomer) {
-				dialog.err('Не номер доверенности');
+			var del = _num($('#poa-del').val()),
+				send = {
+					op:'client_poa_' + (del ? 'del' : 'add'),
+					person_id:id,
+					nomer:$('#nomer').val(),
+					date_begin:$('#date_begin').val(),
+					date_end:$('#date_end').val(),
+					attach_id:$('#attach_id-add').val()
+				};
+			if(!send.nomer && !del) {
+				dialog.err('Не указан номер доверенности');
 				$('#nomer').focus();
 				return;
 			}

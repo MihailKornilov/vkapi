@@ -1,11 +1,11 @@
 <?php
-function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
+function _attachValToList($arr, $keyName='attach_id') {//вставка ссылок на файлы в массив по attach_id
 	$ids = array();
 	$arrIds = array();
 	foreach($arr as $key => $r)
-		if(!empty($r['attach_id'])) {
-			$ids[$r['attach_id']] = 1;
-			$arrIds[$r['attach_id']][] = $key;
+		if(!empty($r[$keyName])) {
+			$ids[$r[$keyName]] = 1;
+			$arrIds[$r[$keyName]][] = $key;
 		}
 	if(empty($ids))
 		return $arr;
@@ -28,7 +28,7 @@ function _attachValToList($arr) {//вставка ссылок на файлы в массив по attach_id
 }
 function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 	$v = array(
-		'id' => _num(@$v['id']),
+		'id' => _ids(@$v['id']),
 		'array' => _num(@$v['array']), //передача списка массивом через ajax
 		'zayav_id' => _num(@$v['zayav_id'])
 	);
@@ -37,7 +37,7 @@ function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID.
 			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
-			($v['id'] ? " AND `id`=".$v['id'] : '');
+			($v['id'] ? " AND `id` IN(".$v['id'].")" : '');
 	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 
 	$send = array();
