@@ -7,7 +7,6 @@ header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CN
 
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
-_getVkUser();           //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода
 _setup_global();
 _pinCheck();
 _hashRead();
