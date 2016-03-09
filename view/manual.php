@@ -110,7 +110,7 @@ function _manualMenu() {//разделы основного меню
 	return
 	'<div id="_menu">'.
 		$link.
-		'<a class="back" href="'.URL.'">'._app('name').'</a>'.
+		'<a class="back" href="'.URL.'">'._app('app_name').'</a>'.
 	'</div>';
 }
 function _manual_main() {//главная страница
