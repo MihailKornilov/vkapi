@@ -328,6 +328,9 @@ function _manual_page_bottom($id) {//отображение кнопок для ответа, либо заметок
 	'</div>';
 }
 function _manual_answer($id) {
+	if(SA)
+		return 'answered';
+
 	$sql = "SELECT *
 			FROM `_manual_answer`
 			WHERE `manual_id`=".$id."
@@ -341,6 +344,9 @@ function _manual_answer($id) {
 	return $r['val'] > 2 ? 'answered' : '';
 }
 function _manual_answer_insert($manual_id, $val=1) {
+	if(SA)
+		return;
+
 	$sql = "SELECT `id`
 			FROM `_manual_answer`
 			WHERE `manual_id`=".$manual_id."
