@@ -1566,6 +1566,27 @@ switch(@$_POST['op']) {
 		$send['t'] = utf8(invoice_transfer_spisok());
 		jsonSuccess($send);
 		break;
+	case 'invoice_transfer_edit'://редактирование комментария перевода
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		$sql = "SELECT *
+				FROM `_money_invoice_transfer`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice_transfer` SET `about`='".addslashes($about)."' WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['t'] = utf8(invoice_transfer_spisok());
+		jsonSuccess($send);
+		break;
 	case 'invoice_transfer_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();

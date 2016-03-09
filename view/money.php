@@ -1392,7 +1392,7 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 				'<th>Cумма'.
 				'<th>Со счёта'.
 				'<th>На счёт'.
-				'<th>Подробно'.
+				'<th>Комментарий'.
 				'<th>Дата'.
 				'<th>';
 	while($r = mysql_fetch_assoc($q)) {
@@ -1419,14 +1419,19 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 			$confirm = $r['about'] ? '<br />' : '';
 			$confirm .= '<span class="confirm'.$class.'">'.$ne.'подтверждено</span>'.$button;
 		}
+		$val =  $r['id'].'###'.
+				$r['invoice_id_from'].'###'.
+				$r['invoice_id_to'].'###'.
+				_cena($r['sum']).'###'.
+				addslashes($r['about']);
 		$send .=
-			'<tr>'.
+			'<tr val="'.$val.'">'.
 				'<td class="sum">'._sumSpace($r['sum']).
 				'<td><span class="type">'._invoice($r['invoice_id_from']).'</span>'.
 				'<td><span class="type">'._invoice($r['invoice_id_to']).'</span>'.
 				'<td class="about">'.$r['about'].$confirm.
 				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'._iconDel($r);
+				'<td class="ed">'._iconEdit($r)._iconDel($r);
 	}
 
 	$send .= _next($filter + array(

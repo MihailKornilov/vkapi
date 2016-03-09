@@ -670,38 +670,48 @@ var _accrualAdd = function(o) {
 			}, 'json');
 		}
 	},
-	_invoiceTransfer = function(from) {
+	_invoiceTransfer = function(o) {
+		o = $.extend({
+			id:0,
+			from:0,
+			to:0,
+			sum:'',
+			about:''
+		}, o);
 		var t = $(this),
 			html = '<table class="_dialog-tab">' +
-					'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + from + '" />' +
-					'<tr><td class="label">На счёт:<td><input type="hidden" id="to" />' +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
-					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+					'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + o.from + '" />' +
+					'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="' + o.to + '" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money"' + (o.id ? ' disabled' : '') + ' value="' + o.sum + '" /> руб. ' +
+					'<tr><td class="label">Комментарий:<td><input type="text" id="about" value="' + o.about + '" />' +
 				'</table>',
 			dialog = _dialog({
 				head:'Перевод между счетами',
 				content:html,
-				butSubmit:'Перевести',
+				butSubmit:o.id ? 'Сохранить' : 'Перевести',
 				submit:submit
 			});
 		$('#from')._select({
 			width:218,
 			title0:'Не выбран',
+			disabled:o.id,
 			spisok:INVOICE_SPISOK
 		});
 		$('#to')._select({
 			width:218,
 			title0:'Не выбран',
+			disabled:o.id,
 			spisok:INVOICE_SPISOK,
 			func:function() {
 				$('#sum').focus();
 			}
 		});
-		$('#sum').focus();
+		$(o.id ? '#about' : '#sum').focus();
 		$('#sum,#about').keyEnter(submit);
 		function submit() {
 			var send = {
-				op:'invoice_transfer_add',
+				op:'invoice_transfer_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
 				from:_num($('#from').val()),
 				to:_num($('#to').val()),
 				sum:_cena($('#sum').val()),
@@ -2001,7 +2011,7 @@ $(document)
 		$('#invoice-setup-tab .u').click(function() {
 			dialog.close();
 			switch(_num($(this).attr('val'))) {
-				case 1: _invoiceTransfer(id); break;
+				case 1: _invoiceTransfer({from:id}); break;
 				case 3: _invoiceBalansSet(id); break;
 				case 4: _invoiceReset(id); break;
 				case 5:
@@ -2020,6 +2030,29 @@ $(document)
 			}
 		});
 	})
+	.on('click', '#transfer-spisok .img_edit', function() {
+		var t = $(this),
+			p = _parent(t),
+			v = p.attr('val').split('###');
+		_invoiceTransfer({
+			id:v[0],
+			from:v[1],
+			to:v[2],
+			sum:v[3],
+			about:v[4]
+		});
+	})
+	.on('click', '#transfer-spisok .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'перевода между счетами',
+			op:'invoice_transfer_del',
+			func:function(res) {
+				$('#invoice-spisok').html(res.i);
+				$('#transfer-spisok').html(res.t);
+			}
+		});
+	})
 	.on('click', '#transfer-spisok ._next', function() {
 		var next = $(this),
 			send = {
@@ -2035,17 +2068,6 @@ $(document)
 			else
 				next.removeClass('busy');
 		}, 'json');
-	})
-	.on('click', '#transfer-spisok .img_del', function() {
-		_dialogDel({
-			id:$(this).attr('val'),
-			head:'перевода между счетами',
-			op:'invoice_transfer_del',
-			func:function(res) {
-				$('#invoice-spisok').html(res.i);
-				$('#transfer-spisok').html(res.t);
-			}
-		});
 	})
 	.on('click', '#transfer-spisok .vk.small', function() {
 		var t = $(this),
