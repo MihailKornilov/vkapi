@@ -955,9 +955,9 @@ var _accrualAdd = function(o) {
 			var send = {
 				op:'salary_balans_set',
 				worker_id:SALARY.worker_id,
-				sum:_cena($('#sum').val(), 1)
+				sum:$('#sum').val()
 			};
-			if(!send.sum) {
+			if(!_cena(send.sum, 1) && send.sum != 0) {
 				dialog.err('Некорректно указана сумма');
 				$('#sum').focus();
 				return;
