@@ -402,6 +402,9 @@ function _manual_new_spisok() {
 }
 
 function _menuInfoTop() {//информационное сообщение сверху страницы
+	if(SA)
+		return '';
+
 	$sql = "SELECT *
 			FROM `_manual`
 			WHERE `part_id`=1
