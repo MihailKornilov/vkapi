@@ -126,7 +126,7 @@ var _zayavSpisok = function(v, id) {
 					'<tr' + (ZAYAV_INFO_ABOUT ?   '' : ' class="dn"') + '><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr' + (ZAYAV_INFO_ADRES ?   '' : ' class="dn"') + '>' +
 						'<td class="label">Адрес:<td>' +
-							'<input type="text" id="adres" value="' + o.adres + '" />' +
+							'<input type="text" id="zayav-adres" value="' + o.adres + '" />' +
 							'<input type="hidden" id="client-adres" />' +
 					'<tr' + (ZAYAV_INFO_DEVICE ?  '' : ' class="dn"') + '>' +
 						'<td class="label topi">Устройство:' +
@@ -170,8 +170,8 @@ var _zayavSpisok = function(v, id) {
 				add:1,
 				func:function(uid, id, item) {
 					o.client_adres = uid ? item.adres : '';
-					if($('#client-adres').val() == 1)
-						$('#adres').val(o.client_adres);
+					if(_num($('#client-adres').val()))
+						$('#zayav-adres').val(o.client_adres);
 				}
 			});
 		$('#name').focus();
@@ -180,7 +180,7 @@ var _zayavSpisok = function(v, id) {
 
 		$('#client-adres')._check({
 			func:function(v) {
-				$('#adres').val(v ? o.client_adres : '');
+				$('#zayav-adres').val(v ? o.client_adres : '');
 			}
 		});
 		$('#client-adres_check').vkHint({
@@ -190,7 +190,7 @@ var _zayavSpisok = function(v, id) {
 			indent:60,
 			delayShow:500
 		});
-		$('#adres').keyup(function() {
+		$('#zayav-adres').keyup(function() {
 			$('#client-adres')._check(0);
 		});
 
@@ -230,7 +230,7 @@ var _zayavSpisok = function(v, id) {
 					product_sub_id:$('#item-sub').val(),
 					product_count:$('#item-count').val(),
 					count:_num($('#count').val()),
-					adres:$('#adres').val(),
+					adres:$('#zayav-adres').val(),
 					device_id:_num($('#za-dev_device').val()),
 					vendor_id:_num($('#za-dev_vendor').val()),
 					model_id:_num($('#za-dev_model').val()),

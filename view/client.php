@@ -492,6 +492,34 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 
 	return $send;
 }
+function _clientDelAccess($client_id) {//разрешение на удаление клиента
+	//Наличие заявок
+	$sql = "SELECT COUNT(*) FROM `_zayav` WHERE !`deleted` AND `client_id`=".$client_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	//Наличие начислений
+	$sql = "SELECT COUNT(*) FROM `_money_accrual` WHERE !`deleted` AND `client_id`=".$client_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	//Наличие счетов на оплату
+	$sql = "SELECT COUNT(*) FROM `_schet` WHERE !`deleted` AND `client_id`=".$client_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	//Наличие платежей
+	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `client_id`=".$client_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	//Наличие возвратов
+	$sql = "SELECT COUNT(*) FROM `_money_refund` WHERE !`deleted` AND `client_id`=".$client_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return false;
+
+	return true;
+}
 
 function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клиенте
 	$sql = "SELECT *
@@ -640,7 +668,7 @@ function _clientInfo() {//вывод информации о клиенте
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
 							'<a id="client-edit">Редактировать</a>'.
-							'<a id="client-del">Удалить клиента</a>'.
+							(_clientDelAccess($client_id) ? '<a id="client-del">Удалить клиента</a>' : '').
 						'</div>'.
 			'</table>'.
 

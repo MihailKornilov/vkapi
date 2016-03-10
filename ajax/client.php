@@ -283,11 +283,13 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'client_del':
-		jsonError();//todo доделать удаление клиента
 		if(!$client_id = _num($_POST['id']))
 			jsonError();
 
 		if(!$r = _clientQuery($client_id))
+			jsonError();
+
+		if(!_clientDelAccess($client_id))
 			jsonError();
 
 		$sql = "UPDATE `_client` SET `deleted`=1 WHERE `id`=".$client_id;

@@ -96,37 +96,39 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 			if(category_id == 1 && !fio) {
 				dialog.err('Не указаны ФИО');
 				$('#fio').focus();
-			} else if(category_id > 1 && !send.org_name) {
+				return;
+			}
+			if(category_id > 1 && !send.org_name) {
 				dialog.err('Не указано название организации');
 				$('#org_name').focus();
-			} else {
-				if(category_id == 1) // если выбрано частное лицо, то помещается в доверенные лица на первое место
-					send.person.unshift({
-						fio:fio,
-						phone:$('#phone').val(),
-						adres:$('#adres').val(),
-						post:'',
-						pasp_seria:$('#pasp_seria').val(),
-						pasp_nomer:$('#pasp_nomer').val(),
-						pasp_adres:$('#pasp_adres').val(),
-						pasp_ovd:$('#pasp_ovd').val(),
-						pasp_data:$('#pasp_data').val()
-					});
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новый клиент внесён.');
-//						if(typeof callback == 'function')
-//							callback(res);
-//						else
-							document.location.href = URL + '&p=client&d=info&id=' + res.uid;
-					} else {
-						dialog.abort();
-						send.person.shift();
-					}
-				}, 'json');
+				return;
 			}
+			if(category_id == 1) // если выбрано частное лицо, то помещается в доверенные лица на первое место
+				send.person.unshift({
+					fio:fio,
+					phone:$('#phone').val(),
+					adres:$('#adres').val(),
+					post:'',
+					pasp_seria:$('#pasp_seria').val(),
+					pasp_nomer:$('#pasp_nomer').val(),
+					pasp_adres:$('#pasp_adres').val(),
+					pasp_ovd:$('#pasp_ovd').val(),
+					pasp_data:$('#pasp_data').val()
+				});
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Новый клиент внесён.');
+					if(typeof callback == 'function')
+						callback(res);
+					else
+						document.location.href = URL + '&p=client&d=info&id=' + res.uid;
+				} else {
+					dialog.abort();
+					send.person.shift();
+				}
+			}, 'json');
 		}
 	},
 	clientEdit = function() {
@@ -352,10 +354,8 @@ $.fn.clientSel = function(o) {
 	if(o.add)
 		o.add = function() {
 			clientAdd(function(res) {
-				var arr = [];
-				arr.push(res);
-				t._select(arr);
-				t._select(res.uid);
+				o.client_id = res.uid;
+				clientsGet();
 			});
 		};
 
@@ -384,8 +384,20 @@ $.fn.clientSel = function(o) {
 			t._select('cancel');
 			if(res.success) {
 				t._select(res.spisok);
-				if(o.client_id) {
+				if(_num(o.client_id)) {
 					t._select(o.client_id);
+
+					//todo переделать
+					var item;
+					for(var n = 0; n < res.spisok.length; n++) {
+						var sp = res.spisok[n];
+						if(sp.uid == o.client_id) {
+							item = sp;
+							break;
+						}
+					}
+
+					o.func(o.client_id, '', item);
 					o.client_id = 0;
 				}
 			}
