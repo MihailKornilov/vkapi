@@ -931,7 +931,7 @@ function _zayav_info() {
 	$z['sum_pay'] = _cena($z['sum_pay']);
 
 	//разница начислений и платежей
-	$sum_diff = abs($z['sum_dolg']) ? ($z['sum_dolg'] < 0 ? 'недоплачено ' : 'предоплачено ').abs($z['sum_dolg']).' руб.' : '';
+	$sum_diff = abs($z['sum_dolg']) ? ($z['sum_dolg'] < 0 ? 'нед' : 'пред').'оплачено <b>'._sumSpace(abs($z['sum_dolg'])).'</b> руб.' : '';
 
 	return
 	_attachJs(array('zayav_id'=>$zayav_id)).
@@ -1022,9 +1022,9 @@ function _zayav_info() {
 						'<tr><td class="label">Документ:<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
 					: '').
 
-   ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._cena($z['sum_accrual']).'</b> руб.' : '').
+   ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._sumSpace($z['sum_accrual']).'</b> руб.' : '').
 	   ($z['sum_pay'] ? '<tr><td class="label">Оплачено:'.
-							'<td><b class="pay">'._cena($z['sum_pay']).'</b> руб.'.
+							'<td><b class="pay">'._sumSpace($z['sum_pay']).'</b> руб.'.
 				   ($sum_diff ? '<span id="sum-diff">'.$sum_diff.'</span>' : '')
 		: '').
 					'</table>'.
@@ -1750,7 +1750,7 @@ function _zayav_tovar_several($z) {//список нескольких товаров для информации о 
 
 	$send .= '</table>';
 
-	return 	'<tr><td class="label top">'.$z['zpu'][11]['name'].':<td>'.$send;
+	return 	'<tr><td class="label topi">'.$z['zpu'][11]['name'].':<td>'.$send;
 }
 
 
@@ -2106,7 +2106,7 @@ function _zayav_expense($zayav_id) {//вставка расходов по заявке в информацию о 
 		_zayav_bonus_spisok($zayav_id).
 	'</div>';
 }
-function _zayav_expense_spisok($zayav_id) {//вставка расходов по заявке в информацию о заявке
+function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по заявке в информацию о заявке
 	$sql = "SELECT *
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
@@ -2132,7 +2132,7 @@ function _zayav_expense_spisok($zayav_id) {//вставка расходов по заявке в информ
 	$send =
 		'<div class="headBlue but">'.
 			'Расходы по заявке'.
-			'<button class="vk small">Добавить расход</button>'.
+			'<button class="vk small" onclick="_zayavExpenseEdit()">Добавить расход</button>'.
 		'</div>'.
 		'<h1>'.($accrual_sum ? 'Общая сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Начислений нет.').'</h1>';
 
@@ -2162,17 +2162,17 @@ function _zayav_expense_spisok($zayav_id) {//вставка расходов по заявке в информ
 		}
 
 		$send .=
-			'<tr class="l">'.
+			'<tr class="l'.($insert_id == $r['id'] ? ' inserted' : '').'">'.
 				'<td class="name">'.$ze['name'].
 				'<td>'.$dop.
 				'<td class="sum">'.
-					'<em>'.$sum.' р.</em>'.
+					'<em>'._sumSpace($sum).' р.</em>'.
 					'<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>';
 	}
 
 	$ost = $accrual_sum - $expense_sum;
-	$send .= '<tr><td colspan="2" class="itog">Итог:<td class="sum"><b>'.$expense_sum.'</b> р.'.
-			 '<tr><td colspan="2" class="itog">Остаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'.$ost.' р.'.
+	$send .= '<tr><td colspan="2" class="r">Итог:<td class="sum"><b>'._sumSpace($expense_sum).'</b> р.'.
+			 '<tr><td colspan="2" class="r">Остаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'._sumSpace($ost).' р.'.
 			'</table>';
 
 	return $send;

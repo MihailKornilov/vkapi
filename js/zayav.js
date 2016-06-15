@@ -676,7 +676,9 @@ var _zayavSpisok = function(v, id) {
 	},
 
 	_zayavExpenseEdit = function () {//внесение/редактирование расхода по заявке
-		var html =
+		var prev = $('#_zayav-expense table'),
+			html =
+			(prev.length ? '<table id="ze-prev">' + prev.html() + '</table>' : '') +
 			'<table class="bs10 w100p">' +
 				'<tr><td class="label r top w100">Заявка:<td><b>' + ZI.name + '</b>' +
 				'<tr><td class="label r">Категория:<td><input type="hidden" id="ze-cat" />' +
@@ -686,10 +688,15 @@ var _zayavSpisok = function(v, id) {
 				'<tr><td class="label r">Сумма:<td><input type="text" id="ze-sum" class="money" /> руб.' +
 			'</table>',
 			dialog = _dialog({
+				top:30,
 				width:450,
 				head:'Новый расход заявки',
 				content:html,
-				submit:submit
+				butCancel:'Закрыть',
+				submit:submit,
+				cancel:function() {
+					$('.inserted').removeClass('inserted');
+				}
 			});
 
 		$('#ze-cat')._select({
@@ -789,8 +796,9 @@ var _zayavSpisok = function(v, id) {
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
-					_msg('Сохранено');
+					//_msg();
 					$('#_zayav-expense').html(res.html);
+					_zayavExpenseEdit();
 				} else
 					dialog.abort();
 			}, 'json');
@@ -1371,7 +1379,6 @@ $(document)
 		}
 	})
 
-	.on('click', '#_zayav-expense .vk', _zayavExpenseEdit)
 	.on('click', '#_zayav-expense .img_del', function() {
 		var t = $(this);
 		_dialogDel({

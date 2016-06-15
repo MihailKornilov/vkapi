@@ -465,15 +465,32 @@
 #_zayav-expense .l:hover{background-color:#ffffe8}
 #_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px;line-height:13px}
 #_zayav-expense .name{width:30px;white-space:nowrap;font-size:10px}
-#_zayav-expense .sum {width: 50px;text-align:right;cursor:default;position:relative}
+#_zayav-expense .sum {
+	width:50px;
+	text-align:right;
+	cursor:default;
+	position:relative;
+	white-space:nowrap;
+}
+#_zayav-expense .sum{font:11px arial}
+#_zayav-expense .sum b{font:bold 11px arial}
+
 #_zayav-expense em{font-size:10px;white-space:nowrap}
 #_zayav-expense tr:hover em{color:#ddd}
 #_zayav-expense .img_del{position:absolute;right:1px}
 #_zayav-expense tr:not(:hover) .img_del{display:none}
-#_zayav-expense .itog{text-align:right}
 #_zayav-expense .plus{background-color:#dfd;color:#272}
 #_zayav-expense .minus{background-color:#fdd;color:#922}
 
+/* список расходов в диалоговом окне */
+#ze-prev{width:100%;border-collapse:collapse;margin-bottom:20px}
+#ze-prev *{font-size:10px}
+#ze-prev tr:not(.l){display:none}
+#ze-prev tr.inserted{background:#ffc}
+#ze-prev td{border:#dee4e8 solid 1px;padding:2px 4px}
+#ze-prev .name{width:30px;white-space:nowrap;font-size:10px}
+#ze-prev .sum {width:60px;text-align:right;cursor:default;position:relative}
+#ze-prev .img_del{display:none}
 
 
 

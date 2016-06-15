@@ -16,7 +16,6 @@ switch(@$_POST['op']) {
 					`nomer`,
 
 					`client_id`,
-					`name`,
 					`about`,
 					`count`,
 					`adres`,
@@ -42,7 +41,6 @@ switch(@$_POST['op']) {
 					"._maxSql('_zayav', 'nomer', 1).",
 
 					".$v['client_id'].",
-					'".addslashes($v['name'])."',
 					'".addslashes($v['about'])."',
 					".$v['count'].",
 					'".addslashes($v['adres'])."',
@@ -81,7 +79,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_zayavNameUpdate($send['id']);
+		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarUpdate($send['id']);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождени€ товара
 
@@ -142,7 +140,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav` SET ".$v['update']." WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_zayavNameUpdate($zayav_id);
+		_zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
 
 		if($changes =
@@ -897,8 +895,9 @@ switch(@$_POST['op']) {
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_zayav_expense', GLOBAL_MYSQL_CONNECT);
 
-		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));
+		$send['html'] = utf8(_zayav_expense_spisok($zayav_id, $insert_id));
 		jsonSuccess($send);
 		break;
 	case 'zayav_expense_del'://удаление расхода по за€вке
@@ -1204,7 +1203,7 @@ switch(@$_POST['op']) {
 }
 
 function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности полей при внесении/редактировании за€вки
-	$zpu = _zayavPole($service_id, 1); //Zayav Pole Use
+	$zpu = _zayavPole($service_id); //Zayav Pole Use
 
 	$v = array();
 	$upd = array();   // дл€ редактировани€ за€вки
@@ -1217,7 +1216,6 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 	if($u = @$zpu[1]) {
 		if($u['require'] && !$v['name'])
 			jsonError('Ќе заполнено поле '.$u['name']);
-		$upd[] = "`name`='".addslashes($v['name'])."'";
 	}
 
 	$v['about'] = _txt(@$_POST['about']);
@@ -1316,24 +1314,29 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 	$v['zpu'] = $zpu;
 	return $v;
 }
-function _zayavNameUpdate($zayav_id) {//обновление названи€ за€вки и строки дл€ поиска
+function _zayavNameUpdate($zayav_id, $v) {//обновление названи€ за€вки и строки дл€ поиска
 	$z = _zayavQuery($zayav_id);
 
-	$name = $z['name'];
+	$zpu = $v['zpu'];
 
-	if(@$_POST['tovar']) {
-		$ex = explode(',', $_POST['tovar']);
-		$ex = explode(':', $ex[0]);
-		$tovar_id = $ex[0];
+	$name = '';
 
-		$sql = "SELECT `find`
-				FROM `_tovar`
-				WHERE `id`=".$tovar_id;
-		$name = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	if(isset($zpu[1])) {
+		$name = $v['name'];
+	} elseif(isset($zpu[4])) {
+		if(@$_POST['tovar']) {
+			$ex = explode(',', $_POST['tovar']);
+			$ex = explode(':', $ex[0]);
+			$tovar_id = $ex[0];
+	
+			$sql = "SELECT `find`
+					FROM `_tovar`
+					WHERE `id`=".$tovar_id;
+			$name = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		}
+	} elseif(isset($zpu[23])) {
+		$name = ' артриджи';
 	}
-
-//	if(ZAYAV_INFO_CARTRIDGE)
-//		$name = ' артриджи';
 
 	if(!$name)
 		$name = '«а€вка #'.$z['nomer'];
