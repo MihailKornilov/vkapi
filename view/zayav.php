@@ -1524,7 +1524,7 @@ function _zayavInfoTovar($z) {//информация о товаре
 	return
 	'<div id="zayav-tovar">'.
 		'<div class="center">'._zayavImg($z['id'], $tovar_id).'</div>'.
-		'<div class="headBlue">Информация об изделии</div>'.
+		'<div class="headBlue">Информация о товаре</div>'.
 
 		'<div id="content">'.
 			'<div id="tovar-name">'.

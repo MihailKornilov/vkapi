@@ -1303,7 +1303,7 @@ $(document)
 
 			dialog = _dialog({
 				width:420,
-				head:'Изменение местонахождения изделия',
+				head:'Изменение местонахождения товара',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit

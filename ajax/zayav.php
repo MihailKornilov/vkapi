@@ -83,7 +83,7 @@ switch(@$_POST['op']) {
 
 		_zayavNameUpdate($send['id']);
 		_zayavTovarUpdate($send['id']);
-		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения изделия
+		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
 
 		_note(array(
 			'add' => 1,

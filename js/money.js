@@ -69,8 +69,8 @@ var _accrualAdd = function(o) {
 				(place ?
 					'<div id="place-div">' +
 						'<table class="tab">' +
-							'<tr><td class="label r">Текущее местонахождение изделия:<td><b>' + _toAss(ZAYAV_TOVAR_PLACE_SPISOK)[ZI.place_id] + '</b>' +
-							'<tr><td class="label topi">Новое местонахождение изделия:<td><input type="hidden" id="tovar-place" />' +
+							'<tr><td class="label r">Текущее местонахождение:<td><b>' + _toAss(ZAYAV_TOVAR_PLACE_SPISOK)[ZI.place_id] + '</b>' +
+							'<tr><td class="label topi">Новое местонахождение:<td><input type="hidden" id="tovar-place" />' +
 						'</table>' +
 					'</div>'
 				: '') +
