@@ -21,8 +21,6 @@
 #client-add-tab #person-pasp_data
 	{width:180px}
 
-#client-add-tab #person-head{margin:15px 0 10px 50px;color:#555;font-weight:bold}
-#client-add-tab #person-list{margin:0 0 5px 50px}
 
 /* добавление доверенного лица при внесении нового клиента и в информации о клиенте */
 #client-add-tab #person-add {
@@ -40,7 +38,7 @@
 #client-person-tab textarea{width:220px;height:30px}
 
 /* Список клиентов */
-#client #buttonCreate{width:135px}
+#client .vk{width:135px}
 #client #find-tab{
 	background-color:#F7F7F7;
 	border-spacing:9px;
@@ -89,21 +87,29 @@
 #client ._next{margin:0 10px}
 #client ._empty{margin:10px}
 
-
+/* Текущая сумма долга клиентов - показывается в верхнем правом углу на всех страницах */
+#client-dolg-sum{
+	float:right;
+	color:#777;
+	margin-top:5px;
+	cursor:default;
+}
+#client-dolg-sum b{color:#a22}
 
 
 /* Информация о клиенте */
 #client-info .left{padding-bottom:10px}
 #client-info #client-del{color:#e00}
+#client-info #ci-cat{color:#999;margin:10px 0 0 20px}
 #client-info #ci-name{
 	color:#31618C;
 	font-size:12px;
 	font-weight:bold;
-	margin:15px 5px 5px 20px;
+	margin:3px 5px 5px 20px;
 }
 #client-info .ci-balans{
 	float:right;
-	margin:11px 8px 0 0;
+	margin:22px 8px 0 0;
 	font-size:12px;
 	font-weight:bold;
 	background-color:#ffa;
@@ -143,6 +149,7 @@
 	text-align:right;
 	margin:20px 10px 0 0;
 }
+#client-info .added u{font-size:10px}
 
 #client-info .right{width:140px;height:auto}
 #client-info #dopLinks{border-top:#dae1e8 solid 1px}
@@ -178,3 +185,11 @@
 .client-poa-unit .label{text-align:right}
 .client-poa-unit .fio{color:#555;font-weight:bold}
 
+
+
+
+#client-from{margin:10px;min-height:400px}
+#client-from .headName{margin:0}
+#client-from ._spisok{width:400px;margin-top:10px}
+#client-from .name{width:220px}
+#client-from #cf-setup{margin-top:10px}

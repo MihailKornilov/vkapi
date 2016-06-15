@@ -1,7 +1,10 @@
+.path #app-id{float:right;color:#999;cursor:default}
+
 .sa-tab{border-spacing:10px}
 .sa-tab .label{text-align:right}
 .sa-tab #name{width:250px}
 .sa-tab textarea{width:250px}
+.sa-tab ._info{white-space:pre-line}
 
 #sa-index{padding:15px 0 100px 20px}
 #sa-index h1{font-weight:bold}
@@ -75,22 +78,52 @@
 
 
 /* заявки */
-#sa-zayav tt{float:right;margin:0 10px}
-#sa-zayav #dopLinks{margin:-5px 20px 0}
-#sa-zayav ._spisok{width:auto}
-#sa-zayav #pole-spisok{margin:10px 20px}
-#sa-zayav .id{text-align:right;color:#777}
-#sa-zayav .name{width:180px;font-weight:bold}
-#sa-zayav .about{
-	margin-left:20px;
-	font-size:10px;
-	color:#888;
-	white-space:pre-line;
-}
-#sa-zayav .const{font-weight:bold;color:#8229C1}
-#sa-zayav .use{text-align:center}
+#sa-zayav{margin:10px 20px}
+#sa-zayav .headName{margin:0 0 10px}
+#sa-zayav a{display:block}
 
-#zayav-pole-tab #const{width:250px;font-weight:bold}
+#sa-zayav-pole .headName{margin:10px}
+#sa-zayav-pole #spisok{margin:10px 10px 30px}
+#sa-zayav-pole .sel{cursor:pointer}
+#sa-zayav-pole .sel:hover{background:#ffa}
+#sa-zayav-pole td{vertical-align:top}
+#sa-zayav-pole .id{text-align:right;color:#777}
+#sa-zayav-pole .name{width:180px;font-weight:bold}
+#sa-zayav-pole .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-zayav-pole .use{text-align:center;width:40px}
+#sa-zayav-pole .ed{padding-top:4px}
+
+#sa-zayav-service{margin:10px 10px 50px}
+#sa-zayav-service .headName{margin:0 0 10px}
+#sa-zayav-service .zs-head{font:22px Verdana;margin:10px 0}
+#sa-zayav-service .vk{
+	margin-left:15px;
+	position:relative;
+	top:5px;
+}
+#sa-zayav-service ._spisok{margin-bottom:1px}
+#sa-zayav-service ._sort{margin-bottom:30px}
+#sa-zayav-service .show{background:#ffc}
+#sa-zayav-service .pole{width:45px}
+#sa-zayav-service td.pole{text-align:right;color:#777}
+#sa-zayav-service .head{width:250px}
+#sa-zayav-service td.head{cursor:move}
+#sa-zayav-service .name{font-weight:bold}
+#sa-zayav-service .label{font-weight:bold;color:#888}
+#sa-zayav-service .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-zayav-service .ed{width:35px}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* цвета */
@@ -130,6 +163,13 @@
 #sa-user .action-res{border-collapse:collapse;margin-top:5px}
 #sa-user .action-res td{border:#ddd solid 1px;padding:1px 4px}
 #sa-user .action-res .c{text-align:right}
+
+
+
+/* счётчики */
+#sa-count{margin:10px}
+#sa-count .headName{margin:15px 0}
+
 
 
 

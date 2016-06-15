@@ -1,3 +1,4 @@
+
 $(document)
 	.on('click', '.debug_toggle', function() {
 		_cookie('debug', _cookie('debug') == 1 ? 0 : 1);

@@ -1,6 +1,5 @@
 #manual{margin:10px;min-height:250px}
 #manual h1{font-weight:bold;font-size:13px}
-#manual #manual-add{}
 #manual #page-add{font-weight:bold}
 #manual #part-spisok{margin:0 15px 30px}
 #manual .part{
@@ -30,7 +29,8 @@
 }
 #manual-part a.back{display:inline-block;margin-bottom:10px;color:#9ab}
 #manual-part a.back:hover{text-decoration:none;color:#357}
-#manual-part h1{font:bold 13px Tahoma;margin-bottom:8px}
+#manual-part #head{font-size:19px;margin-bottom:8px}
+#manual-part #head span{float:right;color:#999;margin-top:6px}
 #manual-part #orig{display:none}
 
 #manual-part p{margin:3px 0 8px}
@@ -59,10 +59,10 @@
 #manual-part #page-bottom:not(.answered) ._note{display:none}
 #manual-part #page-but.busy{opacity:.5}
 #manual-part #answer-ok{color:#292}
+#manual-part #action{margin-top:20px}
 
 
-#manual-part .img_edit{float:right}
-#manual-part .img_del{float:right}
+#manual-part #mp-edit{text-align:right}
 #manual-part .page-unit{padding:8px 0}
 #manual-part .page-unit:not(.noborder){border-bottom:1px solid #ebedf0}
 #manual-part .page-unit a{margin-left:7px}
@@ -79,6 +79,7 @@
 
 /* Внесение новой страницы */
 #manual-page-add #name{width:417px;font-weight:bold}
+#manual-page-add .decor{font-weight:bold;color:#47a}
 #manual-page-add #content{width:495px;height:200px}
 
 
@@ -98,6 +99,9 @@
 }
 
 
-
+/* События */
+#manual-action{margin:10px}
+#manual-action .user{width:140px}
+#manual-action .act{width:120px}
 
 

@@ -16,7 +16,6 @@ var _manualPartEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
 		$('#access')._check({
 			light:1,
 			name:'раздел доступен для просмотра'
@@ -56,19 +55,21 @@ var _manualPartEdit = function(o) {
 		}, o);
 
 		var t = $(this),
+			paste = '',
 			html =
-				'<table id="manual-page-add" class="_dialog-tab">' +
+				'<table id="manual-page-add" class="bs10">' +
 					'<tr><td><td><input type="hidden" id="access" value="' + o.access + '" />' +
-					'<tr><td class="label">Раздел:<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
-					'<tr><td class="label">Подраздел:<td><input type="hidden" id="part_sub_id" value="' + o.part_sub_id + '" />' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-			(o.id ? '<tr><td class="label top">Изображения:<td id="img">' : '') +
-					'<tr><td class="label top">Содержание:' +
-						'<td><b>&lt;div class="_info"></b> - информационный блок жёлтого цвета<br />' +
-							'<b>&lt;p></b> - параграф с отступами<br />' +
-							'<b>&lt;b></b> - жирный шрифт<br />' +
-							'<b>&lt;ul>&lt;li> &lt;/ul></b> - маркированный список<br />' +
-							'<b>&lt;h6></b> - текст в сером блоке<br />' +
+					'<tr><td class="label r">Раздел:<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
+					'<tr><td class="label r">Подраздел:<td><input type="hidden" id="part_sub_id" value="' + o.part_sub_id + '" />' +
+					'<tr><td class="label r">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+			(o.id ? '<tr><td class="label r top">Изображения:<td id="img">' : '') +
+					'<tr><td class="label r top">Содержание:' +
+						'<td><a class="decor __info">&lt;div class="_info"></a> - информационный блок жёлтого цвета<br />' +
+							'<a class="decor __p">&lt;p></a> - параграф с отступами<br />' +
+							'<a class="decor __b">&lt;b></a> - жирный шрифт<br />' +
+							'<a class="decor __u">&lt;u></a> - подчёркивание<br />' +
+							'<a class="decor __ul">&lt;ul>&lt;li> &lt;/ul></a> - маркированный список<br />' +
+							'<a class="decor __h6">&lt;h6></a> - текст в сером блоке<br />' +
 					'<tr><td colspan="2"><textarea id="content">' + o.content + '</textarea>' +
 				'</table>',
 			dialog = _dialog({
@@ -103,9 +104,19 @@ var _manualPartEdit = function(o) {
 				$('#name').focus()
 			}
 		});
-		$('#name').focus().keyEnter(submit);
 		$('#img')._image({manual_id:o.id});
 		$('#content').autosize();
+		
+		$('.__info').mouseover(function() { paste = '<div class="_info">' + window.getSelection() + '</div>'; });
+		$('.__p').mouseover(function() {    paste = '<p>'; });
+		$('.__b').mouseover(function() {    paste = '<b>' + window.getSelection() + '</b>'; });
+		$('.__u').mouseover(function() {    paste = '<u>' + window.getSelection() + '</u>'; });
+		$('.__ul').mouseover(function() {	paste = "\n<ul>\n<li> " + window.getSelection() + "\n<li> \n<li> \n</ul>\n"; });
+		$('.__h6').mouseover(function() {   paste = "\n<h6>" + window.getSelection() + "</h6>\n"; });
+
+		$('.decor').click(function() {
+			$('#content').insertAtCaret(paste);
+		});
 
 
 		function submit() {
@@ -171,7 +182,6 @@ $(document)
 				$('#name').focus()
 			}
 		});
-		$('#name').focus().keyEnter(submit);
 
 		function submit() {
 			var send = {
@@ -220,7 +230,7 @@ $(document)
 			access:o[1],
 			part_id:o[2],
 			part_sub_id:o[3],
-			name:p.find('h1').html(),
+			name:$('#mp-edit-name').val(),
 			content:p.find('textarea').html()
 		});
 	})

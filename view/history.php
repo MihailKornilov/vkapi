@@ -26,7 +26,6 @@ function _history_insert($v=array()) {//внесение истории действий
 				`dogovor_id`,
 				`attach_id`,
 				`schet_id`,
-				`zp_id`,
 				`tovar_id`,
 				`worker_id`,
 				`invoice_id`,
@@ -47,7 +46,6 @@ function _history_insert($v=array()) {//внесение истории действий
 				"._num(@$v['dogovor_id']).",
 				"._num(@$v['attach_id']).",
 				"._num(@$v['schet_id']).",
-				"._num(@$v['zp_id']).",
 				"._num(@$v['tovar_id']).",
 				"._num(@$v['worker_id']).",
 				"._num(@$v['invoice_id']).",
@@ -222,7 +220,7 @@ function _history_types($history) {//перевод type_id в текст
 					else $ex[$i] = str_replace('?{', '{', $ex[$i]);
 				$txt = implode(' ', $ex);
 			}
-			if(strpos($txt, '{'.$v.'}') !== false)
+			if(strpos($txt, '{'.$v.'}') !== false && isset($r[$v]))
 				$txt = str_replace('{'.$v.'}', $r[$v], $txt);
 			if(strpos($txt, '#'.$v.'#') !== false)
 				$txt = str_replace('#'.$v.'#', '<div class="changes">'.$r[$v].'</div>', $txt);
@@ -242,15 +240,15 @@ function _history_types($history) {//перевод type_id в текст
 
 
 function _historyChange($name, $old, $new, $v1='', $v2='') {//возвращается элемент таблицы, если было изменение при редактировании данных
-	if($old != $new) {
-		if($v1 && $v2) {
-			$old = $v1;
-			$new = $v2;
-		}
-		$name = $name ? '<th>'.$name.':' : '';
-		return '<tr>'.$name.'<td>'.$old.'<td>»<td>'.$new;
+	if($old == $new)
+		return '';
+
+	if($v1 && $v2) {
+		$old = $v1;
+		$new = $v2;
 	}
-	return '';
+	$name = $name ? '<th>'.$name.':' : '';
+	return '<tr>'.$name.'<td>'.$old.'<td>»<td>'.$new;
 }
 
 function _history_right($v=array()) {//вывод условий поиска для истории действий

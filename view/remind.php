@@ -205,7 +205,7 @@ function _remind_spisok($v=array()) {
 			FROM `_remind`
 			WHERE ".$cond;
 	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
-		$send['spisok'] .= '<div class="_empty">Напоминаний'.REMIND_TODAY_MSG.' нет.</div>';
+		$send['spisok'] .= $filter['js'].'<div class="_empty">Напоминаний'.REMIND_TODAY_MSG.' нет.</div>';
 		return $send;
 	}
 

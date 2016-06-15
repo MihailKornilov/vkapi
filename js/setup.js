@@ -17,7 +17,23 @@ var setupRuleCheck = function(v, id) {
 
 		var t = $(this),
 			html = '<table id="setup-tab">' +
-					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label r">Наименование:' +
+						'<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
+						'<td class="label r">Объединить:' +
+						'<td><input type="hidden" id="join" />' +
+					'<tr class="tr-join dn">' +
+						'<td><td>' +
+							'<div class="_info">' +
+								'При объединении категорий расходов выбранная категория станет общей с той, которая редактируется в данный момент. ' +
+								'Все записи перейдут в новую категорию, старая будет удалена.' +
+								'<br /><br />' +
+								'<b>Выберите категорию для объединения:</b>' +
+							'</div>' +
+					'<tr class="tr-join dn">' +
+						'<td class="label topi">С категорией:' +
+						'<td><input type="hidden" id="category_id-join" />' +
+							'<input type="hidden" id="category_sub_id-join" />' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
@@ -25,15 +41,33 @@ var setupRuleCheck = function(v, id) {
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
 				submit:submit
-			});
+			}),
+			catSpisok = _copySel(EXPENSE_SPISOK, o.id);
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
+		$('#join')._check({
+			func:function(v) {
+				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
+				if(v)
+					$('#category_id-join')._select({
+						width:218,
+						bottom:5,
+						title0:' категория не выбрана',
+						spisok:_copySel(catSpisok, 1),
+						func:function(v) {
+							_expenseSub(v, 0, '-join', 218);
+						}
+					});
+			}
+		});
 
 		function submit() {
 			var send = {
 				op:'expense_category_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
-				name:$('#name').val()
+				name:$('#name').val(),
+				category_id:_num($('#category_id-join').val()),
+				category_sub_id:_num($('#category_sub_id-join').val())
 			};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
@@ -62,6 +96,21 @@ var setupRuleCheck = function(v, id) {
 			html = '<table id="setup-tab">' +
 					'<tr><td class="label r">Категория:<td><b>' + $('#cat-name').html() + '</b>' +
 					'<tr><td class="label r">Подкатегория:<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
+						'<td class="label r">Объединить:' +
+						'<td><input type="hidden" id="join" />' +
+					'<tr class="tr-join dn">' +
+						'<td><td>' +
+							'<div class="_info">' +
+								'При объединении категорий расходов выбранная категория станет общей с той, которая редактируется в данный момент. ' +
+								'Все записи перейдут в новую категорию, старая будет удалена.' +
+								'<br /><br />' +
+								'<b>Выберите категорию для объединения:</b>' +
+							'</div>' +
+					'<tr class="tr-join dn">' +
+						'<td class="label topi">С категорией:' +
+						'<td><input type="hidden" id="category_id-join" />' +
+							'<input type="hidden" id="category_sub_id-join" />' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
@@ -71,14 +120,31 @@ var setupRuleCheck = function(v, id) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
+		$('#join')._check({
+			func:function(v) {
+				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
+				if(v)
+					$('#category_id-join')._select({
+						width:218,
+						bottom:5,
+						title0:' категория не выбрана',
+						spisok:_copySel(EXPENSE_SPISOK, 1),
+						func:function(v) {
+							_expenseSub(v, 0, '-join', 218);
+						}
+					});
+			}
+		});
 
 		function submit() {
 			var send = {
 				op:'expense_category_sub_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
 				category_id:CAT_ID,
-				name:$('#name').val()
+				name:$('#name').val(),
+				category_id_join:_num($('#category_id-join').val()),
+				category_sub_id_join:_num($('#category_sub_id-join').val())
 			};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
@@ -116,7 +182,7 @@ var setupRuleCheck = function(v, id) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
 		$('#dop')._radio({light:1,spisok:ZAYAV_EXPENSE_DOP});
 
 		function submit() {
@@ -177,8 +243,7 @@ var setupRuleCheck = function(v, id) {
 					'<tr><td><td><b>Действия при выборе статуса</b>' +
 					'<tr><td><td><input type="hidden" id="executer" value="' + o.executer + '" />' +
 					'<tr><td><td><input type="hidden" id="srok" value="' + o.srok + '" />' +
-					'<tr' + (ZAYAV_INFO_STATUS_DAY ? '' : ' class="dn"') + '>' +
-						'<td class="label">' +
+					'<tr><td class="label">' +
 						'<td><input type="hidden" id="day_fact" value="' + o.day_fact + '" />' +
 					'<tr><td><td><input type="hidden" id="accrual" value="' + o.accrual + '" />' +
 					'<tr><td><td><input type="hidden" id="remind" value="' + o.remind + '" />' +
@@ -192,7 +257,7 @@ var setupRuleCheck = function(v, id) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
 		$('#about').autosize();
 		$('#color').click(setupZayavStatusColor);
 		$('#default')._check({
@@ -339,6 +404,48 @@ var setupRuleCheck = function(v, id) {
 				.css('background-color', '#' +color)
 				.attr('val', color);
 		});
+	},
+	setupTovarCategoryEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table id="setup-tab">' +
+					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Создание новой' ) + ' категории товаров',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'setup_tovar_category_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					sortable();
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	};
 
 $(document)
@@ -559,7 +666,6 @@ $(document)
 				submit:submit
 			});
 		$('#name').focus();
-		$('#name,#head').keyEnter(submit);
 		$('#about').autosize();
 		function submit() {
 			var send = {
@@ -586,7 +692,7 @@ $(document)
 		var t = _parent($(this), 'DD');
 		setupExpenseEdit({
 			id:t.attr('val'),
-			name:t.find('.name').html()
+			name:t.find('.name').html().replace(/\"/g, '&quot;')
 		});
 
 	})
@@ -607,7 +713,7 @@ $(document)
 		var t = _parent($(this));
 		setupExpenseSubEdit({
 			id:t.attr('val'),
-			name:t.find('.name').html()
+			name:t.find('.name').html().replace(/\"/g, '&quot;')
 		});
 
 	})
@@ -675,175 +781,162 @@ $(document)
 		});
 	})
 
-	.on('click', '#setup_product .add', function() {
+	.on('click', '#setup-cartridge .img_edit', function() {
 		var t = $(this),
-			html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" />' +
+			id = t.attr('val'),
+			p = _parent(t),
+			name = p.find('.name').html(),
+			type_id = p.find('.type_id').val(),
+			filling = p.find('.filling').val(),
+			restore = p.find('.restore').val(),
+			chip = p.find('.chip').val(),
+			html = '<table id="setup-tab">' +
+				'<tr><td class="label">Вид:<td><input type="hidden" id="type_id" value="' + type_id + '" />' +
+				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" value="' + name + '" />' +
+				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +
+				'<tr><td class="label">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" value="' + restore + '" /> руб.' +
+				'<tr><td class="label">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" value="' + chip + '" /> руб.' +
+				'<tr><td><td>' +
+				'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
+				'<tr class="tr-join dn"><td class="label">С картриджем:<td><input type="hidden" id="join_id" />' +
 				'</table>',
 			dialog = _dialog({
-				top:60,
-				width:390,
-				head:'Добавление нового наименования изделия',
-				content:html,
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		function submit() {
-			var send = {
-				op:'setup_product_add',
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Внесено!');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
-	.on('click', '#setup_product .img_edit', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		var id = t.attr('val'),
-			name = t.find('.name a'),
-			dog = t.find('.dog').html() ? 1 : 0,
-			html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" value="' + name.html() + '" />' +
-				'</table>',
-			dialog = _dialog({
-				top:60,
-				width:390,
-				head:'Редактирование наименования изделия',
+				top:40,
+				width:400,
+				head:'Редактирование данных картриджа',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#name').focus().keyEnter(submit);
+		$('#type_id')._select({
+			spisok:CARTRIDGE_TYPE
+		});
+		$('#name').focus();
+		$('#join')._check({
+			func:function(v) {
+				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
+			}
+		});
+		var spisok = [];
+		for(var n = 0; n < CARTRIDGE_SPISOK.length; n++) {
+			var sp = CARTRIDGE_SPISOK[n];
+			if(sp.uid == id)
+				continue;
+			spisok.push(sp);
+		}
+		$('#join_id')._select({
+			width:218,
+			write:1,
+			title0:'Не выбрано',
+			spisok:spisok
+		});
 		function submit() {
-			var send = {
-				op:'setup_product_edit',
-				id:id,
-				name:$('#name').val()
-			};
+			var join = _num($('#join').val()),
+				send = {
+					op:'cartridge_edit',
+					id:id,
+					type_id:$('#type_id').val(),
+					name:$('#name').val(),
+					cost_filling:_num($('#cost_filling').val()),
+					cost_restore:_num($('#cost_restore').val()),
+					cost_chip:_num($('#cost_chip').val()),
+					join_id:join ? _num($('#join_id').val()) : 0
+				};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
 				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Сохранено!');
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			if(join && !send.join_id) {
+				dialog.err('Не выбран картридж для объединения');
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					CARTRIDGE_SPISOK = res.cart;
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	})
-	.on('click', '#setup_product .img_del', function() {
-		var p = _parent($(this));
-		_dialogDel({
-			id:p.attr('val'),
-			head:'изделия',
-			op:'setup_product_del',
-			func:function() {
-				p.remove();
-			}
-		});
+	.on('mouseleave', '#setup-cartridge .edited', function() {//удаление подсветки отредактированного картриджа
+		$(this).css('background-color', '#fff');
 	})
 
-	.on('click', '#setup_product_sub .add', function() {
-		var t = $(this),
-			html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" style="width:250px" />' +
-				'</table>',
-			dialog = _dialog({
-				width:390,
-				head:'Добавление нового подвида изделия',
-				content:html,
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		function submit() {
-			var send = {
-				op:'setup_product_sub_add',
-				product_id:PRODUCT_ID,
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Внесено!');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
+	.on('click', '#setup_tovar_category #add', setupTovarCategoryEdit)
+	.on('click', '#setup_tovar_category .img_edit', function() {
+		var t = _parent($(this));
+		setupTovarCategoryEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
 	})
-	.on('click', '#setup_product_sub .img_edit', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		var name = t.find('.name'),
-			html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" style="width:250px" value="' + name.html() + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:390,
-				head:'Редактирование подвида изделия',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		function submit() {
-			var send = {
-				op:'setup_product_sub_edit',
-				id:t.attr('val'),
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						name.html(send.name);
-						dialog.close();
-						_msg('Сохранено!');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
-	.on('click', '#setup_product_sub .img_del', function() {
+	.on('click', '#setup_tovar_category .img_del', function() {
 		var p = _parent($(this));
 		_dialogDel({
 			id:p.attr('val'),
-			head:'подвида изделия',
-			op:'setup_product_sub_del',
+			head:'категории товаров',
+			op:'setup_tovar_category_del',
 			func:function() {
 				p.remove();
 			}
 		});
+	})
+	.on('click', '#setup_tovar_category #join', function() {//подключение категории из готовых каталогов
+		var dialog = _dialog({
+			top:30,
+			width:420,
+			head:'Подключение категорий товаров из готовых каталогов',
+			load:1,
+			butSubmit:'Готово',
+			submit:submit
+		});
+
+
+		$.post(AJAX_MAIN, {op:'setup_tovar_category_join_load'}, function(res) {
+			if(res.success)
+				dialog.content.html(res.html);
+			else
+				dialog.loadError();
+		}, 'json');
+
+
+		function submit() {
+			var send = {
+				op:'setup_tovar_category_join_save',
+				ids:_checkAll()
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					sortable();
+					dialog.close();
+					_msg();
+				} else
+					dialog.loadError();
+			}, 'json');
+		}
+	})
+
+	.on('click', '#setup_salary_list .vk', function() {//сохранение настройки листа выдачи
+		var t = $(this);
+		if(t.hasClass('_busy'))
+			return;
+
+		var send = {
+			op:'setup_salary_list',
+			ids:_checkAll()
+		};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success)
+				_msg();
+		}, 'json');
 	})
 
 	.ready(function() {
@@ -860,7 +953,7 @@ $(document)
 						butSubmit:'Установить',
 						submit:submit
 					});
-				$('#pin').focus().keyEnter(submit);
+				$('#pin').focus();
 				function submit() {
 					var send = {
 						op:'setup_my_pinset',
@@ -897,8 +990,7 @@ $(document)
 						butSubmit:'Изменить',
 						submit:submit
 					});
-				$('#oldpin').focus().keyEnter(submit);
-				$('#pin').keyEnter(submit);
+				$('#oldpin').focus();
 				function submit() {
 					var send = {
 						op:'setup_my_pinchange',
@@ -936,7 +1028,7 @@ $(document)
 						butSubmit:'Применить',
 						submit:submit
 					});
-				$('#oldpin').focus().keyEnter(submit);
+				$('#oldpin').focus();
 				function submit() {
 					var send = {
 						op:'setup_my_pindel',
@@ -993,17 +1085,19 @@ $(document)
 				if(!send.first_name) {
 					err('Не указано имя');
 					$('#first_name').focus();
-				} else if(!send.last_name) {
+					return;
+				}
+				if(!send.last_name) {
 					err('Не указана фамилия');
 					$('#last_name').focus();
-				} else {
-					but.addClass('busy');
-					$.post(AJAX_MAIN, send, function(res) {
-						but.removeClass('busy');
-						if(res.success)
-							_msg('Сохранено');
-					}, 'json');
+					return;
 				}
+				but.addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					but.removeClass('_busy');
+					if(res.success)
+						_msg('Сохранено');
+				}, 'json');
 				function err(msg) {
 					but.vkHint({
 						msg:'<SPAN class="red">' + msg + '</SPAN>',
@@ -1088,11 +1182,11 @@ $(document)
 						viewer_id:RULE_VIEWER_ID
 					},
 					but = $(this);
-				if(but.hasClass('busy'))
+				if(but.hasClass('_busy'))
 					return;
-				but.addClass('busy');
+				but.addClass('_busy');
 				$.post(AJAX_MAIN, send, function(res) {
-					but.removeClass('busy');
+					but.removeClass('_busy');
 					if(res.success) {
 						_msg('Пин-код сброшен');
 						but.prev().remove();
@@ -1102,11 +1196,13 @@ $(document)
 			});
 		}
 		if($('#setup_rekvisit').length) {
+			$('#type_id')._select({width:245,spisok:APP_TYPE});
 			$('textarea').autosize();
-			$('.vkButton').click(function() {
+			$('.vk').click(function() {
 				var t = $(this),
 					send = {
 						op:'setup_rekvisit',
+						type_id:$('#type_id').val(),
 						name:$('#name').val(),
 						name_yur:$('#name_yur').val(),
 						ogrn:$('#ogrn').val(),
@@ -1122,9 +1218,9 @@ $(document)
 						bank_account:$('#bank_account').val(),
 						bank_account_corr:$('#bank_account_corr').val()
 					};
-				t.addClass('busy');
+				t.addClass('_busy');
 				$.post(AJAX_MAIN, send, function(res) {
-					t.removeClass('busy');
+					t.removeClass('_busy');
 					if(res.success)
 						_msg('Информация сохранена.');
 				}, 'json');

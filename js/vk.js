@@ -7,8 +7,9 @@ var VK_SCROLL = 0,
 	FB_HEIGHT = 0,
 	DIALOG_MAXHEIGHT = 0,
 	FOTO_HEIGHT = 0,
-	REGEXP_NUMERIC = /^\d+$/,
-	REGEXP_CENA = /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_NUMERIC =         /^\d+$/,
+	REGEXP_NUMERIC_MINUS = /^-?\d+$/,
+	REGEXP_CENA =         /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_CENA_MINUS = /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
@@ -38,6 +39,16 @@ var VK_SCROLL = 0,
 		10:'октября',
 		11:'ноября',
 		12:'декабря'
+	},
+	WEEK_NAME = {
+		0:'вс',
+		1:'пн',
+		2:'вт',
+		3:'ср',
+		4:'чт',
+		5:'пт',
+		6:'сб',
+		7:'вс'
 	},
 	hashLoc,
 	hashSet = function(hash) {
@@ -209,7 +220,7 @@ var VK_SCROLL = 0,
 				butCancel:'',
 				submit:submitPinConfirm
 			});
-		$('#tpin').focus().keyEnter(submitPinConfirm);
+		$('#tpin').focus();
 		return true;
 
 		function submitPinConfirm() {
@@ -264,6 +275,8 @@ var VK_SCROLL = 0,
 		$('._sort').sortable({
 			axis:'y',
 			update:function () {
+				if($(this).hasClass('no'))
+					return true;
 				var dds = $(this).find('dd'),
 					arr = [];
 				for(var n = 0; n < dds.length; n++)
@@ -305,8 +318,9 @@ var VK_SCROLL = 0,
 	_bool = function(v) {
 		return v == 1 ? 1 : 0;
 	},
-	_num = function(v) {
-		return !REGEXP_NUMERIC.test(v) ? 0 : v * 1;
+	_num = function(v, minus) {
+		var val = minus ? REGEXP_NUMERIC_MINUS.test(v) : REGEXP_NUMERIC.test(v);
+		return val ? v * 1 : 0;
 	},
 	_cena = function(v, minus) {
 		if(typeof v == 'string')
@@ -404,6 +418,9 @@ var VK_SCROLL = 0,
 		$('#_wait')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
+	_br = function(v) {
+		return v.replace(new RegExp('<br />','g'), "\n");
+	},
 	_copySel = function(arr, id) {//копирование массива для селекта. Если указан id - игнорируется
 		var send = [];
 		for(var n = 0; n < arr.length; n++) {
@@ -424,6 +441,7 @@ var VK_SCROLL = 0,
 			padding:10,//отступ для content
 			head:'head: Название заголовка',
 			load:0, // Показ процесса ожидания загрузки в центре диалога
+			class:'',//дополнительный класс для content
 			content:'content: содержимое центрального поля',
 			submit:function() {},
 			cancel:function() {},
@@ -434,17 +452,23 @@ var VK_SCROLL = 0,
 		if(o.load)
 			o.content = '<div class="load _busy"><div class="ms">В процессе загрузки произошла ошибка.</div></div>';
 		var frameNum = $('.dFrame').length,
-			html = '<div class="_dialog">' +
-			'<div class="head"><div><A class="img_del"></A>' + o.head + '</div></div>' +
-			'<div class="dcntr">' +
-				'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
-				'<div class="content"' + (o.padding ? ' style="padding:' + o.padding + 'px"' : '') + '>' + o.content + '</div>' +
-			'</div>' +
-			'<div class="bottom">' +
-				'<div class="vkButton' + (o.butSubmit ? '' : ' dn') + '"><button>' + o.butSubmit + '</button></div>' +
-				(o.butCancel ? '<div class="vkCancel"><button>' + o.butCancel + '</button></div>' : '') +
-			'</div>' +
-		'</div>';
+			html =
+			'<div class="_dialog">' +
+				'<div class="head">' +
+					'<a class="img_del"></a>' +
+					o.head +
+				'</div>' +
+				'<div class="dcntr">' +
+					'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
+					'<div class="content' + (o.class ? ' ' + o.class + '_dialog' : '') + '"' + (o.padding ? ' style="padding:' + o.padding + 'px"' : '') + '>' +
+						o.content +
+					'</div>' +
+				'</div>' +
+				'<div class="bottom">' +
+					'<button class="vk submit' + (o.butSubmit ? '' : ' dn') + '">' + o.butSubmit + '</button>' +
+					(o.butCancel ? '<button class="vk cancel">' + o.butCancel + '</button>' : '') +
+				'</div>' +
+			'</div>';
 
 		// Если открывается первый диалог на странице, запоминается стартовая максимальная высота диалогов
 		if(frameNum == 0)
@@ -453,17 +477,20 @@ var VK_SCROLL = 0,
 		var dialog = $('body').append(html).find('._dialog:last'),
 			content = dialog.find('.content'),
 			bottom = dialog.find('.bottom'),
-			butSubmit = bottom.find('.vkButton'),
+			butSubmit = bottom.find('.submit'),
 			w2 = Math.round(o.width / 2); // ширина/2. Для определения положения по центру
 		dialog.find('.head .img_del').click(dialogClose);
-		butSubmit.find('button').click(function() {
+		butSubmit.click(function() {
 			o.submit();
 		});
-		bottom.find('.vkCancel').click(function(e) {
+		bottom.find('.cancel').click(function(e) {
 			e.stopPropagation();
 			o.cancel();
 			dialogClose();
 		});
+
+		//для всех input при нажатии enter применяется submit
+		content.find('input').keyEnter(o.submit);
 
 		_backfon();
 
@@ -515,7 +542,7 @@ var VK_SCROLL = 0,
 				bottom.vkHint({
 					msg:'<span class="red">' + msg + '</span>',
 					top:-48,
-					left:w2 - 85,
+					left:w2 - 90,
 					indent:40,
 					show:1,
 					remove:1
@@ -526,7 +553,7 @@ var VK_SCROLL = 0,
 			},
 			butSubmit:function(name) {
 				butSubmit[(name ? 'remove' : 'add') + 'Class']('dn');
-				butSubmit.find('button').html(name);
+				butSubmit.html(name);
 			},
 			submit:function(func) {
 				o.submit = func;
@@ -669,7 +696,8 @@ var VK_SCROLL = 0,
 			else
 				if(_num(eq.find('input').val())) {
 					arr.push(id);
-					sum += _parent(eq).find('.sum').html() * 1;
+					if(o == 'sum')
+						sum += _parent(eq).find('.sum').html() * 1;
 					type.push(eq.parent().attr('val'));
 				}
 		}
@@ -708,12 +736,22 @@ $.fn._check = function(o) {
 		name:'',
 		disabled:0,
 		light:0,
+		mt:0,//margin-top
+		block:0,
 		func:function() {}
 	}, o);
 
 	var val = t.val() == 1 ? 1 : 0;
 	t.val(val);
-	t.wrap('<div class="_check' + (o.disabled ? ' disabled' : '') + ' check' + val + (o.name ? '' : ' e') + (o.light ? ' l' : '') + '" id="' + id + '_check">');
+	t.wrap('<div class="_check' +
+					(o.disabled ? ' disabled' : '') +
+					' check' + val + (o.name ? '' : ' e') +
+					(o.light ? ' l' : '') +
+					(o.block ? ' block' : '') +
+				'"' +
+				' id="' + id + '_check"' +
+				(o.mt ? ' style="margin-top:' + o.mt + 'px"' : '') +
+		'>');
 	t.after(o.name);
 	_click(o.func);
 
@@ -794,31 +832,37 @@ $.fn._radio = function(o) {
 
 	function _click(func) {
 		$(document).on('click', '#' + id + '_radio .on,#' + id + '_radio .off', function() {
-			func(parseInt(t.val()), id);
+			func(_num(t.val()), id);
 		});
 	}
 
 	return t;
 };
-$.fn._search = function(o) {
+$.fn._search = function(o, v) {
 	var t = $(this),
 		id = t.attr('id');
 
 	switch(typeof o) {
 		case 'number':
 		case 'string':
-			if(o == 'val')
+			if(o == 'val') {
+				if(v) {
+					window[id + '_search'].inp(v);
+					return;
+				}
 				return window[id + '_search'].inp();
+			}
 			if(o == 'clear')
 				window[id + '_search'].clear();
 			return t;
 	}
 	o = $.extend({
 		width:126,
-		focus:0,
-		txt:'',
+		focus:0,//сразу устанавливать фокус
+		txt:'', //текст-подсказка
 		func:function() {},
-		enter:0
+		enter:0,//применять введённый текст только после нажатия ентер
+		v:''    //введённое значение
 	}, o);
 	var html =
 			'<div class="_search" style="width:' + o.width + 'px">' +
@@ -869,9 +913,6 @@ $.fn._search = function(o) {
 		holdFocus();
 	});
 
-	function holdFocus() { hold.css('color', '#ccc'); }
-	function holdBlur() { hold.css('color', '#777'); }
-
 	t.inp = function(v) {
 		if(!v)
 			return $.trim(inp.val());
@@ -886,7 +927,13 @@ $.fn._search = function(o) {
 		hold.removeClass('dn');
 	};
 	window[id + '_search'] = t;
+
+	t.inp(o.v);
+
 	return t;
+
+	function holdFocus() { hold.css('color', '#ccc'); }
+	function holdBlur() { hold.css('color', '#777'); }
 };
 $.fn._calendar = function(o) {
 	var t = $(this),
@@ -1213,7 +1260,7 @@ $.fn._dropdown = function(o) {
 	}, o);
 	var n,
 		val = t.val() * 1 || 0,
-		ass = assСreate(),
+		ass = assCreate(),
 		head = o.head || o.title0,
 		len = o.spisok.length,
 		spisok = o.title0 && !o.disabled ? '<a class="ddu grey' + (!len ? ' last' : '') + (!val ? ' seld' : '') + '" val="0">' + o.title0 + '</a>' : '',
@@ -1278,7 +1325,7 @@ $.fn._dropdown = function(o) {
 		});
 	}
 
-	function assСreate() {//Создание ассоциативного массива
+	function assCreate() {//Создание ассоциативного массива
 		var arr = o.title0 ? {0:o.title0} : {};
 		for (var n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
@@ -1766,10 +1813,15 @@ $.fn._select = function(o) {
 				case 'cancel': s.cancel(); break;
 				case 'title': return s.title();
 				case 'inp': return s.inp();
+				case 'focus': s.focus(); break;
 				case 'remove': $('#' + id + '_select').remove(); break;
 				default:
-					if(REGEXP_NUMERIC.test(o))
+					if(REGEXP_NUMERIC_MINUS.test(o)) {
+						var write_save = s.o.write_save;
+						s.o.write_save = 0;
 						s.value(o);
+						s.o.write_save = write_save;
+					}
 			}
 			return t;
 		case 'object':
@@ -1790,7 +1842,8 @@ $.fn._select = function(o) {
 		title0:'',			// поле с нулевым значением
 		spisok:[],			// результаты в формате json
 		limit:0,
-		write:false,        // возможность вводить значения
+		write:0,            // возможность вводить значения
+		write_save:0,       // сохранять текст, если даже не выбран элемент
 		nofind:'Список пуст',
 		multiselect:0,      // возможность выбирать несколько значений. Идентификаторы перечисляются через запятую
 		func:function() {},	// функция, выполняемая при выборе элемента
@@ -1840,7 +1893,7 @@ $.fn._select = function(o) {
 		tag = /(<[\/]?[_a-zA-Z0-9=\"' ]*>)/i, // поиск всех тегов
 		keys = {38:1,40:1,13:1,27:1,9:1};
 
-	assСreate();
+	assCreate();
 
 	if(o.multiselect) {
 		if(val != 0) {
@@ -2008,7 +2061,7 @@ $.fn._select = function(o) {
 			}
 		}
 	}
-	function assСreate() {//Создание ассоциативного массива
+	function assCreate() {//Создание ассоциативного массива
 		ass = o.title0 ? {0:''} : {};
 		for(n = 0; n < o.spisok.length; n++) {
 			var sp = o.spisok[n];
@@ -2045,9 +2098,11 @@ $.fn._select = function(o) {
 			for(n = 0; n < x.length; n++)
 				arr.push(x.eq(n).attr('val'));
 			t.val(arr.join());
-		} else {
-			val = v;
-			t.val(v);
+			return;
+		}
+		val = v;
+		t.val(v);
+		if(v || !v && !o.write_save) {
 			inp.val(ass[v]);
 			title0bg[v == 0 ? 'show' : 'hide']();
 		}
@@ -2129,7 +2184,7 @@ $.fn._select = function(o) {
 		if(!inp.is(':focus')) {
 			select.removeClass('rs');
 			if(o.write && !val) {
-				if(inp.val()) {
+				if(inp.val() && !o.write_save) {
 					inp.val('');
 					o.funcKeyup('');
 				}
@@ -2142,6 +2197,7 @@ $.fn._select = function(o) {
 		}
 	}
 
+	t.o = o;
 	t.value = setVal;
 	t.process = function() {//Показ ожидания загрузки в selinp
 		inp.addClass('_busy');
@@ -2151,7 +2207,7 @@ $.fn._select = function(o) {
 	};
 	t.spisok = function(v) {
 		o.spisok = v;
-		assСreate();
+		assCreate();
 		spisokPrint();
 		t.cancel();
 	};
@@ -2160,6 +2216,9 @@ $.fn._select = function(o) {
 	};
 	t.inp = function() {//Получение содержимого введённого значения
 		return inp.val();
+	};
+	t.focus = function() {//установка фокуса на input
+		inp.focus();
 	};
 
 	window[id + '_select'] = t;
@@ -2589,6 +2648,18 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.dlink.js .link', function() {//переключение дополнительного списка ссылок
+		var t = $(this),
+			p = t.parent();
+
+		p.find('.sel').removeClass('sel');
+		var i = t.addClass('sel').index(),
+			dlp = $('.dlink-page');
+
+		dlp.addClass('dn');
+		dlp.eq(i).removeClass('dn');
+	})
+
 	.on('click', '._check:not(.disabled)', function() {
 		var t = $(this),
 			inp = t.find('input'),
@@ -2600,7 +2671,7 @@ $(document)
 	})
 	.on('click', '._radio .on,._radio .off', function() {
 		var t = $(this),
-			p = t.parent(),
+			p = _parent(t, '._radio'),
 			v = t.attr('val');
 		p.find('div.on').removeClass('on').addClass('off');
 		t.removeClass('off').addClass('on');

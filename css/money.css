@@ -38,7 +38,7 @@
 
 /* Внесение платежа */
 #_income-add .tab{border-spacing:10px;padding:10px 0;width:100%}
-#_income-add .label{width:130px;text-align:right}
+#_income-add .label{width:145px;text-align:right}
 #_income-add #about{width:210px}
 #_income-add #place-div{display:none;background-color:#efe}
 #_income-add #remind-div{display:none;padding:10px 20px;background-color:#dfd}
@@ -128,10 +128,18 @@
 }
 #invoice-spisok .img_note{margin-bottom:-2px}
 
-#transfer-spisok{margin:-10px 10px 10px}
+#transfer-spisok{margin:10px}
+#transfer-spisok ._spisok{margin-top:3px}
 #transfer-spisok .confirm{font-size:10px;color:#090}
 #transfer-spisok .confirm.no{color:red}
 #transfer-spisok .vk{float:right}
+
+#inout-spisok{margin:10px}
+#inout-spisok ._spisok{margin-top:3px}
+#inout-spisok .action{width:55px}
+#inout-spisok .in{background:#f4fff4}
+#inout-spisok .out{background:#fff4f4}
+#inout-spisok .type{width:150px}
 
 #invoice-setup-tab table{border-spacing:10px}
 #invoice-setup-tab .u{
@@ -165,7 +173,8 @@
 #balans-show #dopLinks{margin:25px 0 10px}
 #balans-show #dopLinks span{margin-right:15px}
 
-#balans-tab .action{width:100px}
+#balans-tab .action{width:100px;background:#efe}
+#balans-tab .action.minus{background:#fee}
 #balans-tab .balans{width:70px;text-align:right}
 #balans-tab .diff{font-size:10px;color:#777}
 
@@ -262,8 +271,7 @@
 
 /* деньги в информации о заявке */
 #_zayav-money{margin-top:15px}
-#_zayav-money em{float:right;margin:0 5px}
-#_zayav-money ._refund-add{color:#c22}
+#_zayav-money ._spisok{margin-top:-1px}
 #_zayav-money .income{color:#090;cursor:default}
 #_zayav-money .refund{color:#c22;cursor:default}
 

@@ -1,0 +1,329 @@
+#_tovar{position:relative}
+#_tovar #find{margin-top:10px}
+#_tovar #icon{
+	position:absolute;
+	right:7px;
+	top:4px;
+}
+#_tovar #spisok{margin:8px}
+#_tovar #tset{
+	display:block;
+	margin:10px 0;
+	color:#999;
+}
+#_tovar ._empty a{display:block;font-size:12px;margin-top:10px}
+
+
+.tovar-category-unit{padding:10px;border-bottom:#dae1e8 solid 1px}
+.tovar-category-unit .hd{font-size:17px}
+.tovar-category-unit .hd-count{
+	font-size:15px;
+	margin-left:14px;
+	color:#999;
+}
+.tovar-category-unit .sub-unit{
+	margin-left:10px;
+	padding:2px 10px;
+}
+.tovar-category-unit .sub-unit:hover{background:#e9edf1}
+.tovar-category-unit .sub-count{
+	margin-left:10px;
+	color:#aaa;
+}
+.tovar-category-unit .avai{
+	float:right;
+	font-weight:bold;
+	color:#3a3;
+}
+
+.tovar-unit-min .tovar-set{font-size:10px;color:#777}
+.tovar-unit-min .tovar-set b{font-size:10px}
+.tovar-unit-min .avai{
+	width:40px;
+	font-weight:bold;
+	text-align:center;
+	color:#3a3;
+}
+
+/* список товаров с картинками */
+.tovar-unit-image{margin-bottom:10px}
+.tovar-unit-image .img{
+	width:80px;
+	height:80px;
+	text-align:center;
+	vertical-align:top;
+	padding-right:7px;
+}
+.tovar-unit-image .inf{
+	vertical-align:top;
+}
+.tovar-unit-image .name{font-size:12px}
+.tovar-unit-image .tovar-set{margin-top:3px;color:#888}
+
+
+
+
+.img_tovar_group,
+.img_tovar_category,
+.img_tovar_foto,
+.img_tovar_spisok{
+	display:inline-block;
+	margin:0 3px;
+	width:22px;
+	height:22px;
+	cursor:pointer;
+	background:transparent no-repeat 0 0;
+}
+.img_tovar_group:hover,
+.img_tovar_category:hover,
+.img_tovar_foto:hover,
+.img_tovar_spisok:hover,
+.img_tovar_group.sel,
+.img_tovar_category.sel,
+.img_tovar_foto.sel,
+.img_tovar_spisok.sel{
+	background-position:0 -22px;
+}
+.img_tovar_group {
+	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAANnKLpMxDBCJ+t8NtNsN5fed4kgRjbmqYSR475wLM+0lqrsmZO72H8/TtCmQhUXwYFyyXQwn9CnM0ptEqrYwTQb3XKl1y/UK1aSy2dxeklru99rc7jMntO1dno8u8f2q39UgV15aIVMCQA7");
+}
+.img_tovar_category{
+	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAAM8KLrc/jDKSau9lOjNu/8giI1kaZ5nqK6shr5wLFNDbd94ru987//AoPDXKho1w6RyyWw2j9CVc0qtWn8JADs=");
+}
+.img_tovar_foto{
+	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAANbKLq0/pDFCYm9OLe3qe/epI1kaZ5lFX4rhWJqG4Ey8954Tgt73cu5WM3xa+UGyCQhyWw6lc+o89hcSq8DKzaq63o1061UK67iwmV0mvlte9VrJDlOZcftdzkuAQA7");
+}
+.img_tovar_spisok{
+	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAANFKLrc/hCSSau9OOfIu1daKI7TZ54gqa4E6nZsLL70I99YrS9D7//AoHA4xBkpxKRy2TsemdBo04mTWpXU6nUbzN64YF8CADs=");
+}
+
+
+
+
+/* Внесение нового товара */
+.tovar-add_dialog .headName{margin:5px 0}
+.tovar-add_dialog #ta-name ._info{margin:20px 0 0}
+.tovar-add_dialog #tab-name{border-spacing:10px 5px;margin:0 0 25px -5px}
+.tovar-add_dialog #no-vendor{float:right;position:relative;bottom:-1px}
+.tovar-add_dialog #name{width:210px}
+.tovar-add_dialog #ta-set ._info{margin:0}
+.tovar-add_dialog #tab-set{margin-bottom:25px}
+.tovar-add_dialog #tab-set .label{width:180px}
+.tovar-add_dialog #tab-dop .label{width:180px}
+.tovar-add_dialog #feature-tab .label{width:180px}
+.tovar-add_dialog #feature-tab .img_del{
+	float:right;
+	position:relative;
+	top:5px;
+	left:5px;
+}
+.tovar-add_dialog .tderr{background:#fdd}/* Указание поля-ошибки */
+.tovar-add_dialog #about{width:360px;height:30px}
+.tovar-add_dialog #feature-add{
+	cursor:pointer;
+	padding:10px;
+	text-align:center;
+	color:#2B587A;
+}
+.tovar-add_dialog #feature-add:hover{background:#e9edf1}
+.tovar-add_dialog .feature_val{width:310px}
+
+
+
+/* Информация о товаре */
+#tovar-info #tab{margin:8px;width:100%}
+#tovar-info #ti-left{width:200px;vertical-align:top}
+#tovar-info #ti-foto{text-align:center}
+#tovar-info #ti-link{margin-top:15px}
+#tovar-info #ti-link a{display:block;padding:8px 12px}
+#tovar-info #ti-link a:hover{text-decoration:none;background:#e9edf1}
+#tovar-info #ti-edit{font-weight:bold}
+#tovar-info #ti-right{vertical-align:top;padding:0 15px 0 10px}
+#tovar-info #category{color:#999;margin-top:8px}
+#tovar-info #head{font-size:18px}
+#tovar-info #set{margin-top:3px;font:12px Arial}
+#tovar-info #set a{font:12px Arial}
+#tovar-info ._info{margin:10px 0 5px}
+#tovar-info #ti-feature{border-spacing:10px 4px}
+#tovar-info #ti-zp{
+	margin-top:10px;
+	background:#cef;
+	padding:7px;
+}
+#tovar-info #ti-zp h1{font-weight:bold}
+#tovar-info #ti-compat{
+	margin-top:10px;
+	background:#cdf;
+	padding:7px;
+}
+#tovar-info #ti-zayav{
+	margin-top:10px;
+	background:#def;
+	padding:7px;
+}
+#tovar-info #ti-zakaz{
+	margin-top:10px;
+	background:#fde;
+	padding:7px;
+}
+#tovar-info #ti-move{margin-top:10px}
+#tovar-info div#ti-move{background:#ffc;padding:7px}
+#tovar-info #ti-move .minus{background:#fff2f2}
+#tovar-info #ti-move .plus{background:#efe}
+#tovar-info .count-sum{width:80px}
+#tovar-info .count-sum .sm{color:#aaa}
+#tovar-info .count-sum .sm a{color:#99a;text-decoration:underline;cursor:default}
+
+/* Количество, закупка, продажа */
+#avai-cost td.ac{
+	width:126px;
+	height:54px;
+	padding:4px;
+	text-align:center;
+	vertical-align:top;
+}
+#avai-cost span{color:#666;font-size:12px}
+#avai-cost a{display:inline-block;color:#999;margin-top:3px}
+
+#avai-cost tt{display:block;margin-top:3px;font-size:14px}
+#avai-cost tt b{font:bold 17px tahoma}
+
+#avai-cost td.avai{
+	position:relative;
+	background:#BCFFBC;
+	border-top:#ADEBAD solid 4px;
+}
+#avai-cost td.avai tt{color:#080}
+#avai-cost td.avai.no{background:#ddd;border-top:#aaa solid 4px}
+#avai-cost td.avai.no tt{color:#555}
+
+#avai-cost #avai-show{
+	display:none;
+	text-align:left;
+	position:absolute;
+	width:388px;
+	padding:6px;
+	background:#BCFFBC;
+	left:0;
+	top:62px;
+	box-shadow: 0 7px 12px rgba(0,0,0,0.3);
+}
+#avai-cost td.avai:not(.no):hover{box-shadow: 0 0 15px rgba(0,0,0,0.3)}
+#avai-cost td.avai:not(.no):hover #avai-show{display:block}
+
+
+/* Таблица наличия товара с артикулами */
+.tovar-avai-articul td{background:#fff}
+.tovar-avai-articul .rs{width:16px;padding-left:10px}
+.tovar-avai-articul .articul{color:#888;width:60px}
+.tovar-avai-articul .count{width:50px;color:#080}
+.tovar-avai-articul .cena{width:60px}
+.tovar-avai-articul .bu{color:#a33}
+
+
+
+#avai-cost td.buy{background:#FEFFBB;border-top:#E5E69B solid 4px}
+#avai-cost td.buy tt{color:#660}
+
+#avai-cost td.sell{background:#FFDCDB;border-top:#F1BFBE solid 4px}
+#avai-cost td.sell tt{color:#700}
+
+
+
+
+
+/* внесение наличия товара */
+.tovar-avai-add_dialog #count{width:50px}
+.tovar-avai-add_dialog #about{width:230px}
+
+
+
+
+
+
+
+
+/* Продажа товара */
+.tovar-sell_dialog .headName{margin:10px 0 4px}
+.tovar-sell_dialog h1{font-size:18px;margin-top:20px}
+.tovar-sell_dialog h1 b{font-size:18px}
+.tovar-sell_dialog h2{color:#777}
+.tovar-sell_dialog #ts-tab{margin-top:20px}
+.tovar-sell_dialog .label{width:130px}
+.tovar-sell_dialog #count{
+	width:50px;
+	font-size:12px;
+	font-weight:bold;
+}
+.tovar-sell_dialog #max{color:#888;margin-left:5px}
+.tovar-sell_dialog #nosell{
+	color:red;
+	padding:40px 0;
+	text-align:center;
+	font-weight:bold;
+}
+
+
+
+
+
+
+
+/* список при выборе товара - tovar-select */
+.ts-count{margin:15px 0 5px;color:#292}
+.ts-count.no{color:#888}
+.ts-unit{
+	padding:5px 10px;
+	color:#2B587A;
+	cursor:pointer;
+}
+.ts-unit.sel{background:#cfc}
+.ts-unit:hover{background:#e9edf1}
+.ts-unit em{background:#FFC;border-bottom:#FE2 solid 1px}
+.ts-unit b em{font-weight:bold}
+.ts-unit tt{color:#999;font-size:10px}
+.ts-unit tt *{font-size:10px}
+.ts-unit .avai{float:right;color:#292}
+
+
+
+.tovar-select{margin-top:-2px}
+.tovar-select .td-but{padding-left:0;border:0}
+.tovar-select button.vk{padding-left:35px;padding-right:35px}
+.tovar-select img{float:left;margin-right:5px}
+.tovar-select .ts-name{vertical-align:top;padding-left:5px}
+.tovar-select .ts-name tt{
+	display:block;
+	color:#999;
+	font-size:10px;
+	margin-right:38px;
+}
+.tovar-select .ts-name tt *{font-size:10px}
+.tovar-select .td-cnt{
+	padding-left:0;
+	padding-right:0;
+	width:28px;
+	background:#ffd;
+}
+.tovar-select .td-cnt.err{background:#fcc}
+.tovar-select .td-cnt input{
+	width:30px;
+	text-align:center;
+	font-weight:bold;
+	border:0;
+	background:transparent;
+}
+.tovar-select .img_edit{float:right}
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -21,7 +21,6 @@ var _accrualAdd = function(o) {
 		});
 
 		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
 
 		function submit() {
 			var send = {
@@ -50,6 +49,7 @@ var _accrualAdd = function(o) {
 
 	_incomeAdd = function() {
 		var zayav = window.ZI,
+			place = zayav && ZI.pole[12],
 			about = zayav ? 'Примечание' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
@@ -66,10 +66,11 @@ var _accrualAdd = function(o) {
 				'</table>' +
 
 		   (zayav ?
-				(ZAYAV_INFO_DEVICE ?
+				(place ?
 					'<div id="place-div">' +
 						'<table class="tab">' +
-							'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="device-place" value="-1" />' +
+							'<tr><td class="label r">Текущее местонахождение изделия:<td><b>' + _toAss(ZAYAV_TOVAR_PLACE_SPISOK)[ZI.place_id] + '</b>' +
+							'<tr><td class="label topi">Новое местонахождение изделия:<td><input type="hidden" id="tovar-place" />' +
 						'</table>' +
 					'</div>'
 				: '') +
@@ -86,7 +87,7 @@ var _accrualAdd = function(o) {
 			'</div>';
 		var dialog = _dialog({
 				top:zayav ? 30 : 60,
-				width:460,
+				width:490,
 				head:'Внесение платежа',
 				padding:0,
 				content:html,
@@ -124,16 +125,18 @@ var _accrualAdd = function(o) {
 				],
 				func:function() {
 					$('#about').focus();
-					if(ZAYAV_INFO_DEVICE)
+					if(place)
 						$('#place-div').slideDown(300);
 					else
 						$('#remind-div').slideDown(300);
 				}
 			});
 
-			if(ZAYAV_INFO_DEVICE)
-				zayavPlace(function() {
-					$('#remind-div').slideDown(300);
+			if(place)
+				$('#tovar-place').zayavTovarPlace({
+					func:function() {
+						$('#remind-div').slideDown(300);
+					}
 				});
 			for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
 				var i = ZAYAV_REMIND.active_spisok[n];
@@ -175,8 +178,8 @@ var _accrualAdd = function(o) {
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
 				zayav_id:zayav ? ZI.id : 0,
-				place:0,
-				place_other:'',
+				place_id:$('#tovar-place').val(),
+				place_other:$('#tovar-place').attr('val'),
 				remind_ids:remind.join()
 			};
 
@@ -203,16 +206,10 @@ var _accrualAdd = function(o) {
 				return;
 			}
 
-			if(zayav && ZAYAV_INFO_DEVICE) {
-				send.place = $('#device-place').val() * 1;
-				send.place_other = $('#place_other').val();
-				if(send.place > 0)
-					send.place_other = '';
-				if(send.place == -1 || !send.place && !send.place_other) {
-					dialog.err('Не указано местонахождение устройства');
-					$('#place_other').focus();
-					return;
-				}
+			if(place && (send.place_id == -1 || !send.place_id && !send.place_other)) {
+				dialog.err('Не указано местонахождение устройства');
+				$('#place_other').focus();
+				return;
 			}
 
 			if(send.prepay == 2)
@@ -341,11 +338,11 @@ var _accrualAdd = function(o) {
 		}, 'json');
 	},
 
-	_expenseSub = function catSub(id, sub_id, add) {//показ-скрытие подкатегории расхода
+	_expenseSub = function(id, sub_id, add, width) {//показ-скрытие подкатегории расхода
 		add = add || '';
 		var sub = EXPENSE_SUB_SPISOK[id];
 		$('#category_sub_id' + add).val(_num(sub_id) || 0)._select(!sub ? 'remove' : {
-			width:add ? 258 : 140,
+			width:width || (add ? 258 : 140),
 			title0:add ? 'Подкатегория не указана' : 'Любая подкатегория',
 			spisok:sub,
 			func:function(v, id) {
@@ -617,7 +614,7 @@ var _accrualAdd = function(o) {
 			submit:submit
 		});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
 		$('#about').autosize();
 		$('#visible')._select({
 			width:218,
@@ -707,7 +704,6 @@ var _accrualAdd = function(o) {
 			}
 		});
 		$(o.id ? '#about' : '#sum').focus();
-		$('#sum,#about').keyEnter(submit);
 		function submit() {
 			var send = {
 				op:'invoice_transfer_' + (o.id ? 'edit' : 'add'),
@@ -746,6 +742,96 @@ var _accrualAdd = function(o) {
 			}, 'json');
 		}
 	},
+	_invoiceIn = function(invoice_id, balans) {
+		var t = $(this),
+			html = '<table class="_dialog-tab">' +
+					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
+					'<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
+					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Внесение денег на счёт',
+				content:html,
+				submit:submit
+			});
+		$('#sum').focus();
+		function submit() {
+			var send = {
+				op:'invoice_in_add',
+				invoice_id:invoice_id,
+				sum:_cena($('#sum').val()),
+				about:$('#about').val()
+			};
+			if(!send.sum) {
+				dialog.err('Некорректно введена сумма');
+				$('#sum').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.i);
+					$('#inout-spisok').html(res.io);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	_invoiceOut = function(invoice_id, balans) {
+		var t = $(this),
+			html = '<table class="_dialog-tab">' +
+					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
+					'<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
+					'<tr><td class="label">Получатель:<td><input type="hidden" id="worker_id" />' +
+					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Вывод денег со счёта',
+				content:html,
+				butSubmit:'Вывести',
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#worker_id')._select({
+			width:218,
+			title0:'Сотрудник не выбран',
+			spisok:_toSpisok(WORKER_ASS)
+		});
+
+		function submit() {
+			var send = {
+				op:'invoice_out_add',
+				invoice_id:invoice_id,
+				sum:_cena($('#sum').val()),
+				worker_id:_num($('#worker_id').val()),
+				about:$('#about').val()
+			};
+			if(!send.sum) {
+				dialog.err('Некорректно введена сумма');
+				$('#sum').focus();
+				return;
+			}
+			if(!send.worker_id) {
+				dialog.err('Не указан сотрудник-получатель');
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.i);
+					$('#inout-spisok').html(res.io);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
 	_invoiceBalansSet = function(invoice_id) {
 		var html =
 				'<table class="_dialog-tab">' +
@@ -760,7 +846,7 @@ var _accrualAdd = function(o) {
 			submit:submit
 		});
 
-		$('#sum').focus().keyEnter(submit);
+		$('#sum').focus();
 
 		function submit() {
 			var send = {
@@ -959,7 +1045,7 @@ var _accrualAdd = function(o) {
 			submit:submit
 		});
 
-		$('#sum').focus().keyEnter(submit);
+		$('#sum').focus();
 
 		function submit() {
 			var send = {
@@ -1008,7 +1094,6 @@ var _accrualAdd = function(o) {
 			});
 
 		$('#sum').focus();
-		$('#sum,#day').keyEnter(submit);
 		$('#period')._select({
 			width:100,
 			spisok:SALARY_PERIOD_SPISOK,
@@ -1075,7 +1160,6 @@ var _accrualAdd = function(o) {
 			});
 
 		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
 		function submit() {
 			var send = {
 				op:'salary_accrual_add',
@@ -1120,7 +1204,6 @@ var _accrualAdd = function(o) {
 			});
 
 		$('#sum').focus();
-		$('#sum,#about').keyEnter(submit);
 		function submit() {
 			var send = {
 				op:'salary_deduct_add',
@@ -1186,6 +1269,7 @@ var _accrualAdd = function(o) {
 					'<div class="_info">' +
 						'Все ранее выданные з/п в этом месяце, которые не привязаны к листам выдачи, попадут в <b>текущий лист</b> и будут отмечены как <b>авансы</b>.' +
 					'</div>' +
+					'<a href="' + URL + '&p=setup&d=salary_list" id="list-set">Настроить лист выдачи</a>' +
 				'</div>',
 			dialog = _dialog({
 				width:330,
@@ -1254,7 +1338,6 @@ var _accrualAdd = function(o) {
 				$('#sum').focus();
 			}
 		});
-		$('#sum,#about').keyEnter(submit);
 		$('#salary_avans')._check();
 		$('#salary_list_id')._select({
 			width:218,
@@ -1759,7 +1842,7 @@ var _accrualAdd = function(o) {
 				$('#sum').focus();
 			}
 		});
-		$('#sum').focus().keyEnter(submit);
+		$('#sum').focus();
 		function submit() {
 			var send = {
 				op:'schet_pay',
@@ -1975,10 +2058,16 @@ $(document)
 							'<h2>Перевести денежные средства на другой расчётный счёт.</h2>' +
 						'</div>' +
 				(VIEWER_ADMIN ?
-			//			'<div class="u" val="2">' +
-			//				'<h1>Вывести деньги</h1>' +
-			//				'<h2>Произвести вывод денежных средств из организации.</h2>' +
-			//			'</div>' +
+					(balans ?
+						'<div class="u" val="2">' +
+							'<h1>Внести деньги на счёт</h1>' +
+							'<h2>Внести произвольную сумму на расчётный счёт. Данная сумма не будет являться платежом.</h2>' +
+						'</div>' +
+						'<div class="u" val="7">' +
+							'<h1>Вывести деньги со счёта</h1>' +
+							'<h2>Произвести вывод денежных средств из организации.</h2>' +
+						'</div>'
+					: '') +
 						'<div class="u" val="3">' +
 							'<h1>Установить текущую сумму</h1>' +
 							'<h2>Установить сумму, которая соответствует фактической сумме на расчётном счёте или наличию денег в кассе.</h2>' +
@@ -2000,8 +2089,8 @@ $(document)
 				: '') +
 					'</div>',
 			dialog = _dialog({
-				top:30,
-				width:400,
+				top:20,
+				width:460,
 				head:'Выполнение операции над счётом',
 				content:html,
 				butSubmit:'',
@@ -2012,6 +2101,8 @@ $(document)
 			dialog.close();
 			switch(_num($(this).attr('val'))) {
 				case 1: _invoiceTransfer({from:id}); break;
+				case 2: _invoiceIn(id, balans); break;
+				case 7: _invoiceOut(id, balans); break;
 				case 3: _invoiceBalansSet(id); break;
 				case 4: _invoiceReset(id); break;
 				case 5:
@@ -2102,6 +2193,18 @@ $(document)
 					dialog.abort();
 			}, 'json');
 		}
+	})
+	.on('click', '#inout-spisok .img_del', function() {
+		var t = $(this),
+			p = _parent(t);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'записи',
+			op:'invoice_' + p.attr('class') + '_del',
+			func:function() {
+				p.remove();
+			}
+		});
 	})
 
 	.on('click', '#_balans_next', function() {

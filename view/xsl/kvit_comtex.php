@@ -130,7 +130,7 @@ function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
 	$sheet->setCellValue($colLabel.$row[3], 'Дата приёма в ремонт');
 	$sheet->setCellValue($colItem.$row[3], utf8(FullData($z['dtime_add'])));
 	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
-	$sheet->setCellValue($colItem.$row[4], utf8(trim(_deviceName($z['base_device_id'])).(zayavEquipSpisok($z['equip']) ? ', '.zayavEquipSpisok($z['equip']) : '')));
+	$sheet->setCellValue($colItem.$row[4], utf8(trim(_deviceName($z['base_device_id'])).($z['equip'] ? ', '._tovarEquip('spisok', $z['equip']) : '')));
 	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
 	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
 	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');
@@ -223,7 +223,7 @@ function xls_comtex_rules($sheet, $x=2, $y=31) {
 		$sheet->getStyle(pageNum($x + 1).($y + 4))->getFont()->setSize(8);
 
 	$sheet->setCellValue(pageNum($x).($y + 5), '4. ');
-	$sheet->setCellValue(pageNum($x + 1).($y + 5), 'В случае отказа от ремонта Заказчик оплачивает диагностику.');
+	$sheet->setCellValue(pageNum($x + 1).($y + 5), 'В случае отказа от ремонта стоимость диагностики составляет 300 рублей.');
 		$sheet->getStyle(pageNum($x + 1).($y + 5))->getFont()->setSize(8);
 
 	$sheet->setCellValue(pageNum($x).($y + 6), '5. ');

@@ -95,7 +95,8 @@ function _noteUnit($r) {
 				'<td class="nu-i">'.
 					'<div class="img_del nu-del'._tooltip('Удалить заметку', -98, 'r').'</div>'.
 					'<h3>'.$r['viewer_link'].'</h3>'.
-					'<h4>'.wordwrap(_br($r['txt']), 45, '<br />', true).$r['image'].'</h4>'.
+//					'<h4>'.wordwrap(_br($r['txt']), 45, '<br />', true).$r['image'].'</h4>'.
+					'<h4>'._br($r['txt']).$r['image'].'</h4>'.
 					'<h5>'.
 						FullDataTime($r['dtime_add'], 1).
 						($n ? '<a class="nu-go-comm'.($r['comment_count'] ? ' ex' : '').'">'.$goComm.'</a>' : '').
@@ -131,7 +132,8 @@ function _noteCommentUnit($r) {
 			'<tr><td class="cu-photo">'.$r['viewer_photo'].
 				'<td class="cu-i">'.$r['viewer_link'].
 					'<div class="img_del cu-del'._tooltip('Удалить комментарий', -126, 'r').'</div>'.
-					'<h4>'.wordwrap(_br($r['txt']), 40, '<br />', true).$r['image'].'</h4>'.
+//					'<h4>'.wordwrap(_br($r['txt']), 40, '<br />', true).$r['image'].'</h4>'.
+					'<h4>'._br($r['txt']).$r['image'].'</h4>'.
 					'<h5>'.FullDataTime($r['dtime_add'], 1).'</h5>'.
 		'</table>'.
 	'</div>';

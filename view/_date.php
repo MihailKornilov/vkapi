@@ -138,3 +138,12 @@ function _dateLost($v) {//проверка, прошла ли дата
 
 	return false;
 }
+function _dtimeAdd($v=array()) {//дата и время внесения записи с подсказкой сотрудника, который вносил запись
+	return
+		'<div class="'._tooltip(_viewerAdded($v['viewer_id_add']), -40).FullDataTime($v['dtime_add'], 1).'</div>'.
+	(@$v['viewer_id_del'] ?
+		'<div class="ddel '._tooltip(_viewerDeleted($v['viewer_id_del']), -40).
+			FullDataTime($v['dtime_del'], 1).
+		'</div>'
+	: '');
+}

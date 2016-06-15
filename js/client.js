@@ -1,26 +1,13 @@
 var clientPeopleTab = function(v, p) {// таблица: частное лицо
-		v = $.extend({
-			id:0,
-			fio:'',
-			phone:'',
-			adres:'',
-			worker_id:0,
-			post:'',
-			pasp_seria:'',
-			pasp_nomer:'',
-			pasp_adres:'',
-			pasp_ovd:'',
-			pasp_data:''
-		}, v);
 		// отображать ли паспортные данные
 		var pasp = v.pasp_seria || v.pasp_nomer || v.pasp_adres || v.pasp_ovd || v.pasp_data ? '' : ' class="dn"',
 			prefix = p ? 'person-' : '',
 			worker = !p && v.id;//показывать пункт: связан с сотрудником
 		return '' +
-		'<table class="ca-table" id="people">' +
+		'<table class="ca-table' + (p || v.category_id == 1 ? '' : ' dn') + '" id="people">' +
 			'<tr><td class="label"><b>Ф.И.О.:</b><td><input type="text" id="' + prefix + 'fio" value="' + v.fio + '" />' +
 			'<tr><td class="label">Телефон:      <td><input type="text" id="' + prefix + 'phone" value="' + v.phone + '" />' +
-			'<tr><td class="label topi">Адрес:   <td><textarea id="' + prefix + 'adres">' + v.adres + '</textarea>' +
+			'<tr><td class="label topi">Адрес:   <td><textarea id="' + prefix + 'adres">' + _br(v.adres) + '</textarea>' +
   (worker ? '<tr><td class="label">Связан с сотрудником:<td><input type="hidden" id="worker_id" value="' + v.worker_id + '">' : '') +
 	   (p ? '<tr><td class="label">Должность:<td><input type="text" id="person-post" value="' + v.post + '" />' : '') +
 
@@ -34,287 +21,265 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 			'<tr' + pasp + '><td class="label">Когда выдан:<td><input type="text" id="' + prefix + 'pasp_data" value="' + v.pasp_data + '" />' +
 		'</table>';
 	},
-	clientAdd = function(callback) {
+	clientEdit = function(o) {
+		o = $.extend({
+			id:0,
+			category_id:1,
+			worker_id:0,
+			from_id:0,
+
+			org_category_id:0,
+			org_name:'',
+			org_phone:'',
+			org_fax:'',
+			org_adres:'',
+			org_inn:'',
+			org_kpp:'',
+			org_email:'',
+
+			fio:'',
+			phone:'',
+			adres:'',
+			post:'',
+			pasp_seria:'',
+			pasp_nomer:'',
+			pasp_adres:'',
+			pasp_ovd:'',
+			pasp_data:'',
+
+			callback:null
+		}, window.CI || o);
+
+		var cat = '';
+		for(var i in CLIENT_CATEGORY_ASS)
+			cat += '<a class="link' + (i == o.category_id ? ' sel' : '') + '" val="' + i + '">' + CLIENT_CATEGORY_ASS[i] + '</a>';
+
 		var html =
 			'<div id="client-add-tab">' +
-				'<div id="dopLinks">';
-		for(var i in CLIENT_CATEGORY_ASS)
-			html += '<a class="link' + (i == 1 ? ' sel' : '') + '" val="' + i + '">' + CLIENT_CATEGORY_ASS[i] + '</a>';
-		html += '</div>' +
-				clientPeopleTab() +
-				'<table class="ca-table dn" id="org">' +
-					'<tr><td class="label"><b>Название организации:</b><td><input type="text" id="org_name" />' +
-					'<tr><td class="label">Телефон:<td><input type="text" id="org_phone" />' +
-					'<tr><td class="label">Факс<td><input type="text" id="org_fax" />' +
-					'<tr><td class="label topi">Адрес:<td><textarea id="org_adres"></textarea>' +
-					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" />' +
-					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" />' +
+				'<div id="dopLinks">' + cat + '</div>' +
+				clientPeopleTab(o) +
+				'<table class="ca-table' + (o.category_id == 2 ? '' : ' dn') + '" id="org">' +
+					'<tr><td class="label"><b>Название организации:</b><td><input type="text" id="org_name" value="' + o.org_name + '" />' +
+					'<tr><td class="label">Телефон:<td><input type="text" id="org_phone" value="' + o.org_phone + '" />' +
+					'<tr><td class="label">Факс<td><input type="text" id="org_fax" value="' + o.org_fax + '" />' +
+					'<tr><td class="label topi">Адрес:<td><textarea id="org_adres">' + _br(o.org_adres) + '</textarea>' +
+					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + o.org_inn + '" />' +
+					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp"  value="' + o.org_kpp + '"/>' +
 				'</table>' +
-				'<div id="person-head">Доверенные лица:</div>' +
-				'<div id="person-list"></div>' +
-				'<a id="person-add">Добавить доверенное лицо</a>' +
-			'</div>';
-		var category_id = 1,
-			person = [],
-			dialog = _dialog({
-				width:480,
-				top:30,
-				padding:0,
-				head:'Добавление нoвого клиента',
-				content:html,
-				submit:submit
-			});
-		$('#fio').focus();
-		$('#adres,#org_adres').autosize();
-		$('#person-add').click(function() {
-			clientPersonAdd(person);
-		});
-		$('#dopLinks .link').click(function() {
-			var t = $(this),
-				p = t.parent();
-			category_id = _num(t.attr('val'));
-			p.find('.sel').removeClass('sel');
-			t.addClass('sel');
-			$('#people')[(category_id != 1 ? 'add' : 'remove') + 'Class']('dn');
-			$('#org')[(category_id == 1 ? 'add' : 'remove') + 'Class']('dn');
-			$(category_id == 1 ? '#fio' : '#org_name').focus();
-		});
-		function submit() {
-			var fio = $('#fio').val(),
-				send = {
-					op:'client_add',
-					category_id:category_id,
-					org_name:$('#org_name').val(),
-					org_phone:$('#org_phone').val(),
-					org_fax:$('#org_fax').val(),
-					org_adres:$('#org_adres').val(),
-					org_inn:$('#org_inn').val(),
-					org_kpp:$('#org_kpp').val(),
-					person:person
-				};
 
-			if(category_id == 1 && !fio) {
-				dialog.err('Не указаны ФИО');
-				$('#fio').focus();
-				return;
-			}
-			if(category_id > 1 && !send.org_name) {
-				dialog.err('Не указано название организации');
-				$('#org_name').focus();
-				return;
-			}
-			if(category_id == 1) // если выбрано частное лицо, то помещается в доверенные лица на первое место
-				send.person.unshift({
-					fio:fio,
-					phone:$('#phone').val(),
-					adres:$('#adres').val(),
-					post:'',
-					pasp_seria:$('#pasp_seria').val(),
-					pasp_nomer:$('#pasp_nomer').val(),
-					pasp_adres:$('#pasp_adres').val(),
-					pasp_ovd:$('#pasp_ovd').val(),
-					pasp_data:$('#pasp_data').val()
-				});
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Новый клиент внесён.');
-					if(typeof callback == 'function')
-						callback(res);
-					else
-						document.location.href = URL + '&p=client&d=info&id=' + res.uid;
-				} else {
-					dialog.abort();
-					send.person.shift();
-				}
-			}, 'json');
-		}
-	},
-	clientEdit = function() {
-		var org = CLIENT.category_id > 1,
-			html =
-			'<div id="client-add-tab">' +
-			(!org ? clientPeopleTab(CLIENT) : '') +
-			(org ?
-				'<table class="ca-table">' +
-					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="' + CLIENT.org_name + '" />' +
-					'<tr><td class="label">Телефон:<td><input type="text" id="org_phone" value="' + CLIENT.org_phone + '" />' +
-					'<tr><td class="label">Факс:<td><input type="text" id="org_fax" value="' + CLIENT.org_fax + '" />' +
-					'<tr><td class="label top">Адрес:<td><textarea id="org_adres">' + CLIENT.org_adres + '</textarea>' +
-					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + CLIENT.org_inn + '" />' +
-					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" value="' + CLIENT.org_kpp + '" />' +
-				'</table>'
-			: '') +
-				'<table class="ca-table">' +
+				'<table class="ca-table' + (CLIENT_FROM_USE ? '' : ' dn') + '">' +
+					'<tr><td class="label"><span id="td-from">Откуда клиент нашёл нас:</span>' +
+						'<td><input type="hidden" id="from_id" value="' + o.from_id + '" />' +
+				'</table>' +
+
+				'<table class="ca-table join-table' + (o.id ? '' : ' dn') + '">' +
 					'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
 					'<tr id="tr_join" class="dn"><td class="label">с клиентом:<td><input type="hidden" id="client2" />' +
 				'</table>' +
-			'</div>',
-			dialog = _dialog({
-				width:500,
-				top:30,
-				head:'Редактирование данных клиента',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#' + (org ? 'org_name' : 'fio')).focus();
+
+			'</div>';
+		var dialog = _dialog({
+			width:480,
+			top:30,
+			padding:0,
+			head:(o.id ? 'Редактирование данных' : 'Добавление нoвого') + ' клиента',
+			content:html,
+			submit:submit,
+			butSubmit:o.id ? 'Сохранить' : 'Внести'
+		});
+		$('#fio').focus();
 		$('#adres,#org_adres').autosize();
-		$('#worker_id')._select({
-			width:220,
-			title0:'Сотрудник не выбран',
-			spisok:CLIENT.workers
+		$('#dopLinks .link').click(function() {
+			var t = $(this),
+				p = t.parent();
+			o.category_id = _num(t.attr('val'));
+			p.find('.sel').removeClass('sel');
+			t.addClass('sel');
+			$('#people')[(o.category_id != 1 ? 'add' : 'remove') + 'Class']('dn');
+			$('#org')[(o.category_id == 1 ? 'add' : 'remove') + 'Class']('dn');
+			$(o.category_id == 1 ? '#fio' : '#org_name').focus();
+			$('.join-table').addClass('dn');
+			$('#join')._check(0);
 		});
-		$('#client2').clientSel({
-			width:258,
-			category_id:CLIENT.category_id,
-			not_client_id:CLIENT.id
-		});
-		$('#join')
-			._check()
-			._check(function(v) {
-				$('#tr_join')[(v ? 'remove' : 'add') + 'Class']('dn');
+
+		if(o.id) {
+			$('#worker_id')._select({
+				width:220,
+				title0:'Сотрудник не выбран',
+				spisok:CI.workers
 			});
-		$('#join_check').vkHint({
-			msg:'<b>Объединение клиентов.</b><br />' +
+			$('#client2').clientSel({
+				width:258,
+				category_id:CI.category_id,
+				not_client_id:CI.id
+			});
+			$('#join')
+				._check()
+				._check(function(v) {
+					$('#tr_join')[(v ? 'remove' : 'add') + 'Class']('dn');
+				});
+			$('#join_check').vkHint({
+				msg:'<b>Объединение клиентов.</b><br />' +
 				'Необходимо, если один клиент был внесён в базу дважды.<br /><br />' +
 				'Текущий клиент будет получателем.<br />Выберите второго клиента.<br />' +
 				'Все заявки, начисления, платежи и доверенные лица<br />станут общими после объединения.<br /><br />' +
 				'Внимание, операция необратима!',
-			width:330,
-			delayShow:1500,
-			top:-162,
-			left:-80,
-			indent:80
+				width:330,
+				delayShow:1500,
+				top:-162,
+				left:-80,
+				indent:80
+			});
+		}
+
+		$('#from_id')._select({
+			width:220,
+			title0:'источник не указан',
+			write:1,
+			write_save:1,
+			spisok:CLIENT_FROM_SPISOK
 		});
+		$('#td-from').vkHint({
+			msg:'Укажите источник, из которого клиент узнал о нашей организации.',
+			width:140,
+			top:-80,
+			left:20
+		});
+
 		function submit() {
 			var send = {
-				op:'client_edit',
-				id:CLIENT.id,
+				op:o.id ? 'client_edit' : 'client_add',
+				id:o.id,
+				category_id:o.category_id,
+				worker_id:_num($('#worker_id').val()),
+
+				fio:$('#fio').val(),
+				phone:$('#phone').val(),
+				adres:$('#adres').val(),
+				post:'',
+				pasp_seria:$('#pasp_seria').val(),
+				pasp_nomer:$('#pasp_nomer').val(),
+				pasp_adres:$('#pasp_adres').val(),
+				pasp_ovd:$('#pasp_ovd').val(),
+				pasp_data:$('#pasp_data').val(),
+
+				org_name:$('#org_name').val(),
+				org_phone:$('#org_phone').val(),
+				org_fax:$('#org_fax').val(),
+				org_adres:$('#org_adres').val(),
+				org_inn:$('#org_inn').val(),
+				org_kpp:$('#org_kpp').val(),
+
+				from_id:_num($('#from_id').val()),
+				from_name:$('#from_id')._select('inp'),
+
 				join:_num($('#join').val()),
 				client2:_num($('#client2').val())
 			};
 
-			if(!org) {
-				send.person_id = CLIENT.person_id;
-				send.fio = $.trim($('#fio').val());
-				send.phone = $.trim($('#phone').val());
-				send.adres = $.trim($('#adres').val());
-				send.worker_id = _num($('#worker_id').val());
-				send.pasp_seria = $.trim($('#pasp_seria').val());
-				send.pasp_nomer = $.trim($('#pasp_nomer').val());
-				send.pasp_adres = $.trim($('#pasp_adres').val());
-				send.pasp_ovd = $.trim($('#pasp_ovd').val());
-				send.pasp_data = $.trim($('#pasp_data').val());
+			if(o.category_id == 1 && !send.fio) {
+				dialog.err('Не указаны ФИО');
+				$('#fio').focus();
+				return;
+			}
+			if(o.category_id > 1 && !send.org_name) {
+				dialog.err('Не указано название организации');
+				$('#org_name').focus();
+				return;
 			}
 
-			if(org) {
-				send.org_name = $('#org_name').val();
-				send.org_phone = $('#org_phone').val();
-				send.org_fax = $('#org_fax').val();
-				send.org_adres = $('#org_adres').val();
-				send.org_inn = $('#org_inn').val();
-				send.org_kpp = $('#org_kpp').val();
+			if(CLIENT_FROM_REQUIRE && !o.id && !send.from_id && !send.from_name) {
+				dialog.err('Не указан источник, откуда пришёл клиент');
+				return;
 			}
 
 			if(!send.join)
 				send.client2 = 0;
-
-			if(!org && !send.fio) {
-				dialog.err('Не указаны ФИО');
-				$('#fio').focus();
-			} else if(org && !send.org_name) {
-				dialog.err('Не указано название организации');
-				$('#org_name').focus();
-			} else if(send.join && !send.client2)
+			if(send.join && !send.client2) {
 				dialog.err('Укажите второго клиента');
-			else if(send.join && send.client2 == CLIENT.id)
-				dialog.err('Выберите другого клиента');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Данные клиента изменены');
-						document.location.reload();
-					} else
-						dialog.abort().err(res.text);
-				}, 'json');
+				return;
 			}
+			if(send.join && send.client2 == CI.id) {
+				dialog.err('Выберите другого клиента');
+				return;
+			}
+
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					if(o.id) {
+						location.reload();
+						return;
+					}
+
+					if(o.callback)
+						o.callback(res);
+					else
+						document.location.href = URL + '&p=client&d=info&id=' + res.uid;
+				} else
+					dialog.abort().err(res.text);
+			}, 'json');
 		}
 	},
 
-	clientPersonVal = function() {
-		return {
-			op:'client_person_add',
-			fio:$('#person-fio').val(),
-			phone:$('#person-phone').val(),
-			adres:$('#person-adres').val(),
-			post:$('#person-post').val(),
-			pasp_seria:$('#person-pasp_seria').val(),
-			pasp_nomer:$('#person-pasp_nomer').val(),
-			pasp_adres:$('#person-pasp_adres').val(),
-			pasp_ovd:$('#person-pasp_ovd').val(),
-			pasp_data:$('#person-pasp_data').val()
-		};
-	},
-	clientPersonAdd = function(person) {
-		var html = '<div id="client-add-tab">' + clientPeopleTab(0, 1) + '</div>',
+	clientPersonEdit = function(o) {
+		o = $.extend({
+			id:0,
+			fio:'',
+			phone:'',
+			adres:'',
+			post:'',
+			pasp_seria:'',
+			pasp_nomer:'',
+			pasp_adres:'',
+			pasp_ovd:'',
+			pasp_data:''
+		}, o);
+		var html = '<div id="client-add-tab">' + clientPeopleTab(o, 1) + '</div>',
 			dialog = _dialog({
 				top:80,
 				width:400,
-				head:'Нoвое доверенное лицо',
+				head:o.id ? 'Редактирование доверенного лица' : 'Нoвое доверенное лицо',
 				content:html,
-				butSubmit:'Добавить',
+				butSubmit:o.id ? 'Применить' : 'Добавить',
 				submit:submit
 			});
 		$('#person-fio').focus();
 		$('#person-adres').autosize();
 
 		function submit() {
-			var send = clientPersonVal();
+			var send = {
+				op:'client_person_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				client_id:CI.id,
+				fio:$('#person-fio').val(),
+				phone:$('#person-phone').val(),
+				adres:$('#person-adres').val(),
+				post:$('#person-post').val(),
+				pasp_seria:$('#person-pasp_seria').val(),
+				pasp_nomer:$('#person-pasp_nomer').val(),
+				pasp_adres:$('#person-pasp_adres').val(),
+				pasp_ovd:$('#person-pasp_ovd').val(),
+				pasp_data:$('#person-pasp_data').val()
+			};
 			if(!send.fio) {
 				dialog.err('Не указано ФИО');
 				$('#person-fio').focus();
-			} else {
-				if($('#client-info').length) {
-					send.client_id = CLIENT.id;
-					dialog.process();
-					$.post(AJAX_MAIN, send, function(res) {
-						if(res.success) {
-							$('#person-spisok').html(res.html);
-							CLIENT.person = res.array;
-							dialog.close();
-							_msg('Новое доверенное лицо внесено');
-						} else
-							dialog.abort();
-					}, 'json');
-					return;
-				}
-
-				dialog.close();
-				person.push(send);
-				personPrint(person);
+				return;
 			}
-		}
-		function personPrint(person) {
-			var html = '<table class="_spisok">';
-			for(var i in person)
-				html += '<tr>' +
-				'<td>' + (i * 1 + 1) +
-				'<td>' + person[i].fio + (person[i].phone ? ', ' + person[i].phone : '') +
-				'<td>' + (person[i].post ? '<u>' + person[i].post + '</u> ' : '') +
-				'<td><div val="' + i + '" class="img_del' + _tooltip('Удалить', -29) + '</div>';
-			html += '</table>';
-			$('#person-list')
-				.html(html)
-				.find('.img_del').click(function() {
-					var v = $(this).attr('val');
-					person.splice(v, 1);
-					personPrint(person);
-				});
 
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#person-spisok').html(res.html);
+					CI.person = res.array;
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	},
 
@@ -332,12 +297,55 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		var send = {
 			op:'zayav_spisok',
 			type_id:v,
-			client_id:CLIENT.id
+			client_id:CI.id
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				$('#zayav-spisok').html(res.spisok);
 		}, 'json');
+	},
+	clientFromEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label">Название:' +
+						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:370,
+				head:(o.id ? 'Редактирование' : 'Добавление нового' ) + ' источника',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'client_from_' + (o.id ? 'edit' : 'add'),
+				from_id:o.id,
+				from_name:$('#name').val()
+			};
+			if(!send.from_name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.spisok);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	};
 
 $.fn.clientSel = function(o) {
@@ -353,9 +361,11 @@ $.fn.clientSel = function(o) {
 
 	if(o.add)
 		o.add = function() {
-			clientAdd(function(res) {
-				o.client_id = res.uid;
-				clientsGet();
+			clientEdit({
+				callback:function(res) {
+					o.client_id = res.uid;
+					clientsGet();
+				}
 			});
 		};
 
@@ -444,45 +454,16 @@ $(document)
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
 	})
 
-	.on('click', '#client-info #person-add', clientPersonAdd)
+	.on('click', '#client-info #person-add', clientPersonEdit)
 	.on('click', '#client-info .person-edit', function() {
-		var id = $(this).attr('val'),
-			html = '<div id="client-add-tab">' + clientPeopleTab(CLIENT.person[id], 1) + '</div>',
-			dialog = _dialog({
-				width:400,
-				head:'Редактирование доверенного лица',
-				content:html,
-				butSubmit:'Изменить',
-				submit:submit
-			});
-		$('#person-fio').focus();
-		$('#person-adres').autosize();
-
-		function submit() {
-			var send = clientPersonVal();
-			send.person_id = id;
-			if(!send.fio) {
-				dialog.err('Не указано ФИО');
-				$('#person-fio').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						$('#person-spisok').html(res.html);
-						CLIENT.person = res.array;
-						dialog.close();
-						_msg('Изменено');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
+		var id = $(this).attr('val');
+		clientPersonEdit(CI.person[id]);
 	})
 	.on('click', '#client-info .person-poa', function() {//внесение доверенности
 		var id = $(this).attr('val'),
-			person = CLIENT.person[id],
+			person = CI.person[id],
 			html = '<table class="_dialog-tab">' +
-					'<tr><td class="label w125">Организация:<td><b>' + CLIENT.name + '</b>' +
+					'<tr><td class="label w125">Организация:<td><b>' + CI.name + '</b>' +
 					'<tr><td class="label">Доверенное лицо:<td>' + person.fio +
 					'<tr><td class="label">Номер доверенности:<td><input type="text" id="nomer" class="money" value="' + person.poa_nomer + '" />' +
 					'<tr><td class="label">Дата выдачи:<td><input type="hidden" id="date_begin" value="' + person.poa_date_begin + '" />' +
@@ -532,7 +513,7 @@ $(document)
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#person-spisok').html(res.html);
-					CLIENT.person = res.array;
+					CI.person = res.array;
 					dialog.close();
 					_msg();
 				} else
@@ -547,11 +528,40 @@ $(document)
 			op:'client_person_del',
 			func:function(res) {
 				$('#person-spisok').html(res.html);
-				CLIENT.person = res.array;			}
+				CI.person = res.array;			}
+		});
+	})
+
+	.on('click', '#client-from .add', clientFromEdit)
+	.on('click', '#client-from .img_edit', function() {
+		var t = _parent($(this));
+		clientFromEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html()
+		});
+	})
+	.on('click', '#client-from .img_del', function() {
+		var p = _parent($(this));
+		_dialogDel({
+			id:p.attr('val'),
+			head:'источника, откуда пришёл клиент',
+			op:'client_from_del',
+			func:function() {
+				p.remove();
+			}
 		});
 	})
 
 	.ready(function() {
+		$('#client-dolg-sum').vkHint({
+			msg:'Текущая сумма долга клиентов',
+			ugol:'top',
+			width:190,
+			top:16,
+			left:404,
+			indent:'right'
+		});
+
 		if($('#client').length) {
 			$('#find')._search({
 				width:458,
@@ -560,7 +570,6 @@ $(document)
 				txt:'Введите текст и нажмите Enter',
 				func:_clientSpisok
 			}).inp(CLIENT.find);
-			$('#buttonCreate').click(clientAdd);
 			$('#category_id')._radio(_clientSpisok);
 			$('#dolg')._check(function(v, id) {
 				$('#opl')._check(0);
@@ -607,14 +616,14 @@ $(document)
 			$('#client-schet-add').click(function() {
 				_schetEdit({
 					edit:1,
-					client_id:CLIENT.id,
-					client:CLIENT.name
+					client_id:CI.id,
+					client:CI.name
 				});
 			});
 			$('#client-edit').click(clientEdit);
 			$('#client-del').click(function() {
 				_dialogDel({
-					id:CLIENT.id,
+					id:CI.id,
 					head:'клиента',
 					op:'client_del',
 					func:function() {
@@ -625,8 +634,37 @@ $(document)
 			$('#zayav-type-id')._radio({
 				light:1,
 				right:0,
-				spisok:_toSpisok(CLIENT.service_client),
+				spisok:_toSpisok(CI.service_client),
 				func:_clientZayavSpisok
+			});
+		}
+		if($('#client-from').length) {
+			$('#client_from_use')._check(function(v) {
+				$('.tr-require')[(v ? 'remove' : 'add') + 'Class']('dn');
+				$('.tr-submit').removeClass('dn');
+			});
+			$('#client_from_require')._check(function() {
+				$('.tr-submit').removeClass('dn');
+			});
+			$('.setup-submit').click(function() {
+				var t = $(this);
+				if(t.hasClass('_busy'))
+					return;
+
+				var send = {
+					op:'client_from_setup',
+					use:_bool($('#client_from_use').val()),
+					require:_bool($('#client_from_require').val())
+				};
+				
+				t.addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					t.removeClass('_busy');
+					if(res.success) {
+						$('.tr-submit').addClass('dn');
+						_msg();
+					}
+				}, 'json');
 			});
 		}
 	});

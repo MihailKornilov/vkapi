@@ -4,14 +4,15 @@ function _imageValToList($arr, $type_id) {//вставка изображений в массив на осно
 			FROM `_image`
 			WHERE !`deleted`
 			  AND !`sort`
+			  AND `".$type_id."`
 			  AND `".$type_id."` IN ("._idsGet($arr).")";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r[$type_id]]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 
-	foreach($arr as $r)
+	foreach($arr as $id => $r)
 		if(!isset($r['image_small']))
-			$arr[$r['id']]['image_small'] = '<img src="'.API_HTML.'/img/nofoto-s.gif">';
+			$arr[$id]['image_small'] = '<img src="'.API_HTML.'/img/nofoto-s.gif">';
 
 	return $arr;
 }
@@ -56,9 +57,9 @@ function _image200($v) {//показ изображения шириной 200
 	$js = ''; //параметр, который передаёт на кого будет загрузка изображения
 
 	//запчасти
-	if($zp_id = _num(@$v['zp_id'])) {
-		$cond .= " AND `zp_id`=".$zp_id;
-		$js = 'zp_id:'.$zp_id;
+	if($tovar_id = _num(@$v['tovar_id'])) {
+		$cond .= " AND `tovar_id`=".$tovar_id;
+		$js = 'tovar_id:'.$tovar_id;
 	}
 
 	$sql = "SELECT *
@@ -81,9 +82,9 @@ function _image200($v) {//показ изображения шириной 200
 function _imageSmall($v) {//получение одного маленького изображения
 	$cond = "!`deleted` AND !`sort`";
 
-	//запчасти
-	if($zp_id = _num(@$v['zp_id']))
-		$cond .= " AND `zp_id`=".$zp_id;
+	//товары
+	if($tovar_id = _num(@$v['tovar_id']))
+		$cond .= " AND `tovar_id`=".$tovar_id;
 
 	//модель устройств
 	if($model_id = _num(@$v['model_id']))
@@ -203,7 +204,7 @@ function _imageArr($id, $withDel=0) {//массив изображений по критению
 			FROM `_image`
 			WHERE `model_id`=".$im['model_id']."
 			  AND `zayav_id`=".$im['zayav_id']."
-			  AND `zp_id`=".$im['zp_id']."
+			  AND `tovar_id`=".$im['tovar_id']."
 			  AND `manual_id`=".$im['manual_id']."
 			  AND `note_id`=".$im['note_id']."
 			  AND `comment_id`=".$im['comment_id']."

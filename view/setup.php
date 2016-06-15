@@ -29,11 +29,13 @@ function _setup() {
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
 		'service' => 'Виды деятельности',
+		'cartridge' => 'Картриджи',
 		'expense' => 'Категории расходов',
 		'zayav_status' => 'Статусы заявок',
 		'zayav_expense' => 'SA: Расходы по заявке',
-		'product' => 'Виды изделий'
-	) + (function_exists('setup') ? setup() : array());
+		'tovar' => 'Категории товаров',
+		'salary_list' => 'Лист выдачи з/п'
+	);
 
 	$sub = array(
 		'worker' => 'rule',
@@ -50,6 +52,9 @@ function _setup() {
 
 	if(!RULE_SETUP_ZAYAV_STATUS)
 		unset($page['zayav_status']);
+
+	if(APP_ID != 3798718)
+		unset($page['cartridge']);
 
 	if(_service('count') < 2)
 		unset($page['service']);
@@ -90,12 +95,11 @@ function setup_my() {
 			'<p>Если вы забыли пин-код, обратитесь к руководителю, чтобы сбросить его.'.
 		'</div>'.
 	(PIN ?
-		'<div class="vkButton" id="pinchange"><button>Изменить пин-код</button></div>'.
-		'<div class="vkButton" id="pindel"><button>Удалить пин-код</button></div>'
+		'<button class="vk" id="pinchange">Изменить пин-код</button>'.
+		'<button class="vk" id="pindel">Удалить пин-код</button>'
 	:
-		'<div class="vkButton" id="pinset"><button>Установить пин-код</button></div>'
+		'<button class="vk" id="pinset">Установить пин-код</button>'
 	).
-
 
 		'<div class="headName" id="dop" >Дополнительно</div>'.
 		'<table class="bs10">'.
@@ -175,7 +179,7 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td class="lab">Имя:<td><input type="text" id="first_name" value="'.$u['viewer_first_name'].'" />'.
 			'<tr><td class="lab">Отчество:<td><input type="text" id="middle_name" value="'.$u['viewer_middle_name'].'" />'.
 			'<tr><td class="lab">Должность:<td><input type="text" id="post" value="'.$u['viewer_post'].'" />'.
-			'<tr><td><td><div class="vkButton" id="w-save"><button>Сохранить</button></div>'.
+			'<tr><td><td><button class="vk" id="w-save">Сохранить</button>'.
 		'</table>'.
 
 	(RULE_SETUP_RULES ?
@@ -195,7 +199,7 @@ function setup_worker_rule($viewer_id) {
 
 	($u['pin'] ?
 		'<div class="headName">Пин-код</div>'.
-		'<div class="vkButton" id="pin-clear"><button>Сбросить пин-код</button></div>'
+		'<button class="vk" id="pin-clear">Сбросить пин-код</button>'
 	: '').
 
 /*		'<div class="headName">Дополнительно</div>'.
@@ -336,48 +340,53 @@ function setup_rekvisit() {
 	if(!RULE_SETUP_REKVISIT)
 		return _err('Недостаточно прав: Реквизиты организации');
 
-	$sql = "SELECT *
-			FROM `_app`
-			WHERE `id`=".APP_ID;
+	$sql = "SELECT * FROM `_app` WHERE `id`=".APP_ID;
 	$g = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 	return
-		'<div id="setup_rekvisit">'.
-			'<div class="headName">Реквизиты организации</div>'.
-			'<table class="t">'.
-				'<tr><td class="label topi">Название организации:<td><textarea id="name">'.$g['name'].'</textarea>'.
-				'<tr><td class="label topi">Наименование юридического лица:<td><textarea id="name_yur">'.$g['name_yur'].'</textarea>'.
-				'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
-				'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
-				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
-				'<tr><td class="label">Контактные телефоны:<td><input type="text" id="phone" value="'.$g['phone'].'" />'.
-				'<tr><td class="label">Факс:<td><input type="text" id="fax" value="'.$g['fax'].'" />'.
-				'<tr><td class="label topi">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
-				'<tr><td class="label topi">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
-				'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
-			'</table>'.
-			'<div class="headName">Банк получателя</div>'.
-			'<table class="t">'.
-				'<tr><td class="label topi">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
-				'<tr><td class="label">БИК:<td><input type="text" id="bank_bik" value="'.$g['bank_bik'].'" />'.
-				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="bank_account" value="'.$g['bank_account'].'" />'.
-				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="bank_account_corr" value="'.$g['bank_account_corr'].'" />'.
-				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
-			'</table>'.
-		'</div>';
+	'<script>'.
+		'var APP_TYPE='._selJson(_appType()).';'.
+	'</script>'.
+	'<div id="setup_rekvisit">'.
+		'<div class="headName">Основная информация</div>'.
+		'<table class="t">'.
+			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type_id" value="'.$g['type_id'].'" />'.
+		'</table>'.
+		'<div class="headName">Реквизиты организации</div>'.
+		'<table class="t">'.
+			'<tr><td class="label topi">Название организации:<td><textarea id="name">'.$g['name'].'</textarea>'.
+			'<tr><td class="label topi">Наименование юридического лица:<td><textarea id="name_yur">'.$g['name_yur'].'</textarea>'.
+			'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
+			'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
+			'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
+			'<tr><td class="label">Контактные телефоны:<td><input type="text" id="phone" value="'.$g['phone'].'" />'.
+			'<tr><td class="label">Факс:<td><input type="text" id="fax" value="'.$g['fax'].'" />'.
+			'<tr><td class="label topi">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
+			'<tr><td class="label topi">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
+			'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
+		'</table>'.
+		'<div class="headName">Банк получателя</div>'.
+		'<table class="t">'.
+			'<tr><td class="label topi">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
+			'<tr><td class="label">БИК:<td><input type="text" id="bank_bik" value="'.$g['bank_bik'].'" />'.
+			'<tr><td class="label">Расчётный счёт:<td><input type="text" id="bank_account" value="'.$g['bank_account'].'" />'.
+			'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="bank_account_corr" value="'.$g['bank_account_corr'].'" />'.
+			'<tr><td><td><button class="vk">Сохранить</button>'.
+		'</table>'.
+	'</div>';
 }
 
 function setup_service() {
 	$sql = "SELECT
 				*,
 				0 `active`
-			FROM `_zayav_type`
+			FROM `_zayav_service`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
 
-	$sql = "SELECT `type_id`
-			FROM `_zayav_type_active`
+	$sql = "SELECT `service_id`
+			FROM `_zayav_service_use`
 			WHERE `app_id`=".APP_ID;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
@@ -417,7 +426,8 @@ function setup_expense_spisok() {
 	$sql = "SELECT
 				*,
 				0 `sub`,
-				0 `count`
+				0 `count`,
+				0 `deleted`
 			FROM `_money_expense_category`
 			WHERE `app_id`=".APP_ID." OR !`app_id`
 			ORDER BY `sort`";
@@ -440,11 +450,24 @@ function setup_expense_spisok() {
 				COUNT(`id`) `count`
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
 			  AND `category_id`
 			GROUP BY `category_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['count'] = $r['count'];
+
+	$sql = "SELECT
+				DISTINCT `category_id`,
+				COUNT(`id`) `count`
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `deleted`
+			  AND `category_id`
+			GROUP BY `category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['deleted'] = $r['count'];
 
 	$send =
 		'<table class="_spisok">'.
@@ -463,10 +486,12 @@ function setup_expense_spisok() {
 									'<a class="name" href="'.URL.'&p=setup&d=expense&id='.$id.'">'.$r['name'].'</a>'
 						).
 					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
-					'<td class="count">'.($r['count'] ? $r['count'] : '').
+					'<td class="count">'.
+						($r['count'] ? $r['count'] : '').
+						($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '').
 					'<td class="ed">'.
 						($id != 1 ? _iconEdit($r) : '').
-						($id != 1 && !$r['count'] ? _iconDel($r) : '').
+						($id != 1 && !$r['count'] && !$r['deleted'] ? _iconDel($r) : '').
 			'</table>';
 	$send .= '</dl>';
 	return $send;
@@ -491,7 +516,9 @@ function setup_expense_sub($id) {
 }
 function setup_expense_sub_spisok($id) {
 	$sql = "SELECT
-				*
+				*,
+				0 `count`,
+				0 `deleted`
 			FROM `_money_expense_category_sub`
 			WHERE `app_id`=".APP_ID."
 			  AND `category_id`=".$id."
@@ -500,12 +527,42 @@ function setup_expense_sub_spisok($id) {
 	if(empty($arr))
 		return 'Список пуст.';
 
+	$sql = "SELECT
+				DISTINCT `category_sub_id`,
+				COUNT(`id`) `count`
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `category_id`=".$id."
+			  AND `category_sub_id`
+			GROUP BY `category_sub_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['category_sub_id']]['count'] = $r['count'];
+
+	$sql = "SELECT
+				DISTINCT `category_sub_id`,
+				COUNT(`id`) `count`
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `deleted`
+			  AND `category_id`=".$id."
+			  AND `category_sub_id`
+			GROUP BY `category_sub_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['category_sub_id']]['deleted'] = $r['count'];
+
 	$send = '<table class="_spisok">'.
-				 '<tr><th>Наименование'.
-					 '<th>';
+				'<tr><th>Наименование'.
+				'<th class="count">Кол-во<br />записей'.
+				'<th>';
 	foreach($arr as $r)
 		$send .= '<tr val="'.$r['id'].'">'.
-			 '<td class="name">'.$r['name'].
+			'<td class="name">'.$r['name'].
+			'<td class="count">'.
+				($r['count'] ? $r['count'] : '').
+				($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '').
 			 '<td class="ed">'._iconEdit($r)._iconDel($r);
 
 	$send .= '</table>';
@@ -519,14 +576,9 @@ function setup_zayav_status() {
 		'<div id="setup_zayav_status">'.
 			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
 			'<div id="status-spisok">'.setup_zayav_status_spisok().'</div>'.
-		'</div>'.
-		'<script type="text/javascript">'.
-			'var '._service('const_js', _service('current')).';'.
-		'</script>';
+		'</div>';
 }
 function setup_zayav_status_spisok() {
-	_service('const_define', _service('current'));
-
 	$sql = "SELECT
 	            *,
 	            0 `next`
@@ -696,113 +748,6 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 }
 
 
-function setup_product() {
-	return
-	'<div id="setup_product">'.
-		'<div class="headName">Настройки видов изделий<a class="add">Добавить</a></div>'.
-		'<div class="spisok">'.setup_product_spisok().'</div>'.
-	'</div>';
-}
-function setup_product_spisok() {
-	$sql = "SELECT
-				*,
-				0 `sub`,
-				0 `zayav`
-			FROM `_product`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `name`";
-	$product = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-	if(empty($product))
-		return 'Список пуст.';
-
-	$sql = "SELECT `product_id`,
-				   COUNT(`id`) AS `sub`
-			FROM `_product_sub`
-			WHERE `app_id`=".APP_ID."
-			GROUP BY `product_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$product[$r['product_id']]['sub'] = $r['sub'];
-
-	$sql = "SELECT `product_id`,
-				   COUNT(`id`) AS `zayav`
-			FROM `_zayav_product`
-			WHERE `app_id`=".APP_ID."
-			GROUP BY `product_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$product[$r['product_id']]['zayav'] = $r['zayav'];
-
-	$send = '<table class="_spisok">'.
-				'<tr><th>Наименование'.
-					'<th>Подвиды'.
-					'<th>Кол-во<br />заявок'.
-					'<th>';
-	foreach($product as $id => $r)
-		$send .= '<tr val="'.$id.'">'.
-					'<td class="name"><a href="'.URL.'&p=setup&d=product&id='.$id.'">'.$r['name'].'</a>'.
-					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
-					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
-					'<td><div class="img_edit"></div>'.
-						($r['sub'] || $r['zayav'] ? '' :'<div class="img_del"></div>');
-	$send .= '</table>';
-	return $send;
-}
-function setup_product_sub($product_id) {
-	$sql = "SELECT *
-			FROM `_product`
-			WHERE `app_id`=".APP_ID."
-			  AND `id`=".$product_id;
-	if(!$pr = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-		return 'Изделия id = '.$product_id.' не существует.';
-
-	return
-	'<script type="text/javascript">var PRODUCT_ID='.$product_id.';</script>'.
-	'<div id="setup_product_sub">'.
-		'<a href="'.URL.'&p=setup&d=product"><< назад к видам изделий</a>'.
-		'<div class="headName">Список подвидов изделий для "'.$pr['name'].'"<a class="add">Добавить</a></div>'.
-		'<div class="spisok">'.setup_product_sub_spisok($product_id).'</div>'.
-	'</div>';
-}
-function setup_product_sub_spisok($product_id) {
-	$sql = "SELECT
-				*,
-				0 `zayav`
-			FROM `_product_sub`
-			WHERE `app_id`=".APP_ID."
-			  AND `product_id`=".$product_id."
-			ORDER BY `name`";
-	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-	if(empty($arr))
-		return 'Список пуст.';
-
-	$sql = "SELECT
-				`product_sub_id`,
-				COUNT(`id`) `zayav`
-			FROM `_zayav_product`
-			WHERE `app_id`=".APP_ID."
-			  AND `product_id`=".$product_id."
-			  AND `product_sub_id`
-			GROUP BY `product_sub_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$arr[$r['product_sub_id']]['zayav'] = $r['zayav'];
-
-	$send = '<table class="_spisok">'.
-				 '<tr><th>Наименование'.
-					 '<th>Кол-во<br />заявок'.
-					 '<th>';
-	foreach($arr as $id => $r)
-		$send .= '<tr val="'.$r['id'].'">'.
-			 '<td class="name">'.$r['name'].
-			 '<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
-			 '<td><div class="img_edit"></div>'.
-					($r['zayav'] ? '' : '<div class="img_del"></div>');
-		$send .= '</table>';
-	return $send;
-}
-
-
 function setup_zayav_expense() {//категории расходов по заявке
 	if(!SA)
 		return '';
@@ -861,3 +806,297 @@ function setup_zayav_expense_spisok() {
 	$send .= '</dl>';
 	return $send;
 }
+
+function setup_salary_list() {
+	return
+	'<div id="setup_salary_list">'.
+		'<div class="headName">Настройка листа выдачи з/п</div>'.
+		'<div class="spisok">'.setup_salary_list_spisok().'</div>'.
+		'<div class="center mt20"><button class="vk">Сохранить</button></div>'.
+	'</div>';
+}
+function setup_salary_list_spisok() {
+	$spisok = salary_list_head();
+	$pole = array();
+	$check = array();
+
+	if(_app('salary_list_setup'))
+		foreach(explode(',', _app('salary_list_setup')) as $k) {
+			$pole[$k] = $spisok[$k];
+			$check[$k] = 1;
+			unset($spisok[$k]);
+		}
+
+	foreach($spisok as $id => $name) {
+		$pole[$id] = $spisok[$id];
+		$check[$id] = 0;
+	}
+
+	$send =
+	'<table class="_spisok">'.
+		'<tr><th class="name">Название столбца листа выдачи'.
+	'</table>'.
+	'<dl class="_sort no">';
+	foreach($pole as $id => $name)
+		$send .=
+		'<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="ch">'._check('ch'.$id, '', $check[$id]).
+					'<td class="name" style="cursor:move">'.$name.
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}
+function salary_list_head() {
+	return array(
+		1 => '№ заявки',
+		2 => 'Название заявки',
+		3 => '№ дог.',
+		4 => 'Адрес',
+		5 => 'Дата выполнения',
+		6 => 'Сумма',
+		7 => 'Описание',
+		8 => 'Дата начисления'
+	);
+}
+
+
+
+
+
+
+
+
+function setup_cartridge() {
+	return
+		'<div id="setup-cartridge">'.
+			'<div class="headName">Управление заправкой картриджей<a class="add" onclick="cartridgeNew()">Внести новый картридж</a></div>'.
+			'<div id="spisok">'.setup_cartridge_spisok().'</div>'.
+		'</div>';
+}
+function setup_cartridge_spisok($edit_id=0) {
+	$send = '';
+	foreach(_cartridgeType() as $type_id => $name) {
+		$sql = "SELECT `s`.*,
+				   COUNT(`z`.`id`) `count`
+			FROM `_setup_cartridge` `s`
+				LEFT JOIN `_zayav_cartridge` AS `z`
+				ON `s`.`id`=`z`.`cartridge_id`
+			WHERE `type_id`=".$type_id."
+			GROUP BY `s`.`id`
+			ORDER BY `name`";
+		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+			continue;
+
+		$send .=
+			'<div class="type">'.$name.':</div>'.
+			'<table class="_spisok">' .
+				'<tr><th class="n">№' .
+					'<th class="name">Модель' .
+					'<th class="cost">Вид услуги:<br />Запр./восст./чип' .
+					'<th class="count">Кол-во' .
+					'<th class="set">';
+		$n = 1;
+		foreach ($spisok as $id => $r) {
+			$cost = array();
+			if($r['cost_filling'])
+				$cost[] = '<span class="'._tooltip('Заправка', -30).$r['cost_filling'].'</span>';
+			if($r['cost_restore'])
+				$cost[] = '<span class="'._tooltip('Восстановление', -48).$r['cost_restore'].'</span>';
+			if($r['cost_chip'])
+				$cost[] = '<span class="'._tooltip('Замена чипа', -40).$r['cost_chip'].'</span>';
+			$send .=
+				'<tr'.($edit_id == $r['id'] ? ' class="edited"' : '').'>' .
+					'<td class="n">'.($n++) .
+					'<td class="name">'.$r['name'] .
+					'<td class="cost">'.implode(' / ', $cost) .
+						'<input type="hidden" class="type_id" value="'.$r['type_id'].'" />' .
+						'<input type="hidden" class="filling" value="'.$r['cost_filling'].'" />' .
+						'<input type="hidden" class="restore" value="'.$r['cost_restore'].'" />' .
+						'<input type="hidden" class="chip" value="'.$r['cost_chip'].'" />' .
+					'<td class="count">'.($r['count'] ? $r['count'] : '') .
+					'<td class="set">' .
+						'<div val="'.$id.'" class="img_edit'._tooltip('Изменить', -33).'</div>';
+		}
+		$send .= '</table>';
+	}
+	return $send ? $send : 'Список пуст.';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+function setup_tovar() {
+	return setup_tovar_category();
+	switch(@$_GET['d1']) {
+		case 'category': return setup_tovar_category();
+		case 'name': return setup_tovar_name();
+		case 'vendor': return setup_tovar_vendor();
+	}
+
+	return
+	'<div id="setup_tovar">'.
+		'<div class="headName">Настройки товаров</div>'.
+		'<a href="'.URL.'&p=setup&d=tovar&d1=category">Настроить категории товаров</a>'.
+		'<br />'.
+		'<a href="'.URL.'&p=setup&d=tovar&d1=name">Названия товаров</a>'.
+		'<br />'.
+		'<a href="'.URL.'&p=setup&d=tovar&d1=vendor">Производители</a>'.
+	'</div>';
+}
+
+function setup_tovar_category() {
+	//Категории можно вносить свои, либо подключать из существующих
+	//При подключении существующих категорий все товары становятся доступными для текущего приложения
+	return
+	'<div id="setup_tovar_category">'.
+		'<div class="headName">Категории товаров</div>'.
+		'<div class="_info">'.
+			'<u>Категории</u> предназначены для разделения товаров по похожим свойствам или характеристикам. '.
+			'<br />'.
+			'Возможно создавать собственные категории товаров, либо подключать готовые категории из каталога.'.
+		'</div>'.
+		'<table id="but">'.
+			'<tr><td><button class="vk" id="add">Создать новую категорию</button>'.
+				'<td><button class="vk" id="join">Подключить категории из каталога</button>'.
+		'</table>'.
+		'<div id="spisok">'.setup_tovar_category_spisok().'</div>'.
+	'</div>';
+}
+function setup_tovar_category_spisok() {//категории товаров
+	$sql = "SELECT *
+			FROM `_tovar_category_use`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$sql = "SELECT *
+			FROM `_tovar_category`
+			WHERE `id` IN ("._idsGet($spisok, 'category_id').")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		foreach($spisok as $sp)
+			if($r['id'] == $sp['category_id']) {
+				$spisok[$sp['id']]['name'] = $r['name'];
+				continue;
+			}
+
+	$send = '<table class="_spisok">'.
+				'<tr><th class="name">Наименование'.
+					'<th class="ed">'.
+			'</table>'.
+			'<dl class="_sort" val="_tovar_category_use">';
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr val="'.$r['category_id'].'">'.
+					'<td class="name">'.$r['name'].
+					'<td class="ed">'._iconEdit($r)._iconDel($r).
+			'</table>';
+	$send .= '</dl>';
+
+	return $send;
+}
+
+function setup_tovar_name() {
+	return
+	'<div id="setup_tovar_name">'.
+		'<div class="headName">Названия товаров<a class="add">Добавить</a></div>'.
+		'<div class="_info">'.
+			'<u>Названия товаров</u> предназначены для краткого и точного описания товара. '.
+			'<br />'.
+			'Обратите внимание, что одно и то же название может содержаться в разных категориях товаров. '.
+			'<br />'.
+			'Добавляйте новое название только в случае, если его точно нет в этом списке. '.
+		'</div>'.
+		'<div id="spisok">'.setup_tovar_name_spisok().'</div>'.
+	'</div>';
+}
+function setup_tovar_name_spisok() {
+	$sql = "SELECT
+				*,
+				0 `tovar`
+			FROM `_tovar_name`
+			ORDER BY `name`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$sql = "SELECT
+				`name_id`,
+				COUNT(`id`) `count`
+			FROM `_tovar`
+			WHERE `category_id`
+			GROUP BY `name_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['name_id']]['tovar'] = $r['count'];
+
+	$send = '<table class="_spisok">'.
+				'<tr><th>Название'.
+					'<th>Кол-во<br />товаров'.
+					'<th>';
+	foreach($spisok as $id => $r)
+		$send .= '<tr val="'.$id.'">'.
+					'<td class="name">'.$r['name'].' <b>'.$r['id'].'</b>'.
+					'<td class="tovar center">'.($r['tovar'] ? $r['tovar'] : '').
+					'<td class="ed">'._iconEdit($r)._iconDel($r);
+	$send .= '</table>';
+
+	return $send;
+}
+
+function setup_tovar_vendor() {
+	return
+	'<div id="setup_tovar_vendor">'.
+		'<div class="headName">Производители товаров<a class="add">Новый производитель</a></div>'.
+		'<div class="_info">'.
+			'<u>Производители товаров</u>'.
+			'<br />'.
+		'</div>'.
+		'<div id="spisok">'.setup_tovar_vendor_spisok().'</div>'.
+	'</div>';
+}
+function setup_tovar_vendor_spisok() {
+	$sql = "SELECT
+				*,
+				0 `tovar`
+			FROM `_tovar_vendor`
+			ORDER BY `name`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+		$sql = "SELECT
+				`vendor_id`,
+				COUNT(`id`) `count`
+			FROM `_tovar`
+			WHERE `vendor_id`
+			GROUP BY `vendor_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['vendor_id']]['tovar'] = $r['count'];
+
+	$send = '<table class="_spisok">'.
+				'<tr><th>Название'.
+					'<th>Кол-во<br />товаров'.
+					'<th>';
+	foreach($spisok as $id => $r)
+		$send .= '<tr val="'.$id.'">'.
+					'<td class="name">'.$r['name'].' <b>'.$r['id'].'</b>'.
+					'<td class="tovar center">'.($r['tovar'] ? $r['tovar'] : '').
+					'<td class="ed">'._iconEdit($r)._iconDel($r);
+	$send .= '</table>';
+
+	return $send;
+}
+
+

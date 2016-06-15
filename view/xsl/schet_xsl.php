@@ -36,7 +36,7 @@ function pageNum($n) {
 	}
 
 	return $res.$arr[$n];
-}//pageNum()
+}
 function pageSetup($book, $title) {
 	$sheet = $book->getActiveSheet();
 
@@ -67,7 +67,7 @@ function xls_schet_width($sheet) {//установка ширины столбц
 	$sheet->getColumnDimension('D')->setWidth(8);
 	$sheet->getColumnDimension('E')->setWidth(14);
 	$sheet->getColumnDimension('F')->setWidth(14);
-}//xls_schet_width()
+}
 function xls_schet_top($sheet, $ws) {
 	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode($ws['name'])));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
@@ -77,7 +77,7 @@ function xls_schet_top($sheet, $ws) {
 
 	$sheet->setCellValue('A4', 'Телефон: '.utf8(htmlspecialchars_decode($ws['phone'])));
 	$sheet->getStyle('A4')->getFont()->setBold(true);
-}//xls_schet_top()
+}
 function xls_schet_rekvisit($sheet, $ws) {
 	$sheet->setCellValue('A6', 'Образец заполнения платежного поручения');
 	$sheet->getStyle('A6')->getFont()->setBold(true);
@@ -117,7 +117,7 @@ function xls_schet_rekvisit($sheet, $ws) {
 	$sheet->setCellValue('E11', utf8($ws['bank_account_corr']).' ');
 
 	$sheet->getStyle('D9:D11')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-}//xls_schet_rekvisit()
+}
 function xls_schet_head($sheet, $s) {
 	$sheet->mergeCells('A13:F13');
 	$sheet->setCellValue('A13', 'СЧЕТ № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
@@ -149,7 +149,7 @@ function xls_schet_head($sheet, $s) {
 	}
 
 	return $line + 1;
-}//xls_schet_head()
+}
 function xls_schet_tabHead($sheet, $line) {//заголовок колонок таблицы
 	$ram = array(
 		'borders' => array(
@@ -174,7 +174,7 @@ function xls_schet_tabHead($sheet, $line) {//заголовок колонок �
 	$sheet->setCellValue('D'.$line, "Коли-\nчество");
 	$sheet->setCellValue('E'.$line, 'Цена');
 	$sheet->setCellValue('F'.$line, 'Сумма');
-}//xls_schet_tabHead()
+}
 function xls_tabContent($sheet, $line) {
 	$sql = "SELECT *
 			FROM `_schet_content`
@@ -190,8 +190,8 @@ function xls_tabContent($sheet, $line) {
 		$sheet->getCell('B'.$line)->setValue(utf8($r['name']));
 		$sheet->getCell('C'.$line)->setValue('шт');
 		$sheet->getCell('D'.$line)->setValue($r['count']);
-		$sheet->getCell('E'.$line)->setValue(round($r['cost']).',00');
-		$sheet->getCell('F'.$line)->setValue($s.',00');
+		$sheet->getCell('E'.$line)->setValue(_cena($r['cost'], 0, 1, ','));
+		$sheet->getCell('F'.$line)->setValue(_cena($s, 0, 1, ','));
 		$line++;
 		$n++;
 		$sum += $s;
@@ -224,23 +224,23 @@ function xls_tabContent($sheet, $line) {
 		'n' => $n,
 		'sum' => $sum
 	);
-}//xls_tabContent()
+}
 function xls_schet_tab($sheet, $line) {
 	$start = $line + 1;
 	$arr = xls_tabContent($sheet, $start);
 	$line = $arr['line'];
 	$n = $arr['n'];
-	$sum = $arr['sum'];
+	$sum = _cena($arr['sum'], 0, 1, ',');
 
 	//итог
 	$sheet->getCell('E'.$line)->setValue('Итого:');
-	$sheet->getCell('F'.$line)->setValue($sum.',00');
+	$sheet->getCell('F'.$line)->setValue($sum);
 
 	$sheet->getCell('E'.($line + 1))->setValue('Без налога (НДС).');
 	$sheet->getCell('F'.($line + 1))->setValue('-              ');
 
 	$sheet->getCell('E'.($line + 2))->setValue('Всего к оплате:');
-	$sheet->getCell('F'.($line + 2))->setValue($sum.',00');
+	$sheet->getCell('F'.($line + 2))->setValue($sum);
 
 	$sheet->getStyle('E'.$line.':F'.($line + 2))->getFont()->setBold(true);
 
@@ -258,19 +258,19 @@ function xls_schet_tab($sheet, $line) {
 	));
 
 	$line += 4;
-	$sheet->getCell('A'.$line)->setValue('Всего наименований '.($n - 1).', на сумму '.$sum.'.00');
+	$sheet->getCell('A'.$line)->setValue('Всего наименований '.($n - 1).', на сумму '.$sum);
 	$line++;
-	$sheet->getCell('A'.$line)->setValue(mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' 00 копеек');
+	$sheet->getCell('A'.$line)->setValue(mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' '.utf8(_kop($sum)).'.');
 	$sheet->getStyle('A'.$line)->getFont()->setBold(true);
 
 	return $line;
-}//xls_schet_tab()
+}
 function xls_schet_podpis($sheet, $line) {
 	$line += 3;
 	$sheet->getCell('A'.$line)->setValue('Руководитель предприятия_____________________ (Шерстянников С.Ю.)');
 	$line += 3;
 	$sheet->getCell('A'.$line)->setValue('Главный бухгалтер____________________________ (Шерстянникова Я.В.)');
-}//xls_schet_podpis()
+}
 
 
 
@@ -280,7 +280,7 @@ function xls_nakl_razmer($sheet) {
 		$sheet->getColumnDimension(pageNum($n))->setWidth(3);
 	for($n = 1; $n <= 31; $n++)
 		$sheet->getRowDimension($n)->setRowHeight(12);
-}//xls_nakl_razmer()
+}
 function xls_nakl_head($sheet, $s) {
 	$sheet->setCellValue('A1', 'Накладная № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
 	$sheet->getStyle('A1')
@@ -303,7 +303,7 @@ function xls_nakl_head($sheet, $s) {
 		)
 	);
 	$sheet->getStyle('A1:'.pageNum(31).'1')->applyFromArray($ram);
-}//xls_nakl_head()
+}
 function xls_nakl_rekvisit($sheet, $ws, $s, $line=3) {
 	$x = pageNum(5);
 
@@ -331,7 +331,7 @@ function xls_nakl_rekvisit($sheet, $ws, $s, $line=3) {
 
 	$line += 2;
 	return $line;
-}//xls_nakl_rekvisit()
+}
 function xls_nakl_table($sheet, $line) {
 	$ram = array(
 		'borders' => array(
@@ -371,7 +371,7 @@ function xls_nakl_table($sheet, $line) {
 	$sheet->mergeCells(pageNum(28).$line.':'.pageNum(31).$line);
 
 	return ++$line;
-}//xls_nakl_table()
+}
 function xls_nakl_tovar_spisok($sheet, $line) {
 	$sql = "SELECT *
 			FROM `_schet_content`
@@ -394,11 +394,11 @@ function xls_nakl_tovar_spisok($sheet, $line) {
 		$sheet->getCell(pageNum(22).$line)->setValue('шт');
 		$sheet->mergeCells(pageNum(22).$line.':'.pageNum(23).$line);
 
-		$sheet->getCell(pageNum(24).$line)->setValue(round($r['cost'], 2).',00');
+		$sheet->getCell(pageNum(24).$line)->setValue(_cena($r['cost'], 0, 1, ','));
 		$sheet->mergeCells(pageNum(24).$line.':'.pageNum(27).$line);
 
 		$s = $r['count'] * $r['cost'];
-		$sheet->getCell(pageNum(28).$line)->setValue($s.',00');
+		$sheet->getCell(pageNum(28).$line)->setValue(_cena($s, 0, 1, ','));
 		$sheet->mergeCells(pageNum(28).$line.':'.pageNum(31).$line);
 
 		$line++;
@@ -454,25 +454,25 @@ function xls_nakl_tovar_spisok($sheet, $line) {
 		'n' => $n,
 		'sum' => $sum
 	);
-}//xls_nakl_tovar_spisok()
+}
 function xls_nakl_itogo($sheet, $r) {
 	$line = $r['line'];
-	$sum = $r['sum'];
+	$sum = _cena($r['sum'], 0, 1, ',');
 
 	$line++;
 	$sheet->setCellValue(pageNum(27).$line, 'Итого:');
 	$sheet->getStyle(pageNum(27).$line)->getFont()->setBold(true);
 
-	$sheet->setCellValue(pageNum(31).$line, _sumSpace($sum).',00');
+	$sheet->setCellValue(pageNum(31).$line, $sum);
 	$sheet->getStyle(pageNum(31).$line)->getFont()->setBold(true);
 
 	$sheet->getStyle(pageNum(24).$line.':'.pageNum(31).$line)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 
 	$line += 2;
-	$sheet->getCell('A'.$line)->setValue('Всего наименований '.($r['n'] - 1).', на сумму '.$sum.'.00');
+	$sheet->getCell('A'.$line)->setValue('Всего наименований '.($r['n'] - 1).', на сумму '.$sum);
 
 	$line++;
-	$sheet->getCell('A'.$line)->setValue(mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' 00 копеек');
+	$sheet->getCell('A'.$line)->setValue(mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' '.utf8(_kop($sum)).'.');
 	$sheet->getStyle('A'.$line)->getFont()->setBold(true);
 	$sheet->getRowDimension($line)->setRowHeight(18);
 	$ram = array(
@@ -489,7 +489,7 @@ function xls_nakl_itogo($sheet, $r) {
 	$sheet->getStyle('A'.$line.':'.pageNum(31).$line)->applyFromArray($ram);
 
 	return $line + 3;
-}//xls_nakl_itogo()
+}
 function xls_nakl_podpis($sheet, $line) {
 	$sheet->setCellValue(pageNum(1).$line, 'Отпустил');
 	$sheet->getStyle(pageNum(1).$line)->getFont()->setBold(true);
@@ -532,7 +532,7 @@ function xls_nakl_podpis($sheet, $line) {
 	$sheet->mergeCells($xy);
 	$sheet->getStyle($xy)->applyFromArray($ram);
 	$sheet->setCellValue(pageNum(27).$line, 'подпись');
-}//xls_nakl_podpis()
+}
 
 function xls_act_width($sheet) {//установка ширины столбцов
 	$sheet->getColumnDimension('A')->setWidth(3);
@@ -541,14 +541,14 @@ function xls_act_width($sheet) {//установка ширины столбцо
 	$sheet->getColumnDimension('D')->setWidth(12);
 	$sheet->getColumnDimension('E')->setWidth(12);
 	$sheet->getColumnDimension('F')->setWidth(13);
-}//xls_act_width()
+}
 function xls_act_top($sheet, $ws) {
 	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode($ws['name'])));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
 	$sheet->setCellValue('A2', 'Адрес: '.utf8(htmlspecialchars_decode($ws['adres_yur'])));
 	$sheet->getStyle('A2')->getFont()->setBold(true);
-}//xls_act_top()
+}
 function xls_act_head($sheet, $s) {
 	$sheet->mergeCells('A4:F4');
 	$sheet->setCellValue('A4', 'Акт № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
@@ -556,7 +556,7 @@ function xls_act_head($sheet, $s) {
 	$sheet->getStyle('A4')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
 	$sheet->setCellValue('A6', 'Заказчик: '.utf8(htmlspecialchars_decode(_clientVal($s['client_id'], 'name'))));
-}//xls_act_head()
+}
 function xls_act_tabHead($sheet) {//заголовок колонок таблицы
 	$line = 8;
 
@@ -581,7 +581,7 @@ function xls_act_tabHead($sheet) {//заголовок колонок табли
 	$sheet->setCellValue('D'.$line, 'Количество');
 	$sheet->setCellValue('E'.$line, 'Цена');
 	$sheet->setCellValue('F'.$line, 'Сумма');
-}//xls_act_tabHead()
+}
 function xls_act_tab($sheet) {
 	$start = 9;
 	$arr = xls_tabContent($sheet, $start);
@@ -590,7 +590,7 @@ function xls_act_tab($sheet) {
 
 	//итого
 	$sheet->getCell('E'.$line)->setValue('Итого:');
-	$sheet->getCell('F'.$line)->setValue($sum.',00');
+	$sheet->getCell('F'.$line)->setValue(_cena($sum, 0, 1, ','));
 
 	$sheet->getStyle('E'.$line.':F'.$line)->getFont()->setBold(true);
 
@@ -608,11 +608,11 @@ function xls_act_tab($sheet) {
 	));
 
 	$line += 2;
-	$sheet->getCell('A'.$line)->setValue('Всего оказано услуг на сумму: '.mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' 00 копеек.');
+	$sheet->getCell('A'.$line)->setValue('Всего оказано услуг на сумму: '.mb_ucfirst(utf8(_numToWord($sum))).' рубл'._end($sum, 'ь', 'я', 'ей').' '.utf8(_kop($sum)).'.');
 	$sheet->getStyle('A'.$line)->getFont()->setItalic(true);
 
 	return $line;
-}//xls_act_tab()
+}
 function xls_act_podpis($sheet, $line) {
 	$line++;
 	$sheet->getCell('A'.$line)->setValue(
@@ -639,7 +639,7 @@ function xls_act_podpis($sheet, $line) {
 	$line += 2;
 	$sheet->getCell('B'.$line)->setValue('                   М.П.');
 	$sheet->getCell('D'.$line)->setValue('      М.П.');
-}//xls_act_podpis()
+}
 
 function xls_act_podpis2($sheet, $line) {
 	$line++;
@@ -673,7 +673,7 @@ function xls_act_podpis2($sheet, $line) {
 	$sheet->getCell('C'.$line)->setValue('Дата и время выдачи: ___/___/______      ____:____');
 	$line += 2;
 	$sheet->getCell('D'.$line)->setValue('      М.П.');
-}//xls_act_podpis2()
+}
 
 
 define('SCHET_ID', _num(@$_GET['schet_id']));

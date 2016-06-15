@@ -12,7 +12,11 @@ function sa_userCount() {
 
 function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
 	return
-	'<div class="path">'.sa_cookie_back().'Администрирование</div>'.
+	'<div class="path">'.
+		'<div id="app-id" val="'._app('app_name').'">'.APP_ID.'</div>'.
+		sa_cookie_back().
+		'Администрирование'.
+	'</div>'.
 	'<div id="sa-index">'.
 		'<h1>Global:</h1>'.
 		'<a href="'.URL.'&p=sa&d=menu">Разделы главного меню</a>'.
@@ -21,6 +25,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
 		'<a href="'.URL.'&p=sa&d=zayav">Заявки</a>'.
 		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
+		'<a href="'.URL.'&p=sa&d=count">Счётчики</a>'.
 		'<br />'.
 
 		'<h1>App:</h1>'.
@@ -50,6 +55,7 @@ function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу
 function sa_path($v1, $v2='') {
 	return
 		'<div class="path">'.
+			'<div id="app-id" val="'._app('app_name').'">'.APP_ID.'</div>'.
 			sa_cookie_back().
 			'<a href="'.URL.'&p=sa">Администрирование</a> » '.
 			$v1.($v2 ? ' » ' : '').
@@ -388,7 +394,7 @@ function sa_balans_action_spisok($arr, $count) {
 
 
 
-function sa_zayav() {//управление балансами
+function sa_zayav() {//настройки заявок
 	/*
 		+ Поля для отображения информации о заявке
 		- Какие поля участвуют в быстром поиске find
@@ -400,36 +406,145 @@ function sa_zayav() {//управление балансами
 			- печать квитации
 			- составление счёта на оплату
 	*/
+	switch(@$_GET['d1']) {
+		case 'edit':   return sa_zayav_pole(1);
+		case 'filter': return sa_zayav_pole(2);
+		case 'info':   return sa_zayav_pole(3);
+		case 'service': return sa_zayav_service();
+	}
+
 	return
 		sa_path('Настройки заявок').
 		'<div id="sa-zayav">'.
+			'<div class="headName">Настройки заявок</div>'.
+			'<a href="'.URL.'&p=sa&d=zayav&d1=edit">Поля - внесение/редактирование заявки</a>'.
+			'<a href="'.URL.'&p=sa&d=zayav&d1=filter">Поля - фильтр заявок</a>'.
+			'<a href="'.URL.'&p=sa&d=zayav&d1=info">Поля - информация о заявке</a>'.
+			'<br />'.
+			'<a href="'.URL.'&p=sa&d=zayav&d1=service">Виды деятельности заявок и использование полей</a>'.
+		'</div>';
+}
+function sa_zayav_pole_type($type_id=0) {//типы полей заявок
+	/*
+		1 - edit: внесение/редактирование заявки
+		2 - filter: фильтр заявок
+		3 - info: информация о заявке
+	*/
+	$arr = array(
+		1 => 'внесение/редактирование заявки',
+		2 => 'фильтр заявок',
+		3 => 'информация о заявке'
+	);
+	if($type_id)
+		return $arr[$type_id];
+	return $arr;
+}
+function sa_zayav_pole($type_id) {
+	return
+		'<script>'.
+			'var SAZP_TYPE_ID='.$type_id.','.
+				'SAZP_TYPE_NAME="'.sa_zayav_pole_type($type_id).'";'.
+		'</script>'.
+		sa_path('<a href="'.URL.'&p=sa&d=zayav">Настройки заявок</a>', sa_zayav_pole_type($type_id)).
+		'<div id="sa-zayav-pole">'.
 			'<div class="headName">'.
-				'Используемые поля'.
-				'<a class="add" id="pole-add">Новое поле</a>'.
-				'<tt>::</tt>'.
-				'<a class="add" id="type-add">Новый вид заявки</a>'.
+				'Настройки полей: '.sa_zayav_pole_type($type_id).
+				'<a class="add" onclick="saZayavPoleEdit()">Новое поле</a>'.
 			'</div>'.
-			sa_zayav_type_link().
-			'<div id="pole-spisok">'.sa_zayav_pole_spisok().'</div>'.
-		'</div>'.
-		'<script type="text/javascript">'.
-			'var SA_ZAYAV_TYPE_ID='.TYPE_ID.';'.
-		'</script>';
+			'<div id="spisok">'.sa_zayav_pole_spisok($type_id).'</div>'.
+		'</div>';
+}
+function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех полей заявки
+	//$sel - возможность выбора для составления таблицы
+	$sql = "SELECT *
+			FROM `_zayav_pole`
+			WHERE `type_id`=".$type_id."
+			".($sel !== false ? " AND `id` NOT IN (".$sel.")" : '')."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	if($sel === false) {
+		$sql = "SELECT
+					`pole_id`,
+					COUNT(`id`) `count`
+				FROM `_zayav_pole_use`
+				WHERE `pole_id` IN ("._idsGet($spisok).")
+				GROUP BY `pole_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$spisok[$r['pole_id']]['use'] = $r['count'];
+	}
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>'.
+				'<th>Наименование'.
+				'<th>Описание'.
+	   ($sel === false ? '<th>use' : '').
+	   ($sel === false ? '<th>' : '');
+	foreach($spisok as $r)
+		$send .=
+			'<tr'.($sel !== false ? ' class="sel" val="'.$r['id'].'"' : '').'>'.
+				'<td class="id">'.$r['id'].
+				'<td class="name">'.$r['name'].
+				'<td class="about">'.$r['about'].
+	   ($sel === false ? '<td class="use">'.(@$r['use'] ? $r['use'] : '') : '').
+	   ($sel === false ? '<td class="ed">'._iconEdit($r)._iconDel($r + array('nodel'=>_num(@$r['use']))) : '');
+	$send .= '</table>';
+
+	return $send;
 }
 
-function sa_zayav_type_link() {//меню списка видов заявок и получение TYPE_ID
+function sa_zayav_service() {
+	return
+		sa_path('<a href="'.URL.'&p=sa&d=zayav">Настройки заявок</a>', 'Виды деятельности').
+		'<div id="sa-zayav-service">'.
+			'<div class="headName">'.
+				'Виды деятельности заявок и использование полей'.
+				'<a class="add">Новый вид деятельности</a>'.
+			'</div>'.
+			sa_zayav_service_link().
+
+			'<div class="zs-head">'.
+				'Новая заявка'.
+				'<button class="vk small" onclick="saZayavServicePoleAdd('.SERVICE_ID.',1)">Добавить поле</button>'.
+				'<button class="vk small red" onclick="_zayavEdit('.SERVICE_ID.')">Предосмотр</button>'.
+			'</div>'.
+			'<table class="_spisok">'.
+				'<tr><th class="pole">pole_id'.
+					'<th class="head">Название поля'.
+					'<th>'.
+					'<th class="ed">'.
+			'</table>'.
+			'<dl id="spisok1" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(1).'</dl>'.
+
+			'<div class="zs-head">'.
+				'Фильтр заявок'.
+				'<button class="vk small" onclick="saZayavServicePoleAdd('.SERVICE_ID.',2)">Добавить поле</button>'.
+//				'<button class="vk small red">Предосмотр фильтра</button>'.
+			'</div>'.
+			'<dl id="spisok2" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(2).'</dl>'.
+
+			'<div class="zs-head">'.
+				'Информация о заявке'.
+				'<button class="vk small" onclick="saZayavServicePoleAdd('.SERVICE_ID.',3)">Добавить поле</button>'.
+			'</div>'.
+			'<dl id="spisok3" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(3).'</dl>'.
+		'</div>';
+}
+function sa_zayav_service_link() {//меню списка видов заявок и получение SERVICE_ID
 	$sql = "SELECT *
-			FROM `_zayav_type`
+			FROM `_zayav_service`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
-		define('TYPE_ID', 0);
+		define('SERVICE_ID', 0);
 		return '';
 	}
 
-	if(!$id = _num(@$_GET['id'])) {
+	if(!$id = _num(@$_GET['id']))
 		$id = key($spisok);
-	}
 	$exist = 0; //проверка, чтобы id вида заявки совпадал с существующими, иначе ставится по умолчанию
 	foreach($spisok as $r)
 		if($r['id'] == $id) {
@@ -445,46 +560,47 @@ function sa_zayav_type_link() {//меню списка видов заявок и получение TYPE_ID
 	$link = '';
 	foreach($spisok as $r) {
 		$sel = $r['id'] == $id ? ' sel' : '';
-		$link .= '<a href="'.URL.'&p=sa&d=zayav&id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+		$link .= '<a href="'.URL.'&p=sa&d=zayav&d1=service&id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
 	}
 
-	define('TYPE_ID', $id);
+	define('SERVICE_ID', $id);
 
 	return '<div id="dopLinks">'.$link.'</div>';
 }
-function sa_zayav_pole_spisok() {
+function sa_zayav_service_use($type_id, $show=0) {//использование полей для конкретного вида деятельности
 	$sql = "SELECT
-				*,
-				0 `use_info`
-			FROM `_zayav_const`
-			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return 'Список пуст.';
-
-	$sql = "SELECT *
-			FROM `_zayav_const_use`
+				`u`.`id`,
+				`u`.`pole_id`,
+				`zp`.`name`,
+				`zp`.`about`,
+				`u`.`label`,
+				`u`.`require`
+			FROM
+			    `_zayav_pole_use` `u`,
+				`_zayav_pole` `zp`
 			WHERE `app_id`=".APP_ID."
-			  AND `type_id`=".TYPE_ID;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['pole_id']]['use_info'] = 1;
+			  AND `service_id`=".SERVICE_ID."
+			  AND `zp`.`id`=`u`.`pole_id`
+			  AND `zp`.`type_id`=".$type_id."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Поля не определены.';
 
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th>'.
-				'<th>Наименование'.
-				'<th>Константа'.
-				'<th>use'.
-				'<th>';
+	$send = '';
 	foreach($spisok as $r)
 		$send .=
-			'<tr><td class="id">'.$r['id'].
-				'<td><div class="name">'.$r['name'].'</div>'.
-					'<div class="about">'.$r['about'].'</div>'.
-				'<td class="const">'.$r['const'].
-				'<td class="use">'._check('use'.$r['id'], '', $r['use_info']).
-				'<td class="ed">'._iconEdit($r);
-	$send .= '</table>';
+		'<dd val="'.$r['id'].'">'.
+			'<table class="_spisok'.($show == $r['id'] ? ' show' : '').'">'.
+				'<tr><td class="pole">'.$r['pole_id'].
+					'<td class="head">'.
+						'<div class="name">'.$r['name'].($r['require'] ? ' *' : '').'</div>'.
+						'<div class="label">'.$r['label'].'</div>'.
+						'<div class="about">'.$r['about'].'</div>'.
+						'<input type="hidden" class="require" value="'.$r['require'].'" />'.
+						'<input type="hidden" class="type_id" value="'.$type_id.'" />'.
+					'<td>'.
+					'<td class="ed">'._iconEdit($r)._iconDel($r).
+			'</table>';
 
 	return $send;
 }
@@ -554,6 +670,31 @@ function sa_color_spisok() {
 }
 
 
+
+
+
+function sa_count() {
+	return
+		sa_path('Счётчики').
+		'<div id="sa-count">'.
+			'<div class="headName">Счётчики</div>'.
+			'<button class="vk client">Клиенты</button>'.
+			'<br />'.
+			'<br />'.
+			'<button class="vk zayav">Заявки</button>'.
+			'<br />'.
+			'<br />'.
+			'<button class="vk tovar-set-find-update">Обновить find товаров-запчастей <em></em></button>'.
+			'<br />'.
+			'<br />'.
+			'<button class="vk tovar-articul-update">Обновить артикулы товаров</button>'.
+		'</div>';
+}
+
+
+
+
+
 function sa_app() {
 	return
 		sa_path('Приложения').
@@ -585,7 +726,7 @@ function sa_app_spisok() {
 			'<tr>'.
 				'<td class="id">'.$r['id'].
 					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
-				'<td class="app_name">'.$r['app_name'].
+				'<td class="app_name">'.(LOCAL ? '<a href="'.API_HTML.'/index.php'.'?api_id='.$r['id'].'&viewer_id='.VIEWER_ID.'">'.$r['app_name'].'</a>' : $r['app_name']).
 				'<td class="title">'.$r['title'].
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconEdit($r);

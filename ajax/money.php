@@ -138,8 +138,8 @@ switch(@$_POST['op']) {
 		$client_id = 0;
 		$confirm = _bool($_POST['confirm']);
 		$prepay = _bool($_POST['prepay']);
-		$place = _num($_POST['place']);
-		$place_other = !$place ? _txt($_POST['place_other']) : '';
+		$place_id = _num(@$_POST['place_id']);
+		$place_other = !$place_id ? _txt(@$_POST['place_other']) : '';
 		$remind_ids = _ids($_POST['remind_ids']);
 
 		//в произвольном платеже обязательно указывается описание
@@ -201,7 +201,7 @@ switch(@$_POST['op']) {
 
 		if($zayav_id) {
 			_zayavBalansUpdate($zayav_id);
-			zayavPlaceCheck($zayav_id, $place, $place_other);
+			_zayavTovarPlaceUpdate($zayav_id, $place_id, $place_other);
 
 			//отметка выбранных активных напоминаних выполненными
 			if($remind_ids)
@@ -273,13 +273,16 @@ switch(@$_POST['op']) {
 		//платёж быть произведён по счёту
 		_schetPayCorrect($r['schet_id']);
 
+		//была произведена продажа товара
+		_tovarAvaiUpdate($r['tovar_id']);
+
 		_history(array(
 			'type_id' => 9,
 			'invoice_id' => $r['invoice_id'],
 			'client_id' => $r['client_id'],
 			'zayav_id' => $r['zayav_id'],
 			'schet_id' => $r['schet_id'],
-			'zp_id' => $r['zp_id'],
+			'tovar_id' => $r['tovar_id'],
 			'v1' => round($r['sum'], 2),
 			'v2' => $about
 		));
@@ -296,7 +299,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND !`client_id`
-				  AND !`zp_id`
+				  AND !`tovar_id`
 				  AND !`refund_id`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -537,6 +540,7 @@ switch(@$_POST['op']) {
 		if(!$category_id && empty($about))
 			jsonError();
 
+		$category_sub_id = _num(@$_POST['category_sub_id']);
 		$worker_id = _num(@$_POST['worker_id']);
 		$attach_id = _num(@$_POST['attach_id']);
 		$salary_avans = _bool(@$_POST['salary_avans']);
@@ -552,6 +556,7 @@ switch(@$_POST['op']) {
 					`about`,
 					`invoice_id`,
 					`category_id`,
+					`category_sub_id`,
 					`worker_id`,
 					`salary_avans`,
 					`salary_list_id`,
@@ -565,6 +570,7 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."',
 					".$invoice_id.",
 					".$category_id.",
+					".$category_sub_id.",
 					".$worker_id.",
 					".$salary_avans.",
 					".$salary_list_id.",
@@ -1191,7 +1197,12 @@ switch(@$_POST['op']) {
 				WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		zayavCartridgeSchetDel($schet_id);
+		//отвязка картриджей от счёта
+		$sql = "UPDATE `_zayav_cartridge`
+				SET `schet_id`=0
+				WHERE `schet_id`=".$schet_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
 		_zayavBalansUpdate($r['zayav_id']);
 		_salaryZayavBonus($r['zayav_id']);
 
@@ -1630,6 +1641,165 @@ switch(@$_POST['op']) {
 		$send['t'] = utf8(invoice_transfer_spisok());
 		jsonSuccess($send);
 		break;
+	case 'invoice_in_add'://внесение денег на расчётный счёт
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		$sql = "INSERT INTO `_money_invoice_in` (
+					`app_id`,
+					`invoice_id`,
+					`sum`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$invoice_id.",
+					".$sum.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 48,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum,
+			'about' => $about
+		));
+
+		_history(array(
+			'type_id' => 97,
+			'invoice_id' => $invoice_id,
+			'v1' => _sumSpace($sum),
+			'v2' => $about
+		));
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['io'] = utf8(invoice_inout_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_in_del'://удаление внесения денег
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice_in`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice_in`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 49,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum'],
+			'about' => $r['about']
+		));
+
+		_history(array(
+			'type_id' => 98,
+			'invoice_id' => $r['invoice_id'],
+			'v1' => _sumSpace($r['sum']),
+			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
+	case 'invoice_out_add'://вывод денег с расчётного счёта
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		$sql = "INSERT INTO `_money_invoice_out` (
+					`app_id`,
+					`invoice_id`,
+					`sum`,
+					`worker_id`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$invoice_id.",
+					".$sum.",
+					".$worker_id.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 50,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum,
+			'about' => $about
+		));
+		_history(array(
+			'type_id' => 99,
+			'invoice_id' => $invoice_id,
+			'worker_id' => $worker_id,
+			'v1' => _sumSpace($sum),
+			'v2' => $about
+		));
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['io'] = utf8(invoice_inout_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_out_del'://удаление вывода денег
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_money_invoice_out`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_money_invoice_out`
+				SET `deleted`=1,
+					`viewer_id_del`=".VIEWER_ID.",
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_balans(array(
+			'action_id' => 51,
+			'invoice_id' => $r['invoice_id'],
+			'sum' => $r['sum'],
+			'about' => $r['about']
+		));
+
+		_history(array(
+			'type_id' => 100,
+			'invoice_id' => $r['invoice_id'],
+			'worker_id' => $r['worker_id'],
+			'v1' => _sumSpace($r['sum']),
+			'v2' => $r['about']
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'balans_show':
 		$send['html'] = utf8(balans_show($_POST));
@@ -2056,8 +2226,8 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		if(TODAY != substr($r['dtime_add'], 0, 10))
-			jsonError();
+//		if(TODAY != substr($r['dtime_add'], 0, 10))
+//			jsonError();
 
 		$sql = "SELECT COUNT(`id`)
 				FROM `_money_expense`

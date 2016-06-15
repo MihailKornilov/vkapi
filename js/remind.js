@@ -2,12 +2,12 @@ var _remindAdd = function() {
 		var html =
 				'<table class="_remind-add-tab">' +
 					 (window.ZI ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					(window.CLIENT ? '<tr><td class="label">Клиент:<td>' + CLIENT.fio : '') +
+					(window.CI ? '<tr><td class="label">Клиент:<td>' + CI.fio : '') +
 					'<tr><td class="label">Задача:<td><input type="text" id="txt" />' +
 					'<tr><td class="label top">Подробно:<td><textarea id="about"></textarea>' +
 					'<tr><td class="label">День выполнения:<td><input type="hidden" id="day" />' +
 				'</table>' +
-				'<input type="hidden" id="client_id" value="' + (window.CLIENT ? CLIENT.id : 0) + '">' +
+				'<input type="hidden" id="client_id" value="' + (window.CI ? CI.id : 0) + '">' +
 				'<input type="hidden" id="zayav_id" value="' + (window.ZI ? ZI.id : 0) + '">',
 			dialog = _dialog({
 				top:40,
@@ -40,7 +40,10 @@ var _remindAdd = function() {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					_remindSpisok();
+					if(window.ZI && !window.REMIND)
+						location.reload();
+					else
+						_remindSpisok();
 				} else
 					dialog.abort();
 			}, 'json');
@@ -101,7 +104,8 @@ $(document)
 		$('#reason')._select({
 			width:225,
 			spisok:[],
-			write:true
+			write:1,
+			write_save:1
 		});
 
 		// загрузка списка причин
@@ -126,7 +130,7 @@ $(document)
 		function submit(status) {
 			var send = {
 				op:'remind_action',
-				from:window.ZI ? 'zayav' : (window.CLIENT ? 'client' : ''),
+				from:window.ZI ? 'zayav' : (window.CI ? 'client' : ''),
 				id:id,
 				status:status,
 				day:$('#remind_day').val(),
@@ -163,7 +167,7 @@ $(document)
 				submit:submit
 			});
 
-		$('#hdtxt').focus().keyEnter(submit);
+		$('#hdtxt').focus();
 		$('#hd-about').autosize();
 
 		function submit() {

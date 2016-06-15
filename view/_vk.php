@@ -1,16 +1,6 @@
 <?php
 /*
-
-//[a-zA-Z_]*\(\)$
-
-CREATE TABLE IF NOT EXISTS `pagehelp` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`),
-  `page` varchar(50) DEFAULT '',
-  `name` varchar(200) DEFAULT '',
-  `txt` text default NULL,
-  `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP
-) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
+//[a-zA-Z_0-9]*\(\)$
 */
 
 define('TIME', microtime(true));
@@ -38,6 +28,7 @@ require_once GLOBAL_DIR.'/view/_debug.php';
 
 require_once GLOBAL_DIR.'/view/client.php';
 require_once GLOBAL_DIR.'/view/zayav.php';
+require_once GLOBAL_DIR.'/view/tovar.php';
 require_once GLOBAL_DIR.'/view/money.php';
 require_once GLOBAL_DIR.'/view/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
@@ -62,7 +53,7 @@ function _const() {
 	session_name('app'.APP_ID);
 	session_start();
 
-	define('APP_NAME', _app('name'));
+	define('APP_NAME', _app('app_name'));
 
 	define('VIEWER_MAX', 2147000001);
 
@@ -120,10 +111,7 @@ function _header() {
 		'<head>'.
 			'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
 			'<title>'.APP_NAME.'</title>'.
-
 			_api_scripts().
-			(PIN_ENTER ? '' : _appScripts()).
-
 		'</head>'.
 		'<body>'.
 			'<div id="frameBody">'.
@@ -149,6 +137,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 			'var VIEWER_ID='.VIEWER_ID.','.
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
 				'APP_ID='.APP_ID.','.
+				'APP_TYPE=['.APP_TYPE.'],'.
 				'URL="'.URL.'",'.
 				'AJAX_MAIN="'.AJAX_MAIN.'",'.
 				'VALUES="'.VALUES.'";'.
@@ -172,6 +161,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Заявки
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/zayav'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/zayav'.MIN.'.js?'.VERSION.'"></script>'.
+
+		//Товары
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/tovar'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/js/tovar'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Деньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
@@ -223,6 +216,7 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 		case 'main': return _menuMain();
 		case 'client': return _clientCase();
 		case 'zayav':  return _zayav();
+		case 'tovar':  return _tovar();
 		case 'money':  return _money();
 		case 'report': return _report();
 		case 'setup':  return _setup();
@@ -233,17 +227,14 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 				header('Location:'.URL);
 				exit;
 			}
+			if(!empty($_GET['d'])) {
+				$f = 'sa_'.$_GET['d'];
+				if(function_exists($f))
+					return $f();
+			}
 			switch(@$_GET['d']) {
 				default:            return sa_global_index();
-				case 'menu':        return sa_menu();
-				case 'history':     return sa_history();
 				case 'historycat':  return sa_history_cat();
-				case 'rule':        return sa_rule();
-				case 'balans':      return sa_balans();
-				case 'zayav':       return sa_zayav();
-				case 'color':       return sa_color();
-
-				case 'app':         return sa_app();
 			}
 	}
 
@@ -357,8 +348,7 @@ function _app($i='all') {//Получение данных о приложении
 
 	if(!defined('APP_VALUES')) {
 		define('APP_VALUES', $arr['js_values']);
-		define('WS_DEVS', $arr['devs']);        //todo на удаление
-		define('WS_TYPE', $arr['ws_type_id']);  //todo
+		define('APP_TYPE', $arr['type_id']);
 	}
 
 	if($i == 'all')
@@ -412,6 +402,52 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 			'</body>'.
 		'</html>';
 	die($html);
+}
+function _appType($i=false, $p=1) {//тип организации
+	/*  $p - падеж
+			1 - именительный Кто? Что?
+			2 - родительный (нет) Что? Кого?
+			3 - дательный (дать) Кому? Чему?
+			4 - винительный (вижу) Кого? Что?
+			5 - творительный (горжусь) Кем? Чем?
+			6 - предложный (думаю) О ком? О чём?
+
+			7 - нахождение Где?
+	*/
+	$arr[1] = array(
+		1 => 'Сервисный центр',
+		2 => 'Мастерская',
+		3 => 'Магазин'
+	);
+
+	$arr[2] = array(
+		1 => 'Сервисного центра',
+		2 => 'Мастерской',
+		3 => 'Магазина'
+	);
+
+	$arr[4] = array(
+		1 => 'Сервисный центр',
+		2 => 'Мастерскую',
+		3 => 'Магазин'
+	);
+
+	$arr[7] = array(
+		1 => 'в сервисном центре',
+		2 => 'в мастерской',
+		3 => 'в магазине'
+	);
+
+	if($i === false)
+		return $arr[$p];
+
+	if(!isset($arr[$p]))
+		return '';
+
+	if(!$i)
+		return '';
+
+	return $arr[$p][$i];
 }
 
 
@@ -498,7 +534,10 @@ function _menu() {//разделы основного меню
 
 	return
 	_menuInfoTop().
-	'<div id="_menu">'.$link.'</div>';
+	'<div id="_menu">'.
+		$link.
+		_clientDolgSum().
+	'</div>';
 }
 function _menuMain() {//список ссылок главной страницы
 	$send = '';
@@ -510,7 +549,10 @@ function _menuMain() {//список ссылок главной страницы
 			continue;
 
 		if($r['p'] == 'client')
-			$r['about'] .= '<a href="'.URL.'&p=client&d=poa">Доверенности</a>';
+			$r['about'] .=
+				'<a href="'.URL.'&p=client&d=poa">Доверенности</a>'.
+				'<br />'.
+				'<a href="'.URL.'&p=client&d=from">Откуда пришёл клиент</a>';
 		if($r['p'] == 'zayav')
 			$r['about'] .= _menuMainZayav();
 		$send .=
@@ -560,7 +602,8 @@ function _report() {
 	$pages = array(
 		'history' => 'История действий',
 		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
-		'salary' => 'З/п сотрудников'
+		'salary' => 'З/п сотрудников',
+		'zayav' => 'Заявки'
 	);
 
 
@@ -604,6 +647,7 @@ function _report() {
 					'</div>';
 			}
 			break;
+		case 'zayav': return _zayav_report();
 	}
 
 	return
@@ -793,16 +837,36 @@ function _bool($v) {//проверка на булево число
 		return 0;
 	return intval($v);
 }
-function _cena($v, $minus=0) {//проверка на цену. $minus - может ли цена быть минусовой
+function _cena($v, $minus=0, $kop=0, $del='.') {//проверка на цену.
+	/*
+		$minus - может ли цена быть минусовой.
+		$kop - возвращать с копейками, даже если 00
+		$del - знак после запятой
+	*/
 	if(empty($v) || is_array($v) || !preg_match($minus ? REGEXP_CENA_MINUS : REGEXP_CENA, $v))
 		return 0;
+
 	$v = str_replace(',', '.', $v);
-	return round($v, 2);
+	$v = round($v, 2);
+
+	if(!$kop)
+		return $v;
+
+	if(!$ost = round($v - floor($v), 2))
+		$v .= '.00';
+	else
+		if(!(($ost * 100) % 10))
+			$v .= 0;
+
+	if($del == ',')
+		$v = str_replace('.', ',', $v);
+
+	return $v;
 }
 function _txt($v, $utf8=0) {
 	$v = htmlspecialchars(trim($v));
 	return $utf8 ? $v : win1251($v);
-}//_txt
+}
 function _br($v) {//вставка br в текст при нахождении enter
 	return str_replace("\n", '<br />', $v);
 }
@@ -829,15 +893,6 @@ function _iconDel($v=array()) {//иконка удаления записи в таблице
 
 	return '<div '.$v['id'].'class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
 }
-function _dtimeAdd($v=array()) {//дата и время внесения записи с подсказкой сотрудника, который вносил запись
-	return
-		'<div class="'._tooltip(_viewerAdded($v['viewer_id_add']), -40).FullDataTime($v['dtime_add']).'</div>'.
-	(@$v['viewer_id_del'] ?
-		'<div class="ddel '._tooltip(_viewerDeleted($v['viewer_id_del']), -40).
-			FullDataTime($v['dtime_del']).
-		'</div>'
-	: '');
-}
 
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
 	$ids = trim($ids);
@@ -852,12 +907,27 @@ function _ids($ids, $return_arr=0) {//проверка корректности списка id, составлен
 	return $return_arr ? $arr : implode(',', $arr);
 }
 function _idsGet($arr, $i='id') {//возвращение из массива списка id через запятую
+/*
+	key: сборка id по ключу
+*/
 	$ids = array();
-	foreach($arr as $r)
+	foreach($arr as $id => $r) {
+		if($i == 'key') {
+			$ids[] = $id;
+			continue;
+		}
 		if(!empty($r[$i]))
 			$ids[] = $r[$i];
+	}
 	return empty($ids) ? 0 : implode(',', array_unique($ids));
 }
+function _idsAss($v) {//получение списка id вида: $v[25] = 1; - выбранный список
+	$send = array();
+	foreach(_ids($v, 1) as $id)
+		$send[$id] = 1;
+	return $send;
+}
+
 function _keys($arr) {//возвращение ключей через запятую
 	return implode(',', array_keys($arr));
 }
@@ -952,6 +1022,15 @@ function _numToWord($num, $firstSymbolUp=false) {
 		$word[0] = strtoupper($word[0]);
 	return $word;
 }
+function _kop($v) {//получение копеек из суммы
+	$v = _cena($v);
+	if(!$ost = $v - floor($v))
+		return '00 копеек';
+
+
+	$ost = floor($ost * 100);
+	return $ost.' копе'._end($ost, 'йка', 'йки', 'ек');
+}
 function _maxSql($table, $pole='sort', $app=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	/*
 		$ws: учитывать приложение и организацию
@@ -987,7 +1066,7 @@ function _sel($arr) {
 	foreach($arr as $uid => $title) {
 		$send[] = array(
 			'uid' => $uid,
-			'title' => utf8($title)
+			'title' => utf8(trim($title))
 		);
 	}
 	return $send;
@@ -1133,6 +1212,7 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
  		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
+		"\n".'ZE_DOP_NAME='._assJson(_zayavExpenseDop()).','.
 		"\n".'RULE_HISTORY_SPISOK='._selJson(_ruleHistoryView()).','.
 		"\n".'RULE_INVOICE_TRANSFER_SPISOK='._selJson(_ruleInvoiceTransfer()).','.
 		"\n".'COUNTRY_SPISOK=['.
@@ -1218,12 +1298,12 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'EXPENSE_SUB_SPISOK='.Gvalues_obj('_money_expense_category_sub', '`category_id`,`name`', 'category_id', GLOBAL_MYSQL_CONNECT, 1).','.
 		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных заявок в организации
 		"\n".'SERVICE_ACTIVE_ASS='._service('js').','.              //виды активных заявок в организации
+		"\n".'CLIENT_FROM_SPISOK='._clientFromJs().','.
+		"\n".'CLIENT_FROM_USE='._app('client_from_use').','.
+		"\n".'CLIENT_FROM_REQUIRE='._app('client_from_require').','.
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_TXT='.   query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=1", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_WORKER='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=2", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_ZP='.    query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=3", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_EXPENSE_ATTACH='.query_assJson("SELECT `id`,1 FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." AND `dop`=4", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZE_DOP_ASS='.query_assJson("SELECT `id`,`dop` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID, GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_STATUS_NAME_SPISOK='.query_selJson("SELECT `id`,`name`
 														FROM `_zayav_status`
 														WHERE `app_id`=".APP_ID."
@@ -1269,9 +1349,17 @@ function _appJsValues() {//для конкретного приложения
 														 WHERE `app_id`=".APP_ID."
 														   AND `day_fact`
 														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'PRODUCT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_product` WHERE `app_id`=".APP_ID." ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'PRODUCT_ASS=_toAss(PRODUCT_SPISOK),'.
-		"\n".'PRODUCT_SUB_SPISOK='.Gvalues_obj('_product_sub', '`product_id`,`name`', 'product_id', GLOBAL_MYSQL_CONNECT, 1).';';
+		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
+
+		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
+		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.
+		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `_setup_cartridge`").','.
+		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `_setup_cartridge`").','.
+		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `_setup_cartridge`").','.
+
+		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategoryJs().','.
+		"\n".'TOVAR_VENDOR_SPISOK='._tovarVendorJs().','.
+		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().';';
 
 
 	$fp = fopen(API_PATH.'/js/values/app_'.APP_ID.'.js', 'w+');
@@ -1302,12 +1390,16 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'service'.$app_id);//виды деятельности
 	xcache_unset(CACHE_PREFIX.'invoice'.$app_id);//расчётные счета
 	xcache_unset(CACHE_PREFIX.'expense'.$app_id);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'expense_sub'.$app_id);//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'expense_sub'.$app_id);//подкатегории расходов организации
+	xcache_unset(CACHE_PREFIX.'client_from'.$app_id);//источники, откуда пришёл клиент
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$app_id);//категории расходов заявки
 	xcache_unset(CACHE_PREFIX.'zayav_status'.$app_id);//статусы заявки
-	xcache_unset(CACHE_PREFIX.'product'.$app_id);
-	xcache_unset(CACHE_PREFIX.'product_sub'.$app_id);
-
+	xcache_unset(CACHE_PREFIX.'tovar_name');
+	xcache_unset(CACHE_PREFIX.'tovar_vendor');
+	xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'tovar_feature_name');
+	xcache_unset(CACHE_PREFIX.'tovar_equip');
+	xcache_unset(CACHE_PREFIX.'cartridge');
 
 	//сброс времени действия введённого пинкода
 //		unset($_SESSION[PIN_TIME_KEY]);
@@ -1328,6 +1420,11 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 	}
 }
+function _cacheErr($txt='Неизвестное значение', $i='') {//
+	if($i != '')
+		$i = ': <b>'.$i.'</b>';
+	return '<span class="red">'.$txt.$i.'.</span>';
+}
 
 function _check($id, $txt='', $v=0, $light=false) {
 	$v = $v ? 1 : 0;
@@ -1335,6 +1432,21 @@ function _check($id, $txt='', $v=0, $light=false) {
 	'<div class="_check check'.$v.($light ? ' l' : '').($txt ? '' : ' e').'" id="'.$id.'_check">'.
 		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
 		$txt.
+	'</div>';
+}
+function _checkNew($v=array()) {
+	$v = array(
+		'id' => @$v['id'],
+		'txt' => @$v['txt'],
+		'value' => _bool(@$v['value']),
+		'light' => _bool(@$v['light']) ? ' l' : '',
+		'disabled' => _bool(@$v['disabled']) ? ' disabled' : '',
+		'block' => _bool(@$v['block']) ? ' block' : ''
+	);
+	return
+	'<div class="_check check'.$v['value'].$v['block'].$v['disabled'].$v['light'].($v['txt'] ? '' : ' e').'" id="'.$v['id'].'_check">'.
+		'<input type="hidden" id="'.$v['id'].'" value="'.$v['value'].'" />'.
+		$v['txt'].
 	'</div>';
 }
 function _radio($id, $list, $value=0, $light=0, $block=1) {
@@ -1346,7 +1458,7 @@ function _radio($id, $list, $value=0, $light=0, $block=1) {
 	}
 	return
 	'<div class="_radio'.($block ? ' block' : '').'" id="'.$id.'_radio">'.
-		'<input type="hidden" id="'.$id.'" value="'.$value.'">'.
+		'<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
 		$spisok.
 	'</div>';
 }
@@ -1584,12 +1696,6 @@ function translit($str) {
 	return strtr($str, $list);
 }
 
-function _button($id, $name, $width=0) {
-	return
-	'<div class="vkButton" id="'.$id.'">'.
-		'<button'.($width ? ' style="width:'.$width.'px"' : '').'>'.$name.'</button>'.
-	'</div>';
-}
 function _payType($type_id=false) {//вид расчёта
 	$arr = array(
 		1 => 'Наличный',
@@ -1622,7 +1728,7 @@ function _color($color_id, $color_dop=0) {
 }
 
 function _print_document() {//вывод на печать документов
-	set_time_limit(60);
+	set_time_limit(300);
 	require_once GLOBAL_DIR.'/excel/PHPExcel.php';
 	require_once GLOBAL_DIR.'/word/clsMsDocGenerator.php';
 
@@ -1645,6 +1751,9 @@ function _print_document() {//вывод на печать документов
 		case 'receipt': _incomeReceiptPrint(); break;
 		case 'salary_list':
 			require_once GLOBAL_DIR.'/view/xsl/salary_list.php';
+			break;
+		case 'radiomaster':
+			require_once GLOBAL_DIR.'/view/xsl/price_radiomaster.php';
 			break;
 		default: die('Документ не найден.');
 	}

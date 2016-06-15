@@ -605,7 +605,7 @@ function salary_worker_list($v) {
 				'<td class="sum pay">'.($r['pay'] ? _sumSpace($r['pay']) : '').
 				'<td class="sum '.($diff < 0 ? 'red'._tooltip('Выдано больше, чем начислено', -60) : 'grey">')._sumSpace($diff).
 				'<td class="dtime">'.FullData($r['dtime_add']).
-				'<td class="ed">'._iconDel($r + array('class'=>'salary-list-del','nodel'=>$payNoAvans));
+				'<td class="ed">'._iconDel(array('class'=>'salary-list-del') + $r);//,'nodel'=>$payNoAvans
 	}
 	$send .= '</table>';
 	return $send;

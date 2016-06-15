@@ -98,14 +98,29 @@
 
 
 /* Категории расходов */
+#setup_expense{min-height:600px}
 #setup_expense .td-name{cursor:move}
 #setup_expense .sub{width:65px;text-align:center}
-#setup_expense .count{width:55px;text-align:center}
+#setup_expense .count{width:65px;text-align:center}
+#setup_expense em{
+	color:#999;
+	font-size:10px;
+	margin-left:4px;
+	cursor:default;
+}
 #setup_expense .ed{width:35px}
 
+#setup_expense_sub{min-height:600px}
 #setup_expense_sub .headName{margin-top:10px}
 #setup_expense_sub #cat-name{font:bold 14px Tahoma}
 #setup_expense_sub #spisok{margin-top:10px}
+#setup_expense_sub .count{width:65px;text-align:center}
+#setup_expense_sub em{
+	color:#999;
+	font-size:10px;
+	margin-left:4px;
+	cursor:default;
+}
 
 
 /* Статусы заявок */
@@ -150,15 +165,6 @@
 }
 
 
-/* Виды изделий */
-#setup_product .name{width:170px}
-#setup_product .sub{text-align:center;font-weight:700}
-#setup_product .zayav{text-align:center}
-#setup_product_sub .headName{margin-top:10px}
-#setup_product_sub .zayav{text-align:center}
-
-
-
 /* Расходы по заявкам */
 #setup_zayav_expense .name{width:130px}
 #setup_zayav_expense td.name{cursor:move}
@@ -166,3 +172,31 @@
 #setup_zayav_expense .use{width:55px;text-align:center}
 #setup_zayav_expense .ed{width:35px}
 
+
+
+
+
+
+
+#setup-cartridge .type{font-weight:bold;margin-bottom:5px}
+#setup-cartridge ._spisok{margin-bottom:20px}
+#setup-cartridge .edited{background-color:#ffa}
+#setup-cartridge .n{width:16px;text-align:right}
+#setup-cartridge .name{width:185px}
+#setup-cartridge .cost span{cursor:default}
+#setup-cartridge .count{text-align:center}
+
+
+
+
+
+
+
+
+/* Категории товаров */
+#setup_tovar_category #but{width:100%}
+#setup_tovar_category #spisok{margin-top:20px}
+#setup_tovar_category td.name{cursor:move}
+#setup_tovar_category .ed{width:35px}
+
+#setup_tovar_category_join .tovar{width:50px;text-align:right}

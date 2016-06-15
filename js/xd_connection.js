@@ -30,7 +30,7 @@
 			});
 		}, 0);
 	}
-
+	
 // Env functions
 	function getEnv(callback, self) {
 		if (env.loaded) {

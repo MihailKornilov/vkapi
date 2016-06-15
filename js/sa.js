@@ -20,7 +20,6 @@ var saMenuEdit = function(o) {
 			});
 
 		$('#name').focus();
-		$('#name,#p').keyEnter(submit);
 		$('#about').autosize();
 
 		function submit() {
@@ -70,7 +69,7 @@ var saMenuEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
 
 		function submit() {
 			var send = {
@@ -116,7 +115,7 @@ var saMenuEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name').focus().keyEnter(submit);
+		$('#name').focus();
 		$('#minus')._check();
 
 		function submit() {
@@ -148,57 +147,125 @@ var saMenuEdit = function(o) {
 		o = $.extend({
 			id:0,
 			name:'',
-			about:'',
-			const:'ZAYAV_'
+			about:''
 		}, o);
 
 		var html =
-				'<table class="sa-tab" id="zayav-pole-tab">' +
-					'<tr><td class="label">Наименование:<td><input type="text" id="name" value="' + o.name + '" />' +
-					'<tr><td class="label topi">Структура:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr><td class="label">Константа:<td><input type="text" id="const" value="' + o.const + '" />' +
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Тип поля:<td><b>' + SAZP_TYPE_NAME + '</b>' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
-				head:(o.id ? 'Изменение' : 'Внесение нового') + ' поля заявки',
+				head:(o.id ? 'Изменение' : 'Добавление') + ' поля заявки',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
 				submit:submit
 			});
 
-		$('#name')
-			.focus()
-			.keyEnter(submit);
+		$('#name').focus();
 		$('#about').autosize();
 
 		function submit() {
 			var send = {
 				op:'sa_zayav_pole_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
+				type_id:SAZP_TYPE_ID,
 				name:$('#name').val(),
-				about:$('#about').val(),
-				const:$('#const').val()
+				about:$('#about').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			if(!send.const) {
-				dialog.err('Не указана константа');
-				$('#const').focus();
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					$('#pole-spisok').html(res.html);
-				} else {
+					$('#spisok').html(res.html);
+				} else
 					dialog.abort();
-					dialog.err(res.text);
-				}
+			}, 'json');
+		}
+	},
+	saZayavServicePoleAdd = function(service_id, type_id) {
+		var dialog = _dialog({
+				top:20,
+				width:600,
+				head:'Добавление поля заявки - выбор',
+				load:1,
+				butSubmit:''
+			}),
+			send = {
+				op:'sa_zayav_service_pole_load',
+				service_id:service_id,
+				type_id:type_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				$('.sel').click(function() {
+					dialog.close();
+					var t = $(this);
+					saZayavServicePoleEdit({
+						service_id:service_id,
+						pole_id:t.find('.id').html(),
+						type_id:type_id,
+						name:t.find('.name').html(),
+						about:t.find('.about').html()
+					});
+				});
+			} else
+				dialog.loadError();
+		}, 'json');
+	},
+	saZayavServicePoleEdit = function(o) {
+		o = $.extend({
+			id:0,
+			service_id:0,
+			type_id:0,
+			pole_id:0,
+			name:'',
+			about:'',
+			label:'',
+			require:0
+		}, o);
+
+		var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label w150">Исходное название:<td><b>' + o.name + '</b>' +
+		 (o.about ? '<tr><td class="label top">Описание:<td><div class="_info">' + o.about + '</div>' : '') +
+					'<tr><td class="label">Альтернативное название:<td><input type="text" id="label" class="w250" value="' + o.label + '" />' +
+					'<tr' + (o.type_id == 1 ? '' : ' class="dn"') + '>' +
+						'<td class="label">Обязательное заполнение:' +
+						'<td><input type="hidden" id="require" value="' + o.require + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:490,
+				head:(o.id ? 'Изменение' : 'Добавление') + ' поля заявки',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#label').focus();
+		$('#require')._check();
+
+		function submit() {
+			var send = {
+				op:'sa_zayav_service_pole_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				service_id:o.service_id,
+				pole_id:o.pole_id,
+				label:$('#label').val(),
+				require:$('#require').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok' + res.type_id).html(res.html);
+				} else
+					dialog.abort();
 			}, 'json');
 		}
 	},
@@ -224,9 +291,7 @@ var saMenuEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name')
-			.focus()
-			.keyEnter(submit);
+		$('#name').focus();
 
 		function submit() {
 			var send = {
@@ -271,7 +336,6 @@ var saMenuEdit = function(o) {
 				submit:submit
 			});
 
-		$('#name,#predlog').keyEnter(submit);
 		$('#predlog').focus();
 
 		function submit() {
@@ -606,31 +670,54 @@ $(document)
 		});
 	})
 
-
-	.on('click', '#sa-zayav #pole-add', saZayavPoleEdit)
-	.on('click', '#sa-zayav .img_edit', function() {
+	.on('click', '#sa-zayav-pole .img_edit', function() {
 		var t = $(this),
 			p = _parent(t);
 		saZayavPoleEdit({
 			id:t.attr('val'),
 			name:p.find('.name').html(),
-			about:p.find('.about').html(),
-			const:p.find('.const').html()
+			about:p.find('.about').html()
 		});
 	})
-	.on('click', '#sa-zayav #pole-spisok ._check', function() {
+	.on('click', '#sa-zayav-pole .img_del', function() {
 		var t = $(this),
-			inp = t.find('input'),
-			send = {
-				op:'sa_zayav_setup_use_change',
-				type_id:SA_ZAYAV_TYPE_ID,
-				id:_num(inp.attr('id').split('use')[1]),
-				v:inp.val()
-			};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success)
-				_msg();
-		}, 'json');
+			p = _parent(t);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'поля',
+			op:'sa_zayav_pole_del',
+			func:function() {
+				p.remove();
+			}
+		});
+	})
+
+	.on('mouseover', '#sa-zayav-service .show', function() {
+		$(this).removeClass('show');
+	})
+	.on('click', '#sa-zayav-service .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saZayavServicePoleEdit({
+			id:t.attr('val'),
+			name:p.find('.name').html(),
+			about:p.find('.about').html(),
+			label:p.find('.label').html(),
+			type_id:p.find('.type_id').val(),
+			require:p.find('.require').val()
+		});
+	})
+	.on('click', '#sa-zayav-service .img_del', function() {
+		var t = $(this),
+			p = _parent(t, 'DD');
+		_dialogDel({
+			id:t.attr('val'),
+			head:'поля',
+			op:'sa_zayav_service_pole_del',
+			func:function() {
+				p.remove();
+			}
+		});
 	})
 
 	.on('click', '#sa-zayav #type-add', saZayavTypeEdit)
@@ -655,6 +742,111 @@ $(document)
 			}
 		});
 	})
+
+	.on('click', '#sa-count .client', function() {
+		var dialog = _dialog({
+			top:20,
+			width:500,
+			head:'Обновление балансов клиентов',
+			load:1,
+			butSubmit:''
+		});
+
+		var send = {
+			op:'sa_count_client_load'
+		};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+			} else
+				dialog.loadError();
+		}, 'json');
+
+	})
+	.on('click', '.client-balans-repair', function() {
+		var t = $(this),
+			send = {
+				op:'sa_count_client_balans_repair',
+				client_id:t.attr('val')
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				t.remove();
+			}
+		}, 'json');
+
+	})
+
+	.on('click', '#sa-count .zayav', function() {
+		var dialog = _dialog({
+			top:20,
+			width:500,
+			head:'Обновление балансов заявок',
+			load:1,
+			butSubmit:''
+		});
+
+		var send = {
+			op:'sa_count_zayav_load'
+		};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+			} else
+				dialog.loadError();
+		}, 'json');
+
+	})
+	.on('click', '.zayav-balans-repair', function() {
+		var t = $(this),
+			send = {
+				op:'sa_count_zayav_balans_repair',
+				zayav_id:t.attr('val')
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				t.remove();
+			}
+		}, 'json');
+
+	})
+
+	.on('click', '#sa-count .tovar-set-find-update', function() {
+		var t = $(this),
+			send = {
+				op:'sa_count_tovar_set_find_update',
+				start:t.find('em').html()
+			};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success) {
+				_msg();
+				t.find('em').html(res.start);
+			}
+		}, 'json');
+
+	})
+	.on('click', '#sa-count .tovar-articul-update', function() {
+		var t = $(this),
+			send = {
+				op:'sa_count_tovar_articul_update'
+			};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success)
+				_msg();
+		}, 'json');
+
+	})
+
 
 	.on('click', '#sa-app .add', saAppEdit)
 	.on('click', '#sa-app .img_edit', function() {
@@ -764,6 +956,15 @@ $(document)
 	})
 
 	.ready(function() {
+		$('#app-id').vkHint({
+			msg:$('#app-id').attr('val'),
+			ugol:'top',
+			width:120,
+			indent:'right',
+			top:32,
+			left:484
+		});
+
 		if($('#sa-history').length) {
 			$('textarea').autosize();
 			$('.add.const').click(function() {

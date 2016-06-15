@@ -549,6 +549,7 @@ switch(@$_POST['op']) {
 		if(!RULE_SETUP_REKVISIT)
 			jsonError();
 
+		$type_id = _num($_POST['type_id']);
 		$name = _txt($_POST['name']);
 		$name_yur = _txt($_POST['name_yur']);
 		$ogrn = _txt($_POST['ogrn']);
@@ -571,7 +572,8 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_app`
-				SET `name`='".addslashes($name)."',
+				SET `type_id`=".$type_id.",
+					`name`='".addslashes($name)."',
 					`name_yur`='".addslashes($name_yur)."',
 					`ogrn`='".addslashes($ogrn)."',
 					`inn`='".addslashes($inn)."',
@@ -589,6 +591,7 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$changes =
+			_historyChange('Вид организации', _appType($r['type_id']), _appType($type_id)).
 			_historyChange('Название организации', $r['name'], $name).
 			_historyChange('Наименование юридического лица', $r['name_yur'], $name_yur).
 			_historyChange('ОГРН', $r['ogrn'], $ogrn).
@@ -621,28 +624,28 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_type`
+				FROM `_zayav_service`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_type_active`
+				FROM `_zayav_service_use`
 				WHERE `app_id`=".APP_ID."
-				  AND `type_id`=".$id;
+				  AND `service_id`=".$id;
 		if($active = !query_value($sql, GLOBAL_MYSQL_CONNECT)) {
-			$sql = "INSERT INTO `_zayav_type_active` (
+			$sql = "INSERT INTO `_zayav_service_use` (
 						`app_id`,
-						`type_id`
+						`service_id`
 					) VALUES (
 						".APP_ID.",
 						".$id."
 					)";
 		} else {
-			$sql = "DELETE FROM `_zayav_type_active`
+			$sql = "DELETE FROM `_zayav_service_use`
 					WHERE `app_id`=".APP_ID."
-					  AND `type_id`=".$id;
+					  AND `service_id`=".$id;
 		}
 
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -665,13 +668,13 @@ switch(@$_POST['op']) {
 		$about = win1251($_POST['about']);
 
 		$sql = "SELECT *
-				FROM `_zayav_type`
+				FROM `_zayav_service`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "UPDATE `_zayav_type`
+		$sql = "UPDATE `_zayav_service`
 				SET `name`='".addslashes($name)."',
 					`head`='".addslashes($head)."',
 					`about`='".addslashes($about)."'
@@ -718,6 +721,7 @@ switch(@$_POST['op']) {
 
 		$name = _txt($_POST['name']);
 
+
 		if(empty($name))
 			jsonError();
 
@@ -733,9 +737,6 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
-		_appJsValues();
-
 		$changes =
 			_historyChange('Наименование', $r['name'], $name);
 
@@ -745,6 +746,40 @@ switch(@$_POST['op']) {
 				'v1' => $name,
 				'v2' => '<table>'.$changes.'</table>'
 			));
+
+		if($category_id = _num($_POST['category_id'])) {
+			$category_sub_id = _num($_POST['category_sub_id']);
+
+			//если не указана подкатегория, но в категории есть подкатегории, объединение не производится
+			if(!$category_sub_id && _expense($category_id, 'sub'))
+				jsonError();
+
+			$sql = "UPDATE `_money_expense`
+					SET `category_id`=".$id.",
+						`category_sub_id`=0
+					WHERE `category_id`=".$category_id."
+					  AND `category_sub_id`=".$category_sub_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			_history(array(
+				'type_id' => 1051,
+				'v1' => _expense($id),
+				'v2' => _expense($category_id).
+						($category_sub_id ? ': '._expenseSub($category_sub_id) : '')
+			));
+
+			if($category_sub_id) {
+				$sql = "DELETE FROM `_money_expense_category_sub` WHERE `id`=".$category_sub_id;
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			} else {
+				$sql = "DELETE FROM `_money_expense_category` WHERE `id`=".$category_id;
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			}
+
+		}
+
+		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		_appJsValues();
 
 		$send['html'] = utf8(setup_expense_spisok());
 		jsonSuccess($send);
@@ -768,6 +803,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "DELETE FROM `_money_expense_category` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_money_expense_category_sub` WHERE `category_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
@@ -842,9 +880,6 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
-		_appJsValues();
-
 		if($changes =
 			_historyChange('Наименование', $r['name'], $name))
 			_history(array(
@@ -852,6 +887,39 @@ switch(@$_POST['op']) {
 				'v1' => _expense($r['category_id']),
 				'v2' => '<table>'.$changes.'</table>'
 			));
+
+		if($category_id = _num($_POST['category_id_join'])) {
+			$category_sub_id = _num($_POST['category_sub_id_join']);
+
+			//если не указана подкатегория, но в категории есть подкатегории, объединение не производится
+			if(!$category_sub_id && _expense($category_id, 'sub'))
+				jsonError();
+
+			$sql = "UPDATE `_money_expense`
+					SET `category_id`=".$r['category_id'].",
+						`category_sub_id`=".$id."
+					WHERE `category_id`=".$category_id."
+					  AND `category_sub_id`=".$category_sub_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			_history(array(
+				'type_id' => 1051,
+				'v1' => _expense($r['category_id']).': '._expenseSub($id),
+				'v2' => _expense($category_id).
+						($category_sub_id ? ': '._expenseSub($category_sub_id) : '')
+			));
+
+			if($category_sub_id) {
+				$sql = "DELETE FROM `_money_expense_category_sub` WHERE `id`=".$category_sub_id;
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			} else {
+				$sql = "DELETE FROM `_money_expense_category` WHERE `id`=".$category_id;
+				query($sql, GLOBAL_MYSQL_CONNECT);
+			}
+		}
+
+		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		_appJsValues();
 
 		$send['html'] = utf8(setup_expense_sub_spisok($r['category_id']));
 		jsonSuccess($send);
@@ -888,177 +956,6 @@ switch(@$_POST['op']) {
 
 		$send['html'] = utf8(setup_expense_sub_spisok($r['category_id']));
 		jsonSuccess($send);
-		break;
-
-	case 'setup_product_add':
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "INSERT INTO `_product` (
-					`app_id`,
-					`name`
-				) VALUES (
-					".APP_ID.",
-					'".addslashes($name)."'
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
-		_appJsValues();
-
-		_history(array(
-			'type_id' => 1037,
-			'v1' => $name
-		));
-
-		$send['html'] = utf8(setup_product_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_product_edit':
-		if(!$product_id = _num($_POST['id']))
-			jsonError();
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `_product`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$product_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "UPDATE `_product`
-		        SET `name`='".addslashes($name)."'
-		        WHERE `id`=".$product_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
-		_appJsValues();
-
-		if($changes = _historyChange('Наименование', $r['name'], $name))
-			_history(array(
-				'type_id' => 1038,
-				'v1' => $name,
-				'v2' => '<table>'.$changes.'</table>'
-			));
-
-		$send['html'] = utf8(setup_product_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_product_del':
-		if(!$product_id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `_product` WHERE `id`=".$product_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `_product_sub` WHERE `product_id`=".$product_id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `_zayav_product` WHERE `product_id`=".$product_id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "DELETE FROM `_product` WHERE `id`=".$product_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product'.APP_ID);
-		_appJsValues();
-
-		_history(array(
-			'type_id' => 1039,
-			'v1' => $r['name']
-		));
-
-		jsonSuccess();
-		break;
-	case 'setup_product_sub_add':
-		if(!$product_id = _num($_POST['product_id']))
-			jsonError();
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "SELECT * FROM `_product` WHERE `id`=".$product_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "INSERT INTO `_product_sub` (
-					`app_id`,
-					`product_id`,
-					`name`
-				) VALUES (
-					".APP_ID.",
-					".$product_id.",
-					'".addslashes($name)."'
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
-		_appJsValues();
-
-		_history(array(
-			'type_id' => 1040,
-			'v1' => _product($product_id),
-			'v2' => $name
-		));
-
-		$send['html'] = utf8(setup_product_sub_spisok($product_id));
-		jsonSuccess($send);
-		break;
-	case 'setup_product_sub_edit':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "SELECT * FROM `_product_sub` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "UPDATE `_product_sub`
-				SET `name`='".addslashes($name)."'
-				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
-		_appJsValues();
-
-		if($changes = _historyChange('Наименование', $r['name'], $name))
-			_history(array(
-				'type_id' => 1041,
-				'v1' => _product($r['product_id']),
-				'v2' => '<table>'.$changes.'</table>'
-			));
-
-		jsonSuccess();
-		break;
-	case 'setup_product_sub_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `_product_sub` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `_zayav_product` WHERE `product_sub_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-
-		$sql = "DELETE FROM `_product_sub` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'product_sub'.APP_ID);
-		_appJsValues();
-
-		_history(array(
-			'type_id' => 1042,
-			'v1' => _product($r['product_id']),
-			'v2' => $r['name']
-		));
-
-		jsonSuccess();
 		break;
 
 	case 'setup_zayav_status_add':
@@ -1324,6 +1221,245 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(setup_zayav_expense_spisok());
 		jsonSuccess($send);
 		break;
+
+	case 'setup_salary_list'://сохранение настройки листа выдачи
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+
+		$sql = "UPDATE `_app`
+				SET `salary_list_setup`='".$ids."'
+				WHERE `id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'app'.APP_ID);
+
+		jsonSuccess();
+		break;
+
+	case 'cartridge_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+		$name = _txt($_POST['name']);
+		$cost_filling = _num($_POST['cost_filling']);
+		$cost_restore = _num($_POST['cost_restore']);
+		$cost_chip = _num($_POST['cost_chip']);
+		$join_id = _num($_POST['join_id']);
+
+		if(empty($name))
+			jsonError();
+		if($join_id == $id)
+			jsonError();
+
+		$sql = "SELECT * FROM `_setup_cartridge` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if($join_id) {
+			$sql = "SELECT * FROM `_setup_cartridge` WHERE `id`=".$join_id;
+			if(!$j = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+				jsonError();
+			$sql = "UPDATE `_zayav_cartridge`
+					SET `cartridge_id`=".$id."
+					WHERE `cartridge_id`=".$join_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			$sql = "DELETE FROM `_setup_cartridge` WHERE `id`=".$join_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			_history(array(
+				'type_id' => 1019,
+				'v1' => $name,
+				'v2' => $j['name']
+			));
+		}
+
+		$sql = "UPDATE `_setup_cartridge`
+				SET `type_id`=".$type_id.",
+					`name`='".addslashes($name)."',
+					`cost_filling`=".$cost_filling.",
+					`cost_restore`=".$cost_restore.",
+					`cost_chip`=".$cost_chip."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'cartridge');
+		_appJsValues();
+
+		if($changes =
+			_historyChange('Вид', _cartridgeType($r['type_id']), _cartridgeType($type_id)).
+			_historyChange('Модель', $r['name'], $name).
+			_historyChange('Заправка', $r['cost_filling'], $cost_filling).
+			_historyChange('Восстановление', $r['cost_restore'], $cost_restore).
+			_historyChange('Замена чипа', $r['cost_chip'], $cost_chip))
+			_history(array(
+				'type_id' => 1034,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_cartridge_spisok($id));
+		$sql = "SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`";
+		$send['cart'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
+		jsonSuccess($send);
+		break;
+
+	case 'setup_tovar_category_add':
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "INSERT INTO `_tovar_category` (
+					`app_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_tovar_category', GLOBAL_MYSQL_CONNECT);
+
+		setup_tovar_category_use_insert($insert_id);
+
+		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		_appJsValues();
+
+		$send['html'] = utf8(setup_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_tovar_category_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_tovar_category`
+		        SET `name`='".addslashes($name)."'
+		        WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		_appJsValues();
+
+		$send['html'] = utf8(setup_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_tovar_category_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_tovar_category` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_tovar_category_use` WHERE `category_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'setup_tovar_category_join_load'://получение списка категорий готовых каталогов
+		$sql = "SELECT
+					*,
+					0 `tovar_count`,
+					0 `use`
+				FROM `_tovar_category`
+				WHERE !`app_id`
+				ORDER BY `name`";
+		$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT
+					`category_id`,
+					COUNT(`id`) `count`
+				FROM `_tovar`
+				WHERE `category_id` IN ("._idsGet($spisok).")
+				GROUP BY `category_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$spisok[$r['category_id']]['tovar_count'] = $r['count'];
+
+		$sql = "SELECT `category_id`
+				FROM `_tovar_category_use`
+				WHERE `app_id`=".APP_ID;
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			if(!isset($spisok[$r['category_id']]))
+				continue;
+			$spisok[$r['category_id']]['use'] = 1;
+		}
+
+		$html =
+			'<table class="_spisok" id="setup_tovar_category_join">'.
+				'<tr><th>'._check('check_all').
+					'<th>Категория'.
+					'<th>Товары';
+		foreach($spisok as $r) {
+			if(!$r['tovar_count'])
+				continue;
+			$html .=
+				'<tr><td class="ch">'._check('ch'.$r['id'], '', $r['use']).
+					'<td>'.$r['name'].
+					'<td class="tovar_count">'.$r['tovar_count'];
+		}
+
+		$html .= '</table>';
+
+		$send['html'] = utf8($html);
+
+		jsonSuccess($send);
+		break;
+	case 'setup_tovar_category_join_save'://применение категорий из общих каталогов
+		if(empty($_POST['ids'])) {
+			//если было ничего не выбрано, удаление всех общих категорий
+			$sql = "DELETE FROM `_tovar_category_use`
+					WHERE `app_id`=".APP_ID."
+					  AND `category_id` IN ("._tovarCategory('noapp').")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		} else {
+			if(!$ids = _ids($_POST['ids']))
+				jsonError();
+
+			//удаление категорий, которые были не выбраны
+			$sql = "DELETE FROM `_tovar_category_use`
+					WHERE `app_id`=".APP_ID."
+					  AND `category_id` IN ("._tovarCategory('noapp').")
+					  AND `category_id` NOT IN (".$ids.")";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+
+			$sql = "SELECT `category_id`,0
+					FROM `_tovar_category_use`
+					WHERE `app_id`=".APP_ID;
+			$use = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+
+			foreach(_ids($ids, 1) as $id) {
+				if(isset($use[$id]))
+					continue;
+				setup_tovar_category_use_insert($id);
+			}
+		}
+
+
+
+		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		_appJsValues();
+
+		$send['html'] = utf8(setup_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
 }
 
 function setup_status_next_insert($status_id, $post) {
@@ -1344,3 +1480,16 @@ function setup_status_next_insert($status_id, $post) {
 			) VALUES ".implode(',', $values);
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
+function setup_tovar_category_use_insert($id) {//внесение категории товаров, доступной для приложения
+	$sql = "INSERT INTO `_tovar_category_use` (
+				`app_id`,
+				`category_id`,
+				`sort`
+			) VALUES (
+				".APP_ID.",
+				".$id.",
+				"._maxSql('_tovar_category_use')."
+			)";
+	query($sql, GLOBAL_MYSQL_CONNECT);
+}
+

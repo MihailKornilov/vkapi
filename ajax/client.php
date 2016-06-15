@@ -23,28 +23,6 @@ switch(@$_POST['op']) {
 		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 			jsonSuccess($send);
 
-		// фио и телефоны клиентов
-		$sql = "SELECT *
-			FROM `_client_person`
-			WHERE `client_id` IN (".implode(',', array_keys($spisok)).")
-			ORDER BY `client_id`,`id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		$k = 0;
-		$client_id = key($spisok);
-		while($r = mysql_fetch_assoc($q)) {
-			if($client_id != $r['client_id']) {
-				$client_id = $r['client_id'];
-				$k = 0;
-			}
-
-			if(!$k) {
-				$spisok[$r['client_id']]['fio'] = $r['fio'];
-				$spisok[$r['client_id']]['phone'] = $r['phone'];
-				$spisok[$r['client_id']]['adres'] = $r['adres'];
-			}
-			$k++;
-		}
-
 		foreach($spisok as $r) {
 			$name = $r['category_id'] == 1 ? $r['fio'] : $r['org_name'];
 			$phone = $r['category_id'] == 1 ? $r['phone'] : $r['org_phone'];
@@ -67,6 +45,16 @@ switch(@$_POST['op']) {
 
 		define('ORG', $category_id > 1);
 
+		$fio = !ORG ? _txt($_POST['fio']) : '';
+		$phone = !ORG ? _txt($_POST['phone']) : '';
+		$adres = !ORG ? _txt($_POST['adres']) : '';
+		$post = !ORG ? _txt($_POST['post']) : '';
+		$pasp_seria = !ORG ? _txt($_POST['pasp_seria']) : '';
+		$pasp_nomer = !ORG ? _txt($_POST['pasp_nomer']) : '';
+		$pasp_adres = !ORG ? _txt($_POST['pasp_adres']) : '';
+		$pasp_ovd = !ORG ? _txt($_POST['pasp_ovd']) : '';
+		$pasp_data = !ORG ? _txt($_POST['pasp_data']) : '';
+
 		$org_name =  ORG ? _txt($_POST['org_name']) : '';
 		$org_phone = ORG ? _txt($_POST['org_phone']) : '';
 		$org_fax =   ORG ? _txt($_POST['org_fax']) : '';
@@ -74,42 +62,63 @@ switch(@$_POST['op']) {
 		$org_inn =   ORG ? _txt($_POST['org_inn']) : '';
 		$org_kpp =   ORG ? _txt($_POST['org_kpp']) : '';
 
-		if(!ORG && empty($_POST['person']))//Для частного лица обязательно указывается ФИО
+		if(!ORG && empty($fio))     //Для частного лица обязательно указывается ФИО
 			jsonError();
-		if(ORG && empty($org_name))//Для организаций обязательно указывается Название организации
+		if(ORG && empty($org_name)) //Для организаций обязательно указывается Название организации
 			jsonError();
 
 		$sql = "INSERT INTO `_client` (
 					`app_id`,
 					`category_id`,
+
+					`fio`,
+					`phone`,
+					`adres`,
+					`post`,
+					`pasp_seria`,
+					`pasp_nomer`,
+					`pasp_adres`,
+					`pasp_ovd`,
+					`pasp_data`,
+
 					`org_name`,
 					`org_phone`,
 					`org_fax`,
 					`org_adres`,
 					`org_inn`,
 					`org_kpp`,
+
+					`from_id`,
+
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
 					".$category_id.",
+
+					'".addslashes($fio)."',
+					'".addslashes($phone)."',
+					'".addslashes($adres)."',
+					'".addslashes($post)."',
+					'".addslashes($pasp_seria)."',
+					'".addslashes($pasp_nomer)."',
+					'".addslashes($pasp_adres)."',
+					'".addslashes($pasp_ovd)."',
+					'".addslashes($pasp_data)."',
+
 					'".addslashes($org_name)."',
 					'".addslashes($org_phone)."',
 					'".addslashes($org_fax)."',
 					'".addslashes($org_adres)."',
 					'".addslashes($org_inn)."',
 					'".addslashes($org_kpp)."',
+
+					"._clientFromGet().",
+
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		$sql = "SELECT `id` FROM `_client` WHERE `app_id`=".APP_ID." ORDER BY `id` DESC LIMIT 1";
-		$client_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
-
-		if(!empty($_POST['person']))
-			foreach($_POST['person'] as $r) {
-				$r['client_id'] = $client_id;
-				_clientPersonInsert($r, 1);
-			}
+		$client_id = query_insert_id('_client', GLOBAL_MYSQL_CONNECT);
 
 		_clientFindUpdate($client_id);
 
@@ -132,11 +141,13 @@ switch(@$_POST['op']) {
 	case 'client_edit':
 		if(!$client_id = _num($_POST['id']))
 			jsonError();
+		if(!$category_id = _num($_POST['category_id']))
+			jsonError();
 
 		if(!$c = _clientQuery($client_id))
 			jsonError();
 
-		define('ORG', $c['category_id'] > 1);
+		define('ORG', $category_id > 1);
 
 		if($worker_id = _num($_POST['worker_id'])) {
 			$sql = "SELECT COUNT(`id`)
@@ -148,6 +159,16 @@ switch(@$_POST['op']) {
 				jsonError('Этот сотрудник связан с другим клиентом');
 		}
 
+		$fio = !ORG ? _txt($_POST['fio']) : '';
+		$phone = !ORG ? _txt($_POST['phone']) : '';
+		$adres = !ORG ? _txt($_POST['adres']) : '';
+		$post = !ORG ? _txt($_POST['post']) : '';
+		$pasp_seria = !ORG ? _txt($_POST['pasp_seria']) : '';
+		$pasp_nomer = !ORG ? _txt($_POST['pasp_nomer']) : '';
+		$pasp_adres = !ORG ? _txt($_POST['pasp_adres']) : '';
+		$pasp_ovd = !ORG ? _txt($_POST['pasp_ovd']) : '';
+		$pasp_data = !ORG ? _txt($_POST['pasp_data']) : '';
+
 		$org_name = ORG ? _txt($_POST['org_name']) : '';
 		$org_phone = ORG ? _txt($_POST['org_phone']) : '';
 		$org_fax = ORG ? _txt($_POST['org_fax']) : '';
@@ -157,41 +178,11 @@ switch(@$_POST['op']) {
 		$join = _bool($_POST['join']);
 		$client2 = _num($_POST['client2']);
 
-		if(!ORG) { // Для частного лица обязательно указывается ФИО
-			if(!$person_id = _num($_POST['person_id']))
-				jsonError();
+		if(!ORG && empty($fio)) // Для частного лица обязательно указывается ФИО
+			jsonError();
 
-			$fio = _txt($_POST['fio']);
-			$phone = _txt($_POST['phone']);
-			$adres = _txt($_POST['adres']);
-			$pasp_seria = _txt($_POST['pasp_seria']);
-			$pasp_nomer = _txt($_POST['pasp_nomer']);
-			$pasp_adres = _txt($_POST['pasp_adres']);
-			$pasp_ovd = _txt($_POST['pasp_ovd']);
-			$pasp_data = _txt($_POST['pasp_data']);
-			if(empty($fio))
-				jsonError();
-
-			$sql = "SELECT * FROM `_client_person` WHERE `client_id`=".$client_id." AND `id`=".$person_id;
-			if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-				jsonError();
-
-			$sql = "UPDATE `_client_person`
-					SET `fio`='".addslashes($fio)."',
-						`phone`='".addslashes($phone)."',
-						`adres`='".addslashes($adres)."',
-						`pasp_seria`='".addslashes($pasp_seria)."',
-						`pasp_nomer`='".addslashes($pasp_nomer)."',
-						`pasp_adres`='".addslashes($pasp_adres)."',
-						`pasp_ovd`='".addslashes($pasp_ovd)."',
-						`pasp_data`='".addslashes($pasp_data)."'
-					WHERE `id`=".$person_id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-
-			$r['worker_id'] = $c['worker_id'];
-		} else
-			if(empty($org_name))//Для организации обязательно указывается Название организации
-				jsonError();
+		if(ORG && empty($org_name))//Для организации обязательно указывается Название организации
+			jsonError();
 
 		if($join) {
 			if(!$client2)
@@ -203,13 +194,26 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `_client`
-				SET `worker_id`=".$worker_id.",
+				SET `category_id`=".$category_id.",
+					`worker_id`=".$worker_id.",
+					
+					`fio`='".addslashes($fio)."',
+					`phone`='".addslashes($phone)."',
+					`adres`='".addslashes($adres)."',
+					`pasp_seria`='".addslashes($pasp_seria)."',
+					`pasp_nomer`='".addslashes($pasp_nomer)."',
+					`pasp_adres`='".addslashes($pasp_adres)."',
+					`pasp_ovd`='".addslashes($pasp_ovd)."',
+					`pasp_data`='".addslashes($pasp_data)."',
+
 					`org_name`='".addslashes($org_name)."',
 					`org_phone`='".addslashes($org_phone)."',
 					`org_fax`='".addslashes($org_fax)."',
 					`org_adres`='".addslashes($org_adres)."',
 					`org_inn`='".addslashes($org_inn)."',
-					`org_kpp`='".addslashes($org_kpp)."'
+					`org_kpp`='".addslashes($org_kpp)."',
+
+					`from_id`="._clientFromGet()."
 			   WHERE `id`=".$client_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -224,18 +228,11 @@ switch(@$_POST['op']) {
 //			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2, GLOBAL_MYSQL_CONNECT);
 
-			// доверенные лица переносятся новому клиенту. Если это частное лицо, то первый по порядку не трогается
-			$sql = "SELECT `id`
-					FROM `_client_person`
-					WHERE `client_id`=".$client2."
-					ORDER BY `id`".
-					(!ORG ? " LIMIT 1,1000" : '');
-			if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
-				$sql = "UPDATE `_client_person`
-						SET `client_id`=".$client_id."
-						WHERE `id` IN (".$ids.")";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-			}
+			// доверенные лица переносятся новому клиенту
+			$sql = "UPDATE `_client`
+					SET `client_id_person`=".$client_id."
+					WHERE `client_id_person`=".$client2;
+			query($sql, GLOBAL_MYSQL_CONNECT);
 
 //			_clientBalansUpdate($client_id);
 			//баланс для клиента
@@ -253,25 +250,28 @@ switch(@$_POST['op']) {
 
 		_clientFindUpdate($client_id);
 
-		$changes = !ORG ?
-					_historyChange('ФИО', $r['fio'], $fio).
-					_historyChange('Телефон', $r['phone'], $phone).
-					_historyChange('Адрес', $r['adres'], $adres).
-					_historyChange('Связан с сотрудником',
-									$r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '',
-									$worker_id ? _viewer($worker_id, 'viewer_name') : '').
-					_historyChange('Паспорт серия', $r['pasp_seria'], $pasp_seria).
-					_historyChange('Паспорт номер', $r['pasp_nomer'], $pasp_nomer).
-					_historyChange('Паспорт прописка', $r['pasp_adres'], $pasp_adres).
-					_historyChange('Паспорт кем выдан', $r['pasp_ovd'], $pasp_ovd).
-					_historyChange('Паспорт когда выдан', $r['pasp_data'], $pasp_data)
-					:
-					_historyChange('Название организации', $r['org_name'], $org_name).
-					_historyChange('Телефон', $r['org_phone'], $org_phone).
-					_historyChange('Факс', $r['org_fax'], $org_fax).
-					_historyChange('Адрес', $r['org_adres'], $org_adres).
-					_historyChange('ИНН', $r['org_inn'], $org_inn).
-					_historyChange('КПП', $r['org_kpp'], $org_kpp);
+		$changes =
+			_historyChange('Категория', _clientCategory($c['category_id'], 1), _clientCategory($category_id, 1)).
+			(!ORG ?
+				_historyChange('ФИО', $c['fio'], $fio).
+				_historyChange('Телефон', $c['phone'], $phone).
+				_historyChange('Адрес', $c['adres'], $adres).
+				_historyChange('Связан с сотрудником',
+								$c['worker_id'] ? _viewer($c['worker_id'], 'viewer_name') : '',
+								$worker_id ? _viewer($worker_id, 'viewer_name') : '').
+				_historyChange('Паспорт серия', $c['pasp_seria'], $pasp_seria).
+				_historyChange('Паспорт номер', $c['pasp_nomer'], $pasp_nomer).
+				_historyChange('Паспорт прописка', $c['pasp_adres'], $pasp_adres).
+				_historyChange('Паспорт кем выдан', $c['pasp_ovd'], $pasp_ovd).
+				_historyChange('Паспорт когда выдан', $c['pasp_data'], $pasp_data)
+			:
+				_historyChange('Название организации', $c['org_name'], $org_name).
+				_historyChange('Телефон', $c['org_phone'], $org_phone).
+				_historyChange('Факс', $c['org_fax'], $org_fax).
+				_historyChange('Адрес', $c['org_adres'], $org_adres).
+				_historyChange('ИНН', $c['org_inn'], $org_inn).
+				_historyChange('КПП', $c['org_kpp'], $org_kpp)
+			);
 
 		if($changes)
 			_history(array(
@@ -301,41 +301,171 @@ switch(@$_POST['op']) {
 		));
 		jsonSuccess();
 		break;
+
 	case 'client_person_add':
-		$r = _clientPersonInsert($_POST);
+		if(!$client_id = _num($_POST['client_id']))
+			jsonError();
 
-		_clientFindUpdate($r['client_id']);
+		if(!$c = _clientQuery($client_id))
+			jsonError();
 
-		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
-		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		$fio = _txt($_POST['fio']);
+		$phone = _txt($_POST['phone']);
+		$adres = _txt($_POST['adres']);
+		$post = _txt($_POST['post']);
+		$pasp_seria = _txt($_POST['pasp_seria']);
+		$pasp_nomer = _txt($_POST['pasp_nomer']);
+		$pasp_adres = _txt($_POST['pasp_adres']);
+		$pasp_ovd = _txt($_POST['pasp_ovd']);
+		$pasp_data = _txt($_POST['pasp_data']);
+
+		if(empty($fio))
+			jsonError();
+
+		$sql = "INSERT INTO `_client` (
+					`app_id`,
+					`category_id`,
+					`client_id_person`,
+					`fio`,
+					`phone`,
+					`adres`,
+					`post`,
+					`pasp_seria`,
+					`pasp_nomer`,
+					`pasp_adres`,
+					`pasp_ovd`,
+					`pasp_data`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					1,
+					".$client_id.",
+					'".addslashes($fio)."',
+					'".addslashes($phone)."',
+					'".addslashes($adres)."',
+					'".addslashes($post)."',
+					'".addslashes($pasp_seria)."',
+					'".addslashes($pasp_nomer)."',
+					'".addslashes($pasp_adres)."',
+					'".addslashes($pasp_ovd)."',
+					'".addslashes($pasp_data)."',
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		$person_id = query_insert_id('_client', GLOBAL_MYSQL_CONNECT);
+
+		_clientFindUpdate($client_id);
+		_clientFindUpdate($person_id);
+
+		_history(array(
+			'type_id' => 5,
+			'client_id' => $client_id,
+			'v1' => $fio
+		));
+
+		$send['html'] = utf8(_clientInfoPerson($client_id));
+		$send['array'] = _clientInfoPerson($client_id, 'array');
+		jsonSuccess($send);
+		break;
+	case 'client_person_edit':
+		if(!$person_id = _num($_POST['id']))
+			jsonError();
+		if(!$client_id = _num($_POST['client_id']))
+			jsonError();
+
+		if(!$c = _clientQuery($client_id))
+			jsonError();
+
+		if($person_id != $c['client_id_person'])
+		
+		if(!$p = _clientQuery($person_id))
+			jsonError();
+
+		$fio = _txt($_POST['fio']);
+		$phone = _txt($_POST['phone']);
+		$adres = _txt($_POST['adres']);
+		$post = _txt($_POST['post']);
+		$pasp_seria = _txt($_POST['pasp_seria']);
+		$pasp_nomer = _txt($_POST['pasp_nomer']);
+		$pasp_adres = _txt($_POST['pasp_adres']);
+		$pasp_ovd = _txt($_POST['pasp_ovd']);
+		$pasp_data = _txt($_POST['pasp_data']);
+
+		if(empty($fio))
+			jsonError();
+
+		$sql = "UPDATE `_client`
+				SET `fio`='".addslashes($fio)."',
+					`phone`='".addslashes($phone)."',
+					`adres`='".addslashes($adres)."',
+					`post`='".addslashes($post)."',
+					`pasp_seria`='".addslashes($pasp_seria)."',
+					`pasp_nomer`='".addslashes($pasp_nomer)."',
+					`pasp_adres`='".addslashes($pasp_adres)."',
+					`pasp_ovd`='".addslashes($pasp_ovd)."',
+					`pasp_data`='".addslashes($pasp_data)."'
+				WHERE `id`=".$person_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_clientFindUpdate($client_id);
+		_clientFindUpdate($person_id);
+
+		$changes =
+			_historyChange('ФИО', $p['fio'], $fio).
+			_historyChange('Телефон', $p['phone'], $phone).
+			_historyChange('Адрес', $p['adres'], $adres).
+			_historyChange('Должность', $p['post'], $post).
+			_historyChange('Паспорт серия', $p['pasp_seria'], $pasp_seria).
+			_historyChange('Паспорт номер', $p['pasp_nomer'], $pasp_nomer).
+			_historyChange('Паспорт прописка', $p['pasp_adres'], $pasp_adres).
+			_historyChange('Паспорт кем выдан', $p['pasp_ovd'], $pasp_ovd).
+			_historyChange('Паспорт когда выдан', $p['pasp_data'], $pasp_data);
+		if($changes)
+			_history(array(
+				'type_id' => 6,
+				'client_id' => $client_id,
+				'v1' => $fio,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(_clientInfoPerson($client_id));
+		$send['array'] = _clientInfoPerson($client_id, 'array');
 		jsonSuccess($send);
 		break;
 	case 'client_person_del':
 		if(!$person_id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+
+		if(!$p = _clientQuery($person_id))
 			jsonError();
 
-		if(!$c = _clientQuery($r['client_id']))
+		$client_id = $p['client_id_person'];
+		if(!$c = _clientQuery($client_id))
 			jsonError();
 
-		$sql = "DELETE FROM `_client_person` WHERE `id`=".$person_id;
+		$sql = "UPDATE `_client`
+				SET `client_id_person`=0,
+					`poa_nomer`='',
+					`poa_date_begin`='0000-00-00',
+					`poa_date_end`='0000-00-00',
+					`poa_attach_id`=0
+				WHERE `id`=".$person_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_clientFindUpdate($r['client_id']);
+		_clientFindUpdate($client_id);
 
 		_history(array(
 			'type_id' => 7,
-			'client_id' => $r['client_id'],
-			'v1' => $r['fio']
+			'client_id' => $client_id,
+			'v1' => $p['fio']
 		));
 
-		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
-		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		$send['html'] = utf8(_clientInfoPerson($client_id));
+		$send['array'] = _clientInfoPerson($client_id, 'array');
 		jsonSuccess($send);
 		break;
+
 	case 'client_poa_add'://внесение информации о доверенности
 		if(!$person_id = _num($_POST['person_id']))
 			jsonError();
@@ -349,14 +479,14 @@ switch(@$_POST['op']) {
 		$date_end = $_POST['date_end'];
 		$attach_id = _num($_POST['attach_id']);
 
-		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$p = _clientQuery($person_id))
 			jsonError();
 
-		if(!$c = _clientQuery($r['client_id']))
+		$client_id = $p['client_id_person'];
+		if(!$c = _clientQuery($client_id))
 			jsonError();
 
-		$sql = "UPDATE `_client_person`
+		$sql = "UPDATE `_client`
 				SET `poa_nomer`='".addslashes($nomer)."',
 					`poa_date_begin`='".$date_begin."',
 					`poa_date_end`='".$date_end."',
@@ -364,35 +494,35 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$person_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_clientFindUpdate($r['client_id']);
+		_clientFindUpdate($client_id);
 
-		if(!$r['poa_nomer'])
+		if(!$p['poa_nomer'])
 			_history(array(
 				'type_id' => 94,
-				'client_id' => $r['client_id'],
+				'client_id' => $client_id,
 				'v1' => $nomer,
 				'v2' => FullData($date_end)
 			));
 
-		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
-		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		$send['html'] = utf8(_clientInfoPerson($client_id));
+		$send['array'] = _clientInfoPerson($client_id, 'array');
 		jsonSuccess($send);
 		break;
 	case 'client_poa_del'://удаление доверенности
 		if(!$person_id = _num($_POST['person_id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$p = _clientQuery($person_id))
 			jsonError();
 
-		if(!$r['poa_nomer'])
+		if(!$p['poa_nomer'])
 			jsonError();
 
-		if(!$c = _clientQuery($r['client_id']))
+		$client_id = $p['client_id_person'];
+		if(!$c = _clientQuery($client_id))
 			jsonError();
 
-		$sql = "UPDATE `_client_person`
+		$sql = "UPDATE `_client`
 				SET `poa_nomer`='',
 					`poa_date_begin`='0000-00-00',
 					`poa_date_end`='0000-00-00',
@@ -400,26 +530,97 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$person_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_clientFindUpdate($r['client_id']);
+		_clientFindUpdate($client_id);
 
 		_history(array(
 			'type_id' => 95,
-			'client_id' => $r['client_id'],
-			'v1' => $r['poa_nomer']
+			'client_id' => $client_id,
+			'v1' => $p['poa_nomer']
 		));
 
-		$send['html'] = utf8(_clientInfoPerson($r['client_id']));
-		$send['array'] = _clientInfoPerson($r['client_id'], 'array');
+		$send['html'] = utf8(_clientInfoPerson($client_id));
+		$send['array'] = _clientInfoPerson($client_id, 'array');
 		jsonSuccess($send);
 		break;
-	case 'client_zayav_spisok':
-		$_POST['limit'] = 10;
-		$data = zayav_spisok($_POST);
-		if($data['filter']['page'] == 1)
-			$send['all'] = utf8($data['result']);
-		$send['html'] = utf8($data['spisok']);
+
+	case 'client_from_add'://внесение нового источника, откуда приходит клиент
+		if(!_clientFromGet())
+			jsonError();
+
+		$send['spisok'] = utf8(_client_from_spisok());
 		jsonSuccess($send);
 		break;
+	case 'client_from_edit'://редактирование источника, откуда приходит клиент
+		if(!$id = _num($_POST['from_id']))
+			jsonError();
+
+		$name = _txt($_POST['from_name']);
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_client_from`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_client_from`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		_appJsValues();
+
+		$send['spisok'] = utf8(_client_from_spisok());
+		jsonSuccess($send);
+		break;
+	case 'client_from_del'://удаление источника, откуда приходит клиент
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_client_from`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`)
+				FROM `_client`
+				WHERE `app_id`=".APP_ID."
+				  AND `from_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_client_from` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'client_from_setup'://настройка использования источников
+		if(!VIEWER_ADMIN)
+			jsonError();
+
+		$use = _bool($_POST['use']);
+		$require = $use ? _bool($_POST['require']) : 0;
+
+		$sql = "UPDATE `_app`
+				SET `client_from_use`=".$use.",
+					`client_from_require`=".$require."
+				WHERE `id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'app'.APP_ID);
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
 }
 
 function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
@@ -427,6 +628,9 @@ function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
 		return;
 
 	$find =
+		$r['fio'].' '.
+		$r['phone'].' '.
+		$r['adres'].' '.
 		$r['org_name'].' '.
 		$r['org_phone'].' '.
 		$r['org_fax'].' '.
@@ -434,112 +638,36 @@ function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
 		$r['org_inn'].' '.
 		$r['org_kpp'].' ';
 
-	$sql = "SELECT * FROM `_client_person` WHERE `client_id`=".$client_id." ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	$person = array();
-	while($r = mysql_fetch_assoc($q))
-		$person[] = $r['fio'].' '.$r['phone'].' '.$r['adres'];
-
-	$find .= implode(' ', $person);
-
 	$sql = "UPDATE `_client` SET `find`='".addslashes($find)."' WHERE `id`=".$client_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
-}//_clientFindUpdate()
-function _clientPersonInsert($v, $clientNew=false) {//внесение или обновление доверенного лица
-	$person_id = _num(@$v['person_id']);
-	$client_id = 0;
-	if($person_id) {
-		$sql = "SELECT * FROM `_client_person` WHERE `id`=".$person_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError();
-		$client_id = $r['client_id'];
+}
+function _clientFromGet() {//получение id источника откуда пришёл клиент
+	if($from_id = _num($_POST['from_id']))
+		return $from_id;
+
+	$name = _txt($_POST['from_name']);
+	if(empty($name))
+		return 0;
+
+	$sql = "SELECT IFNULL(`id`,0)
+	        FROM `_client_from`
+			WHERE `app_id`=".APP_ID."
+			  AND `name`='".addslashes($name)."'
+			LIMIT 1";
+	if(!$from_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		$sql = "INSERT INTO `_client_from` (
+					`app_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$from_id = query_insert_id('_client_from', GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		_appJsValues();
 	}
-
-	if(!$client_id)
-		$client_id = _num(@$v['client_id']);
-
-	if(!$c = _clientQuery($client_id))
-		jsonError();
-
-	$fio = _txt($v['fio']);
-	$phone = _txt($v['phone']);
-	$adres = _txt($v['adres']);
-	$post = _txt($v['post']);
-	$pasp_seria = _txt($v['pasp_seria']);
-	$pasp_nomer = _txt($v['pasp_nomer']);
-	$pasp_adres = _txt($v['pasp_adres']);
-	$pasp_ovd = _txt($v['pasp_ovd']);
-	$pasp_data = _txt($v['pasp_data']);
-
-	if(empty($fio))
-		jsonError();
-
-	$sql = "INSERT INTO `_client_person` (
-				`id`,
-				`app_id`,
-				`client_id`,
-				`fio`,
-				`phone`,
-				`adres`,
-				`post`,
-				`pasp_seria`,
-				`pasp_nomer`,
-				`pasp_adres`,
-				`pasp_ovd`,
-				`pasp_data`
-			) VALUES (
-				".$person_id.",
-				".APP_ID.",
-				".$client_id.",
-				'".addslashes($fio)."',
-				'".addslashes($phone)."',
-				'".addslashes($adres)."',
-				'".addslashes($post)."',
-				'".addslashes($pasp_seria)."',
-				'".addslashes($pasp_nomer)."',
-				'".addslashes($pasp_adres)."',
-				'".addslashes($pasp_ovd)."',
-				'".addslashes($pasp_data)."'
-			) ON DUPLICATE KEY UPDATE
-				`fio`=VALUES(`fio`),
-				`phone`=VALUES(`phone`),
-				`adres`=VALUES(`adres`),
-				`post`=VALUES(`post`),
-				`pasp_seria`=VALUES(`pasp_seria`),
-				`pasp_nomer`=VALUES(`pasp_nomer`),
-				`pasp_adres`=VALUES(`pasp_adres`),
-				`pasp_ovd`=VALUES(`pasp_ovd`),
-				`pasp_data`=VALUES(`pasp_data`)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
-
-	if(!$person_id) {
-		if(!$clientNew)
-			_history(array(
-				'type_id' => 5,
-				'client_id' => $client_id,
-				'v1' => $fio
-			));
-	} else {
-		$changes =
-			_historyChange('ФИО', $r['fio'], $fio).
-			_historyChange('Телефон', $r['phone'], $phone).
-			_historyChange('Адрес', $r['adres'], $adres).
-			_historyChange('Должность', $r['post'], $post).
-			_historyChange('Паспорт серия', $r['pasp_seria'], $pasp_seria).
-			_historyChange('Паспорт номер', $r['pasp_nomer'], $pasp_nomer).
-			_historyChange('Паспорт прописка', $r['pasp_adres'], $pasp_adres).
-			_historyChange('Паспорт кем выдан', $r['pasp_ovd'], $pasp_ovd).
-			_historyChange('Паспорт когда выдан', $r['pasp_data'], $pasp_data);
-		if($changes)
-			_history(array(
-				'type_id' => 6,
-				'client_id' => $client_id,
-				'v1' => $fio,
-				'v2' => '<table>'.$changes.'</table>'
-			));
-	}
-
-	$v['client_id'] = $client_id;
-
-	return $v;
-}//_clientPersonInsert()
+	return $from_id;
+}

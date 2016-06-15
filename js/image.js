@@ -2,13 +2,13 @@ var _imageAdd = function(o) {
 		o = $.extend({
 			key:0,//ключ по которому будет прикрепл€тьс€ изображение, например, к заметке
 			zayav_id:0,
-			zp_id:0,
+			tovar_id:0,
 			manual_id:0,
 			func:function() {
 				location.reload();
 			}
 		}, o);
-
+	
 		var html =
 			'<div id="_image-add-tab">' +
 				'<div class="_info">' +
@@ -28,7 +28,7 @@ var _imageAdd = function(o) {
 						'<input type="file" name="f1" id="file" accept="image/jpeg,image/png,image/gif,image/tiff" />' +
 						'<input type="hidden" name="key" value="' + o.key + '" />' +
 						'<input type="hidden" name="zayav_id" value="' + o.zayav_id + '" />' +
-						'<input type="hidden" name="zp_id" value="' + o.zp_id + '" />' +
+						'<input type="hidden" name="tovar_id" value="' + o.tovar_id + '" />' +
 						'<input type="hidden" name="manual_id" value="' + o.manual_id + '" />' +
 					'</form>' +
 					'<button class="vk">¬ыбрать изображение</button>' +
@@ -103,7 +103,7 @@ $.fn._image = function(o) {
 	o = $.extend({
 		op:'image_obj_get',
 		zayav_id:0,
-		zp_id:0,
+		tovar_id:0,
 		manual_id:0
 	}, o);
 

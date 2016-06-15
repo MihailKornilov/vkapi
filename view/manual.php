@@ -1,14 +1,14 @@
 <?php
 function _manual() {
-	if(@$_GET['d'] == 'new')
-		return _manual_new();
-
-	if(@$_GET['d'] == 'part') {
-		if(@$_GET['part_id'] == 1) {
-			$_GET['d'] = 'new';
-			return _manual_new();
-		}
-		return _manual_part();
+	switch(@$_GET['d']) {
+		case 'new': return _manual_new();
+		case 'part':
+			if(@$_GET['part_id'] == 1) {
+				$_GET['d'] = 'new';
+				return _manual_new();
+			}
+			return _manual_part();
+		case 'action': return _manual_action();
 	}
 
 	return _manual_main();
@@ -90,11 +90,14 @@ function _manualMenu() {//разделы основного меню
 	$menu = array(
 		'main' => 'Мануал',
 		'part' => 'Разделы',
-		'new' => _manualPart(1)
+		'new' => _manualPart(1),
+		'action' => 'События'
 //		'dialog' => 'Обсуждения'
-//		'action' => 'События'
 	);
 
+	if(!SA)
+		unset($menu['actiom']);
+	
 	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
 		$_GET['d'] = 'main';
 
@@ -218,10 +221,15 @@ function _manual_content() {//содержание с левой стороны
 	return
 	(SA && !$access ? '<div id="no-access">Раздел недоступен для просмотра.</div>' : '').
 	(SA ?
-		_iconDel(array('id'=>$part_id,'class'=>'manual-part-del')).
-		'<div class="img_edit manual-part-edit" val="'.$part_id.'#'.addslashes(_manualPart($part_id)).'#'.$access.'"></div>'
+		'<div id="mp-edit">'.
+			'<div class="img_edit manual-part-edit" val="'.$part_id.'#'.addslashes(_manualPart($part_id)).'#'.$access.'"></div>'.
+			_iconDel(array('id'=>$part_id,'class'=>'manual-part-del')).
+		'</div>'
 	: '').
-	'<h1>'._manualPart($part_id).'</h1>'.
+	'<div id="head">'.
+		(SA ? '<span>{part'.$part_id.'}</span>' : '').
+		_manualPart($part_id).
+	'</div>'.
 	_manual_page_spisok($part_id);
 }
 function _manual_page_spisok($part_id) {
@@ -275,18 +283,30 @@ function _manual_page_info($id) {//отображение страницы мануала
 
 	$_GET['part_id'] = $r['part_id'];
 
+	$content = _manual_page_image($id, $r['content']);
+	$content = _manual_page_link_part($content);
+	$content = _manual_page_link_page($content);
+
 	return
 	(SA && !$r['access'] ? '<div id="no-access">Страница недоступна для просмотра.</div>' : '').
+	(SA ?
+		'<div id="mp-edit">'.
+			'<div class="img_edit manual-page-edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
+			_iconDel(array('dtime_add'=>'','class'=>'manual-page-del') + $r).
+			'<input type="hidden" id="mp-edit-name" value="'.$r['name'].'" />'.
+			'<textarea id="orig">'.$r['content'].'</textarea>'.
+		'</div>'
+	: '').
+
 	(!_manualPageCountInPart($r['part_id']) ?
 		'<a class="back" href="'.URL.'&p=manual&d=part&part_id='.$r['part_id'].'"><< назад к разделу <b>'._manualPart($r['part_id']).'</b></a>'
 	: '').
-	(SA ?
-		_iconDel(array('dtime_add'=>'','class'=>'manual-page-del') + $r).
-		'<div class="img_edit manual-page-edit" val="'.$r['id'].'#'.$r['access'].'#'.$r['part_id'].'#'.$r['part_sub_id'].'"></div>'.
-		'<textarea id="orig">'.$r['content'].'</textarea>'
-	: '').
-	'<h1>'.$r['name'].'</h1>'.
-	'<h2>'._br(_manual_page_image($r)).'</h2>'.
+
+	'<div id="head">'.
+		(SA ? '<span>{page'.$id.'}</span>' : '').
+		$r['name'].
+	'</div>'.
+	'<h2>'._br($content).'</h2>'.
 	'<div id="created">'.
 		'Страница создана '.FullDataTime($r['dtime_add']).'.'.
 		($r['count_upd'] ?
@@ -294,23 +314,46 @@ function _manual_page_info($id) {//отображение страницы мануала
 			'последняя '.FullDataTime($r['dtime_upd']).'.'
 		: '').
 	'</div>'.
-	_manual_page_bottom($id);
+	_manual_page_bottom($id).
+	(SA ?
+		'<div id="action">'._manual_action_spisok(array('manual_id'=>$id)).'</div>'
+	: '');
 }
-function _manual_page_image($m) {//вставка изображений в страницу мануала
+function _manual_page_image($id, $content) {//вставка изображений в страницу мануала {img5432}
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `manual_id`=".$m['id'];
+			  AND `manual_id`=".$id;
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q)) {
 		$s = _imageResize($r['big_x'], $r['big_y'], 426, 400);
-		$m['content'] = str_replace(
+		$content = str_replace(
 							'{img'.$r['id'].'}',
 							'<div class="image"><img class="_iview" val="'.$r['id'].'" width="'.$s['x'].'" height="'.$s['y'].'" src="'.$r['path'].$r['big_name'].'" /></div>',
-							$m['content']);
+							$content);
 	}
 
-	return $m['content'];
+	return $content;
+}
+function _manual_page_link_part($content) {//вставка ссылок на разделы мануала {part1}
+	$sql = "SELECT `id`,`name` FROM `_manual_part`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$content = str_replace(
+					'{part'.$r['id'].'}',
+					'<a href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.$r['name'].'</a>',
+					$content);
+	return $content;
+}
+function _manual_page_link_page($content) {//вставка ссылок на страницы мануала {page15}
+	$sql = "SELECT `id`,`name` FROM `_manual`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$content = str_replace(
+					'{page'.$r['id'].'}',
+					'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>',
+					$content);
+	return $content;
 }
 function _manual_page_bottom($id) {//отображение кнопок для ответа, либо заметок
 	return
@@ -428,7 +471,80 @@ function _menuInfoTop() {//информационное сообщение сверху страницы
 	'</div>';
 }
 
+function _manualAction($id, $i='name') {
+	$name = array(
+		1 => 'страница просмотрена',
+        2 => 'объявление закрыто',
+        3 => 'Всё понятно',
+        4 => 'Мне не понятно',
+        5 => 'Не интересно'
+	);
 
+	$bg = array(
+		1 => 'dfd',
+        2 => 'ffd',
+        3 => 'e9e9ff',
+        4 => 'fdd',
+        5 => 'eee'
+	);
 
+	if($i == 'bg')
+		return ' style="background:#'.$bg[$id].'"';
+
+	return $name[$id];
+}
+function _manual_action() {//действия пользователей в отношении страниц
+	if(!SA)
+		return _manual_main();
+	return
+	_manualMenu().
+	'<div id="manual-action">'.
+		'<div id="spisok">'._manual_action_spisok().'</div>'.
+	'</div>';
+}
+function _manual_action_filter($v) {
+	return array(
+		'manual_id' => _num(@$v['manual_id'])
+	);
+}
+function _manual_action_spisok($v=array()) {
+	$filter = _manual_action_filter($v);
+
+	$cond = "`id`";
+	if($filter['manual_id'])
+		$cond .= " AND `manual_id`=".$filter['manual_id'];
+
+	$sql = "SELECT *
+			FROM `_manual_answer`
+			WHERE ".$cond."
+			ORDER BY `dtime_add` DESC
+			LIMIT 100";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Событий нет.';
+
+	$sql = "SELECT `id`,`name` FROM `_manual`";
+	$page = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+
+	$send = '<table class="_spisok">'.
+				'<tr>'.
+			(!$filter['manual_id'] ?
+					'<th>Страница' :
+			'').
+					'<th>Сотрудник'.
+					'<th>Действие'.
+					'<th>Дата';
+	foreach($spisok as $r) {
+		$send .=
+				'<tr>'.
+			(!$filter['manual_id'] ?
+					'<td><a href="'.URL.'&p=manual&d=part&page_id='.$r['manual_id'].'">'.$page[$r['manual_id']].'</a>'
+			: '').
+					'<td class="user">'._viewer($r['viewer_id'], 'viewer_link').
+					'<td class="act"'._manualAction($r['val'], 'bg').'>'._manualAction($r['val']).
+					'<td class="dtime">'.FullDataTime($r['dtime_add']);
+	}
+	$send .= '</table>';
+	return $send;
+}
 
 

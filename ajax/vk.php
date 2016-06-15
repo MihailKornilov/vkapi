@@ -8,8 +8,6 @@ switch(@$_POST['op']) {
 		_globalJsValues();
 		_appJsValues();
 
-		_cacheClear();//todo для удаления
-
 		//обновление глобальных значений
 		$sql = "UPDATE `_setup_global` SET `value`=`value`+1";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -94,11 +92,9 @@ switch(@$_POST['op']) {
 		for($n = 0; $n < count($sort); $n++) {
 			$sql = "UPDATE `".$table."` SET `sort`=".$n." WHERE `id`=".intval($sort[$n]);
 			query($sql, $conn);
-
 		}
 
 		_globalCacheClear();
-		_cacheClear();
 		_appJsValues();
 
 		jsonSuccess();
@@ -488,7 +484,7 @@ switch(@$_POST['op']) {
 	case 'image_upload'://добавление изображения
 		$key = _txt($_POST['key']);
 		$zayav_id = _num($_POST['zayav_id']);
-		$zp_id = _num($_POST['zp_id']);
+		$tovar_id = _num($_POST['tovar_id']);
 		$manual_id = _num($_POST['manual_id']);
 
 		$f = $_FILES['f1'];
@@ -537,7 +533,7 @@ switch(@$_POST['op']) {
 				WHERE !`deleted`
 	  ".($key ? " AND `key`='".$key."'" : '')."
  ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
-	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
+ ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
 				LIMIT 1";
 		$sort = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -557,7 +553,7 @@ switch(@$_POST['op']) {
 					`big_size`,
 
 					`zayav_id`,
-					`zp_id`,
+					`tovar_id`,
 					`manual_id`,
 
 					`key`,
@@ -578,7 +574,7 @@ switch(@$_POST['op']) {
 					".$big['size'].",
 
 					'".$zayav_id."',
-					'".$zp_id."',
+					'".$tovar_id."',
 					'".$manual_id."',
 
 					'".addslashes($key)."',
@@ -620,7 +616,7 @@ switch(@$_POST['op']) {
 	case 'image_obj_get':
 		$key = _txt(@$_POST['key']);
 		$zayav_id = _num(@$_POST['zayav_id']);
-		$zp_id = _num(@$_POST['zp_id']);
+		$tovar_id = _num(@$_POST['tovar_id']);
 		$manual_id = _num(@$_POST['manual_id']);
 
 		$sql = "SELECT *
@@ -628,7 +624,7 @@ switch(@$_POST['op']) {
 				WHERE !`deleted`
 	  ".($key ? " AND `key`='".$key."'" : '')."
  ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
-	".($zp_id ? " AND `zp_id`=".$zp_id : '')."
+ ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
 				ORDER BY `id`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);

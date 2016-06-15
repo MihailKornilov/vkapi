@@ -9,7 +9,12 @@ function _dbConnect($prefix='') {
 				1
 			) or die("Can't connect to database");
 	mysql_select_db(constant($prefix.'MYSQL_DATABASE'), $conn) or die("Can't select database");
-	query('SET NAMES `'.constant($prefix.'MYSQL_NAMES').'`', $conn);
+
+	$sql = "SET NAMES `".constant($prefix.'MYSQL_NAMES')."`";
+//	query($sql, $conn);
+
+	mysql_query($sql, $conn) or die($sql.'<br />'.mysql_error());
+
 	define($prefix.'MYSQL_CONNECT', $conn);
 }
 function query($sql, $resource_id=MYSQL_CONNECT) {
@@ -57,7 +62,7 @@ function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 	while($sp = mysql_fetch_row($q))
 		$send[] = '{'.
 			'uid:'.$sp[0].','.
-			'title:"'.addslashes(htmlspecialchars_decode($sp[1])).'"'.
+			'title:"'.addslashes(htmlspecialchars_decode(trim($sp[1]))).'"'.
 		'}';
 	return '['.implode(',',$send).']';
 }
@@ -77,7 +82,7 @@ function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select 
 	while($sp = mysql_fetch_row($q))
 		$send[] = array(
 			'uid' => $sp[0],
-			'title' => utf8(addslashes(htmlspecialchars_decode($sp[1])))
+			'title' => utf8(addslashes(htmlspecialchars_decode(trim($sp[1]))))
 		);
 	return $send;
 }

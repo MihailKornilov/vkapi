@@ -451,98 +451,173 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'sa_zayav_pole_add':
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
-		$const = strtoupper(_txt($_POST['const']));
 
 		if(!$name)
 			jsonError();
-		if(!$const)
-			jsonError();
 
-		$sql = "SELECT COUNT(*)
-				FROM `_zayav_const`
-				WHERE `const`='".addslashes($const)."'";
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError('Константа занята');
-
-		$sql = "INSERT INTO `_zayav_const` (
+		$sql = "INSERT INTO `_zayav_pole` (
+					`type_id`,
 					`name`,
-					`about`,
-					`const`
+					`about`
 				) VALUES (
+					".$type_id.",
 					'".addslashes($name)."',
-					'".addslashes($about)."',
-					'".addslashes($const)."'
+					'".addslashes($about)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		sa_zayav_type_link();
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
-		$send['html'] = utf8(sa_zayav_pole_spisok());
+		$send['html'] = utf8(sa_zayav_pole_spisok($type_id));
 		jsonSuccess($send);
 		break;
-	case 'sa_zayav_pole_edit':
+	case 'sa_zayav_pole_edit'://редактирование поля заявок
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
-		$const = strtoupper(_txt($_POST['const']));
 
 		if(!$name)
 			jsonError();
-		if(!$const)
+
+		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT COUNT(*)
-				FROM `_zayav_const`
-				WHERE `const`='".addslashes($const)."'
-				  AND `id`!=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
-			jsonError('Константа занята');
-
-		$sql = "UPDATE `_zayav_const`
+		$sql = "UPDATE `_zayav_pole`
 				SET `name`='".addslashes($name)."',
-					`about`='".addslashes($about)."',
-					`const`='".addslashes($const)."'
+					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
 
-		sa_zayav_type_link();
-		$send['html'] = utf8(sa_zayav_pole_spisok());
+		$send['html'] = utf8(sa_zayav_pole_spisok($r['type_id']));
 		jsonSuccess($send);
 		break;
-	case 'sa_zayav_setup_use_change':
+	case 'sa_zayav_pole_del'://удаление поля заявки
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$type_id = _num($_POST['type_id']);
+		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('id поля не существует');
 
-		$sql = "DELETE FROM `_zayav_const_use`
-				WHERE `app_id`=".APP_ID."
-				  AND `type_id`=".$type_id."
-				  AND `pole_id`=".$id;
+		$sql = "SELECT COUNT(*) FROM `_zayav_pole_use` WHERE `pole_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Это поле используется');
+
+		$sql = "DELETE FROM `_zayav_pole` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		if(_bool($_POST['v'])) {
-			$sql = "INSERT INTO `_zayav_const_use` (
-						`app_id`,
-						`type_id`,
-						`pole_id`
-					) VALUES (
-						".APP_ID.",
-						".$type_id.",
-						".$id."
-					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
-		}
+		$sql = "ALTER TABLE `_zayav_pole` AUTO_INCREMENT=0";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_globalJsValues();
+
+		jsonSuccess();
+		break;
+
+	case 'sa_zayav_service_pole_load':
+		$service_id = _num($_POST['service_id']);
+
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+		
+		$sql = "SELECT `pole_id`
+				FROM `_zayav_pole_use`
+				WHERE `app_id`=".APP_ID."
+				  AND `service_id`=".$service_id;
+		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+		
+		$send['html'] = utf8('<div id="sa-zayav-pole">'.sa_zayav_pole_spisok($type_id, $ids).'</div>');
+		jsonSuccess($send);
+		break;
+	case 'sa_zayav_service_pole_add'://добавление выбранного поля заявки
+		if(!$pole_id = _num($_POST['pole_id']))
+			jsonError();
+
+		$service_id = _num($_POST['service_id']);
+		$name_use = _txt($_POST['label']);
+		$require = _bool($_POST['require']);
+
+		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$pole_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_pole_use` (
+					`app_id`,
+					`service_id`,
+					`pole_id`,
+					`label`,
+					`require`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".$service_id.",
+					".$pole_id.",
+					'".addslashes($name_use)."',
+					'".addslashes($require)."',
+					"._maxSql('_zayav_pole_use')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_zayav_pole_use', GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_globalJsValues();
+
+		define('SERVICE_ID', $service_id);
+		$send['html'] = utf8(sa_zayav_service_use($r['type_id'], $insert_id));
+		$send['type_id'] = $r['type_id'];
+		jsonSuccess($send);
+		break;
+	case 'sa_zayav_service_pole_edit'://редактирование выбранного поля заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name_use = _txt($_POST['label']);
+		$require = _bool($_POST['require']);
+
+		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
+		if(!$u = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$u['pole_id'];
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_pole_use`
+				SET `label`='".addslashes($name_use)."',
+					`require`=".$require."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_globalJsValues();
+
+		define('SERVICE_ID', _num($u['service_id']));
+		$send['html'] = utf8(sa_zayav_service_use($r['type_id'], $id));
+		$send['type_id'] = $r['type_id'];
+		jsonSuccess($send);
+		break;
+	case 'sa_zayav_service_pole_del'://удаление выбранного поля заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_pole_use` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -555,7 +630,7 @@ switch(@$_POST['op']) {
 		if(!$name)
 			jsonError();
 
-		$sql = "INSERT INTO `_zayav_type` (
+		$sql = "INSERT INTO `_zayav_service` (
 					`app_id`,
 					`name`,
 					`head`
@@ -569,17 +644,17 @@ switch(@$_POST['op']) {
 		$type_id = query_insert_id('_zayav_type', GLOBAL_MYSQL_CONNECT);
 
 		$sql = "SELECT COUNT(*)
-				FROM `_zayav_type`
+				FROM `_zayav_service`
 				WHERE `app_id`=".APP_ID;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
 			$sql = "UPDATE `_zayav`
-					SET `type_id`=".$type_id."
+					SET `service_id`=".$type_id."
 					WHERE `app_id`=".APP_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);
 
 			//применение типа заявки к используемым полям
-			$sql = "UPDATE `_zayav_const_use`
-					SET `type_id`=".$type_id."
+			$sql = "UPDATE `_zayav_pole_use`
+					SET `service_id`=".$type_id."
 					WHERE `app_id`=".APP_ID;
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
@@ -662,6 +737,191 @@ switch(@$_POST['op']) {
 
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
+		break;
+
+	case 'sa_count_client_load':
+		$sql = "UPDATE `_client` `c`
+				SET `balans_test`=(
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_income`
+					WHERE !`tovar_id`
+					  AND `confirm` NOT IN (1,3)
+					  AND !`deleted`
+					  AND `client_id`=`c`.`id`
+				) - (
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_accrual`
+					WHERE !`deleted`
+					  AND `client_id`=`c`.`id`
+				) - (
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_refund`
+					WHERE !`deleted`
+					  AND `client_id`=`c`.`id`
+				) WHERE `app_id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT *
+				FROM `_client`
+				WHERE `app_id`=".APP_ID."
+				  AND `balans`!=`balans_test`";
+		$client = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$spisok = '';
+		foreach($client as $r)
+			$spisok .= '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'"><b>'.$r['id'].'</b></a> '.
+					   '<a class="client-balans-repair" val="'.$r['id'].'">исправить</a>'.
+					   '<br />';
+
+		$send['html'] = utf8(
+			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
+			'<div>Различия: '.count($client).'</div>'.
+			'<br />'.
+			$spisok
+		);
+		jsonSuccess($send);
+		break;
+	case 'sa_count_client_balans_repair':
+		if(!$client_id = _num($_POST['client_id']))
+			jsonError();
+
+		_clientBalansUpdate($client_id);
+
+		_balans(array(
+			'action_id' => 52,
+			'client_id' => $client_id
+		));
+
+		jsonSuccess();
+		break;
+
+	case 'sa_count_zayav_load':
+		$sql = "UPDATE `_zayav` `z`
+				SET `sum_dolg_test`=(
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_income`
+					WHERE `confirm` NOT IN (1,3)
+					  AND !`deleted`
+					  AND `zayav_id`=`z`.`id`
+				) - (
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_accrual`
+					WHERE !`deleted`
+					  AND `zayav_id`=`z`.`id`
+				) - (
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_refund`
+					WHERE !`deleted`
+					  AND `zayav_id`=`z`.`id`
+				) WHERE `app_id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT *
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `sum_dolg`!=`sum_dolg_test`";
+		$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$spisok = '';
+		foreach($zayav as $r)
+			$spisok .= '<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">Заявка <b>#'.$r['id'].'</b></a> '.
+					   '<a class="zayav-balans-repair" val="'.$r['id'].'">исправить</a>'.
+					   '<br />';
+
+		$send['html'] = utf8(
+			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
+			'<div>Различия: '.count($zayav).'</div>'.
+			'<br />'.
+			$spisok
+		);
+		jsonSuccess($send);
+		break;
+	case 'sa_count_zayav_balans_repair':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		_zayavBalansUpdate($zayav_id);
+
+		jsonSuccess();
+		break;
+
+	case 'sa_count_tovar_set_find_update':
+		$start = _num(@$_POST['start']);
+		
+		$sql = "SELECT DISTINCT(`tovar_id_set`)
+				FROM `_tovar`
+				WHERE `tovar_id_set`";
+		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT *
+				FROM `_tovar`
+				WHERE `id` IN (".$ids.")";
+		$tovar = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT *
+				FROM `_tovar`
+				WHERE `tovar_id_set`
+				LIMIT ".$start.",500";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$count = mysql_num_rows($q);
+		while($r = mysql_fetch_assoc($q)) {
+			$t = $tovar[$r['tovar_id_set']];
+
+			$find =
+				_tovarName($r['name_id']).
+				' '.
+				_tovarName($t['name_id']).
+				_tovarVendor($t['vendor_id']).
+				$t['name'];
+
+			$sql = "UPDATE `_tovar`
+					SET `find`='".addslashes($find)."'
+					WHERE `id`=".$r['id'];
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		if($count < 500)
+			$start += $count;
+		else
+			$start += 500;
+
+		$send['start'] = $start;
+		jsonSuccess($send);
+		break;
+	case 'sa_count_tovar_articul_update':
+		$sql = "SELECT DISTINCT `app_id` FROM `_tovar_avai`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			$sql = "SELECT COUNT(`id`)
+					FROM `_tovar_avai`
+					WHERE !LENGTH(`articul`)
+					  AND `app_id`=".$r['app_id'];
+			if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+				continue;
+
+			//получение максимального значения артикула
+			$sql = "SELECT MAX(`articul`)
+					FROM `_tovar_avai`
+					WHERE `app_id`=".$r['app_id'];
+			$max = _num(query_value($sql, GLOBAL_MYSQL_CONNECT)) + 1;
+
+			for($n = 0; $n < $count; $n ++) {
+				$articul = $max;
+				for($i = 0; $i < 6 - strlen($max); $i++)
+					$articul = '0'.$articul;
+				$sql = "UPDATE `_tovar_avai`
+						SET `articul`='".$articul."'
+						WHERE `app_id`=".$r['app_id']."
+						  AND !LENGTH(`articul`)
+						ORDER BY `id` ASC
+						LIMIT 1";
+				query($sql, GLOBAL_MYSQL_CONNECT);
+
+				$max++;
+			}
+		}
+
+		jsonSuccess();
 		break;
 
 	case 'sa_app_add':
@@ -759,7 +1019,6 @@ switch(@$_POST['op']) {
 			query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".$ws['admin_id']);
 			xcache_unset(CACHE_PREFIX.'viewer_'.$ws['admin_id']);
 		}
-		_cacheClear($ws_id);
 		jsonSuccess();
 		break;
 	case 'sa_ws_del':
@@ -769,7 +1028,6 @@ switch(@$_POST['op']) {
 			query("DELETE FROM `".$tab."` WHERE `ws_id`=".$ws_id);
 		query("DELETE FROM `workshop` WHERE `id`=".$ws_id);
 		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
-		_cacheClear($ws_id);
 		jsonSuccess();
 		break;
 	case 'sa_ws_client_balans'://корректировка балансов клиентов

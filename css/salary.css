@@ -57,6 +57,12 @@
 #salary-list-tab ._info h1{display:block;margin-bottom:3px;text-align:center}
 #salary-list-tab table{border-spacing:10px;margin:0 0 15px 30px}
 #salary-list-tab .label{text-align:right}
+#salary-list-tab #list-set{
+	display:block;
+	text-align:center;
+	font-weight:bold;
+	margin:10px;
+}
 
 
 #salary-rate-set-tab .label{width:100px}

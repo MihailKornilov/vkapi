@@ -1,71 +1,35 @@
 <?php
 switch(@$_POST['op']) {
-	case 'zayav_add':
-		if(!$client_id = _num($_POST['client_id']))
-			jsonError();
+	case 'zayav_edit_load'://загрузка данных заявки для внесения или редактирования
+		$send['html'] = utf8(_zayavPoleEdit($_POST));
+		jsonSuccess($send);
+		break;
+	case 'zayav_add'://внесение новой заявки
+		$service_id = _num($_POST['service_id']);
 
-		$type_id = _num($_POST['type_id']);
-		$name = _txt($_POST['name']);
-		$about = _txt($_POST['about']);
-		$count = _num($_POST['count']);
-		$adres = _txt($_POST['adres']);
-
-		$device_id = _num($_POST['device_id']);
-		$vendor_id = _num($_POST['vendor_id']);
-		$model_id = _num($_POST['model_id']);
-		$equip = _ids($_POST['equip']);
-		$imei = _txt($_POST['imei']);
-		$serial = _txt($_POST['serial']);
-
-		$place_id = _num($_POST['place']);
-		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
-
-		$color_id = _num($_POST['color_id']);
-		$color_dop = _num($_POST['color_dop']);
-		$sum_cost = _cena($_POST['sum_cost']);
-		$pay_type = _num($_POST['pay_type']);
-		$srok = $_POST['srok'];
-
-		_service('const_define', $type_id);
-
-		if(ZAYAV_INFO_DEVICE && !$device_id)
-			jsonError('Не выбрано устройство');
-
-		if(ZAYAV_INFO_SROK && $srok == '0000-00-00')
-			jsonError('Не указан срок выполнения заявки');
-
-		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
-			jsonError('Не указан вид платежа');
-
-		if(ZAYAV_INFO_COUNT && !$count)
-			jsonError('Не указано количество');
-
-		if(!ZAYAV_INFO_COUNT)
-			$count = 0;
+		if(!$v = _zayavValuesCheck($service_id))
+			jsonError('Нет данных для внесения заявки');
 
 		$sql = "INSERT INTO `_zayav` (
 					`app_id`,
-					`type_id`,
-					`client_id`,
+					`service_id`,
 					`nomer`,
 
+					`client_id`,
 					`name`,
 					`about`,
 					`count`,
 					`adres`,
-
-					`base_device_id`,
-					`base_vendor_id`,
-					`base_model_id`,
-					`equip`,
 					`imei`,
 					`serial`,
-
 					`color_id`,
 					`color_dop`,
+					`executer_id`,
+
+					`srok`,
 					`sum_cost`,
 					`pay_type`,
-					`srok`,
+					`equip`,
 
 					`status_id`,
 					`status_dtime`,
@@ -74,27 +38,24 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".$type_id.",
-					".$client_id.",
+					".$service_id.",
 					"._maxSql('_zayav', 'nomer', 1).",
 
-					'".addslashes($name)."',
-					'".addslashes($about)."',
-					".$count.",
-					'".addslashes($adres)."',
+					".$v['client_id'].",
+					'".addslashes($v['name'])."',
+					'".addslashes($v['about'])."',
+					".$v['count'].",
+					'".addslashes($v['adres'])."',
+					'".addslashes($v['imei'])."',
+					'".addslashes($v['serial'])."',
+					".$v['color_id'].",
+					".$v['color_dop'].",
+					".$v['executer_id'].",
 
-					".$device_id.",
-					".$vendor_id.",
-					".$model_id.",
-					'".$equip."',
-					'".addslashes($imei)."',
-					'".addslashes($serial)."',
-
-					".$color_id.",
-					".$color_dop.",
-					".$sum_cost.",
-					".$pay_type.",
-					'".$srok."',
+					'".$v['srok']."',
+					".$v['sum_cost'].",
+					".$v['pay_type'].",
+					'".$v['equip']."',
 
 					"._zayavStatus('default').",
 					current_timestamp,
@@ -115,147 +76,90 @@ switch(@$_POST['op']) {
 					".APP_ID.",
 					".$send['id'].",
 					"._zayavStatus('default').",
-					'".$srok."',
+					'".$v['srok']."',
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-
-		_zayavProductUpdate($send['id'], $_POST);
 		_zayavNameUpdate($send['id']);
-
-		if(ZAYAV_INFO_DEVICE)
-			zayavPlaceCheck($send['id'], $place_id, $place_other);
+		_zayavTovarUpdate($send['id']);
+		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения изделия
 
 		_note(array(
 			'add' => 1,
 			'p' => 'zayav',
 			'id' => $send['id'],
-			'txt' => _txt(@$_POST['note'])
+			'txt' => $v['note']
 		));
 
 		_history(array(
 			'type_id' => 73,
-			'client_id' => $client_id,
+			'client_id' => $v['client_id'],
 			'zayav_id' => $send['id']
 		));
+
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
 		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		if(!$client_id = _num($_POST['client_id']))
-			jsonError();
-
-		$name = _txt($_POST['name']);
-		$about = _txt($_POST['about']);
-		$count = _num($_POST['count']);
-		$adres = _txt($_POST['adres']);
-
-		$device_id = _num($_POST['device_id']);
-		$vendor_id = _num($_POST['vendor_id']);
-		$model_id = _num($_POST['model_id']);
-		$equip = _ids($_POST['equip']);
-		$imei = _txt($_POST['imei']);
-		$serial = _txt($_POST['serial']);
-
-		$color_id = _num($_POST['color_id']);
-		$color_dop = _num($_POST['color_dop']);
-		$sum_cost = _cena($_POST['sum_cost']);
-		$pay_type = _num($_POST['pay_type']);
-
+			jsonError('Некорректный id заявки');
+		
 		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
+			jsonError('Заявки id:'.$zayav_id.' не существует');
 
-		_service('const_define', $z['type_id']);
+		$v = _zayavValuesCheck($z['service_id'], $zayav_id);
 
-		if(ZAYAV_INFO_DEVICE && !$device_id)
-			jsonError('Не выбрано устройство');
+		$zpu = $v['zpu'];
 
-		if(ZAYAV_INFO_PAY_TYPE && !$pay_type)
-			jsonError();
+		if(!$v['update'])
+			jsonError('Нет данных для обновления заявки');
 
-		if(ZAYAV_INFO_COUNT && !$count)
-			jsonError();
-
-		$sql = "UPDATE `_zayav`
-				SET `client_id`=".$client_id.",
-					`name`='".addslashes($name)."',
-					`about`='".addslashes($about)."',
-					`count`=".$count.",
-					`adres`='".addslashes($adres)."',
-
-					`base_device_id`=".$device_id.",
-					`base_vendor_id`=".$vendor_id.",
-					`base_model_id`=".$model_id.",
-					`equip`='".addslashes($equip)."',
-					`imei`='".addslashes($imei)."',
-					`serial`='".addslashes($serial)."',
-
-					`color_id`=".$color_id.",
-					`color_dop`=".$color_dop.",
-					`sum_cost`=".$sum_cost.",
-					`pay_type`=".$pay_type."
-				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		if($z['client_id'] != $client_id) {
+		if(isset($zpu[5]) && $z['client_id'] != $v['client_id']) {
+			if($z['client_id'] && !$v['client_id'])
+				jsonError('Нельзя производить отвязку заявки от клиента');
 			$sql = "UPDATE `_money_accrual`
-					SET `client_id`=".$client_id."
+					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
 			$sql = "UPDATE `_money_income`
-					SET `client_id`=".$client_id."
+					SET `client_id`=".$v['client_id']."
+					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
 			$sql = "UPDATE `_money_refund`
-					SET `client_id`=".$client_id."
+					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql, GLOBAL_MYSQL_CONNECT);
 			_clientBalansUpdate($z['client_id']);
-			_clientBalansUpdate($client_id);
+			_clientBalansUpdate($v['client_id']);
 		}
 
-		$productArrOld = array();
-		if($r = _zayav_product_query($zayav_id)) {
-			$r = $r[key($r)];
-			$productArrOld = array(
-				_num($r['product_id']),
-				_num($r['product_sub_id']),
-				_num($r['count'])
-			);
-		}
-		$productArrNew = _zayavProductUpdate($zayav_id, $_POST);
+		$sql = "UPDATE `_zayav` SET ".$v['update']." WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_zayavNameUpdate($zayav_id);
-
-		$labelName = 'Название';
-		if(ZAYAV_INFO_DEVICE)
-			$labelName = 'Устройство';
+		_zayavTovarUpdate($zayav_id);
 
 		if($changes =
-			_historyChange('Клиент', $z['client_id'], $client_id, _clientVal($z['client_id'], 'go'), _clientVal($client_id, 'go')).
-			_historyChange($labelName, $z['name'], $name).
-			_historyChange('Описание', $z['about'], $about).
-			_historyChange('Количество', $z['count'], $count).
-			_historyChange('Изделия', _zayavProductTxt($productArrOld), _zayavProductTxt($productArrNew)).
-			_historyChange('Адрес', $z['adres'], $adres).
-		(ZAYAV_INFO_DEVICE ?
-			_historyChange('Комплект', zayavEquipSpisok($z['equip']), zayavEquipSpisok($equip))
-		: '').
-			_historyChange('IMEI', $z['imei'], $imei).
-			_historyChange('Серийный номер', $z['serial'], $serial).
-			_historyChange('Цвет', _color($z['color_id'], $z['color_dop']), _color($color_id, $color_dop)).
-			_historyChange('Предварительная стоимость', _cena($z['sum_cost']), $sum_cost).
-			_historyChange('Расчёт', _payType($z['pay_type']), _payType($pay_type)))
+			(isset($zpu[5])  ? _historyChange($zpu[5]['name'], $z['client_id'], $v['client_id'], _clientVal($z['client_id'], 'go'), _clientVal($v['client_id'], 'go')) : '').
+			(isset($zpu[1])  ? _historyChange($zpu[1]['name'], $z['name'], $v['name']) : '').
+			(isset($zpu[2])  ? _historyChange($zpu[2]['name'], $z['about'], $v['about']) : '').
+			(isset($zpu[3])  ? _historyChange($zpu[3]['name'], $z['count'], $v['count']) : '').
+			(isset($zpu[6])  ? _historyChange($zpu[6]['name'], $z['adres'], $v['adres']) : '').
+			(isset($zpu[7])  ? _historyChange($zpu[7]['name'], $z['imei'], $v['imei']) : '').
+			(isset($zpu[8])  ? _historyChange($zpu[8]['name'], $z['serial'], $v['serial']) : '').
+			(isset($zpu[9])  ? _historyChange($zpu[9]['name'], _color($z['color_id'], $z['color_dop']), _color($v['color_id'], $v['color_dop'])) : '').
+			(isset($zpu[15]) ? _historyChange($zpu[15]['name'], _cena($z['sum_cost']), $v['sum_cost']) : '').
+			(isset($zpu[16]) ? _historyChange($zpu[16]['name'], _payType($z['pay_type']), _payType($v['pay_type'])) : '').
+			(isset($zpu[31]) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : ''))
 			_history(array(
 				'type_id' => 72,
-				'client_id' => $z['client_id'],
+				'client_id' => $v['client_id'],
 				'zayav_id' => $zayav_id,
 				'v1' => '<table>'.$changes.'</table>'
 			));
@@ -323,14 +227,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'zayav_type_js'://получение констант для js конкретного типа заявок
-		if(!$type_id = _num($_POST['type_id']))
-			jsonError();
-
-		$send['js'] = _service('const_arr', $type_id);
-
-		jsonSuccess($send);
-		break;
 	case 'zayav_status':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -339,8 +235,6 @@ switch(@$_POST['op']) {
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
-
-		_service('const_define', $z['type_id']);
 
 		$place_id = _num($_POST['place']);
 		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
@@ -423,20 +317,20 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'zayav_type_change':
+	case 'zayav_service_change':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$type_id = _num($_POST['type_id']))
+		if(!$service_id = _num($_POST['service_id']))
 			jsonError();
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError();
 
-		if($z['type_id'] == $type_id)
+		if($z['service_id'] == $service_id)
 			jsonError();
 
 		$sql = "UPDATE `_zayav`
-				SET `type_id`=".$type_id."
+				SET `service_id`=".$service_id."
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -444,46 +338,159 @@ switch(@$_POST['op']) {
 			'type_id' => 72,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => '<table>'._historyChange('Категория', _service('name', $z['type_id']), _service('name', $type_id)).'</table>'
+			'v1' => '<table>'._historyChange('Категория', _service('name', $z['service_id']), _service('name', $service_id)).'</table>'
 		));
 
 		jsonSuccess();
 		break;
-
-	case 'zayav_srok':
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
+	case 'zayav_tovar_place_change':
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
-		$day = $_POST['day'];
-		$zayav_spisok = _bool($_POST['zayav_spisok']);
+		$place_id = _num($_POST['place_id']);
+		$place_other = !$place_id ? _txt(@$_POST['place_other']) : '';
 
-		$send['html'] = utf8(_zayavSrokCalendar($day, '', $zayav_spisok));
+		if(!_zayavTovarPlaceUpdate($zayav_id, $place_id, $place_other))
+			jsonError();
+
+		jsonSuccess();
+		break;
+
+	case 'zayav_tovar_set_load':
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError();
+
+		$send['html'] = utf8(
+			'<div class="_info">'.
+				'<u>Товар</u> будет добавлен в расходы заявки с указанием закупочной стоимости. '.
+//				'<u>Наличие</u> товара будет уменьшено на 1 '.
+			'</div>'.
+			'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
+			'<h2>для '.$r['tovar_set_name'].'</h2>'.
+			'<div class="headName">Выбор по наличию</div>'.
+			_tovarAvaiArticul($tovar_id, 1)
+		);
+
 		jsonSuccess($send);
 		break;
-	case 'zayav_srok_next':
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
+	case 'zayav_tovar_set':// Установка товара из заявки
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$avai_id = _num($_POST['avai_id']))
 			jsonError();
 
-		$day = $_POST['day'];
-		$zayav_spisok = _bool($_POST['zayav_spisok']);
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
 
-		$send['html'] = utf8(_zayavSrokCalendar($day, $_POST['mon'], $zayav_spisok));
+		$sql = "SELECT *
+				FROM `_tovar_avai`
+				WHERE id=".$avai_id;
+		if(!$avai = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(!$avai['count'])
+			jsonError();
+
+/*
+		//Удаление из заказа запчасти, привязанной к заявке
+		$sql = "DELETE FROM `zp_zakaz`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id`=".$zayav_id."
+				  AND `zp_id`=".$zp_id;
+		query($sql);
+
+		_note(array(
+			'add' => 1,
+			'comment' => 1,
+			'p' => 'zayav',
+			'id' => $zayav_id,
+			'txt' => 'Установка запчасти: ' .
+				'<a class="zp-id" val="'.$zp_id.'">' .
+				_zpName($zp['name_id']).' ' .
+				_vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']) .
+				'</a>'
+		));
+
+
+		//внесение движения товара
+		$move_id = _tovarMoveInsert(array(
+			'type_id' => 2,
+			'tovar_id' => $avai['tovar_id'],
+			'tovar_avai_id' => $avai_id,
+			'zayav_id' => $zayav_id
+		));
+*/
+		//добавление запчасти в расходы по заявке
+		$sql = "INSERT INTO `_zayav_expense` (
+					`app_id`,
+					`zayav_id`,
+					`category_id`,
+					`tovar_id`,
+					`tovar_avai_id`,
+					`sum`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$zayav_id.",
+					2,
+					".$avai['tovar_id'].",
+					".$avai_id.",
+					".$avai['cost_buy'].",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_tovarAvaiUpdate($avai['tovar_id']);
+
+/*
+		_history(array(
+			'type_id' => 13,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => $count,
+			'zp_id' => $zp_id
+		));
+*/
+		jsonSuccess();
+		break;
+
+	case 'zayav_srok_open'://открытие календаря заявок
+		$send['html'] = utf8(_zayavSrokCalendar($_POST));
 		jsonSuccess($send);
 		break;
-	case 'zayav_srok_save':
+	case 'zayav_srok_save'://изменение срока выполнения
+		if(!$zayav_id = _num(@$_POST['zayav_id']))
+			jsonError();
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_id = _num(@$_POST['zayav_id']);
-		$save = _bool($_POST['save']);
 
-		if($zayav_id && $save)
-			if(!_zayavSrokChange($zayav_id, $day))
-				jsonError();
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
 
-		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
-		jsonSuccess($send);
+		if($day != $z['srok'] && $day != '0000-00-00') {
+			$sql = "UPDATE `_zayav`
+					SET `srok`='".$day."'
+					WHERE `id`=".$zayav_id;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			_history(array(
+				'type_id' => 52,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'v1' => '<table><tr>'.
+					'<th>Срок:'.
+						'<td>'.($z['srok'] == '0000-00-00' ? 'не указан' : FullData($z['srok'], 0, 1, 1)).
+						'<td>»'.
+						'<td>'.FullData($day, 0, 1, 1).
+					'</table>'
+			));
+		}
+
+		jsonSuccess();
 		break;
 
 	case 'zayav_executer_change'://изменение исполнителя заявки
@@ -797,303 +804,536 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-/*
 	case 'dogovor_terminate'://расторжение договора
-		if(!$zayav_id = _num($_POST['zayav_id']))
+		if(!$dogovor_id = _num($_POST['dogovor_id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE !`deleted` AND `id`=".$zayav_id;
-		if(!$z = mysql_fetch_assoc(query($sql)))
+		$sql = "SELECT *
+				FROM `_zayav_dogovor`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$dogovor_id;
+		if(!$dog = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav_dogovor` WHERE !`deleted` AND `zayav_id`=".$zayav_id;
-		if(!$dog = mysql_fetch_assoc(query($sql)))
+		if(!$z = _zayavQuery($dog['zayav_id']))
 			jsonError();
 
-		query("UPDATE `zayav_dogovor` SET `deleted`=1 WHERE `id`=".$dog['id']);
-		query("UPDATE `accrual` SET `deleted`=1 WHERE `dogovor_id`=".$dog['id']);
-		query("UPDATE `zayav` SET `dogovor_id`=0 WHERE `id`=".$zayav_id);
+		query("UPDATE `_zayav_dogovor` SET `deleted`=1 WHERE `id`=".$dogovor_id);
+		query("UPDATE `_money_accrual` SET `deleted`=1 WHERE `dogovor_id`=".$dogovor_id);
+		query("UPDATE `_zayav` SET `dogovor_id`=0 WHERE `id`=".$dog['zayav_id']);
 
-		_historyInsert(
-			59,
-			array(
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'dogovor_id' => $dog['id']
-			)
-		);
-
-		$sql = "SELECT * FROM `money` WHERE !`deleted` AND `dogovor_id`=".$dog['id'];
-		if($money = mysql_fetch_assoc(query($sql))) {
-			$prim = 'Возврат авансового платежа при расторжении договора №'.$dog['nomer'].'.';
-			$sql = "INSERT INTO `money` (
-					`zayav_id`,
-					`client_id`,
-					`invoice_id`,
-					`sum`,
-					`prim`,
-					`refund`,
-					`dogovor_id`,
-					`owner_id`,
-					`viewer_id_add`
-				) VALUES (
-					".$zayav_id.",
-					".$z['client_id'].",
-					1,
-					-".$money['sum'].",
-					'".$prim."',
-					1,
-					".$dog['id'].",
-					".VIEWER_ID.",
-					".VIEWER_ID."
-				)";
-			query($sql);
-
-			invoice_history_insert(array(
-				'action' => 13,
-				'table' => 'money',
-				'id' => mysql_insert_id()
-			));
-
-			_historyInsert(
-				56,
-				array(
-					'zayav_id' => $zayav_id,
-					'client_id' => $z['client_id'],
-					'value' => round($money['sum'], 2),
-					'value1' => $prim
-				)
-			);
-		}
+		//внесение баланса для клиента
+		_balans(array(
+			'action_id' => 26,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'dogovor_id' => $dogovor_id,
+			'sum' => $dog['sum']
+		));
 
 		_clientBalansUpdate($z['client_id']);
-		_zayavBalansUpdate($zayav_id);
+		_zayavBalansUpdate($z['id']);
+		_salaryZayavBonus($z['id']);
+
+		_history(array(
+			'type_id' => 96,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'dogovor_id' => $dogovor_id
+		));
 
 		jsonSuccess();
 		break;
-*/
-	case 'zayav_expense_edit'://изменение расходов по заявке
+
+	case 'zayav_expense_add'://внесение расхода по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-
-		$expense = _zayav_expense_test($_POST['expense']);
-		if($expense === false)
+		if(!$cat_id = _num($_POST['cat_id']))
 			jsonError();
 
-		if(!$z = _zayavQuery($zayav_id))
+		$txt = '';
+		$worker_id = 0;
+		$tovar_id = 0;
+		$attach_id = 0;
+		$mon = 0;
+		$year = 0;
+		$sum = _cena($_POST['sum']);
+		
+		switch(_zayavExpense($cat_id, 'dop')) {
+			case 1: $txt = _txt($_POST['dop']); break;
+			case 2:
+				$worker_id = _num($_POST['dop']);
+				$mon = intval(strftime('%m'));
+				$year = strftime('%Y');
+				break;
+			case 3: $tovar_id = _num($_POST['dop']); break;
+			case 4: $attach_id = _num($_POST['dop']); break;
+		}
+		
+		$sql = "INSERT INTO `_zayav_expense` (
+					`app_id`,
+					`zayav_id`,
+					`category_id`,
+					`txt`,
+					`worker_id`,
+					`tovar_id`,
+					`attach_id`,
+					`sum`,
+					`mon`,
+					`year`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$zayav_id.",
+					".$cat_id.",
+					'".addslashes($txt)."',
+					".$worker_id.",
+					".$tovar_id.",
+					".$attach_id.",
+					".$sum.",
+					".$mon.",
+					".$year.",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));
+		jsonSuccess($send);
+		break;
+	case 'zayav_expense_del'://удаление расхода по заявке
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT *
 				FROM `_zayav_expense`
 				WHERE `app_id`=".APP_ID."
-				  AND `zayav_id`=".$zayav_id."
-				ORDER BY `id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		$arr = array();
-		$workerBalans = array();//сохранение старых балансов сотрудников
-		while($r = mysql_fetch_assoc($q)) {
-			$dop = '';
-			$ze = _zayavExpense($r['category_id'], 'all');
-			if($ze['txt'])
-				$dop = $r['txt'];
-			if($ze['worker'])
-				$dop = $r['worker_id'];
-			if($ze['zp'])
-				$dop = $r['zp_id'];
-			if($ze['attach'])
-				$dop = $r['attach_id'] ? $r['attach_id'] : '.'.$r['txt'];
-			$arr[] =
-				$r['id'].'&&&'.
-				$r['category_id'].'&&&'.
-				$dop.'&&&'.
-				_cena($r['sum']);
+				  AND `id`=".$id;
+		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_tovarAvaiUpdate($r['tovar_id']);
+		
+		$send['html'] = utf8(_zayav_expense_spisok($r['zayav_id']));
+		jsonSuccess($send);
+		break;
+
+	case 'zayav_kvit':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		$active = _bool(@$_POST['active']);
+		$defect = _txt($_POST['defect']);
+
+		if(empty($defect))
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_kvit`
+				WHERE `app_id`=".APP_ID."
+				  AND !`active`
+				  AND `zayav_id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT `tovar_id`
+				FROM `_zayav_tovar`
+				WHERE `zayav_id`=".$zayav_id."
+				ORDER BY `id`
+				LIMIT 1";
+		$tovar_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "INSERT INTO `_zayav_kvit` (
+					`app_id`,
+					`zayav_id`,
+
+					`tovar_id`,
+					`color_id`,
+					`color_dop`,
+					`imei`,
+					`serial`,
+					`equip`,
+
+					`client_name`,
+					`client_phone`,
+
+					`defect`,
+					`active`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$zayav_id.",
+
+					".$tovar_id.",
+
+					".$z['color_id'].",
+					".$z['color_dop'].",
+
+					'".addslashes($z['imei'])."',
+					'".addslashes($z['serial'])."',
+					'".addslashes($z['equip'])."',
+
+					'".addslashes(_clientVal($z['client_id'], 'name'))."',
+					'".addslashes(_clientVal($z['client_id'], 'phone'))."',
+
+					'".addslashes($defect)."',
+					".$active.",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		$send['id'] = query_insert_id('_zayav_kvit', GLOBAL_MYSQL_CONNECT);
+
+		jsonSuccess($send);
+		break;
+
+	case 'cartridge_new'://внесение новой модели картриджа
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$cost_filling = _num($_POST['cost_filling']);
+		$cost_restore = _num($_POST['cost_restore']);
+		$cost_chip = _num($_POST['cost_chip']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_setup_cartridge` (
+					`type_id`,
+					`name`,
+					`cost_filling`,
+					`cost_restore`,
+					`cost_chip`
+				) VALUES (
+					".$type_id.",
+					'".addslashes($name)."',
+					".$cost_filling.",
+					".$cost_restore.",
+					".$cost_chip."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		$send['insert_id'] = query_insert_id('_setup_cartridge', GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'cartridge');
+		_appJsValues();
+
+		_history(array(
+			'type_id' => 1030,
+			'v1' => $name
+		));
+
+		if($_POST['from'] == 'setup')
+			$send['spisok'] = utf8(setup_cartridge_spisok($send['insert_id']));
+		else {
+			$sql = "SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`";
+			$send['spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
 		}
 
-		$old = _zayav_expense_array(implode('###', $arr));
-		$new = _zayav_expense_array($expense);
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_add'://добавление картриджей к заявке
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
 
-		sort($old);
-		sort($new);
+		// Если не указан ни один картридж
+		if(!$ids = _ids($_POST['ids'], 1))
+			jsonError();
 
-		if($old != $new) {
-			$toDelete = array();
-			foreach($old as $r)
-				$toDelete[$r[0]] = $r;
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
 
-			//получение старого массива для истории действий
-			$sql = "SELECT *
-					FROM `_zayav_expense`
-					WHERE `app_id`=".APP_ID."
-					  AND `zayav_id`=".$zayav_id."
-					ORDER BY `id`";
-			$arrOld = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-			$arrOld = _attachValToList($arrOld);
-
-			foreach($new as $r) {
-				$mon = intval(strftime('%m'));
-				$year = strftime('%Y');
-
-				//пропускать, если есть привязка к листу выдачи зп
-				if($r[0]) {
-					$sql = "SELECT *
-							FROM `_zayav_expense`
-							WHERE `id`=".$r[0];
-					if($zeEx = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
-						if($zeEx['salary_list_id']) {
-							unset($toDelete[$r[0]]);
-							continue;
-						}
-						$mon = $zeEx['mon'];
-						$year = $zeEx['year'];
-					}
-				}
-
-				$ze = _zayavExpense($r[1], 'all');
-				$txt = '';
-				if($ze['txt'])
-					$txt = _txt($r[2]);
-				if($ze['attach'] && !preg_match(REGEXP_NUMERIC, $r[2]))
-					$txt = _txt(substr($r[2], 1));
-
-				$worker_id = $ze['worker'] ? _num($r[2]) : 0;
-
-				//если стоит галочка "Не начислять по заявкам с долгами" и есть долг по заявке
-				if($worker_id && _viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY'))
-					if($z['sum_accrual'] - $z['sum_pay'] > 0) {
-						$mon = 0;
-						$year = 0;
-					}
-
-				$sql = "INSERT INTO `_zayav_expense` (
-							`id`,
-							`app_id`,
-							`zayav_id`,
-							`category_id`,
-							`txt`,
-							`worker_id`,
-							`zp_id`,
-							`attach_id`,
-							`sum`,
-							`mon`,
-							`year`,
-							`viewer_id_add`
-						) VALUES (
-							".$r[0].",
-							".APP_ID.",
-							".$zayav_id.",
-							".$r[1].",
-							'".addslashes($txt)."',
-							".$worker_id.",
-							".($ze['zp'] ? _num($r[2]) : 0).",
-							".($ze['attach'] ? _num($r[2]) : 0).",
-							".$r[3].",
-							".$mon.",
-							".$year.",
-							".VIEWER_ID."
-						) ON DUPLICATE KEY UPDATE
-							`category_id`=VALUES(`category_id`),
-							`txt`=VALUES(`txt`),
-							`zp_id`=VALUES(`zp_id`),
-							`worker_id`=VALUES(`worker_id`),
-							`attach_id`=VALUES(`attach_id`),
-							`sum`=VALUES(`sum`),
-							`mon`=VALUES(`mon`),
-							`year`=VALUES(`year`)";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-
-				unset($toDelete[$r[0]]);
-			}
-
-			//удаление расходов, которые были удалены
-			if(!empty($toDelete)) {
-				$sql = "DELETE FROM `_zayav_expense` WHERE `id` IN (".implode(',', array_keys($toDelete)).")";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-			}
-
-			//получение нового массива для истории дейсвтий
-			$sql = "SELECT *
-					FROM `_zayav_expense`
-					WHERE `app_id`=".APP_ID."
-					  AND `zayav_id`=".$zayav_id."
-					ORDER BY `id`";
-			$arrNew = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-			$arrNew = _attachValToList($arrNew);
-
-			_zayav_expense_worker_balans($z, $arrOld, $arrNew);
-
-			$old = _zayav_expense_html($arrOld, false, $arrNew);
-			$new = _zayav_expense_html($arrNew, false, $arrOld, true);
-
-			_zayavBalansUpdate($zayav_id);
-			_salaryZayavBonus($zayav_id);
-
-			if($old != $new)
-				_history(array(
-					'type_id' => 30,
-					'client_id' => $z['client_id'],
-					'zayav_id' => $zayav_id,
-					'v1' => '<table><tr><td>'.$old.'<td>»<td>'.$new.'</table>'
-				));
+		$cartgidge = array();
+		foreach($ids as $id) {
+			$sql = "INSERT INTO `_zayav_cartridge` (
+						`zayav_id`,
+						`cartridge_id`
+					) VALUES (
+						".$zayav_id.",
+						".$id."
+					)";
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			$cartgidge[] = '<u>'._cartridgeName($id).'</u>';
 		}
 
-		$send['html'] = utf8(_zayav_expense_spisok($zayav_id));
+
+		_history(array(
+			'type_id' => 55,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => implode(', ', $cartgidge)
+		));
+
+		$send['html'] = utf8(_zayavInfoCartridge_spisok($zayav_id));
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_edit'://применение действия по картриджу
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$cartridge_id = _num($_POST['cart_id']))
+			jsonError();
+
+		$filling = _bool($_POST['filling']);
+		$restore = _bool($_POST['restore']);
+		$chip = _bool($_POST['chip']);
+		$cost = _cena($_POST['cost']);
+		$prim = _txt($_POST['prim']);
+
+		$sql = "SELECT * FROM `_zayav_cartridge` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(!$z = _zayavQuery($r['zayav_id']))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_cartridge`
+				SET `cartridge_id`=".$cartridge_id.",
+					`filling`=".$filling.",
+					`restore`=".$restore.",
+					`chip`=".$chip.",
+					`cost`=".$cost.",
+					`dtime_ready`=".($filling || $restore || $chip ? "CURRENT_TIMESTAMP" : "'0000-00-00 00:00:00'").",
+					`prim`='".addslashes($prim)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$changes =
+			_historyChange('Модель', _cartridgeName($r['cartridge_id']), _cartridgeName($cartridge_id)) .
+			_historyChange('Стоимость', _cena($r['cost']), $cost) .
+			_historyChange('Примечание', $r['prim'], $prim);
+		if($r['filling'] != $filling || $r['restore'] != $restore || $r['chip'] != $chip) {
+			$old = array();
+			if($r['filling'])
+				$old[] = 'заправлен';
+			if($r['restore'])
+				$old[] = 'восстановлен';
+			if($r['chip'])
+				$old[] = 'заменён чип';
+			$new = array();
+			if($filling)
+				$new[] = 'заправлен';
+			if($restore)
+				$new[] = 'восстановлен';
+			if($chip)
+				$new[] = 'заменён чип';
+			$changes .= _historyChange('Действие', implode(', ', $old), implode(', ', $new));
+		}
+		if($changes)
+			_history(array(
+				'type_id' => 57,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'v1' => _cartridgeName($cartridge_id),
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(_zayavInfoCartridge_spisok($r['zayav_id']));
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_del'://удаление картриджа из заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_cartridge`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Картриджа уже был удалён');
+
+		if($r['schet_id'])
+			jsonError('Картридж привязан к счёту на оплату');
+
+		if(!$z = _zayavQuery($r['zayav_id']))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_cartridge` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 56,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'v1' => _cartridgeName($r['cartridge_id'])
+		));
+
+		jsonSuccess();
+		break;
+	case 'zayav_cartridge_ids':
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+
+		$send['arr'] = _zayavInfoCartridgeForSchet($ids);
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_schet_set':
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_cartridge`
+				SET `schet_id`=".$schet_id."
+				WHERE `id` IN (".$ids.")";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		jsonSuccess();
+		break;
+
+	case 'zayav_report_cols_set'://отображение, скрытие колонок отчёта по заявкам
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+		
+		$sql = "UPDATE `_vkuser`
+				SET `zayav_report_cols_show`='".$ids."'
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".VIEWER_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+
+		jsonSuccess();
+		break;
+	case 'zayav_report_spisok'://отображение, скрытие колонок отчёта по заявкам
+		$send['status'] = utf8(_zayav_report_status_count($_POST));
+		$send['executer'] = utf8(_zayav_report_executer($_POST));
+		$send['spisok'] = utf8(_zayav_report_spisok($_POST));
 		jsonSuccess($send);
 		break;
 }
 
-function _zayavProductUpdate($zayav_id, $p) {//внесение|обновление изделия для конкретной заявки
-	if(!$product_id = _num(@$p['product_id']))
-		return array();
+function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности полей при внесении/редактировании заявки
+	$zpu = _zayavPole($service_id, 1); //Zayav Pole Use
 
-	$product_sub_id = _num($p['product_sub_id']);
-	$count = _num($p['product_count']);
+	$v = array();
+	$upd = array();   // для редактирования заявки
 
-	$sql = "DELETE FROM `_zayav_product` WHERE `zayav_id`=".$zayav_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	if(empty($zpu) && !$zayav_id) //если нет данных для внесения новой заявки, то выход
+		return $v;
 
-	$sql = "INSERT INTO `_zayav_product` (
-				`app_id`,
-				`zayav_id`,
-				`product_id`,
-				`product_sub_id`,
-				`count`
-			) VALUES (
-				".APP_ID.",
-				".$zayav_id.",
-				".$product_id.",
-				".$product_sub_id.",
-				".$count."
-			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
 
-	//если не было указано названия заявки, то вносится название продукта
-	$z = _zayavQuery($zayav_id);
-	if(!$z['name']) {
-		$product_name = _product($product_id);
-		if($product_sub_id)
-			$product_name .= ' '._productSub($product_sub_id);
-
-		$sql = "UPDATE `_zayav`
-				SET `name`='".addslashes($product_name)."'
-				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+	$v['name'] = _txt(@$_POST['name']);
+	if($u = @$zpu[1]) {
+		if($u['require'] && !$v['name'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`name`='".addslashes($v['name'])."'";
 	}
 
-	return array($product_id, $product_sub_id, $count);
-}
-function _zayavProductTxt($r) {//преобразование id изделий в текст
-	return $r ? _product($r[0]).($r[1] ? ' '._productSub($r[1]) : '').': '.$r[2].' шт.' : '';
+	$v['about'] = _txt(@$_POST['about']);
+	if($u = @$zpu[2]) {
+		if($u['require'] && !$v['about'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`about`='".addslashes($v['about'])."'";
+	}
+
+	$v['count'] = _num(@$_POST['count']);
+	if($u = @$zpu[3]) {
+		if($u['require'] && !$v['count'])
+			jsonError('Некорректно заполнено поле '.$u['name']);
+		$upd[] = "`count`='".addslashes($v['count'])."'";
+	}
+
+	if(@$zpu[4]['require'] && empty($_POST['tovar']))
+		jsonError('Не выбрано поле '.$zpu[4]['name']);
+
+	$v['client_id'] = _num(@$_POST['client_id']);
+	if($u = @$zpu[5]) {
+		if($u['require'] && !$v['client_id'])
+			jsonError('Не выбран '.$u['name']);
+		$upd[] = "`client_id`=".$v['client_id'];
+	}
+
+	$v['adres'] = _txt(@$_POST['adres']);
+	if($u = @$zpu[6]) {
+		if($u['require'] && !$v['adres'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`adres`='".addslashes($v['adres'])."'";
+	}
+
+	$v['imei'] = _txt(@$_POST['imei']);
+	if($u = @$zpu[7]) {
+		if($u['require'] && !$v['imei'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`imei`='".addslashes($v['imei'])."'";
+	}
+
+	$v['serial'] = _txt(@$_POST['serial']);
+	if($u = @$zpu[8]) {
+		if($u['require'] && !$v['serial'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`serial`='".addslashes($v['serial'])."'";
+	}
+
+	$v['color_id'] = _num(@$_POST['color_id']);
+	$v['color_dop'] = _num(@$_POST['color_dop']);
+	if($u = @$zpu[9]) {
+		if($u['require'] && !$v['color_id'])
+			jsonError('Не выбран '.$u['name']);
+		$upd[] = "`color_id`=".$v['color_id'];
+		$upd[] = "`color_dop`=".$v['color_dop'];
+	}
+
+	$v['executer_id'] = _num(@$_POST['executer_id']);
+	if(!$zayav_id && @$zpu[10]['require'] && !$v['executer_id'])
+		jsonError('Не назначен '.$zpu[10]['name']);
+
+	if(@$zpu[11]['require'] && empty($_POST['tovar']))
+		jsonError('Не выбрано поле '.$zpu[11]['name']);
+
+	$v['place_id'] = _num(@$_POST['place_id']);
+	$v['place_other'] = !$v['place_id'] ? _txt(@$_POST['place_other']) : '';
+	if(!$zayav_id && @$zpu[12]['require'] && !$v['place_id'] && !$v['place_other'])
+		jsonError('Не выбрано поле '.$zpu[12]['name']);
+
+	$v['srok'] = empty($_POST['srok']) ? '0000-00-00' : $_POST['srok'];
+	if(!$zayav_id && @$zpu[13]['require'] && $v['srok'] == '0000-00-00')
+		jsonError('Не указан срок выполнения заявки');
+
+    $v['note'] = _txt(@$_POST['note']);
+	if(!$zayav_id && @$zpu[14]['require'] && !$v['note'])
+		jsonError('Не заполнено поле '.$zpu[14]['name']);
+
+	$v['sum_cost'] = _cena(@$_POST['sum_cost']);
+	if($u = @$zpu[15]) {
+		if($u['require'] && !$v['sum_cost'])
+			jsonError('Некорректно заполнено поле '.$u['name']);
+		$upd[] = "`sum_cost`=".$v['sum_cost'];
+	}
+
+	$v['pay_type'] = _num(@$_POST['pay_type']);
+	if($u = @$zpu[16]) {
+		if($u['require'] && !$v['pay_type'])
+			jsonError('Не указан вид расчёта');
+		$upd[] = "`pay_type`=".$v['pay_type'];
+	}
+
+	$v['equip'] = _ids(@$_POST['equip']);
+	if(@$zpu[4] && @$zpu[31])
+		$upd[] = "`equip`='".$v['equip']."'";
+
+	$v['update'] = implode(',', $upd);
+	$v['zpu'] = $zpu;
+	return $v;
 }
 function _zayavNameUpdate($zayav_id) {//обновление названия заявки и строки для поиска
 	$z = _zayavQuery($zayav_id);
 
 	$name = $z['name'];
 
-	if(ZAYAV_INFO_DEVICE)
-		$name = _deviceName($z['base_device_id'])._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']);
+	if(@$_POST['tovar']) {
+		$ex = explode(',', $_POST['tovar']);
+		$ex = explode(':', $ex[0]);
+		$tovar_id = $ex[0];
 
-	if(ZAYAV_INFO_CARTRIDGE)
-		$name = 'Картриджи';
+		$sql = "SELECT `find`
+				FROM `_tovar`
+				WHERE `id`=".$tovar_id;
+		$name = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	}
+
+//	if(ZAYAV_INFO_CARTRIDGE)
+//		$name = 'Картриджи';
 
 	if(!$name)
 		$name = 'Заявка #'.$z['nomer'];
@@ -1156,28 +1396,6 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 		));
 	}
 }
-function _zayavSrokChange($zayav_id, $day) {//изменение срока выполнения
-	if(!$z = _zayavQuery($zayav_id))
-		return false;
-	if($day != $z['srok'] && $day != '0000-00-00') {
-		$sql = "UPDATE `_zayav`
-				SET `srok`='".$day."'
-				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		_history(array(
-			'type_id' => 52,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'v1' => '<table><tr>'.
-				'<th>Срок:'.
-					'<td>'.($z['srok'] == '0000-00-00' ? 'не указан' : FullData($z['srok'], 0, 1, 1)).
-					'<td>»'.
-					'<td>'.FullData($day, 0, 1, 1).
-				'</table>'
-		));
-	}
-	return true;
-}
 function _zayavStatusRemindAdd($zayav_id) {//внесение напоминания при изменении статуса заявки
 	if(!_bool($_POST['remind']))
 		return;
@@ -1195,4 +1413,44 @@ function _zayavStatusRemindAdd($zayav_id) {//внесение напоминания при изменении 
 		'txt' => $remind_txt,
 		'day' => $remind_day
 	));
+}
+function _zayavTovarUpdate($zayav_id) {//обновление списка товаров заявки
+	$z = _zayavQuery($zayav_id);
+	$z['zpu'] = _zayavPole($z['service_id'], 1);
+
+	if(empty($z['zpu'][4]) && empty($z['zpu'][11]))
+		return;
+
+	$sql = "DELETE FROM `_zayav_tovar` WHERE `zayav_id`=".$zayav_id;
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	$v = _txt($_POST['tovar']);
+	if(!$v)
+		return;
+
+	$values = array();
+	foreach(explode(',', $_POST['tovar']) as $r) {
+		$ex = explode(':', $r);
+		if(!$id = _num($ex[0]))
+			continue;
+		if(!$count = _num($ex[1]))
+			continue;
+		$values[] = "(
+			".APP_ID.",
+			".$zayav_id.",
+			".$id.",
+			".$count."
+		)";
+	}
+
+	if(empty($values))
+		return;
+
+	$sql = "INSERT INTO `_zayav_tovar` (
+				`app_id`,
+				`zayav_id`,
+				`tovar_id`,
+				`count`
+			) VALUES ".implode(',', $values);
+	query($sql, GLOBAL_MYSQL_CONNECT);
 }

@@ -25,7 +25,10 @@
 ._hist-un i{font:italic 11px Arial;color:#977}
 ._hist-un em{color:#777}
 ._hist-un .changes *{font-size:10px;color:#777}
-._hist-un .changes table{border-collapse:collapse;margin-top:3px}
+._hist-un .changes table{
+	border-collapse:collapse;
+	margin-top:3px;
+}
 ._hist-un .changes th{text-align:right;font-weight:700}
 ._hist-un .changes th,
 ._hist-un .changes td{

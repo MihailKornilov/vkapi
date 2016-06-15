@@ -13,10 +13,7 @@
 #_zayav #diff_check{margin-top:10px}
 #_zayav #noschet_check{margin-top:10px}
 /* Срок выполнения заявки */
-	#_zayav .rightLink a:not(.sel) #srok{display:none}
-	#_zayav #srok,#_zayav #srok *{font-size:10px}
-	#_zayav #srok{margin-top:8px}
-	#_zayav .srok-link{color:#BCDCFF}
+	#_zayav .zayav-srok{float:right}
 #_zayav #deleted_check{margin-top:20px}
 #_zayav #deleted-only-div{margin-top:5px}
 #_zayav ._empty{margin:10px}
@@ -33,10 +30,11 @@
 	min-height:60px;
 }
 ._zayav-unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4)}
-._zayav-unit em{background:#ffc;border-bottom:1px solid #FE2;font-size:12px}
+._zayav-unit em{background:#ffc;border-bottom:1px solid #FE2}
 ._zayav-unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
 ._zayav-unit .name b{font-size:12px}
-._zayav-unit .name em{font-weight:bold}
+._zayav-unit .name em{font-weight:bold;font-size:12px}
+._zayav-unit b em{font-weight:bold}
 ._zayav-unit .zd{float:right;text-align:right;font-size:10px;color:#777;padding:4px}
 ._zayav-unit .zd em{font-size:10px}
 ._zayav-unit .date-add{font-size:10px;color:#999}
@@ -129,17 +127,22 @@
 
 
 /* внесение новой заявки */
-#_zayav-add-tab{border-spacing:12px;margin-bottom:30px}
-#_zayav-add-tab .label{width:170px;text-align:right}
-#_zayav-add-tab #name,
-#_zayav-add-tab #about{width:251px}
-#_zayav-add-tab #zayav-adres{width:232px}
-#_zayav-add-tab #client-adres_check{margin:0 0 -3px 5px}
-#_zayav-add-tab #count{width:40px}
 #_zayav-add-tab #equip-spisok div{display:block;margin-bottom:5px}
-#_zayav-add-tab #imei{width:130px}
-#_zayav-add-tab #serial{width:251px}
-#_zayav-add-tab #note{width:251px;height:40px}
+
+/* Внесение/редактирование заявки */
+.zayav-edit_dialog .label{width:170px;text-align:right}
+.zayav-edit_dialog #ze-name{width:250px}
+.zayav-edit_dialog #ze-about{width:250px}
+.zayav-edit_dialog #ze-count{width:40px}
+.zayav-edit_dialog #ze-adres{width:231px}
+.zayav-edit_dialog #client-adres_check{margin:0 0 -3px 5px}
+.zayav-edit_dialog #ze-imei{width:130px}
+.zayav-edit_dialog #ze-serial{width:250px}
+.zayav-edit_dialog #ze-note{width:251px;height:40px}
+#ze-equip-spisok._busy{background-position:left}
+#ze-equip-spisok ._check{display:inline-block;margin-bottom:5px}
+#ze-equip-spisok .vk{margin-left:5px;margin-top:1px}
+
 
 /* Выбор изделий при внесении новой заявки или редактировании */
 #product-list ._select{margin-right:5px}
@@ -151,6 +154,11 @@
 	margin-top:3px;
 	color:#777;
 	cursor:default;
+}
+#_zayav-info #category{
+	display:inline-block;
+	color:#999;
+	margin-bottom:3px;
 }
 #_zayav-info table.page{padding-left:10px;width:100%}
 #_zayav-info #left{
@@ -186,8 +194,69 @@
 	text-align:center;
 	color:red;
 }
+#_zayav-info #tsev{border-collapse:collapse}/* tovar-several несколько товаров */
+#_zayav-info #tsev td{border:#ddd solid 1px;padding:3px 8px}
+#_zayav-info #tsev .n{color:#999}
+#_zayav-info .kvit_defect{color:#777}
 
-#_zayav-accrual{margin-top :10px}
+
+
+/* Список запчастей*/
+#_zayav-info #zp-spisok *{font-size:10px}
+#_zayav-info #zp-spisok{padding:3px 7px 60px;border-left:#e9edf1 solid 1px}
+#_zayav-info #zp-spisok .unit{
+	border-bottom:#DEE3EF solid 1px;
+	padding-bottom:4px;
+	margin-bottom:7px;
+}
+#_zayav-info #zp-spisok .zakaz{color:#567f9e}
+#_zayav-info #zp-spisok .unit:not(:hover) .zakaz{visibility:hidden}
+#_zayav-info #zp-spisok .unit:not(:hover) .set{visibility:hidden}
+#_zayav-info #zp-spisok .set{color:#567f9e;float:right}
+#_zayav-info #zp-spisok .avai{float:right;color:#393;margin-left:4px}
+
+/* Применение товара в расходы */
+.zayav-tovar-set_dialog .headName{margin:10px 0 4px}
+.zayav-tovar-set_dialog h1{font-size:18px;margin-top:20px}
+.zayav-tovar-set_dialog h1 b{font-size:18px}
+.zayav-tovar-set_dialog h2{color:#777}
+
+/*
+#zayav-zp-spisok .version{color:#333}
+#zayav-zp-spisok .color{color:#777}
+#zayav-zp-spisok .zakaz_ok{color:#933}
+#zayav-zp-spisok .unit:not(:hover) .image{display:none}
+#zayav-zp-spisok .image{position:relative}
+#zayav-zp-spisok .image div{
+	position:absolute;
+	top:0;
+	left:-94px;
+	background-color:#fff;
+	border:#ccc solid 1px;
+	min-width:80px;
+	min-height:50px;
+	padding:5px;
+	text-align:center;
+}
+#zayav-zp-spisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
+*/
+
+
+
+#_zayav-accrual{margin-top:10px}
+#_zayav-accrual ._spisok{margin-top:-1px}
+
+
+
+/* Информация о товаре в информации о заявке */
+#zayav-tovar{width:200px}
+#zayav-tovar #content{border-left:#e9edf1 solid 1px}
+#zayav-tovar #tovar-name{padding:7px 0 0 7px}
+#zayav-tovar #tovar-name a{font-weight:bold}
+#zayav-tovar #info{margin:7px 0 10px 7px;border-spacing:1px}
+#zayav-tovar #info *{font-size:10px}
+#zayav-tovar #info th{width:70px;color:#777;text-align:left;font-size:10px}
+
 
 /* Статус заявки */
 #zayav-status{padding-top:10px}
@@ -305,17 +374,33 @@
 
 
 /* Календарь заявок */
+#zayav-srok-calendar .filter{
+	width:100%;
+	border:#eee solid 1px;
+	background:#f7f7f7;
+	margin-bottom:10px;
+}
+#zayav-srok-calendar .label{width:70px}
 #zayav-srok-calendar #fc-head{width:100%}
-#zayav-srok-calendar #fc-head td{padding:10px;text-align:center}
-#zayav-srok-calendar #fc-head td.ch{
-	width:47px;
+#zayav-srok-calendar #fc-head td{padding:10px 30px}
+#zayav-srok-calendar td.ch{
+	width:60px;
 	cursor:pointer;
 	font-size:18px;
 	font-weight:bold;
 	color:#aaa;
 }
-#zayav-srok-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
-#zayav-srok-calendar #fc-head span{font-size:14px}
+#zayav-srok-calendar .ch:hover{background-color:#f7f7fd;color:#555}
+#zayav-srok-calendar tt{
+	margin:0 20px;
+	font-size:15px;
+	color:#aaa;
+}
+#zayav-srok-calendar #fc-head span{
+	display:block;
+	font-size:14px;
+	text-align:center;
+}
 #zayav-srok-calendar #fc-head._busy span{visibility:hidden}
 #zayav-srok-calendar #fc-mon{width:100%;border-collapse:collapse}
 #zayav-srok-calendar #fc-mon td{border:#ddd solid 1px}
@@ -327,7 +412,7 @@
 	text-align:center;
 	padding:10px;
 }
-#zayav-srok-calendar td.d{width:47px;height:40px;text-align:center}
+#zayav-srok-calendar td.d{width:60px;height:60px;text-align:center}
 #zayav-srok-calendar td.d.old{background-color:#f8f8f8;color:#888}
 #zayav-srok-calendar td.d.sel{background-color:#ffb}
 #zayav-srok-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
@@ -351,10 +436,6 @@
 #zayav-srok-calendar #fc-cancel:hover{background-color:#afa}
 #zayav-srok-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
 
-.srok-link{display:inline-block;cursor:pointer;color:#2B587A}
-.srok-link:hover{text-decoration:underline}
-.srok-link._busy span{visibility:hidden}
-
 
 
 
@@ -375,32 +456,149 @@
 	border-bottom:#e9edf1 solid 1px;
 	padding:5px 7px;
 }
-#_zayav-expense .img_edit{
-	float:right;
-	background-color:#fff;
-	width:16px;
-	height:16px;
-	margin:-2px -6px 0 0;
-	border:#ddd solid 1px;
-	background-position:2px 2px;
+#_zayav-expense table{
+	width:100%;
+	margin-top:-1px;
+	border-collapse:collapse;
 }
-#_zayav-expense .img_edit:hover{background-position:2px -13px}
-#_zayav-expense table *{font-size:10px}
-#_zayav-expense table{width:100%;margin-top:-1px;border-collapse:collapse}
-#_zayav-expense tr.l:hover{background-color:#ffffe8}
-#_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px}
-#_zayav-expense .name{width:100px}
-#_zayav-expense .sum{text-align:right;width:50px;white-space:nowrap;cursor:default}
+#_zayav-expense .l:hover{background-color:#ffffe8}
+#_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px;line-height:13px}
+#_zayav-expense .name{width:30px;white-space:nowrap;font-size:10px}
+#_zayav-expense .sum {width: 50px;text-align:right;cursor:default;position:relative}
+#_zayav-expense em{font-size:10px;white-space:nowrap}
+#_zayav-expense tr:hover em{color:#ddd}
+#_zayav-expense .img_del{position:absolute;right:1px}
+#_zayav-expense tr:not(:hover) .img_del{display:none}
 #_zayav-expense .itog{text-align:right}
 #_zayav-expense .plus{background-color:#dfd;color:#272}
 #_zayav-expense .minus{background-color:#fdd;color:#922}
 
-/* редактирование списка расходов в заявке */
-#zee-tab{border-spacing:10px}
-#zee-tab .label{width:100px;text-align:right}
-#zee-spisok .zee-tab{margin-bottom:8px}
-#zee-spisok .zee-txt{width:232px;margin-right:5px}
-#zee-spisok ._select{margin-right:5px}
-#zee-spisok .zee-sum{width:60px;margin-right:3px;text-align:right}
-#zee-spisok .tab-attach{width:245px}
-#zee-spisok .attach-txt{width:130px}
+
+
+
+
+
+
+
+
+
+
+/* Диалог формирования квитанции */
+.zayav-print .label{width:90px}
+.zayav-print i{font:11px Arial;color:#999}
+.zayav-print textarea{width:220px;height:40px}
+.zayav-print #preview{display:block;padding:10px;text-align:center}
+.zayav-print #preview._busy span{visibility:hidden}
+.zayav-print #preview:hover{background-color:#e9edf1;text-decoration:none}
+
+
+
+
+
+
+
+/* Местонахождение устройства: поле Другое */
+#place-other-div{display:inline-block;position:relative}
+#place_other{width:120px;position:absolute;top:-3px;left:45px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Информация о заявке с картриджами */
+#zayav-cartridge .n{text-align:right;color:#777}
+#zayav-cartridge .cost{text-align:right}/* стоимость заправки картриджа */
+#zayav-cartridge .cart-name{width:130px}
+#zayav-cartridge .cart-prim{font-size:10px;color:#444}
+#zayav-cartridge .cart-prim u{font-size:10px}
+#zayav-cartridge .ready{background-color:#dfd}
+#zayav-cartridge .nomer{margin:0 4px;color:#777}
+#zayav-cartridge .cart-add{float:right}
+
+
+
+
+
+
+
+
+
+
+
+/* Отчёты по заявкам */
+#zayav-report{min-height:600px}
+#zayav-report #filter{
+	padding:10px;
+	background:#f7f7f7;
+	border-bottom:#dae1e8 solid 1px;
+}
+
+#zayav-report #status-count{margin:10px}
+#zayav-report .cub{
+	display:inline-block;
+	border:#dae1e8 solid 1px;
+	padding:12px 0;
+	min-width:40px;
+	text-align:center;
+	font-weight:bold;
+	font-size:12px;
+	margin-left:1px;
+	cursor:default;
+}
+#zayav-report .cub.all{
+	padding:12px 8px;
+	white-space:nowrap;
+	font-weight:normal;
+}
+#zayav-report .cub b{font-size:12px}
+	/* исполнители */
+#zayav-report #executer-count{margin:10px 10px 20px}
+#zayav-report #executer-count .headName{margin:15px 0 10px}
+#zayav-report #executer-count ._spisok{width:auto}
+#zayav-report #executer-count ._info{float:right;width:230px}
+
+#zayav-report #spisok{margin:10px 0}
+#zayav-report .unit:hover{background:#ffd}
+#zayav-report .dtime{width:30px}
+#zayav-report .nomer{width:35px}
+#zayav-report .name{width:120px}
+#zayav-report .dog{width:35px}
+#zayav-report .adres{width:120px}
+#zayav-report .executer{width:110px}
+#zayav-report .executer a{font-size:10px}
+#zayav-report .sum-cost{width:50px;font-weight:bold}
+#zayav-report .sum-accrual{width:50px;font-weight:bold;color:#07a}
+#zayav-report .sum-pay{width:50px;font-weight:bold;color:#090}
+#zayav-report .sum-dolg{width:50px;font-weight:bold;color:#090}
+#zayav-report .sum-dolg.minus{color:#c33}
+#zayav-report .sum-expense{width:40px}
+#zayav-report .sum-profit{width:40px;color:#090}
+#zayav-report .sum-profit.minus{font-weight:bold;background:#fbb;color:#b00}
+
+#zayav-report .cols-div{margin:10px 15px;position:relative}
+#zayav-report .cols-div a{z-index:101}
+#zayav-report .cols-div:not(.show) #sp{display:none}
+#zayav-report .cols-div #sp{
+	position:absolute;
+	width:170px;
+	border:#ddd solid 1px;
+	background:#f7f7f7;
+	padding:7px 9px 10px;
+	left:-10px;
+	top:-8px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.2);
+	z-index:100;
+}
+#zayav-report .cols-div #sp a{display:inline-block;margin-bottom:10px}
+#zayav-report .cols-div ._check{margin:5px 10px}
+
+
+
