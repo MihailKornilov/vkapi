@@ -6,7 +6,6 @@ header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CN
 
 
 _const();               //установка основных констант
-if(!SA)_appError('Невозможно выполнить вход в приложение.');
 _appAuth();             //получение данных о приложении, проверка авторизации
 _setup_global();
 _pinCheck();

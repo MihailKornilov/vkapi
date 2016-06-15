@@ -28,7 +28,7 @@ function _setup() {
 		'my' => 'Мои настройки',
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
-		'service' => 'Виды деятельности',
+		'service' => 'SA: Виды деятельности',
 		'cartridge' => 'Картриджи',
 		'expense' => 'Категории расходов',
 		'zayav_status' => 'Статусы заявок',
@@ -61,6 +61,9 @@ function _setup() {
 
 	if(!SA)
 		unset($page['zayav_expense']);
+
+	if(!SA)
+		unset($page['service']);
 
 	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
 

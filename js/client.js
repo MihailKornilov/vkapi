@@ -296,7 +296,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 	_clientZayavSpisok = function(v, id) {
 		var send = {
 			op:'zayav_spisok',
-			type_id:v,
+			service_id:v,
 			client_id:CI.id
 		};
 		$.post(AJAX_MAIN, send, function(res) {

@@ -295,13 +295,11 @@ function _zayavFilter($v) {
 		'finish' => '0000-00-00',
 		'executer_id' => 0,
 		'zpzakaz' => 0,
-		'device' => 0,
-		'vendor' => 0,
-		'model' => 0,
-		'place' => 0,
+		'tovar_place_id' => 0,
 		'paytype' => 0,
 		'noschet' => 0,
-		'zenofile' => 0,
+		'nofile' => 0,
+		'tovar_name_id' => 0,
 		'deleted' => 0,
 		'deleted_only' => 0
 	);
@@ -316,13 +314,11 @@ function _zayavFilter($v) {
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
 		'executer_id' => intval(@$v['executer_id']),
 		'zpzakaz' => _num(@$v['zpzakaz']),
-		'device' => @$v['device'],
-		'vendor' => _num(@$v['vendor']),
-		'model' => _num(@$v['model']),
-		'place' => _num(@$v['place']),
+		'tovar_place_id' => _num(@$v['tovar_place_id']),
 		'paytype' => _num(@$v['paytype']),
 		'noschet' => _bool(@$v['noschet']),
-		'zenofile' => _bool(@$v['zenofile']),
+		'nofile' => _bool(@$v['nofile']),
+		'tovar_name_id' => _num(@$v['tovar_name_id']),
 		'deleted' => _bool(@$v['deleted']),
 		'deleted_only' => _bool(@$v['deleted_only']),
 		'clear' => ''
@@ -392,25 +388,7 @@ function _zayav_spisok($v) {
 			$cond .= " AND !`schet_count`";
 		if($filter['executer_id'])
 			$cond .= " AND `executer_id`=".($filter['executer_id'] < 0 ? 0 : $filter['executer_id']);
-/*
-		if(ZAYAV_INFO_DEVICE) {
-			if($filter['zpzakaz']) {
-				$sql = "SELECT `zayav_id` FROM `zp_zakaz` WHERE `app_id`=".APP_ID;
-				$ids = query_ids($sql);
-				$not = $filter['zpzakaz'] == 2 ? 'NOT' : '';
-				$cond .= " AND `id` ".$not." IN (".$ids.")";
-			}
-			if($filter['device'])
-				$cond .= " AND `base_device_id` IN (".$filter['device'].")";
-			if($filter['vendor'])
-				$cond .= " AND `base_vendor_id`=".$filter['vendor'];
-			if($filter['model'])
-				$cond .= " AND `base_model_id`=".$filter['model'];
-			if($filter['place'])
-				$cond .= " AND `tovar_place_id`=".$filter['place'];
-		}
-*/
-		if($filter['zenofile']) {
+		if($filter['nofile']) {
 			//получение id расходов по заявке из настроек, к которым прикрепляется файл
 			$sql = "SELECT `id`
 					FROM `_zayav_expense_category`
@@ -422,12 +400,27 @@ function _zayav_spisok($v) {
 						FROM `_zayav_expense`
 						WHERE `app_id`=".APP_ID."
 						  AND `category_id` IN (".$zeIds.")";
-				if($zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT));
+				$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
 
 				//инверсия
 				$cond .= " AND `id` NOT IN (".$zayav_ids.")";
 			}
 		}
+
+		if($filter['tovar_name_id']) {
+			$sql = "SELECT DISTINCT `zayav_id`
+					FROM `_zayav_tovar` `zt`,
+						`_tovar` `t`
+					WHERE `zt`.`app_id`=".APP_ID."
+					  AND `t`.`id`=`zt`.`tovar_id`
+					  AND `t`.`name_id`=".$filter['tovar_name_id'];
+			$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+			$cond .= " AND `id` IN (".$zayav_ids.")";
+		}
+
+		if($filter['tovar_place_id'])
+			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
+
 
 		if(VIEWER_ADMIN) {
 			if($filter['deleted']) {
@@ -867,11 +860,15 @@ function _zayavPoleFilter($v=array()) {
 			  '<input type="hidden" id="executer_id" value="'.$v['executer_id'].'" />',
 
 		28 => '<div class="findHead">{label}</div>'.
-			  '<input type="hidden" id="place" value="'.$v['place'].'" />',
+			  '<input type="hidden" id="tovar_place_id" value="'.$v['tovar_place_id'].'" />',
 
 		29 => _check('noschet', 'Счёт не выписан', $v['noschet']),
 
-		30 => '<br />'._check('zenofile', '{label}', $v['zenofile'], 1)
+		30 => _check('nofile', '{label}', $v['nofile'], 1),
+
+		32 => '<script>var ZAYAV_TOVAR_NAME_SPISOK='._zayavTovarName().';</script>'.
+			  '<div class="findHead">{label}</div>'.
+			  '<input type="hidden" id="tovar_name_id" value="'.$v['tovar_name_id'].'" />'
 	);
 
 	$send = '';
@@ -883,7 +880,23 @@ function _zayavPoleFilter($v=array()) {
 
 	return $send;
 }
+function _zayavTovarName() {
+	$sql = "SELECT DISTINCT `tovar_id`
+			FROM `_zayav_tovar`
+			WHERE `app_id`=".APP_ID;
+	if(!$tovar_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT))
+		return '[]';
 
+	$sql = "SELECT DISTINCT `name_id`
+			FROM `_tovar`
+			WHERE `id` IN (".$tovar_ids.")";
+	$name_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "SELECT `id`,`name`
+			FROM `_tovar_name`
+			WHERE `id` IN (".$name_ids.")";
+	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+}
 
 /* Информация о заявке */
 function _zayavQuery($zayav_id, $withDel=0) {

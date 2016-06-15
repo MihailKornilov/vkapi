@@ -118,19 +118,27 @@ function xls_comtex_center($sheet) {//разделительная центра�
 	));
 }//xls_comtex_center()
 function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
+	$tovar = array();
+	$sql = "SELECT `tovar_id`
+			FROM `_zayav_tovar`
+			WHERE `zayav_id`=".$z['id']."
+			LIMIT 1";
+	if($tovar_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		$tovar = _tovarQuery($tovar_id);
+
 	$colLabel = pageNum($col);
 	$colItem = pageNum($col + 7);
 
 	$sheet->setCellValue($colLabel.$row[0], 'Изделие');
-	$sheet->setCellValue($colItem.$row[0], utf8(_deviceName($z['base_device_id'])));
+	$sheet->setCellValue($colItem.$row[0], utf8($tovar_id ? _tovarName($tovar['name_id']) : ''));
 	$sheet->setCellValue($colLabel.$row[1], 'Модель');
-	$sheet->setCellValue($colItem.$row[1], utf8(_vendorName($z['base_vendor_id'])._modelName($z['base_model_id'])));
+	$sheet->setCellValue($colItem.$row[1], utf8($tovar_id ? _tovarVendor($tovar['vendor_id']).$tovar['name'] : ''));
 	$sheet->setCellValue($colLabel.$row[2], 'Серийный номер');
 	$sheet->setCellValue($colItem.$row[2], utf8($z['imei'] ? $z['imei'] : $z['serial']));
 	$sheet->setCellValue($colLabel.$row[3], 'Дата приёма в ремонт');
 	$sheet->setCellValue($colItem.$row[3], utf8(FullData($z['dtime_add'])));
 	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
-	$sheet->setCellValue($colItem.$row[4], utf8(trim(_deviceName($z['base_device_id'])).($z['equip'] ? ', '._tovarEquip('spisok', $z['equip']) : '')));
+	$sheet->setCellValue($colItem.$row[4], utf8(trim($tovar_id ? _tovarName($tovar['name_id']) : '').($z['equip'] ? ', '._tovarEquip('spisok', $z['equip']) : '')));
 	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
 	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
 	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');

@@ -1297,7 +1297,7 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 			  AND `invoice_id`=".$invoice_id;
 	$in = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-	//Внесение денег на счёт
+	//Снятие денег со счёта
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_invoice_out`
 			WHERE `app_id`=".APP_ID."
