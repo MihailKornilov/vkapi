@@ -165,15 +165,21 @@ switch(@$_POST['op']) {
 		if(!_bool($_POST['set']))
 			$cond .= " AND !`tovar_id_set`";
 
-		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if(!$v && $tovar_id_set)
-			$cond .= " AND `tovar_id_set`=".$tovar_id_set;
-
 		//наличие товара
 		$RJ_AVAI = _num($_POST['avai']) ?
 					"RIGHT JOIN `_tovar_avai` `ta`
 				     ON `ta`.`tovar_id`=`t`.`id` AND `ta`.`count`"
 				: '';
+
+		$tovar_id_set = _num($_POST['tovar_id_set']);
+		if(!$v && $tovar_id_set) {
+			$cond_set = " AND `tovar_id_set`=".$tovar_id_set;
+			$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond.$cond_set;
+			if(query_value($sql, GLOBAL_MYSQL_CONNECT)) //если нет наличи€ по товару дл€ установки, то вывод всех по-умолчанию.
+				$cond .= $cond_set;
+			else $tovar_id_set = 0;
+		}
+
 
 		$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond;
 		$spisok = '';
@@ -215,7 +221,7 @@ switch(@$_POST['op']) {
 			$send['arr'] = _imageValToList($send['arr'], 'tovar_id');
 		}
 
-		$result = $count ? 'Ќайден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').':' : '“оваров не найдено.';
+		$result = $count ? 'Ќайден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').($RJ_AVAI ? ' в наличии' : '').':' : '“оваров не найдено.';
 
 		$send['html'] =	utf8('<div class="ts-count'.($count ? '' : ' no').'">'.$result.'</div>'.$spisok);
 
