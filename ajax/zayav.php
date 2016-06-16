@@ -428,6 +428,7 @@ switch(@$_POST['op']) {
 					`category_id`,
 					`tovar_id`,
 					`tovar_avai_id`,
+					`tovar_avai_count`,
 					`sum`,
 					`viewer_id_add`
 				) VALUES (
@@ -436,6 +437,7 @@ switch(@$_POST['op']) {
 					2,
 					".$avai['tovar_id'].",
 					".$avai_id.",
+					1,
 					".$avai['cost_buy'].",
 					".VIEWER_ID."
 				)";
