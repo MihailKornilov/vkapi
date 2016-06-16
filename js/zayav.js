@@ -41,7 +41,7 @@ var _zayavSpisok = function(v, id) {
 	},
 	_zayavEdit = function(sid) {
 		var zayav_id = window.ZI ? ZI.id : 0,
-			service_id = sid || 0,
+			service_id = zayav_id ? ZI.service_id : sid || 0,
 			client_adres = '', //адрес клиента для подстановки в строку Адрес
 			equip_js = [],     //список комплектации для select, которые были не выбраны для конкретного товара
 			equip_tovar_id = 0,//id товара, по которому будет формироваться комплектация
