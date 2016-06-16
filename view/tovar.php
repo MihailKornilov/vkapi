@@ -279,12 +279,18 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 
 					($r['tovar_id_set'] ? '<br />для '.$set[$r['tovar_id_set']] : '').
 				'</a>';
+
 			$arr[$id]['tovar_set_name'] =
 				($r['tovar_id_set'] ? '<b>'._tovarName($r['name_id']).'</b>' : _tovarName($r['name_id'])).
 				'<b>'.
 					_tovarVendor($r['vendor_id']).
 					$r['name'].
 				'</b>';
+
+			$arr[$id]['tovar_name'] =
+				_tovarName($r['name_id']).
+				_tovarVendor($r['vendor_id']).
+				$r['name'];
 		}
 	}
 

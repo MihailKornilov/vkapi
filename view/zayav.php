@@ -23,8 +23,8 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-			xcache_set($key, $arr, 86400);
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
 	}
 
 	//фильтр дл€ списка за€вок
@@ -118,8 +118,12 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 	if($i == 'name')
 		return $arr[$id]['name'];
 
-	if($i == 'color')
-		return $arr[$id]['color'];
+	if($i == 'color') {
+		$c = $arr[$id]['color'];
+		if(strlen($c) != 6)
+			return $c[0].$c[0].$c[1].$c[1].$c[2].$c[2];
+		return $c;
+	}
 
 	if($i == 'executer')
 		return _bool($arr[$id]['executer']);
@@ -1751,6 +1755,27 @@ function _zayav_tovar_several($z) {//список нескольких товаров дл€ информации о 
 
 	return 	'<tr><td class="label topi">'.$z['zpu'][11]['name'].':<td>'.$send;
 }
+function _zayavTovarValToList($arr) {//список нескольких товаров дл€ информации о за€вке
+	$sql = "SELECT *
+			FROM `_zayav_tovar`
+			WHERE `zayav_id` IN ("._idsGet($arr).")
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return $arr;
+
+	foreach($arr as $r)
+		$arr[$r['id']]['tovar_report'] = array();
+	
+	$spisok =  _tovarValToList($spisok);
+
+	foreach($spisok as $r)
+		$arr[$r['zayav_id']]['tovar_report'][] = $r['tovar_name'].': '.$r['count'].' шт.';
+
+	foreach($arr as $r)
+		$arr[$r['id']]['tovar_report'] = implode("\n", $r['tovar_report']);
+
+	return $arr;
+}
 
 
 
@@ -2489,6 +2514,9 @@ function _zayav_report_filter($sel) {
 			'func' => '_zayav_report_days',
 			'sel' => $sel
 		)).
+		(APP_ID == 3978722 || SA ?
+			'<br /><a href="'.URL.'&p=print&d=erm">ќтчЄт XSL за текущий мес€ц</a>'
+		: '').
 	'</div>';
 }
 function _zayav_report_days($mon=0) {//отметка дней в календаре, в которые вносились новые за€вки

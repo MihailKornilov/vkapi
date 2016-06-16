@@ -19,6 +19,7 @@ function _attachValToList($arr, $keyName='attach_id') {//вставка ссылок на файлы
 	foreach($attach as $r) {
 		foreach($arrIds[$r['id']] as $id) {
 			$arr[$id] += array(
+				'attach_name' => $r['name'],
 				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>',
 			);
 		}

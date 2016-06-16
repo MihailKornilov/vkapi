@@ -1755,6 +1755,9 @@ function _print_document() {//вывод на печать документов
 		case 'radiomaster':
 			require_once GLOBAL_DIR.'/view/xsl/price_radiomaster.php';
 			break;
+		case 'erm':
+			require_once GLOBAL_DIR.'/view/xsl/evrookna_report_month.php';
+			break;
 		default: die('ƒокумент не найден.');
 	}
 	exit;
