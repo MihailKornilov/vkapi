@@ -464,7 +464,7 @@
 }
 #_zayav-expense .l:hover{background-color:#ffffe8}
 #_zayav-expense td{border:#dee4e8 solid 1px;padding:2px 4px;line-height:13px}
-#_zayav-expense .name{width:30px;white-space:nowrap;font-size:10px}
+#_zayav-expense .name{width:70px;font-size:10px}
 #_zayav-expense .sum {
 	width:50px;
 	text-align:right;
@@ -474,7 +474,11 @@
 }
 #_zayav-expense .sum{font:11px arial}
 #_zayav-expense .sum b{font:bold 11px arial}
-
+#_zayav-expense .count{
+	text-align:right;
+	font-weight:bold;
+	color:#292;
+}
 #_zayav-expense em{font-size:10px;white-space:nowrap}
 #_zayav-expense tr:hover em{color:#ddd}
 #_zayav-expense .img_del{position:absolute;right:1px}
@@ -492,6 +496,7 @@
 #ze-prev .sum {width:60px;text-align:right;cursor:default;position:relative}
 #ze-prev .img_del{display:none}
 
+#ze-count-max{color:#999;margin-left:8px}
 
 
 

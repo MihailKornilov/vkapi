@@ -853,11 +853,13 @@ switch(@$_POST['op']) {
 		$txt = '';
 		$worker_id = 0;
 		$tovar_id = 0;
+		$tovar_avai_id = 0;
+		$tovar_avai_count = 0;
 		$attach_id = 0;
 		$mon = 0;
 		$year = 0;
 		$sum = _cena($_POST['sum']);
-		
+
 		switch(_zayavExpense($cat_id, 'dop')) {
 			case 1: $txt = _txt($_POST['dop']); break;
 			case 2:
@@ -865,7 +867,21 @@ switch(@$_POST['op']) {
 				$mon = intval(strftime('%m'));
 				$year = strftime('%Y');
 				break;
-			case 3: $tovar_id = _num($_POST['dop']); break;
+			case 3:
+				if(!$tovar_avai_id = _num($_POST['dop']))
+					jsonError('Не выбрано наличие товара');
+				if(!$tovar_avai_count = _num($_POST['count']))
+					jsonError('Не указано количество');
+				$sql = "SELECT *
+						FROM `_tovar_avai`
+						WHERE `app_id`=".APP_ID."
+						  AND `id`=".$tovar_avai_id;
+				if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+					jsonError('Наличия товара id'.$tovar_avai_id.' не существует');
+				if($tovar_avai_count > $r['count'])
+					jsonError('Указанное количество превышает допустимое');
+				$tovar_id = $r['tovar_id'];
+				break;
 			case 4: $attach_id = _num($_POST['dop']); break;
 		}
 		
@@ -876,6 +892,8 @@ switch(@$_POST['op']) {
 					`txt`,
 					`worker_id`,
 					`tovar_id`,
+					`tovar_avai_id`,
+					`tovar_avai_count`,
 					`attach_id`,
 					`sum`,
 					`mon`,
@@ -888,6 +906,8 @@ switch(@$_POST['op']) {
 					'".addslashes($txt)."',
 					".$worker_id.",
 					".$tovar_id.",
+					".$tovar_avai_id.",
+					".$tovar_avai_count.",
 					".$attach_id.",
 					".$sum.",
 					".$mon.",
@@ -896,6 +916,8 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$insert_id = query_insert_id('_zayav_expense', GLOBAL_MYSQL_CONNECT);
+
+		_tovarAvaiUpdate($tovar_id);
 
 		$send['html'] = utf8(_zayav_expense_spisok($zayav_id, $insert_id));
 		jsonSuccess($send);

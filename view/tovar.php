@@ -991,8 +991,8 @@ function _tovar_info_move($tovar_id) {
 				`tovar_avai_id`,
 				0 `client_id`,
 				`zayav_id`,
-				1 `count`,
-				`sum` `cena`,
+				`tovar_avai_count` `count`,
+				ROUND(`sum`/`tovar_avai_count`) `cena`,
 				`sum` `summa`,
 				'' `about`,
 				`viewer_id_add`,
@@ -1042,7 +1042,7 @@ function _tovar_info_move($tovar_id) {
 		4 => 'Брак',        //defect
 		5 => 'Возврат',     //return
 		6 => 'Списание',    //writeoff
-		7 => 'Применение'
+		7 => 'Применение<br />в заявке'
 	);
 
 	$send =

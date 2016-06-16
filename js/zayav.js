@@ -685,11 +685,14 @@ var _zayavSpisok = function(v, id) {
 				'<tr class="tr-dop dn">' +
 					'<td class="label r" id="td-label">' +
 					'<td id="td-input">' +
+				'<tr class="tr-count dn">' +
+					'<td class="label r">Количество:' +
+					'<td><input type="text" id="ze-count" class="w50" /> шт.<span id="ze-count-max">(max: <b></b>)</span>' +
 				'<tr><td class="label r">Сумма:<td><input type="text" id="ze-sum" class="money" /> руб.' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
-				width:450,
+				width:490,
 				head:'Новый расход заявки',
 				content:html,
 				butCancel:'Закрыть',
@@ -705,6 +708,7 @@ var _zayavSpisok = function(v, id) {
 				title0:'категория не выбрана',
 				spisok:ZAYAV_EXPENSE_SPISOK,
 				func:function(id) {
+					$('.tr-count').addClass('dn');
 					sumFocus();
 					$('.tr-dop')[(id ? 'remove' : 'add') + 'Class']('dn');
 					if(!id)
@@ -733,8 +737,24 @@ var _zayavSpisok = function(v, id) {
 							$('#ze-dop').tovar({
 								open:1,
 								tovar_id_set:ZI.tovar_id,
-								del:0,
-								func:sumFocus
+								func:function() {
+									$('#ze-dop').val('');//здесь будет id наличия
+								},
+								avai:1,
+								avai_radio:function(avai) {
+									$('#ze-dop').val(avai.id);
+									$('.tr-count').removeClass('dn');
+									$('#ze-count')
+										.val(1)
+										.select()
+										.off('keyup')
+										.keyup(function() {
+											$('#ze-sum').val(_cena(_num($(this).val()) * avai.cost_buy));
+										});
+									$('#ze-count-max b').html(avai.count);
+									$('#ze-sum').val(_cena(avai.cost_buy));
+								},
+								del:0
 							});
 							break;
 						case 4: //файл
@@ -764,6 +784,7 @@ var _zayavSpisok = function(v, id) {
 				zayav_id:ZI.id,
 				cat_id:_num($('#ze-cat').val()),
 				dop:$('#ze-dop').length ? $('#ze-dop').val() : '',
+				count:_num($('#ze-count').val()),
 				sum:_cena($('#ze-sum').val())
 			};
 			if(!send.cat_id) {
@@ -777,11 +798,16 @@ var _zayavSpisok = function(v, id) {
 					send.dop = _num(send.dop);
 					break;
 				case 3:
+					send.dop = _num(send.dop);
 					if(!send.dop) {
 						dialog.err('Не выбран товар');
 						return;
 					}
-					send.dop = send.dop.split(':')[0];
+					if(!send.count) {
+						dialog.err('Некорректно указано количество');
+						$('#ze-count').focus();
+						return;
+					}
 					break;
 				case 4: break;
 			}
@@ -796,7 +822,6 @@ var _zayavSpisok = function(v, id) {
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
-					//_msg();
 					$('#_zayav-expense').html(res.html);
 					_zayavExpenseEdit();
 				} else

@@ -386,6 +386,7 @@ $.fn.tovar = function(o) {
 		tovar_id_set:0, //по умолчанию показать список запчастей, которые устанавливаются на этот товар
 		several:0,      //возможность выбирать несколько товаров
 		count_show:1,   //возможность указывать количество товаров
+		avai:0,         //выбор товара только из наличия
 		del:1,          //возможность отменить выбранный товар
 		func:function() {}
 	}, o);
@@ -403,12 +404,14 @@ $.fn.tovar = function(o) {
 					'<tr class="tr-but">' +
 						'<td class="td-but" colspan="3"><button class="vk small">выбрать товар</button>' +
 				'</table>' +
+				'<div class="ts-avai dn">&nbsp;</div>' +
 			'</div>');
 
 	var ts = t.next(),
 		trBut = ts.find('.tr-but'),
 		but = ts.find('.vk'),
 		tsDialog,   //диалог окна выбора товара
+		tsAvai = ts.find('.ts-avai'),//поле для показа наличия товара
 		tsArr,      //массив данных для выбора конкретного товара
 		TSV = '';   //последнее слово поиска
 
@@ -445,7 +448,7 @@ $.fn.tovar = function(o) {
 		var html =
 			'<table id="tovar-select-tab" class="w100p">' +
 				'<tr><td><div id="tovar-find"></div>' +
-					'<td class="r"><button class="vk">Добавить новый товар</button>' +
+		 (!o.avai ? '<td class="r"><button class="vk">Добавить новый товар</button>' : '') +
 			'</table>' +
 			'<div id="tres"></div>';
 		tsDialog = _dialog({
@@ -481,7 +484,9 @@ $.fn.tovar = function(o) {
 			v:v,
 			tovar_id:tovar_id,
 			tovar_id_set:o.tovar_id_set,
-			set:o.set
+			set:o.set,
+			avai:o.avai,
+			avai_radio:function() {}
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
@@ -513,6 +518,9 @@ $.fn.tovar = function(o) {
 		if(!o.several)
 			trBut.hide();
 
+		if(o.avai)
+			avaiGet(v);
+
 		valueUpdate();
 		o.func(v);
 	}
@@ -535,6 +543,29 @@ $.fn.tovar = function(o) {
 			v.push(id + ':' + val);
 		}
 		t.val(v.join());
+	}
+	function avaiGet(tovar_id) {//вставка таблицы с наличием после выбора товара
+		if(tsAvai.hasClass('_busy'))
+			return;
+
+		tsAvai
+			.html('&nbsp;')
+			.removeClass('dn')
+			.addClass('_busy');
+
+		var send = {
+			op:'tovar_select_avai',
+			tovar_id:tovar_id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			tsAvai.removeClass('_busy');
+			if(res.success) {
+				tsAvai.html(res.html);
+				tsAvai.find('#ta-articul')._radio(function(id) {
+					o.avai_radio(res.arr[id]);
+				});
+			}
+		}, 'json');
 	}
 
 	return t;

@@ -169,13 +169,20 @@ switch(@$_POST['op']) {
 		if(!$v && $tovar_id_set)
 			$cond .= " AND `tovar_id_set`=".$tovar_id_set;
 
-		$sql = "SELECT COUNT(*) FROM `_tovar` WHERE ".$cond;
+		//наличие товара
+		$RJ_AVAI = _num($_POST['avai']) ?
+					"RIGHT JOIN `_tovar_avai` `ta`
+				     ON `ta`.`tovar_id`=`t`.`id` AND `ta`.`count`"
+				: '';
+
+		$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond;
 		$spisok = '';
 		$send['arr'] = array();
 		if($count = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
 			$order = $v || $tovar_id_set ? "`name_id` ASC,`vendor_id` ASC,`name` ASC" : "`id` DESC";
-			$sql = "SELECT *
-					FROM `_tovar`
+			$sql = "SELECT `t`.*
+					FROM `_tovar` `t`
+					".$RJ_AVAI."
 					WHERE ".$cond."
 					ORDER BY ".$order."
 					LIMIT 20";
@@ -265,6 +272,24 @@ switch(@$_POST['op']) {
 				'image_small' => $r['image_small']
 			);
 		}
+
+		jsonSuccess($send);
+		break;
+	case 'tovar_select_avai':
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		$sql = "SELECT
+					`id`,
+					`articul`,
+					`count`,
+					`cost_buy`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id."
+				  AND `count`";
+		$send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$send['html'] = utf8(_tovarAvaiArticul($tovar_id, 1));
 
 		jsonSuccess($send);
 		break;

@@ -975,7 +975,6 @@ function _zayav_info() {
 
 	'</script>'.
 	'<div id="_zayav-info">'.
-//		'<a href="http://vk.com/app2031819?z=photo-29895201_393551018">123</a>'.
 		'<div id="dopLinks">'.
 			'<a class="link a-page sel">Информация</a>'.
 			'<a class="link" onclick="_zayavEdit('.$z['service_id'].')">Редактирование</a>'.
@@ -1019,7 +1018,7 @@ function _zayav_info() {
 					: '').
 
 					(isset($zpu[22]) || $z['attach_id'] ?
-						'<tr><td class="label">Документ:<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
+						'<tr><td class="label">'.(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
 					: '').
 
    ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._sumSpace($z['sum_accrual']).'</b> руб.' : '').
@@ -2144,6 +2143,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		$ze = _zayavExpense($r['category_id'], 'all');
 
 		$dop = '';
+		$count = 0;
 		switch($ze['dop']) {
 			case 1: $dop = $r['txt']; break;
 			case 2:
@@ -2155,6 +2155,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			case 3:
 				if($r['tovar_id'])
 					$dop = $r['tovar_set'];
+				$count = $r['tovar_avai_count'];
 				break;
 			case 4:
 				$dop = !$r['attach_id'] && $r['txt'] ?  $r['txt'] : $r['attach_link'];
@@ -2164,15 +2165,16 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		$send .=
 			'<tr class="l'.($insert_id == $r['id'] ? ' inserted' : '').'">'.
 				'<td class="name">'.$ze['name'].
-				'<td>'.$dop.
+				'<td'.(!$count ? ' colspan="2"' : '').'>'.$dop.
+	  ($count ? '<td class="count">'.$count : '').
 				'<td class="sum">'.
 					'<em>'._sumSpace($sum).' р.</em>'.
 					'<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>';
 	}
 
 	$ost = $accrual_sum - $expense_sum;
-	$send .= '<tr><td colspan="2" class="r">Итог:<td class="sum"><b>'._sumSpace($expense_sum).'</b> р.'.
-			 '<tr><td colspan="2" class="r">Остаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'._sumSpace($ost).' р.'.
+	$send .= '<tr><td colspan="3" class="r">Итог:<td class="sum"><b>'._sumSpace($expense_sum).'</b> р.'.
+			 '<tr><td colspan="3" class="r">Остаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'._sumSpace($ost).' р.'.
 			'</table>';
 
 	return $send;
