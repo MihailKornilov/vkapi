@@ -2515,7 +2515,7 @@ function _zayav_report_filter($sel) {
 			'sel' => $sel
 		)).
 		(APP_ID == 3978722 || SA ?
-			'<br /><a href="'.URL.'&p=print&d=erm">ќтчЄт XSL за текущий мес€ц</a>'
+			'<br /><a href="'.URL.'&p=print&d=erm">ќтчЄт XLS за текущий мес€ц</a>'
 		: '').
 	'</div>';
 }
