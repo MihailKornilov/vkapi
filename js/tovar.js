@@ -379,6 +379,9 @@ $.fn.tovar = function(o) {
 		ts_value = $.trim(t.val()),
 		win = attr_id + '_tovarSelect';
 
+	if(!attr_id)
+		return;
+
 	switch(typeof o) {
 		case 'string':
 			var s = window[win];
@@ -390,6 +393,7 @@ $.fn.tovar = function(o) {
 
 	o = $.extend({
 		open:0,         //автоматически открывать окно выбора товара
+		ids:'none',     //выводить товары только из этого списка
 		set:1,          //выводить товары, которые являются запчастью для других товаров
 		image:1,        //показывать в результате изображение
 		tovar_id_set:0, //по умолчанию показать список запчастей, которые устанавливаются на этот товар
@@ -494,6 +498,7 @@ $.fn.tovar = function(o) {
 			tovar_id:tovar_id,
 			tovar_id_set:o.tovar_id_set,
 			set:o.set,
+			ids:o.ids,
 			avai:o.avai,
 			avai_radio:function() {}
 		};

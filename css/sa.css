@@ -109,7 +109,7 @@
 #sa-zayav-service .head{width:250px}
 #sa-zayav-service td.head{cursor:move}
 #sa-zayav-service .name{font-weight:bold}
-#sa-zayav-service .label{font-weight:bold;color:#888}
+#sa-zayav-service .label{font-weight:bold;color:#999;margin-bottom:3px}
 #sa-zayav-service .about{font-size:10px;color:#888;white-space:pre-line}
 #sa-zayav-service .ed{width:35px}
 

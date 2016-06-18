@@ -162,6 +162,9 @@ switch(@$_POST['op']) {
 			$cond .= " AND (".implode(' OR ', $find).")";
 		}
 
+		if($_POST['ids'] != 'none')
+			$cond .= " AND `id` IN (".$_POST['ids'].")";
+
 		if(!_bool($_POST['set']))
 			$cond .= " AND !`tovar_id_set`";
 

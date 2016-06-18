@@ -885,7 +885,8 @@ function _zayavPoleFilter($v=array()) {
 			  '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="tovar_name_id" value="'.$v['tovar_name_id'].'" />',
 
-		33 => '<div class="findHead">{label}</div>'.
+		33 => '<script>var ZAYAV_TOVAR_IDS="'._zayavTovarIds($v['service_id']).'";</script>'.
+			  '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />'
 	);
 
@@ -914,6 +915,16 @@ function _zayavTovarName() {
 			FROM `_tovar_name`
 			WHERE `id` IN (".$name_ids.")";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+}
+function _zayavTovarIds($service_id) {
+	$sql = "SELECT DISTINCT `zt`.`tovar_id`
+			FROM `_zayav` `z`,
+				 `_zayav_tovar` `zt`
+			WHERE `z`.`app_id`=".APP_ID."
+			  AND `z`.`id`=`zt`.`zayav_id`
+			  AND !`z`.`deleted`
+			  AND `z`.`service_id`=".$service_id;
+	return query_ids($sql, GLOBAL_MYSQL_CONNECT);
 }
 
 /* Информация о заявке */

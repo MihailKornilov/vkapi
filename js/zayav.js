@@ -1621,15 +1621,17 @@ $(document)
 
 			_zayavSpisokTovarNameFilter();
 
-			$('#tovar_id').tovar({
-				set:0,
-				func:function(v, id) {
-					$('#tovar_name_id')._select(0);
-					ZAYAV.tovar_name_id = 0;
-					_zayavSpisokTovarNameFilter(v);
-					_zayavSpisok(v, id);
-				}
-			});
+			if($('#tovar_id').length)
+				$('#tovar_id').tovar({
+					set:0,
+					ids:ZAYAV_TOVAR_IDS,
+					func:function(v, id) {
+						$('#tovar_name_id')._select(0);
+						ZAYAV.tovar_name_id = 0;
+						_zayavSpisokTovarNameFilter(v);
+						_zayavSpisok(v, id);
+					}
+				});
 
 			$('#tovar_place_id')._select({
 				width:155,
