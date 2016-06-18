@@ -1471,8 +1471,11 @@ function _zayavTovarUpdate($zayav_id) {//обновление списка товаров заявки
 		$ex = explode(':', $r);
 		if(!$id = _num($ex[0]))
 			continue;
-		if(!$count = _num($ex[1]))
+		$count = _num(@$ex[1]);
+		if(isset($z['zpu'][11]) && !$count)
 			continue;
+		if(!$count)
+			$count = 1;
 		$values[] = "(
 			".APP_ID.",
 			".$zayav_id.",

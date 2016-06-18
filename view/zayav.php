@@ -304,6 +304,7 @@ function _zayavFilter($v) {
 		'noschet' => 0,
 		'nofile' => 0,
 		'tovar_name_id' => 0,
+		'tovar_id' => 0,
 		'deleted' => 0,
 		'deleted_only' => 0
 	);
@@ -323,6 +324,7 @@ function _zayavFilter($v) {
 		'noschet' => _bool(@$v['noschet']),
 		'nofile' => _bool(@$v['nofile']),
 		'tovar_name_id' => _num(@$v['tovar_name_id']),
+		'tovar_id' => _num(@$v['tovar_id']),
 		'deleted' => _bool(@$v['deleted']),
 		'deleted_only' => _bool(@$v['deleted_only']),
 		'clear' => ''
@@ -418,6 +420,15 @@ function _zayav_spisok($v) {
 					WHERE `zt`.`app_id`=".APP_ID."
 					  AND `t`.`id`=`zt`.`tovar_id`
 					  AND `t`.`name_id`=".$filter['tovar_name_id'];
+			$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+			$cond .= " AND `id` IN (".$zayav_ids.")";
+		}
+
+		if($filter['tovar_id']) {
+			$sql = "SELECT DISTINCT `zayav_id`
+					FROM `_zayav_tovar`
+					WHERE `app_id`=".APP_ID."
+					  AND `tovar_id`=".$filter['tovar_id'];
 			$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
 			$cond .= " AND `id` IN (".$zayav_ids.")";
 		}
@@ -872,7 +883,10 @@ function _zayavPoleFilter($v=array()) {
 
 		32 => '<script>var ZAYAV_TOVAR_NAME_SPISOK='._zayavTovarName().';</script>'.
 			  '<div class="findHead">{label}</div>'.
-			  '<input type="hidden" id="tovar_name_id" value="'.$v['tovar_name_id'].'" />'
+			  '<input type="hidden" id="tovar_name_id" value="'.$v['tovar_name_id'].'" />',
+
+		33 => '<div class="findHead">{label}</div>'.
+			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />'
 	);
 
 	$send = '';

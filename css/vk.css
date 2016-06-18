@@ -148,7 +148,7 @@ a.add:hover{text-decoration:underline;color:#357}
 
 /* заголовок фильтра справой стороны */
 .f-label{color:#555;font-weight:bold;margin-bottom:5px}
-.findHead{color:#555;font-weight:bold;margin:15px 0 4px 0}
+.findHead{color:#555;font-weight:bold;margin:20px 0 4px 0}
 
 ._info{
 	background-color:#ffe;
@@ -722,7 +722,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	width:100%;
 	height:100%;
 	background:#fff;
-	opacity:.7;
+	opacity:.8;
 }
 
 

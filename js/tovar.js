@@ -374,10 +374,19 @@ var _tovarAdd = function(o) {
 
 $.fn.tovar = function(o) {
 	var t = $(this),
-//		attr_id = t.attr('id'),
+		attr_id = t.attr('id'),
 		tovar_id = 0,
-		ts_value = $.trim(t.val());
-//		win = attr_id + '_tovarSelect';
+		ts_value = $.trim(t.val()),
+		win = attr_id + '_tovarSelect';
+
+	switch(typeof o) {
+		case 'string':
+			var s = window[win];
+			switch(o) {
+				case 'cancel': s.cancel(); break;
+			}
+			return t;
+	}
 
 	o = $.extend({
 		open:0,         //автоматически открывать окно выбора товара
@@ -522,13 +531,13 @@ $.fn.tovar = function(o) {
 			avaiGet(v);
 
 		valueUpdate();
-		o.func(v);
+		o.func(v, attr_id);
 	}
 	function tsCancel() {
 		_parent($(this)).remove();
 		trBut.show();
 		valueUpdate();
-		o.func(0);
+		o.func(0, attr_id);
 	}
 	function valueUpdate() {//обновление выбранных значений товаров
 		var inp = ts.find('input'),
@@ -542,7 +551,7 @@ $.fn.tovar = function(o) {
 				continue;
 			v.push(id + ':' + val);
 		}
-		t.val(v.join());
+		t.val(o.several ? v.join() : _num(v.length ? v[0].split(':')[0] : 0));
 	}
 	function avaiGet(tovar_id) {//вставка таблицы с наличием после выбора товара
 		if(tsAvai.hasClass('_busy'))
@@ -567,6 +576,16 @@ $.fn.tovar = function(o) {
 			}
 		}, 'json');
 	}
+
+	t.o = o;
+	t.cancel = function() {
+		t.val(0);
+		trBut.show();
+		trBut.prev().remove();
+		o.func(0, attr_id);
+	};
+	
+	window[win] = t;
 
 	return t;
 };
