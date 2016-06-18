@@ -79,8 +79,8 @@ switch(@$_POST['op']) {
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarUpdate($send['id']);
+		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
 
 		_note(array(
@@ -428,7 +428,7 @@ switch(@$_POST['op']) {
 					`category_id`,
 					`tovar_id`,
 					`tovar_avai_id`,
-					`tovar_avai_count`,
+					`tovar_count`,
 					`sum`,
 					`viewer_id_add`
 				) VALUES (
@@ -856,7 +856,7 @@ switch(@$_POST['op']) {
 		$worker_id = 0;
 		$tovar_id = 0;
 		$tovar_avai_id = 0;
-		$tovar_avai_count = 0;
+		$tovar_count = 0;
 		$attach_id = 0;
 		$mon = 0;
 		$year = 0;
@@ -869,10 +869,18 @@ switch(@$_POST['op']) {
 				$mon = intval(strftime('%m'));
 				$year = strftime('%Y');
 				break;
+			case 5:
+				if(!$tovar_id = _num($_POST['dop']))
+					jsonError('Не выбран товар');
+				if(!$tovar_count = _num($_POST['count']))
+					jsonError('Не указано количество');
+				if(!$r = _tovarQuery($tovar_id))
+					jsonError('Товара id'.$tovar_id.' не существует');
+				break;
 			case 3:
 				if(!$tovar_avai_id = _num($_POST['dop']))
 					jsonError('Не выбрано наличие товара');
-				if(!$tovar_avai_count = _num($_POST['count']))
+				if(!$tovar_count = _num($_POST['count']))
 					jsonError('Не указано количество');
 				$sql = "SELECT *
 						FROM `_tovar_avai`
@@ -880,7 +888,7 @@ switch(@$_POST['op']) {
 						  AND `id`=".$tovar_avai_id;
 				if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 					jsonError('Наличия товара id'.$tovar_avai_id.' не существует');
-				if($tovar_avai_count > $r['count'])
+				if($tovar_count > $r['count'])
 					jsonError('Указанное количество превышает допустимое');
 				$tovar_id = $r['tovar_id'];
 				break;
@@ -895,7 +903,7 @@ switch(@$_POST['op']) {
 					`worker_id`,
 					`tovar_id`,
 					`tovar_avai_id`,
-					`tovar_avai_count`,
+					`tovar_count`,
 					`attach_id`,
 					`sum`,
 					`mon`,
@@ -909,7 +917,7 @@ switch(@$_POST['op']) {
 					".$worker_id.",
 					".$tovar_id.",
 					".$tovar_avai_id.",
-					".$tovar_avai_count.",
+					".$tovar_count.",
 					".$attach_id.",
 					".$sum.",
 					".$mon.",
@@ -1345,9 +1353,10 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 
 	$name = '';
 
-	if(isset($zpu[1])) {
+	if(isset($zpu[1]))
 		$name = $v['name'];
-	} elseif(isset($zpu[4])) {
+
+	if(!$name && isset($zpu[4])) {
 		if(@$_POST['tovar']) {
 			$ex = explode(',', $_POST['tovar']);
 			$ex = explode(':', $ex[0]);
@@ -1358,9 +1367,10 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 					WHERE `id`=".$tovar_id;
 			$name = query_value($sql, GLOBAL_MYSQL_CONNECT);
 		}
-	} elseif(isset($zpu[23])) {
-		$name = 'Картриджи';
 	}
+
+	if(!$name && isset($zpu[23]))
+		$name = 'Картриджи';
 
 	if(!$name)
 		$name = 'Заявка #'.$z['nomer'];

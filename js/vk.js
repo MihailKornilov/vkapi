@@ -1814,7 +1814,10 @@ $.fn._select = function(o) {
 				case 'title': return s.title();
 				case 'inp': return s.inp();
 				case 'focus': s.focus(); break;
-				case 'remove': $('#' + id + '_select').remove(); break;
+				case 'remove':
+					$('#' + id + '_select').remove();
+					window[id + '_select'] = null;
+					break;
 				default:
 					if(REGEXP_NUMERIC_MINUS.test(o)) {
 						var write_save = s.o.write_save;
@@ -1917,17 +1920,21 @@ $.fn._select = function(o) {
 
 	if(!o.disabled) {
 		$(document)
+			.off('click', '#' + id + '_select .selug')
 			.on('click', '#' + id + '_select .selug', hideOn)
-			.on('click', '#' + id + '_select .selsel', function() {
-				inp.focus();
-			})
-			.on('click', '#' + id + '_select .selun', function() {
-				unitSel($(this));
-			})
+
+			.off('click', '#' + id + '_select .selsel')
+			.on('click', '#' + id + '_select .selsel', function() { inp.focus(); })
+
+			.off('click', '#' + id + '_select .selun')
+			.on('click', '#' + id + '_select .selun', function() { unitSel($(this)); })
+
+			.off('mouseenter', '#' + id + '_select .selun')
 			.on('mouseenter', '#' + id + '_select .selun', function() {
 				res.find('.ov').removeClass('ov');
 				$(this).addClass('ov');
 			})
+			.off('click', '#' + id + '_select .x')
 			.on('click', '#' + id + '_select .x', function(e) {
 				e.stopPropagation();
 				var v = $(this).attr('val');

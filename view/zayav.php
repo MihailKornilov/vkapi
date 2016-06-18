@@ -2118,7 +2118,8 @@ function _zayavExpenseDop($id=false) {//дополнительное условие для категории рас
 		0 => 'нет',
 		1 => 'Описание',
 		2 => 'Сотрудник',
-		3 => 'Товар',
+		5 => 'Товар',
+		3 => 'Товар <b>наличие</b>',
 		4 => 'Файл'
 	);
 	return $id !== false ? $arr[$id] : $arr;
@@ -2167,25 +2168,25 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		$expense_sum += $sum;
 		$ze = _zayavExpense($r['category_id'], 'all');
 
-		$dop = '';
+		$dop = $r['txt'];
 		$count = 0;
-		switch($ze['dop']) {
-			case 1: $dop = $r['txt']; break;
-			case 2:
-				if($r['worker_id'])
-					$dop = '<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
-								_viewer($r['worker_id'], 'viewer_name').
-							'</a>';
-				break;
-			case 3:
-				if($r['tovar_id'])
-					$dop = $r['tovar_set'];
-				$count = $r['tovar_avai_count'];
-				break;
-			case 4:
-				$dop = !$r['attach_id'] && $r['txt'] ?  $r['txt'] : $r['attach_link'];
-				break;
+
+		if($r['worker_id'])
+			$dop = '<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
+						_viewer($r['worker_id'], 'viewer_name').
+					'</a>';
+
+		if($r['tovar_id']) {
+			if($r['tovar_avai_id']) {
+				$dop = $r['tovar_set'];
+				$count = $r['tovar_count'];
+
+			} else
+				$dop = $r['tovar_set'].': '.$r['tovar_count'].' шт.';
 		}
+
+		if($r['attach_id'])
+			$dop = $r['attach_link'];
 
 		$send .=
 			'<tr class="l'.($insert_id == $r['id'] ? ' inserted' : '').'">'.

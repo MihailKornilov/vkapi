@@ -699,6 +699,7 @@ var _zayavSpisok = function(v, id) {
 				submit:submit,
 				cancel:function() {
 					$('.inserted').removeClass('inserted');
+					$('#ze-cat')._select('remove');
 				}
 			});
 
@@ -709,6 +710,7 @@ var _zayavSpisok = function(v, id) {
 				spisok:ZAYAV_EXPENSE_SPISOK,
 				func:function(id) {
 					$('.tr-count').addClass('dn');
+					$('#ze-count-max').show();
 					sumFocus();
 					$('.tr-dop')[(id ? 'remove' : 'add') + 'Class']('dn');
 					if(!id)
@@ -733,7 +735,18 @@ var _zayavSpisok = function(v, id) {
 								func:sumFocus
 							});
 							break;
-						case 3: //товар
+						case 5: //товар
+							$('#ze-count-max').hide();
+							$('#ze-dop').tovar({
+								open:1,
+								func:function(v) {
+									$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');
+									$(v ? '#ze-count' : '#ze-sum').focus();
+									$('#ze-count').val(1);
+								}
+							});
+							break;
+						case 3: //товар наличие
 							$('#ze-dop').tovar({
 								open:1,
 								tovar_id_set:ZI.tovar_id,
@@ -796,6 +809,18 @@ var _zayavSpisok = function(v, id) {
 				case 1: break;
 				case 2:
 					send.dop = _num(send.dop);
+					break;
+				case 5:
+					send.dop = _num(send.dop.split(':')[0]);
+					if(!send.dop) {
+						dialog.err('Не выбран товар');
+						return;
+					}
+					if(!send.count) {
+						dialog.err('Некорректно указано количество');
+						$('#ze-count').focus();
+						return;
+					}
 					break;
 				case 3:
 					send.dop = _num(send.dop);

@@ -221,7 +221,7 @@ switch(@$_POST['op']) {
 			$send['arr'] = _imageValToList($send['arr'], 'tovar_id');
 		}
 
-		$result = $count ? 'Найден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').($RJ_AVAI ? ' в наличии' : '').':' : 'Товаров не найдено.';
+		$result = $count ? 'Найден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').($RJ_AVAI ? ' <b>в наличии</b>' : '').':' : 'Товаров не найдено.';
 
 		$send['html'] =	utf8('<div class="ts-count'.($count ? '' : ' no').'">'.$result.'</div>'.$spisok);
 

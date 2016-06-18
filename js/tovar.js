@@ -419,8 +419,8 @@ $.fn.tovar = function(o) {
 
 	tovarSelected();
 
-//	if(o.open)
-//		selOpen();
+	if(o.open)
+		but.trigger('click');
 
 	function tovarSelected() {//вставка товара, который был выбран (при редактировании)
 		if(!ts_value)
