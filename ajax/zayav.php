@@ -140,7 +140,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav` SET ".$v['update']." WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
-		_zayavNameUpdate($zayav_id, $v);
+		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
 
 		if($changes =
@@ -1383,6 +1383,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 			WHERE `id`=".$zayav_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
+	return $name;
 }
 function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключении/изменении договора
 	if($v['avans']) {
