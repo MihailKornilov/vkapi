@@ -379,6 +379,9 @@ switch(@$_POST['op']) {
 				'income_id' => $r['id'],
 				'sum' => $r['sum']
 			));
+		
+		_zayavBalansUpdate($r['zayav_id']);
+		_salaryZayavCheck($r['zayav_id']);
 
 		_history(array(
 			'type_id' => 43,

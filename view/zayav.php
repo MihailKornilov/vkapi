@@ -1455,6 +1455,9 @@ function _zayavDogovorPrint($v) {
 	$doc->output($v['link'], @$v['save'] ? PATH_DOGOVOR : '');
 }
 function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
+	if(!$zayav_id)
+		return;
+
 	//начисления
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_accrual`

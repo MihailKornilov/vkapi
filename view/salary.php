@@ -670,6 +670,9 @@ function salary_worker_zp($v) {
 }
 
 function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полностью, перенести з/п сотрудника из неактивного списка, если такие есть
+	if(!$zayav_id)
+		return;
+
 	if(!$z = _zayavQuery($zayav_id))
 		return;
 
