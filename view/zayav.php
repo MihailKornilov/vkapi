@@ -2152,6 +2152,25 @@ function _zayavExpenseDop($id=false) {//дополнительное условие для категории рас
 	);
 	return $id !== false ? $arr[$id] : $arr;
 }
+function _zayavExpenseDopVal($r) {//значение дополнительного поля
+	if($r['worker_id'])
+		return '<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
+					_viewer($r['worker_id'], 'viewer_name').
+				'</a>';
+
+	if($r['tovar_id']) {
+		$arr = _tovarValToList(array($r['id']=>$r));
+		$r = $arr[$r['id']];
+		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'.$r['tovar_count'].'</b>' : ': '.$r['tovar_count'].' шт.');
+	}
+
+	if($r['attach_id']) {
+		$arr = _attachValToList(array($r['id']=>$r));
+		return $arr[$r['id']]['attach_link'];
+	}
+
+	return $r['txt'];
+}
 function _zayav_expense($zayav_id) {//вставка расходов по заявке в информацию о заявке
 	return
 	'<div id="_zayav-expense">'.
@@ -2197,33 +2216,30 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		$ze = _zayavExpense($r['category_id'], 'all');
 
 		$dop = $r['txt'];
-		$count = 0;
 
 		if($r['worker_id'])
 			$dop = '<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
 						_viewer($r['worker_id'], 'viewer_name').
 					'</a>';
 
-		if($r['tovar_id']) {
-			if($r['tovar_avai_id']) {
-				$dop = $r['tovar_set'];
-				$count = $r['tovar_count'];
-
-			} else
-				$dop = $r['tovar_set'].': '.$r['tovar_count'].' шт.';
-		}
+		if($r['tovar_id'])
+			$dop = $r['tovar_set'].($r['tovar_avai_id'] ? '' : ': '.$r['tovar_count'].' шт.');
 
 		if($r['attach_id'])
 			$dop = $r['attach_link'];
 
+		$inserted = $insert_id == $r['id'] ? ' inserted' : ''; //подсветка только что внесённой записи
+		$list = $r['salary_list_id'] ? ' list' : '';  //затемнение зп, которые привязаны к листу выдачи
 		$send .=
-			'<tr class="l'.($insert_id == $r['id'] ? ' inserted' : '').'">'.
+			'<tr class="l'.$inserted.$list.'">'.
 				'<td class="name">'.$ze['name'].
-				'<td'.(!$count ? ' colspan="2"' : '').'>'.$dop.
-	  ($count ? '<td class="count">'.$count : '').
+				'<td'.(!$r['tovar_avai_id'] ? ' colspan="2"' : '').'>'.$dop.
+		($r['tovar_avai_id'] ?
+				'<td class="count">'.$r['tovar_count']
+		: '').
 				'<td class="sum">'.
 					'<em>'._sumSpace($sum).' р.</em>'.
-					'<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>';
+					(!$r['salary_list_id'] ? '<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>' : '');
 	}
 
 	$ost = $accrual_sum - $expense_sum;

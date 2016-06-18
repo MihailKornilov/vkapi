@@ -945,6 +945,24 @@ switch(@$_POST['op']) {
 
 		_tovarAvaiUpdate($tovar_id);
 
+		$sql = "SELECT *
+				FROM `_zayav_expense`
+				WHERE `id`=".$insert_id;
+		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		
+		_history(array(
+			'type_id' => 101,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' =>
+				'<table>'.
+					'<tr><td>'._zayavExpense($cat_id).
+						'<td>'._zayavExpenseDopVal($r).
+						'<td>'._sumSpace($sum).' ð.'.
+				'</table>'
+		));
+
+
 		$send['html'] = utf8(_zayav_expense_spisok($zayav_id, $insert_id));
 		jsonSuccess($send);
 		break;
@@ -974,7 +992,21 @@ switch(@$_POST['op']) {
 			));
 
 		_tovarAvaiUpdate($r['tovar_id']);
-		
+
+		$z = _zayavQuery($r['zayav_id']);
+
+		_history(array(
+			'type_id' => 102,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'v1' =>
+				'<table>'.
+					'<tr><td>'._zayavExpense($r['category_id']).
+						'<td>'._zayavExpenseDopVal($r).
+						'<td>'._sumSpace($r['sum']).' ð.'.
+				'</table>'
+		));
+
 		$send['html'] = utf8(_zayav_expense_spisok($r['zayav_id']));
 		jsonSuccess($send);
 		break;

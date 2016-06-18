@@ -31,11 +31,9 @@
 }
 ._hist-un .changes th{text-align:right;font-weight:700}
 ._hist-un .changes th,
-._hist-un .changes td{
-	border:#ddd solid 1px;
-	padding:2px 4px;
-	vertical-align:top;
-}
+._hist-un .changes td{ border:#ddd solid 1px;padding:2px 4px;vertical-align:top}
+._hist-un .changes.add table{background:#e0ffe0}
+._hist-un .changes.del table{background:#fee}
 ._hist-un .oplata{color:#770}
 ._hist-un a.deleted{color:#a66}
 ._hist-un .zstatus{display:inline-block;padding:2px 5px}
@@ -46,8 +44,8 @@
 ._hist-un .z .ze-spisok td,
 ._hist-un .z .zayav-rashod-spisok td
 {border:#ddd solid 1px}
-._hist-un .z .ze-spisok tr.new{background-color:#e0ffe0}
-._hist-un .z .ze-spisok tr.del{background-color:#fee}
+._hist-un .z .ze-spisok tr.new{background:#e0ffe0}
+._hist-un .z .ze-spisok tr.del{background:#fee}
 ._hist-un .z .ze-spisok tr.del *{color:#999}
-._hist-un .z .ze-spisok td.change{background-color:#ffc}
+._hist-un .z .ze-spisok td.change{background:#ffc}
 ._hist-un .z .ze-spisok td.sum{white-space:nowrap;text-align:right}
