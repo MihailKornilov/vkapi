@@ -852,8 +852,12 @@ switch(@$_POST['op']) {
 		if(!$cat_id = _num($_POST['cat_id']))
 			jsonError();
 
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError('Заявки id:'.$zayav_id.' не существует');
+
 		$txt = '';
 		$worker_id = 0;
+		$workerOnPay = 0;//внесение баланса сотрудника при отсутствии долга заявки
 		$tovar_id = 0;
 		$tovar_avai_id = 0;
 		$tovar_count = 0;
@@ -865,9 +869,12 @@ switch(@$_POST['op']) {
 		switch(_zayavExpense($cat_id, 'dop')) {
 			case 1: $txt = _txt($_POST['dop']); break;
 			case 2:
-				$worker_id = _num($_POST['dop']);
-				$mon = intval(strftime('%m'));
-				$year = strftime('%Y');
+				if($worker_id = _num($_POST['dop'])) {
+					if($workerOnPay = !(_viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY') && $z['sum_dolg'] < 0)) {
+						$mon = intval(strftime('%m'));
+						$year = strftime('%Y');
+					}
+				}
 				break;
 			case 5:
 				if(!$tovar_id = _num($_POST['dop']))
@@ -927,6 +934,15 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$insert_id = query_insert_id('_zayav_expense', GLOBAL_MYSQL_CONNECT);
 
+		//внесение истории баланса сотрудника
+		if($workerOnPay)
+			_balans(array(
+				'action_id' => 19,
+				'worker_id' => $worker_id,
+				'zayav_id' => $zayav_id,
+				'sum' => $sum
+			));
+
 		_tovarAvaiUpdate($tovar_id);
 
 		$send['html'] = utf8(_zayav_expense_spisok($zayav_id, $insert_id));
@@ -942,8 +958,20 @@ switch(@$_POST['op']) {
 				  AND `id`=".$id;
 		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
+		if($r['salary_list_id'])
+			jsonError();
+
 		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//внесение истории баланса сотрудника
+		if($r['worker_id'] && $r['year'] && $r['mon'])
+			_balans(array(
+				'action_id' => 21,
+				'worker_id' => $r['worker_id'],
+				'zayav_id' => $r['zayav_id'],
+				'sum' => $r['sum']
+			));
 
 		_tovarAvaiUpdate($r['tovar_id']);
 		
