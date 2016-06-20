@@ -32,7 +32,7 @@ function _setup() {
 		'cartridge' => 'Картриджи',
 		'expense' => 'Категории расходов',
 		'zayav_status' => 'Статусы заявок',
-		'zayav_expense' => 'SA: Расходы по заявке',
+		'zayav_expense' => 'Расходы по заявке',
 		'tovar' => 'Категории товаров',
 		'salary_list' => 'Лист выдачи з/п'
 	);
@@ -58,9 +58,6 @@ function _setup() {
 
 	if(_service('count') < 2)
 		unset($page['service']);
-
-	if(!SA)
-		unset($page['zayav_expense']);
 
 	if(!SA)
 		unset($page['service']);
@@ -752,19 +749,13 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 
 
 function setup_zayav_expense() {//категории расходов по заявке
-	if(!SA)
-		return '';
-
 	return
 	'<div id="setup_zayav_expense">'.
-		'<div class="headName">Настройки категорий расходов по заявке<a class="add">Добавить</a></div>'.
+		'<div class="headName">Настройка категорий расходов по заявке<a class="add">Добавить</a></div>'.
 		'<div id="spisok">'.setup_zayav_expense_spisok().'</div>'.
 	'</div>';
 }
 function setup_zayav_expense_spisok() {
-	if(!SA)
-		return '';
-
 	$sql = "SELECT
 				*,
 				0 `use`

@@ -1120,9 +1120,6 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_zayav_expense_add':
-		if(!SA)
-			jsonError();
-
 		$name = _txt($_POST['name']);
 		$dop = _num($_POST['dop']);
 
@@ -1154,9 +1151,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'setup_zayav_expense_edit':
-		if(!SA)
-			jsonError();
-
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
@@ -1193,9 +1187,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'setup_zayav_expense_del':
-		if(!SA)
-			jsonError();
-
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
