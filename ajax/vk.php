@@ -172,7 +172,7 @@ switch(@$_POST['op']) {
 			if(!$z = _zayavQuery($zayav_id))
 				jsonError();
 
-		$zayav_save = _bool($_POST['zayav_save']);
+		$zayav_save = _num($_POST['zayav_save']);
 		$name = _txt($_POST['name']);
 
 		$sql = "SELECT *
@@ -195,9 +195,9 @@ switch(@$_POST['op']) {
 			'zayav_id' => $zayav_id
 		));
 
-		if($zayav_save && $zayav_id) {
+		if($zayav_id && $zayav_save) {
 			$sql = "UPDATE `_zayav`
-					SET `attach_id`=".$id."
+					SET `attach".($zayav_save == 2 ? '1' : '')."_id`=".$id."
 					WHERE `id`=".$zayav_id;
 			query($sql, GLOBAL_MYSQL_CONNECT);
 		}
@@ -255,6 +255,11 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_zayav`
+				SET `attach1_id`=0
+				WHERE `attach1_id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		//удаление из расходов по заявке

@@ -593,9 +593,11 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 			'<table class="_spisok'.($show == $r['id'] ? ' show' : '').'">'.
 				'<tr><td class="pole">'.$r['pole_id'].
 					'<td class="head">'.
-						'<div class="name">'.($r['label'] ? $r['label'] : $r['name']).($r['require'] ? ' *' : '').'</div>'.
+						'<div class="name">'._br($r['label'] ? $r['label'] : $r['name']).($r['require'] ? ' *' : '').'</div>'.
 						'<div class="label">'.($r['label'] ? $r['name'] : '').'</div>'.
 						'<div class="about">'.$r['about'].'</div>'.
+						'<input type="hidden" class="e-name" value="'.$r['name'].'" />'.
+						'<input type="hidden" class="e-label" value="'.$r['label'].'" />'.
 						'<input type="hidden" class="require" value="'.$r['require'].'" />'.
 						'<input type="hidden" class="type_id" value="'.$type_id.'" />'.
 					'<td>'.

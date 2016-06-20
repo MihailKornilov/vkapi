@@ -61,7 +61,7 @@ function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 		return $array;
 
 	return
-	'<script type="text/javascript">'.
+	'<script>'.
 		'var ATTACH={'.implode(',', $send).'};'.
 	'</script>';
 }

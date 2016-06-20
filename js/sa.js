@@ -232,8 +232,9 @@ var saMenuEdit = function(o) {
 		var html =
 				'<table class="sa-tab">' +
 					'<tr><td class="label w150">Исходное название:<td><b>' + o.name + '</b>' +
-		 (o.about ? '<tr><td class="label top">Описание:<td><div class="_info">' + o.about + '</div>' : '') +
-					'<tr><td class="label">Альтернативное название:<td><input type="text" id="label" class="w250" value="' + o.label + '" />' +
+		 (o.about ? '<tr><td class="label topi">Описание:<td><div class="_info">' + o.about + '</div>' : '') +
+					'<tr><td class="label topi">Альтернативное название:' +
+						'<td><textarea id="label" class="w250">' + o.label + '</textarea>' +
 					'<tr' + (o.type_id == 1 ? '' : ' class="dn"') + '>' +
 						'<td class="label">Обязательное заполнение:' +
 						'<td><input type="hidden" id="require" value="' + o.require + '" />' +
@@ -700,9 +701,9 @@ $(document)
 			p = _parent(t);
 		saZayavServicePoleEdit({
 			id:t.attr('val'),
-			name:p.find('.name').html(),
+			name:p.find('.e-name').val(),
 			about:p.find('.about').html(),
-			label:p.find('.label').html(),
+			label:p.find('.e-label').val(),
 			type_id:p.find('.type_id').val(),
 			require:p.find('.require').val()
 		});

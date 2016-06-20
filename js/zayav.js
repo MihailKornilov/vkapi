@@ -1785,6 +1785,10 @@ $(document)
 				zayav_id:ZI.id,
 				zayav_save:1
 			});
+			$('#attach1_id')._attach({
+				zayav_id:ZI.id,
+				zayav_save:2
+			});
 		}
 		if($('#zayav-report').length) {
 			window._calendarFilter = _zayavReportSpisok;

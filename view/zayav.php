@@ -1047,7 +1047,11 @@ function _zayav_info() {
 					: '').
 
 					(isset($zpu[22]) || $z['attach_id'] ?
-						'<tr><td class="label">'.(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
+						'<tr><td class="label">'._br(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
+					: '').
+
+					(isset($zpu[34]) || $z['attach1_id'] ?
+						'<tr><td class="label">'._br(isset($zpu[34]) ? $zpu[34]['name'] : 'Документ 1').':<td><input type="hidden" id="attach1_id" value="'.$z['attach1_id'].'" />'
 					: '').
 
    ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._sumSpace($z['sum_accrual']).'</b> руб.' : '').
