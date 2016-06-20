@@ -536,13 +536,13 @@ $.fn.tovar = function(o) {
 			avaiGet(v);
 
 		valueUpdate();
-		o.func(v, attr_id);
+		o.func(v, attr_id, sp);
 	}
 	function tsCancel() {
 		_parent($(this)).remove();
 		trBut.show();
 		valueUpdate();
-		o.func(0, attr_id);
+		o.func(0, attr_id, {});
 	}
 	function valueUpdate() {//обновление выбранных значений товаров
 		var inp = ts.find('input'),
@@ -587,7 +587,7 @@ $.fn.tovar = function(o) {
 		t.val(0);
 		trBut.show();
 		trBut.prev().remove();
-		o.func(0, attr_id);
+		o.func(0, attr_id, {});
 	};
 	
 	window[win] = t;

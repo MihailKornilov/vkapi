@@ -211,7 +211,9 @@ switch(@$_POST['op']) {
 				$send['arr'][$r['id']] = array(
 					'id' => $r['id'],
 					'tovar_id' => $r['id'],
-					'name' => utf8($name)
+					'name' => utf8($name),
+					'cost_buy' => _cena($r['cost_buy']),
+					'cost_sell' => _cena($r['cost_sell'])
 				);
 
 				$spisok .=

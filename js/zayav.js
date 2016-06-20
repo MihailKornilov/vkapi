@@ -721,88 +721,96 @@ var _zayavSpisok = function(v, id) {
 				disabled:0,
 				title0:'категория не выбрана',
 				spisok:ZAYAV_EXPENSE_SPISOK,
-				func:function(id) {
-					$('.tr-count').addClass('dn');
-					$('#ze-count-max').show();
-					sumFocus();
-					$('.tr-dop')[(id ? 'remove' : 'add') + 'Class']('dn');
-					if(!id)
-						return;
-					var dop_id = ZE_DOP_ASS[id];
-					$('#td-label')
-						.html(ZE_DOP_NAME[dop_id] + ':')
-						[(dop_id == 4 ? 'remove' : 'add') + 'Class']('topi');
-					$('#td-input').html('<input type="hidden" id="ze-dop" />');
-
-					switch(dop_id) {
-						case 1: //описание
-							$('#td-input').html('<input type="text" id="ze-dop" class="w250" />');
-							$('#ze-dop').focus();
-							break;
-						case 2: //сотрудник
-							$('#ze-dop')._select({
-								width:200,
-								disabled:0,
-								title0:'Сотрудник',
-								spisok:WORKER_SPISOK,
-								func:sumFocus
-							});
-							break;
-						case 5: //товар
-							$('#ze-count-max').hide();
-							$('#ze-dop').tovar({
-								open:1,
-								func:function(v) {
-									$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');
-									$(v ? '#ze-count' : '#ze-sum').focus();
-									$('#ze-count').val(1);
-								}
-							});
-							break;
-						case 3: //товар наличие
-							$('#ze-dop').tovar({
-								open:1,
-								tovar_id_set:ZI.tovar_id,
-								func:function() {
-									$('#ze-dop').val('');//здесь будет id наличия
-								},
-								avai:1,
-								avai_radio:function(avai) {
-									$('#ze-dop').val(avai.id);
-									$('.tr-count').removeClass('dn');
-									$('#ze-count')
-										.val(1)
-										.select()
-										.off('keyup')
-										.keyup(function() {
-											$('#ze-sum').val(_cena(_num($(this).val()) * avai.cost_buy));
-										});
-									$('#ze-count-max b').html(avai.count);
-									$('#ze-sum').val(_cena(avai.cost_buy));
-								},
-								del:0
-							});
-							break;
-						case 4: //файл
-							$('#ze-dop')._attach({
-								zayav_id:ZI.id,
-								func:function(v) {
-//									$('#' + num + 'attach-txt')[v ? 'hide' : 'show']().val('');
-									sumFocus();
-								}
-							});
-							break;
-						default://нет
-							$('.tr-dop').addClass('dn');
-							$('#td-input').html('');
-					}
-				}
+				func:catSelect
 			});
 
 		sumFocus();
 
 		function sumFocus() {
 			$('#ze-sum').focus();
+		}
+		function catSelect(id) {
+			$('.tr-count').addClass('dn');
+			$('#ze-count-max').show();
+			sumFocus();
+			$('.tr-dop')[(id ? 'remove' : 'add') + 'Class']('dn');
+			if(!id)
+				return;
+			var dop_id = ZE_DOP_ASS[id];
+			$('#td-label')
+				.html(ZE_DOP_NAME[dop_id] + ':')
+				[(dop_id == 4 ? 'remove' : 'add') + 'Class']('topi');
+			$('#td-input').html('<input type="hidden" id="ze-dop" />');
+
+			switch(dop_id) {
+				case 1: //описание
+					$('#td-input').html('<input type="text" id="ze-dop" class="w250" />');
+					$('#ze-dop').focus();
+					break;
+				case 2: //сотрудник
+					$('#ze-dop')._select({
+						width:200,
+						disabled:0,
+						title0:'Сотрудник',
+						spisok:WORKER_SPISOK,
+						func:sumFocus
+					});
+					break;
+				case 5: //товар
+					$('#ze-count-max').hide();
+					$('#ze-dop').tovar({
+						open:1,
+						func:function(v, attr_id, sp) {
+							$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');
+							$(v ? '#ze-count' : '#ze-sum').focus();
+							$('#ze-count')
+								.val(1)
+								.select()
+								.off('keyup')
+								.keyup(function() {
+									$('#ze-sum').val(_cena(_num($(this).val()) * sp.cost_buy));
+								});
+							$('#ze-sum').val(v ? sp.cost_buy : '');
+						}
+					});
+					break;
+				case 3: //товар наличие
+					$('#ze-dop').tovar({
+						open:1,
+						tovar_id_set:ZI.tovar_id,
+						func:function() {
+							$('#ze-dop').val('');//здесь будет id наличия
+						},
+						avai:1,
+						avai_radio:function(avai) {
+							$('#ze-dop').val(avai.id);
+							$('.tr-count').removeClass('dn');
+							$('#ze-count')
+								.val(1)
+								.select()
+								.off('keyup')
+								.keyup(function() {
+									$('#ze-sum').val(_cena(_num($(this).val()) * avai.cost_buy));
+								});
+							$('#ze-count-max b').html(avai.count);
+							$('#ze-sum').val(_cena(avai.cost_buy));
+						},
+						del:0
+					});
+					break;
+				case 4: //файл
+					$('#ze-dop')._attach({
+						zayav_id:ZI.id,
+						func:function(v) {
+							//									$('#' + num + 'attach-txt')[v ? 'hide' : 'show']().val('');
+							sumFocus();
+						}
+					});
+					break;
+				default://нет
+					$('.tr-dop').addClass('dn');
+					$('#td-input').html('');
+			}
 		}
 		function submit() {
 			var send = {
