@@ -2235,7 +2235,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 				'<td class="name">'.$ze['name'].
 				'<td'.(!$r['tovar_avai_id'] ? ' colspan="2"' : '').'>'.$dop.
 		($r['tovar_avai_id'] ?
-				'<td class="count">'.$r['tovar_count']
+				'<td class="count">'.$r['tovar_count'].' шт.'
 		: '').
 				'<td class="sum">'.
 					'<em>'._sumSpace($sum).' р.</em>'.
