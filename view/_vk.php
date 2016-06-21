@@ -598,12 +598,12 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 /* Секция отчётов - report */
 function _report() {
 	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
-	$d1 = '';
 	$pages = array(
 		'history' => 'История действий',
 		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
 		'salary' => 'З/п сотрудников',
-		'zayav' => 'Заявки'
+		'zayav' => 'Заявки',
+		'attach' => 'Файлы'
 	);
 
 
@@ -622,8 +622,8 @@ function _report() {
 	$left = '';
 	$right = '';
 	switch($d) {
-		default: $d = 'history';
-		case 'histoty':
+		default:
+		case 'history':
 			if(!RULE_HISTORY_VIEW)
 				break;
 			$data = _history();
@@ -648,10 +648,13 @@ function _report() {
 			}
 			break;
 		case 'zayav': return _zayav_report();
+		case 'attach':
+			$left = _attach_list();
+			break;
 	}
 
 	return
-		'<table class="tabLR '.($d1 ? $d1 : $d).'" id="report">'.
+		'<table class="tabLR" id="report">'.
 			'<tr><td class="left">'.$left.
 				'<td class="right">'.
 					$rightLink.
@@ -1104,6 +1107,22 @@ function _arrJson($arr, $i=false) {//Последовательный массив
 		$send[] = preg_match(REGEXP_CENA, $v) ? $v : '"'.addslashes(htmlspecialchars_decode($v)).'"';
 	}
 	return '['.implode(',', $send).']';
+}
+
+function _fileSize($v) {//оформление размера файла в байтах, Кб, Мб
+	if($v < 1000)
+		return $v.'b';
+
+	$v = round($v / 1024);
+	if($v < 1000)
+		return $v.'K';
+	
+	$v = round($v / 1024);
+	if($v < 1000)
+		return '<b>'.$v.'M</b>';
+	
+	$v = round($v / 1024);
+	return '<b class="red">'.$v.'G</b>';
 }
 
 function _filterJs($name, $filter) {//формирование условий поиска в формате js

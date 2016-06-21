@@ -205,6 +205,6 @@ $(document)
 	})
 
 	.ready(function() {
-		if($('#report.remind').length)
+		if($('#remind-filter').length)
 			$('#status')._radio(_remindSpisok);
 	});

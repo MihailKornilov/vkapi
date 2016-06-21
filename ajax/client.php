@@ -132,7 +132,7 @@ switch(@$_POST['op']) {
 		break;
 	case 'client_spisok':
 		$_POST['find'] = win1251($_POST['find']);
-		$data = client_data($_POST);
+		$data = _client_spisok($_POST);
 		if($data['filter']['page'] == 1)
 			$send['all'] = utf8($data['result']);
 		$send['spisok'] = utf8($data['spisok']);

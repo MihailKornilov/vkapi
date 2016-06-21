@@ -79,3 +79,77 @@ function _attachArr($id) {//получение данных о файле в формате json для ajax
 
 	return array();
 }
+
+function _attach_list() {
+	$data = _attach_spisok();
+	return
+	'<div id="attach-list">'.
+		$data['result'].
+		$data['spisok'].
+	'</div>';
+}
+function _attachFilter($v) {
+	$filter = array(
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
+		'page' => _num(@$v['page']) ? $v['page'] : 1
+	);
+	return $filter;
+}
+function _attach_spisok($v=array()) {// список клиентов
+	$filter = _attachFilter($v);
+	$filter = _filterJs('ATTACH', $filter);
+
+	$cond = "`app_id`=".APP_ID."
+		 AND !`deleted`";
+
+	$sql = "SELECT
+				COUNT(`id`) `all`,
+				SUM(`size`) `size`
+			FROM `_attach` WHERE ".$cond;
+	$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	if(!$all = $r['all'])
+		return array(
+			'all' => 0,
+			'result' => '',
+			'spisok' => $filter['js'].'<div class="_empty">Файлов не найдено.</div>',
+			'filter' => $filter
+		);
+
+	$all = $r['all'];
+	$send['all'] = $all;
+	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' файл'._end($all, '', 'а', 'ов').' общим размером '._fileSize($r['size']);
+	$send['filter'] = $filter;
+	$send['spisok'] = $filter['js'];
+
+	$sql = "SELECT *
+			FROM `_attach`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT "._startLimit($filter);
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	$send['spisok'] .= $filter['page'] != 1 ? '' :
+		'<table class="_spisok">'.
+			'<tr>'.
+				'<th>Описание'.
+				'<th>Размер'.
+				'<th>Дата<br />загрузки';
+
+	foreach($spisok as $r) {
+		$send['spisok'] .=
+			'<tr>'.
+				'<td>'.$r['name'].
+				'<td class="size'._tooltip(_sumSpace($r['size']), 5)._fileSize($r['size']).
+				'<td class="dtime">'._dtimeAdd($r);
+	}
+
+	$send['spisok'] .= _next($filter + array(
+		'all' => $all,
+		'tr' => 1
+	));
+
+	return $send;
+}
+
+
+

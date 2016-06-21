@@ -78,6 +78,7 @@ table{border:0;border-spacing:0}
 	border-bottom:#DAE1E8 solid 1px;
 }
 .result #filter-clear{float:right}
+.result.norm{font-weight:normal}
 
 #admin{text-align:center;background-color:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
 #admin a{color:#888;font-size:10px}
@@ -1049,12 +1050,6 @@ button.vk.grey:hover{background-color:#999}
 
 
 
-
-
-
-
-
-
 /* Загрузка файла */
 #attach-add-tab{padding-bottom:10px}
 #attach-add-tab h1{margin-left:135px;width:110px}
@@ -1083,6 +1078,28 @@ button.vk.grey:hover{background-color:#999}
 ._attach-link:hover{text-decoration:none}
 
 
+/* Список загруженных файлов */
+#attach-list{margin:10px}
+#attach-list ._spisok{margin-top:5px}
+#attach-list .size{
+	width:45px;
+	color:#555;
+	font-size:10px;
+	text-align:right;
+}
+#attach-list .size b{font-size:10px}
+
+
+
+
+
+
+
+
+
+
+
+
 
 ._select-color tt{
 	display:inline-block;
@@ -1104,6 +1121,7 @@ button.vk.grey:hover{background-color:#999}
 .w200{width:200px}
 .w250{width:250px}
 .mt20{margin-top:20px}
+.mar8{margin:8px}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 .red{color:#E22}

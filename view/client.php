@@ -33,7 +33,7 @@ function _client($v) {
 	return client_list($v);
 }
 function client_list($v) {// страница со списком клиентов
-	$data = client_data($v);
+	$data = _client_spisok($v);
 	$v = $data['filter'];
 
 	//Если внесены клиенты только одной категории, то условие по катериям не будет выводиться
@@ -99,7 +99,7 @@ function clientFilter($v) {
 		}
 	return $filter;
 }
-function client_data($v=array()) {// список клиентов
+function _client_spisok($v=array()) {// список клиентов
 	$filter = clientFilter($v);
 	$filter = _filterJs('CLIENT', $filter);
 

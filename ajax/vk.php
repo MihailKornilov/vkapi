@@ -276,6 +276,13 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'attach_spisok':
+		$data = _attach_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
+		$send['spisok'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
 
 	case 'note_add':
 		if(!$page_id = _num($_POST['page_id']))

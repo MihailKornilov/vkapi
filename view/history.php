@@ -108,15 +108,15 @@ function _history_spisok($v=array()) {
 			'all' => 0,
 			'spisok' =>
 				$spisok.
-				(PAGE1 ? '<div class="result">Истории по указанным условиям нет'.$add.'</div>' : '').
-				'<div class="_empty">Истории по указанным условиям нет</div>',
+				(PAGE1 ? '<div class="result norm">Истории по указанным условиям нет'.$add.'</div>' : '').
+				'<div class="_empty mar8">Истории по указанным условиям нет</div>',
 			'filter' => $filter
 		);
 
 	$send = array(
 		'all' => $all,
 		'spisok' =>
-			(PAGE1 ? '<div class="result">Показан'._end($all, 'а ', 'о ')._sumSpace($all).' запис'._end($all, 'ь', 'и', 'ей').$add.'</div>' : '').
+			(PAGE1 ? '<div class="result norm">Показан'._end($all, 'а ', 'о ')._sumSpace($all).' запис'._end($all, 'ь', 'и', 'ей').$add.'</div>' : '').
 			$spisok,
 		'filter' => $filter
 	);

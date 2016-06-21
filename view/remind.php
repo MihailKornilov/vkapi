@@ -37,28 +37,30 @@ function _remind_stat() {
 	$moveWeek = _remind_stat_count(1, 'week') - $newWeek;
 	$moveMonth = _remind_stat_count(1, strftime('%Y-%m-')) - $newMonth;
 	return
-	'<table class="_spisok" id="_remind-stat">'.
-		'<tr><th>'.
-			'<th>Сегодня'.
-			'<th>Текущая<br />неделя'.
-			'<th>Текущий<br />месяц'.
-		'<tr><td>Новые'.
-			'<td class="count">'.($newToday ? $newToday : '').
-			'<td class="count">'.($newWeek ? $newWeek : '').
-			'<td class="count">'.($newMonth ? $newMonth : '').
-		'<tr><td>Перенесены'.
-			'<td class="count">'.($moveToday ? $moveToday : '').
-			'<td class="count">'.($moveWeek ? $moveWeek : '').
-			'<td class="count">'.($moveMonth ? $moveMonth : '').
-		'<tr><td>Выполнены'.
-			'<td class="count">'._remind_stat_count(2).
-			'<td class="count">'._remind_stat_count(2, 'week').
-			'<td class="count">'._remind_stat_count(2, strftime('%Y-%m-')).
-		'<tr><td>Отменены'.
-			'<td class="count">'._remind_stat_count(0).
-			'<td class="count">'._remind_stat_count(0, 'week').
-			'<td class="count">'._remind_stat_count(0, strftime('%Y-%m-')).
-	'</table>';
+	'<div class="mar8">'.
+		'<table class="_spisok">'.
+			'<tr><th>'.
+				'<th>Сегодня'.
+				'<th>Текущая<br />неделя'.
+				'<th>Текущий<br />месяц'.
+			'<tr><td>Новые'.
+				'<td class="w70 center">'.($newToday ? $newToday : '').
+				'<td class="w70 center">'.($newWeek ? $newWeek : '').
+				'<td class="w70 center">'.($newMonth ? $newMonth : '').
+			'<tr><td>Перенесены'.
+				'<td class="w70 center">'.($moveToday ? $moveToday : '').
+				'<td class="w70 center">'.($moveWeek ? $moveWeek : '').
+				'<td class="w70 center">'.($moveMonth ? $moveMonth : '').
+			'<tr><td>Выполнены'.
+				'<td class="w70 center">'._remind_stat_count(2).
+				'<td class="w70 center">'._remind_stat_count(2, 'week').
+				'<td class="w70 center">'._remind_stat_count(2, strftime('%Y-%m-')).
+			'<tr><td>Отменены'.
+				'<td class="w70 center">'._remind_stat_count(0).
+				'<td class="w70 center">'._remind_stat_count(0, 'week').
+				'<td class="w70 center">'._remind_stat_count(0, strftime('%Y-%m-')).
+		'</table>'.
+	'</div>';
 }
 function _remind_stat_count($status, $period=TODAY) {
 	$cont = " AND `dtime_add` LIKE '".$period."%'";
@@ -81,8 +83,10 @@ function _remind_right() {
 		3 => 'Отменены'
 	);
 	return
-		'<div class="findHead">Категории напоминаний</div>'.
-		_radio('status', $list, 9, 1);
+		'<div id="remind-filter">'.
+			'<div class="findHead">Категории напоминаний</div>'.
+			_radio('status', $list, 9, 1).
+		'</div>';
 }
 function _remind_history_add($v) {
 	$v = array(
