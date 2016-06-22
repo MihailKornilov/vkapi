@@ -296,7 +296,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		define($prefix.'ID', $c['id']);
 		define($prefix.'ORG', $org);
 		define($prefix.'FIO', $c['fio']);
-		define($prefix.'BALANS', _cena($c['balans']));
+		define($prefix.'BALANS', _sumSpace(_cena($c['balans'], 1)));
 
 		define($prefix.'PASP_SERIA', $c['pasp_seria']);
 		define($prefix.'PASP_NOMER', $c['pasp_nomer']);
@@ -633,7 +633,7 @@ function _clientInfoBalans($r) {//отображение текущего баланса клиента
 		'<a style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
 		  ' val="2:'.$r['id'].'"'.
 		  ' class="ci-balans _balans-show'._tooltip('Баланс', -19).
-			round($r['balans'], 2).
+			_sumSpace(_cena($r['balans'], 1)).
 		'</a>';
 }
 function _clientInfoContent($r) {//основная информация о клиенте

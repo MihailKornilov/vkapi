@@ -16,7 +16,8 @@ function _salary_spisok() {
 				`salary_balans_start`,
 				`salary_rate_sum`,
 				`salary_rate_period`,
-				0 `balans`
+				0 `balans`,
+				'' `dolg`
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`
@@ -110,10 +111,25 @@ function _salary_spisok() {
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] -= $r['sum'];
 
+	//долг организации
+	$sql = "SELECT
+ 				`worker_id`,
+				`balans`
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `worker_id`
+			  AND `balans`<0";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		if(isset($worker[$r['worker_id']]))
+			$worker[$r['worker_id']]['dolg'] = _sumSpace(_cena($r['balans'], 1));
+
+
 	$send = '<table class="_spisok">'.
 				'<tr><th>Фио'.
 					'<th>Ставка'.
-					'<th>Баланс';
+					'<th>Баланс'.
+					'<th>Долг<br />организации';
 
 	foreach($worker as $r) {
 		if(!_viewerRule($r['id'], 'RULE_SALARY_SHOW'))
@@ -122,7 +138,8 @@ function _salary_spisok() {
 		$send .=
 			'<tr><td class="fio"><a href="'.URL.'&p=report&d=salary&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
 				'<td class="rate">'.($r['salary_rate_sum'] == 0 ? '' : '<b>'.round($r['salary_rate_sum'], 2).'</b>/'._salaryPeriod($r['salary_rate_period'])).
-				'<td class="balans" style="color:#'.($balans < 0 ? 'A00' : '090').'">'._sumSpace($balans);
+				'<td class="balans" style="color:#'.($balans < 0 ? 'A00' : '090').'">'._sumSpace($balans).
+				'<td class="dolg">'.$r['dolg'];
 	}
 	$send .= '</table>';
 
@@ -341,20 +358,19 @@ function salary_worker_client($worker_id) {//блок связи с клиентом
 			  AND !`deleted`
 			  AND `worker_id`=".$worker_id."
 			LIMIT 1";
-	if($c = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
-		$c = _clientVal($c['id']);
-		if($c['balans'] < 0)
-			$send =
-				'Присутствует клиентский долг в размере '.
-				'<a href="'.URL.'&p=client&d=info&id='.$c['id'].'" class="dolg '._tooltip('Перейти на клиентскую страницу', -85).
-					$c['balans'].
-				'</a> руб.';
-		else
-			$send = 'Сотрудник привязан к клиенту '.$c['link'].'.';
-		return '<div class="_info">'.$send.'</div>';
-	}
+	if(!$c = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
 
-	return '';
+	$c = _clientVal($c['id']);
+	$send = 'Сотрудник привязан к клиенту '.$c['link'].'.';
+	if($c['balans'] < 0)
+		$send .=
+			'<br />'.
+			'Присутствует долг организации в размере '.
+			'<a href="'.URL.'&p=client&d=info&id='.$c['id'].'" class="dolg">'.
+				$c['balans'].
+			'</a> руб.';
+	return '<div class="_info">'.$send.'</div>';
 }
 function salary_worker_acc($filter) {
 	$sql = "SELECT

@@ -2,6 +2,11 @@
 #salary #spisok{margin:10px}
 #salary ._spisok{width:auto}
 #salary .balans{text-align:right}
+#salary .dolg{
+	text-align:right;
+	font-weight:bold;
+	color:#b22;
+}
 
 
 
@@ -29,6 +34,11 @@
 #salary-worker .list .sum{color:#888}
 #salary-worker .show{background-color:#ffc}
 #salary-worker ._info{margin-top:10px}
+#salary-worker .dolg{
+	text-align:right;
+	font-weight:bold;
+	color:#b22;
+}
 #salary-worker #spisok-noacc{margin-top:30px}
 #salary-worker #noacc-recalc{float:right}
 #salary-worker #noacc-count{
