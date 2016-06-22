@@ -284,19 +284,6 @@ function _clientCategory($i=0, $menu=0) {//Категории клиентов
 	);
 	return $i ? $arr[$i] : $arr;
 }
-/*
-function _clientCategory($i=0, $menu=0) {//Категории клиентов
-	$arr = array(
-		1 => $menu ? 'Частное лицо' : 'Ф.И.О.',
-		2 => 'Организация',
-		3 => 'ИП',
-		4 => 'ООО',
-		5 => 'ОАО',
-		6 => 'ЗАО'
-	);
-	return $i ? $arr[$i] : $arr;
-}
-*/
 function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиенте
 	$prefix = 'CLIENT_'.$client_id.'_';
 	if(!defined($prefix.'LOADED')) {

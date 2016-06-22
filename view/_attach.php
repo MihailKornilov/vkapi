@@ -20,12 +20,19 @@ function _attachValToList($arr, $keyName='attach_id') {//вставка ссылок на файлы
 		foreach($arrIds[$r['id']] as $id) {
 			$arr[$id] += array(
 				'attach_name' => $r['name'],
-				'attach_link' => '<a href="'.$r['link'].'" class="_attach-link" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>',
+				'attach_link' => _attachLink($r),
 			);
 		}
 	}
 
 	return $arr;
+}
+function _attachLink($r) {//формирование ссылки на скачивание файла
+	return
+	'<div class="_attach-link">'.
+		'<a href="'.$r['link'].'" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>'.
+		'<span class="'._tooltip(_sumSpace($r['size']), -7, 'l')._fileSize($r['size']).'</span>'.
+	'</div>';
 }
 function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 	$v = array(
@@ -117,7 +124,7 @@ function _attach_spisok($v=array()) {// список клиентов
 
 	$all = $r['all'];
 	$send['all'] = $all;
-	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' файл'._end($all, '', 'а', 'ов').' общим размером '._fileSize($r['size']);
+	$send['result'] = 'Показан'._end($all, ' ', 'о ').$all.' файл'._end($all, '', 'а', 'ов').' общим размером '._fileSize($r['size']);
 	$send['filter'] = $filter;
 	$send['spisok'] = $filter['js'];
 
@@ -132,14 +139,12 @@ function _attach_spisok($v=array()) {// список клиентов
 		'<table class="_spisok">'.
 			'<tr>'.
 				'<th>Описание'.
-				'<th>Размер'.
 				'<th>Дата<br />загрузки';
 
 	foreach($spisok as $r) {
 		$send['spisok'] .=
 			'<tr>'.
-				'<td>'.$r['name'].
-				'<td class="size'._tooltip(_sumSpace($r['size']), 5)._fileSize($r['size']).
+				'<td>'._attachLink($r).
 				'<td class="dtime">'._dtimeAdd($r);
 	}
 

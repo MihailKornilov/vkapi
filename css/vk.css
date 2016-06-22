@@ -1074,8 +1074,20 @@ button.vk.grey:hover{background-color:#999}
 /* —сылка на диалоговое окно дл€ закрузки файла */
 ._attach-add{color:#888}
 ._attach.ex ._attach-add{display:none}
-._attach-link{border-bottom:#2B587A dotted 1px}
-._attach-link:hover{text-decoration:none}
+._attach-link{display:inline-block}
+._attach-link a{color:#088;border-bottom:#088 dotted 1px}
+._attach-link a:hover{text-decoration:none}
+._attach-link span{
+	display:inline-block;
+	font-size:10px;
+	margin-left:4px;
+	color:#299;
+	background:#e0f0f0;
+	padding:1px 4px;
+	border-radius:3px;
+	cursor:default;
+}
+._attach-link b{font-size:10px}
 
 
 /* —писок загруженных файлов */

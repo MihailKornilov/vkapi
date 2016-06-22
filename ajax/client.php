@@ -627,18 +627,20 @@ function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
 	if(!$r = _clientQuery($client_id, 1))
 		return;
 
-	$find =
-		$r['fio'].' '.
-		$r['phone'].' '.
-		$r['adres'].' '.
-		$r['org_name'].' '.
-		$r['org_phone'].' '.
-		$r['org_fax'].' '.
-		$r['org_adres'].' '.
-		$r['org_inn'].' '.
-		$r['org_kpp'].' ';
-
-	$sql = "UPDATE `_client` SET `find`='".addslashes($find)."' WHERE `id`=".$client_id;
+	$sql = "UPDATE `_client`
+			SET `find`=CONCAT(
+			    IFNULL(CONCAT(`org_name`, ' '), ''),
+			    IFNULL(CONCAT(`org_phone`, ' '), ''),
+			    IFNULL(CONCAT(`org_fax`, ' '), ''),
+			    IFNULL(CONCAT(`org_adres`, ' '), ''),
+			    IFNULL(CONCAT(`org_inn`, ' '), ''),
+			    IFNULL(CONCAT(`org_kpp`, ' '), ''),
+			    IFNULL(CONCAT(`fio`, ' '), ''),
+			    IFNULL(CONCAT(`phone`, ' '), ''),
+			    IFNULL(CONCAT(`adres`, ' '), ''),
+			    IFNULL(CONCAT(`email`, ' '), ''),
+			    IFNULL(CONCAT(`org_email`, ' '), '')
+			) WHERE `id`=".$client_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
 function _clientFromGet() {//получение id источника откуда пришёл клиент
