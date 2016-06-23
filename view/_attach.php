@@ -32,6 +32,7 @@ function _attachLink($r) {//формирование ссылки на скачивание файла
 	'<div class="_attach-link">'.
 		'<a href="'.$r['link'].'" val="'.$r['id'].'" target="_blank">'.$r['name'].'</a>'.
 		'<span class="'._tooltip(_sumSpace($r['size']), -7, 'l')._fileSize($r['size']).'</span>'.
+		(!file_exists(GLOBAL_PATH.'/..'.$r['link']) ? '<tt class="'._tooltip('Файл отсутствует на сервере', -6, 'l').'del</tt>' : '').
 	'</div>';
 }
 function _attachJs($v=array()) {//получение ссылок на файлы в javascript
@@ -128,23 +129,78 @@ function _attach_spisok($v=array()) {// список клиентов
 	$send['filter'] = $filter;
 	$send['spisok'] = $filter['js'];
 
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 `zayav0`,
+				0 `zayav1`,
+				0 `ze`,
+				0 `expense_id`
 			FROM `_attach`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
 	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = _zayavValToList($spisok);
+
+	$attach_ids = _idsGet($spisok);
+
+	//заявка attach_id
+	$sql = "SELECT *
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `attach_id` IN (".$attach_ids.")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['attach_id']]['zayav0'] = $r['id'];
+
+	//заявка attach1_id
+	$sql = "SELECT *
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `attach1_id` IN (".$attach_ids.")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['attach1_id']]['zayav1'] = $r['id'];
+
+	//расход по заявке
+	$sql = "SELECT *
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `attach_id` IN (".$attach_ids.")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$ze = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$spisok[$r['attach_id']]['ze'] = 1;
+		$ze[$r['attach_id']] = array('zayav_id'=>$r['zayav_id']);
+	}
+	$ze = _zayavValToList($ze);
+
+	//расход организации
+	$sql = "SELECT *
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `attach_id` IN (".$attach_ids.")";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['attach_id']]['expense_id'] = $r['id'];
+	$spisok = _expenseValToList($spisok);
+
+	$zpu = _zayavPole(0);
 
 	$send['spisok'] .= $filter['page'] != 1 ? '' :
 		'<table class="_spisok">'.
 			'<tr>'.
-				'<th>Описание'.
+				'<th>Название'.
 				'<th>Дата<br />загрузки';
 
 	foreach($spisok as $r) {
 		$send['spisok'] .=
-			'<tr>'.
+			'<tr class="l">'.
 				'<td>'._attachLink($r).
+					($r['zayav0'] ? '<div class="about">Заявка '.$r['zayav_link_name'].': '.@$zpu[22]['name'].'.</div>' : '').
+					($r['zayav1'] ? '<div class="about">Заявка '.$r['zayav_link_name'].': '.@$zpu[34]['name'].'.</div>' : '').
+					($r['ze'] ? '<div class="about">Расход по заявке '.$ze[$r['id']]['zayav_link_name'].'.</div>' : '').
+					($r['expense_id'] ? '<div class="about">Расход организации на сумму <b>'.$r['expense_sum'].'</b> руб.</div>' : '').
 				'<td class="dtime">'._dtimeAdd($r);
 	}
 

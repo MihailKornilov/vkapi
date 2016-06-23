@@ -731,6 +731,36 @@ function _expenseSub($id, $i='name') {//Список подкатегорий расходов
 	//возврат данных конкретной категории расхода
 	return $arr[$id][$i];
 }
+function _expenseValToList($arr) {//вставка данных расходов организации в массив по expense_id
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['expense_id'])) {
+			$ids[$r['expense_id']] = 1;
+			$arrIds[$r['expense_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_money_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	foreach($spisok as $r) {
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'expense_sum' => _sumSpace(_cena($r['sum'])),
+				'expense_invoice' => '',
+				'expense_dtime' => FullDataTime($r['dtime_add'])
+			);
+		}
+	}
+
+	return $arr;
+
+}
 function expense() {
 	$data = expense_spisok();
 	return
@@ -939,7 +969,6 @@ function expenseAbout($r) {//описание для расходов
 		$r['about'].
 		($r['attach_id'] ? '<div>Файл: '.$r['attach_link'].'</div>' : '');
 }
-
 
 /*
 function income_all() {//Суммы платежей по годам

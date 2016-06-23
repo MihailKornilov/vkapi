@@ -1514,7 +1514,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			head:at.name,
 			nosel:1,
 			spisok:[
-				{uid:1,title:'Скачать (' + Math.round(at.size / 2014) + ' кб.)'},
+				{uid:1,title:'Скачать (' + Math.round(at.size / 1024) + ' кб.)'},
 				{uid:2,title:'Изменить'},
 				{uid:3,title:'Удалить'}
 			],
