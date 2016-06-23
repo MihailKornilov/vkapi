@@ -296,7 +296,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		define($prefix.'ID', $c['id']);
 		define($prefix.'ORG', $org);
 		define($prefix.'FIO', $c['fio']);
-		define($prefix.'BALANS', _sumSpace(_cena($c['balans'], 1)));
+		define($prefix.'BALANS', _cena($c['balans'], 1));
 
 		define($prefix.'PASP_SERIA', $c['pasp_seria']);
 		define($prefix.'PASP_NOMER', $c['pasp_nomer']);

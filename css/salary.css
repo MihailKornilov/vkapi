@@ -35,9 +35,10 @@
 #salary-worker .show{background-color:#ffc}
 #salary-worker ._info{margin-top:10px}
 #salary-worker .dolg{
-	text-align:right;
+	float:right;
 	font-weight:bold;
 	color:#b22;
+	cursor:default;
 }
 #salary-worker #spisok-noacc{margin-top:30px}
 #salary-worker #noacc-recalc{float:right}

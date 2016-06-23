@@ -122,14 +122,14 @@ function _salary_spisok() {
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
-			$worker[$r['worker_id']]['dolg'] = _sumSpace(_cena($r['balans'], 1));
+			$worker[$r['worker_id']]['dolg'] = _sumSpace(_cena(abs($r['balans'])));
 
 
 	$send = '<table class="_spisok">'.
 				'<tr><th>Фио'.
 					'<th>Ставка'.
 					'<th>Баланс'.
-					'<th>Долг<br />организации';
+					'<th>Клиентский<br />долг';
 
 	foreach($worker as $r) {
 		if(!_viewerRule($r['id'], 'RULE_SALARY_SHOW'))
@@ -362,15 +362,11 @@ function salary_worker_client($worker_id) {//блок связи с клиентом
 		return '';
 
 	$c = _clientVal($c['id']);
-	$send = 'Сотрудник привязан к клиенту '.$c['link'].'.';
-	if($c['balans'] < 0)
-		$send .=
-			'<br />'.
-			'Присутствует долг организации в размере '.
-			'<a href="'.URL.'&p=client&d=info&id='.$c['id'].'" class="dolg">'.
-				$c['balans'].
-			'</a> руб.';
-	return '<div class="_info">'.$send.'</div>';
+	return
+		'<div class="_info">'.
+			'Сотрудник привязан к клиенту '.$c['link'].'.'.
+			($c['balans'] < 0 ? '<div class="dolg'._tooltip('Клиентский долг', -16, 'l')._sumSpace(abs($c['balans'])).'</div>' : '').
+		'</div>';
 }
 function salary_worker_acc($filter) {
 	$sql = "SELECT
