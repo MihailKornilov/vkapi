@@ -1205,7 +1205,7 @@ function _next($v) {//вывод ссылки на догрузку списка
 		($v['page'] == 1 && !empty($v['tr']) ? '</table>' : '');
 }
 
-function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=MYSQL_CONNECT, $app=0) {//ассоциативный список подкатегорий
+function Gvalues_obj($table, $sort='name', $category_id='category_id', $resource_id=GLOBAL_MYSQL_CONNECT, $app=0) {//ассоциативный список подкатегорий
 	$cond = $app ? " AND `app_id`=".APP_ID : '';
 	$sql = "SELECT *
 			FROM `".$table."`

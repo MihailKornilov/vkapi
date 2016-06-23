@@ -17,10 +17,10 @@ function _dbConnect($prefix='') {
 
 	define($prefix.'MYSQL_CONNECT', $conn);
 }
-function query($sql, $resource_id=MYSQL_CONNECT) {
+function query($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	global $sqlQuery, $sqlTime;
 	$t = microtime(true);
-	$res = mysql_query($sql, $resource_id ? $resource_id : MYSQL_CONNECT) or die($sql.'<br />'.mysql_error());
+	$res = mysql_query($sql, $resource_id ? $resource_id : GLOBAL_MYSQL_CONNECT) or die($sql.'<br />'.mysql_error());
 	$t = microtime(true) - $t;
 
 	$sqlTime += $t;
@@ -30,33 +30,33 @@ function query($sql, $resource_id=MYSQL_CONNECT) {
 		return mysql_insert_id();
 	return $res;
 }
-function query_value($sql, $resource_id=MYSQL_CONNECT) {
+function query_value($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	$q = query($sql, $resource_id);
 	if(!$r = mysql_fetch_row($q))
 		return 0;
 	return $r[0];
 }
-function query_assoc($sql, $resource_id=MYSQL_CONNECT) {
+function query_assoc($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	$q = query($sql, $resource_id);
 	if(!$r = mysql_fetch_assoc($q))
 		return array();
 	return $r;
 }
-function query_ass($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив
+function query_ass($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//Ассоциативный массив
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_row($q))
 		$send[$r[0]] = preg_match(REGEXP_NUMERIC, $r[1]) ? intval($r[1]) : $r[1];
 	return $send;
 }
-function query_arr($sql, $resource_id=MYSQL_CONNECT) {//Массив, где ключами является id
+function query_arr($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//Массив, где ключами является id
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_assoc($q))
 		$send[$r['id']] = $r;
 	return $send;
 }
-function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
+function query_selJson($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($sp = mysql_fetch_row($q))
@@ -66,7 +66,7 @@ function query_selJson($sql, $resource_id=MYSQL_CONNECT) {
 		'}';
 	return '['.implode(',',$send).']';
 }
-function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудников в формате json для _select
+function query_workerSelJson($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//список сотрудников в формате json для _select
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($r = mysql_fetch_array($q))
@@ -76,7 +76,7 @@ function query_workerSelJson($sql, $resource_id=MYSQL_CONNECT) {//список сотрудн
 		'}';
 	return '['.implode(',',$send).']';
 }
-function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select при отправке через ajax
+function query_selArray($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//список для _select при отправке через ajax
 	$send = array();
 	$q = query($sql, $resource_id);
 	while($sp = mysql_fetch_row($q))
@@ -86,21 +86,21 @@ function query_selArray($sql, $resource_id=MYSQL_CONNECT) {//список для _select 
 		);
 	return $send;
 }
-function query_assJson($sql, $resource_id=MYSQL_CONNECT) {//Ассоциативный массив js
+function query_assJson($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//Ассоциативный массив js
 	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
 	return '{'.implode(',', $send).'}';
 }
-function query_ids($sql, $resource_id=MYSQL_CONNECT) {//Список идентификаторов
+function query_ids($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//Список идентификаторов
 	$q = query($sql, $resource_id);
 	$send = array();
 	while($sp = mysql_fetch_row($q))
 		$send[] = $sp[0];
 	return empty($send) ? 0 : implode(',', array_unique($send));
 }
-function query_insert_id($tab, $resource_id=MYSQL_CONNECT) {//id последнего внесённого элемента
+function query_insert_id($tab, $resource_id=GLOBAL_MYSQL_CONNECT) {//id последнего внесённого элемента
 	$sql = "SELECT `id` FROM `".$tab."` ORDER BY `id` DESC LIMIT 1";
 	return query_value($sql, $resource_id);
 }
