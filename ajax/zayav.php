@@ -1416,7 +1416,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 	if(isset($zpu[1]))
 		$name = $v['name'];
 
-	if(!$name && isset($zpu[4])) {
+	if(!$name && (isset($zpu[4]) || isset($zpu[11]))) {
 		if(@$_POST['tovar']) {
 			$ex = explode(',', $_POST['tovar']);
 			$ex = explode(':', $ex[0]);
