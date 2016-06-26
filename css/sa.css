@@ -90,6 +90,7 @@
 #sa-zayav-pole .id{text-align:right;color:#777}
 #sa-zayav-pole .name{width:180px;font-weight:bold}
 #sa-zayav-pole .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-zayav-pole .param{font-size:10px;color:red;margin-top:5px;font-weight:bold}
 #sa-zayav-pole .use{text-align:center;width:40px}
 #sa-zayav-pole .ed{padding-top:4px}
 
@@ -111,6 +112,16 @@
 #sa-zayav-service .name{font-weight:bold}
 #sa-zayav-service .label{font-weight:bold;color:#999;margin-bottom:3px}
 #sa-zayav-service .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-zayav-service .param{
+	display:inline-block;
+	padding:3px 8px;
+	font-size:10px;
+	color:#999;
+	background:#eee;
+	margin-top:5px;
+	font-weight:bold;
+}
+#sa-zayav-service .param.on{color:#3b3;background:#dfd}
 #sa-zayav-service .ed{width:35px}
 
 

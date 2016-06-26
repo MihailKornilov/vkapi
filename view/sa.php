@@ -488,7 +488,9 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 			'<tr'.($sel !== false ? ' class="sel" val="'.$r['id'].'"' : '').'>'.
 				'<td class="id">'.$r['id'].
 				'<td class="name">'.$r['name'].
-				'<td class="about">'.$r['about'].
+				'<td>'.
+					'<div class="about">'.$r['about'].'</div>'.
+   ($r['param1'] ? '<div class="param">'.$r['param1'].'</div>' : '').
 	   ($sel === false ? '<td class="use">'.(@$r['use'] ? $r['use'] : '') : '').
 	   ($sel === false ? '<td class="ed">'._iconEdit($r)._iconDel($r + array('nodel'=>_num(@$r['use']))) : '');
 	$send .= '</table>';
@@ -574,7 +576,9 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 				`zp`.`name`,
 				`zp`.`about`,
 				`u`.`label`,
-				`u`.`require`
+				`u`.`require`,
+				`zp`.`param1`,
+				`u`.`param_v1`
 			FROM
 			    `_zayav_pole_use` `u`,
 				`_zayav_pole` `zp`
@@ -596,9 +600,12 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 						'<div class="name">'._br($r['label'] ? $r['label'] : $r['name']).($r['require'] ? ' *' : '').'</div>'.
 						'<div class="label">'.($r['label'] ? $r['name'] : '').'</div>'.
 						'<div class="about">'.$r['about'].'</div>'.
+		($r['param1'] ? '<div class="param'.($r['param_v1'] ? ' on' : '').'">'.$r['param1'].'</div>' : '').
 						'<input type="hidden" class="e-name" value="'.$r['name'].'" />'.
 						'<input type="hidden" class="e-label" value="'.$r['label'].'" />'.
 						'<input type="hidden" class="require" value="'.$r['require'].'" />'.
+						'<input type="hidden" class="param1" value="'.$r['param1'].'" />'.
+						'<input type="hidden" class="param_v1" value="'.$r['param_v1'].'" />'.
 						'<input type="hidden" class="type_id" value="'.$type_id.'" />'.
 					'<td>'.
 					'<td class="ed">'._iconEdit($r)._iconDel($r).

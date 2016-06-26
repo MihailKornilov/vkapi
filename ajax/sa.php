@@ -455,6 +455,7 @@ switch(@$_POST['op']) {
 			jsonError();
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
+		$param1 = _txt($_POST['param1']);
 
 		if(!$name)
 			jsonError();
@@ -462,11 +463,13 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_zayav_pole` (
 					`type_id`,
 					`name`,
-					`about`
+					`about`,
+					`param1`
 				) VALUES (
 					".$type_id.",
 					'".addslashes($name)."',
-					'".addslashes($about)."'
+					'".addslashes($about)."',
+					'".addslashes($param1)."'
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -482,6 +485,7 @@ switch(@$_POST['op']) {
 
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
+		$param1 = _txt($_POST['param1']);
 
 		if(!$name)
 			jsonError();
@@ -492,7 +496,8 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_zayav_pole`
 				SET `name`='".addslashes($name)."',
-					`about`='".addslashes($about)."'
+					`about`='".addslashes($about)."',
+					`param1`='".addslashes($param1)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -548,6 +553,7 @@ switch(@$_POST['op']) {
 		$service_id = _num($_POST['service_id']);
 		$name_use = _txt($_POST['label']);
 		$require = _bool($_POST['require']);
+		$param_v1 = _bool($_POST['param_v1']);
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$pole_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -559,13 +565,15 @@ switch(@$_POST['op']) {
 					`pole_id`,
 					`label`,
 					`require`,
+					`param_v1`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
 					".$service_id.",
 					".$pole_id.",
 					'".addslashes($name_use)."',
-					'".addslashes($require)."',
+					".$require.",
+					".$param_v1.",
 					"._maxSql('_zayav_pole_use')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -585,6 +593,7 @@ switch(@$_POST['op']) {
 
 		$name_use = _txt($_POST['label']);
 		$require = _bool($_POST['require']);
+		$param_v1 = _bool($_POST['param_v1']);
 
 		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
 		if(!$u = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -596,7 +605,8 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_zayav_pole_use`
 				SET `label`='".addslashes($name_use)."',
-					`require`=".$require."
+					`require`=".$require.",
+					`param_v1`=".$param_v1."
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
