@@ -1385,13 +1385,20 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 		attach_id = _num(t.val());
 
 	o = $.extend({
+		title:'прикрепить файл',
+		icon:0,//показывать ссылку в виде иконки документа
 		zayav_id:0,
 		zayav_save:0,//сразу прикреплять к заявке, как только будет загружен
 		func:function() {}
 	}, o);
 
 	t.wrap('<div class="_attach">');
-	t.parent().append('<a class="_attach-add">прикрепить файл</a>');
+
+	var html = '<a class="_attach-add">' + o.title + '</a>';
+	if(o.icon)
+		html = '<a class="_attach-add img_doc' + _tooltip(o.title, -13, 'l') + '</a>';
+
+	t.parent().append(html);
 
 	var attach = t.parent(),
 		attachAdd = attach.find('._attach-add');

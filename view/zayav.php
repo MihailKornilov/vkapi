@@ -303,6 +303,8 @@ function _zayavFilter($v) {
 		'paytype' => 0,
 		'noschet' => 0,
 		'nofile' => 0,
+		'noattach' => 0,
+		'noattach1' => 0,
 		'tovar_name_id' => 0,
 		'tovar_id' => 0,
 		'deleted' => 0,
@@ -323,6 +325,8 @@ function _zayavFilter($v) {
 		'paytype' => _num(@$v['paytype']),
 		'noschet' => _bool(@$v['noschet']),
 		'nofile' => _bool(@$v['nofile']),
+		'noattach' => _bool(@$v['noattach']),
+		'noattach1' => _bool(@$v['noattach1']),
 		'tovar_name_id' => _num(@$v['tovar_name_id']),
 		'tovar_id' => _num(@$v['tovar_id']),
 		'deleted' => _bool(@$v['deleted']),
@@ -336,6 +340,7 @@ function _zayavFilter($v) {
 		}
 
 	$filter['service_id'] = _service('current', _num(@$v['service_id']));
+	$filter['nofind'] = empty($filter['find']) ? '' : ' dn';//скрытие остальных полей, если использовался быстрый поиск
 
 	return $filter;
 }
@@ -352,9 +357,11 @@ function _zayav_list($v=array()) {
 				'<td class="right">'.
 					'<button class="vk fw" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
 					_zayavPoleFilter($v).
-	(VIEWER_ADMIN ? _check('deleted', '+ удалённые заявки', $v['deleted'], 1).
-					'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
-						_check('deleted_only', 'только удалённые', $v['deleted_only'], 1).
+	(VIEWER_ADMIN ? '<div class="nofind'.$v['nofind'].'">'.
+						_check('deleted', '+ удалённые заявки', $v['deleted'], 1).
+						'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
+							_check('deleted_only', 'только удалённые', $v['deleted_only'], 1).
+						'</div>'.
 					'</div>'
 	: '').
 		'</table>'.
@@ -413,6 +420,11 @@ function _zayav_spisok($v) {
 			}
 		}
 
+		if($filter['noattach'])
+			$cond .= " AND !`attach_id` AND !`attach_cancel`";
+		if($filter['noattach1'])
+			$cond .= " AND !`attach1_id` AND !`attach1_cancel`";
+
 		if($filter['tovar_name_id']) {
 			$sql = "SELECT DISTINCT `zayav_id`
 					FROM `_zayav_tovar` `zt`,
@@ -435,7 +447,6 @@ function _zayav_spisok($v) {
 
 		if($filter['tovar_place_id'])
 			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
-
 
 		if(VIEWER_ADMIN) {
 			if($filter['deleted']) {
@@ -756,7 +767,8 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 		$send[$r['pole_id']] = array(
 			'label' => $label,
 			'name' => $name,
-			'require' => $r['require']
+			'require' => $r['require'],
+			'v1' => $r['param_v1']
 		);
 	}
 
@@ -845,16 +857,6 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 	return
 	'<table class="bs10">'.$send.'</table>';
 }
-/*
-					''.
-
-					'<div class="condLost'.(!empty($v['find']) ? ' dn' : '').'">'.
-
-						'<div class="findHead">Заказаны запчасти</div>'.
-						_radio('zpzakaz', array(0=>'Не важно',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
-
-					'</div>'.
-*/
 function _zayavPoleFilter($v=array()) {
 	$pole = array(
 		17 => '<div id="find"></div>',
@@ -878,8 +880,9 @@ function _zayavPoleFilter($v=array()) {
 			  '<input type="hidden" id="tovar_place_id" value="'.$v['tovar_place_id'].'" />',
 
 		29 => _check('noschet', 'Счёт не выписан', $v['noschet']),
-
 		30 => _check('nofile', '{label}', $v['nofile'], 1),
+		35 => _check('noattach', '{label}', $v['noattach'], 1),
+		36 => _check('noattach1', '{label}', $v['noattach1'], 1),
 
 		32 => '<script>var ZAYAV_TOVAR_NAME_SPISOK='._zayavTovarName().';</script>'.
 			  '<div class="findHead">{label}</div>'.
@@ -894,7 +897,10 @@ function _zayavPoleFilter($v=array()) {
 	foreach(_zayavPole($v['service_id'], 2) as $pole_id => $r) {
 		if(empty($pole[$pole_id]))
 			continue;
-		$send .= str_replace('{label}', $r['name'], $pole[$pole_id]);
+		$unit = str_replace('{label}', $r['name'], $pole[$pole_id]);
+		if($pole_id != 17 && $pole_id != 18)
+			$unit = '<div class="nofind'.$v['nofind'].'">'.$unit.'</div>';
+		$send .= $unit;
 	}
 
 	return $send;
@@ -1047,11 +1053,15 @@ function _zayav_info() {
 					: '').
 
 					(isset($zpu[22]) || $z['attach_id'] ?
-						'<tr><td class="label">'._br(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'
+						'<tr><td class="label">'._br(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':'.
+							'<td><input type="hidden" id="attach_id" value="'.$z['attach_id'].'" />'.
+								 _zayavAttachCancel($z, 22)
 					: '').
 
 					(isset($zpu[34]) || $z['attach1_id'] ?
-						'<tr><td class="label">'._br(isset($zpu[34]) ? $zpu[34]['name'] : 'Документ 1').':<td><input type="hidden" id="attach1_id" value="'.$z['attach1_id'].'" />'
+						'<tr><td class="label">'._br(isset($zpu[34]) ? $zpu[34]['name'] : 'Документ 1').':'.
+							'<td><input type="hidden" id="attach1_id" value="'.$z['attach1_id'].'" />'.
+								 _zayavAttachCancel($z, 34)
 					: '').
 
    ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._sumSpace($z['sum_accrual']).'</b> руб.' : '').
@@ -1670,7 +1680,29 @@ function _zayavKvit($zayav_id) {
 
 	return $send;
 }
+function _zayavAttachCancel($z, $i) {//вывод сообщения о необязательном прикреплении документа
+	$v = $i == 22 ? '' : 1;
 
+	if($z['attach'.$v.'_id'])
+		return '';
+
+	if(!@$z['zpu'][$i]['v1'])
+		return '';
+
+	if($z['attach'.$v.'_cancel']) {
+		$viewer_id = $z['attach'.$v.'_cancel_viewer_id'];
+		$val = 'Отметил'.(_viewer($viewer_id, 'viewer_sex') == 1 ? 'а' : '').' '.
+				_viewer($viewer_id, 'viewer_name').
+				'<br />'.
+				FullDataTime($z['attach'.$v.'_cancel_dtime']);
+		return
+			'<span class="attach-canceled" val="'.$val.'">'.
+				'не требуется'.
+			'</span>';
+	}
+
+	return '<div id="attach'.$v.'_cancel" class="img_cancel'._tooltip('Прикрепление не требуется', -12, 'l').'</div>';
+}
 
 
 /* Местонахождение товара в заявке */

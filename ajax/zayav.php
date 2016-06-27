@@ -846,6 +846,28 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'zayav_attach_cancel':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		$v = _txt($_POST['v']);
+		if($v != 'attach' && $v != 'attach1')
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		$sql = "UPDATE `_zayav`
+				SET `".$v."_cancel`=1,
+					`".$v."_cancel_viewer_id`=".VIEWER_ID.",
+					`".$v."_cancel_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$zayav_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		jsonSuccess();
+		break;
+
+
 	case 'zayav_expense_add'://внесение расхода по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

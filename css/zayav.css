@@ -8,11 +8,7 @@
 #_zayav #find{margin-top:15px}
 #_zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
 #_zayav .rightLink b{float:right}
-#_zayav #desc_check{margin-top:10px}
-#_zayav #diagnost_check{margin-top:15px}
-#_zayav #diff_check{margin-top:10px}
-#_zayav #noschet_check{margin-top:10px}
-#_zayav #nofile_check{margin-top:10px}
+#_zayav ._check{margin-top:10px}
 /* Срок выполнения заявки */
 	#_zayav .zayav-srok{float:right}
 #_zayav #deleted_check{margin-top:20px}
@@ -181,6 +177,8 @@
 }
 #_zayav-info .dogn{cursor:default}/* номер договора */
 #_zayav-info .img_word{margin:0 15px -4px -2px}
+#_zayav-info .img_cancel{margin:0 0 -1px 5px}
+#_zayav-info .attach-canceled{margin-left:5px;color:#999;cursor:default}
 #_zayav-info .acc{color:#07a;cursor:default}
 #_zayav-info .pay{color:#090;cursor:default}
 #_zayav-info #sum-diff{color:#888;margin-left:10px}
