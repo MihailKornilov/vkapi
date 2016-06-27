@@ -234,6 +234,16 @@ function _tovarFeatureJs() {//характеристики товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 }
+function _tovarMeasure($id) {//единицы изменения
+	$arr = array(
+		1 => 'шт.',
+		2 => 'м.',
+		3 => 'мм.'
+	);
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id единицы измерения', $id);
+	return $arr[$id];
+}
 
 
 function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в массив по tovar_id
@@ -279,6 +289,16 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 
 					($r['tovar_id_set'] ? '<br />для '.$set[$r['tovar_id_set']] : '').
 				'</a>';
+
+			$arr[$id]['tovar_sale'] =
+				'<div class="tovar-info-go tovar-sale" val="'.$r['id'].'">'.
+					'<div class="cat">'._tovarCategory($r['category_id']).'</div>'.
+					_tovarName($r['name_id']).
+					'<b>'._tovarVendor($r['vendor_id']).
+						  $r['name'].
+					'</b>:'.
+					'<b class="count">'.$arr[$id]['tovar_count'].' '._tovarMeasure($r['measure_id']).'</b>'.
+				'</div>';
 
 			$arr[$id]['tovar_set_name'] =
 				($r['tovar_id_set'] ? '<b>'._tovarName($r['name_id']).'</b>' : _tovarName($r['name_id'])).
@@ -448,11 +468,11 @@ function _tovar_category_spisok($filter) {
 		asort($r['sub']);
 		foreach($r['sub'] as $k => $i)
 			$r['sub'][$k] =
-				'<div class="sub-unit">'.
-					'<a val="'.$k.'">'.$i.'</a>'.
+				'<a class="sub-unit" val="'.$k.'">'.
+					$i.
 					'<span class="sub-count">'.$r['sub_count'][$k].'</span>'.
   ($r['avai'][$k] ? '<span class="avai">'.$r['avai'][$k].'</span>' : '').
-				'</div>';
+				'</a>';
 		$send['spisok'] .=
 			'<div class="tovar-category-unit" val="'.($r['id'] ? $r['id'] : -1).'">'.
 				'<a class="hd">'.$r['name'].'</a>'.
@@ -771,6 +791,8 @@ function _tovar_info() {//информация о товаре
 
 	$tovar_id = $r['id'];//todo
 
+	define('MEASURE', _tovarMeasure($r['measure_id']));
+
 	return
 	'<script type="text/javascript">'.
 		'var TI={'.
@@ -846,20 +868,23 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 			'<tr><td class="ac avai'.($avai ? '' : ' no').'">'.
 					'<span>Наличие</span>'.
 					($avai ?
-						'<tt><b>'.$avai.'</b> шт.</tt>' :
+						'<tt><b>'.$avai.'</b> '.MEASURE.'</tt>' :
 						'<tt><b>-</b></tt>'
 					).
 					'<a class="tovar-avai-add">внести наличие</a>'.
 
 					'<div id="avai-show">'._tovarAvaiArticul($tovar['id']).'</div>'.
 
+		(APP_ID != 4357416 ?
 				'<td class="ac buy">'.
 					'<span>Закупка</span>'.
 					(_cena($tovar['cost_buy']) ?
 						'<tt><b>'._sumSpace($tovar['cost_buy']).'</b> руб.</tt>' :
 						'<tt><b>-</b></tt>'
 					).
-					'<a>изменить</a>'.
+					'<a>изменить</a>'
+		: '').
+
 				'<td class="ac sell">'.
 					'<span>Продажа</span>'.
 					(_cena($tovar['cost_sell']) ?
@@ -908,7 +933,7 @@ function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 			FROM `_tovar`
 			WHERE `tovar_id_set`=".$tovar['id'];
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return '<div id="ti-zp">Запчастей нет.</div>';
+		return '';
 
 	$send = '<h1>Запчасти:</h1>';
 	$n = 1;
@@ -925,7 +950,7 @@ function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 }
 function _tovar_info_compat($tovar) {//совместимости товара
 	if(!$tovar['tovar_id_compat'])
-		return '<div id="ti-compat">Совместимостей нет.</div>';
+		return '';
 
 	$sql = "SELECT *
 			FROM `_tovar`
@@ -955,7 +980,8 @@ function _tovar_info_zayav($tovar_id) {//заявки по этому товару
 			FROM `_zayav_tovar`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id;
-	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
 	return '<div id="ti-zayav">Заявки: '.$count.'</div>';
 }
 function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
@@ -963,7 +989,8 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 			FROM `_tovar_zakaz`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id;
-	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
 	return '<div id="ti-zakaz">Заказ: '.$count.'</div>';
 }
 function _tovar_info_move($tovar_id) {
@@ -1058,6 +1085,7 @@ function _tovar_info_move($tovar_id) {
 			'<th>Описание'.
 			'<th>Дата'.
 			'<th>';
+	$c = 0;
 	foreach($spisok as $r) {
 		$count = abs($r['count']);
 
@@ -1065,7 +1093,7 @@ function _tovar_info_move($tovar_id) {
 		if($summa)
 			$summa = '<div class="sm">'.
 						($count > 1 ?
-							'<a class="'._tooltip(_cena($r['cena']).' руб./шт', 0, 'l').'<b>'.$summa.'</b> руб.</a>'
+							'<a class="'._tooltip(_cena($r['cena']).' руб./'.MEASURE, 0, 'l').'<b>'.$summa.'</b> руб.</a>'
 							:
 							'<b>'.$summa.'</b> руб.'
 						).
@@ -1075,14 +1103,14 @@ function _tovar_info_move($tovar_id) {
 		$send .= '<tr class="'.($r['type_id'] == 1 ? 'plus' : 'minus').'">'.
 				'<td>'.$type[$r['type_id']].
 				'<td class="count-sum r">'.
-					($count ? '<b>'.$count.'</b> шт.' : '').
+					($count ? '<b>'.$count.'</b> '.MEASURE : '').
 					$summa.
 				'<td>'.
 					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').
 					($r['zayav_id'] ? 'заявка '.$r['zayav_link'].'. ' : '').
 					$r['about'].
 				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'._iconDel($r).
+				'<td class="ed">'._iconDel(array('dtime_add'=>(!$c++ && $r['class'] == 'move' ? '' : $r['dtime_add'])) + $r).
 		'</div>';
 	}
 

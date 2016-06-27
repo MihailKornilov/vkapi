@@ -708,9 +708,9 @@ $(document)
 		_tovarSpisok(v, 'category_id');
 		_tovarIcon(4);
 	})
-	.on('click', '.tovar-category-unit .sub-unit a', function() {//действие при нажатии на название товара в категории товаров
+	.on('click', '.tovar-category-unit .sub-unit', function() {//действие при нажатии на название товара в категории товаров
 		var t = $(this),
-			cat_id = t.parent().parent().attr('val'),
+			cat_id = t.parent().attr('val'),
 			name_id = t.attr('val');
 
 		$('#category_id')._select(cat_id);
@@ -783,32 +783,41 @@ $(document)
 				tovar_id:TI.id
 			},
 			avai_id = 0,
-			max = 0;
+			max = 0,
+			arr;
+
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.content.html(res.html);
 					if(!res.count)
 						return;
+					arr = res.arr;
 					$('#invoice_id')._select({
 						width:218,
 						title0:'Не выбран',
 						spisok:_invoiceIncomeInsert()
 					});
 					$('#client_id').clientSel({width:300,add:1});
-					$('#ta-articul')._radio(function(o) {
-						avai_id = _num($('#ta-articul').val());
-						max = res.arr[avai_id].count;
-						$('#count').val(1).focus();
-						$('#max b').html(max);
-						sumCount();
-						$('#count,#cena').keyup(sumCount);
-						$('#ts-tab').removeClass('dn');
-						dialog.butSubmit('Применить');
-					});
+					$('#ta-articul')._radio(articulSel);
+					if(res.count == 1) {
+						for(var key in arr);
+						$('#ta-articul')._radio(key);
+						articulSel();
+					}
 				} else
 					dialog.loadError();
 			},'json');
 
+		function articulSel() {
+			avai_id = _num($('#ta-articul').val());
+			max = arr[avai_id].count;
+			$('#count').val(1).focus();
+			$('#max b').html(max);
+			sumCount();
+			$('#count,#cena').keyup(sumCount);
+			$('#ts-tab').removeClass('dn');
+			dialog.butSubmit('Применить');
+		}
 		function sumCount() {
 			var count = _num($('#count').val()),
 				cena = _cena($('#cena').val()),
@@ -855,6 +864,30 @@ $(document)
 					dialog.abort();
 			},'json');
 		}
+	})
+
+	.on('click', '#tovar-info .move', function() {//удаление движения товара
+		var t = $(this),
+			p = _parent(t);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'записи',
+			op:'tovar_move_del',
+			func:function() {
+				location.reload();
+			}
+		});
+	})
+	.on('click', '#tovar-info .mi', function() {//удаление продажи товара
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'записи',
+			op:'income_del',
+			func:function() {
+				location.reload();
+			}
+		});
 	})
 
 	.ready(function() {

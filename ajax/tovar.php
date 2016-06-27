@@ -398,8 +398,10 @@ switch(@$_POST['op']) {
 				'<div class="headName">Выбор по наличию</div>'.
 				_tovarAvaiArticul($tovar_id, 1).
 				'<table id="ts-tab" class="bs10 dn">'.
-					'<tr><td class="label r">Количество:*<td><input type="text" id="count" /><span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Цена продажи (за ед.):*<td><input type="text" id="cena" class="money" value="'._cena($r['cost_sell']).'" /> руб.'.
+					'<tr><td class="label r">Количество:*'.
+							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
+								'<span id="max">(max: <b></b>)</span>'.
+					'<tr><td class="label r">Цена продажи (за '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['cost_sell']).'" /> руб.'.
 					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
 					'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
 					'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
@@ -480,6 +482,25 @@ switch(@$_POST['op']) {
 			'zp_id' => $zp_id
 		));
 */
+		jsonSuccess();
+		break;
+
+	case 'tovar_move_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		
+		$sql = "SELECT *
+				FROM `_tovar_move`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_tovar_move` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_tovarAvaiUpdate($r['tovar_id']);
+
 		jsonSuccess();
 		break;
 

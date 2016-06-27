@@ -22,10 +22,11 @@
 	color:#999;
 }
 .tovar-category-unit .sub-unit{
+	display:block;
 	margin-left:10px;
 	padding:2px 10px;
 }
-.tovar-category-unit .sub-unit:hover{background:#e9edf1}
+.tovar-category-unit .sub-unit:hover{background:#e9edf1;text-decoration:none}
 .tovar-category-unit .sub-count{
 	margin-left:10px;
 	color:#aaa;
@@ -323,6 +324,17 @@
 
 
 
+
+/* Отображение единицы товара в платежах */
+.tovar-sale{
+	display:inline-block;
+	background:#E3EEFA;
+	padding:2px 6px;
+	cursor:pointer;
+}
+.tovar-sale:hover{background:#D3E1F1}
+.tovar-sale .cat{color:#999}
+.tovar-sale .count{margin-left:10px;color:#292}
 
 
 
