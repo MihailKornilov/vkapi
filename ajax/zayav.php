@@ -864,6 +864,15 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$zayav_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
+		$zpu = _zayavPole($z['service_id']);
+
+		_history(array(
+			'type_id' => 103,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => str_replace("\n", ' ', $zpu[$v == 'attach' ? 22 : 34]['name'])
+		));
+
 		jsonSuccess();
 		break;
 
