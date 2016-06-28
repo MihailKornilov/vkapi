@@ -234,12 +234,16 @@ function _tovarFeatureJs() {//характеристики товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 }
-function _tovarMeasure($id) {//единицы изменения
+function _tovarMeasure($id=0) {//единицы изменения
 	$arr = array(
 		1 => 'шт.',
 		2 => 'м.',
 		3 => 'мм.'
 	);
+	
+	if(!$id)
+		return $arr;
+	
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id единицы измерения', $id);
 	return $arr[$id];
@@ -281,6 +285,7 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 
 	foreach($tovar as $r) {
 		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id]['tovar_measure_name'] = _tovarMeasure($r['measure_id']);
 			$arr[$id]['tovar_set'] =
 				'<a class="tovar-info-go" val="'.$r['id'].'">'.
 					($r['tovar_id_set'] ? '<b>'._tovarName($r['name_id']).'</b>' : _tovarName($r['name_id'])).
@@ -297,7 +302,7 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 					'<b>'._tovarVendor($r['vendor_id']).
 						  $r['name'].
 					'</b>:'.
-					'<b class="count">'.$arr[$id]['tovar_count'].' '._tovarMeasure($r['measure_id']).'</b>'.
+					'<b class="count">'.@$arr[$id]['tovar_count'].' '._tovarMeasure($r['measure_id']).'</b>'.
 				'</div>';
 
 			$arr[$id]['tovar_set_name'] =
@@ -804,6 +809,7 @@ function _tovar_info() {//информация о товаре
 			'set_position_id:'.$r['set_position_id'].','.
 			'tovar_id_set:'.$r['tovar_id_set'].','.
 			'measure_id:'.$r['measure_id'].','.
+			'measure_name:"'._tovarMeasure($r['measure_id']).'",'.
 			'cost_buy:'._cena($r['cost_buy']).','.
 			'cost_sell:'._cena($r['cost_sell']).','.
 			'about:"'._br($r['about']).'",'.

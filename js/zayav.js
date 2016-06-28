@@ -698,9 +698,13 @@ var _zayavSpisok = function(v, id) {
 				'<tr class="tr-dop dn">' +
 					'<td class="label r" id="td-label">' +
 					'<td id="td-input">' +
+
 				'<tr class="tr-count dn">' +
 					'<td class="label r">Количество:' +
-					'<td><input type="text" id="ze-count" class="w50" /> шт.<span id="ze-count-max">(max: <b></b>)</span>' +
+					'<td><input type="text" id="ze-count" class="w50" /> ' +
+						'<em id="ze-measure"></em>' +
+						'<span id="ze-count-max">(max: <b></b>)</span>' +
+
 				'<tr><td class="label r">Сумма:<td><input type="text" id="ze-sum" class="money" /> руб.' +
 			'</table>',
 			dialog = _dialog({
@@ -784,6 +788,7 @@ var _zayavSpisok = function(v, id) {
 						avai:1,
 						avai_radio:function(avai) {
 							$('#ze-dop').val(avai.id);
+							$('#ze-measure').html(avai.measure);
 							$('.tr-count').removeClass('dn');
 							$('#ze-count')
 								.val(1)

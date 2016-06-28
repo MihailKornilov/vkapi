@@ -290,11 +290,15 @@ switch(@$_POST['op']) {
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError();
 
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError();
+
 		$sql = "SELECT
 					`id`,
 					`articul`,
 					`count`,
-					`cost_buy`
+					`cost_buy`,
+					'".utf8(_tovarMeasure($r['measure_id']))."' `measure`
 				FROM `_tovar_avai`
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."

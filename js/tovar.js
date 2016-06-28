@@ -232,13 +232,17 @@ var _tovarAdd = function(o) {
 			set:0
 		});
 
-		$('#measure_id')._select({
-			width:170,
-			spisok:[
+		/*
+			[
 				{uid:1,title:'шт.',content:'шт. - количество'},
 				{uid:2,title:'м.',content:'м. - длина в метрах'},
 				{uid:3,title:'мм.',content:'мм. - длина в миллиметрах'}
 			]
+		*/
+
+		$('#measure_id')._select({
+			width:170,
+			spisok:TOVAR_MEASURE_SPISOK
 		});
 		$('#about').autosize();
 
@@ -401,7 +405,8 @@ $.fn.tovar = function(o) {
 		count_show:1,   //возможность указывать количество товаров
 		avai:0,         //выбор товара только из наличия
 		del:1,          //возможность отменить выбранный товар
-		func:function() {}
+		func:function() {},
+		avai_radio:function() {}
 	}, o);
 
 	//если несколько товаров, то картинка не показывается
@@ -727,7 +732,7 @@ $(document)
 
 	.on('click', '.tovar-avai-add', function() {
 		var html =  '<table class="bs10">' +
-						'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1" /> шт.' +
+						'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1" /> ' + TI.measure_name +
 						'<tr><td class="label r">Цена за ед.:' +
 							'<td><input type="text" id="cost_buy" class="money" value="' + TI.cost_buy + '"> руб.' +
 						'<tr><td class="label r">Б/у:<td><input type="hidden" id="bu" />' +
