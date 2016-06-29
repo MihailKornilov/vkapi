@@ -305,6 +305,7 @@ switch(@$_POST['op']) {
 				  AND `count`";
 		$send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 		$send['html'] = utf8(_tovarAvaiArticul($tovar_id, 1));
+		$send['count'] = count($send['arr']);
 
 		jsonSuccess($send);
 		break;

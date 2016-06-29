@@ -124,7 +124,7 @@ var _zayavSpisok = function(v, id) {
 			});
 
 			// 9 - ÷вет
-			$('#ze-color')._selectColor();
+			$('#ze-color')._selectColor(zayav_id ? ZI : {});
 			
 			// 10 - »сполнитель
 			$('#ze-executer_id')._dropdown({
@@ -806,10 +806,7 @@ var _zayavSpisok = function(v, id) {
 				case 4: //файл
 					$('#ze-dop')._attach({
 						zayav_id:ZI.id,
-						func:function(v) {
-							//									$('#' + num + 'attach-txt')[v ? 'hide' : 'show']().val('');
-							sumFocus();
-						}
+						func:sumFocus
 					});
 					break;
 				default://нет
@@ -817,6 +814,7 @@ var _zayavSpisok = function(v, id) {
 					$('#td-input').html('');
 			}
 		}
+
 		function submit() {
 			var send = {
 				op:'zayav_expense_add',

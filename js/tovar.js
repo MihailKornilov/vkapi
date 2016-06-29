@@ -583,6 +583,11 @@ $.fn.tovar = function(o) {
 				tsAvai.find('#ta-articul')._radio(function(id) {
 					o.avai_radio(res.arr[id]);
 				});
+				if(res.count == 1) {
+					for(var key in res.arr);
+					$('#ta-articul')._radio(key);
+					o.avai_radio(res.arr[key]);
+				}
 			}
 		}, 'json');
 	}

@@ -81,7 +81,7 @@ function _history_spisok($v=array()) {
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID;
-//	   " AND `type_id` IN (20)".//todo удалить
+//	   " AND `type_id` IN (39)";//todo удалить
 
 	if($filter['viewer_id_add'])
 		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
@@ -102,8 +102,7 @@ function _history_spisok($v=array()) {
 	$add = HIST_LOCAL ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
-	$all = query_value($sql, GLOBAL_MYSQL_CONNECT);
-	if(!$all)
+	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
 		return array(
 			'all' => 0,
 			'spisok' =>
