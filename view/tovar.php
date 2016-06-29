@@ -316,6 +316,8 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 				_tovarName($r['name_id']).
 				_tovarVendor($r['vendor_id']).
 				$r['name'];
+
+			$arr[$id]['tovar_link'] = '<a class="tovar-info-go" val="'.$r['id'].'">'.$arr[$id]['tovar_name'].'</a>';
 		}
 	}
 

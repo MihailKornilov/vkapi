@@ -93,6 +93,11 @@ switch(@$_POST['op']) {
 		);
 		$send['arr'] = _imageValToList($send['arr'], 'tovar_id');
 
+		_history(array(
+			'type_id' => 105,
+			'tovar_id' => $send['id']
+		));
+
 		jsonSuccess($send);
 		break;
 	case 'tovar_edit':
@@ -123,11 +128,13 @@ switch(@$_POST['op']) {
 
 		if(!$r = _tovarQuery($tovar_id))
 			jsonError();
-		
+
+		$vendor_id = _tovar_vendor_get();
+
 		$sql = "UPDATE `_tovar`
 				SET `category_id`=".$category_id.",
 					`name_id`=".$name_id.",
-					`vendor_id`="._tovar_vendor_get().",
+					`vendor_id`=".$vendor_id.",
 					`name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
 
@@ -142,6 +149,20 @@ switch(@$_POST['op']) {
 
 		_tovar_find_update($tovar_id);
 		_tovar_feature_update($tovar_id);
+
+		if($changes =
+			_historyChange('Категория', _tovarCategory($r['category_id']), _tovarCategory($category_id)).
+			_historyChange('Наименование', _tovarName($r['name_id']), _tovarName($name_id)).
+			_historyChange('Производитель', _tovarVendor($r['vendor_id']), _tovarVendor($vendor_id)).
+			_historyChange('Подробно', $r['name'], $name).
+			_historyChange('Описание', $r['about'], $about).
+			_historyChange('Применение', _tovarPosition($r['set_position_id']), _tovarPosition($set_position_id)).
+			_historyChange('Единица изменения', _tovarMeasure($r['measure_id']), _tovarMeasure($measure_id))
+		)   _history(array(
+				'type_id' => 106,
+				'tovar_id' => $tovar_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;
@@ -367,6 +388,15 @@ switch(@$_POST['op']) {
 			'tovar_avai_id' => $avai_id,
 			'count' => $count,
 			'cena' => $cost_buy
+		));
+
+		_history(array(
+			'type_id' => 107,
+			'tovar_id' => $tovar_id,
+			'v1' => $count,
+			'v2' => $cost_buy,
+			'v3' => _cena($count * $cost_buy),
+			'v4' => _tovarMeasure($r['measure_id'])
 		));
 
 		jsonSuccess();

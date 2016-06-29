@@ -137,6 +137,7 @@ function _history_spisok($v=array()) {
 	$history = _clientValToList($history);
 	$history = _zayavValToList($history);
 	$history = _dogovorValToList($history);
+	$history = _tovarValToList($history);
 	$history = _attachValToList($history);
 	$history = _schetValToList($history);
 	$history = _history_types($history);
@@ -194,6 +195,7 @@ function _history_types($history) {//перевод type_id в текст
 		'dogovor_data',
 		'dogovor_sum',
 		'dogovor_avans',
+		'tovar_link',
 		'attach_link',
 		'schet_link_full',
 		'invoice_name',
