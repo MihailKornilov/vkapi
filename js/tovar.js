@@ -737,21 +737,18 @@ $(document)
 
 	.on('click', '.tovar-avai-add', function() {
 		var html =  '<table class="bs10">' +
-						'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1" /> ' + TI.measure_name +
+						'<tr><td class="label r">Количество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
 						'<tr><td class="label r">Цена за ед.:' +
 							'<td><input type="text" id="cost_buy" class="money" value="' + TI.cost_buy + '"> руб.' +
-						'<tr><td class="label r">Б/у:<td><input type="hidden" id="bu" />' +
-						'<tr><td class="label r">Примечание:<td><input type="text" id="about" />' +
+						'<tr><td class="label r">Примечание:<td><input type="text" id="about" class="w230" />' +
 					'</table>',
 			dialog = _dialog({
 				head:'Внесение наличия товара',
-				class:'tovar-avai-add',
 				content:html,
 				submit:submit
 			});
 
 		$('#count').focus();
-		$('#bu')._check();
 
 		function submit() {
 			var send = {
@@ -759,7 +756,6 @@ $(document)
 				tovar_id:TI.id,
 				count:_num($('#count').val()),
 				cost_buy:_cena($('#cost_buy').val()),
-				bu:_bool($('#bu').val()),
 				about:$('#about').val()
 			};
 			if(!send.count) {

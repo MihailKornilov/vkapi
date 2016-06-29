@@ -317,7 +317,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$cost_buy = _cena($_POST['cost_buy']);
-		$bu = _bool($_POST['bu']);
 		$about = _txt($_POST['about']);
 
 		if(!$r = _tovarQuery($tovar_id))
@@ -328,7 +327,6 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."
 				  AND `cost_buy`=".$cost_buy."
-				  AND `bu`=".$bu."
 				  AND `about`='".$about."'";
 		$avai_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -339,7 +337,6 @@ switch(@$_POST['op']) {
 					`articul`,
 					`count`,
 					`cost_buy`,
-					`bu`,
 					`about`
 				) VALUES (
 					".$avai_id.",
@@ -348,7 +345,6 @@ switch(@$_POST['op']) {
 					'"._tovarArticulCreate()."',
 					".$count.",
 					".$cost_buy.",
-					".$bu.",
 					'".addslashes($about)."'
 				) ON DUPLICATE KEY UPDATE
 					`count`=`count`+".$count;

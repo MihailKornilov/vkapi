@@ -665,9 +665,7 @@ function _tovarAvaiArticul($tovar_id, $radio=0) {//таблица наличия товара по кон
 				'<td class="articul r">'.$r['articul'].
 				'<td class="count center"><b>'.$r['count'].'</b>'.
 				'<td class="cena r">'._cena($r['cost_buy']).
-				'<td>'.
-					($r['bu'] ? '<b class="bu">б/у</b> ' : '').
-					$r['about'];
+				'<td>'.$r['about'];
 	}
 	$send .= '</table>';
 

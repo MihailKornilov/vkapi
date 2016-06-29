@@ -219,7 +219,6 @@
 .tovar-avai-articul .articul{color:#888;width:60px}
 .tovar-avai-articul .count{width:50px;color:#080}
 .tovar-avai-articul .cena{width:60px}
-.tovar-avai-articul .bu{color:#a33}
 
 
 
@@ -231,11 +230,6 @@
 
 
 
-
-
-/* внесение наличия товара */
-.tovar-avai-add_dialog #count{width:50px}
-.tovar-avai-add_dialog #about{width:230px}
 
 
 
