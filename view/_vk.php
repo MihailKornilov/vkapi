@@ -1383,7 +1383,8 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategoryJs().','.
 		"\n".'TOVAR_VENDOR_SPISOK='._tovarVendorJs().','.
 		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().','.
-		"\n".'TOVAR_MEASURE_SPISOK='._selJson(_tovarMeasure()).';';
+		"\n".'TOVAR_MEASURE_SPISOK='._selJson(_tovarMeasure()).','.
+		"\n".'TOVAR_POSITION_SPISOK='._selJson(_tovarPosition()).';';
 
 
 	$fp = fopen(API_PATH.'/js/values/app_'.APP_ID.'.js', 'w+');

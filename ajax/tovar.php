@@ -36,14 +36,12 @@ switch(@$_POST['op']) {
 		//применение к другому товару
 		$set_position_id = _num($_POST['set_position_id']);
 		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if(_num($_POST['set']) && (!$set_position_id || !$tovar_id_set))
+		if($set_position_id && !$tovar_id_set)
 			jsonError();
 		
 		if(!$measure_id = _num($_POST['measure_id']))
 			jsonError();
 
-		$cost_buy = _txt($_POST['cost_buy']);
-		$cost_sell = _txt($_POST['cost_sell']);
 		$about = _txt($_POST['about']);
 
 		$sql = "INSERT INTO `_tovar` (
@@ -56,10 +54,7 @@ switch(@$_POST['op']) {
 
 					`set_position_id`,
 					`tovar_id_set`,
-
 					`measure_id`,
-					`cost_buy`,
-					`cost_sell`,
 
 					`viewer_id_add`
 				) VALUES (
@@ -72,10 +67,7 @@ switch(@$_POST['op']) {
 
 					".$set_position_id.",
 					".$tovar_id_set.",
-
 					".$measure_id.",
-					".$cost_buy.",
-					".$cost_sell.",
 
 					".VIEWER_ID."
 				)";
@@ -115,16 +107,13 @@ switch(@$_POST['op']) {
 		//применение к другому товару
 		$set_position_id = _num($_POST['set_position_id']);
 		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if(_num($_POST['set']) && (!$set_position_id || !$tovar_id_set))
+		if($set_position_id && !$tovar_id_set)
 			jsonError();
 
 		if(!$measure_id = _num($_POST['measure_id']))
 			jsonError();
 
-		$cost_buy = _txt($_POST['cost_buy']);
-		$cost_sell = _txt($_POST['cost_sell']);
 		$about = _txt($_POST['about']);
-
 
 		if(!$r = _tovarQuery($tovar_id))
 			jsonError();
@@ -141,9 +130,7 @@ switch(@$_POST['op']) {
 					`set_position_id`=".$set_position_id.",
 					`tovar_id_set`=".$tovar_id_set.",
 
-					`measure_id`=".$measure_id.",
-					`cost_buy`=".$cost_buy.",
-					`cost_sell`=".$cost_sell."
+					`measure_id`=".$measure_id."
 				WHERE `id`=".$tovar_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -210,9 +197,14 @@ switch(@$_POST['op']) {
 		$send['arr'] = array();
 		if($count = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
 			$order = $v || $tovar_id_set ? "`name_id` ASC,`vendor_id` ASC,`name` ASC" : "`id` DESC";
-			$sql = "SELECT `t`.*
+			$sql = "SELECT
+						`t`.*,
+						IFNULL(`tc`.`sum_buy`,0) `sum_buy`,
+						IFNULL(`tc`.`sum_sell`,0) `sum_sell`
 					FROM `_tovar` `t`
-					".$RJ_AVAI."
+						".$RJ_AVAI."
+						LEFT JOIN `_tovar_cost` `tc`
+				        ON `tc`.`tovar_id`=`t`.`id` AND `tc`.`app_id`=".APP_ID."
 					WHERE ".$cond."
 					ORDER BY ".$order."
 					LIMIT 20";
@@ -233,8 +225,8 @@ switch(@$_POST['op']) {
 					'id' => $r['id'],
 					'tovar_id' => $r['id'],
 					'name' => utf8($name),
-					'cost_buy' => _cena($r['cost_buy']),
-					'cost_sell' => _cena($r['cost_sell'])
+					'sum_buy' => _cena($r['sum_buy']),
+					'sum_sell' => _cena($r['sum_sell'])
 				);
 
 				$spisok .=
@@ -318,7 +310,7 @@ switch(@$_POST['op']) {
 					`id`,
 					`articul`,
 					`count`,
-					`cost_buy`,
+					`sum_buy`,
 					'".utf8(_tovarMeasure($r['measure_id']))."' `measure`
 				FROM `_tovar_avai`
 				WHERE `app_id`=".APP_ID."
@@ -331,13 +323,54 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'tovar_cost_set'://Изменение закупочной стоимости и продажи
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		$sum_buy = _cena($_POST['sum_buy']);
+		$sum_sell = _cena($_POST['sum_sell']);
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError();
+
+		if($r['sum_buy'] == $sum_buy && $r['sum_sell'] == $sum_sell)
+			jsonError();
+
+		$sql = "DELETE FROM `_tovar_cost` WHERE `tovar_id`=".$tovar_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "INSERT INTO `_tovar_cost` (
+					`app_id`,
+					`tovar_id`,
+					`sum_buy`,
+					`sum_sell`
+				) VALUES (
+					".APP_ID.",
+					".$tovar_id.",
+					".$sum_buy.",
+					".$sum_sell."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		if($changes =
+			_historyChange('Закупка', _cena($r['sum_buy']), $sum_buy).
+			_historyChange('Продажа', _cena($r['sum_sell']), $sum_sell)
+		)   _history(array(
+				'type_id' => 106,
+				'tovar_id' => $tovar_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+		jsonSuccess();
+		break;
+
 	case 'tovar_avai_add':
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError();
 		if(!$count = _num($_POST['count']))
 			jsonError();
 
-		$cost_buy = _cena($_POST['cost_buy']);
+		$sum_buy = _cena($_POST['sum_buy']);
 		$about = _txt($_POST['about']);
 
 		if(!$r = _tovarQuery($tovar_id))
@@ -347,7 +380,7 @@ switch(@$_POST['op']) {
 				FROM `_tovar_avai`
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."
-				  AND `cost_buy`=".$cost_buy."
+				  AND `sum_buy`=".$sum_buy."
 				  AND `about`='".$about."'";
 		$avai_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -357,7 +390,7 @@ switch(@$_POST['op']) {
 					`tovar_id`,
 					`articul`,
 					`count`,
-					`cost_buy`,
+					`sum_buy`,
 					`about`
 				) VALUES (
 					".$avai_id.",
@@ -365,7 +398,7 @@ switch(@$_POST['op']) {
 					".$tovar_id.",
 					'"._tovarArticulCreate()."',
 					".$count.",
-					".$cost_buy.",
+					".$sum_buy.",
 					'".addslashes($about)."'
 				) ON DUPLICATE KEY UPDATE
 					`count`=`count`+".$count;
@@ -374,28 +407,19 @@ switch(@$_POST['op']) {
 		if(!$avai_id)
 			$avai_id = query_insert_id('_tovar_avai', GLOBAL_MYSQL_CONNECT);
 
-
-		//обновление закупочной стоимости товара
-		if($cost_buy && $r['cost_buy'] != $cost_buy) {
-			$sql = "UPDATE `_tovar`
-					SET `cost_buy`=".$cost_buy."
-					WHERE `id`=".$tovar_id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-		}
-
 		_tovarMoveInsert(array(
 			'tovar_id' => $tovar_id,
 			'tovar_avai_id' => $avai_id,
 			'count' => $count,
-			'cena' => $cost_buy
+			'cena' => $sum_buy
 		));
 
 		_history(array(
 			'type_id' => 107,
 			'tovar_id' => $tovar_id,
 			'v1' => $count,
-			'v2' => $cost_buy,
-			'v3' => _cena($count * $cost_buy),
+			'v2' => $sum_buy,
+			'v3' => _cena($count * $sum_buy),
 			'v4' => _tovarMeasure($r['measure_id'])
 		));
 
@@ -432,7 +456,7 @@ switch(@$_POST['op']) {
 					'<tr><td class="label r">Количество:*'.
 							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
 								'<span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Цена продажи (за '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['cost_sell']).'" /> руб.'.
+					'<tr><td class="label r">Цена продажи (за '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
 					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
 					'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
 					'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
@@ -519,7 +543,7 @@ switch(@$_POST['op']) {
 	case 'tovar_move_del':
 		if(!$id = _num($_POST['id']))
 			jsonError();
-		
+
 		$sql = "SELECT *
 				FROM `_tovar_move`
 				WHERE `app_id`=".APP_ID."

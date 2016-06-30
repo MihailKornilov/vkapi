@@ -102,15 +102,26 @@
 
 
 /* Внесение нового товара */
-.tovar-add_dialog .headName{margin:5px 0}
+.tovar-add_dialog .headName{margin:5px 10px}
+.tovar-add_dialog .cat-un{
+	font: bold 15px tahoma;
+	color:#777;
+	background:#f2f8ff;
+	cursor:pointer;
+	margin-bottom:5px;
+	padding:6px 12px;
+	width:300px;
+}
+.tovar-add_dialog .cat-un:hover{background:#D8EAFF;color:#000}
 .tovar-add_dialog #ta-name ._info{margin:20px 0 0}
-.tovar-add_dialog #tab-name{border-spacing:10px 5px;margin:0 0 25px -5px}
-.tovar-add_dialog #no-vendor{float:right;position:relative;bottom:-1px}
-.tovar-add_dialog #name{width:210px}
-.tovar-add_dialog #ta-set ._info{margin:0}
-.tovar-add_dialog #tab-set{margin-bottom:25px}
-.tovar-add_dialog #tab-set .label{width:180px}
-.tovar-add_dialog #tab-dop .label{width:180px}
+.tovar-add_dialog #tab-name{border-spacing:10px;margin-bottom:25px}
+.tovar-add_dialog #name{width:310px}
+.tovar-add_dialog .prim{
+	float:right;
+	margin:6px 0 0 10px;
+	font-size:10px;
+	color:#aaa;
+}
 .tovar-add_dialog #feature-tab .label{width:180px}
 .tovar-add_dialog #feature-tab .img_del{
 	float:right;

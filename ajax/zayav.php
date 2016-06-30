@@ -438,7 +438,7 @@ switch(@$_POST['op']) {
 					".$avai['tovar_id'].",
 					".$avai_id.",
 					1,
-					".$avai['cost_buy'].",
+					".$avai['sum_buy'].",
 					".VIEWER_ID."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);

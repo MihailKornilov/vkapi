@@ -772,9 +772,9 @@ var _zayavSpisok = function(v, id) {
 								.select()
 								.off('keyup')
 								.keyup(function() {
-									$('#ze-sum').val(_cena(_num($(this).val()) * sp.cost_buy));
+									$('#ze-sum').val(_cena(_num($(this).val()) * sp.sum_buy));
 								});
-							$('#ze-sum').val(v ? sp.cost_buy : '');
+							$('#ze-sum').val(v ? sp.sum_buy : '');
 						}
 					});
 					break;
@@ -795,10 +795,10 @@ var _zayavSpisok = function(v, id) {
 								.select()
 								.off('keyup')
 								.keyup(function() {
-									$('#ze-sum').val(_cena(_num($(this).val()) * avai.cost_buy));
+									$('#ze-sum').val(_cena(_num($(this).val()) * avai.sum_buy));
 								});
 							$('#ze-count-max b').html(avai.count);
-							$('#ze-sum').val(_cena(avai.cost_buy));
+							$('#ze-sum').val(_cena(avai.sum_buy));
 						},
 						del:0
 					});

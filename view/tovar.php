@@ -165,16 +165,23 @@ function _tovarVendorJs() {//производители товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 }
-function _tovarPosition($id) {//виды применения к другому товару
+function _tovarPosition($id=false) {//виды применения к другому товару
 	$arr = array(
 		0 => '',
 		1 => 'запчасть',
 		2 => 'комплектующее',
 		3 => 'аксессуар',
-		4 => 'ингридиент'
+		4 => 'ингредиент'
 	);
+	
+	if($id === false) {
+		unset($arr[0]);
+		return $arr;
+	}
+	
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id применения', $id);
+
 	return $arr[$id];
 }
 function _tovarFeature($id=false, $i='name') {//названия характеристик товаров
@@ -638,6 +645,16 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 			ORDER BY `sort`";
 	$tovar['equip_ids'] = query_ids($sql, GLOBAL_MYSQL_CONNECT);
 
+	//закупка и продажа
+	$sql = "SELECT *
+			FROM `_tovar_cost`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id."
+			LIMIT 1";
+	$cost = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$tovar['sum_buy'] = _cena(@$cost['sum_buy']);
+	$tovar['sum_sell'] = _cena(@$cost['sum_sell']);
+
 	return $tovar;
 }
 function _tovarAvaiArticul($tovar_id, $radio=0) {//таблица наличия товара по конкретным артикулам
@@ -666,7 +683,7 @@ function _tovarAvaiArticul($tovar_id, $radio=0) {//таблица наличия товара по кон
 	  ($radio ? '<td class="rs"><div class="off" val="'.$r['id'].'"><s></s></div>' : '').
 				'<td class="articul r">'.$r['articul'].
 				'<td class="count center"><b>'.$r['count'].'</b>'.
-				'<td class="cena r">'._cena($r['cost_buy']).
+				'<td class="cena r">'._cena($r['sum_buy']).
 				'<td>'.$r['about'];
 	}
 	$send .= '</table>';
@@ -740,7 +757,7 @@ function _tovarMoveInsert($v) {//внесение движения товара
 		return 0;
 
 	if(!$v['cena']) {
-		$sql = "SELECT `cost_buy`
+		$sql = "SELECT `sum_buy`
 				FROM `_tovar_avai`
 				WHERE `id`=".$v['tovar_avai_id'];
 		$v['cena'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
@@ -810,8 +827,8 @@ function _tovar_info() {//информация о товаре
 			'tovar_id_set:'.$r['tovar_id_set'].','.
 			'measure_id:'.$r['measure_id'].','.
 			'measure_name:"'._tovarMeasure($r['measure_id']).'",'.
-			'cost_buy:'._cena($r['cost_buy']).','.
-			'cost_sell:'._cena($r['cost_sell']).','.
+			'sum_buy:'.$r['sum_buy'].','.
+			'sum_sell:'.$r['sum_sell'].','.
 			'about:"'._br($r['about']).'",'.
 			'feature:'._tovar_info_feature_js($tovar_id).
 		'};'.
@@ -884,20 +901,20 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 		(APP_ID != 4357416 ?
 				'<td class="ac buy">'.
 					'<span>Закупка</span>'.
-					(_cena($tovar['cost_buy']) ?
-						'<tt><b>'._sumSpace($tovar['cost_buy']).'</b> руб.</tt>' :
+					(_cena($tovar['sum_buy']) ?
+						'<tt><b>'._sumSpace($tovar['sum_buy']).'</b> руб.</tt>' :
 						'<tt><b>-</b></tt>'
 					).
-					'<a>изменить</a>'
+					'<a onclick="_tovarCostSet(\'buy\')">изменить</a>'
 		: '').
 
 				'<td class="ac sell">'.
 					'<span>Продажа</span>'.
-					(_cena($tovar['cost_sell']) ?
-						'<tt><b>'._sumSpace($tovar['cost_sell']).'</b> руб.</tt>' :
+					($tovar['sum_sell'] ?
+						'<tt><b>'._sumSpace($tovar['sum_sell']).'</b> руб.</tt>' :
 						'<tt><b>-</b></tt>'
 					).
-					'<a>изменить</a>'.
+					'<a onclick="_tovarCostSet(\'sell\')">изменить</a>'.
 		'</table>';
 }
 function _tovar_info_about($about) {//вывод описания товара, если есть
