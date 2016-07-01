@@ -171,10 +171,13 @@ switch(@$_POST['op']) {
 		}
 
 		if($_POST['ids'] != 'none')
-			$cond .= " AND `id` IN (".$_POST['ids'].")";
+			$cond .= " AND `t`.`id` IN (".$_POST['ids'].")";
 
 		if(!_bool($_POST['set']))
 			$cond .= " AND !`tovar_id_set`";
+
+		if($tovar_id_not = _num($_POST['tovar_id_not']))
+			$cond .= " AND `t`.`id`!=".$tovar_id_not;
 
 		//наличие товара
 		$RJ_AVAI = _num($_POST['avai']) ?

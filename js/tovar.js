@@ -252,7 +252,10 @@ var _tovarEditExtend = function(o) {
 				$('.tr-set')[(v ? 'remove' : 'add') + 'Class']('dn');
 			}
 		});
-		$('#te-tovar_id_set').tovar({set:0});
+		$('#te-tovar_id_set').tovar({
+			set:0,
+			tovar_id_not:o.id
+		});
 
 		$('#measure_id')._select({
 			width:70,
@@ -405,6 +408,7 @@ $.fn.tovar = function(o) {
 		set:1,          //выводить товары, которые являются запчастью для других товаров
 		image:1,        //показывать в результате изображение
 		tovar_id_set:0, //по умолчанию показать список запчастей, которые устанавливаются на этот товар
+		tovar_id_not:0, //исключать этот id товара при поиске
 		several:0,      //возможность выбирать несколько товаров
 		count_show:1,   //возможность указывать количество товаров
 		avai:0,         //выбор товара только из наличия
@@ -506,6 +510,7 @@ $.fn.tovar = function(o) {
 			v:v,
 			tovar_id:tovar_id,
 			tovar_id_set:o.tovar_id_set,
+			tovar_id_not:o.tovar_id_not,
 			set:o.set,
 			ids:o.ids,
 			avai:o.avai,
