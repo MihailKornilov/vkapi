@@ -220,27 +220,6 @@
 .zayav-tovar-set_dialog h1 b{font-size:18px}
 .zayav-tovar-set_dialog h2{color:#777}
 
-/*
-#zayav-zp-spisok .version{color:#333}
-#zayav-zp-spisok .color{color:#777}
-#zayav-zp-spisok .zakaz_ok{color:#933}
-#zayav-zp-spisok .unit:not(:hover) .image{display:none}
-#zayav-zp-spisok .image{position:relative}
-#zayav-zp-spisok .image div{
-	position:absolute;
-	top:0;
-	left:-94px;
-	background-color:#fff;
-	border:#ccc solid 1px;
-	min-width:80px;
-	min-height:50px;
-	padding:5px;
-	text-align:center;
-}
-#zayav-zp-spisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
-*/
-
-
 
 #_zayav-accrual{margin-top:10px}
 #_zayav-accrual ._spisok{margin-top:-1px}

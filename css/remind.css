@@ -58,21 +58,9 @@
 #_remind-head-edit #hdtxt{width:300px;font-weight:bold}
 #_remind-head-edit #hd-about{width:300px;height:60px}
 
-#_remind-show-all{
-	float:right;
-	margin-right:10px;
-	color:#88C;
-}
-
 
 
 #_remind-zayav{margin-top:15px}
-#_remind-zayav ._remind-add{
-	float:right;
-	background-color:#fff;
-	width:15px;
-	height:15px;
-	margin:-2px -5px 0 0;
-	border:#ddd solid 1px;
-	background-position:2px 2px;
-}
+#_remind-zayav #_remind-spisok{margin:8px 0}
+#_remind-show-all{float:right;color:#88C}
+#_remind-zayav #_remind-show-all{margin:4px 10px 0 0}

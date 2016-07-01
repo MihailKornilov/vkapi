@@ -74,22 +74,18 @@
 	border:#ddd solid 1px;
 	padding:10px 20px;
 	margin-bottom:20px;
-	background-color:#f8f8f8;
+	background-color:#dfd;
 }
-#setup-service .unit h1{color:#aaa}
+#setup-service .unit h1{
+	color:#222;
+	font:bold 14px Verdana;
+	text-decoration:underline;
+	margin-bottom:5px;
+}
 #setup-service .img_edit{float:right}
 #setup-service .unit:not(:hover) .img_edit{display:none}
-#setup-service .unit h2{color:#aaa}
-#setup-service .unit h1{font:bold 14px Verdana;text-decoration:underline;margin-bottom:5px}
-#setup-service .unit h2 {font-size:12px}
-#setup-service .unit h3,
-#setup-service .unit h4{text-align:right;margin-top:10px}
+#setup-service .unit h2{color:#444;font-size:12px}
 #setup-service .unit ul{margin:5px 0 0 30px}
-#setup-service .unit.on{background-color:#dfd}
-#setup-service .unit.on h1{color:#222}
-#setup-service .unit.on h2{color:#444}
-#setup-service .unit.on h3{display:none}
-#setup-service .unit:not(.on) h4{display:none}
 #setup-service .unit h1._busy{background-position:right center}
 
 #setup-service-edit{border-spacing:10px}

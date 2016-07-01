@@ -2332,16 +2332,12 @@ function _service($i=false, $id=0) {
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `id`";
 		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
-			foreach($arr as $k => $r) {
-				$arr[$k]['active'] = 0;
+			foreach($arr as $k => $r)
 				$arr[$k]['const'] = array();
-			}
-			$arr = _serviceActiveSet($arr);
 		} else
 			$arr[0] = array(
 				'id' => 0,
-				'name' => '',
-				'active' => 0
+				'name' => ''
 			);
 		xcache_set($key, $arr, 86400);
 	}
@@ -2353,16 +2349,16 @@ function _service($i=false, $id=0) {
 		return count($arr);
 
 	if($i == 'active_count')
-		return _serviceActiveCount($arr);
+		return count($arr) - 1;
 
 	if($i == 'current')
 		return _serviceCurrentId($arr, $id);
 
 	if($i == 'js')
-		return _serviceActiveJs($arr);
+		return _serviceJs($arr);
 
 	if($i == 'js_client')
-		return _serviceActiveJsClient($arr, $id);
+		return _serviceJsClient($arr, $id);
 
 	if($i == 'const_arr')
 		return _serviceConstArr($arr[$id]['const']);
@@ -2376,13 +2372,13 @@ function _service($i=false, $id=0) {
 	return false;
 }
 function _serviceMenu($arr) {//меню для списка заявок
-	if(_serviceActiveCount($arr) < 2)
+	if(count($arr) < 2)
 		return '';
 
 	$id = _serviceCurrentId($arr);
 
 	$link = '';
-	foreach(_serviceActive($arr) as $r) {
+	foreach($arr as $r) {
 		$sel = $r['id'] == $id ? ' sel' : '';
 		$link .= '<a href="'.URL.'&p=zayav&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
 	}
@@ -2396,13 +2392,6 @@ function _serviceCurrentId($spisok, $type_id=0) {//получение текущего type_id за
 	//если есть только один вид деятельности, возвращение его, не важно, активен или нет
 	if(count($spisok) == 1)
 		return key($spisok);
-
-	if(!$type_id)
-		$spisok = _serviceActive($spisok);
-
-	//если видов деятельности больше одного и не один не активен, то переход в настройки Видов деятельности
-	if(!$spisok)
-		header('Location:'.URL.'&p=setup&d=service');
 
 	$cookie_key = COOKIE_PREFIX.'zayav-type';
 
@@ -2432,35 +2421,13 @@ function _serviceCurrentId($spisok, $type_id=0) {//получение текущего type_id за
 	reset($spisok);
 	return key($spisok);
 }
-function _serviceActiveSet($arr) {//отметка активных видов деятельности
-	$sql = "SELECT `service_id`
-			FROM `_zayav_service_use`
-			WHERE `app_id`=".APP_ID;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$arr[$r['service_id']]['active'] = 1;
-	return $arr;
-}
-function _serviceActive($arr) {//возврат активных видов деятельности
+function _serviceJs($arr) {//список видов деятельности в формате JS - ассоциативный список
 	$send = array();
 	foreach($arr as $r)
-		if($r['active'])
-			$send[$r['id']] = $r;
-	return $send;
-}
-function _serviceActiveCount($arr) {//количество активных видой деятельности
-	$count = 0;
-	foreach($arr as $r)
-		$count += $r['active'];
-	return $count;
-}
-function _serviceActiveJs($arr) {//список активных видов деятельности в формате JS - ассоциативный список
-	$send = array();
-	foreach(_serviceActive($arr) as $r)
 		$send[$r['id']] = $r['name'];
 	return _assJson($send);
 }
-function _serviceActiveJsClient($arr, $client_id) {//список видов деятельности, которые использовались в заявках клиента. В формате JS - ассоциативный список
+function _serviceJsClient($arr, $client_id) {//список видов деятельности, которые использовались в заявках клиента. В формате JS - ассоциативный список
 	if(count($arr) < 2)
 		return '{}';
 

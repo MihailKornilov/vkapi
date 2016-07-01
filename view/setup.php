@@ -385,26 +385,14 @@ function setup_service() {
 	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
 
-	$sql = "SELECT `service_id`
-			FROM `_zayav_service_use`
-			WHERE `app_id`=".APP_ID;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['type_id']]['active'] = 1;
-
 	$send = '';
 	foreach($spisok as $r) {
 		$send .=
-		'<div class="unit'.($r['active'] ? ' on' : '').'" val="'.$r['id'].'">'.
+		'<div class="unit" val="'.$r['id'].'">'.
 			(SA ? _iconEdit() : '').
 			'<input type="hidden" class="name" value="'.$r['name'].'">'.
 			'<h1>'.$r['head'].'</h1>'.
 			'<h2>'.$r['about'].'</h2>'.
-			'<h3><a class="service-toggle">Включить</a></h3>'.
-			'<h4>'.
-				($r['id'] == 2 ? '<a href="'.URL.'&p=setup&d=service&d1=cartridge&id=1">Настроить</a> :: ' : '').
-				'<a class="service-toggle">Отключить</a>'.
-			'</h4>'.
 		'</div>';
 	}
 

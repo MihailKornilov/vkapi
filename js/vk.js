@@ -1861,12 +1861,18 @@ $.fn._select = function(o) {
 		funcKeyup:funcKeyup	// функция, выполняемая при вводе в INPUT в селекте. Нужна для вывода списка из вне, например, Ajax-запроса, либо из vk api.
 	}, o);
 
+	o.clear = o.write && !o.multiselect;
+
 	if(o.multiselect)
 		o.write = true;
 
 	var inpWidth = o.width - 17 - 5 - 4;
 	if(o.funcAdd)
 		inpWidth -= 18;
+	if(o.clear) {
+		inpWidth -= 17;
+		val = _num(val);
+	}
 	var html =
 		'<div class="_select' + (o.disabled ? ' disabled' : '') + '" ' +
 			 'id="' + id + '_select" ' +
@@ -1882,6 +1888,7 @@ $.fn._select = function(o) {
 							   'style="width:' + inpWidth + 'px' +
 									(o.write && !o.disabled? '' : ';cursor:default') + '"' +
 									(o.write && !o.disabled? '' : ' readonly') + ' />' +
+					(o.clear ? '<div' + (val ? '' : ' style="display:none"') + ' class="img_del' + _tooltip('Очистить', -49, 'r') + '</div>' : '') +
 	   (o.funcAdd ? '<td class="seladd">' : '') +
 					'<td class="selug">' +
 			'</table>' +
@@ -1892,6 +1899,7 @@ $.fn._select = function(o) {
 
 	var select = t.next(),
 		inp = select.find('.selinp'),
+		inpClear = select.find('.img_del'),
 		sel = select.find('.selsel'),
 		res = select.find('.selres'),
 		resH, //Высота списка до обрезания
@@ -1964,6 +1972,7 @@ $.fn._select = function(o) {
 				if(keys[e.keyCode])
 					return;
 				title0bg[inp.val() || multiCount ? 'hide' : 'show']();
+				inpClear[inp.val() ? 'show' : 'hide']();
 				if(keyVal != inp.val()) {
 					keyVal = inp.val();
 					o.funcKeyup(keyVal);
@@ -1971,6 +1980,12 @@ $.fn._select = function(o) {
 					val = 0;
 				}
 			});
+
+		inpClear.click(function(e) {
+			e.stopPropagation();
+			setVal(0);
+			o.func(0, id);
+		});
 	}
 
 	function spisokPrint() {
@@ -2116,6 +2131,7 @@ $.fn._select = function(o) {
 		}
 		val = v;
 		t.val(v);
+		inpClear[v ? 'show' : 'hide']();
 		if(v || !v && !o.write_save) {
 			inp.val(ass[v]);
 			title0bg[v == 0 ? 'show' : 'hide']();
