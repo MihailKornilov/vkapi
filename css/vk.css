@@ -175,6 +175,7 @@ a.add:hover{text-decoration:underline;color:#357}
 /* Мини-картинки */
 .img_galka,
 .img_del,
+._select .clear,
 .img_edit,
 .img_minidel,
 .img_rest,
@@ -197,6 +198,7 @@ a.add:hover{text-decoration:underline;color:#357}
 }
 .img_galka:hover,
 .img_del:hover,
+._select .clear:hover,
 .img_edit:hover,
 .img_rest:hover,
 .img_add:hover,
@@ -208,7 +210,8 @@ a.add:hover{text-decoration:underline;color:#357}
 .img_galka{
 	background-image:url("data:image/gif;base64,R0lGODlhDQAaANUAAK7B1ZevyYCdvYaiwLnJ26q+0/v8/aO4z4Shv4Wgv6K4z8fU4uTr8fX4+sbU4uPp8ZauyMvX5Njh69rj66m80unu86G2zp+1zuDn73+cvHuZu5KqxoSfwHyZunyZu8TS4Ku+032au4Kevpuxy6W40KK2z6q/05atyKW50IahwK3A1J+1zePq8ZivyYiiwaS40M7Z5aW70YOevn6bvcXS4JWsyIKfvpyyzJuzy36bvH6cvLrCzIikwv///wAAAAAAACH5BAEAAD0ALAAAAAANABoAAAZFwJ5wSJRIiMie0ZgULpnJ51E5pS6dV+lQ+kRyq8Vu0zrels/otHrd02jObvc4Lk/S3218Pi6k7+t/d0h3gESCc4VNekhBADs=");
 }
-.img_del{
+.img_del,
+._select .clear{
 	background-image:url("data:image/gif;base64,R0lGODlhDQAbAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAANABsAAAM/SLrcJA0yQReV70KNuY6ek12ihylmhX6cpY5RLM50bd9DkzNDv/Q7AtA3DBaHuqOouFTyjj4FkymNCq1S3SIBADs=");
 }
 .img_add.m30:hover{background-position:0 -30px}
@@ -303,7 +306,7 @@ a.add:hover{text-decoration:underline;color:#357}
 }
 ._select .selinp._busy{background-position:right center}
 ._select.disabled .selinp{color:#777}
-._select .img_del{float:right;margin:4px 3px 0 0}
+._select .clear{float:right;margin:4px 3px 0 0}
 ._select .selug{
 	width:16px;
 	border-left:#fff solid 1px;

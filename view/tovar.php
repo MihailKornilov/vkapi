@@ -23,6 +23,7 @@ function _tovar() {
 //		'</div>'.
 		'<div class="result">'.$data['result'].'</div>'.
 		'<div id="icon">'.
+			'<div val="5" class="img img_tovar_stat'._tooltip('Статистика', -33).'</div>'.
 //			'<div val="1" class="img img_tovar_group'._tooltip('Товары по группам', -57).'</div>'.
 			'<div val="2" class="img img_tovar_category sel'._tooltip('По категориям', -43).'</div>'.
 			'<div val="3" class="img img_tovar_foto'._tooltip('Подробный список', -100, 'r').'</div>'.
@@ -32,11 +33,13 @@ function _tovar() {
 			'<tr><td class="left">'.
 					'<div id="spisok">'.$data['spisok'].'</div>'.
 				'<td class="right">'.
-					'<button class="vk fw" id="tovar-add">Внести новый товар<br />в каталог</button>'.
-					'<div id="find"></div>'.
-					'<br />'.
-					'<input type="hidden" id="icon_id" value="2" />'.
-					_radio('group', $arr, 0, 1).
+					'<div class="div-but">'.
+						'<button class="vk fw" id="tovar-add">Внести новый товар<br />в каталог</button>'.
+						'<div id="find"></div>'.
+						'<br />'.
+						'<input type="hidden" id="icon_id" value="2" />'.
+						_radio('group', $arr, 0, 1).
+					'</div>'.
 
 					'<div class="div-cat dn">'.
 						'<div class="findHead">Категория</div>'.
@@ -382,6 +385,7 @@ function _tovar_spisok_icon($v=array()) {
 	$filter = _filterJs('TOVAR', $filter);
 
 	switch($filter['icon_id']) {
+		case 5: return _tovar_stat($filter);
 		case 2:
 		default: return _tovar_category_spisok($filter);
 		case 3: return _tovar_spisok($filter);
@@ -432,10 +436,13 @@ function _tovar_category_spisok($filter) {
 
 	$RJ_AVAI = $filter['group'] ?
 					"RIGHT JOIN `_tovar_avai` `ta`
-				     ON `ta`.`tovar_id`=`t`.`id` AND `ta`.`count`"
+				     ON `ta`.`app_id`=".APP_ID."
+				     AND `ta`.`tovar_id`=`t`.`id`
+				     AND `ta`.`count`"
 					:
 					"LEFT JOIN `_tovar_avai` `ta`
-					 ON `ta`.`tovar_id`=`t`.`id`";
+					 ON `ta`.`app_id`=".APP_ID."
+					 AND `ta`.`tovar_id`=`t`.`id`";
 
 
 	//количество товаров в каждой категории
@@ -512,7 +519,9 @@ function _tovar_spisok($filter) {
 
 	$RJ_AVAI = $filter['group'] ?
 					"RIGHT JOIN `_tovar_avai` `ta`
-				     ON `ta`.`tovar_id`=`t`.`id` AND `ta`.`count`"
+				     ON `ta`.`app_id`=".APP_ID."
+				     AND `ta`.`tovar_id`=`t`.`id`
+				     AND `ta`.`count`"
 				: '';
 
 	if($filter['category_id'])
@@ -612,6 +621,87 @@ function _tovar_spisok_min($spisok, $filter) {//сокращённый список товаров
 	$send .= _next($filter + array('tr'=>1,'all'=>$filter['all']));
 
 	return $send;
+}
+
+
+function _tovar_stat($v) {//статистика по товарам
+	$sql = "SELECT
+				`category_id` `id`,
+				0 `pos`,
+				0 `count`,
+				0 `sum`
+			FROM `_tovar_category_use`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `sort`";
+	$cat = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+	//суммы в рублях для каждой категории
+	$summa = 0;
+	$sql = "SELECT
+				`t`.`category_id` `id`,
+				SUM(`ta`.`count`*`ta`.`sum_buy`) `sum`,
+				SUM(`ta`.`count`) `count`
+			FROM `_tovar` `t`,
+				 `_tovar_avai` `ta`
+			WHERE `ta`.`app_id`=".APP_ID."
+			  AND `t`.`id`=`ta`.`tovar_id`
+			  AND `t`.`category_id` IN ("._idsGet($cat).")
+			GROUP BY `t`.`category_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q)) {
+		$cat[$r['id']]['sum'] = _cena($r['sum']);
+		$cat[$r['id']]['count'] = _cena($r['count']);
+		$summa += $r['sum'];
+	}
+
+	$sql = "SELECT
+				`id`,
+				COUNT(`tovar_id`) `count`
+			FROM (
+				SELECT
+					`category_id` `id`,
+					`t`.`id` `tovar_id`
+				FROM `_tovar` `t`
+					RIGHT JOIN `_tovar_avai` `ta`
+					ON `ta`.`app_id`=".APP_ID."
+					AND `ta`.`tovar_id`=`t`.`id`
+					AND `ta`.`count`
+				WHERE `t`.`category_id` IN ("._idsGet($cat).")
+				GROUP BY `t`.`id`
+			) `tt`
+			GROUP BY `tt`.`id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$cat[$r['id']]['pos'] = $r['count'];
+
+	$catSpisok = '';
+	foreach($cat as $r)
+		$catSpisok .=
+			'<tr><td>'.trim(_tovarCategory($r['id'])).
+				'<td class="center">'.
+					($r['pos'] ? '<span class="pos'._tooltip('Позиции', -31).$r['pos'].'</span>' : '').
+				'<td class="r">'.($r['sum'] ? _sumSpace($r['sum']).' руб.' : '');
+
+
+	$spisok = 
+	'<div id="tovar-stat">'.
+		'<div class="headName">Текущий остаток</div>'.
+		'<table class="_spisok">'.
+			'<tr><th>Категория'.
+				'<th>Количество'.
+				'<th>Сумма'.
+			$catSpisok.
+			'<tr><td class="r"><b>Итого:</b>'.
+				'<td>'.
+				'<td class="r"><b>'.($summa ? _sumSpace($summa).'</b> руб.' : '').
+		'</table>'.
+	'</div>';
+
+	return array(
+		'result' => 'Статистика по товарам',
+		'spisok' => $spisok,
+		'filter' => $v
+	);
 }
 
 

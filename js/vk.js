@@ -1888,7 +1888,7 @@ $.fn._select = function(o) {
 							   'style="width:' + inpWidth + 'px' +
 									(o.write && !o.disabled? '' : ';cursor:default') + '"' +
 									(o.write && !o.disabled? '' : ' readonly') + ' />' +
-					(o.clear ? '<div' + (val ? '' : ' style="display:none"') + ' class="img_del' + _tooltip('Очистить', -49, 'r') + '</div>' : '') +
+					(o.clear ? '<div' + (val ? '' : ' style="display:none"') + ' class="clear' + _tooltip('Очистить', -49, 'r') + '</div>' : '') +
 	   (o.funcAdd ? '<td class="seladd">' : '') +
 					'<td class="selug">' +
 			'</table>' +
@@ -1899,7 +1899,7 @@ $.fn._select = function(o) {
 
 	var select = t.next(),
 		inp = select.find('.selinp'),
-		inpClear = select.find('.img_del'),
+		inpClear = select.find('.clear'),
 		sel = select.find('.selsel'),
 		res = select.find('.selres'),
 		resH, //Высота списка до обрезания
@@ -1949,6 +1949,7 @@ $.fn._select = function(o) {
 				res.find('.ov').removeClass('ov');
 				$(this).addClass('ov');
 			})
+
 			.off('click', '#' + id + '_select .x')
 			.on('click', '#' + id + '_select .x', function(e) {
 				e.stopPropagation();
@@ -2135,7 +2136,7 @@ $.fn._select = function(o) {
 		t.val(v);
 		inpClear[v ? 'show' : 'hide']();
 		if(v || !v && !o.write_save) {
-			inp.val(ass[v]);
+			inp.val(ass[v] ? ass[v].replace(/&quot;/g,'"') : '');
 			title0bg[v == 0 ? 'show' : 'hide']();
 		}
 	}

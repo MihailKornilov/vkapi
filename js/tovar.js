@@ -449,7 +449,8 @@ var _tovarEditExtend = function(o) {
 			$('#vendor_id')._select(0);
 		}
 
-		$('.div-cat')[(TOVAR['icon_id'] == 2 ? 'add' : 'remove') + 'Class']('dn');
+		$('.div-but')[(TOVAR['icon_id'] == 5 ? 'add' : 'remove') + 'Class']('dn');
+		$('.div-cat')[(TOVAR['icon_id'] == 2 || TOVAR['icon_id'] == 5 ? 'add' : 'remove') + 'Class']('dn');
 
 		$.post(AJAX_MAIN, TOVAR, function(res) {
 			if(res.success) {

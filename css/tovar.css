@@ -14,6 +14,14 @@
 #_tovar ._empty a{display:block;font-size:12px;margin-top:10px}
 
 
+
+
+
+#tovar-stat .headName{margin:10px 0}
+#tovar-stat .pos{color:#777;cursor:default}
+
+
+
 .tovar-category-unit{padding:10px;border-bottom:#dae1e8 solid 1px}
 .tovar-category-unit .hd{font-size:17px}
 .tovar-category-unit .hd-count{
@@ -65,6 +73,11 @@
 
 
 
+
+
+
+
+.img_tovar_stat,
 .img_tovar_group,
 .img_tovar_category,
 .img_tovar_foto,
@@ -76,15 +89,20 @@
 	cursor:pointer;
 	background:transparent no-repeat 0 0;
 }
+.img_tovar_stat:hover,
 .img_tovar_group:hover,
 .img_tovar_category:hover,
 .img_tovar_foto:hover,
 .img_tovar_spisok:hover,
+.img_tovar_stat.sel,
 .img_tovar_group.sel,
 .img_tovar_category.sel,
 .img_tovar_foto.sel,
 .img_tovar_spisok.sel{
 	background-position:0 -22px;
+}
+.img_tovar_stat {
+	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAANsSLrc/ktIASuZ1D6s9+wOBzLiqJQmOpZq+J1vxcbQLGl2JsdoHtE+2O03vPCAx2IvqVsqmaao9DGoDqbWqzSLtXarX22Uu/WWwQpyRa2GsM1reJsqh7vr6DRe3H7n+3sLgH+BgoUEg3yHUwsJADs=");
 }
 .img_tovar_group {
 	background-image:url("data:image/gif;base64,R0lGODlhFgAsAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAWACwAAANnKLpMxDBCJ+t8NtNsN5fed4kgRjbmqYSR475wLM+0lqrsmZO72H8/TtCmQhUXwYFyyXQwn9CnM0ptEqrYwTQb3XKl1y/UK1aSy2dxeklru99rc7jMntO1dno8u8f2q39UgV15aIVMCQA7");
