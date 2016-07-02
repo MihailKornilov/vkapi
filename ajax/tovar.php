@@ -643,10 +643,32 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
+		if(!$tovar = _tovarQuery($r['tovar_id']))
+			jsonError();
+
 		$sql = "DELETE FROM `_tovar_move` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_tovarAvaiUpdate($r['tovar_id']);
+
+		if($r['type_id'] == 1)
+			_history(array(
+				'type_id' => 110,
+				'tovar_id' => $tovar['id'],
+				'v1' => $r['count'],
+				'v2' => _cena($r['cena']),
+				'v3' => _cena($r['summa']),
+				'v4' => _tovarMeasure($tovar['measure_id'])
+			));
+
+		if($r['type_id'] == 6)
+			_history(array(
+				'type_id' => 111,
+				'tovar_id' => $tovar['id'],
+				'v1' => $r['count'],
+				'v2' => _tovarMeasure($tovar['measure_id']),
+				'v3' => $r['about']
+			));
 
 		jsonSuccess();
 		break;
