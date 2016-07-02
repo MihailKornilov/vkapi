@@ -182,6 +182,7 @@
 #tovar-info div#ti-move{background:#ffc;padding:7px}
 #tovar-info #ti-move .minus{background:#fff2f2}
 #tovar-info #ti-move .plus{background:#efe}
+#tovar-info #ti-move .off{background:#eee}
 #tovar-info .count-sum{width:80px}
 #tovar-info .count-sum .sm{color:#aaa}
 #tovar-info .count-sum .sm a{color:#99a;text-decoration:underline;cursor:default}

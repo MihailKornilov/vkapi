@@ -449,7 +449,7 @@ switch(@$_POST['op']) {
 		if($send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
 			$send['html'] = utf8(
 				'<div class="_info">'.
-					'После применения продажи будет произведён платёж на указанный расчётный счёт. '.
+					'После применения продажи будет произведён платёж на указанный расчётный счёт.'.
 				'</div>'.
 				'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
 				($r['tovar_id_set'] ? '<h2>для '.$r['tovar_set_name'].'</h2>' : '').
@@ -494,7 +494,10 @@ switch(@$_POST['op']) {
 
 		if($count > $avai['count'])
 			jsonError();
-		
+
+		if(!$r = _tovarQuery($avai['tovar_id']))
+			jsonError();
+
 		$sum = _cena($count * $cena);
 
 		//добавление товара в платежи при продаже
@@ -531,15 +534,101 @@ switch(@$_POST['op']) {
 
 		_tovarAvaiUpdate($avai['tovar_id']);
 
-/*
 		_history(array(
-			'type_id' => 13,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
+			'type_id' => 108,
+			'tovar_id' => $avai['tovar_id'],
+			'client_id' => $client_id,
 			'v1' => $count,
-			'zp_id' => $zp_id
+			'v2' => _tovarMeasure($r['measure_id']),
+			'v3' => $sum
 		));
-*/
+
+		jsonSuccess();
+		break;
+
+	case 'tovar_writeoff_load'://загрузка данных для списания товара
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError();
+
+		$send['html'] = utf8('<div id="nosell">Товара в наличии нет.</div>');
+
+		$sql = "SELECT
+					`id`,
+					`articul`,
+					`count`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id."
+				  AND `count`";
+		if($send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+			$send['html'] = utf8(
+				'<div class="_info">'.
+					'Списание товара производится из наличия.'.
+					'<br />'.
+					'Необходимо обязательно указать причину списания.'.
+				'</div>'.
+				'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
+				($r['tovar_id_set'] ? '<h2>для '.$r['tovar_set_name'].'</h2>' : '').
+				'<div class="headName">Выбор по наличию</div>'.
+				_tovarAvaiArticul($tovar_id, 1).
+				'<table id="ts-tab" class="bs10 dn">'.
+					'<tr><td class="label r">Количество:*'.
+							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
+								'<span id="max">(max: <b></b>)</span>'.
+					'<tr><td class="label r">Причина:*<td><input type="text" id="about" class="w250" />'.
+				'</table>'
+			);
+		}
+
+		$send['count'] = count($send['arr']);
+
+		jsonSuccess($send);
+		break;
+	case 'tovar_writeoff':// продажа товара
+		if(!$avai_id = _num($_POST['avai_id']))
+			jsonError();
+		if(!$count = _num($_POST['count']))
+			jsonError();
+
+		$about = _txt($_POST['about']);
+
+		if(!$about)
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_tovar_avai`
+				WHERE id=".$avai_id;
+		if(!$avai = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		if(!$avai['count'])
+			jsonError();
+
+		if($count > $avai['count'])
+			jsonError();
+
+		if(!$r = _tovarQuery($avai['tovar_id']))
+			jsonError();
+
+		_tovarMoveInsert(array(
+			'type_id' => 6,
+			'tovar_id' => $r['id'],
+			'tovar_avai_id' => $avai_id,
+			'count' => $count,
+			'about' => $about
+		));
+
+		_history(array(
+			'type_id' => 109,
+			'tovar_id' => $r['id'],
+			'v1' => $count,
+			'v2' => _tovarMeasure($r['measure_id']),
+			'v3' => $about
+		));
+
 		jsonSuccess();
 		break;
 

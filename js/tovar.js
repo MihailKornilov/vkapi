@@ -336,6 +336,85 @@ var _tovarEditExtend = function(o) {
 		}
 	},
 
+	_tovarWriteOff = function() {//продажа товара из информации о заявке
+		var dialog = _dialog({
+				top:20,
+				width:490,
+				head:'Списание товара',
+				class:'tovar-sell',
+				load:1,
+				butSubmit:'',
+				submit:submit
+			}),
+			send = {
+				op:'tovar_writeoff_load',
+				tovar_id:TI.id
+			},
+			avai_id = 0,
+			max = 0,
+			arr;
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				if(!res.count)
+					return;
+				arr = res.arr;
+				$('#ta-articul')._radio(articulSel);
+				if(res.count == 1) {
+					for(var key in arr);
+					$('#ta-articul')._radio(key);
+					articulSel();
+				}
+			} else
+				dialog.loadError();
+		}, 'json');
+
+		function articulSel() {
+			avai_id = _num($('#ta-articul').val());
+			max = arr[avai_id].count;
+			$('#count').val(1).focus();
+			$('#max b').html(max);
+			$('#ts-tab').removeClass('dn');
+			dialog.butSubmit('Применить');
+			$('#count').val(1).select();
+		}
+
+		function submit() {
+			var send = {
+				op:'tovar_writeoff',
+				avai_id:avai_id,
+				count:_num($('#count').val()),
+				about:$.trim($('#about').val())
+			};
+
+			if(!send.count) {
+				dialog.err('Некорректно указано количество');
+				$('#count').focus();
+				return;
+			}
+			if(send.count > max) {
+				dialog.err('Указано количество больше допустимого');
+				$('#count').focus();
+				return;
+			}
+			if(!send.about) {
+				dialog.err('Не указана причина');
+				$('#about').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+
 	_tovarIcon = function(v) {//установка вида отображения товаров
 		var icon = $('#_tovar #icon'),
 			img = icon.find('.img');
@@ -785,7 +864,7 @@ $(document)
 	})
 	.on('click', '#tovar-sell', function() {//продажа товара из информации о заявке
 		var dialog = _dialog({
-				top:100,
+				top:20,
 				width:490,
 				head:'Продажа товара',
 				class:'tovar-sell',
@@ -826,12 +905,12 @@ $(document)
 		function articulSel() {
 			avai_id = _num($('#ta-articul').val());
 			max = arr[avai_id].count;
-			$('#count').val(1).focus();
 			$('#max b').html(max);
-			sumCount();
 			$('#count,#cena').keyup(sumCount);
 			$('#ts-tab').removeClass('dn');
 			dialog.butSubmit('Применить');
+			$('#count').val(1).select();
+			sumCount();
 		}
 		function sumCount() {
 			var count = _num($('#count').val()),
@@ -899,6 +978,17 @@ $(document)
 			id:t.attr('val'),
 			head:'записи',
 			op:'income_del',
+			func:function() {
+				location.reload();
+			}
+		});
+	})
+	.on('click', '#tovar-info .ze', function() {//удаление расхода по заявке
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'записи',
+			op:'zayav_expense_del',
 			func:function() {
 				location.reload();
 			}

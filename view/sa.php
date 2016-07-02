@@ -698,6 +698,9 @@ function sa_count() {
 			'<br />'.
 			'<br />'.
 			'<button class="vk tovar-articul-update">Обновить артикулы товаров</button>'.
+			'<br />'.
+			'<br />'.
+			'<button class="vk tovar-avai-check">Проверка корректности наличия товара</button>'.
 		'</div>';
 }
 

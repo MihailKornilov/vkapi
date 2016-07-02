@@ -868,7 +868,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
 	case 'sa_count_tovar_set_find_update':
 		$start = _num(@$_POST['start']);
 		
@@ -944,6 +943,127 @@ switch(@$_POST['op']) {
 				$max++;
 			}
 		}
+
+		jsonSuccess();
+		break;
+	case 'sa_count_tovar_avai_load':
+		//движение товара: поступлениe
+		$sql = "SELECT
+					`tovar_id` `id`,
+					IFNULL(SUM(`count`),0) `count`
+				FROM `_tovar_move`
+				WHERE `app_id`=".APP_ID."
+				  AND `type_id`=1
+				GROUP BY `tovar_id`";
+		$tovar = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+
+		//движение товара: расход
+		$sql = "SELECT
+					`tovar_id` `id`,
+					IFNULL(SUM(`count`),0) `count`
+				FROM `_tovar_move`
+				WHERE `app_id`=".APP_ID."
+				  AND `type_id`!=1
+				GROUP BY `tovar_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			if(!isset($tovar[$r['id']]))
+				$tovar[$r['id']] = array(
+					'id' => $r['id'],
+					'count' => 0
+				);
+			$tovar[$r['id']]['count'] -= $r['count'];
+		}
+
+		//применение в расходах по заявкам
+		$sql = "SELECT
+					`tovar_id` `id`,
+					IFNULL(SUM(`tovar_count`),0) `count`
+				FROM `_zayav_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`
+				  AND `tovar_avai_id`
+				GROUP BY `tovar_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			$tovar[$r['id']]['count'] -= $r['count'];
+
+		//продажа товара - платежи
+		$sql = "SELECT
+					`tovar_id` `id`,
+					IFNULL(SUM(`tovar_count`),0) `count`
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `tovar_id`
+				GROUP BY `tovar_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			if(!isset($tovar[$r['id']]))
+				$tovar[$r['id']] = array(
+					'id' => $r['id'],
+					'count' => 0
+				);
+			$tovar[$r['id']]['count'] -= $r['count'];
+		}
+
+		//добавление значения различия
+		foreach($tovar as $id => $r) {
+			$tovar[$id]['tovar_id'] = $id;
+			$tovar[$id]['diff'] = 0;
+		}
+
+		//отметка товаров, количество которых отличается
+		//удаление из списка товаров, количество которых совпадает
+		//в списке останутся товары, которые были задействованы, но не отображены в наличии
+		$sql = "SELECT
+					`tovar_id` `id`,
+					IFNULL(SUM(`count`),0) `count`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				GROUP BY `tovar_id`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q))
+			if($tovar[$r['id']]['count'] != $r['count'])
+				$tovar[$r['id']]['diff'] = $r['count'];
+			else unset($tovar[$r['id']]);
+
+
+		//убирание товаров, наличие которых нулевое
+		foreach($tovar as $id => $r)
+			if(!$r['count'])
+				unset($tovar[$id]);
+
+		$tovar = _tovarValToList($tovar);
+
+		$spisok ='<table class="_spisok">';
+		foreach($tovar as $r)
+			$spisok .=
+				'<tr>'.
+					'<td>'.$r['tovar_set'].
+					'<td'.($r['diff'] ? ' class="red"' : '').'>'.
+						$r['count'].
+						($r['diff'] ?
+							' <span class="grey">('.$r['diff'].')</span>'.
+							' <a class="tovar-avai-repair" val="'.$r['id'].'">исправить</a>'
+						: '');
+
+		$spisok .= '</table>';
+
+		$send['html'] = utf8(
+			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
+			'<br />'.
+			'<div>Товары с ошибками: <b>'.count($tovar).'</b></div>'.
+			'<br />'.
+			$spisok
+		);
+		jsonSuccess($send);
+		break;
+	case 'sa_count_tovar_avai_repair':
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		_tovarAvaiUpdate($tovar_id);
 
 		jsonSuccess();
 		break;

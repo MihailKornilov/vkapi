@@ -835,7 +835,6 @@ $(document)
 		}, 'json');
 
 	})
-
 	.on('click', '#sa-count .tovar-set-find-update', function() {
 		var t = $(this),
 			send = {
@@ -862,6 +861,41 @@ $(document)
 			t.removeClass('_busy');
 			if(res.success)
 				_msg();
+		}, 'json');
+
+	})
+	.on('click', '.tovar-avai-check', function() {
+		var dialog = _dialog({
+			top:20,
+			width:500,
+			head:'Корректность наличия товара',
+			load:1,
+			butSubmit:''
+		});
+
+		var send = {
+			op:'sa_count_tovar_avai_load'
+		};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+			} else
+				dialog.loadError();
+		}, 'json');
+	})
+	.on('click', '.tovar-avai-repair', function() {
+		var t = $(this),
+			send = {
+				op:'sa_count_tovar_avai_repair',
+				tovar_id:t.attr('val')
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				t.remove();
+			}
 		}, 'json');
 
 	})

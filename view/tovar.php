@@ -710,7 +710,7 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 				  AND `type_id`=1";
 		$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
-		//движение в информации о товаре
+		//расход: движение товара
 		$sql = "SELECT IFNULL(SUM(`count`),0)
 				FROM `_tovar_move`
 				WHERE `tovar_avai_id`=".$r['id']."
@@ -718,13 +718,13 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
 
 		//применение в расходах по заявкам
-		$sql = "SELECT COUNT(`id`)
+		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_zayav_expense`
 				WHERE `tovar_avai_id`=".$r['id'];
 		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
 
 		//продажа товара - платежи
-		$sql = "SELECT SUM(`tovar_count`)
+		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_money_income`
 				WHERE !`deleted`
 				  AND `tovar_avai_id`=".$r['id'];
@@ -747,7 +747,8 @@ function _tovarMoveInsert($v) {//внесение движения товара
 		'count' => _num(@$v['count']) ? _num($v['count']) : 1,
 		'cena' => _cena(@$v['cena']),
 		'client_id' => _num(@$v['client_id']),
-		'zayav_id' => _num(@$v['zayav_id'])
+		'zayav_id' => _num(@$v['zayav_id']),
+		'about' => @$v['about']
 	);
 
 	if(!$v['tovar_id'])
@@ -756,13 +757,6 @@ function _tovarMoveInsert($v) {//внесение движения товара
 	if(!$v['tovar_avai_id'])
 		return 0;
 
-	if(!$v['cena']) {
-		$sql = "SELECT `sum_buy`
-				FROM `_tovar_avai`
-				WHERE `id`=".$v['tovar_avai_id'];
-		$v['cena'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
-	}
-	
 	//получение id клиента, если есть заявка
 	if($v['zayav_id']) {
 		$sql = "SELECT `client_id`
@@ -781,6 +775,7 @@ function _tovarMoveInsert($v) {//внесение движения товара
 				`summa`,
 				`client_id`,
 				`zayav_id`,
+				`about`,
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
@@ -792,6 +787,7 @@ function _tovarMoveInsert($v) {//внесение движения товара
 				".($v['count'] * $v['cena']).",
 				".$v['client_id'].",
 				".$v['zayav_id'].",
+				'".addslashes($v['about'])."',
 				".VIEWER_ID."
 			)";
 	query($sql, GLOBAL_MYSQL_CONNECT);
@@ -842,7 +838,7 @@ function _tovar_info() {//информация о товаре
 						'<a class="tovar-avai-add">Внести наличие</a>'.
 						'<a>Заказать</a>'.
 						'<a id="tovar-sell">Продажа</a>'.
-						'<a>Списание</a>'.
+						'<a onclick="_tovarWriteOff()">Списание</a>'.
 					'</div>'.
 				'<td id="ti-right">'.
 					_tovar_info_avai_cost($r).
@@ -1123,7 +1119,13 @@ function _tovar_info_move($tovar_id) {
 					 '</div>';
 		else $summa = '';
 
-		$send .= '<tr class="'.($r['type_id'] == 1 ? 'plus' : 'minus').'">'.
+		$class = 'plus';
+		if($r['type_id'] != 1)
+			$class = 'minus';
+		if($r['type_id'] == 6)
+			$class = 'off';
+
+		$send .= '<tr class="'.$class.'">'.
 				'<td>'.$type[$r['type_id']].
 				'<td class="count-sum r">'.
 					($count ? '<b>'.$count.'</b> '.MEASURE : '').
