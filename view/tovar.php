@@ -607,7 +607,7 @@ function _tovar_spisok_min($spisok, $filter) {//сокращённый список товаров
 						'</b>'.
 						($r['tovar_id_set'] ? '<div class="tovar-set">'.$r['tovar_set_name'].'</div>' : '').
 					'</a>'.
-				'<td class="avai">'.($r['avai_count'] ? $r['avai_count'] : '');
+				'<td class="avai">'.($r['avai_count'] ? _sumSpace($r['avai_count']).' <span>'._tovarMeasure($r['measure_id']).'</span>' : '');
 
 	$send .= _next($filter + array('tr'=>1,'all'=>$filter['all']));
 

@@ -42,8 +42,9 @@
 .tovar-unit-min .avai{
 	width:40px;
 	font-weight:bold;
-	text-align:center;
+	text-align:right;
 	color:#3a3;
+	white-space:nowrap;
 }
 
 /* список товаров с картинками */

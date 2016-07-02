@@ -1870,7 +1870,7 @@ $.fn._select = function(o) {
 	if(o.funcAdd)
 		inpWidth -= 18;
 	if(o.clear) {
-		inpWidth -= 17;
+		inpWidth -= 18;
 		val = _num(val);
 	}
 	var html =
@@ -1984,6 +1984,8 @@ $.fn._select = function(o) {
 		inpClear.click(function(e) {
 			e.stopPropagation();
 			setVal(0);
+			inp.val('');
+			title0bg.show();
 			o.func(0, id);
 		});
 	}
