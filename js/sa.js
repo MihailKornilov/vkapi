@@ -143,6 +143,52 @@ var saMenuEdit = function(o) {
 		}
 	},
 
+	saServiceEdit = function(o) {//добавление/редактирование названия вида деятельности
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var html =
+	   (!o.id ? '<div class="_info">Если это первый вид заявок, то все текущие заявки будут помещены в этот вид.</div>' : '') +
+				'<table class="bs10">' +
+					'<tr><td class="label">Название:' +
+						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Изменение' : 'Внесение нового') + ' вида заявки',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'sa_service_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					document.location.reload();
+				} else {
+					dialog.abort();
+					dialog.err(res.text);
+				}
+			}, 'json');
+		}
+	},
+
 	saZayavPoleEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -281,54 +327,7 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
-	saZayavTypeEdit = function(o) {
-		o = $.extend({
-			id:0,
-			name:''
-		}, o);
 
-		var html =
-				'<table class="sa-tab" id="zayav-pole-tab">' +
-					'<tr><td colspan="2">' +
-							'<div class="_info">' +
-								'Если это первый вид заявок, то все текущие заявки будут помещены в этот вид.' +
-							'</div>' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:400,
-				head:(o.id ? 'Изменение' : 'Внесение нового') + ' вида заявки',
-				content:html,
-				butSubmit:o.id ? 'Сохранить' : 'Внести',
-				submit:submit
-			});
-
-		$('#name').focus();
-
-		function submit() {
-			var send = {
-				op:'sa_zayav_type_' + (o.id ? 'edit' : 'add'),
-				id:o.id,
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					document.location.reload();
-				} else {
-					dialog.abort();
-					dialog.err(res.text);
-				}
-			}, 'json');
-		}
-	},
 	saColorEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -705,6 +704,13 @@ $(document)
 		});
 	})
 
+	.on('click', '#sa-zayav-service .edit', function() {
+		var t = $(this);
+		saServiceEdit({
+			id:t.attr('val'),
+			name:$('.link.sel').html()
+		});
+	})
 	.on('mouseover', '#sa-zayav-service .show', function() {
 		$(this).removeClass('show');
 	})
@@ -734,8 +740,6 @@ $(document)
 			}
 		});
 	})
-
-	.on('click', '#sa-zayav #type-add', saZayavTypeEdit)
 
 	.on('click', '#sa-color .add', saColorEdit)
 	.on('click', '#sa-color .img_edit', function() {

@@ -499,14 +499,16 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 }
 
 function sa_zayav_service() {
+	$link = sa_zayav_service_link();
 	return
 		sa_path('<a href="'.URL.'&p=sa&d=zayav">Настройки заявок</a>', 'Виды деятельности').
 		'<div id="sa-zayav-service">'.
 			'<div class="headName">'.
 				'Виды деятельности заявок и использование полей'.
-				'<a class="add">Новый вид деятельности</a>'.
+				'<a class="add" onclick="saServiceEdit()">Новый вид деятельности</a>'.
+   (SERVICE_ID ?'<a class="add edit" val="'.SERVICE_ID.'">edit</a>' : '').
 			'</div>'.
-			sa_zayav_service_link().
+			$link.
 
 			'<div class="zs-head">'.
 				'Новая заявка'.
@@ -524,7 +526,6 @@ function sa_zayav_service() {
 			'<div class="zs-head">'.
 				'Фильтр заявок'.
 				'<button class="vk small" onclick="saZayavServicePoleAdd('.SERVICE_ID.',2)">Добавить поле</button>'.
-//				'<button class="vk small red">Предосмотр фильтра</button>'.
 			'</div>'.
 			'<dl id="spisok2" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(2).'</dl>'.
 

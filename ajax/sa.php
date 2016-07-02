@@ -450,6 +450,60 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'sa_service_add'://внесение нового вида деятельности
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_service` (
+					`app_id`,
+					`name`,
+					`head`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					'".addslashes($name)."'
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$insert_id = query_insert_id('_zayav_service', GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT COUNT(*)
+				FROM `_zayav_service`
+				WHERE `app_id`=".APP_ID;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
+			$sql = "UPDATE `_zayav`
+					SET `service_id`=".$insert_id."
+					WHERE `app_id`=".APP_ID;
+			query($sql, GLOBAL_MYSQL_CONNECT);
+		}
+
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_globalJsValues();
+
+		jsonSuccess();
+		break;
+	case 'sa_service_edit'://редактирование названия вида деятельности
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_service`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
 	case 'sa_zayav_pole_add':
 		if(!$type_id = _num($_POST['type_id']))
 			jsonError();
@@ -628,46 +682,6 @@ switch(@$_POST['op']) {
 
 		$sql = "DELETE FROM `_zayav_pole_use` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
-		_globalJsValues();
-
-		jsonSuccess();
-		break;
-	case 'sa_zayav_type_add':
-		$name = _txt($_POST['name']);
-
-		if(!$name)
-			jsonError();
-
-		$sql = "INSERT INTO `_zayav_service` (
-					`app_id`,
-					`name`,
-					`head`
-				) VALUES (
-					".APP_ID.",
-					'".addslashes($name)."',
-					'".addslashes($name)."'
-				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-
-		$type_id = query_insert_id('_zayav_type', GLOBAL_MYSQL_CONNECT);
-
-		$sql = "SELECT COUNT(*)
-				FROM `_zayav_service`
-				WHERE `app_id`=".APP_ID;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
-			$sql = "UPDATE `_zayav`
-					SET `service_id`=".$type_id."
-					WHERE `app_id`=".APP_ID;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-
-			//применение типа заявки к используемым полям
-			$sql = "UPDATE `_zayav_pole_use`
-					SET `service_id`=".$type_id."
-					WHERE `app_id`=".APP_ID;
-			query($sql, GLOBAL_MYSQL_CONNECT);
-		}
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
