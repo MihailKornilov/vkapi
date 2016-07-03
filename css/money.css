@@ -126,6 +126,7 @@
 	vertical-align:top;
 	padding-top:8px;
 }
+#invoice-spisok ._check{margin:0 3px -2px 2px}
 #invoice-spisok .img_note{margin-bottom:-2px}
 
 #transfer-spisok{margin:10px}

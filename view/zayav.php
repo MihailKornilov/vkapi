@@ -2562,9 +2562,10 @@ function _zayav_report_filter($sel) {
 			'func' => '_zayav_report_days',
 			'sel' => $sel
 		)).
-		(APP_ID == 3978722 || SA ?
-			'<br /><a href="'.URL.'&p=print&d=erm">ќтчЄт XLS за текущий мес€ц</a>'
-		: '').
+		'<br />'.
+		'<a class="zayav-erm'.(APP_ID != 3978722 && !SA ? ' dn' : '').'" val="'.TODAY.'">'.
+			'ќтчЄт XLS за <b>'._monthDef(strftime('%m')).' '.strftime('%Y').'</b>'.
+		'</a>'.
 	'</div>';
 }
 function _zayav_report_days($mon=0) {//отметка дней в календаре, в которые вносились новые за€вки

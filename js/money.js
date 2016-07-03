@@ -944,8 +944,10 @@ var _accrualAdd = function(o) {
 	},
 	_invoiceIncomeInsert = function(def) {//составление списка счетов, которые может выбрать сотрудник
 		if(window.IIID) {//INVOICE_INCOME_INSERT_DEFINED
-			if(def)
-				return IIID.length ? IIID[0].uid : 0;
+			if(def) {
+				var ass = _toAss(IIID);
+				return ass[VIEWER_INVOICE_ID] ? VIEWER_INVOICE_ID : 0;
+			}
 			return IIID;
 		}
 		var send = [];
@@ -960,8 +962,10 @@ var _accrualAdd = function(o) {
 	},
 	_invoiceExpenseInsert = function(def) {//составление списка счетов, которые может выбрать сотрудник
 		if(window.IEID) {//INVOICE_EXPENSE_INSERT_DEFINED
-			if(def)
-				return IEID.length ? IEID[0].uid : 0;
+			if(def) {
+				var ass = _toAss(IEID);
+				return ass[VIEWER_INVOICE_ID] ? VIEWER_INVOICE_ID : 0;
+			}
 			return IEID;
 		}
 		var send = [];
@@ -2120,6 +2124,36 @@ $(document)
 				case 6: _invoiceClose(id, balans == '0' ? 0 : balans); break;
 			}
 		});
+	})
+	.on('click', '#invoice-spisok ._check', function() {
+		var ch = $('#invoice-spisok ._check input'),
+			inp = $(this).find('input'),
+			sel = inp.attr('id');
+
+		for(var n = 0; n < ch.length; n++) {
+			var sp = ch.eq(n),
+				id = sp.attr('id');
+			if(sel == id)
+				continue;
+			$('#' + id)._check(0);
+		}
+
+		if(!_num(inp.val())) {
+			$('#' + sel)._check(1);
+			return;
+		}
+
+		var send = {
+				op:'invoice_default',
+				invoice_id:sel.split('def')[1]
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg();
+			else
+				$('#' + sel)._check(0);
+		}, 'json');
+
 	})
 	.on('click', '#transfer-spisok .img_edit', function() {
 		var t = $(this),

@@ -1846,6 +1846,18 @@ $(document)
 			});
 		}
 		if($('#zayav-report').length) {
-			window._calendarFilter = _zayavReportSpisok;
+			window._calendarFilter = function(v, id) {
+				var erm = $('.zayav-erm'),
+					year = v.split('-')[0],
+					mon = v.split('-')[1];
+				if(mon) {
+					erm.attr('val', v);
+					erm.find('b').html(MONTH_DEF[_num(mon)] + ' ' + year);
+				}
+				_zayavReportSpisok(v, id);
+			};
+			$('.zayav-erm').click(function() {
+				location.href = URL + '&p=print&d=erm&mon=' + $(this).attr('val');
+			});
 		}
 	});

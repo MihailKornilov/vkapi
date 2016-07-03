@@ -1368,6 +1368,8 @@ function invoice_spisok() {
 	if(!_invoice())
 		return 'Счета не определены.';
 
+	$def = _viewer(VIEWER_ID, 'invoice_id_default');
+
 	$send = '<dl'.(RULE_SETUP_INVOICE ? ' class="_sort" val="_money_invoice"' : '').'>';
 	foreach(_invoice() as $r) {
 		if($r['deleted'])
@@ -1391,6 +1393,7 @@ function invoice_spisok() {
 : '').
 				'<td class="balans"><b>'.($r['start'] != -1 ? _sumSpace(_invoiceBalans($r['id'])).'</b> руб.' : '').
 				'<td class="ed">'.
+					'<span class="'._tooltip('Использовать по умолчанию', -162, 'r')._check('def'.$r['id'], '', $def == $r['id'] ? 1 : 0).'</span>'.
 					'<div val="'.$r['id'].'" class="img_setup'._tooltip('Выполнить операцию над счётом', -195, 'r').'</div>'.
 (RULE_INVOICE_HISTORY ?
 					'<div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'

@@ -221,7 +221,7 @@ function contentShow($sheet, $line) {
 			->setCellValueByColumnAndRow(5, $line, $r['invoice_nomer'])
 			->setCellValueByColumnAndRow(6, $line, $r['invoice_sum'])
 			->setCellValueByColumnAndRow(7, $line, $r['sum_pay'])
-			->setCellValueByColumnAndRow(8, $line, $r['sum_dolg'])
+			->setCellValueByColumnAndRow(8, $line, $r['sum_dolg'] < 0 ? $r['sum_dolg'] : '')
 			->setCellValueByColumnAndRow(9, $line, utf8($r['tovar_report']))
 			->setCellValueByColumnAndRow(10, $line, $r['zp_women'])
 			->setCellValueByColumnAndRow(11, $line, $r['zp_men'])
@@ -269,7 +269,14 @@ function contentShow($sheet, $line) {
 	return $line;
 }
 
-define('MON', strftime('%Y-%m', time()));
+
+$mon = explode('-', @$_GET['mon']);
+if(count($mon) > 1)
+	$mon = $mon[0].'-'.$mon[1];
+else
+	$mon = strftime('%Y-%m');
+
+define('MON', $mon);
 $ex = explode('-', MON);
 define('MONTH', _monthDef($ex[1]).' '.$ex[0]);
 define('MON_FULL', utf8(_monthFull($ex[1])));

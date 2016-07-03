@@ -1485,6 +1485,20 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(invoice_spisok());
 		jsonSuccess($send);
 		break;
+	case 'invoice_default':
+		if(!$invoice_id = _num($_POST['invoice_id']))
+			jsonError();
+
+		$sql = "UPDATE `_vkuser`
+				SET `invoice_id_default`=".$invoice_id."
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".VIEWER_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+
+		jsonSuccess();
+		break;
 	case 'invoice_transfer_spisok':
 		$send['html'] = utf8(invoice_transfer_spisok($_POST));
 		jsonSuccess($send);

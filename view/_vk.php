@@ -136,6 +136,7 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
+				'VIEWER_INVOICE_ID='._viewer(VIEWER_ID, 'invoice_id_default').','.
 				'APP_ID='.APP_ID.','.
 				'APP_TYPE=['.APP_TYPE.'],'.
 				'URL="'.URL.'",'.

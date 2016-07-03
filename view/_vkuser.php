@@ -247,7 +247,8 @@ function _viewerFormat($u) {//формирование данных пользователя
 		'rate_period' => $u['salary_rate_period'],
 		'rate_day' => $u['salary_rate_day'],
 		'bonus_sum' => _cena($u['salary_bonus_sum']),
-		'zayav_report_cols_show' => $u['zayav_report_cols_show']
+		'zayav_report_cols_show' => $u['zayav_report_cols_show'],
+		'invoice_id_default' => _num(@$u['invoice_id_default'])
 	);
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
