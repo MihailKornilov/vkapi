@@ -1023,10 +1023,24 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				GROUP BY `tovar_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
-		while($r = mysql_fetch_assoc($q))
+		while($r = mysql_fetch_assoc($q)) {
+			if(!$r['count'] && empty($tovar[$r['id']]))
+				continue;
+
+			if(!isset($tovar[$r['id']])) {
+				$tovar[$r['id']] = array(
+					'id' => $r['id'],
+					'tovar_id' => $r['id'],
+					'count' => 'count',
+					'diff' => 'no-avai'
+				);
+				continue;
+			}
+
 			if($tovar[$r['id']]['count'] != $r['count'])
 				$tovar[$r['id']]['diff'] = $r['count'];
 			else unset($tovar[$r['id']]);
+		}
 
 
 		//убирание товаров, наличие которых нулевое

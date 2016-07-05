@@ -137,6 +137,13 @@
 .zayav-edit_dialog #ze-serial{width:250px}
 .zayav-edit_dialog #ze-phone{width:250px}
 .zayav-edit_dialog #ze-note{width:251px;height:40px}
+.zayav-edit_dialog #ze-size_x{width:30px}
+.zayav-edit_dialog #ze-size_y{width:30px}
+.zayav-edit_dialog #ze-kv_sm{width:45px;cursor:default;background:#f2f2f2}
+.zayav-edit_dialog .xb{font:12px Trebuchet MS;margin:0 5px;color:#777}
+.zayav-edit_dialog sup{font-size:10px;position:relative;top:2px}
+
+
 #ze-equip-spisok._busy{background-position:left}
 #ze-equip-spisok ._check{display:inline-block;margin-bottom:5px}
 #ze-equip-spisok .vk{margin-left:5px;margin-top:1px}

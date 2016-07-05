@@ -148,6 +148,14 @@ var _zayavSpisok = function(v, id) {
 				light:1,
 				spisok:PAY_TYPE
 			});
+
+			// 39 - Скидка
+			$('#ze-skidka')._select({
+				width:70,
+				title0:'нет',
+				spisok:ZAYAV_SKIDKA_SPISOK
+			});
+
 		}
 
 		function equip(v) {//вставка комплектации при выборе товара

@@ -286,6 +286,20 @@ function _zayavExecuterToList($zayav) {//прописывание исполнителей в список заяв
 
 	return $zayav;
 }
+function _zayavSkidka() {//массив скидок
+	return array(
+		5 => '5%',
+		10 => '10%',
+		15 => '15%',
+		20 => '20%',
+		25 => '25%',
+		30 => '30%',
+		35 => '35%',
+		40 => '40%',
+		45 => '45%',
+		50 => '50%',
+	);
+}
 
 function _zayavFilter($v) {
 	$default = array(
@@ -852,11 +866,21 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 		16 => '<tr><td class="label topi">{label}'.
 				  '<td><input type="hidden" id="ze-pay_type" value="'.@$z['pay_type'].'" />',
 
+		31 => '<tr><td class="label topi">{label}'.
+				  '<td><input type="text" id="ze-size_x" maxlength="5" />'.
+                    '<b class="xb">x</b>'.
+                    '<input type="text" id="ze-size_y" maxlength="5" />'.
+                    ' = '.
+					'<input type="text" id="ze-kv_sm" readonly> см<sup>2</sup>',
+
 		37 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" id="ze-phone" value="'.@$z['name'].'" />',
 
 		38 => '<tr><td class="label">{label}'.
 				 '<td>---',
+
+		39 => '<tr><td class="label">{label}'.
+				 '<td><input type="hidden" id="ze-skidka" />',
 	);
 
 	$send = '';

@@ -107,7 +107,7 @@
 #sa-zayav-service ._sort{margin-bottom:30px}
 #sa-zayav-service .show{background:#ffc}
 #sa-zayav-service .pole{width:45px}
-#sa-zayav-service td.pole{text-align:right;color:#777}
+#sa-zayav-service td.pole{text-align:right;color:#777;vertical-align:top}
 #sa-zayav-service .head{width:250px}
 #sa-zayav-service td.head{cursor:move}
 #sa-zayav-service .name{font-weight:bold}

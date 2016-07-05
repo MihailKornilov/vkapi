@@ -1236,6 +1236,7 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
  		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
+		"\n".'ZAYAV_SKIDKA_SPISOK='._selJson(_zayavSkidka()).','.
 		"\n".'ZE_DOP_NAME='._assJson(_zayavExpenseDop()).','.
 		"\n".'RULE_HISTORY_SPISOK='._selJson(_ruleHistoryView()).','.
 		"\n".'RULE_INVOICE_TRANSFER_SPISOK='._selJson(_ruleInvoiceTransfer()).','.
