@@ -154,7 +154,7 @@ switch(@$_POST['op']) {
 			(isset($zpu[9])  ? _historyChange($zpu[9]['name'], _color($z['color_id'], $z['color_dop']), _color($v['color_id'], $v['color_dop'])) : '').
 			(isset($zpu[15]) ? _historyChange($zpu[15]['name'], _cena($z['sum_cost']), $v['sum_cost']) : '').
 			(isset($zpu[16]) ? _historyChange($zpu[16]['name'], _payType($z['pay_type']), _payType($v['pay_type'])) : '').
-			(isset($zpu[31]) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : ''))
+			(isset($zpu[4]['v1']) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : ''))
 			_history(array(
 				'type_id' => 72,
 				'client_id' => $v['client_id'],
@@ -1430,7 +1430,7 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 	}
 
 	$v['equip'] = _ids(@$_POST['equip']);
-	if(@$zpu[4] && @$zpu[31])
+	if(@$zpu[4] && $zpu[4]['v1'])
 		$upd[] = "`equip`='".$v['equip']."'";
 
 	$v['update'] = implode(',', $upd);

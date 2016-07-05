@@ -250,7 +250,7 @@ var _zayavSpisok = function(v, id) {
 				note:$('#ze-note').val(),               // 14
 				sum_cost:$('#ze-sum_cost').val(),       // 15
 				pay_type:$('#ze-pay_type').val(),       // 16
-				equip:equipGet(1)                       // 31
+				equip:equipGet(1)                       // 4:v1
 			};
 
 			dialog.process();

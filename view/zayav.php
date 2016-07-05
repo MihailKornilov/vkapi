@@ -789,6 +789,7 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 		$z['client_id'] = $client_id;
 
 	$tovar = _zayavTovarValue($zayav_id);
+	$zpu = _zayavPole($service_id, 1);
 
 	$pole = array(
 		1 => '<tr><td class="label">{label}'.
@@ -801,14 +802,23 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 				 '<td><input type="text" class="money" id="ze-count" value="'.@$z['count'].'" /> шт.',
 		
 		4 => '<tr><td class="label topi">{label}'.
-				 '<td><input type="hidden" id="ze-tovar-one" value="'.$tovar.'" />',
+				 '<td><input type="hidden" id="ze-tovar-one" value="'.$tovar.'" />'.
+			(@$zpu[4]['v1'] ?
+			 '<tr class="tr-equip'.($tovar ? '' : ' dn').'">'.
+				  '<td class="label top">Комплектация'.
+				  '<td><input type="hidden" id="ze-equip" value="'.@$z['equip'].'" />'.
+						'<div id="ze-equip-spisok"></div>'
+			: ''),
 
 		5 => '<tr><td class="label">{label}'.
 				 '<td><input type="hidden" id="ze-client_id" value="'.@$z['client_id'].'" />'.
 					($client_id ? '<b id="ze-client-name">'._clientVal($client_id, 'name').'</b>' : ''),
 
 		6 => '<tr><td class="label">{label}'.
-				 '<td><input type="text" id="ze-adres" value="'.@$z['adres'].'" />',
+				 '<td><input type="text" id="ze-adres" value="'.@$z['adres'].'" />'.
+			(@$zpu[6]['v1'] ?
+					 '<input type="hidden" id="client-adres" />'
+			: ''),
 
 		7 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" id="ze-imei" value="'.@$z['imei'].'" />',
@@ -832,16 +842,15 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 
 		14 => '<tr><td class="label top">{label}<td><textarea id="ze-note"></textarea>',
 		
-		15 => '<tr><td class="label">{label}'.
-				  '<td><input type="text" class="money" id="ze-sum_cost" value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" /> руб.',
+		15 => (@$zpu[15]['v1'] ?
+			   '<tr><td class="label">Указать стоимость вручную:'.
+					'<td>'._check('ze-sum_cost_manual')
+			  : '').
+			   '<tr><td class="label">{label}'.
+				   '<td><input type="text" class="money" id="ze-sum_cost" value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" /> руб.',
 
 		16 => '<tr><td class="label topi">{label}'.
 				  '<td><input type="hidden" id="ze-pay_type" value="'.@$z['pay_type'].'" />',
-
-		31 => '<tr class="tr-equip'.($tovar ? '' : ' dn').'">'.
-				  '<td class="label top">{label}'.
-				  '<td><input type="hidden" id="ze-equip" value="'.@$z['equip'].'" />'.
-						'<div id="ze-equip-spisok"></div>',
 
 		37 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" id="ze-phone" value="'.@$z['name'].'" />',
@@ -851,21 +860,13 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 	);
 
 	$send = '';
-	foreach(_zayavPole($service_id, 1) as $pole_id => $r) {
+	foreach($zpu as $pole_id => $r) {
 		if(empty($pole[$pole_id]))
 			continue;
 		if($zayav_id && ($pole_id == 10 || $pole_id == 12 || $pole_id == 13 || $pole_id == 14))
 			continue;
 
-		if($pole_id == 15 && $r['v1'])
-			$send .=
-				'<tr><td class="label">Указать стоимость вручную:'.
-					'<td>'._check('ze-sum_cost_manual');
-
 		$send .= str_replace('{label}', $r['label'], $pole[$pole_id]);
-
-		if($pole_id == 6 && $r['v1'])
-			$send .= '<input type="hidden" id="client-adres" />';
 	}
 
 	return
