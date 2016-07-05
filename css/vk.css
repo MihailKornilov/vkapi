@@ -134,7 +134,7 @@ a.add{float:right;color:#68A;cursor:pointer}
 a.add:hover{text-decoration:underline;color:#357}
 
 .headBlue{
-	background-color:#E1E7ED;
+	background:#E1E7ED;
 	border-top:#D3DAE0 solid 1px;
 	border-bottom:#D8DFE5 solid 1px;
 	font-weight:bold;

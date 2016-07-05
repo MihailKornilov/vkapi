@@ -197,14 +197,45 @@
 	background:#fde;
 	padding:7px;
 }
-#tovar-info #ti-move{margin-top:10px}
-#tovar-info div#ti-move{background:#ffc;padding:7px}
+#tovar-info #ti-move{margin:8px}
+#tovar-info #ti-move ._spisok{margin-top:-1px}
 #tovar-info #ti-move .minus{background:#fff2f2}
 #tovar-info #ti-move .plus{background:#efe}
 #tovar-info #ti-move .off{background:#eee}
-#tovar-info .count-sum{width:80px}
-#tovar-info .count-sum .sm{color:#aaa}
-#tovar-info .count-sum .sm a{color:#99a;text-decoration:underline;cursor:default}
+/* Движение товара */
+#tovar-info .year-empty{
+	border:#eee solid 1px;
+	padding:2px 13px;
+	margin-top:10px;
+	font:16px arial;
+	background:#f7f7f7;
+	color:#aaa;
+}
+#tovar-info .year-tab{
+	border-top:#BBD5ED solid 4px;
+	background:#D2E5F7;
+	margin-top:10px;
+	cursor:pointer;
+}
+#tovar-info .year-tab:hover{border-top:#B6CFE7 solid 4px;background:#C5DBF0}
+#tovar-info .year-tab .y{
+	font:bold 16px arial;
+	padding:7px 15px 6px;
+	width:40px;
+}
+#tovar-info .year-tab em{
+	display:inline-block;
+	width:45px;
+	padding:2px 4px;
+	text-align:right;
+	border:#BFD9F2 solid 1px;
+	color:#555;
+}
+#tovar-info .prihod em{background:#efe}
+#tovar-info .rashod em{background:#fff2f2}
+
+#tovar-info .sm{color:#555}
+#tovar-info .sm a{color:#669;text-decoration:underline;cursor:default}
 
 /* Количество, закупка, продажа */
 #avai-cost td.ac{

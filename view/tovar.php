@@ -946,8 +946,8 @@ function _tovar_info() {//информация о товаре
 					_tovar_info_set_spisok($r).
 					_tovar_info_compat($r).
 					_tovar_info_zayav($tovar_id).
-					_tovar_info_move($tovar_id).
 		'</table>'.
+		'<div id="ti-move">'._tovar_info_move($tovar_id).'</div>'.
 	'</div>';
 }
 function _tovar_info_set($tovar) {//товар, для которого эта запчасть, деталь или комплектующее
@@ -1102,7 +1102,7 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 		return '';
 	return '<div id="ti-zakaz">Заказ: '.$count.'</div>';
 }
-function _tovar_info_move($tovar_id) {
+function _tovar_info_move1($tovar_id) {
 	$sql = "SELECT
 				'move' `class`,
 				`id`,
@@ -1175,7 +1175,7 @@ function _tovar_info_move($tovar_id) {
 	krsort($spisok);
 
 	if(empty($spisok))
-		return '<div id="ti-move">Движения товара нет.</div>';
+		return 'Движения товара нет.';
 
 	$type = array(
 		1 => 'Приход',
@@ -1188,7 +1188,7 @@ function _tovar_info_move($tovar_id) {
 	);
 
 	$send =
-		'<table id="ti-move" class="_spisok">'.
+		'<table class="_spisok">'.
 			'<th>Действие'.
 			'<th class="count-sum">Кол-во<br>Сумма'.
 			'<th>Описание'.
@@ -1233,7 +1233,177 @@ function _tovar_info_move($tovar_id) {
 
 	return $send;
 }
+function _tovar_info_move($tovar_id) {
+	$sql = "SELECT
+				'move' `class`,
+				`id`,
+				`type_id`,
+				`tovar_id`,
+				`tovar_avai_id`,
+				`client_id`,
+				`zayav_id`,
+				`count`,
+				`cena`,
+				`summa`,
+				`about`,
+				`viewer_id_add`,
+				`dtime_add`
+			FROM `_tovar_move`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	$move = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$move = _clientValToList($move);
+	$move = _zayavValToList($move);
 
+	//расходы по заявке
+	$sql = "SELECT
+				'ze' `class`,
+				`id`,
+				7 `type_id`,
+				`tovar_id`,
+				`tovar_avai_id`,
+				0 `client_id`,
+				`zayav_id`,
+				`tovar_count` `count`,
+				ROUND(`sum`/`tovar_count`) `cena`,
+				`sum` `summa`,
+				'' `about`,
+				`viewer_id_add`,
+				`dtime_add`
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id."
+			  AND `tovar_avai_id`";
+	$ze = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$ze = _zayavValToList($ze);
+
+	//продажа
+	$sql = "SELECT
+				'mi' `class`,
+				`id`,
+				3 `type_id`,
+				`tovar_id`,
+				`tovar_avai_id`,
+				`client_id`,
+				0 `zayav_id`,
+				`tovar_count` `count`,
+				ROUND(`sum`/`tovar_count`) `cena`,
+				`sum` `summa`,
+				`about`,
+				`viewer_id_add`,
+				`dtime_add`
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id."
+			  AND `tovar_avai_id`
+			  AND !`deleted`";
+	$mi = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$mi = _clientValToList($mi);
+
+	$spisok = _arrayTimeGroup($move);
+	$spisok += _arrayTimeGroup($ze, $spisok);
+	$spisok += _arrayTimeGroup($mi, $spisok);
+	ksort($spisok);
+
+	_pre($spisok);
+
+	if(empty($spisok))
+		return '';
+//		return 'Движения товара нет.';
+
+	//получение первого года
+	$yearBegin = strftime('%Y', key($spisok));
+	$yearCurrent = strftime('%Y');
+
+	krsort($spisok);
+
+	$year = array();
+
+	foreach($spisok as $key => $r) {
+		$y = strftime('%Y', $key);
+		if(!isset($year[$y]))
+			$year[$y] = array();
+		$year[$y][] = $r;
+	}
+
+	$send = '';
+	for($y = $yearCurrent; $y >= $yearBegin; $y--) {
+		$send .= _tovar_info_move_year($y, @$year[$y]);
+	}
+
+
+	return $send;
+}
+function _tovar_info_move_year($year, $spisok) {//отображение движения товара за конкретный год
+	if(empty($spisok))
+		return '<div class="year-empty">'.$year.'</div>';
+	
+	$type = array(
+		1 => 'Приход',
+		2 => 'Установка',   //set
+		3 => 'Продажа',     //sale
+		4 => 'Брак',        //defect
+		5 => 'Возврат',     //return
+		6 => 'Списание',    //writeoff
+		7 => 'Расход<br />в заявке'
+	);
+
+
+	$prihod = 0;
+	$rashod = 0;
+
+	$send = '<table class="_spisok">';
+	foreach($spisok as $r) {
+		$count = abs($r['count']);
+
+		$summa = _cena($r['summa']);
+		if($summa)
+			$summa = '<div class="sm">'.
+						($count > 1 ?
+							'<a class="'._tooltip(_cena($r['cena']).' руб./'.MEASURE, 0, 'l').'<b>'._sumSpace($summa).'</b> руб.</a>'
+							:
+							'<b>'._sumSpace($summa).'</b> руб.'
+						).
+					 '</div>';
+		else $summa = '';
+
+		$class = 'plus';
+		if($r['type_id'] != 1) {
+			$class = 'minus';
+			$rashod += $count;
+		} else
+			$prihod += $count;
+
+		if($r['type_id'] == 6)
+			$class = 'off';
+
+		$send .= '<tr class="'.$class.'">'.
+				'<td class="w70">'.$type[$r['type_id']].
+				'<td class="w50 r">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
+				'<td class="w100 r">'.$summa.
+				'<td>'.
+					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').
+					($r['zayav_id'] ? 'заявка '.$r['zayav_link'].'. ' : '').
+					$r['about'].
+				'<td class="dtime">'._dtimeAdd($r).
+				'<td class="ed">'._iconDel($r).
+		'</div>';
+	}
+
+	$send .= '</table>';
+
+	return
+		'<table class="year-tab w100p">'.
+			'<tr>'.
+				'<td class="y">'.$year.':'.
+				'<td class="prihod w150">Приход: <em>'.($prihod ? '<b>'.$prihod.'</b ' : '&nbsp;').'</em>'.
+				'<td class="rashod">Расход: <em>'.($rashod ? '<b>'.$rashod.'</b> ' : '&nbsp;').'</em>'.
+		'</table>'.
+		'<div'.($year == strftime('%Y') ? '' : ' class="dn"').'>'.
+			$send.
+			'<br />'.
+		'</div>';
+}
 
 
 

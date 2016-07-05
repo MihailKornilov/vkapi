@@ -808,8 +808,7 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 					($client_id ? '<b id="ze-client-name">'._clientVal($client_id, 'name').'</b>' : ''),
 
 		6 => '<tr><td class="label">{label}'.
-				 '<td><input type="text" id="ze-adres" value="'.@$z['adres'].'" />'.
-					 '<input type="hidden" id="client-adres" />',
+				 '<td><input type="text" id="ze-adres" value="'.@$z['adres'].'" />',
 
 		7 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" id="ze-imei" value="'.@$z['imei'].'" />',
@@ -842,7 +841,13 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 		31 => '<tr class="tr-equip'.($tovar ? '' : ' dn').'">'.
 				  '<td class="label top">{label}'.
 				  '<td><input type="hidden" id="ze-equip" value="'.@$z['equip'].'" />'.
-						'<div id="ze-equip-spisok"></div>'
+						'<div id="ze-equip-spisok"></div>',
+
+		37 => '<tr><td class="label">{label}'.
+				 '<td><input type="text" id="ze-phone" value="'.@$z['name'].'" />',
+
+		38 => '<tr><td class="label">{label}'.
+				 '<td>---',
 	);
 
 	$send = '';
@@ -851,7 +856,16 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 			continue;
 		if($zayav_id && ($pole_id == 10 || $pole_id == 12 || $pole_id == 13 || $pole_id == 14))
 			continue;
+
+		if($pole_id == 15 && $r['v1'])
+			$send .=
+				'<tr><td class="label">Указать стоимость вручную:'.
+					'<td>'._check('ze-sum_cost_manual');
+
 		$send .= str_replace('{label}', $r['label'], $pole[$pole_id]);
+
+		if($pole_id == 6 && $r['v1'])
+			$send .= '<input type="hidden" id="client-adres" />';
 	}
 
 	return

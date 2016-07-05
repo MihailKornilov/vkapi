@@ -135,6 +135,7 @@
 .zayav-edit_dialog #client-adres_check{margin:0 0 -3px 5px}
 .zayav-edit_dialog #ze-imei{width:130px}
 .zayav-edit_dialog #ze-serial{width:250px}
+.zayav-edit_dialog #ze-phone{width:250px}
 .zayav-edit_dialog #ze-note{width:251px;height:40px}
 #ze-equip-spisok._busy{background-position:left}
 #ze-equip-spisok ._check{display:inline-block;margin-bottom:5px}

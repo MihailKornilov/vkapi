@@ -62,7 +62,7 @@ var _zayavSpisok = function(v, id) {
 				width:550,
 				top:30,
 				class:'zayav-edit',
-				head:zayav_id ? 'Редактирование заявки' : 'Внесение новой заявки',
+				head:zayav_id ? 'Редактирование заявки' : 'Внесение новой заявки' + (service_id ? ' - ' + SERVICE_ACTIVE_ASS[service_id] : ''),
 				load:1,
 				butSubmit:zayav_id ? 'Сохранить' : 'Внести',
 				submit:submit

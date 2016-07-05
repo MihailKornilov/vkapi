@@ -996,6 +996,10 @@ $(document)
 		});
 	})
 
+	.on('click', '.year-tab', function() {//показ списка движения товара за выбранный год
+		$(this).next().slideToggle(300);
+	})
+
 	.ready(function() {
 		if($('#_tovar').length) {
 			$('#find')._search({
