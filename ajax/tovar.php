@@ -7,7 +7,7 @@ switch(@$_POST['op']) {
 		$filter = $data['filter'];
 		if($filter['page'] == 1) {
 			$send['result'] = utf8($data['result']);
-			$send['name_spisok'] = $filter['category_id'] ? _tovar_category_name($filter['category_id'] == -1 ? 0 : $filter['category_id']) : _sel(array());
+			$send['name_spisok'] =  _tovar_category_name($filter['category_id']);
 			$send['name_id'] = $filter['name_id'];
 			$send['vendor_spisok'] = _tovar_category_vendor($filter);
 		}
@@ -738,39 +738,6 @@ switch(@$_POST['op']) {
 		break;
 }
 
-function _tovar_category_name($category_id) {//список наименований по выбранной категории
-	$sql = "SELECT DISTINCT(`name_id`)
-			FROM `_tovar`
-			WHERE `category_id`=".$category_id;
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
-
-	$nameIds = array();
-	foreach(_ids($ids, 1) as $r)
-		$nameIds[$r] = _tovarName($r);
-
-	asort($nameIds);
-
-	return _sel($nameIds);
-}
-function _tovar_category_vendor($filter) {//список производителей по выбранной категории
-	if(!$filter['category_id'])
-		return _sel(array());
-
-	$sql = "SELECT DISTINCT(`vendor_id`)
-			FROM `_tovar`
-			WHERE `vendor_id`
-			  AND `category_id`=".$filter['category_id'].
-				($filter['name_id'] ? " AND `name_id`=".$filter['name_id'] : '');
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
-
-	$vendorIds = array();
-	foreach(_ids($ids, 1) as $r)
-		$vendorIds[$r] = _tovarVendor($r);
-
-	asort($vendorIds);
-
-	return _sel($vendorIds);
-}
 function _tovar_name_insert() {//обновление наименования товара и получение его id
 	$name_name = _txt($_POST['name_name']);
 	if(empty($name_name))

@@ -438,19 +438,19 @@ var _tovarEditExtend = function(o) {
 		}
 	},
 	_tovarSpisok = function(v, id) {
-		_filterSpisok(TOVAR, v, id);
-
 		if(id == 'category_id') {
-			TOVAR['icon_id'] = v ? 4 : 2;
+			TOVAR.icon_id = v ? 4 : 2;
 			_tovarIcon(v ? 4 : 2);
-			TOVAR['name_id'] = 0;
+			TOVAR.name_id = 0;
 			$('#name_id')._select(0);
-			TOVAR['vendor_id'] = 0;
+			TOVAR.vendor_id = 0;
 			$('#vendor_id')._select(0);
 		}
 
-		$('.div-but')[(TOVAR['icon_id'] == 5 ? 'add' : 'remove') + 'Class']('dn');
-		$('.div-cat')[(TOVAR['icon_id'] == 2 || TOVAR['icon_id'] == 5 ? 'add' : 'remove') + 'Class']('dn');
+		_filterSpisok(TOVAR, v, id);
+
+		$('.div-but')[(TOVAR.icon_id == 5 ? 'add' : 'remove') + 'Class']('dn');
+		$('.div-cat')[(TOVAR.icon_id == 2 || TOVAR.icon_id == 5 ? 'add' : 'remove') + 'Class']('dn');
 
 		$.post(AJAX_MAIN, TOVAR, function(res) {
 			if(res.success) {
@@ -796,6 +796,15 @@ $(document)
 		});
 	})
 
+	.on('click', '#_tovar #filter_clear', function() {
+		$('#find')._search('clear');    TOVAR.find = '';
+		_tovarIcon(2);                  TOVAR.icon_id = 2;
+		$('#group')._radio(0);          TOVAR.group = 0;
+		$('#category_id')._select(0);   TOVAR.category_id = 0;
+		$('#name_id')._select(0);       TOVAR.name_id = 0;
+		$('#vendor_id')._select(0);     TOVAR.vendor_id = 0;
+		_tovarSpisok();
+	})
 	.on('click', '#_tovar #icon .img', function() {//переключение вида списка товаров
 		var v = $(this).attr('val');
 		_tovarIcon(v);
@@ -1008,7 +1017,7 @@ $(document)
 				txt:'Быстрый поиск...',
 				enter:1,
 				func:_tovarSpisok
-			});
+			}).inp(TOVAR.find);
 			$('#group')._radio(_tovarSpisok);
 			$('#category_id')._select({
 				width:140,
@@ -1019,13 +1028,13 @@ $(document)
 			$('#name_id')._select({
 				width:140,
 				title0:'не выбрано',
-				spisok:[],
+				spisok:TOVAR.category_id ? NAME_SPISOK : [],
 				func:_tovarSpisok
 			});
 			$('#vendor_id')._select({
 				width:140,
 				title0:'не выбран',
-				spisok:[],
+				spisok:TOVAR.category_id ? VENDOR_SPISOK : [],
 				func:_tovarSpisok
 			});
 		}
