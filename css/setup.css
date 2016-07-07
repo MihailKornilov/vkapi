@@ -196,3 +196,22 @@
 #setup_tovar_category .ed{width:35px}
 
 #setup_tovar_category_join .tovar{width:50px;text-align:right}
+
+
+
+
+
+
+
+/* Рубрики объявлений */
+#setup_rubric .name{width:150px}
+#setup_rubric td.name{cursor:move}
+#setup_rubric .sub{width:75px;text-align:center}
+#setup_rubric .zayav{width:75px;text-align:center}
+#setup_rubric .ed{width:35px}
+
+#setup_rubric_sub .headName{margin-top:10px}
+#setup_rubric_sub td.name{cursor:move}
+#setup_rubric_sub .zayav{width:75px;text-align:center}
+#setup_rubric_sub .ed{width:35px}
+

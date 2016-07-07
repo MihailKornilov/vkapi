@@ -162,6 +162,96 @@ var setupRuleCheck = function(v, id) {
 			}, 'json');
 		}
 	},
+	setupRubricEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table class="bs10">' +
+					'<tr><td class="label">Наименование:' +
+						'<td><input id="name" type="text" class="w250" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' рубрики объявлений',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'setup_rubric_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
+	setupRubricSubEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table class="bs10">' +
+					'<tr><td class="label r">Рубрика:<td><b>' + RUBRIC_ASS[RUBRIC_ID] + '</b>' +
+					'<tr><td class="label r">Подрубрика:' +
+						'<td><input id="name" type="text" class="w250" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' подрубрики',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'setup_rubric_sub_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				rubric_id:RUBRIC_ID,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указана подрубрика');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,
@@ -724,6 +814,46 @@ $(document)
 			op:'expense_category_sub_del',
 			func:function(res) {
 				$('#spisok').html(res.html);
+			}
+		});
+	})
+
+	.on('click', '#setup_rubric .img_edit', function() {
+		var t = _parent($(this), 'DD');
+		setupRubricEdit({
+			id:t.attr('val'),
+			name:t.find('.name a').html().replace(/\"/g, '&quot;')
+		});
+
+	})
+	.on('click', '#setup_rubric .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'рубрики объявлений',
+			op:'setup_rubric_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
+				sortable();
+			}
+		});
+	})
+
+	.on('click', '#setup_rubric_sub .img_edit', function() {
+		var t = _parent($(this), 'DD');
+		setupRubricSubEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html().replace(/\"/g, '&quot;')
+		});
+
+	})
+	.on('click', '#setup_rubric_sub .img_del', function() {
+		_dialogDel({
+			id:$(this).attr('val'),
+			head:'подрубрики',
+			op:'setup_rubric_sub_del',
+			func:function(res) {
+				$('#spisok').html(res.html);
+				sortable();
 			}
 		});
 	})

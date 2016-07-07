@@ -29,6 +29,7 @@ function _setup() {
 		'worker' => 'Сотрудники',
 		'rekvisit' => 'Реквизиты организации',
 		'service' => 'SA: Виды деятельности',
+//		'rubric' => 'Рубрики объявлений',
 		'cartridge' => 'Картриджи',
 		'expense' => 'Категории расходов',
 		'zayav_status' => 'Статусы заявок',
@@ -40,6 +41,7 @@ function _setup() {
 	$sub = array(
 		'worker' => 'rule',
 		'service' => 'cartridge',
+		'rubric' => 'sub',
 		'expense' => 'sub',
 		'product' => 'sub'
 	);
@@ -56,10 +58,7 @@ function _setup() {
 	if(APP_ID != 3798718)
 		unset($page['cartridge']);
 
-	if(_service('count') < 2)
-		unset($page['service']);
-
-	if(!SA)
+	if(!SA || _service('count') < 2)
 		unset($page['service']);
 
 	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
@@ -494,7 +493,7 @@ function setup_expense_sub($id) {
 		return 'Категории id = '.$id.' не существует.';
 
 	return
-	'<script type="text/javascript">var CAT_ID='.$id.';</script>'.
+	'<script>var CAT_ID='.$id.';</script>'.
 	'<div id="setup_expense_sub">'.
 		'<a href="'.URL.'&p=setup&d=expense"><< назад к категориям расходов</a>'.
 		'<div class="headName">Список подкатегорий расходов<a class="add">Добавить</a></div>'.
@@ -843,6 +842,141 @@ function salary_list_head() {
 }
 
 
+
+
+
+
+function setup_rubric() {
+	return
+	'<div id="setup_rubric">'.
+		'<div class="headName">Рубрики объявлений<a class="add" onclick="setupRubricEdit()">Новая рубрика</a></div>'.
+		'<div id="spisok">'.setup_rubric_spisok().'</div>'.
+	'</div>';
+}
+function setup_rubric_spisok() {
+	$sql = "SELECT
+				*,
+				0 `sub`,
+				0 `zayav`
+			FROM `_zayav_rubric`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+
+	//подрубрики
+	$sql = "SELECT
+				DISTINCT `rubric_id`,
+				COUNT(`id`) `count`
+			FROM `_zayav_rubric_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `rubric_id`
+			GROUP BY `rubric_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['rubric_id']]['sub'] = $r['count'];
+
+
+	//использование в заявках
+	$sql = "SELECT
+				DISTINCT `rubric_id`,
+				COUNT(`id`) `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `rubric_id`
+			GROUP BY `rubric_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['rubric_id']]['zayav'] = $r['count'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="sub">Подрубрики'.
+				'<th class="zayav">Кол-во<br />объявлений'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_zayav_rubric">';
+	foreach($spisok as $id => $r) {
+		$nodel = $r['sub'] || $r['zayav'];
+		$send .='<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name"><a href="'.URL.'&p=setup&d=rubric&id='.$id.'">'.$r['name'].'</a>'.
+					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
+					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+					'<td class="ed">'.
+						_iconEdit($r).
+						_iconDel(array('nodel' => $nodel) + $r).
+			'</table>';
+	}
+
+	$send .= '</dl>';
+	return $send;
+}
+
+function setup_rubric_sub($id) {
+	$sql = "SELECT *
+			FROM `_zayav_rubric`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".$id;
+	if(!$rub = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Рубрики id = '.$id.' не существует. ';
+
+	return
+	'<script>var RUBRIC_ID='.$id.';</script>'.
+	'<a href="'.URL.'&p=setup&d=rubric"><< назад к списку рубрик</a>'.
+	'<div id="setup_rubric_sub">'.
+		'<div class="headName">Список подрубрик для "'.$rub['name'].'"'.
+			'<a class="add" onclick="setupRubricSubEdit()">Новая подрубрика</a>'.
+		'</div>'.
+		'<div id="spisok">'.setup_rubric_sub_spisok($id).'</div>'.
+	'</div>';
+}
+function setup_rubric_sub_spisok($rubric_id) {
+	$sql = "SELECT
+				*,
+				0 `zayav`
+			FROM `_zayav_rubric_sub`
+			WHERE `app_id`=".APP_ID."
+			  AND `rubric_id`=".$rubric_id."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	//использование в заявках
+	$sql = "SELECT
+				DISTINCT `rubric_id_sub`,
+				COUNT(`id`) `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND `rubric_id`=".$rubric_id."
+			  AND `rubric_id_sub`
+			GROUP BY `rubric_id_sub`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['rubric_id_sub']]['zayav'] = $r['count'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="zayav">Кол-во<br />объявлений'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_zayav_rubric_sub">';
+	foreach($spisok as $id => $r)
+		$send .='<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+					'<td class="ed">'.
+						_iconEdit($r).
+						_iconDel(array('nodel' => $r['zayav']) + $r).
+			'</table>';
+
+	$send .= '</dl>';
+	return $send;
+}
 
 
 

@@ -1375,6 +1375,8 @@ function _appJsValues() {//для конкретного приложения
 														   AND `day_fact`
 														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
+		"\n".'RUBRIC_SPISOK='._rubric('js').','.
+		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.
@@ -1427,6 +1429,9 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'tovar_feature_name');
 	xcache_unset(CACHE_PREFIX.'tovar_equip');
 	xcache_unset(CACHE_PREFIX.'cartridge');
+	xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+
 
 	//сброс времени действия введённого пинкода
 //		unset($_SESSION[PIN_TIME_KEY]);

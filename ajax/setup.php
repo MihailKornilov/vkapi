@@ -958,6 +958,195 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_rubric_add':
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_rubric` (
+					`app_id`,
+					`name`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					"._maxSql('_zayav_rubric', 'sort')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		_appJsValues();
+
+		_history(array(
+			'type_id' => 1057,
+			'v1' => $name
+		));
+
+		$send['html'] = utf8(setup_rubric_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_rubric_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_rubric`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_rubric`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		_appJsValues();
+
+		if($changes =
+			_historyChange('Наименование', $r['name'], $name))
+			_history(array(
+				'type_id' => 1058,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_rubric_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_rubric_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_rubric`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav_rubric_sub` WHERE `rubric_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `rubric_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_rubric` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		_appJsValues();
+
+		_history(array(
+			'type_id' => 1059,
+			'v1' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_rubric_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'setup_rubric_sub_add':
+		if(!$rubric_id = _num($_POST['rubric_id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_rubric`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$rubric_id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "INSERT INTO `_zayav_rubric_sub` (
+					`app_id`,
+					`rubric_id`,
+					`name`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".$rubric_id.",
+					'".addslashes($name)."',
+					"._maxSql('_zayav_rubric_sub', 'sort')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		_appJsValues();
+/*
+		_history(array(
+			'type_id' => 1057,
+			'v1' => $name
+		));
+*/
+		$send['html'] = utf8(setup_rubric_sub_spisok($rubric_id));
+		jsonSuccess($send);
+		break;
+	case 'setup_rubric_sub_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_rubric_sub`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "UPDATE `_zayav_rubric_sub`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		_appJsValues();
+
+		$send['html'] = utf8(setup_rubric_sub_spisok($r['rubric_id']));
+		jsonSuccess($send);
+		break;
+	case 'setup_rubric_sub_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_zayav_rubric_sub`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `rubric_id_sub`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "DELETE FROM `_zayav_rubric_sub` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		_appJsValues();
+
+		$send['html'] = utf8(setup_rubric_sub_spisok($r['rubric_id']));
+		jsonSuccess($send);
+		break;
+
 	case 'setup_zayav_status_add':
 		if(!RULE_SETUP_ZAYAV_STATUS)
 			jsonError();

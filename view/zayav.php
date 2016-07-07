@@ -7,6 +7,44 @@ function _zayav() {
 	return _zayav_list(_hashFilter('zayav'._service('current')));
 }
 
+function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
+	$key = CACHE_PREFIX.'rubric'.APP_ID;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					`id`,
+					`name`
+				FROM `_zayav_rubric`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `sort`";
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
+
+	//все рубрики
+	if($id == 'all')
+		return $arr;
+
+	//список JS дл€ select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
+		return _selJson($spisok);
+	}
+
+	//неизвестный id
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id рубрики', $id);
+	
+	//неизвестный ключ
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ рубрики', $i);
+
+	//возврат конкретной рубрики
+	return $arr[$id][$i];
+}
+
+
 function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 	$key = CACHE_PREFIX.'zayav_status'.APP_ID;
 	if(!$arr = xcache_get($key)) {
