@@ -1086,12 +1086,13 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
 		_appJsValues();
-/*
+
 		_history(array(
-			'type_id' => 1057,
-			'v1' => $name
+			'type_id' => 1060,
+			'v1' => $name,
+			'v2' => _rubric($rubric_id)
 		));
-*/
+
 		$send['html'] = utf8(setup_rubric_sub_spisok($rubric_id));
 		jsonSuccess($send);
 		break;
@@ -1119,6 +1120,15 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
 		_appJsValues();
 
+		if($changes =
+			_historyChange('Наименование', $r['name'], $name))
+			_history(array(
+				'type_id' => 1061,
+				'v1' => $name,
+				'v2' => _rubric($r['rubric_id']),
+				'v3' => '<table>'.$changes.'</table>'
+			));
+
 		$send['html'] = utf8(setup_rubric_sub_spisok($r['rubric_id']));
 		jsonSuccess($send);
 		break;
@@ -1142,6 +1152,12 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
 		_appJsValues();
+
+		_history(array(
+			'type_id' => 1062,
+			'v1' => $r['name'],
+			'v2' => _rubric($r['rubric_id'])
+		));
 
 		$send['html'] = utf8(setup_rubric_sub_spisok($r['rubric_id']));
 		jsonSuccess($send);

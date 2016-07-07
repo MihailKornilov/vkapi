@@ -43,6 +43,48 @@ function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
 	//возврат конкретной рубрики
 	return $arr[$id][$i];
 }
+function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
+	$key = CACHE_PREFIX.'rubric_sub'.APP_ID;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					`id`,
+					`rubric_id`,
+					`name`
+				FROM `_zayav_rubric_sub`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `sort`";
+		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
+
+	//все рубрики
+	if($id == 'all')
+		return $arr;
+
+	//список JS дл€ select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['rubric_id']][$r['id']] = $r['name'];
+
+		$js = array();
+		foreach($spisok as $uid => $r)
+			$js[] = $uid.':'._selJson($r);
+
+		return '{'.implode(',', $js).'}';
+	}
+
+	//неизвестный id
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id подрубрики', $id);
+	
+	//неизвестный ключ
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ подрубрики', $i);
+
+	//возврат конкретной подрубрики
+	return $arr[$id][$i];
+}
 
 
 function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки

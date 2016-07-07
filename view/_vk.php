@@ -1377,6 +1377,7 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
+		"\n".'RUBRIC_SUB_SPISOK='._rubricSub('js').','.
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.
