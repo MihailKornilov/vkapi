@@ -208,20 +208,6 @@
 
 
 
-/* Список запчастей*/
-#_zayav-info #zp-spisok *{font-size:10px}
-#_zayav-info #zp-spisok{padding:3px 7px 60px;border-left:#e9edf1 solid 1px}
-#_zayav-info #zp-spisok .unit{
-	border-bottom:#DEE3EF solid 1px;
-	padding-bottom:4px;
-	margin-bottom:7px;
-}
-#_zayav-info #zp-spisok .zakaz{color:#567f9e}
-#_zayav-info #zp-spisok .unit:not(:hover) .zakaz{visibility:hidden}
-#_zayav-info #zp-spisok .unit:not(:hover) .set{visibility:hidden}
-#_zayav-info #zp-spisok .set{color:#567f9e;float:right}
-#_zayav-info #zp-spisok .avai{float:right;color:#393;margin-left:4px}
-
 /* Применение товара в расходы */
 .zayav-tovar-set_dialog .headName{margin:10px 0 4px}
 .zayav-tovar-set_dialog h1{font-size:18px;margin-top:20px}
@@ -234,6 +220,10 @@
 
 
 
+
+
+
+
 /* Информация о товаре в информации о заявке */
 #zayav-tovar{width:200px}
 #zayav-tovar #content{border-left:#e9edf1 solid 1px}
@@ -242,6 +232,31 @@
 #zayav-tovar #info{margin:7px 0 10px 7px;border-spacing:1px}
 #zayav-tovar #info *{font-size:10px}
 #zayav-tovar #info th{width:70px;color:#777;text-align:left;font-size:10px}
+/* Список запчастей*/
+#zayav-tovar #zp-spisok *{font-size:10px}
+#zayav-tovar #zp-spisok{padding:3px 7px 60px;border-left:#e9edf1 solid 1px}
+#zayav-tovar .unit{
+	border-bottom:#DEE3EF solid 1px;
+	padding-bottom:4px;
+	margin-bottom:7px;
+}
+#zayav-tovar .act{margin-top:3px}
+#zayav-tovar .zakaz{color:#567f9e}
+#zayav-tovar .zakaz._busy{color:transparent}
+#zayav-tovar .unit:not(:hover) .zakaz:not(._busy){visibility:hidden}
+#zayav-tovar .unit:not(:hover) .set{visibility:hidden}
+#zayav-tovar .zakaz-ok{
+	display:inline-block;
+	color:#c22;
+	background:#fee;
+	padding:0 6px 1px;
+}
+#zayav-tovar .set{color:#567f9e;float:right}
+#zayav-tovar .avai{float:right;color:#393;margin-left:4px}
+
+
+
+
 
 
 /* Статус заявки */

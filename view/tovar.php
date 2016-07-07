@@ -281,15 +281,20 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 
 	//получение данных товаров, на которые устанавливается запчасть
 	$set = array();
+	$setZayav = array();//для отображения в заявке
 	if($ids = _idsGet($tovar, 'tovar_id_set')) {
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id` IN (".$ids.")";
-		foreach(query_arr($sql, GLOBAL_MYSQL_CONNECT) as $r)
+		foreach(query_arr($sql, GLOBAL_MYSQL_CONNECT) as $r) {
 			$set[$r['id']] =
-				_tovarName($r['name_id']).
-				_tovarVendor($r['vendor_id']).
+				_tovarName($r['name_id']) .
+				_tovarVendor($r['vendor_id']) .
 				$r['name'];
+			$setZayav[$r['id']] =
+				_tovarVendor($r['vendor_id']) .
+				$r['name'];
+		}
 	}
 
 	foreach($tovar as $r) {
@@ -327,6 +332,13 @@ function _tovarValToList($arr, $keyName='tovar_id') {//вставка ссылок на файлы в
 				$r['name'];
 
 			$arr[$id]['tovar_link'] = '<a class="tovar-info-go" val="'.$r['id'].'">'.$arr[$id]['tovar_name'].'</a>';
+			$arr[$id]['tovar_zayav'] =
+				'<a class="tovar-info-go" val="'.$r['id'].'">'.
+					'<b>'._tovarName($r['name_id']).'</b>'.
+					_tovarVendor($r['vendor_id']).
+					($r['name'] ? $r['name'].'<br />' : '').
+					@$setZayav[$r['tovar_id_set']].
+				'</a>';
 		}
 	}
 
@@ -352,7 +364,7 @@ function _tovarAvaiToList($arr) {
 
 	return $arr;
 }
-function _tovarZakazToList($arr) {
+function _tovarZakazToList($arr, $zayav_id=0) {
 	if(empty($arr))
 		return array();
 
@@ -365,6 +377,7 @@ function _tovarZakazToList($arr) {
 				SUM(`count`) `count`
 			FROM `_tovar_zakaz`
 			WHERE `tovar_id` IN (".$ids.")
+".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
 			GROUP BY `tovar_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))

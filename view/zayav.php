@@ -1675,28 +1675,30 @@ function _zayavInfoTovar($z) {//информация о товаре
 (isset($z['zpu'][12]) ? '<tr><th>Нахождение:<td><a id="zayav-tovar-place-change">'._zayavTovarPlace($z['tovar_place_id']).'</a>' : '').
 			'</table>'.
 		'</div>'.
-		_zayavInfoTovarSet($tovar_id).
+		_zayavInfoTovarSet($tovar_id, $z['id']).
 	'</div>';
 }
-function _zayavInfoTovarSet($tovar_id) {//список запчастей для товара заявки
+function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара заявки
 	$sql = "SELECT *
 			FROM `_tovar`
 			WHERE `tovar_id_set`=".$tovar_id;
 	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
 
+	$arr = _tovarValToList($arr, 'id');
 	$arr = _tovarAvaiToList($arr);
+	$arr = _tovarZakazToList($arr, $zayav_id);
 
 	$spisok = '';
 	foreach($arr as $r)
 		$spisok .=
 			'<div class="unit" val="'.$r['id'].'">'.
 //				'<div class="image"><div>'.$r['image_small'].'</div></div>'.
-				'<a href="'.URL.'&p=tovar&d=info&id='.$r['id'].'"><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</a>'.
+				$r['tovar_zayav'].
 //				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
 //				($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
-				'<div>'.
-					(isset($r['zakaz']) ? '<a class="zakaz_ok">Заказано!</a>' : '<a class="zakaz">Заказать</a>').
+				'<div class="act">'.
+					($r['zakaz_count'] ? '<a class="zakaz-ok">Заказано</a>' : '<a class="zakaz">Заказать</a>').
 					($r['avai_count'] ? '<b class="avai">Наличие: '.$r['avai_count'].'</b> <a class="set">Установить</a>' : '').
 				'</div>'.
 			'</div>';
@@ -1706,7 +1708,7 @@ function _zayavInfoTovarSet($tovar_id) {//список запчастей для товара заявки
 	return
 	'<div class="headBlue">'.
 		'Список запчастей'.
-		'<a class="add">добавить</a>'.
+//		'<a class="add">добавить</a>'.
 	'</div>'.
 	'<div id="zp-spisok">'.$spisok.'</div>';
 }

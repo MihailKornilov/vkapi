@@ -1421,6 +1421,29 @@ $(document)
 			}, 'json');
 		}
 	})
+	.on('click', '#_zayav-info .zakaz', function() {
+		var t = $(this),
+			p = _parent(t, '.unit');
+
+		if(t.hasClass('_busy'))
+			return;
+
+		t.addClass('_busy');
+
+		var send = {
+			op:'zayav_tovar_zakaz',
+			zayav_id:ZI.id,
+			tovar_id:p.attr('val')
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success) {
+				t.removeClass('zakaz')
+				  .addClass('zakaz-ok')
+				  .html('«аказано');
+			}
+		}, 'json');
+	})
 	.on('click', '#_zayav-info .set', function() {//применение товара в расходы по за€вке
 		var tovar_id = _parent($(this), '.unit').attr('val'),
 			dialog = _dialog({

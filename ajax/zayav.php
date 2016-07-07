@@ -251,9 +251,6 @@ switch(@$_POST['op']) {
 //		if(ZAYAV_INFO_SROK && $status_id == 1 && $srok == '0000-00-00')
 //			jsonError();
 
-		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
-
 		if($z['status_id'] == $status_id)
 			jsonError();
 
@@ -354,6 +351,40 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'zayav_tovar_zakaz':// заказ товара из заявки
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError();
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError();
+
+		if(!$t = _tovarQuery($tovar_id))
+			jsonError();
+
+		$sql = "INSERT INTO `_tovar_zakaz` (
+					`app_id`,
+					`zayav_id`,
+					`tovar_id`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$zayav_id.",
+					".$tovar_id.",
+					".VIEWER_ID."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 112,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'tovar_id' => $tovar_id
+		));
+
+		jsonSuccess();
+		break;
 	case 'zayav_tovar_set_load':
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError();
