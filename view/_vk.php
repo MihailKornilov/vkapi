@@ -1378,6 +1378,9 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
 		"\n".'RUBRIC_SUB_SPISOK='._rubricSub('js').','.
+		"\n".'GN_ASS='._gn('js_ass').','.
+		"\n".'GN_FIRST='._gn('first').','.
+		"\n".'GN_LAST='._gn('last').','.
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.
@@ -1432,6 +1435,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'cartridge');
 	xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
 	xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'gn'.APP_ID);
 
 
 	//сброс времени действия введённого пинкода

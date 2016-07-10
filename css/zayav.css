@@ -149,9 +149,66 @@
 #ze-equip-spisok .vk{margin-left:5px;margin-top:1px}
 
 
-/* ¬ыбор изделий при внесении новой за€вки или редактировании */
-#product-list ._select{margin-right:5px}
-#product-list #item-count{width:25px}
+
+
+/* —писок номеров газеты при внесении и редактировании за€вок */
+#gnGet{margin:-3px 0 15px -5px}
+#gnGet #dopLinks{padding:0 0 5px 5px;border:none;background-color:transparent}
+#gnGet #dopLinks a{margin-right:5px}
+#gnGet ._dropdown{margin-right:7px}
+#gnGet #dopDef_dropdown{margin:-4px 0 0 7px}
+#gnGet .gn-spisok{margin-left:-127px}
+#gnGet #darr{
+	font-size:12px;
+	text-align:center;
+	color:#AAA;
+	height:15px;
+	width:245px;
+	cursor:pointer;
+	padding:1px 0 3px;
+}
+#gnGet #darr:hover{background-color:#e1e7ed;color:#444}
+#gnGet .gns-week {
+	width:245px;
+	background-color:#FFF;
+	border:#DDD solid 1px;
+	margin-bottom:2px;
+	cursor:pointer;
+	height:19px;
+}
+#gnGet .gns-week:hover{border:#99A solid 1px}
+#gnGet .td { padding:2px 3px; color:#333; font-size:10px; }
+#gnGet .td b,#gnGet .td tt{font-size:10px}
+#gnGet .g{color:#888;margin-left:3px;font-size:10px}
+#gnGet .cena {
+	width:50px;
+	border:none;
+	padding:0 2px;
+	text-align:right;
+	border-left:#FFF solid 1px;
+	color:#FFF;
+	overflow: hidden;
+}
+#gnGet .gnsel{background-color:#BFB}
+#gnGet .gnsel .cena{
+	border-left:#DDD solid 1px;
+	background-color:#EFE;
+	cursor:pointer;
+	color:#444;
+}
+#gnGet .prev{background-color:#FFB}
+#gnGet .vdop{padding-left:8px}
+#gnGet #selCount{
+	width:127px;
+	vertical-align:top;
+	text-align:right;
+	color:#666;
+	font:bold 10px Tahoma;
+	padding-right:5px;
+}
+#gnGet #selCount a{font-size:10px;display:block;color:#aaa}
+
+
 
 /* »нформаци€ о за€вке */
 #_zayav-info #nz{/* номер за€вки */

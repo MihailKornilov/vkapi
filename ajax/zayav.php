@@ -18,12 +18,16 @@ switch(@$_POST['op']) {
 					`client_id`,
 					`about`,
 					`count`,
+					`phone`,
 					`adres`,
 					`imei`,
 					`serial`,
 					`color_id`,
 					`color_dop`,
 					`executer_id`,
+
+					`rubric_id`,
+					`rubric_id_sub`,
 
 					`srok`,
 					`sum_cost`,
@@ -43,12 +47,16 @@ switch(@$_POST['op']) {
 					".$v['client_id'].",
 					'".addslashes($v['about'])."',
 					".$v['count'].",
+					'".addslashes($v['phone'])."',
 					'".addslashes($v['adres'])."',
 					'".addslashes($v['imei'])."',
 					'".addslashes($v['serial'])."',
 					".$v['color_id'].",
 					".$v['color_dop'].",
 					".$v['executer_id'].",
+
+					".$v['rubric_id'].",
+					".$v['rubric_id_sub'].",
 
 					'".$v['srok']."',
 					".$v['sum_cost'].",
@@ -154,8 +162,9 @@ switch(@$_POST['op']) {
 			(isset($zpu[9])  ? _historyChange($zpu[9]['name'], _color($z['color_id'], $z['color_dop']), _color($v['color_id'], $v['color_dop'])) : '').
 			(isset($zpu[15]) ? _historyChange($zpu[15]['name'], _cena($z['sum_cost']), $v['sum_cost']) : '').
 			(isset($zpu[16]) ? _historyChange($zpu[16]['name'], _payType($z['pay_type']), _payType($v['pay_type'])) : '').
-			(isset($zpu[4]['v1']) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : ''))
-			_history(array(
+			(isset($zpu[4]['v1']) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : '').
+			(isset($zpu[40]) ? _historyChange($zpu[40]['name'], _rubric($z['rubric_id'], $z['rubric_id_sub']), _rubric($v['rubric_id'], $v['rubric_id_sub'])) : '')
+		)	_history(array(
 				'type_id' => 72,
 				'client_id' => $v['client_id'],
 				'zayav_id' => $zayav_id,
@@ -1463,6 +1472,22 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 	$v['equip'] = _ids(@$_POST['equip']);
 	if(@$zpu[4] && $zpu[4]['v1'])
 		$upd[] = "`equip`='".$v['equip']."'";
+
+	$v['phone'] = _txt(@$_POST['phone']);
+	if($u = @$zpu[37]) {
+		if($u['require'] && !$v['phone'])
+			jsonError('Не заполнено поле '.$u['name']);
+		$upd[] = "`phone`='".addslashes($v['phone'])."'";
+	}
+
+	$v['rubric_id'] = _num(@$_POST['rubric_id']);
+	$v['rubric_id_sub'] = _num(@$_POST['rubric_id_sub']);
+	if($u = @$zpu[40]) {
+		if($u['require'] && !$v['rubric_id'])
+			jsonError('Не выбрана '.$u['name']);
+		$upd[] = "`rubric_id`=".$v['rubric_id'];
+		$upd[] = "`rubric_id_sub`=".$v['rubric_id_sub'];
+	}
 
 	$v['update'] = implode(',', $upd);
 	$v['zpu'] = $zpu;

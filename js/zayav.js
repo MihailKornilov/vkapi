@@ -149,6 +149,16 @@ var _zayavSpisok = function(v, id) {
 				spisok:PAY_TYPE
 			});
 
+			// 38 - Номера выпуска
+			$('#ze-gn').gnGet({
+				func:function() {
+//					if($('#summa').attr('readonly')) {
+//						$('#summa').val(window.gnGet.summa());
+//						$('#skidka-txt').html(window.gnGet.skidka());
+//					}
+				}
+			});
+
 			// 39 - Скидка
 			$('#ze-skidka')._select({
 				width:70,
@@ -156,6 +166,8 @@ var _zayavSpisok = function(v, id) {
 				spisok:ZAYAV_SKIDKA_SPISOK
 			});
 
+			// 40 - Рубрика и подрубрика
+			$('#ze-rubric_id')._rubric();
 		}
 
 		function equip(v) {//вставка комплектации при выборе товара
@@ -246,14 +258,17 @@ var _zayavSpisok = function(v, id) {
 				count:$('#ze-count').val(),             // 3
 				tovar:$('#ze-tovar-one').length ? $('#ze-tovar-one').val() : $('#ze-tovar-several').val(), // 4, 11
 				client_id:$('#ze-client_id').val(),     // 5
+				phone:$('#ze-phone').val(),             // 37
 				adres:$('#ze-adres').val(),             // 6
 				imei:$('#ze-imei').val(),               // 7
 				serial:$('#ze-serial').val(),           // 8
 				color_id:$('#color_id').val(),          // 9
 				color_dop:$('#color_dop').val(),        // 9
 				executer_id:$('#ze-executer_id').val(), // 10
-				place_id:$('#tovar-place').val(),       // 12
-				place_other:$('#tovar-place').attr('val'),// 12
+				rubric_id:$('#ze-rubric_id').val(),        // 40
+				rubric_id_sub:$('#ze-rubric_id_sub').val(),// 40
+				place_id:$('#tovar-place').val(),          // 12
+				place_other:$('#tovar-place').attr('val'), // 12
 				srok:$('#ze-srok').val(),               // 13
 				note:$('#ze-note').val(),               // 14
 				sum_cost:$('#ze-sum_cost').val(),       // 15
@@ -1314,6 +1329,430 @@ $.fn.cartridge = function(o) {
 		add();
 	}
 };
+$.fn.gnGet = function(o) {
+	var t = $(this),
+		attr_id = t.attr('id');
+
+	if(!attr_id)
+		return;
+
+	o = $.extend({
+		show:4,     // количество номеров, которые показываются изначально, а также отступ от уже выбранных
+		add:8,      // количество номеров, добавляющихся к показу
+		dop_title0:'',//Доп. параметр не указан           Полоса не указана
+		dop_spisok:[],
+		pn_show:0,  //показывать выбор номеров полос
+		category:1, //todo удалить
+		gns:null,   // выбранные номера (для редактирования)
+		skidka:0,
+		manual:0,   // установлена ли галочка для ввода общей суммы вручную
+		func:function() {}
+	}, o);
+
+	var pix = 21, // высота поля номера в пикселях
+		gns_begin = GN_FIRST,
+		gns_end = gns_begin + o.show,
+		html =
+			'<div id="gnGet">' +
+				'<table>' +
+					'<tr><td><div id="dopLinks">' +
+								'<a class="link" val="4">Месяц</a>' +
+								'<a class="link" val="13">3 месяца</a>' +
+								'<a class="link" val="26">Полгода</a>' +
+								'<a class="link" val="52">Год</a>' +
+							'</div>' +
+						'<td><input type="hidden" id="dopDef">' +
+				'</table>' +
+				'<table class="gn-spisok">' +
+					'<tr><td id="selCount">' +
+						'<td><div id="gns"></div>' +
+				'</table>' +
+			'</div>';
+	t.after(html);
+
+	$(document)
+		.on('click', '#darr', function() {// Разворачивание списка
+			gns_begin = gns_end;
+			gns_end += o.add;
+			gnsPrint();
+		})
+		.on('click', '.gns-week', function() {// Действие по нажатию на номер газеты
+			dopMenuA.removeClass('sel');
+			var th = $(this),
+				sel = !th.hasClass('gnsel'),
+				v = th.attr('val');
+			th[(sel ? 'add': 'remove') + 'Class']('gnsel');
+			th.removeClass('prev');
+			GN_ASS[v].prev = 0;
+			GN_ASS[v].sel = sel;
+			GN_ASS[v].dop = 0;
+			GN_ASS[v].pn = 0;
+			if(o.dop_spisok.length) {
+				if(o.pn_show)
+					$('#pn' + v).val(0)._dropdown('remove');
+				$('#vdop' + v).val(0)._dropdown(!sel ? 'remove' : {
+					title0:o.dop_title0,
+					spisok:o.dop_spisok,
+					func:function(id) {
+						GN_ASS[v].dop = id;
+						cenaSet();
+						o.func();
+						if(o.pn_show) {
+							GN_ASS[v].pn = 0;
+							$('#pn' + v).val(0)._dropdown('remove');
+							if(POLOSA_NUM[id]) {
+								var pc = [];
+								for(n = 2; n < GN_ASS[v].pc; n++)
+									pc.push({uid:n,title:n + '-я'});
+								$('#pn' + v)._dropdown({
+									title0:'??',
+									spisok:pc,
+									func:function(pn) {
+										GN_ASS[v].pn = pn;
+									}
+								});
+							}
+						}
+					}
+				});
+			}
+			gnsCount();
+			cenaSet();
+			o.func();
+		});
+
+	var gnGet = $('#gnGet'),                 // Основная форма
+		gns = gnGet.find('#gns'),            // Список номеров
+		dopMenuA = gnGet.find('#dopLinks a'),// Список меню с периодами
+		dopDef = gnGet.find("#dopDef"),      // Выбор дополнительных параметров по умолчанию
+		selCount = gnGet.find('#selCount'),  // Количество выбранных номеров
+		cena = 0,   // Цена за один номер
+		summa_manual = 0,
+		skidka_sum = 0;
+
+	gnsClear();
+	if(o.gns) {// Выделение выбранных номеров при редактировании
+		var max = 0;
+		for(var n in o.gns) {
+			if(n > GN_LAST)
+				break;
+			if(!GN_ASS[n])
+				continue;
+			var sp = GN_ASS[n];
+			sp.sel = 1;
+			sp.prev = 1;
+			sp.cena = o.gns[n][0];
+			sp.dop = o.gns[n][1];
+			sp.pn = o.gns[n][2];
+			max = n;
+		}
+		gnsPrint(1, max - GN_FIRST + 1);
+		gnsCount();
+	} else
+		gnsPrint();
+	dopMenu();
+
+	dopMenuA.click(function() {// выбор номеров на месяц, 3 месяца, полгода и год начиная сначала
+		var t = $(this),
+			v = t.attr('val') * 1;
+		gnsClear();
+		if(t.hasClass('sel')) {
+			v = 0;
+			t.removeClass('sel');
+		} else {
+			dopMenuA.removeClass('sel');
+			t.addClass('sel');
+			n = GN_FIRST;
+			var c = v;
+			while(c) {
+				if(n > GN_LAST)
+					break;
+				if(!GN_ASS[n])
+					continue;
+				GN_ASS[n].sel = 1;
+				c--;
+				n++;
+			}
+		}
+		gnsCount();
+		gnsPrint(1, v);
+		o.func();
+	});
+	function gnsPrint(first, count) {// Вывод списка номеров
+		if(first) {// Список номеров выводится с самого начала, а не догружается
+			gns_begin = GN_FIRST;
+			gns_end = gns_begin + (count || 0) + o.show;
+		}
+		gnGet.find('#darr').remove();
+		var html = '';
+		for(n = gns_begin; n < gns_end; n++) {
+			if(n > GN_LAST)
+				break;
+			var sp = GN_ASS[n];
+			if(!sp) { // если номер пропущен, тогда не выводится
+				//end++;
+				continue;
+			}
+			html +=
+				'<table><tr>' +
+					'<td><table class="gns-week' + (sp.sel ? ' gnsel' : '') + (sp.prev ? ' prev' : '') + '" val="' + n + '">' +
+							'<tr><td class="td"><b>' + sp.week + '</b><span class="g">(' + n + ')</span>' +
+								'<td class="td"><span class="g">выход</span> ' + sp.txt +
+								'<td class="cena" id="cena' + n + '">' +
+						'</table>' +
+					'<td class="vdop">' +
+						'<input type="hidden" id="vdop' + n + '" value="' + sp.dop + '" /> ' +
+						'<input type="hidden" id="pn' + n + '" value="' + sp.pn + '" />' +
+				'</table>';
+		}
+		html += gns_end < GN_LAST ? '<div id="darr">&darr; &darr; &darr;</div>' : '';
+		gns[first ? 'html' : 'append'](html);
+		gns.animate({height:(gns.find('.gns-week').length * pix) + 'px'}, 300);
+		if(first && o.dop_spisok.length)
+			gnsActionActive(function(sp) {
+				$('#vdop' + sp.n)._dropdown({
+					title0:o.dop_title0,
+					spisok:o.dop_spisok,
+					func:function(v) {
+						GN_ASS[sp.n].dop = v;
+						cenaSet();
+						o.func();
+						if(o.pn_show) {
+							GN_ASS[sp.n].pn = 0;
+							$('#pn' + sp.n).val(0)._dropdown('remove');
+							if(POLOSA_NUM[v]) {
+								var pc = [];
+								for(n = 2; n < GN_ASS[sp.n].pc; n++)
+									pc.push({uid:n,title:n + '-я'});
+								$('#pn' + sp.n)._dropdown({
+									title0:'??',
+									spisok:pc,
+									func:function(pn) {
+										GN_ASS[sp.n].pn = pn;
+									}
+								});
+							}
+						}
+					}
+				});
+				if(o.pn_show && POLOSA_NUM[sp.dop]) {
+					var pc = [];
+					for(var n = 2; n < GN_ASS[sp.n].pc; n++)
+						pc.push({uid:n,title:n + '-я'});
+					$('#pn' + sp.n)._dropdown({
+						title0:'??',
+						spisok:pc,
+						func:function(pn) {
+							GN_ASS[sp.n].pn = pn;
+						}
+					});
+				}
+			});
+		cenaSet();
+	}
+	function dopMenu() {
+		dopDef._dropdown(!o.dop_spisok.length ? 'remove' : {
+			head:'всем...',
+			headgrey:1,
+			title0:o.dop_title0,
+			nosel:1,
+			spisok:o.dop_spisok,
+			func:function(id) {
+				gnsActionActive(function(sp) {
+					if(!sp.prev) {
+						$('#vdop' + sp.n)._dropdown(id);
+						sp.dop = id;
+						if(o.pn_show) {
+							sp.pn = 0;
+							if(POLOSA_NUM[id]) {
+								var pc = [];
+								for(var n = 2; n < GN_ASS[sp.n].pc; n++)
+									pc.push({uid:n,title:n + '-я'});
+							}
+							$('#pn' + sp.n).val(0)._dropdown(!POLOSA_NUM[id] ? 'remove' : {
+								title0:'??',
+								spisok:pc,
+								func:function(pn) {
+									GN_ASS[sp.n].pn = pn;
+								}
+							});
+						}
+					}
+				});
+				cenaSet();
+				o.func();
+			}
+		});
+	}
+	function gnsActionActive(func, all) {// Применение действия к выбранным номерам
+		for(var n = GN_FIRST; n <= GN_LAST; n++) {
+			var sp = GN_ASS[n];
+			if(!sp)
+				continue; // Eсли номер пропущен, тогда нет действия
+			if(all || sp.sel)
+				func(sp, n);
+		}
+	}
+	function gnsCount() {// Вывод количества выбранных номеров
+		var count = 0;
+		gnsActionActive(function() {
+			count++;
+		});
+		if(count) {
+			var html = 'Выбран' + _end(count, ['', 'о']) + ' ' +
+						count + ' номер' + _end(count, ['', 'a', 'ов']) +
+						'<a>очистить</a>';
+			selCount
+				.html(html)
+				.find('a').click(function() {
+					gnsClear();
+					gnsPrint(1);
+					selCount.html('');
+					dopMenuA.removeClass('sel');
+					o.func();
+				});
+		} else
+			selCount.html('');
+	}
+	function gnsClear() {// Очистка выбранных номеров
+		gnsActionActive(function(sp, n) {
+			sp.n = n;
+			sp.sel = 0;
+			sp.prev = 0;
+			sp.cena = 0;
+			sp.dop = 0;
+			sp.pn = 0;
+		}, 1);
+	}
+	function cenaSet() {// Установка цены в выбранные номера
+		var sum = 0,
+			count = 0;
+		switch(o.category) {
+			case 1:
+				var four = 0;
+				if(o.manual) {
+					gnsActionActive(function(sp) {
+						if(!sp.prev) {
+							four++;
+							if (four == 4)
+								four = 0;
+							else
+								count++;
+						}
+					});
+					four = 0;
+					sum = Math.round((summa_manual / count) * 1000000) / 1000000;
+				}
+				gnsActionActive(function(sp) {
+					if(!sp.prev) {
+						four++;
+						if(four == 4) {
+							four = 0;
+							sp.cena = 0;
+						} else
+						if(o.manual)
+							sp.cena = sum;
+						else
+							sp.cena = cena ? cena + (sp.dop ? OBDOP_CENA_ASS[sp.dop] : 0) : 0;
+					}
+					gnGet.find('#cena' + sp.n).html(Math.round(sp.cena * 100) / 100);
+				});
+				break;
+			case 2:
+				if(o.manual) {
+					gnsActionActive(function(sp) {
+						if(sp.dop > 0 && !sp.prev)
+							count++;
+					});
+					sum = Math.round((summa_manual / count) * 1000000) / 1000000;
+				}
+				skidka_sum = 0;
+				gnsActionActive(function(sp) {
+					if(!sp.prev) {
+						sp.cena = 0;
+						if(sp.dop) {
+							if(o.manual)
+								sp.cena = sum;
+							else {
+								sp.cena = cena * POLOSA_CENA_ASS[sp.dop];
+								var sk = sp.cena * o.skidka / 100;
+								sp.cena -= sk;
+								skidka_sum += sk;
+							}
+						}
+					}
+					gnGet.find('#cena' + sp.n).html(Math.round(sp.cena * 100) / 100);
+				});
+				skidka_sum = Math.round(skidka_sum * 100) / 100;
+				break;
+			default:
+				gnsActionActive(function(sp) {
+					if(!sp.prev)
+						count++;
+				});
+				sum = Math.round((summa_manual / count) * 1000000) / 1000000;
+				gnsActionActive(function(sp) {
+					if(!sp.prev)
+						sp.cena = sum;
+					gnGet.find('#cena' + sp.n).html(Math.round(sp.cena * 100) / 100);
+				});
+		}
+	}
+	function summaGet() {
+		var sum = 0;
+		gnsActionActive(function(sp) {
+			if(!sp.prev)
+				sum += sp.cena;
+		});
+		return Math.round(sum * 100) / 100;
+	}
+	t.cena = function(c) {
+		cena = c || 0;
+		cenaSet();
+	};
+	t.skidka = function(v) {
+		if(v != undefined) {
+			o.skidka = v;
+			cenaSet();
+			return '';
+		}
+		return o.category == 2 && skidka_sum ? 'Сумма скидки: <b>' + skidka_sum + '</b> руб.' : '';
+	};
+	t.summa = summaGet;
+	t.clear = function(v) {
+		o.category = v;
+		o.manual = 0;
+		o.skidka = 0;
+		skidka_sum = 0;
+		summa_manual = 0;
+		dopMenuA.removeClass('sel');
+		gnsClear();
+		gnsPrint(1);
+		dopMenu();
+	};
+	t.manual = function(v, sum) {
+		o.manual = v;
+		summa_manual = summaGet();
+		cenaSet();
+		o.func();
+	};
+	t.manualSumma = function(sum) {
+		summa_manual = REGEXP_CENA.test(sum) ? sum.replace(',', '.') * 1 : 0;
+		cenaSet();
+	};
+	t.result = function() {
+		var spisok = [],
+			no_polosa = 0; // проверка, все ли полосы выбраны
+		gnsActionActive(function(sp) {
+			if(o.category == 2 && !sp.dop)
+				no_polosa = 1;
+			spisok.push(sp.n + ':' + sp.cena + ':' + sp.dop + ':' + sp.pn);
+		});
+		return no_polosa ? 'no_polosa' : spisok.join();
+	};
+	return t;
+};
+
 
 $(document)
 	.on('click', '#_zayav .clear', function() {

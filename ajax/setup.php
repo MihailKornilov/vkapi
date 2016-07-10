@@ -964,14 +964,14 @@ switch(@$_POST['op']) {
 		if(empty($name))
 			jsonError();
 
-		$sql = "INSERT INTO `_zayav_rubric` (
+		$sql = "INSERT INTO `_setup_rubric` (
 					`app_id`,
 					`name`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
 					'".addslashes($name)."',
-					"._maxSql('_zayav_rubric', 'sort')."
+					"._maxSql('_setup_rubric', 'sort')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -996,13 +996,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_rubric`
+				FROM `_setup_rubric`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "UPDATE `_zayav_rubric`
+		$sql = "UPDATE `_setup_rubric`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -1026,13 +1026,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_rubric`
+				FROM `_setup_rubric`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "SELECT COUNT(`id`) FROM `_zayav_rubric_sub` WHERE `rubric_id`=".$id;
+		$sql = "SELECT COUNT(`id`) FROM `_setup_rubric_sub` WHERE `rubric_id`=".$id;
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
@@ -1040,7 +1040,7 @@ switch(@$_POST['op']) {
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "DELETE FROM `_zayav_rubric` WHERE `id`=".$id;
+		$sql = "DELETE FROM `_setup_rubric` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
@@ -1065,13 +1065,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_rubric`
+				FROM `_setup_rubric`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$rubric_id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "INSERT INTO `_zayav_rubric_sub` (
+		$sql = "INSERT INTO `_setup_rubric_sub` (
 					`app_id`,
 					`rubric_id`,
 					`name`,
@@ -1080,7 +1080,7 @@ switch(@$_POST['op']) {
 					".APP_ID.",
 					".$rubric_id.",
 					'".addslashes($name)."',
-					"._maxSql('_zayav_rubric_sub', 'sort')."
+					"._maxSql('_setup_rubric_sub', 'sort')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -1106,13 +1106,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_rubric_sub`
+				FROM `_setup_rubric_sub`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "UPDATE `_zayav_rubric_sub`
+		$sql = "UPDATE `_setup_rubric_sub`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -1137,7 +1137,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT *
-				FROM `_zayav_rubric_sub`
+				FROM `_setup_rubric_sub`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -1147,7 +1147,7 @@ switch(@$_POST['op']) {
 		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$sql = "DELETE FROM `_zayav_rubric_sub` WHERE `id`=".$id;
+		$sql = "DELETE FROM `_setup_rubric_sub` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);

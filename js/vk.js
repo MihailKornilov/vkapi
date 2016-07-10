@@ -2310,6 +2310,45 @@ $.fn._selectColor = function(o) {//вывод селектов для выбора цветов
 		dopSpan[v ? 'show' : 'hide']();
 	}
 };
+$.fn._rubric = function() {//вывод селектов для выбора рубрики и подрубрики
+/*
+	прицепляется к первому input
+	второй должен быть с таким же id + _sub
+*/
+	var t = $(this),
+		attr_id = t.attr('id');
+
+	if(!attr_id)
+		return;
+
+	var rub = $('#' + attr_id),
+		sub = $('#' + attr_id + '_sub');
+
+	rub._select({
+		width:100,
+		title0:'не выбрана',
+		spisok:RUBRIC_SPISOK,
+		func:function(id) {
+			sub.val(0)._select('remove');
+			subPrint(id);
+		}
+	});
+
+	$('#' + attr_id + '_select').css('margin-right', 5);
+
+	subPrint(rub.val());
+
+	function subPrint(id) {
+		if(RUBRIC_SUB_SPISOK[id]) {
+			sub._select({
+				width:153,
+				title0:'подрубрика не выбрана',
+				spisok:RUBRIC_SUB_SPISOK[id]
+			});
+		}
+	}
+
+};
 $.fn.insertAtCaret = function(myValue){//вставка текста в место курсора
     return this.each(function(i) {
         if (document.selection) {

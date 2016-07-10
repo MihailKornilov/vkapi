@@ -13,7 +13,7 @@ function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
 		$sql = "SELECT
 					`id`,
 					`name`
-				FROM `_zayav_rubric`
+				FROM `_setup_rubric`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -32,6 +32,10 @@ function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
 		return _selJson($spisok);
 	}
 
+	//рубрика ї подрубрика
+	if(preg_match(REGEXP_NUMERIC, $i))
+		return $arr[$id]['name'].($i ? ' ї '._rubricSub($i) : '');
+
 	//неизвестный id
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id рубрики', $id);
@@ -40,7 +44,7 @@ function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
 	if(!isset($arr[$id][$i]))
 		return _cacheErr('неизвестный ключ рубрики', $i);
 
-	//возврат конкретной рубрики
+	//конкретна€ рубрика
 	return $arr[$id][$i];
 }
 function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
@@ -50,7 +54,7 @@ function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
 					`id`,
 					`rubric_id`,
 					`name`
-				FROM `_zayav_rubric_sub`
+				FROM `_setup_rubric_sub`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
 		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
@@ -84,6 +88,81 @@ function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
 
 	//возврат конкретной подрубрики
 	return $arr[$id][$i];
+}
+function _gn($nomer='all', $i='') {//ѕолучение информации о всех номерах газеты из кеша
+	$key = CACHE_PREFIX.'gn'.APP_ID;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `general_nomer`";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			$arr[$r['general_nomer']] = array(
+				'week' => $r['week_nomer'],
+				'day_print' => $r['day_print'],
+				'day_public' => $r['day_public'],
+				'pub' => FullData($r['day_public'], 1, 1, 1),
+				'pc' => $r['polosa_count']
+			);
+		xcache_set($key, $arr, 86400);
+	}
+
+	//все номера
+	if($nomer == 'all')
+		return $arr;
+
+	//ассоциативный список номеров газет дл€ JS
+	if($nomer == 'js_ass') {
+		if(empty($arr))
+			return '{}';
+
+		$gn = array();
+		foreach($arr as $n => $r)
+			array_push($gn, "\n".$n.':{'.
+				'week:'.$r['week'].','.
+				'pub:"'.$r['day_public'].'",'.
+				'txt:"'.FullData($r['day_public'], 0, 0, 1).'",'.
+				'pc:'.$r['pc'].
+			'}');
+	
+		return '{'.implode(',', $gn).'}';
+	}
+
+	//первый активный номер
+	if($nomer == 'first') {
+		if(empty($arr))
+			return 0;
+
+		foreach($arr as $n => $r)
+			if(strtotime($r['day_print']) > time())
+				return $n;
+
+		return 0;
+	}
+
+	//последний активный номер
+	if($nomer == 'last') {
+		if(empty($arr))
+			return 0;
+
+		end($arr);
+		return key($arr);
+	}
+
+	//неизвестный номер
+	if(!isset($arr[$nomer]))
+		return _cacheErr('неизвестный номер газеты', $nomer);
+
+	//возвращение данных одного номера
+	if(!$i)
+		return $arr[$nomer];
+
+	//неизвестный ключ
+	if(!isset($arr[$nomer][$i]))
+		return _cacheErr('неизвестный ключ номера газеты', $i);
+
+	return $arr[$nomer][$i];
 }
 
 
@@ -156,10 +235,12 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 	}
 
 	//возвращение статуса по умолчанию
-	if($id == 'default')
+	if($id == 'default') {
 		foreach($arr as $r)
 			if($r['default'])
 				return _num($r['id']);
+		return 0;
+	}
 
 	//id статусов, которые скрываютс€ из общего списка
 	if($id == 'hide_ids') {
@@ -954,13 +1035,17 @@ function _zayavPoleEdit($v=array()) {//¬несение/редактирование за€вки
 					'<input type="text" id="ze-kv_sm" readonly> см<sup>2</sup>',
 
 		37 => '<tr><td class="label">{label}'.
-				 '<td><input type="text" id="ze-phone" value="'.@$z['name'].'" />',
+				  '<td><input type="text" id="ze-phone" value="'.@$z['phone'].'" />',
 
-		38 => '<tr><td class="label">{label}'.
-				 '<td>---',
+		38 => '<tr><td class="label top">{label}'.
+				  '<td><input type="hidden" id="ze-gn" />',
 
 		39 => '<tr><td class="label">{label}'.
-				 '<td><input type="hidden" id="ze-skidka" />',
+				  '<td><input type="hidden" id="ze-skidka" />',
+
+		40 => '<tr><td class="label">{label}'.
+				   '<td><input type="hidden" id="ze-rubric_id" value="'.@$z['rubric_id'].'" />'.
+					   '<input type="hidden" id="ze-rubric_id_sub" value="'.@$z['rubric_id_sub'].'" />'
 	);
 
 	$send = '';
