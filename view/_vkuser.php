@@ -72,6 +72,19 @@ function _viewer($viewer_id=VIEWER_ID, $val=false) {
 */
 
 function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате из контакта
+	//список сотрудников для _select
+	if($viewer_id == 'worker_js') {
+		$sql = "SELECT
+					`viewer_id`,
+					CONCAT(`first_name`,' ',`last_name`)
+				 FROM `_vkuser`
+				 WHERE `app_id`=".APP_ID."
+				   AND `worker`
+				   AND !`hidden`
+				 ORDER BY `dtime_add`";
+		return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	}
+
 	if(is_array($viewer_id))
 		return _viewerValToList($viewer_id);
 
@@ -272,10 +285,10 @@ function _viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с у
 	if(!$viewer_id)
 		return 'внесено автоматически';
 	return 'вн'.(_viewer($viewer_id, 'viewer_sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'viewer_name');
-}//_viewerAdded();
+}
 function _viewerDeleted($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
 	return 'удалил'.(_viewer($viewer_id, 'sex') == 1 ? 'а' : '').' '._viewer($viewer_id, 'viewer_name');
-}//_viewerDeleted();
+}
 
 
 

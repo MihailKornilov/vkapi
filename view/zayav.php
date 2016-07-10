@@ -170,14 +170,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 	$key = CACHE_PREFIX.'zayav_status'.APP_ID;
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
-					`id`,
-					`name`,
-					`color`,
-					`default`,
-					`executer`,
-					`hide`,
-					`srok`,
-					`day_fact`,
+					*,
 					0 `count`
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
@@ -227,11 +220,115 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 	if($id == 'all')
 		return $arr;
 
-	if($id == 'select') {
+	//список названий JS для select
+	if($id == 'js_name') {
 		$send = array();
-		foreach($arr as $r)
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
 			$send[$r['id']] = $r['name'];
+		}
 		return _selJson($send);
+	}
+
+	//ассоциативный список цветов JS
+	if($id == 'js_color_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			$send[$r['id']] = $r['color'];
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список описаний JS
+	if($id == 'js_about_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			$send[$r['id']] = $r['about'];
+		}
+		return _br(_assJson($send));
+	}
+
+	//ассоциативный список "Не использовать повторно" JS
+	if($id == 'js_nouse_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['nouse'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список "Исполнители" JS
+	if($id == 'js_executer_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['executer'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список "Показывать срок" JS
+	if($id == 'js_srok_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['srok'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список "Вносить начисление" JS
+	if($id == 'js_accrual_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['accrual'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список "Добавлять напоминание" JS
+	if($id == 'js_remind_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['remind'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
+
+	//ассоциативный список "Указывать фактический день" JS
+	if($id == 'js_day_fact_ass') {
+		$send = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['day_fact'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
 	}
 
 	//возвращение статуса по умолчанию
@@ -267,13 +364,13 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 	if($id && !isset($arr[$id])) {
 		if($i == 'bg')
 			return '';
-		return '<span class="red">неизвестный id статуса: <b>'.$id.'</b></span>';
+		return _cacheErr('неизвестный id статуса', $id);
 	}
 
 	if(!$id) {
 		if($i == 'bg')
 			return '';
-		return '<span class="red">статус отсутствует</span>';
+		return _cacheErr('нулевой статус');
 	}
 
 	if($i == 'name')
@@ -298,7 +395,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 	if($i == 'bg')
 		return ' style="background-color:#'.$arr[$id]['color'].'"';
 
-	return '<span class="red">неизвестный ключ статуса: <b>'.$i.'</b></span>';
+	return _cacheErr('неизвестный ключ статуса', $i);
 }
 function _zayavStatusButton($z) {
 	if($z['status_day'] == '0000-00-00')
@@ -1187,7 +1284,6 @@ function _zayav_info() {
 				'count:'.$z['count'].','.
 				'status_id:'.$z['status_id'].','.
 				'status_day:"'.($z['status_day'] == '0000-00-00' ? '' : $z['status_day']).'",'.
-				'status_sel:'._zayavStatus('select').','.
 				'executer_id:'.$z['executer_id'].','.
 				'srok:"'.$z['srok'].'",'.
 				'adres:"'.addslashes($z['adres']).'",'.
@@ -2343,10 +2439,9 @@ function _zayavSrokCalendar($v=array()) {
 
 
 /* --- Расходы по заявке --- */
-function _zayavExpense($id=false, $i='name') {//категории расходов заявки из кеша
+function _zayavExpense($id='all', $i='name') {//категории расходов заявки из кеша
 	$key = CACHE_PREFIX.'zayav_expense'.APP_ID;
-	$arr = xcache_get($key);
-	if(empty($arr)) {
+	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					`id`,
 					`name`,
@@ -2362,12 +2457,24 @@ function _zayavExpense($id=false, $i='name') {//категории расходов заявки из кеш
 		return array_keys($arr);
 
 	//все категории
-	if($id === false)
+	if($id == 'all')
 		return $arr;
 
-	//некорректный id
-	if(!_num($id))
-		return _cacheErr('некорректный id расхода по заявке', $id);
+	//список JS для select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
+		return _selJson($spisok);
+	}
+
+	//ассоциативный список дополнительных параметров
+	if($id == 'dop_ass') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['dop'];
+		return _assJson($spisok);
+	}
 
 	//неизвестный id
 	if(!isset($arr[$id]))

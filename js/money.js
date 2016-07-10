@@ -100,7 +100,7 @@ var _accrualAdd = function(o) {
 			spisok:_invoiceIncomeInsert(),
 			func:function(id) {
 				$('#sum').focus();
-				$('.tr_confirm')[(INVOICE_CONFIRM_INCOME[id] ? 'remove' : 'add') + 'Class']('dn');
+				$('.tr_confirm')[(INVOICE_INCOME_CONFIRM[id] ? 'remove' : 'add') + 'Class']('dn');
 				$('#confirm')._check(0);
 			}
 		});

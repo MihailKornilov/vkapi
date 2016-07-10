@@ -658,8 +658,7 @@ function income_schet_spisok($schet) {//список платежей по конкретному счёту на 
 /* --- расходы --- */
 function _expense($id=0, $i='name') {//Список категорий расходов
 	$key = CACHE_PREFIX.'expense'.APP_ID;
-	$arr = xcache_get($key);
-	if(empty($arr)) {
+	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					*,
 					0 `sub`
@@ -686,29 +685,32 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 	if(!$id)
 		return $arr;
 
-	//некорректный id категории
-	if(!_num($id))
-		die('Error: expense category_id <b>'.$id.'</b> not correct');
+	//список JS для select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
+		return _selJson($spisok);
+	}
 
 	//неизвестный id категории
 	if(!isset($arr[$id]))
-		die('Error: no expense category_id <b>'.$id.'</b> in _invoice');
+		return _cacheErr('неизвестный id категории расходов', $id);
 
-	//массив всех категорий
+	//данные конкретной категории
 	if($i == 'all')
 		return $arr[$id];
 
 	//неизвестный ключ категории
 	if(!isset($arr[$id][$i]))
-		return '<span class="red">неизвестный ключ категории расхода: <b>'.$i.'</b></span>';
+		return _cacheErr('неизвестный ключ категории расходов', $i);
 
 	//возврат данных конкретной категории расхода
 	return $arr[$id][$i];
 }
 function _expenseSub($id, $i='name') {//Список подкатегорий расходов
 	$key = CACHE_PREFIX.'expense_sub'.APP_ID;
-	$arr = xcache_get($key);
-	if(empty($arr)) {
+	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_money_expense_category_sub`
 				WHERE `app_id`=".APP_ID;
@@ -716,17 +718,26 @@ function _expenseSub($id, $i='name') {//Список подкатегорий расходов
 		xcache_set($key, $arr, 86400);
 	}
 
-	//некорректный id категории
-	if(!_num($id))
-		return '';
+	//список JS для select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['category_id']][$r['id']] = $r['name'];
 
-	//неизвестный id категории
+		$js = array();
+		foreach($spisok as $uid => $r)
+			$js[] = $uid.':'._selJson($r);
+
+		return '{'.implode(',', $js).'}';
+	}
+
+	//неизвестный id
 	if(!isset($arr[$id]))
-		return '<span class="red">неизвестный id <b>'.$id.'</b> подкатегории расхода</span>';
+		return _cacheErr('неизвестный id подкатегории расходов', $id);
 
-	//неизвестный ключ категории
+	//неизвестный ключ
 	if(!isset($arr[$id][$i]))
-		return '<span class="red">неизвестный ключ подкатегории расхода: <b>'.$i.'</b></span>';
+		return _cacheErr('неизвестный ключ подкатегории расходов', $i);
 
 	//возврат данных конкретной категории расхода
 	return $arr[$id][$i];
@@ -1205,6 +1216,21 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 	if(!$id)
 		return $arr;
 
+	//список для _select
+	if($id == 'js') {
+		if(empty($arr))
+			return '[]';
+
+		$spisok = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			$spisok[$r['id']] = $r['name'];
+		}
+
+		return _selJson($spisok);
+	}
+
 	//получение ids сотрудников, которые могут вносить платежи по доступным счетам для js
 	if($id == 'income_insert_js') {
 		$spisok = array();
@@ -1216,6 +1242,23 @@ function _invoice($id=0, $i='name') {//получение списка счетов из кеша
 			return '{}';
 
 		return str_replace('"', '', json_encode($spisok));
+	}
+
+	//получение ids сотрудников, которые могут вносить платежи по доступным счетам для js
+	if($id == 'income_confirm_js') {
+		$spisok = array();
+		foreach($arr as $r) {
+			if($r['deleted'])
+				continue;
+			if(!$r['income_confirm'])
+				continue;
+			$spisok[$r['id']] = 1;
+		}
+
+		if(!$spisok)
+			return '{}';
+
+		return _assJson($spisok);
 	}
 
 	//получение ids сотрудников, которые могут вносить расходы по доступным счетам для js

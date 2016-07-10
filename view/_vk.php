@@ -838,6 +838,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуетс€
 function _num($v) {
 	if(empty($v) || is_array($v) || !preg_match(REGEXP_NUMERIC, $v))
 		return 0;
+
 	return intval($v);
 }
 function _bool($v) {//проверка на булево число
@@ -1102,7 +1103,7 @@ function _assJson($arr) {//јссоциативный массив
 		$send[] =
 			(preg_match(REGEXP_NUMERIC, $id) ? $id : '"'.$id.'"').
 			':'.
-			(preg_match(REGEXP_CENA, $v) ? $v : '"'.$v.'"');
+			(preg_match(REGEXP_NUMERIC, $v) ? $v : '"'.$v.'"');
 	return '{'.implode(',', $send).'}';
 }
 function _arrJson($arr, $i=false) {//ѕоследовательный массив
@@ -1289,91 +1290,36 @@ function _globalJsValues() {//—оставление файла global.js, используемый во всех 
 }
 function _appJsValues() {//дл€ конкретного приложени€
 	$save = 'var'.
-		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name`
-											  FROM `_money_invoice`
-											  WHERE `app_id`=".APP_ID."
-												AND !`deleted`
-											  ORDER BY `id`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'INVOICE_SPISOK='._invoice('js').','.
 		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
-		"\n".'INVOICE_CONFIRM_INCOME='.query_assJson("SELECT `id`,1
-													  FROM `_money_invoice`
-													  WHERE `app_id`=".APP_ID."
-														AND `income_confirm`
-														AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'INVOICE_CONFIRM_TRANSFER='.query_assJson("SELECT `id`,1
-														FROM `_money_invoice`
-														WHERE `app_id`=".APP_ID."
-												          AND `transfer_confirm`
-												          AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
 		"\n".'INVOICE_INCOME_INSERT='._invoice('income_insert_js').','.
+		"\n".'INVOICE_INCOME_CONFIRM='._invoice('income_confirm_js').','.
 		"\n".'INVOICE_EXPENSE_INSERT='._invoice('expense_insert_js').','.
-		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`)
-											 FROM `_vkuser`
-											 WHERE `app_id`=".APP_ID."
-											   AND `worker`
-											   AND !`hidden`
-											 ORDER BY `dtime_add`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'WORKER_SPISOK='._viewer('worker_js').','.
 		"\n".'WORKER_ASS=_toAss(WORKER_SPISOK),'.
 		"\n".'WORKER_EXECUTER='._zayavExecuterJs().','.
 		"\n".'SALARY_PERIOD_SPISOK='._selJson(_salaryPeriod()).','.
-		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name`
-											  FROM `_money_expense_category`
-											  WHERE `app_id` IN (".APP_ID.",0)
-											  ORDER BY `sort` ASC", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'EXPENSE_SUB_SPISOK='.Gvalues_obj('_money_expense_category_sub', '`category_id`,`name`', 'category_id', GLOBAL_MYSQL_CONNECT, 1).','.
+		"\n".'EXPENSE_SPISOK='._expense('js').','.
+		"\n".'EXPENSE_SUB_SPISOK='._expenseSub('js').','.
 		"\n".'SERVICE_ACTIVE_COUNT='._service('active_count').','.  //количество активных за€вок в организации
 		"\n".'SERVICE_ACTIVE_ASS='._service('js').','.              //виды активных за€вок в организации
 		"\n".'CLIENT_FROM_SPISOK='._clientFromJs().','.
 		"\n".'CLIENT_FROM_USE='._app('client_from_use').','.
 		"\n".'CLIENT_FROM_REQUIRE='._app('client_from_require').','.
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
-		"\n".'ZAYAV_EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID." ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZE_DOP_ASS='.query_assJson("SELECT `id`,`dop` FROM `_zayav_expense_category` WHERE `app_id`=".APP_ID, GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_NAME_SPISOK='.query_selJson("SELECT `id`,`name`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND !`deleted`
-														ORDER BY `sort`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_EXPENSE_SPISOK='._zayavExpense('js').','.
+		"\n".'ZE_DOP_ASS='._zayavExpense('dop_ass').','.
+		"\n".'ZAYAV_STATUS_NAME_SPISOK='._zayavStatus('js_name').','.
 		"\n".'ZAYAV_STATUS_NAME_ASS=_toAss(ZAYAV_STATUS_NAME_SPISOK),'.
-		"\n".'ZAYAV_STATUS_COLOR_ASS='.query_assJson("  SELECT `id`,`color`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_ABOUT_ASS='._br(query_assJson("  SELECT `id`,`about`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT)).','.
-		"\n".'ZAYAV_STATUS_NOUSE_ASS='.query_assJson("  SELECT `id`,`nouse`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `nouse`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_COLOR_ASS='._zayavStatus('js_color_ass').','.
+		"\n".'ZAYAV_STATUS_ABOUT_ASS='._zayavStatus('js_about_ass').','.
+		"\n".'ZAYAV_STATUS_NOUSE_ASS='._zayavStatus('js_nouse_ass').','.
 		"\n".'ZAYAV_STATUS_NEXT='.setup_zayav_status_next_js().','.
-		"\n".'ZAYAV_STATUS_EXECUTER_ASS='.query_assJson("  SELECT `id`,`executer`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `executer`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_SROK_ASS='.query_assJson("  SELECT `id`,`srok`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `srok`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_ACCRUAL_ASS='.query_assJson("  SELECT `id`,`accrual`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `accrual`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_REMIND_ASS='.query_assJson("  SELECT `id`,`remind`
-														FROM `_zayav_status`
-														WHERE `app_id`=".APP_ID."
-														  AND `remind`
-														  AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='.query_assJson("SELECT `id`,`day_fact`
-														 FROM `_zayav_status`
-														 WHERE `app_id`=".APP_ID."
-														   AND `day_fact`
-														   AND !`deleted`", GLOBAL_MYSQL_CONNECT).','.
+		"\n".'ZAYAV_STATUS_EXECUTER_ASS='._zayavStatus('js_executer_ass').','.
+		"\n".'ZAYAV_STATUS_SROK_ASS='._zayavStatus('js_srok_ass').','.
+		"\n".'ZAYAV_STATUS_ACCRUAL_ASS='._zayavStatus('js_accrual_ass').','.
+		"\n".'ZAYAV_STATUS_REMIND_ASS='._zayavStatus('js_remind_ass').','.
+		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='._zayavStatus('js_day_fact_ass').','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
