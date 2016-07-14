@@ -1005,6 +1005,8 @@ switch(@$_POST['op']) {
 		query($sql, GLOBAL_MYSQL_CONNECT);
 		$insert_id = query_insert_id('_zayav_expense', GLOBAL_MYSQL_CONNECT);
 
+		_zayavBalansUpdate($zayav_id);
+
 		//внесение истории баланса сотрудника
 		if($workerOnPay)
 			_balans(array(
@@ -1052,6 +1054,8 @@ switch(@$_POST['op']) {
 
 		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_zayavBalansUpdate($r['zayav_id']);
 
 		//внесение истории баланса сотрудника
 		if($r['worker_id'] && $r['year'] && $r['mon'])
