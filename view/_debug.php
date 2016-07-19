@@ -71,6 +71,10 @@ function _debug_cookie() {
 function _pre($v) {// вывод в debug разобранного массива
 	if(empty($v))
 		return '';
+
+	if(defined('ARRAY_PRE'))
+		return '';
+
 	$pre = '';
 	foreach($v as $k => $r)
 		$pre .= '<div class="un"><b>'.$k.':</b>'._pre_arr($r).'</div>';

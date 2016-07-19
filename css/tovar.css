@@ -357,10 +357,10 @@
 
 
 
-.tovar-select{margin-top:-2px}
+.tovar-select{margin-top:-3px;background:#fff}
 .tovar-select .td-but{padding-left:0;border:0}
 .tovar-select button.vk{padding-left:35px;padding-right:35px}
-.tovar-select img{float:left;margin-right:5px}
+.tovar-select .ts-image{width:50px}
 .tovar-select .ts-name{vertical-align:top;padding-left:5px}
 .tovar-select .ts-name tt{
 	display:block;
@@ -385,9 +385,15 @@
 }
 .tovar-select .img_edit{float:right}
 .tovar-select .ts-avai{background-position:left;margin-top:-1px}
-
-
-
+#avai-option_radio{margin:12px 40px 40px}
+#ts-articul{margin-top:20px}
+#ts-articul .headName{margin:0 0 -1px}
+#ts-articul .tsa-tab{border:#dee4e8 solid 1px;margin-bottom:-1px}
+#ts-articul .name{font-size:18px}
+#ts-articul .name *{font-size:18px}
+#ts-articul span{color:#999;margin-left:5px}
+#ts-articul #tsa-count{text-align:right;font-weight:bold}
+#ts-articul .tsa-bottom{border:#dee4e8 solid 1px;margin-top:-1px}
 
 
 

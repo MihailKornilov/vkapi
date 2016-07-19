@@ -1479,7 +1479,7 @@ var _accrualAdd = function(o) {
 			});
 			$('#schet-del').click(function() {
 				_dialogDel({
-					id:res.schet_id,
+					id:o.id,
 					head:'счёта № ' + res.nomer,
 					op:'schet_del',
 					func:function() {
@@ -1497,17 +1497,19 @@ var _accrualAdd = function(o) {
 		}
 	},
 	_schetEdit = function(o) {
+		window['tsg'] = false;
 		o = $.extend({
-			edit:0,//0 - возвращаться на просмотр счёта при отмене, 1 - просто закрыть окно
+			edit:0,         // 0 - возвращаться на просмотр счёта при отмене, 1 - просто закрыть окно
 			schet_id:0,
 			client_id:0,
 			zayav_id:0,
-			arr:[],
-			zayav_spisok:[],
+			avai:2,         // варианты выбора товара (из tovar-select)
+			arr:[],         // контент счёта
+			zayav_spisok:[],// список заявок конкретного клиента для прикрепления счёта к другой заявке
 			client:'',
-			date_create:'',
-			nakl:0,
-			act:0,
+			date_create:'', // дата создания счёта
+			nakl:0,         // на печать будет выводиться накладная
+			act:0,          // на мечать будет выводиться акт выполненных работ
 			noedit:0,
 			func:function() {
 				location.reload();
@@ -1529,7 +1531,7 @@ var _accrualAdd = function(o) {
 		: '') +
 					'<table class="tab">' +
 						'<tr><td class="label r top">Плательщик:<td>' + o.client +
-(o.zayav_spisok.length ? '<tr><td class="label r">Заявка:<td><input type="hidden" id="zayav_id" value="' + o.zayav_id + '" />' : '') +
+(o.zayav_spisok.length ?'<tr><td class="label r">Заявка:<td><input type="hidden" id="zayav_id" value="' + o.zayav_id + '" />' : '') +
 						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + o.date_create + '" />' +
 						'<tr><td class="label r topi">Приложения:' +
 							'<td><input id="nakl" type="hidden" value="' + o.nakl + '" />' +
@@ -1553,14 +1555,16 @@ var _accrualAdd = function(o) {
 				width:610,
 				head:o.schet_id ? 'Редактирование счёта на оплату' : 'Формирование нового счёта на оплату',
 				content:html,
-				butSubmit:o.schet_id ? 'Сохранить' : 'Готово',
+				butSubmit:o.schet_id ? 'Сохранить счёт' : 'Сформировать счёт',
 				submit:submit,
 				cancel:function() {
 					if(!o.edit)
 						_schetInfo(o);
 				}
-			});
+			}),
+			tovar_num = 0;// порядковый номер input товара
 
+		$('#_schet-info textarea').autosize();
 		poleNum();
 		itog();
 		if(o.zayav_spisok.length)
@@ -1576,7 +1580,47 @@ var _accrualAdd = function(o) {
 				.parent()
 				.before(pole)
 				.parent()
-				.find('.name:last input').focus();
+				.find('.name:last textarea').autosize().focus();
+			$('#tovar' + tovar_num).tovar({
+				title:'...',
+				tooltip:'Выбрать из товаров',
+				avai:o.avai,
+				avai_open:1,
+				funcSel:function(res, attr_id) {
+					var p = _parent($('#' + attr_id), '.pole'),
+						countInp = p.find('.count input'),
+						costInp = p.find('.cost input');
+
+					p.find('.name textarea')
+					 .after('<textarea>' + res.name + '</textarea>')
+					 .remove();
+
+					p.find('.name textarea')
+						.autosize()
+						.next().val(res.id);
+					p.find('.tovar-avai').val(res.avai_id);
+
+					countInp.val(res.count);
+					costInp
+					 .val(res.sum_sell)
+					 .trigger('keyup');
+
+					itog();
+
+					if(!p.next().hasClass('pole'))
+						$('#pole-add').trigger('click');
+
+					$('#' + attr_id).next().remove();
+
+					if(res.avai_id) {
+						countInp
+							.attr('readonly', 'readonly')
+							.css('font-weight', 'bold');
+						costInp.select();
+					} else
+						countInp.select();
+				}
+			});
 			poleNum();
 		});
 
@@ -1584,35 +1628,42 @@ var _accrualAdd = function(o) {
 			$('#pole-add').trigger('click');
 
 		$(document)
+			.off('click', '.pole-del')
 			.on('click', '.pole-del', function() {
 				_parent($(this)).remove();
 				poleNum();
 				itog();
 			})
-			.on('keyup', '.pole input', function() {
+			.off('keyup', '.pole input,.pole textarea')
+			.on('keyup', '.pole input,.pole textarea', function() {
 				var t = _parent($(this)),
 					count = t.find('.count input').val(),
 					cost = t.find('.cost input').val(),
 					sum = count * _cena(cost);
-				t.find('.sum').html(sum ? sum : '');
+				t.find('.sum').html(sum);
 				itog();
 			});
 
 		function pole(sp) {//добавление нового поля
 			sp = $.extend({
 				name:'',
+				tovar_id:0,
+				tovar_avai_id:0,
 				count:1,
 				cost:''
 			}, sp);
 			var sum = sp.count * _cena(sp.cost),
 				readonly = sp.readonly ? ' readonly="readonly"' : '';
 			return '<tr class="pole">' +
-				'<td class="n">' +
-				'<td class="name"><input type="text" value="' + sp.name + '" />' +
-				'<td class="count"><input type="text"' + readonly + ' value="' + sp.count + '" />' +
-				'<td class="cost"><input type="text"' + readonly + ' value="' + sp.cost + '" />' +
-				'<td class="sum">' + (sum ? sum : '') +
-				'<td class="ed">' +
+				'<td class="n r top">' +
+				'<td class="name">' +
+					'<textarea>' + sp.name + '</textarea>' +
+					'<input type="hidden" id="tovar' + (++tovar_num) + '" value="' + sp.tovar_id + '" />' +
+					'<input type="hidden" class="tovar-avai" value="' + sp.tovar_avai_id + '" />' +
+				'<td class="count top"><input type="text"' + (sp.tovar_avai_id || readonly ? ' readonly="readonly"' : '') + ' value="' + sp.count + '" />' +
+				'<td class="cost top"><input type="text"' + readonly + ' value="' + sp.cost + '" />' +
+				'<td class="sum top">' + (sum ? sum : '') +
+				'<td class="ed top">' +
 					(!readonly ? '<div class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
 		}
 		function poleNum() {//порядковая нумерация позиций счёта
@@ -1624,61 +1675,62 @@ var _accrualAdd = function(o) {
 			var pole = $('#_schet-info .pole'),
 				num = 0,    //количество наименований
 				sum = 0,    //общая сумма
-				arr = [],   //массив для возврата
-				err = 0;    //найдена ли ошибка
+				arr = [];   //массив для возврата
 			for(var n = 0; n < pole.length; n++) {
 				var eq = pole.eq(n),
-					name_inp = eq.find('.name input'),
+					name_inp = eq.find('.name textarea'),
 					count_inp = eq.find('.count input'),
 					cost_inp = eq.find('.cost input'),
 					name = $.trim(name_inp.val()),
 					count = _num(count_inp.val()),
-					cost = _cena(cost_inp.val()),
+					cost = $.trim(cost_inp.val()),
 					s = count * cost;
 				if(s)
 					num++;
-				name_inp[(name ? 'remove' : 'add') + 'Class']('err');
-				count_inp[(count ? 'remove' : 'add') + 'Class']('err');
-				cost_inp[(cost ? 'remove' : 'add') + 'Class']('err');
+				name_inp[(!name ? 'add' : 'remove') + 'Class']('err');
+				count_inp[(!count ? 'add' : 'remove') + 'Class']('err');
+				cost_inp[(!_cena(cost) && cost != '0'  ? 'add' : 'remove') + 'Class']('err');
 				sum += s;
-				if(!err && name && !count) {
-					err = 1;
-					arr = {
-						error:1,
-						msg:'Некорректно указано количество',
-						place:count_inp
-					};
-				}
-				if(!err && name && !cost) {
-					err = 1;
-					arr = {
-						error:1,
-						msg:'Некорректно указана сумма',
-						place:cost_inp
-					};
-				}
-				if(!err && !name && count && cost) {
-					err = 1;
-					arr = {
-						error:1,
-						msg:'Не указано наименование',
-						place:name_inp
-					};
-				}
-				if(!err)
-					arr.push({
-						name:name,
-						count:count,
-						cost:cost,
-						readonly:count_inp.attr('readonly') == 'readonly'
-					});
+				arr.push({
+					tovar_id:_num(name_inp.next().val()),
+					tovar_avai_id:_num(name_inp.next().next().val()),
+					name:name,
+					count:count,
+					cost:cost,
+					readonly:cost_inp.attr('readonly') == 'readonly'
+				});
 			}
 
-			if(!err && !num)
-				arr = {
+			if(!pole.length)
+				$('#_schet-info h3').html('');
+
+			if(!arr.length)
+				return {
 					error:1,
 					msg:'Не добавлено ни одной позиции'
 				};
+
+			for(n = 0; n < arr.length; n++) {
+				var sp = arr[n];
+				if(sp.name && !sp.count)
+					return {
+						error:1,
+						msg:'Некорректно указано количество',
+						place:$('input.err:first')
+					};
+				if(sp.name && !_cena(sp.cost) && sp.cost != '0')
+					return {
+						error:1,
+						msg:'Некорректно указана сумма',
+						place:$('input.err:first')
+					};
+				if(!sp.name && sp.count && sp.cost)
+					return {
+						error:1,
+						msg:'Не указано наименование',
+						place:$('input.err:first')
+					};
+			}
 
 			$('#_schet-info h3').html('Всего наименований <b>' + num + '</b>, на сумму <b>' + sum + '</b> руб.');
 			return arr;
@@ -1698,17 +1750,17 @@ var _accrualAdd = function(o) {
 				dialog.err(send.spisok.msg);
 				if(send.spisok.place)
 					send.spisok.place.focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg();
-						o.func(res.schet_id);
-					} else
-						dialog.abort();
-				}, 'json');
+				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					o.func(res.schet_id);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
 		}
 	},
 	_schetSpisok = function(v, id) {

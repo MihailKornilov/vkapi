@@ -785,10 +785,10 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'schet_load':
-		if(!$id = _num($_POST['id']))
+		if(!$schet_id = _num($_POST['id']))
 			jsonError();
 
-		if(!$schet = _schetQuery($id, 1))
+		if(!$schet = _schetQuery($schet_id, 1))
 			jsonError();
 
 		//сегодня создан счёт или нет - для возможности редактирования
@@ -796,9 +796,10 @@ switch(@$_POST['op']) {
 
 		$sql = "SELECT *
 				FROM `_schet_content`
-				WHERE `schet_id`=".$id."
+				WHERE `schet_id`=".$schet_id."
 				ORDER BY `id`";
 		$content = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$tovar = _tovarValToList($content);
 
 		$html = '<table class="_spisok">'.
 					'<tr><th>№'.
@@ -809,11 +810,16 @@ switch(@$_POST['op']) {
 		$n = 0;
 		$sum = 0;
 		$arr = array();
-		foreach($content as $r) {
+		$avai = 2; // варианты выбора товара (из tovar-select)
+		foreach($content as $id => $r) {
+			if($avai == 2 && $r['tovar_id'])
+				$avai = 0;
+			if(($avai == 2 || !$avai) && $r['tovar_avai_id'])
+				$avai = 1;
 			$html .=
-				'<tr><td class="n">'.(++$n).
-					'<td class="name">'.$r['name'].
-					'<td class="count">'.$r['count'].
+				'<tr><td class="n r">'.(++$n).
+					'<td class="name">'.($r['tovar_id'] ? '<a href="'.URL.'&p=tovar&d=info&id='.$r['tovar_id'].'">'.$r['name'].'</a>' : $r['name']).
+					'<td class="count">'.($r['tovar_avai_id'] ? '<b class="avai">'.$r['count'].' '.$tovar[$id]['tovar_measure_name'].'</b>' : $r['count']).
 					'<td class="cost">'._sumSpace($r['cost']).
 					'<td class="sum">'._sumSpace($r['count'] * $r['cost']);
 			$sum += $r['count'] * $r['cost'];
@@ -842,9 +848,10 @@ switch(@$_POST['op']) {
 				ORDER BY `id`";
 		$send['zayav_spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
 
-		$send['schet_id'] = $id;
+		$send['schet_id'] = $schet_id;
 		$send['client_id'] = _num($schet['client_id']);
 		$send['zayav_id'] = _num($schet['zayav_id']);
+		$send['avai'] = $avai;
 		$send['date_create'] = $schet['date_create'];
 		$send['nakl'] = _bool($schet['nakl']);
 		$send['act'] = _bool($schet['act']);
@@ -859,14 +866,14 @@ switch(@$_POST['op']) {
 		$send['arr'] = $arr;
 		$send['noedit'] = $noedit;
 		$send['del'] = _bool($schet['deleted']);
-		$hist = _history(array('schet_id'=>$id));
+		$hist = _history(array('schet_id'=>$schet_id));
 		$send['hist'] = _num($hist['all']);
 		$send['hist_spisok'] = utf8($hist['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'schet_edit'://создание или редактирование счёта
 		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
-			jsonError();
+			jsonError('Некорректная дата создания');
 
 		$schet_id = _num($_POST['schet_id']);
 		$client_id = _num($_POST['client_id']);
@@ -878,7 +885,7 @@ switch(@$_POST['op']) {
 		$schet = array();
 		if($schet_id) {
 			if(!$schet = _schetQuery($schet_id))
-				jsonError();
+				jsonError('Счёта не существует');
 			$client_id = $schet['client_id'];
 		}
 
@@ -891,15 +898,22 @@ switch(@$_POST['op']) {
 		if(!$client_id || !_clientQuery($client_id))
 			jsonError();
 
-		$spisok = @$_POST['spisok'];
-		if(empty($spisok))
+
+		if(empty($_POST['spisok']))
 			jsonError();
 
+		$spisok = array();
 		$sum = 0;
-		foreach($spisok as $r) {
+		foreach($_POST['spisok'] as $r) {
 			$r['name'] = _txt($r['name']);
+			if(empty($r['name']))
+				continue;
+			$spisok[] = $r;
 			$sum += _num($r['count']) * _cena($r['cost']);
 		}
+
+		if(empty($spisok))
+			jsonError('Некорректно заполнены поля');
 
 		$sql = "INSERT INTO `_schet` (
 					`id`,
@@ -942,22 +956,38 @@ switch(@$_POST['op']) {
 
 		//внесение списка наименований для счёта
 		$values = array();
-		foreach($spisok as $r)
+		foreach($spisok as $r) {
+			if(empty($r['name']))
+				continue;
 			$values[] = "(".
 				$schet_id.",".
-				"'".addslashes(win1251($r['name']))."',".
+				$r['tovar_id'].",".
+				$r['tovar_avai_id'].",".
+				"'".addslashes($r['name'])."',".
 				$r['count'].",".
 				$r['cost'].",".
 				$r['readonly'].
 			")";
+		}
+
 		$sql = "INSERT INTO `_schet_content` (
 					`schet_id`,
+					`tovar_id`,
+					`tovar_avai_id`,
 					`name`,
 					`count`,
 					`cost`,
 					`readonly`
 				) VALUES ".implode(',', $values);
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		foreach($spisok as $r) {
+			if(empty($r['name']))
+				continue;
+			if(!$r['tovar_avai_id'])
+				continue;
+			_tovarAvaiUpdate($r['tovar_id']);
+		}
 
 		//начисление по счёту
 		if($insert_id) {
@@ -1179,7 +1209,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		if(!$r = _schetQuery($schet_id))
-			jsonError();
+			jsonError('Счёта не существует');
 
 		$sql = "SELECT SUM(`sum`)
 				FROM `_money_income`
@@ -1205,6 +1235,19 @@ switch(@$_POST['op']) {
 				SET `schet_id`=0
 				WHERE `schet_id`=".$schet_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		//обновление наличия товара
+		$sql = "SELECT *
+				FROM `_schet_content`
+				WHERE `schet_id`=".$schet_id;
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($sc = mysql_fetch_assoc($q)) {
+			if(empty($sc['name']))
+				continue;
+			if(!$sc['tovar_avai_id'])
+				continue;
+			_tovarAvaiUpdate($sc['tovar_id']);
+		}
 
 		_zayavBalansUpdate($r['zayav_id']);
 		_salaryZayavBonus($r['zayav_id']);

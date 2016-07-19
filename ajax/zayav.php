@@ -916,7 +916,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-
 	case 'zayav_expense_add'://внесение расхода по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

@@ -785,6 +785,7 @@ var _zayavSpisok = function(v, id) {
 					break;
 				case 5: //товар
 					$('#ze-count-max').hide();
+					window.tsg = false;
 					$('#ze-dop').tovar({
 						open:1,
 						func:function(v, attr_id, sp) {
@@ -802,27 +803,38 @@ var _zayavSpisok = function(v, id) {
 					});
 					break;
 				case 3: //товар наличие
+					window.tsg = false;
 					$('#ze-dop').tovar({
 						open:1,
 						tovar_id_set:ZI.tovar_id,
-						func:function() {
-							$('#ze-dop').val('');//здесь будет id наличия
-						},
-						avai:1,
-						avai_radio:function(avai) {
-							$('#ze-dop').val(avai.id);
-							$('#ze-measure').html(avai.measure);
+						func:function(v, attr_id, sp) {
+							$('#td-input').append(sp.articul);
+							var avai_id = _num($('#td-input #ta-articul').val()),
+								buy = avai_id ? sp.articul_arr[avai_id].sum_buy : 0;
+							$('.tovar-avai-articul').css('margin-top', '-1px');
+							$('#ze-measure').html(sp.measure);
 							$('.tr-count').removeClass('dn');
+							$('#td-input #ta-articul')._radio(function(aid) {
+								$('#ze-dop').val(aid);
+								$('#ze-count-max b').html(sp.articul_arr[aid].count);
+								$('#ze-count').val(1);
+								buy = sp.articul_arr[aid].sum_buy;
+								$('#ze-sum').val(buy);
+							});
+							$('#ze-dop').val(avai_id);//id наличия
+
 							$('#ze-count')
 								.val(1)
 								.select()
 								.off('keyup')
 								.keyup(function() {
-									$('#ze-sum').val(_cena(_num($(this).val()) * avai.sum_buy));
+									$('#ze-sum').val(_cena(_num($(this).val()) * buy));
 								});
-							$('#ze-count-max b').html(avai.count);
-							$('#ze-sum').val(_cena(avai.sum_buy));
+
+							$('#ze-count-max b').html(avai_id ? sp.articul_arr[avai_id].count : 1);
+							$('#ze-sum').val(_cena(sp.sum_buy));
 						},
+						avai:1,
 						del:0
 					});
 					break;
@@ -897,7 +909,7 @@ var _zayavSpisok = function(v, id) {
 					$('#_zayav-expense').html(res.html);
 					_zayavExpenseEdit();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
@@ -2109,6 +2121,7 @@ $(document)
 			if($('#tovar_id').length)
 				$('#tovar_id').tovar({
 					set:0,
+					image:0,
 					ids:ZAYAV_TOVAR_IDS,
 					func:function(v, id) {
 						$('#tovar_name_id')._select(0);

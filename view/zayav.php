@@ -1819,7 +1819,7 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 				`sum_pay`=".$income.",
 				`sum_dolg`=`sum_pay`-`sum_accrual`,
 				`sum_expense`=".$expense.",
-				`sum_profit`=".($accrual - $expense).",
+				`sum_profit`=`sum_accrual`-`sum_expense`,
 				`schet_count`=".$schet_count."
 			WHERE `id`=".$zayav_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
@@ -1909,8 +1909,6 @@ function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара
 		return '';
 
 	$arr = _tovarValToList($arr, 'id');
-	$arr = _tovarAvaiToList($arr);
-	$arr = _tovarZakazToList($arr, $zayav_id);
 
 	$spisok = '';
 	foreach($arr as $r)
@@ -1921,8 +1919,8 @@ function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара
 //				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
 //				($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
 				'<div class="act">'.
-					($r['zakaz_count'] ? '<a class="zakaz-ok">Заказано</a>' : '<a class="zakaz">Заказать</a>').
-					($r['avai_count'] ? '<b class="avai">Наличие: '.$r['avai_count'].'</b> <a class="set">Установить</a>' : '').
+					($r['tovar_zakaz_count'] ? '<a class="zakaz-ok">Заказано</a>' : '<a class="zakaz">Заказать</a>').
+					($r['tovar_avai_count'] ? '<b class="avai">Наличие: '.$r['tovar_avai_count'].'</b> <a class="set">Установить</a>' : '').
 				'</div>'.
 			'</div>';
 
@@ -2301,7 +2299,7 @@ function _zayavInfoCartridgeForSchet($ids) {//получение списка картриджей для вс
 		$spisok[] = array(
 			'name' => utf8($txt),
 			'count' => $r['count'],
-			'cost' => $r['cost'],
+			'cost' => _cena($r['cost']),
 			'readonly' => 1
 		);
 	}

@@ -464,10 +464,20 @@ var _tovarEditExtend = function(o) {
 	};
 
 $.fn.tovar = function(o) {
+/*
+	Использование:
+		1. редактирование товара (применение к другому товару)
+		2. внесение заявки: один товар
+		3. внесение заявки: несколько товаров
+		4. фильтр заявок
+		5. расход в заявке
+		6. расход в заявке: наличие
+		7. счёт на оплату
+*/
+
+
 	var t = $(this),
 		attr_id = t.attr('id'),
-		tovar_id = 0,
-		ts_value = $.trim(t.val()),
 		win = attr_id + '_tovarSelect';
 
 	if(!attr_id)
@@ -483,6 +493,8 @@ $.fn.tovar = function(o) {
 	}
 
 	o = $.extend({
+		title:'выбрать товар',//текст в кнопке
+		tooltip:'',     //подсказка для кнопки
 		open:0,         //автоматически открывать окно выбора товара
 		ids:'none',     //выводить товары только из этого списка
 		set:1,          //выводить товары, которые являются запчастью для других товаров
@@ -491,11 +503,33 @@ $.fn.tovar = function(o) {
 		tovar_id_not:0, //исключать этот id товара при поиске
 		several:0,      //возможность выбирать несколько товаров
 		count_show:1,   //возможность указывать количество товаров
-		avai:0,         //выбор товара только из наличия
+		avai:0,         /* варианты выбора товара:
+							0 - любые товары (наличие не важно)
+							1 - только из наличия (наличие списывается)
+							2 - при выборе первого товара будет задан вопрос: выбор из наличия или нет
+						*/
+		avai_open:0,    //возможность выбирать наличие товара в окне поиска товаров
 		del:1,          //возможность отменить выбранный товар
 		func:function() {},
-		avai_radio:function() {}
+		funcSel:null    //функция, применяемая при выборе товара
 	}, o);
+
+	//Tovar Select Global
+	if(!window['tsg'])
+		window['tsg'] = {
+			find:'', //последнее слово поиска
+			avai:o.avai
+		};
+
+	var TOVAR_SEL = 0,  //id товара, который был выбран в окне поиска (для его подсветки)
+		VAL = $.trim(t.val()),
+		TSG = window['tsg'];
+
+	//запоминание варианта выбора, если выбор требовался
+	o.avai = TSG.avai;
+
+	if(VAL == '0')
+		VAL = 0;
 
 	//если несколько товаров, то картинка не показывается
 	if(o.several)
@@ -508,7 +542,8 @@ $.fn.tovar = function(o) {
 	t.after('<div class="tovar-select">' +
 				'<table class="_spisok">' +
 					'<tr class="tr-but">' +
-						'<td class="td-but" colspan="3"><button class="vk small">выбрать товар</button>' +
+						'<td class="td-but" colspan="3">' +
+							'<button class="vk small' + (o.tooltip ? _tooltip(o.tooltip, -3, 'l') : '">') + o.title + '</button>' +
 				'</table>' +
 				'<div class="ts-avai dn">&nbsp;</div>' +
 			'</div>');
@@ -517,42 +552,41 @@ $.fn.tovar = function(o) {
 		trBut = ts.find('.tr-but'),
 		but = ts.find('.vk'),
 		tsDialog,   //диалог окна выбора товара
-		tsAvai = ts.find('.ts-avai'),//поле для показа наличия товара
-		tsArr,      //массив данных для выбора конкретного товара
-		TSV = '';   //последнее слово поиска
+		tsArr;      //массив данных для выбора конкретного товара
 
-	but.click(selOpen);
+	but.click(tsOpen);
 
-	tovarSelected();
+	tsGet();
 
 	if(o.open)
 		but.trigger('click');
 
-	function tovarSelected() {//вставка товара, который был выбран (при редактировании)
-		if(!ts_value)
+	function tsGet() {//вставка товаров, которые были выбраны (при редактировании)
+		if(!VAL)
 			return;
 		
 		var send = {
-			op:'tovar_selected',
-			v:ts_value
+			op:'tovar_select_get',
+			v:VAL
 		};
 		but.addClass('_busy');
 		$.post(AJAX_MAIN, send, function(res) {
 			but.removeClass('_busy');
 			if(res.success) {
 				tsArr = res.arr;
+				if(o.funcSel)
+					o.funcSel(res.arr[VAL], attr_id);
 				for(var i in tsArr)
 					tsSel(i);
 			}
 		}, 'json');
-
 	}
-	function selOpen() {//окно выбора товара
+	function tsOpen() {//окно выбора товара
 		if(but.hasClass('_busy'))
 			return;
 
 		var html =
-			'<table id="tovar-select-tab" class="w100p">' +
+			'<table class="w100p">' +
 				'<tr><td><div id="tovar-find"></div>' +
 		 (!o.avai ? '<td class="r"><button class="vk">Добавить новый товар</button>' : '') +
 			'</table>' +
@@ -566,12 +600,17 @@ $.fn.tovar = function(o) {
 			butCancel:'Закрыть'
 		});
 
+		if(TSG.avai == 2) {
+			tsAvaiOption();
+			return;
+		}
+
 		$('#tovar-find')._search({
 			width:300,
 			focus:1,
 			txt:'начните ввод для поиска товара...',
-			v:TSV,
-			func:selFind
+			v:TSG.find,
+			func:tsFind
 		});
 		$('#tovar-select-tab .vk').click(function() {
 			_tovarAdd({
@@ -582,40 +621,107 @@ $.fn.tovar = function(o) {
 				}
 			});
 		});
-		selFind(TSV);
+		tsFind(TSG.find);
 	}
-	function selFind(v) {
+	function tsAvaiOption() {//варианты выбора товара: из наличия или нет
+		var html =
+			'<div class="_info">' +
+				'При выборе <u>первого</u> товара необходимо указать <u>вид создаваемого счёта</u>:' +
+				'<br />' +
+				'<br />' +
+
+				'1. <b>Предварительный счёт:</b>' +
+				'<div class="grey">' +
+					'Могут выбираться любые товары, независимо от того, есть они в наличии или нет.' +
+					'<br />' +
+					'Используется как информация для клиента, либо для заказа товара по счёту.' +
+					'<br />' +
+					'Данный вид счёта также может быть сформирован для оплаты.' +
+				'</div>' +
+				'<br />' +
+
+				'2. <b>Счёт на оплату:</b>' +
+				'<div class="grey">' +
+					'Можно выбрать товары только <u>из наличия</u>.' +
+					'<br />' +
+					'После того, как счёт будет сформирован, выбранные товары будут списаны<br />из наличия.' +
+				'</div>' +
+			'</div>' +
+			'<br />' +
+			'<div class="headName">Выберите вид счёта:</div>' +
+			'<input type="hidden" id="avai-option" value="-1" />';
+
+		$('#tres').html(html);
+
+		$('#avai-option')._radio({
+			light:1,
+			spisok:[
+				{uid:0,title:'предварительный'},
+				{uid:1,title:'на оплату'}
+			],
+			func:function(v) {
+				tsDialog.close();
+				o.avai = v;
+				TSG.avai = v;
+				tsOpen();
+			}
+		});
+	}
+	function tsFind(v) {//процесс поиска товара
 		var send = {
-			op:'tovar_select',
+			op:'tovar_select_find',
 			v:v,
-			tovar_id:tovar_id,
+			tovar_id:TOVAR_SEL,
 			tovar_id_set:o.tovar_id_set,
 			tovar_id_not:o.tovar_id_not,
 			set:o.set,
 			ids:o.ids,
-			avai:o.avai,
-			avai_radio:function() {}
+			avai:o.avai
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				$('#tres')
 					.html(res.html)
 					.find('.ts-unit').click(function() {
-						var v = $(this).attr('val');
+						var v = $(this).attr('val'),
+							sp = tsArr[v];
+
+						if(o.avai && o.avai_open) {
+							$('#tres').html(sp.articul_full);
+							$('#tres .vk.cancel').click(function() {
+								TOVAR_SEL = v;
+								tsFind(TSG.find);
+							});
+							$('#tres #ta-articul')._radio(function(art) {
+								$('#tres .tsa-bottom').removeClass('dn');
+								$('#tres #tsa-count').val(1).select();
+								$('#tres .max').html(sp.articul_arr[art].count);
+							});
+							$('#tres .vk.submit').click(function() {
+								if(o.funcSel) {
+									sp.avai_id = _num($('#tres #ta-articul').val());
+									sp.count = _num($('#tres #tsa-count').val());
+									o.funcSel(sp, attr_id);
+								}
+								tsDialog.close();
+							});
+							return;							
+						}
 						tsSel(v);
 						tsDialog.close();
+						if(o.funcSel)
+							o.funcSel(sp, attr_id);
 					});
 				tsArr = res.arr;
-				TSV = v;
+				TSG.find = v;
 			}
 		}, 'json');
 	}
 	function tsSel(v) {
 		var sp = tsArr[v],
 			html = '<tr>' +
-						'<td class="ts-name">' +
-							(o.image ? sp.image_small : '') +
-							sp.name +
+			 (o.image ? '<td class="ts-image">' + sp.image_small : '') +
+						'<td class="ts-name">' + sp.name_b +
 						'<td class="td-cnt' + (o.count_show ? '' : ' dn') + '">' +
 							'<input type="text" val="' + v + '" value="' + (sp.count || 1) + '" />' +
 			   (o.del ? '<td class="ed"><div class="img_del' + _tooltip('Отменить выбор', -93, 'r') + '</div>' : '');
@@ -625,9 +731,6 @@ $.fn.tovar = function(o) {
 
 		if(!o.several)
 			trBut.hide();
-
-		if(o.avai)
-			avaiGet(v);
 
 		valueUpdate();
 		o.func(v, attr_id, sp);
@@ -651,34 +754,6 @@ $.fn.tovar = function(o) {
 			v.push(id + ':' + val);
 		}
 		t.val(o.several ? v.join() : _num(v.length ? v[0].split(':')[0] : 0));
-	}
-	function avaiGet(tovar_id) {//вставка таблицы с наличием после выбора товара
-		if(tsAvai.hasClass('_busy'))
-			return;
-
-		tsAvai
-			.html('&nbsp;')
-			.removeClass('dn')
-			.addClass('_busy');
-
-		var send = {
-			op:'tovar_select_avai',
-			tovar_id:tovar_id
-		};
-		$.post(AJAX_MAIN, send, function(res) {
-			tsAvai.removeClass('_busy');
-			if(res.success) {
-				tsAvai.html(res.html);
-				tsAvai.find('#ta-articul')._radio(function(id) {
-					o.avai_radio(res.arr[id]);
-				});
-				if(res.count == 1) {
-					for(var key in res.arr);
-					$('#ta-articul')._radio(key);
-					o.avai_radio(res.arr[key]);
-				}
-			}
-		}, 'json');
 	}
 
 	t.o = o;

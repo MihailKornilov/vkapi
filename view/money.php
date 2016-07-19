@@ -514,8 +514,9 @@ function incomeAbout($r, $filter=array()) {
 	$about = '';
 	if($r['zayav_id'] && !@$filter['zayav_id'])
 		$about .= 'Заявка '.@$r['zayav_link'].'. ';
-	if($r['tovar_id'])
-		$about .= $r['tovar_sale'];
+
+	$about .= $r['tovar_sale'];
+
 	if($r['schet_id'])
 		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 	if($r['dogovor_id'])

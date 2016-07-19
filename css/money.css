@@ -236,15 +236,28 @@
 #_schet-info #dop th a{display:block;width:125px;padding:6px 0 6px 20px}
 #_schet-info #dop th a:hover{background-color:#e9edf1;text-decoration:none}
 #_schet-info #dop th .img_xls{float:right;margin:-1px 20px 0 0}
-#_schet-info .n{width:20px;text-align:right}
-#_schet-info ._spisok input{background-color:#ffd}
-#_schet-info ._spisok input[readonly]{background-color:#f3f3f3}
-#_schet-info ._spisok input.err{background-color:#fdd;color:#922}
-#_schet-info .name input{width:330px}
+#_schet-info .n{width:20px;padding-top:8px}
+#_schet-info ._spisok input{background:#ffd}
+#_schet-info ._spisok input[readonly]{background:#f3f3f3}
+#_schet-info ._spisok input.err{background:#fdd;color:#922}
+#_schet-info ._spisok textarea{background:#ffd}
+#_schet-info ._spisok textarea[readonly]{background:#f3f3f3}
+#_schet-info ._spisok textarea.err{background:#fdd;color:#922}
+#_schet-info .name{padding-right:0}
+#_schet-info .name textarea{width:304px;height:13px}
+#_schet-info .tovar-select{float:right}
+#_schet-info .vk{
+	padding-left:10px;
+	padding-right:8px;
+	margin:0;
+}
 #_schet-info .count{width:40px;text-align:center}
 #_schet-info .count input{width:30px;text-align:right}
+#_schet-info .avai{color:#292}
 #_schet-info .cost{width:50px;text-align:right}
 #_schet-info .cost input{width:40px;text-align:right}
+#_schet-info .sum{padding-top:8px}
+#_schet-info .ed{padding-top:8px}
 #_schet-info h2{margin-top:20px}
 #_schet-info #pole-add{padding:0}
 #_schet-info h3{margin-top:20px}

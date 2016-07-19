@@ -820,6 +820,36 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'sa_count_zayav_load':
+/*
+		UPDATE `_zayav` `z`
+		SET `sum_accrual`=(
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_accrual`
+					WHERE !`deleted`
+					  AND `zayav_id`=`z`.`id`
+				),
+			`sum_pay`=(
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_income`
+					WHERE !`deleted`
+					  AND `confirm` NOT IN (1,3)
+					  AND `zayav_id`=`z`.`id`
+				) - (
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_money_refund`
+					WHERE !`deleted`
+					  AND `zayav_id`=`z`.`id`
+				),
+			`sum_dolg`=`sum_pay`-`sum_accrual`,
+			`sum_expense`=(
+					SELECT IFNULL(SUM(`sum`),0)
+					FROM `_zayav_expense`
+					WHERE `zayav_id`=`z`.`id`
+				),
+			`sum_profit`=`sum_accrual`-`sum_expense`
+		WHERE `app_id`=3978722;
+
+*/
 		$sql = "UPDATE `_zayav` `z`
 				SET `sum_dolg_test`=(
 					SELECT IFNULL(SUM(`sum`),0)

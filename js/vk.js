@@ -523,14 +523,26 @@ var VK_SCROLL = 0,
 				DIALOG_MAXHEIGHT = 0;
 			_fbhs();
 		}
+		function dialogErr(msg) {
+			bottom.vkHint({
+				msg:'<span class="red">' + msg + '</span>',
+				top:-48,
+				left:w2 - 90,
+				indent:40,
+				show:1,
+				remove:1
+			});
+		}
 
 		return {
 			close:dialogClose,
 			process:function() {
 				butSubmit.addClass('_busy');
 			},
-			abort:function() {
+			abort:function(msg) {
 				butSubmit.removeClass('_busy');
+				if(msg)
+					dialogErr(msg);
 			},
 			bottom:(function() {
 				return bottom;
@@ -538,16 +550,7 @@ var VK_SCROLL = 0,
 			content:(function() {
 				return content;
 			})(),
-			err:function(msg) {
-				bottom.vkHint({
-					msg:'<span class="red">' + msg + '</span>',
-					top:-48,
-					left:w2 - 90,
-					indent:40,
-					show:1,
-					remove:1
-				});
-			},
+			err:dialogErr,
 			loadError:function() {
 				dialog.find('.load').removeClass('_busy');
 			},
@@ -831,6 +834,7 @@ $.fn._radio = function(o) {
 	_click(o.func);
 
 	function _click(func) {
+		$(document).off('click', '#' + id + '_radio .on,#' + id + '_radio .off');
 		$(document).on('click', '#' + id + '_radio .on,#' + id + '_radio .off', function() {
 			func(_num(t.val()), id);
 		});

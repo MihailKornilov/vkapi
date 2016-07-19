@@ -153,7 +153,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'tovar_select'://получение списка товаров для выбора
+	case 'tovar_select_find'://получение списка товаров для выбора
 		$tovar_id = _num($_POST['tovar_id']);
 		$v = _txt($_POST['v']);
 
@@ -201,45 +201,39 @@ switch(@$_POST['op']) {
 		if($count = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
 			$order = $v || $tovar_id_set ? "`name_id` ASC,`vendor_id` ASC,`name` ASC" : "`id` DESC";
 			$sql = "SELECT
-						`t`.*,
-						IFNULL(`tc`.`sum_buy`,0) `sum_buy`,
-						IFNULL(`tc`.`sum_sell`,0) `sum_sell`
+						`t`.*
 					FROM `_tovar` `t`
 						".$RJ_AVAI."
-						LEFT JOIN `_tovar_cost` `tc`
-				        ON `tc`.`tovar_id`=`t`.`id` AND `tc`.`app_id`=".APP_ID."
 					WHERE ".$cond."
 					ORDER BY ".$order."
 					LIMIT 20";
 			$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-			$arr = _tovarValToList($arr, 'tovar_id_set');
-			$arr = _tovarAvaiToList($arr);
+			$arr = _tovarValToList($arr, 'id');
 
 			foreach($arr as $r) {
-				$tovarName = _tovarName($r['name_id']);
-				$tovarVendor = _tovarVendor($r['vendor_id']);
-
-				$name = $tovarName.'<br /><b>'.$tovarVendor.$r['name'].'</b>';
-				if($r['tovar_id_set'])
-					$name = '<b>'.$tovarName.'</b><br /><tt>для '.$r['tovar_set_name'].'</tt>';
-
 				//составление массива для выбора товара
 				$send['arr'][$r['id']] = array(
 					'id' => $r['id'],
 					'tovar_id' => $r['id'],
-					'name' => utf8($name),
-					'sum_buy' => _cena($r['sum_buy']),
-					'sum_sell' => _cena($r['sum_sell'])
+					'avai_id' => 0,
+					'count' => 1,
+					'name' => utf8($r['tovar_name']),
+					'name_b' => utf8($r['tovar_name_b']),
+					'sum_buy' => $r['tovar_buy'],
+					'sum_sell' => $r['tovar_sell'],
+					'articul' => utf8($r['tovar_articul']),
+					'articul_full' => utf8($r['tovar_articul_full']),
+					'articul_arr' => $r['tovar_articul_arr'],
+					'measure' => utf8($r['tovar_measure_name']),
+					'image_small' => $r['tovar_image_small']
 				);
 
 				$spisok .=
 					'<div class="ts-unit'.($tovar_id == $r['id'] ? ' sel' : '').'" val="'.$r['id'].'">'.
-						_findRegular($v, str_replace('<br />', '', $name)).
-						($r['avai_count'] ? '<b class="avai">'.$r['avai_count'].'</b>' : '').
+						$r['tovar_select'].
+			($RJ_AVAI ? $r['tovar_avai_b'] : '').
 					'</div>';
 			}
-
-			$send['arr'] = _imageValToList($send['arr'], 'tovar_id');
 		}
 
 		$result = $count ? 'Найден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').($RJ_AVAI ? ' <b>в наличии</b>' : '').':' : 'Товаров не найдено.';
@@ -248,7 +242,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
-	case 'tovar_selected'://список товаров, которые были выбраны
+	case 'tovar_select_get'://список товаров, которые были выбраны
 		$v = _txt($_POST['v']);
 		if(!$v)
 			jsonError();
@@ -272,56 +266,27 @@ switch(@$_POST['op']) {
 		if(empty($tovar))
 			jsonError();
 
-		$sql = "SELECT
-					*,
-					`id` `tovar_id`
+		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id` IN (".implode(',', array_keys($tovar)).")";
 		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 			jsonError();
 
-		$spisok = _imageValToList($spisok, 'tovar_id');
+		$spisok = _tovarValToList($spisok, 'id');
 
 		$send['arr'] = array();
 
-		foreach($spisok as $r) {
-			$name = _tovarName($r['name_id']).'<br /><b>'._tovarVendor($r['vendor_id']).$r['name'].'</b>';
-			if($r['tovar_id_set']) {
-				$ts = _tovarQuery($tovar_id);
-				$name = '<b>'._tovarName($ts['name_id']).'</b><br /><tt>для '.$ts['tovar_set_name'].'</tt>';
-			}
-
-			$send['arr'][$r['id']] = array(
-				'id' => $r['id'],
-				'tovar_id' => $r['id'],
-				'name' => utf8($name),
-				'count' => $tovar[$r['id']],
-				'image_small' => $r['image_small']
+		foreach($spisok as $id => $r)
+			$send['arr'][$id] = array(
+				'id' => $id,
+				'tovar_id' => $id,
+				'count' => $tovar[$id],
+				'name' => utf8($r['tovar_name']),
+				'name_b' => utf8($r['tovar_name_b']),
+				'sum_buy' => $r['tovar_buy'],
+				'sum_sell' => $r['tovar_sell'],
+				'image_small' => $r['tovar_image_small']
 			);
-		}
-
-		jsonSuccess($send);
-		break;
-	case 'tovar_select_avai':
-		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
-
-		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
-
-		$sql = "SELECT
-					`id`,
-					`articul`,
-					`count`,
-					`sum_buy`,
-					'".utf8(_tovarMeasure($r['measure_id']))."' `measure`
-				FROM `_tovar_avai`
-				WHERE `app_id`=".APP_ID."
-				  AND `tovar_id`=".$tovar_id."
-				  AND `count`";
-		$send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT);
-		$send['html'] = utf8(_tovarAvaiArticul($tovar_id, 1));
-		$send['count'] = count($send['arr']);
 
 		jsonSuccess($send);
 		break;
