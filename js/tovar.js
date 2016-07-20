@@ -588,7 +588,7 @@ $.fn.tovar = function(o) {
 		var html =
 			'<table class="w100p">' +
 				'<tr><td><div id="tovar-find"></div>' +
-		 (!o.avai ? '<td class="r"><button class="vk">Добавить новый товар</button>' : '') +
+		 (!o.avai ? '<td class="r"><button class="vk" id="ts-tovar-add">Добавить новый товар</button>' : '') +
 			'</table>' +
 			'<div id="tres"></div>';
 		tsDialog = _dialog({
@@ -612,7 +612,7 @@ $.fn.tovar = function(o) {
 			v:TSG.find,
 			func:tsFind
 		});
-		$('#tovar-select-tab .vk').click(function() {
+		$('#ts-tovar-add').click(function() {
 			_tovarAdd({
 				callback:function(res) {
 					tsArr = res.arr;

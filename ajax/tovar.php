@@ -78,12 +78,10 @@ switch(@$_POST['op']) {
 		_tovar_find_update($send['id']);
 		_tovar_feature_update($send['id']);
 
-		$send['arr'][$send['id']] = array(
-			'id' => $send['id'],
-			'tovar_id' => $send['id'],
-			'name' => utf8(_tovarName($name_id).'<br /><b>'._tovarVendor($vendor_id).$name.'</b>')
-		);
-		$send['arr'] = _imageValToList($send['arr'], 'tovar_id');
+		$tovar[$send['id']] = $send;
+		$tovar = _tovarValToList($tovar, 'id');
+
+		$send['arr'][$send['id']] = _tovar_formimg_send($tovar[$send['id']]);
 
 		_history(array(
 			'type_id' => 105,
@@ -210,23 +208,15 @@ switch(@$_POST['op']) {
 			$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
 			$arr = _tovarValToList($arr, 'id');
 
-			foreach($arr as $r) {
+			foreach($arr as $id => $r) {
 				//составление массива для выбора товара
-				$send['arr'][$r['id']] = array(
-					'id' => $r['id'],
-					'tovar_id' => $r['id'],
-					'avai_id' => 0,
-					'count' => 1,
-					'name' => utf8($r['tovar_name']),
-					'name_b' => utf8($r['tovar_name_b']),
-					'sum_buy' => $r['tovar_buy'],
-					'sum_sell' => $r['tovar_sell'],
-					'articul' => utf8($r['tovar_articul']),
-					'articul_full' => utf8($r['tovar_articul_full']),
-					'articul_arr' => $r['tovar_articul_arr'],
-					'measure' => utf8($r['tovar_measure_name']),
-					'image_small' => $r['tovar_image_small']
-				);
+				$send['arr'][$id] =
+					_tovar_formimg_send($r) +
+					array(
+						'articul' => utf8($r['tovar_articul']),
+						'articul_full' => utf8($r['tovar_articul_full']),
+						'articul_arr' => $r['tovar_articul_arr'],
+					);
 
 				$spisok .=
 					'<div class="ts-unit'.($tovar_id == $r['id'] ? ' sel' : '').'" val="'.$r['id'].'">'.
@@ -276,17 +266,10 @@ switch(@$_POST['op']) {
 
 		$send['arr'] = array();
 
-		foreach($spisok as $id => $r)
-			$send['arr'][$id] = array(
-				'id' => $id,
-				'tovar_id' => $id,
-				'count' => $tovar[$id],
-				'name' => utf8($r['tovar_name']),
-				'name_b' => utf8($r['tovar_name_b']),
-				'sum_buy' => $r['tovar_buy'],
-				'sum_sell' => $r['tovar_sell'],
-				'image_small' => $r['tovar_image_small']
-			);
+		foreach($spisok as $id => $r) {
+			$r['count'] = $tovar[$id];
+			$send['arr'][$id] = _tovar_formimg_send($r);
+		}
 
 		jsonSuccess($send);
 		break;
@@ -811,7 +794,23 @@ function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 			) VALUES ".implode(',', $insert);
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
-
+function _tovar_formimg_send($r) {//форсирование данных товара для отправки (при выборе товара)
+	$id = $r['id'];
+	if(!$count = _num(@$r['count']))
+		$count = 1;
+	return array(
+		'id' => $id,
+		'tovar_id' => $id,
+		'avai_id' => 0,
+		'count' => $count,
+		'name' => utf8($r['tovar_name']),
+		'name_b' => utf8($r['tovar_name_b']),
+		'sum_buy' => $r['tovar_buy'],
+		'sum_sell' => $r['tovar_sell'],
+		'measure' => utf8($r['tovar_measure_name']),
+		'image_small' => $r['tovar_image_small']
+	);
+}
 
 
 
