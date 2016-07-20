@@ -444,7 +444,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 				'<div class="tovar-info-go tovar-sale" val="'.$tovar_id.'">'.
 					'<div class="cat">'._tovarCategory($t['category_id']).'</div>'.
 					$name.'<b>'.$vendor.$t['name'].'</b>:'.
-					'<b class="count">'.@$r['tovar_count'].' '._tovarMeasure($t['measure_id']).'</b>'.
+					'<b class="count">'._ms(@$r['tovar_count']).' '._tovarMeasure($t['measure_id']).'</b>'.
 				'</div>',
 
 			'tovar_select' => $set ?
@@ -1216,7 +1216,7 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 			FROM `_tovar_avai`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar['id'];
-	$avai = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$avai = _ms(query_value($sql, GLOBAL_MYSQL_CONNECT));
 
 	return
 		'<table id="avai-cost">'.

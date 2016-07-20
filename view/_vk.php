@@ -872,6 +872,21 @@ function _cena($v, $minus=0, $kop=0, $del='.') {//проверка на цену.
 
 	return $v;
 }
+function _ms($v, $del='.') {//проверка на единицу измерения с дробями 0.000
+	/*
+		$del - знак после запятой
+	*/
+	if(empty($v) || is_array($v) || !preg_match(REGEXP_MS, $v))
+		return 0;
+
+	$v = str_replace(',', '.', $v);
+	$v = round($v, 3);
+
+	$v = str_replace(',', $del, $v);
+	$v = str_replace('.', $del, $v);
+
+	return $v;
+}
 function _txt($v, $utf8=0) {
 	$v = htmlspecialchars(trim($v));
 	return $utf8 ? $v : win1251($v);

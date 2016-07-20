@@ -911,11 +911,12 @@ $(document)
 	.on('click', '.tovar-avai-add', function() {
 		var html =  '<table class="bs10">' +
 						'<tr><td class="label r">Количество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
-						'<tr><td class="label r">Цена за ед.:' +
+						'<tr><td class="label r">Закупочная цена за ед.:' +
 							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
 						'<tr><td class="label r">Примечание:<td><input type="text" id="about" class="w230" />' +
 					'</table>',
 			dialog = _dialog({
+				width:420,
 				head:'Внесение наличия товара',
 				content:html,
 				submit:submit
@@ -998,16 +999,16 @@ $(document)
 			sumCount();
 		}
 		function sumCount() {
-			var count = _num($('#count').val()),
+			var count = _ms($('#count').val()),
 				cena = _cena($('#cena').val()),
-				sum = _cena(count * cena);
+				sum = Math.round(count * cena);
 			$('#summa').html(sum ? sum : '-');
 		}
 		function submit() {
 			var send = {
 				op:'tovar_sell',
 				avai_id:avai_id,
-				count:_num($('#count').val()),
+				count:_ms($('#count').val()),
 				cena:_cena($('#cena').val()),
 				invoice_id:_num($('#invoice_id').val()),
 				client_id:_num($('#client_id').val())

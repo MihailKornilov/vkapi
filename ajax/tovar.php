@@ -407,7 +407,7 @@ switch(@$_POST['op']) {
 					'<tr><td class="label r">Количество:*'.
 							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
 								'<span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Цена продажи (за '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
+					'<tr><td class="label r">Цена продажи (за 1 '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
 					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
 					'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
 					'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
@@ -422,7 +422,7 @@ switch(@$_POST['op']) {
 	case 'tovar_sell':// продажа товара
 		if(!$avai_id = _num($_POST['avai_id']))
 			jsonError();
-		if(!$count = _num($_POST['count']))
+		if(!$count = _ms($_POST['count']))
 			jsonError();
 		if(!$cena = _cena($_POST['cena']))
 			jsonError();
@@ -446,7 +446,7 @@ switch(@$_POST['op']) {
 		if(!$r = _tovarQuery($avai['tovar_id']))
 			jsonError();
 
-		$sum = _cena($count * $cena);
+		$sum = round($count * $cena);
 
 		//добавление товара в платежи при продаже
 		$sql = "INSERT INTO `_money_income` (

@@ -7,10 +7,11 @@ var VK_SCROLL = 0,
 	FB_HEIGHT = 0,
 	DIALOG_MAXHEIGHT = 0,
 	FOTO_HEIGHT = 0,
-	REGEXP_NUMERIC =         /^\d+$/,
+	REGEXP_NUMERIC =       /^\d+$/,
 	REGEXP_NUMERIC_MINUS = /^-?\d+$/,
-	REGEXP_CENA =         /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
-	REGEXP_CENA_MINUS = /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_CENA =          /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_CENA_MINUS =    /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_MS =            /^[\d]+(.[\d]{1,3})?(,[\d]{1,3})?$/,
 	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
 		1:'январь',
@@ -330,6 +331,15 @@ var VK_SCROLL = 0,
 		if(minus && REGEXP_CENA_MINUS.test(v))
 			return v * 1;
 		if(!REGEXP_CENA.test(v))
+			return 0;
+		return v * 1;
+	},
+	_ms = function(v) {//единица измерени€ с дроб€ми 0.000
+		if(typeof v == 'string')
+			v = v.replace(',', '.');
+		if(v == 0)
+			return 0;
+		if(!REGEXP_MS.test(v))
 			return 0;
 		return v * 1;
 	},
