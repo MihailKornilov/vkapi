@@ -455,8 +455,8 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			'tovar_buy' => _cena($t['buy']),
 			'tovar_sell' => _cena($t['sell']),
 
-			'tovar_avai_count' => $t['avai_count'],
-			'tovar_avai_b' => $t['avai_count'] ? '<b class="avai">'.$t['avai_count'].'</b>' : '',
+			'tovar_avai_count' => _ms($t['avai_count']),
+			'tovar_avai_b' => $t['avai_count'] ? '<b class="avai">'._ms($t['avai_count']).'</b>' : '',
 			'tovar_zakaz_count' => $t['zakaz_count'],
 
 			'tovar_image_small' => $t['image_small']
@@ -1006,7 +1006,7 @@ function _tovarAvaiArticulTab($spisok, $radio) {//таблица наличия товара по конк
 					:
 					$r['articul']
 		).
-				'<td class="count center"><b>'.$r['count'].'</b>'.
+				'<td class="count center"><b>'._ms($r['count']).'</b>'.
 				'<td class="cena r">'._cena($r['sum_buy']).
 				'<td>'.$r['about'];
 	}
