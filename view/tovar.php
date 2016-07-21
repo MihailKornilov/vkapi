@@ -787,14 +787,14 @@ function _tovar_category_spisok($filter) {
 			$r['sub'][$k] =
 				'<a class="sub-unit" val="'.$k.'">'.
 					$i.
-					'<span class="sub-count">'.$r['sub_count'][$k].'</span>'.
- (@$r['avai'][$k] ? '<span class="avai">'.$r['avai'][$k].'</span>' : '').
+					'<span class="sub-count">'.$r['sub_count'][$k].'</span>'. //количество товаров в наименовании
+ (@$r['avai'][$k] ? '<span class="avai">'._ms($r['avai'][$k]).'</span>' : '').
 (@$r['zakaz'][$k] ? '<span class="zakaz">'.$r['zakaz'][$k].'</span>' : '').
 				'</a>';
 		$send['spisok'] .=
 			'<div class="tovar-category-unit" val="'.($r['id'] ? $r['id'] : -1).'">'.
 				'<a class="hd">'.$r['name'].'</a>'.
-				'<span class="hd-count">'.$r['count'].'</span>'.
+				'<span class="hd-count">'.$r['count'].'</span>'.//количество товаров в категории
 				implode('', $r['sub']).
 			'</div>';
 	}
