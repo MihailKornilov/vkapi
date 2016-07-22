@@ -189,11 +189,13 @@ function setup_worker_rule($viewer_id) {
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
 			'<tr><td class="lab"><td>'._check('RULE_EXECUTER', 'Может быть исполнителем заявок', $rule['RULE_EXECUTER']).
 			'<tr><td class="lab"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', 'Начислять з/п по заявке при отсутствии долга', $rule['RULE_SALARY_ZAYAV_ON_PAY']).
+/*
 			'<tr><td class="lab">Начислять бонусы:'.
 				'<td>'._check('RULE_SALARY_BONUS', '', $rule['RULE_SALARY_BONUS']).
 					'<span'.($rule['RULE_SALARY_BONUS'] ? '' : ' class="vh"').'>'.
 						'<input type="text" id="salary_bonus_sum" maxlength="5" value="'.$u['bonus_sum'].'" />%'.
 					'<span>'.
+*/
 		'</table>'.
 
 	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX ?
@@ -213,7 +215,12 @@ function setup_worker_rule($viewer_id) {
 		'<div class="headName">Права в приложении</div>'.
 			_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
 			'<table class="rtab'.($rule['RULE_APP_ENTER'] ? '' : ' dn').'" id="div-app-enter">'.
-				'<tr><td class="label top"><b>Доступ к настройкам:</b>'.
+
+				'<tr><td class="label top"><b>Доступ к основным разделам меню:</b>'.
+					'<td id="td-rule-menu">'._setup_worker_rule_menu($viewer_id).
+
+				'<tr id="tr-rule-setup"'.(_viewerMenuAccess($viewer_id, 5) ? '' : ' class="dn"').'>'.
+					'<td class="label top"><b>Доступ к настройкам:</b>'.
 					'<td id="td-rule-setup">'.
 						_check('RULE_SETUP_WORKER', 'Сотрудники', $rule['RULE_SETUP_WORKER']).
 						'<div id="div-w-rule"'.($rule['RULE_SETUP_WORKER'] ? '' : ' style="display:none"').'>'.
@@ -241,6 +248,25 @@ function setup_worker_rule($viewer_id) {
 
 	'</div>';
 
+}
+function _setup_worker_rule_menu($viewer_id) {//вывод разделов меню с галочками
+	$send = '';
+	$sql = "SELECT
+				`m`.`id`,
+				`m`.`name`
+			FROM
+				`_menu` `m`,
+				`_menu_app` `ma`
+			WHERE `app_id`=".APP_ID."
+			  AND `m`.`id`=`ma`.`menu_id`
+			  AND `show`
+			  AND `m`.`id`!=11
+			ORDER BY `sort`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($viewer_id, $r['id']));
+
+	return $send;
 }
 function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	if(!RULE_SETUP_RULES)

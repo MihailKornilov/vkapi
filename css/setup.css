@@ -54,9 +54,13 @@
 
 
 
+/* Разделы меню */
+#setup_rule #td-rule-menu div{display:block;margin-bottom:5px;color:#555}
+
 #RULE_APP_ENTER_check{margin:5px 0 10px 166px}
 #setup_rule #div-app-enter .label{width:150px;text-align:right}
 #setup_rule #td-rule-setup div{display:block;margin-bottom:5px;color:#555}
+
 
 
 

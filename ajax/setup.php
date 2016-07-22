@@ -364,6 +364,32 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'setup_menu_access':
+		if(!RULE_SETUP_RULES)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+	
+		$menu_id = _num($_POST['menu_id']);
+		$v = _bool($_POST['v']);
+
+		if(_viewerMenuAccess($viewer_id, $menu_id) == $v)
+			jsonError();
+
+		$sql = "UPDATE `_menu_viewer`
+				SET `access`=".$v."
+				WHERE `app_id`=".APP_ID."
+				  AND `menu_id`=".$menu_id."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+		
+		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
+
+		jsonSuccess();
+		break;
+	
 	case 'RULE_SETUP_WORKER'://разрешать сотруднику изменять данные сотрудника
 		$_POST['h1'] = 1004;
 		$_POST['h0'] = 1005;

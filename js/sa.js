@@ -456,7 +456,20 @@ $(document)
 			p:t.find('.p').html()
 		});
 	})
-	.on('click', '#sa-menu ._check', function() {//скрытие-показ разделов меню
+	.on('click', '#sa-menu .access ._check', function() {//доступ для пользователей по умолчанию
+		var t = $(this),
+			p = _parent(t, 'DD'),
+			send = {
+				op:'sa_menu_access',
+				id:p.find('.name').attr('val'),
+				v:t.find('input').val()
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg();
+		}, 'json');
+	})
+	.on('click', '#sa-menu .show ._check', function() {//скрытие-показ разделов меню
 		var t = $(this),
 			send = {
 			op:'sa_menu_show',

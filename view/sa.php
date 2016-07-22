@@ -79,26 +79,23 @@ function sa_menu_spisok() {
 				`m`.`name`,
 				`m`.`about`,
 				`m`.`p`,
-				`ma`.`show`
+				`ma`.`show`,
+				`m`.`access_default`
 			FROM
 				`_menu` `m`,
 				`_menu_app` `ma`
 			WHERE `m`.`id`=`ma`.`menu_id`
 			  AND `ma`.`app_id`=".APP_ID."
 			ORDER BY `ma`.`sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
-	if(!mysql_num_rows($q))
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
 		return 'Список пуст.';
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
 
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Название'.
 				'<th class="p">Link'.
 				'<th class="show">App<br />show'.
+				'<th class="access">user<br />access<br />default'.
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_menu_app">';
@@ -110,6 +107,7 @@ function sa_menu_spisok() {
 					'<div class="about">'.$r['about'].'</div>'.
 				'<td class="p">'.$r['p'].
 				'<td class="show">'._check('show'.$r['id'], '', $r['show']).
+				'<td class="access">'._check('access'.$r['id'], '', $r['access_default']).
 				'<td class="ed">'._iconEdit($r).
 		'</table>';
 

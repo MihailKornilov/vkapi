@@ -1287,6 +1287,26 @@ $(document)
 				$('#div-app-enter')[(v ? 'remove' : 'add') + 'Class']('dn');
 				setupRuleCheck(v, id);
 			});
+
+
+			$('#td-rule-menu ._check').click(function() {
+				var ch = $(this).find('input'),
+					send = {
+						op:'setup_menu_access',
+						viewer_id:window.RULE_VIEWER_ID || VIEWER_ID,
+						menu_id:ch.attr('id').split('RULE_MENU_')[1],
+						v:_bool(ch.val()) ? 0 : 1
+					};
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success)
+						_msg('Сохранено');
+				}, 'json');
+			});
+			//показ-скрытие прав с подразделами настроек
+			$('#RULE_MENU_5')._check(function(v) {
+				$('#tr-rule-setup')[(v ? 'remove' : 'add') + 'Class']('dn');
+			});
+
 			$('#RULE_SETUP_WORKER')._check(function(v, id) {
 				$('#div-w-rule')[v ? 'show' : 'hide']();
 				setupRuleCheck(v, id);

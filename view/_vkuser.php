@@ -308,7 +308,7 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 	define('PIN_TIME', empty($_SESSION[PIN_TIME_KEY]) ? 0 : $_SESSION[PIN_TIME_KEY]);
 	define('PIN_ENTER', PIN && APP_FIRST_LOAD || PIN && (PIN_TIME - time() < 0));//требуется ли ввод пин-кода
 
-	_viewerRule();//формирование констант прав
+	_viewerRule();      //формирование констант прав
 
 	if(APP_FIRST_LOAD) {
 		//обновление даты посещения приложения сотрудником
@@ -452,4 +452,50 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	}
 
 	return $i && isset($rule[$i]) ? $rule[$i] : $rule;
+}
+
+function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к разделам меню
+	$key = CACHE_PREFIX.'viewer_menu_access_'.$viewer_id;
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					`menu_id`,
+					`access`
+				FROM `_menu_viewer`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		xcache_set($key, $arr, 86400);
+	}
+
+	//установка доступа по умолчанию, если пусто 
+	if(empty($arr)) {
+		$values = array();
+		$sql = "SELECT * FROM `_menu`";
+		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		while($r = mysql_fetch_assoc($q)) {
+			$values[] = "(".
+				APP_ID.",".
+				$viewer_id.",".
+				$r['id'].",".
+				$r['access_default'].
+			")";
+		}
+
+		$sql = "INSERT INTO `_menu_viewer` (
+					`app_id`,
+					`viewer_id`,
+					`menu_id`,
+					`access`
+				) VALUES ".implode(',', $values);
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
+		return _viewerMenuAccess($viewer_id);
+	}
+	
+	//возвращение всех разделов
+	if(!$menu_id)
+		return $arr;
+	
+	return _num(@$arr[$menu_id]);
 }

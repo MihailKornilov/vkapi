@@ -215,13 +215,13 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 function _global_index() {//пути переходов по ссылкам глобальных разделов
 	switch(@$_GET['p']) {
 		case 'main': return _menuMain();
-		case 'client': return _clientCase();
-		case 'zayav':  return _zayav();
-		case 'tovar':  return _tovar();
-		case 'money':  return _money();
-		case 'report': return _report();
-		case 'setup':  return _setup();
-		case 'manual': return _manual();
+		case 'client': _menuAccess(1); return _clientCase();
+		case 'zayav':  _menuAccess(2); return _zayav();
+		case 'tovar':  _menuAccess(8); return _tovar();
+		case 'money':  _menuAccess(3); return _money();
+		case 'report': _menuAccess(6); return _report();
+		case 'setup':  _menuAccess(5); return _setup();
+		case 'manual': _menuAccess(10); return _manual();
 		case 'print':  _print_document(); exit;
 		case 'sa':
 			if(!SA) {
@@ -241,6 +241,8 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 
 	return '';
 }
+
+
 
 function _footer() {
 	$getArr = array(
@@ -523,6 +525,10 @@ function _menu() {//разделы основного меню
 	foreach(_menuCache() as $r) {
 		if($r['p'] == 'manual')
 			continue;
+
+		if(!_viewerMenuAccess(VIEWER_ID, $r['id']))
+			continue;
+
 		if($r['show']) {
 			$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
 			$main = $r['p'] == 'main' ? ' main' : '';
@@ -551,6 +557,9 @@ function _menuMain() {//список ссылок главной страницы
 			continue;
 
 		if($r['p'] == 'main')
+			continue;
+
+		if(!_viewerMenuAccess(VIEWER_ID, $r['id']))
 			continue;
 
 		if($r['p'] == 'client')
@@ -598,7 +607,12 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 		'<tr><td class="label r">'._monthDef(strftime('%m'), true).':<td><b>'.($mon ? $mon : '-').'</b>'.
 	'</table>';
 }
-
+function _menuAccess($menu_id) {//проверка доступа к разделу меню. Если нет, то перенаправление на список разделов
+	if(!_viewerMenuAccess(VIEWER_ID, $menu_id)) {
+		header('Location:'.URL.'&p=main');
+		exit;
+	}
+};
 
 /* Секция отчётов - report */
 function _report() {
@@ -1405,6 +1419,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	//очистка кеша текущего пользователя
 	xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
 	xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
+	xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.VIEWER_ID);
 
 	//очистка кеша сотрудников приложения
 	$sql = "SELECT `viewer_id`
@@ -1415,6 +1430,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	while($r = mysql_fetch_assoc($q)) {
 		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
+		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$r['viewer_id']);
 		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
 	}
 }

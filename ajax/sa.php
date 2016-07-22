@@ -64,6 +64,24 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_menu_spisok());
 		jsonSuccess($send);
 		break;
+	case 'sa_menu_access'://доступ для пользователей по умолчанию
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$v = _bool($_POST['v']);
+
+		$sql = "UPDATE `_menu`
+				SET `access_default`=".$v."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'menu');
+		xcache_unset(CACHE_PREFIX.'menu_app');
+		xcache_unset(CACHE_PREFIX.'menu_sort');
+
+		_menuCache();
+		jsonSuccess();
+		break;
 	case 'sa_menu_show':
 		if(!$id = _num($_POST['id']))
 			jsonError();
