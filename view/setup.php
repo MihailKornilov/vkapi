@@ -219,6 +219,11 @@ function setup_worker_rule($viewer_id) {
 				'<tr><td class="label top"><b>Доступ к основным разделам меню:</b>'.
 					'<td id="td-rule-menu">'._setup_worker_rule_menu($viewer_id).
 
+				'<tr id="tr-rule-zayav"'.(_viewerMenuAccess($viewer_id, 2) ? '' : ' class="dn"').'>'.
+					'<td class="label top"><b>Права в заявках:</b>'.
+					'<td id="td-rule-zayav">'.
+						_check('RULE_ZAYAV_EXECUTER', 'Видит только те заявки,<br />в которых является исполнителем', $rule['RULE_ZAYAV_EXECUTER']).
+
 				'<tr id="tr-rule-setup"'.(_viewerMenuAccess($viewer_id, 5) ? '' : ' class="dn"').'>'.
 					'<td class="label top"><b>Доступ к настройкам:</b>'.
 					'<td id="td-rule-setup">'.
@@ -289,10 +294,11 @@ function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	if($old != $v) {
 		_workerRuleQuery($viewer_id, $key, $v);
 
-		_history(array(
-			'type_id' => $post['h' . $v],
-			'worker_id' => $viewer_id
-		));
+		if(!empty($post['h' . $v]))
+			_history(array(
+				'type_id' => $post['h' . $v],
+				'worker_id' => $viewer_id
+			));
 	}
 	return true;
 }

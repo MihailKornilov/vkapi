@@ -1302,6 +1302,12 @@ $(document)
 						_msg('Сохранено');
 				}, 'json');
 			});
+			//показ-скрытие прав в заявках
+			$('#RULE_MENU_2')._check(function(v) {
+				$('#tr-rule-zayav')[(v ? 'remove' : 'add') + 'Class']('dn');
+			});
+			$('#RULE_ZAYAV_EXECUTER')._check(setupRuleCheck);
+
 			//показ-скрытие прав с подразделами настроек
 			$('#RULE_MENU_5')._check(function(v) {
 				$('#tr-rule-setup')[(v ? 'remove' : 'add') + 'Class']('dn');

@@ -41,7 +41,7 @@
 #setup_rule .name{font-weight:bold;font-size:12px;color:#45688e;margin-bottom:10px}
 #setup_rule .headName{margin:20px 0 10px}
 #setup_rule #pin-clear{margin-left:116px}
-#setup_rule .rtab{border-spacing:8px}
+#setup_rule .rtab{border-spacing:8px 12px}
 #setup_rule .lab{width:100px;text-align:right}
 #setup_rule .rtab input{width:230px}
 #RULE_SALARY_BONUS_check{margin-bottom:-3px}

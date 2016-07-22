@@ -401,6 +401,16 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'RULE_ZAYAV_EXECUTER'://Видит только те заявки, в которых является исполнителем
+//		$_POST['h1'] = 1004;
+//		$_POST['h0'] = 1005;
+
+		if(!setup_worker_rule_save($_POST))
+			jsonError();
+
+		jsonSuccess();
+		break;
 	case 'RULE_SETUP_RULES'://разрешать сотруднику настраивать права других сотрудников
 		$_POST['h1'] = 1006;
 		$_POST['h0'] = 1007;

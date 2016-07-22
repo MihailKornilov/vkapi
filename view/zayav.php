@@ -188,6 +188,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 				WHERE `app_id`=".APP_ID."
 				  AND `service_id`="._service('current')."
 				  AND `status_id`
+				  ".(RULE_ZAYAV_EXECUTER ?  " AND `executer_id`=".VIEWER_ID : '')."
 				  AND !`deleted`
 				GROUP BY `status_id`";
 		$q = query($sql, GLOBAL_MYSQL_CONNECT);
@@ -647,6 +648,8 @@ function _zayav_spisok($v) {
 		 AND `service_id`=".$filter['service_id'];
 	if(!VIEWER_ADMIN)
 		$cond .= " AND !`deleted`";
+	if(RULE_ZAYAV_EXECUTER)
+		$cond .= " AND `executer_id`=".VIEWER_ID;
 
 	define('SROK', $filter['finish'] != '0000-00-00');
 
@@ -1198,6 +1201,11 @@ function _zayavPoleFilter($v=array()) {
 	foreach(_zayavPole($v['service_id'], 2) as $pole_id => $r) {
 		if(empty($pole[$pole_id]))
 			continue;
+
+		//если показываются заявки только если сотрудник является исполнителем, то фильтр с исполнителями не выводится
+		if(RULE_ZAYAV_EXECUTER && $pole_id == 27)
+			continue;
+
 		$unit = str_replace('{label}', $r['name'], $pole[$pole_id]);
 		if($pole_id != 17 && $pole_id != 18)
 			$unit = '<div class="nofind'.$v['nofind'].'">'.$unit.'</div>';
@@ -1251,6 +1259,9 @@ function _zayav_info() {
 
 	if(!$z = _zayavQuery($zayav_id, 1))
 		return _err('Заявки не существует.');
+
+	if(RULE_ZAYAV_EXECUTER && $z['executer_id'] != VIEWER_ID)
+		return _err('Нет доступа.');
 
 	_service('current', $z['service_id']);//установка куки для возврата на соответствующий списов заявок
 
