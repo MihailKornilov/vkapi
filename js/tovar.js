@@ -928,7 +928,7 @@ $(document)
 			var send = {
 				op:'tovar_avai_add',
 				tovar_id:TI.id,
-				count:_num($('#count').val()),
+				count:_ms($('#count').val()),
 				sum_buy:_cena($('#sum_buy').val()),
 				about:$('#about').val()
 			};
@@ -948,7 +948,7 @@ $(document)
 			}, 'json');
 		}
 	})
-	.on('click', '#tovar-sell', function() {//продажа товара из информации о заявке
+	.on('click', '#tovar-sell', function() {//продажа товара из информации о товаре
 		var dialog = _dialog({
 				top:20,
 				width:510,

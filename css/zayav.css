@@ -534,7 +534,6 @@
 #_zayav-expense .sum b{font:bold 11px arial}
 #_zayav-expense .count{
 	text-align:right;
-	font-weight:bold;
 	color:#292;
 	width:30px;
 	white-space:nowrap;
@@ -555,7 +554,6 @@
 #ze-prev .name{width:70px}
 #ze-prev .count{
 	text-align:right;
-	font-weight:bold;
 	color:#292;
 	width:30px;
 	white-space:nowrap;

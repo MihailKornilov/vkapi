@@ -949,15 +949,15 @@ switch(@$_POST['op']) {
 			case 5:
 				if(!$tovar_id = _num($_POST['dop']))
 					jsonError('Не выбран товар');
-				if(!$tovar_count = _num($_POST['count']))
-					jsonError('Не указано количество');
+				if(!$tovar_count = _ms($_POST['count']))
+					jsonError('Некорректно указано количество');
 				if(!$r = _tovarQuery($tovar_id))
 					jsonError('Товара id'.$tovar_id.' не существует');
 				break;
 			case 3:
 				if(!$tovar_avai_id = _num($_POST['dop']))
 					jsonError('Не выбрано наличие товара');
-				if(!$tovar_count = _num($_POST['count']))
+				if(!$tovar_count = _ms($_POST['count']))
 					jsonError('Не указано количество');
 				$sql = "SELECT *
 						FROM `_tovar_avai`

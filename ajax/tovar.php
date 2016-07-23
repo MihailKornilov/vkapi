@@ -318,7 +318,7 @@ switch(@$_POST['op']) {
 	case 'tovar_avai_add':
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError();
-		if(!$count = _num($_POST['count']))
+		if(!$count = _ms($_POST['count']))
 			jsonError();
 
 		$sum_buy = _cena($_POST['sum_buy']);
@@ -801,7 +801,7 @@ function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 }
 function _tovar_formimg_send($r) {//форсирование данных товара для отправки (при выборе товара)
 	$id = $r['id'];
-	if(!$count = _num(@$r['count']))
+	if(!$count = _ms(@$r['count']))
 		$count = 1;
 	return array(
 		'id' => $id,
@@ -810,8 +810,8 @@ function _tovar_formimg_send($r) {//форсирование данных товара для отправки (при
 		'count' => $count,
 		'name' => utf8($r['tovar_name']),
 		'name_b' => utf8($r['tovar_name_b']),
-		'sum_buy' => $r['tovar_buy'],
-		'sum_sell' => $r['tovar_sell'],
+		'sum_buy' => _cena($r['tovar_buy']),
+		'sum_sell' => _cena($r['tovar_sell']),
 		'measure' => utf8($r['tovar_measure_name']),
 		'image_small' => $r['tovar_image_small']
 	);

@@ -354,7 +354,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			GROUP BY `tovar_id`";
 	$q = query($sql, GLOBAL_MYSQL_CONNECT);
 	while($r = mysql_fetch_assoc($q))
-		$tovar[$r['tovar_id']]['avai_count'] = $r['count'];
+		$tovar[$r['tovar_id']]['avai_count'] = _ms($r['count']);
 
 	//артикулы
 	$articul = array();
@@ -371,7 +371,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 	foreach($articul as $id => $r) {
 		$tovar[$id]['articul'] = _tovarAvaiArticulTab($r, 1);
 		$tovar[$id]['articul_count'] = count($r);
-		$tovar[$id]['articul_count_first'] = $r[key($r)]['count'];
+		$tovar[$id]['articul_count_first'] = _ms($r[key($r)]['count']);
 
 		foreach($r as $k => $i) {
 			unset($r[$k]['id']);
@@ -379,7 +379,8 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			unset($r[$k]['articul']);
 			unset($r[$k]['tovar_id']);
 			unset($r[$k]['about']);
-			$r[$k]['sum_buy'] = _cena($r[$k]['sum_buy']);
+			$r[$k]['count'] = _ms($i['count']);
+			$r[$k]['sum_buy'] = _cena($i['sum_buy']);
 		}
 		$tovar[$id]['articul_arr'] = $r;
 	}
@@ -1080,7 +1081,7 @@ function _tovarMoveInsert($v) {//внесение движения товара
 		'type_id' => _num(@$v['type_id']) ? _num($v['type_id']) : 1,
 		'tovar_id' => _num(@$v['tovar_id']),
 		'tovar_avai_id' => _num(@$v['tovar_avai_id']),
-		'count' => _num(@$v['count']) ? _num($v['count']) : 1,
+		'count' => _ms(@$v['count']) ? _ms($v['count']) : 1,
 		'cena' => _cena(@$v['cena']),
 		'client_id' => _num(@$v['client_id']),
 		'zayav_id' => _num(@$v['zayav_id']),

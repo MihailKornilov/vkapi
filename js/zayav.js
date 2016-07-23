@@ -828,7 +828,7 @@ var _zayavSpisok = function(v, id) {
 								.select()
 								.off('keyup')
 								.keyup(function() {
-									$('#ze-sum').val(_cena(_num($(this).val()) * buy));
+									$('#ze-sum').val(Math.round(_ms($(this).val()) * buy));
 								});
 
 							$('#ze-count-max b').html(avai_id ? sp.articul_arr[avai_id].count : 1);
@@ -856,7 +856,7 @@ var _zayavSpisok = function(v, id) {
 				zayav_id:ZI.id,
 				cat_id:_num($('#ze-cat').val()),
 				dop:$('#ze-dop').length ? $('#ze-dop').val() : '',
-				count:_num($('#ze-count').val()),
+				count:_ms($('#ze-count').val()),
 				sum:_cena($('#ze-sum').val())
 			};
 			if(!send.cat_id) {

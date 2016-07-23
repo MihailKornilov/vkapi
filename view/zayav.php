@@ -2519,7 +2519,7 @@ function _zayavExpenseDopVal($r) {//значение дополнительного поля
 	if($r['tovar_id']) {
 		$arr = _tovarValToList(array($r['id']=>$r));
 		$r = $arr[$r['id']];
-		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'.$r['tovar_count'].'</b>' : ': '.$r['tovar_count'].' '.$r['tovar_measure_name']);
+		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'._ms($r['tovar_count']).'</b>' : ': '.$r['tovar_count']).' '.$r['tovar_measure_name'];
 	}
 
 	if($r['attach_id']) {
@@ -2581,7 +2581,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 					'</a>';
 
 		if($r['tovar_id'])
-			$dop = $r['tovar_set'].($r['tovar_avai_id'] ? '' : ': '.$r['tovar_count'].' '.$r['tovar_measure_name']);
+			$dop = $r['tovar_set'].($r['tovar_avai_id'] ? '' : ': '._ms($r['tovar_count']).' '.$r['tovar_measure_name']);
 
 		if($r['attach_id'])
 			$dop = $r['attach_link'];
@@ -2593,7 +2593,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 				'<td class="name">'.$ze['name'].
 				'<td'.(!$r['tovar_avai_id'] ? ' colspan="2"' : '').'>'.$dop.
 		($r['tovar_avai_id'] ?
-				'<td class="count">'.$r['tovar_count'].' '.$r['tovar_measure_name']
+				'<td class="count"><b>'._ms($r['tovar_count']).'</b> '.$r['tovar_measure_name']
 		: '').
 				'<td class="sum">'.
 					'<em>'._sumSpace($sum).' р.</em>'.
