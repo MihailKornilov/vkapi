@@ -407,13 +407,18 @@ switch(@$_POST['op']) {
 					'<tr><td class="label r">Количество:*'.
 							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
 								'<span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Цена продажи (за 1 '._tovarMeasure($r['measure_id']).'):*<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
+					'<tr><td class="label r">Цена продажи (за 1 '._tovarMeasure($r['measure_id']).'):*'.
+						'<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
 					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
 					'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
 					'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
 				'</table>'
 			);
+
+			foreach($send['arr'] as $r)
+				$send['arr'][$r['id']]['count'] = _ms($r['count']);
 		}
+
 
 		$send['count'] = count($send['arr']);
 

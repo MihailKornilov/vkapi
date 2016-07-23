@@ -951,7 +951,7 @@ $(document)
 	.on('click', '#tovar-sell', function() {//продажа товара из информации о заявке
 		var dialog = _dialog({
 				top:20,
-				width:490,
+				width:510,
 				head:'Продажа товара',
 				class:'tovar-sell',
 				load:1,
