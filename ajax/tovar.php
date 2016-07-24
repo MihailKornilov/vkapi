@@ -22,6 +22,18 @@ switch(@$_POST['op']) {
 		$send['spisok'] = _tovar_category_name($category_id);
 		jsonSuccess($send);
 		break;
+	case 'tovar_vendor_load':
+		if(!$category_id = _num($_POST['category_id']))
+			jsonError();
+		if(!$name_id = _num($_POST['name_id']))
+			jsonError();
+
+		$send['spisok'] = _tovar_category_vendor(array(
+			'category_id' => $category_id,
+			'name_id' => $name_id
+		));
+		jsonSuccess($send);
+		break;
 	case 'tovar_add':
 		if(!$category_id = _num($_POST['category_id']))
 			jsonError();

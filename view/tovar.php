@@ -707,6 +707,7 @@ function _tovar_category_spisok($filter) {
 	foreach($spisok as $r) {
 		$spisok[$r['id']]['name'] = trim(_tovarCategory($r['id']));
 		$spisok[$r['id']]['sub'] = array();
+		$spisok[$r['id']]['sub_vendor'] = array();
 		$spisok[$r['id']]['count'] = 0;
 	}
 
@@ -777,21 +778,61 @@ function _tovar_category_spisok($filter) {
 			if($r['category_id'] == $sp['id']) {
 				$spisok[$sp['id']]['sub'][$r['name_id']] = trim(_tovarName($r['name_id']));
 				$spisok[$sp['id']]['sub_count'][$r['name_id']] = $r['count'];
-				$spisok[$sp['id']][$filter['group'] == 2 ? 'zakaz' : 'avai'][$r['name_id']] = $r['avai_zakaz'];
+				$spisok[$sp['id']][$filter['group'] == 2 ? 'zakaz' : 'avai'][$r['name_id']] = _ms($r['avai_zakaz']);
+			}
+
+	//количество товаров и наличия по каждому наименованию
+	$sql = "SELECT
+				`category_id`,
+				`name_id`,
+				`vendor_id`,
+				COUNT(`t`.`id`) `count`,
+				SUM(`ta`.`count`) `avai_zakaz`
+			FROM `_tovar` `t`
+			".$JOIN."
+			WHERE ".$cond."
+			GROUP BY `category_id`,`name_id`,`vendor_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		foreach($spisok as $sp)
+			if($r['category_id'] == $sp['id']) {
+				if(!$r['vendor_id'])
+					continue;
+				$spisok[$sp['id']]['sub_vendor'][$r['name_id']][$r['vendor_id']] = trim(_tovarVendor($r['vendor_id']));
+				$spisok[$sp['id']]['sub_vendor_count'][$r['name_id']][$r['vendor_id']] = $r['count'];
+				$spisok[$sp['id']]['sub_vendor_'.($filter['group'] == 2 ? 'zakaz' : 'avai')][$r['name_id']][$r['vendor_id']] = _ms($r['avai_zakaz']);
 			}
 
 	foreach($spisok as $id => $r) {
 		if(!$r['count'])
 			continue;
 		asort($r['sub']);
-		foreach($r['sub'] as $k => $i)
+
+
+		foreach($r['sub'] as $k => $i) {
+			$vendor = '';
+			if(isset($r['sub_vendor'][$k])) {
+				asort($r['sub_vendor'][$k]);
+				foreach($r['sub_vendor'][$k] as $kk => $ii)
+					$vendor .=
+						'<a class="sub-vendor" val="'.$id.':'.$k.':'.$kk.'">'.$ii.'</a>'.
+						'<span class="ven-count">'.$r['sub_vendor_count'][$k][$kk].'</span>'.
+ (@$r['sub_vendor_avai'][$k][$kk] ? '<span class="ven-avai">'.$r['sub_vendor_avai'][$k][$kk].'</span>' : '').
+(@$r['sub_vendor_zakaz'][$k][$kk] ? '<span class="ven-zakaz">'.$r['sub_vendor_zakaz'][$k][$kk].'</span>' : '').
+						'<br />';
+				$vendor = '<div class="ven">'.$vendor.'</div>';
+			}
 			$r['sub'][$k] =
 				'<a class="sub-unit" val="'.$k.'">'.
+					($vendor ? '<div class="ven-plus'._tooltip('Показать производителей', -15, 'l').'+</div>' : '').
 					$i.
 					'<span class="sub-count">'.$r['sub_count'][$k].'</span>'. //количество товаров в наименовании
- (@$r['avai'][$k] ? '<span class="avai">'._ms($r['avai'][$k]).'</span>' : '').
+ (@$r['avai'][$k] ? '<span class="avai">'.$r['avai'][$k].'</span>' : '').
 (@$r['zakaz'][$k] ? '<span class="zakaz">'.$r['zakaz'][$k].'</span>' : '').
-				'</a>';
+				'</a>'.
+				$vendor;
+		}
+
 		$send['spisok'] .=
 			'<div class="tovar-category-unit" val="'.($r['id'] ? $r['id'] : -1).'">'.
 				'<a class="hd">'.$r['name'].'</a>'.

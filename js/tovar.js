@@ -148,7 +148,7 @@ var _tovarEditExtend = function(o) {
 			(!o.vendor_id ? '<span class="prim">(не указывайте производителя, если его нет)</span>' : '') +
 
 					'<tr><td class="label r">Подробно:' +
-						'<td><input type="text" id="name" value="' + o.name + '" placeholder="описание / модель / версия / уточнение" />' +
+						'<td><input type="text" id="name" value="' + o.name + '" placeholder="модель / версия / уточнение" />' +
 				'</table>';
 	},
 	_tovarEditLabelSet = function(o) {
@@ -162,7 +162,7 @@ var _tovarEditExtend = function(o) {
 			'</table>';
 	},
 	_tovarEditLabelDop = function(o) {
-		return '<div class="headName">Дополнительные характеристики:</div>' +
+		return '<div class="headName">Характеристики:</div>' +
 			'<table class="bs10" id="tab-dop">' +
 				'<tr><td class="label r w125">Единица изменения:*<td><input type="hidden" id="measure_id" value="' + o.measure_id + '" />' +
 				'<tr><td class="label topi r">Описание товара:<td><textarea id="about">' + _br(o.about) + '</textarea>' +
@@ -182,8 +182,9 @@ var _tovarEditExtend = function(o) {
 		});
 
 		_tovarEditNameLoad(o.category_id, o.name_id);
+		_tovarEditVendorLoad(o.name_id, o.vendor_id);
 	},
-	_tovarEditNameLoad = function(v, name_id) {//загрузка наименований после выбора категории
+	_tovarEditNameLoad = function(v, name_id) {//загрузка названий после выбора категории
 		$('#name_id-add')._select(0);
 		if(!v) {
 			$('#name_id-add')._select([]);
@@ -198,6 +199,24 @@ var _tovarEditExtend = function(o) {
 			$('#name_id-add')
 				._select(res.success ? res.spisok : [])
 				._select(name_id);
+		}, 'json');
+	},
+	_tovarEditVendorLoad = function(name_id, vendor_id) {//загрузка производителей после выбора названия
+		var ven = $('#vendor_id-add');
+		ven._select(0);
+		if(!name_id) {
+			ven._select([]);
+			return;
+		}
+		var send = {
+			op:'tovar_vendor_load',
+			category_id:_num($('#category_id-add').val()),
+			name_id:name_id
+		};
+		ven._select('process');
+		$.post(AJAX_MAIN, send, function(res) {
+			ven._select(res.success ? res.spisok : []);
+			ven._select(vendor_id);
 		}, 'json');
 	},
 	_tovarEditCategoryFunc = function(v) {
@@ -218,14 +237,15 @@ var _tovarEditExtend = function(o) {
 			spisok:[],
 			write:1,
 			write_save:1,
-			func:function() {
+			func:function(v) {
+				_tovarEditVendorLoad(v);
 				$('#name').focus();
 			}
 		});
 		$('#vendor_id-add')._select({
 			width:180,
 			title0:'не выбран',
-			spisok:TOVAR_VENDOR_SPISOK,
+			spisok:[],
 			write:1,
 			write_save:1,
 			func:function() {
@@ -459,6 +479,7 @@ var _tovarEditExtend = function(o) {
 				$('#name_id')._select(res.name_spisok);
 				$('#name_id')._select(res.name_id);
 				$('#vendor_id')._select(res.vendor_spisok);
+				$('#vendor_id')._select(TOVAR.vendor_id);
 			}
 		}, 'json');
 	};
@@ -900,6 +921,22 @@ $(document)
 		TOVAR['category_id'] = cat_id;
 		_tovarIcon(4);
 		_tovarSpisok(name_id, 'name_id');
+	})
+	.on('click', '.tovar-category-unit .ven-plus', function(e) {//открытие списка с производителями
+		e.stopPropagation();
+		$(this).parent().next().slideToggle(300);
+	})
+	.on('click', '.tovar-category-unit .sub-vendor', function() {//действие при нажатии на название производителя в категории товаров
+		var v = $(this).attr('val').split(':'),
+			cat_id = v[0],
+			name_id = v[1],
+			vendor_id = v[2];
+
+		$('#category_id')._select(cat_id);
+		TOVAR['category_id'] = cat_id;
+		TOVAR['name_id'] = name_id;
+		_tovarIcon(4);
+		_tovarSpisok(vendor_id, 'vendor_id');
 	})
 
 	.on('click', '.tovar-info-go', function() {
