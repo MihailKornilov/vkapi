@@ -1270,6 +1270,7 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
 		"\n".'ZE_DOP_NAME='._assJson(_zayavExpenseDop()).','.
 		"\n".'RULE_HISTORY_SPISOK='._selJson(_ruleHistoryView()).','.
 		"\n".'RULE_INVOICE_TRANSFER_SPISOK='._selJson(_ruleInvoiceTransfer()).','.
+		"\n".'TOVAR_MEASURE_SPISOK='._tovarMeasure('js').','.
 		"\n".'COUNTRY_SPISOK=['.
 				'{uid:1,title:"Россия"},'.
 				'{uid:2,title:"Украина"},'.
@@ -1366,7 +1367,6 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategoryJs().','.
 		"\n".'TOVAR_VENDOR_SPISOK='._tovarVendorJs().','.
 		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().','.
-		"\n".'TOVAR_MEASURE_SPISOK='._selJson(_tovarMeasure()).','.
 		"\n".'TOVAR_POSITION_SPISOK='._selJson(_tovarPosition()).';';
 
 
@@ -1407,6 +1407,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
 	xcache_unset(CACHE_PREFIX.'tovar_feature_name');
 	xcache_unset(CACHE_PREFIX.'tovar_equip');
+	xcache_unset(CACHE_PREFIX.'tovar_measure');
 	xcache_unset(CACHE_PREFIX.'cartridge');
 	xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
 	xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);

@@ -24,6 +24,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a>'.
 		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
 		'<a href="'.URL.'&p=sa&d=zayav">Заявки</a>'.
+		'<a href="'.URL.'&p=sa&d=tovar_measure">Товары: единицы измерения</a>'.
 		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
 		'<a href="'.URL.'&p=sa&d=count">Счётчики</a>'.
 		'<br />'.
@@ -62,6 +63,7 @@ function sa_path($v1, $v2='') {
 			$v2.
 		'</div>';
 }
+
 
 
 function sa_menu() {//управление историей действий
@@ -111,8 +113,11 @@ function sa_menu_spisok() {
 				'<td class="ed">'._iconEdit($r).
 		'</table>';
 
+	$send .= '</dl>';
+
 	return $send;
 }
+
 
 
 function sa_history() {//управление историей действий
@@ -276,6 +281,7 @@ function sa_history_cat_spisok() {
 }
 
 
+
 function sa_rule() {//управление историей действий
 	return
 		sa_path('Права сотрудников').
@@ -313,6 +319,7 @@ function sa_rule_spisok() {
 
 	return $send;
 }
+
 
 
 function sa_balans() {//управление балансами
@@ -495,6 +502,67 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 
 	return $send;
 }
+
+
+
+function sa_tovar_measure() {//единицы измерения товаров
+	return
+		sa_path('Товары: единицы измерения').
+		'<div id="sa-measure">'.
+			'<div class="headName">'.
+				'Товары: единицы измерения'.
+				'<a class="add" onclick="saTovarMeasureEdit()">Новая единица измерения</a>'.
+			'</div>'.
+			'<div id="spisok" class="mar20">'.sa_tovar_measure_spisok().'</div>'.
+		'</div>';
+}
+function sa_tovar_measure_spisok() {
+	$sql = "SELECT
+				*,
+				0 `tovar`
+			FROM `_tovar_measure`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Список пуст.';
+
+	$sql = "SELECT
+				DISTINCT `measure_id`,
+				COUNT(`id`) `count`
+			FROM `_tovar`
+			GROUP BY `measure_id`";
+	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['measure_id']]['tovar'] = $r['count'];
+
+	$send =
+		'<table class="_spisok mb1">'.
+			'<tr><th class="td-name">Название'.
+				'<th class="fraction w50">Дробь'.
+				'<th class="tovar w50">Товары'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_tovar_measure">';
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+		'<table class="_spisok mb1">'.
+			'<tr><td class="td-name curM" val="'.$r['id'].'">'.
+					'<b class="short">'.$r['short'].'</b>'.
+					($r['name'] ? ' - ' : '').
+					'<span class="name">'.$r['name'].'</span>'.
+					'<div class="about">'.$r['about'].'</div>'.
+				'<td class="fraction center w50">'.($r['fraction'] ? 'да' : '').
+				'<td class="tovar center w50">'.($r['tovar'] ? $r['tovar'] : '').
+				'<td class="ed">'.
+					_iconEdit($r).
+					_iconDel($r + array('nodel'=>$r['tovar'])).
+		'</table>';
+
+	$send .= '</dl>';
+
+	return $send;
+}
+
+
 
 function sa_zayav_service() {
 	$link = sa_zayav_service_link();

@@ -243,19 +243,36 @@ function _tovarFeatureJs() {//характеристики товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
 }
-function _tovarMeasure($id=0) {//единицы изменения
-	$arr = array(
-		1 => 'шт.',
-		2 => 'м.',
-		3 => 'мм.'
-	);
-	
-	if(!$id)
+function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
+	$key = CACHE_PREFIX.'tovar_measure';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_tovar_measure`
+				ORDER BY `sort`";
+		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+			xcache_set($key, $arr, 86400);
+	}
+
+	if($id == 'all')
 		return $arr;
-	
+
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = array(
+				'title' => $r['short'],
+				'content' => '<b>'.$r['short'].'</b>'.($r['name'] ? ' - '.$r['name'] : '')
+			);
+		return _selJson($spisok);
+	}
+
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id единицы измерения', $id);
-	return $arr[$id];
+
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ производителя', $i);
+
+	return $arr[$id][$i];
 }
 
 

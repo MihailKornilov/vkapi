@@ -1156,8 +1156,10 @@ button.vk.grey:hover{background-color:#999}
 .w200{width:200px}
 .w230{width:230px}
 .w250{width:250px}
-.mt20{margin-top:20px}
 .mar8{margin:8px}
+.mar20{margin:20px}
+.mt20{margin-top:20px}
+.mb1{margin-bottom:1px}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 .red{color:#E22}
@@ -1165,4 +1167,9 @@ button.vk.grey:hover{background-color:#999}
 .dn{display:none}
 .vh{visibility:hidden}
 .center{text-align:center}
+
+/* Курсоры */
+.curM{cursor:move}
+.curD{cursor:default}
+.curP{cursor:pointer}
 

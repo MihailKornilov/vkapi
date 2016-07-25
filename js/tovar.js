@@ -278,7 +278,7 @@ var _tovarEditExtend = function(o) {
 		});
 
 		$('#measure_id')._select({
-			width:70,
+			width:200,
 			spisok:TOVAR_MEASURE_SPISOK
 		});
 		$('#about').autosize();

@@ -707,6 +707,82 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'sa_tovar_measure_add'://внесение единицы измерения
+		$short = _txt($_POST['short']);
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$fraction = _bool($_POST['fraction']);
+
+		if(!$short)
+			jsonError();
+
+		$sql = "INSERT INTO `_tovar_measure` (
+					`short`,
+					`name`,
+					`about`,
+					`fraction`,
+					`sort`
+				) VALUES (
+					'".addslashes($short)."',
+					'".addslashes($name)."',
+					'".addslashes($about)."',
+					".$fraction.",
+					"._maxSql('_setup_rubric', 'sort')."
+				)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'tovar_measure');
+		_globalJsValues();
+
+		$send['html'] = utf8(sa_tovar_measure_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_tovar_measure_edit'://редактирование единицы измерения
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		$short = _txt($_POST['short']);
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+		$fraction = _bool($_POST['fraction']);
+
+		if(!$short)
+			jsonError();
+
+		$sql = "UPDATE `_tovar_measure`
+				SET `short`='".addslashes($short)."',
+					`name`='".addslashes($name)."',
+					`about`='".addslashes($about)."',
+					`fraction`=".$fraction."
+				WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'tovar_measure');
+		_globalJsValues();
+
+		$send['html'] = utf8(sa_tovar_measure_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_tovar_measure_del'://удаление единицы измерения
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_tovar_measure` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError();
+
+		$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `measure_id`=".$id;
+		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			jsonError('Эта единица измерения используется');
+
+		$sql = "DELETE FROM `_tovar_measure` WHERE `id`=".$id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		xcache_unset(CACHE_PREFIX.'tovar_measure');
+		_globalJsValues();
+
+		jsonSuccess();
+		break;
+
 	case 'sa_color_add':
 		$predlog = _txt($_POST['predlog']);
 		$name = _txt($_POST['name']);

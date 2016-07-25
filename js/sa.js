@@ -328,6 +328,56 @@ var saMenuEdit = function(o) {
 		}
 	},
 
+	saTovarMeasureEdit = function(o) {
+		o = $.extend({
+			id:0,
+			short:'',
+			name:'',
+			about:'',
+			fraction:0
+		}, o);
+
+		var html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Короткое название:<td><input type="text" id="short" class="w50" value="' + o.short + '" />' +
+					'<tr><td class="label">Полное название:<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
+					'<tr><td class="label">Дробь:<td><input type="hidden" id="fraction" value="' + o.fraction + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:420,
+				head:(o.id ? 'Изменение' : 'Добавление') + ' единицы измерения',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#short').focus();
+		$('#about').autosize();
+		$('#fraction')._check();
+
+		function submit() {
+			var send = {
+				op:'sa_tovar_measure_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				short:$('#short').val(),
+				name:$('#name').val(),
+				about:$('#about').val(),
+				fraction:$('#fraction').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+					sortable();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	
 	saColorEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -748,6 +798,30 @@ $(document)
 			id:t.attr('val'),
 			head:'поля',
 			op:'sa_zayav_service_pole_del',
+			func:function() {
+				p.remove();
+			}
+		});
+	})
+
+	.on('click', '#sa-measure .img_edit', function() {
+		var t = $(this),
+			p = _parent(t, 'DD');
+		saTovarMeasureEdit({
+			id:t.attr('val'),
+			short:p.find('.short').html(),
+			name:p.find('.name').html(),
+			about:p.find('.about').html(),
+			fraction:p.find('.fraction').html() ? 1 : 0
+		});
+	})
+	.on('click', '#sa-measure .img_del', function() {
+		var t = $(this),
+			p = _parent(t, 'DD');
+		_dialogDel({
+			id:t.attr('val'),
+			head:'единицы измерения',
+			op:'sa_tovar_measure_del',
 			func:function() {
 				p.remove();
 			}
