@@ -4,6 +4,15 @@ function _zayav() {
 		return zayavCase();
 	if(@$_GET['d'] == 'info')
 		return _zayav_info();
+	
+	//вывести список заявок, в котором использовался конкретный товар (переход со страницы информации о товаре)
+	if($tovar_id = _num(@$_GET['from_tovar_id'])) {
+		foreach($_COOKIE as $key => $val)
+			if(strpos($key, APP_ID.'_'.VIEWER_ID.'_zayav') !== false)
+			unset($_COOKIE[$key]);
+		$_COOKIE[APP_ID.'_'.VIEWER_ID.'_zayav'._service('current').'_tovar_id'] = $tovar_id;
+	}
+	
 	return _zayav_list(_hashFilter('zayav'._service('current')));
 }
 

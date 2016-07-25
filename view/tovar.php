@@ -1378,7 +1378,10 @@ function _tovar_info_zayav($tovar_id) {//за€вки по этому товару
 			  AND `tovar_id`=".$tovar_id;
 	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
 		return '';
-	return '<div id="ti-zayav">«а€вки: '.$count.'</div>';
+	return
+		'<div id="ti-zayav">'.
+			'<a href="'.URL.'&p=zayav&from_tovar_id='.$tovar_id.'">»спользование в за€вках: '.$count.'</a>'.
+		'</div>';
 }
 function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 	$sql = "SELECT COUNT(`id`)
