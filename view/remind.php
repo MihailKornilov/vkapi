@@ -78,6 +78,7 @@ function _remind_stat_count($status, $period=TODAY) {
 function _remind_right() {
 	$list = array(
 		9 => 'Сегодня'.(_remindTodayCount() ? '<em>'._remindTodayCount().'</em>' : ''),
+		4 => 'Завтра'._remindTomorrowCount(),
 		1 => 'Активные<em>'._remindActiveCount().'</em>',
 		2 => 'Выполнены',
 		3 => 'Отменены'
@@ -126,6 +127,17 @@ function _remindTodayCount($plus_b=0) { //Получение количества напоминаний на се
 	define('REMIND_ACTIVE_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
 
 	return _remindTodayCount($plus_b);
+}
+function _remindTomorrowCount($plus_b=0) { //Получение количества напоминаний на завтра
+	$sql = "SELECT COUNT(`id`)
+			FROM `_remind`
+			WHERE `app_id`=".APP_ID."
+			  AND `status`=1
+			  AND `day`=DATE_ADD('".TODAY."', INTERVAL 1 DAY)";
+	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return '';
+
+	return '<em>'.$count.'</em>';
 }
 function _remindActiveCount() { //количество активных напоминаний
 	$sql = "SELECT COUNT(`id`)
@@ -182,12 +194,15 @@ function _remind_spisok($v=array()) {
 	define('CLIENT_OR_ZAYAV', $filter['client_id'] || $filter['zayav_id']);
 	define('REMIND_TODAY', !CLIENT_OR_ZAYAV && $filter['status'] == 9);
 	define('REMIND_TODAY_MSG', REMIND_TODAY ? ' на сегодня' : '');
-	define('REMIND_ACTIVE', !CLIENT_OR_ZAYAV && !REMIND_TODAY);
+	define('REMIND_TOMORROW', !CLIENT_OR_ZAYAV && $filter['status'] == 4);
+	define('REMIND_ACTIVE', !CLIENT_OR_ZAYAV && !REMIND_TODAY && !REMIND_TOMORROW);
 
 	$cond = "`app_id`=".APP_ID;
 
 	if(REMIND_TODAY)
 		$cond .= " AND `status`=1 AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
+	if(REMIND_TOMORROW)
+		$cond .= " AND `status`=1 AND `day`=DATE_ADD('".TODAY."', INTERVAL 1 DAY)";
 	if(REMIND_ACTIVE)
 		$cond .= " AND `status`=".$filter['status'];
 	if($filter['client_id'])
