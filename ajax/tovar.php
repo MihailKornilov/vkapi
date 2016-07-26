@@ -163,6 +163,26 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'tovar_del'://удаление товара
+		if(!$tovar_id = _num($_POST['id']))
+			jsonError();
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError();
+
+		if($reason = _tovarDelAccess($r))
+			jsonError($reason);
+
+		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_history(array(
+			'type_id' => 113,
+			'tovar_id' => $tovar_id
+		));
+
+		jsonSuccess();
+		break;
 	case 'tovar_select_find'://получение списка товаров для выбора
 		$tovar_id = _num($_POST['tovar_id']);
 		$v = _txt($_POST['v']);

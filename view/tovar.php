@@ -426,7 +426,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 		$t = $tovar[$r[$key]];
 		$tovar_id = $t['id'];
 		$set = $t['tovar_id_set'];
-		$go = ' class="tovar-info-go" val="'.$tovar_id.'"';
+		$go = ' class="tovar-info-go'.($t['deleted'] ? ' deleted' : '').'" val="'.$tovar_id.'"';
 		$name = _tovarName($t['name_id']);
 		$nameB = $set ? '<b>'.$name.'</b>' : $name;
 		$vendor = _tovarVendor($t['vendor_id']);
@@ -519,6 +519,44 @@ function _tovarArticulCreate() {//формирование очередного артикула товара
 		$articul = '0'.$articul;
 	
 	return $articul;
+}
+
+function _tovarDelAccess($r) {//разрешение на удаление товара
+	$tovar_id = $r['id'];
+
+	if(!$r['app_id'])
+		return 'Товар был создан не в этом приложении';
+
+	$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `id`=".$r['tovar_id_set'];
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Этот товар применяется к другому товару';
+
+	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Производилась продажа товара';
+
+	$sql = "SELECT COUNT(*) FROM `_schet_content` WHERE `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Товар используется в счётах на оплату';
+
+	$sql = "SELECT COUNT(*) FROM `_tovar_avai` WHERE `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Товар есть в наличии';
+
+	$sql = "SELECT COUNT(*) FROM `_tovar_move` WHERE `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'У товара есть история действий';
+
+	$sql = "SELECT COUNT(*) FROM `_zayav_expense` WHERE `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Товар используется в расходах по заявкам';
+
+	$sql = "SELECT COUNT(*) FROM `_zayav_tovar` WHERE `tovar_id`=".$tovar_id;
+	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		return 'Товар используется в заявках';
+
+	//причины на запрет удаления нет
+	return 0;
 }
 
 function _tovarFilter($v) {
@@ -736,7 +774,7 @@ function _tovar_category_spisok($filter) {
 		'filter' => $filter
 	);
 
-	$cond = "`category_id` IN ("._idsGet($spisok).")";
+	$cond = "!`deleted` AND `category_id` IN ("._idsGet($spisok).")";
 
 	if(!empty($filter['find'])) {
 //		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
@@ -864,7 +902,7 @@ function _tovar_category_spisok($filter) {
 	return $send;
 }
 function _tovar_spisok($filter) {
-	$cond = "`category_id` IN ("._tovarCategory('use').")";
+	$cond = "!`deleted` AND `category_id` IN ("._tovarCategory('use').")";
 
 	define('ZAKAZ_ADDED', $filter['group'] == 2);
 	define('PAGE1', $filter['page'] == 1);
@@ -996,7 +1034,8 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 				'' `tovar_set_name`
 			FROM `_tovar`
 			WHERE `id".($old ? '_old' : '')."`=".$tovar_id;
-	$tovar = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	if(!$tovar = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		return array();
 
 	if($tovar['tovar_id_set']) {
 		$sql = "SELECT *
@@ -1202,6 +1241,9 @@ function _tovar_info() {//информация о товаре
 	if(!$r = _tovarQuery($tovar_id, $old))
 		return _err('Товара не существует');
 
+	if($r['deleted'])
+		return _err('Товар был удалён');
+
 	$tovar_id = $r['id'];//todo
 
 	define('MEASURE', _tovarMeasure($r['measure_id']));
@@ -1234,6 +1276,7 @@ function _tovar_info() {//информация о товаре
 						'<a>Добавить в заказ</a>'.
 						'<a id="tovar-sell">Продажа</a>'.
 						'<a onclick="_tovarWriteOff()">Списание</a>'.
+(!_tovarDelAccess($r) ? '<a class="red" onclick="_tovarDel()">Удалить товар</a>' : '').
 					'</div>'.
 				'<td id="ti-right">'.
 					_tovar_info_avai_cost($r).

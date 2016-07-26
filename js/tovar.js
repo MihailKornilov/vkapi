@@ -355,7 +355,6 @@ var _tovarEditExtend = function(o) {
 			}, 'json');
 		}
 	},
-
 	_tovarWriteOff = function() {//продажа товара из информации о заявке
 		var dialog = _dialog({
 				top:20,
@@ -433,6 +432,16 @@ var _tovarEditExtend = function(o) {
 					dialog.abort();
 			}, 'json');
 		}
+	},
+	_tovarDel = function() {
+		_dialogDel({
+			id:TI.id,
+			head:'товара',
+			op:'tovar_del',
+			func:function(res) {
+				location.reload();
+			}
+		});
 	},
 
 	_tovarIcon = function(v) {//установка вида отображения товаров
