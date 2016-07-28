@@ -266,6 +266,24 @@ function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
 		return _selJson($spisok);
 	}
 
+	//условие Дробь для JS
+	if($id == 'js_fraction') {
+		$spisok = array();
+		foreach($arr as $r)
+			if($r['fraction'])
+				$spisok[$r['id']] = 1;
+		return _assJson($spisok);
+	}
+
+	//условие Площадь для JS
+	if($id == 'js_area') {
+		$spisok = array();
+		foreach($arr as $r)
+			if($r['area'])
+				$spisok[$r['id']] = 1;
+		return _assJson($spisok);
+	}
+
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id единицы измерения', $id);
 
@@ -1260,6 +1278,8 @@ function _tovar_info() {//информация о товаре
 			'tovar_id_set:'.$r['tovar_id_set'].','.
 			'measure_id:'.$r['measure_id'].','.
 			'measure_name:"'._tovarMeasure($r['measure_id']).'",'.
+			'measure_length:'._ms($r['measure_length']).','.
+			'measure_width:'._ms($r['measure_width']).','.
 			'sum_buy:'.$r['sum_buy'].','.
 			'sum_sell:'.$r['sum_sell'].','.
 			'about:"'._br($r['about']).'",'.
@@ -1288,7 +1308,7 @@ function _tovar_info() {//информация о товаре
 					'</div>'.
 					_tovar_info_set($r).
 					_tovar_info_about($r['about']).
-					_tovar_info_feature($tovar_id).
+					_tovar_info_feature($r).
 
 					_tovar_info_zakaz($tovar_id).
 					_tovar_info_set_spisok($r).
@@ -1357,20 +1377,31 @@ function _tovar_info_about($about) {//вывод описания товара, если есть
 		return '';
 	return '<div class="_info">'._br($about).'</div>';
 }
-function _tovar_info_feature($tovar_id, $js=0) {//характеристики товара
+function _tovar_info_feature($tovar) {//характеристики товара
+	$send = '<table id="ti-feature">'.
+				'<tr><td class="label">Единица измерения:'.
+					'<td><b>'.MEASURE.'</b>';
+
+	if(_tovarMeasure($tovar['measure_id'], 'area'))
+		$send .=
+			'<tr><td class="label">Площадь:'.
+				'<td><span class="curD'._tooltip('Длина', -26)._ms($tovar['measure_length']).'</span>'.
+					' x '.
+					'<span class="curD'._tooltip('Ширина', -30)._ms($tovar['measure_width']).'</span>'.
+					' = '.
+					'<b>'._ms($tovar['measure_area']) .'</b> кв. м';
+
 	$sql = "SELECT *
 			FROM `_tovar_feature`
-			WHERE `tovar_id`=".$tovar_id."
+			WHERE `tovar_id`=".$tovar['id']."
 			ORDER BY `id`";
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
-		return '';
+	if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		foreach($arr as $r) {
+			$send .=
+				'<tr><td class="label">'._tovarFeature($r['name_id']).':'.
+					'<td>'.$r['v'];
+		}
 
-	$send = '<table id="ti-feature">';
-	foreach($arr as $r) {
-		$send .=
-			'<tr><td class="label">'._tovarFeature($r['name_id']).':'.
-				'<td>'.$r['v'];
-	}
 	$send .= '</table>';
 
 	return $send;
@@ -1628,7 +1659,7 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 
 		$send .= '<tr class="'.$class.'">'.
 				'<td class="w70">'.$type[$r['type_id']].
-				'<td class="w50 r">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
+				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
 				'<td class="w100 r">'.$summa.
 				'<td>'.
 					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').

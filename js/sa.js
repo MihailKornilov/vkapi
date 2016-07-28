@@ -334,7 +334,8 @@ var saMenuEdit = function(o) {
 			short:'',
 			name:'',
 			about:'',
-			fraction:0
+			fraction:0,
+			area:0
 		}, o);
 
 		var html =
@@ -343,6 +344,7 @@ var saMenuEdit = function(o) {
 					'<tr><td class="label">Полное название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr><td class="label">Дробь:<td><input type="hidden" id="fraction" value="' + o.fraction + '" />' +
+					'<tr><td class="label">Площадь:<td><input type="hidden" id="area" value="' + o.area + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:420,
@@ -355,6 +357,7 @@ var saMenuEdit = function(o) {
 		$('#short').focus();
 		$('#about').autosize();
 		$('#fraction')._check();
+		$('#area')._check();
 
 		function submit() {
 			var send = {
@@ -363,7 +366,8 @@ var saMenuEdit = function(o) {
 				short:$('#short').val(),
 				name:$('#name').val(),
 				about:$('#about').val(),
-				fraction:$('#fraction').val()
+				fraction:$('#fraction').val(),
+				area:$('#area').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -812,7 +816,8 @@ $(document)
 			short:p.find('.short').html(),
 			name:p.find('.name').html(),
 			about:p.find('.about').html(),
-			fraction:p.find('.fraction').html() ? 1 : 0
+			fraction:p.find('.fraction').html() ? 1 : 0,
+			area:p.find('.area').html() ? 1 : 0
 		});
 	})
 	.on('click', '#sa-measure .img_del', function() {

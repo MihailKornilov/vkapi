@@ -538,6 +538,7 @@ function sa_tovar_measure_spisok() {
 		'<table class="_spisok mb1">'.
 			'<tr><th class="td-name">Название'.
 				'<th class="fraction w50">Дробь'.
+				'<th class="area w70">Площадь'.
 				'<th class="tovar w50">Товары'.
 				'<th class="ed">'.
 		'</table>'.
@@ -551,6 +552,7 @@ function sa_tovar_measure_spisok() {
 					'<span class="name">'.$r['name'].'</span>'.
 					'<div class="about">'.$r['about'].'</div>'.
 				'<td class="fraction center w50">'.($r['fraction'] ? 'да' : '').
+				'<td class="area center w70">'.($r['area'] ? 'да' : '').
 				'<td class="tovar center w50">'.($r['tovar'] ? $r['tovar'] : '').
 				'<td class="ed">'.
 					_iconEdit($r).

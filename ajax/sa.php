@@ -712,6 +712,7 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$fraction = _bool($_POST['fraction']);
+		$area = _bool($_POST['area']);
 
 		if(!$short)
 			jsonError();
@@ -721,12 +722,14 @@ switch(@$_POST['op']) {
 					`name`,
 					`about`,
 					`fraction`,
+					`area`,
 					`sort`
 				) VALUES (
 					'".addslashes($short)."',
 					'".addslashes($name)."',
 					'".addslashes($about)."',
 					".$fraction.",
+					".$area.",
 					"._maxSql('_setup_rubric', 'sort')."
 				)";
 		query($sql, GLOBAL_MYSQL_CONNECT);
@@ -744,6 +747,7 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$fraction = _bool($_POST['fraction']);
+		$area = _bool($_POST['area']);
 
 		if(!$short)
 			jsonError();
@@ -752,7 +756,8 @@ switch(@$_POST['op']) {
 				SET `short`='".addslashes($short)."',
 					`name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
-					`fraction`=".$fraction."
+					`fraction`=".$fraction.",
+					`area`=".$area."
 				WHERE `id`=".$id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 

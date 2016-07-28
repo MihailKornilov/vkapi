@@ -1271,6 +1271,8 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
 		"\n".'RULE_HISTORY_SPISOK='._selJson(_ruleHistoryView()).','.
 		"\n".'RULE_INVOICE_TRANSFER_SPISOK='._selJson(_ruleInvoiceTransfer()).','.
 		"\n".'TOVAR_MEASURE_SPISOK='._tovarMeasure('js').','.
+		"\n".'TOVAR_MEASURE_FRACTION='._tovarMeasure('js_fraction').','.
+		"\n".'TOVAR_MEASURE_AREA='._tovarMeasure('js_area').','.
 		"\n".'COUNTRY_SPISOK=['.
 				'{uid:1,title:"Россия"},'.
 				'{uid:2,title:"Украина"},'.

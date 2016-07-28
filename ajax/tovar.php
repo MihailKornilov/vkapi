@@ -54,6 +54,17 @@ switch(@$_POST['op']) {
 		if(!$measure_id = _num($_POST['measure_id']))
 			jsonError();
 
+		$measure_length = 0;
+		$measure_width = 0;
+		$measure_area = 0;
+		if(_tovarMeasure($measure_id, 'area')) {
+			if(!$measure_length = _ms($_POST['measure_length']))
+				jsonError('Некорректно указана длина');
+			if(!$measure_width = _ms($_POST['measure_width']))
+				jsonError('Некорректно указана ширина');
+			$measure_area = _ms($measure_length * $measure_width);
+		}
+
 		$about = _txt($_POST['about']);
 
 		$sql = "INSERT INTO `_tovar` (
@@ -66,7 +77,11 @@ switch(@$_POST['op']) {
 
 					`set_position_id`,
 					`tovar_id_set`,
+
 					`measure_id`,
+					`measure_length`,
+					`measure_width`,
+					`measure_area`,
 
 					`viewer_id_add`
 				) VALUES (
@@ -79,7 +94,11 @@ switch(@$_POST['op']) {
 
 					".$set_position_id.",
 					".$tovar_id_set.",
+
 					".$measure_id.",
+					".$measure_length.",
+					".$measure_width.",
+					".$measure_area.",
 
 					".VIEWER_ID."
 				)";
@@ -123,6 +142,17 @@ switch(@$_POST['op']) {
 		if(!$measure_id = _num($_POST['measure_id']))
 			jsonError();
 
+		$measure_length = 0;
+		$measure_width = 0;
+		$measure_area = 0;
+		if(_tovarMeasure($measure_id, 'area')) {
+			if(!$measure_length = _ms($_POST['measure_length']))
+				jsonError('Некорректно указана длина');
+			if(!$measure_width = _ms($_POST['measure_width']))
+				jsonError('Некорректно указана ширина');
+			$measure_area = _ms($measure_length * $measure_width);
+		}
+
 		$about = _txt($_POST['about']);
 
 		if(!$r = _tovarQuery($tovar_id))
@@ -140,7 +170,10 @@ switch(@$_POST['op']) {
 					`set_position_id`=".$set_position_id.",
 					`tovar_id_set`=".$tovar_id_set.",
 
-					`measure_id`=".$measure_id."
+					`measure_id`=".$measure_id.",
+					`measure_length`=".$measure_length.",
+					`measure_width`=".$measure_width.",
+					`measure_area`=".$measure_area."
 				WHERE `id`=".$tovar_id;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
@@ -436,9 +469,16 @@ switch(@$_POST['op']) {
 				'<div class="headName">Выбор по наличию</div>'.
 				_tovarAvaiArticul($tovar_id, 1).
 				'<table id="ts-tab" class="bs10 dn">'.
+
+					'<tr'.(_tovarMeasure($r['measure_id'], 'area') ? '' : ' class="dn"').'>'.
+						'<td class="label r">Площадь:'.
+						'<td><input type="text" id="sale-length" class="w50" placeholder="длина м." />'.
+							' x '.
+							'<input type="text" id="sale-width" class="w50" placeholder="ширина м." />'.
+
 					'<tr><td class="label r">Количество:*'.
-							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
-								'<span id="max">(max: <b></b>)</span>'.
+						'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
+							'<span id="max">(max: <b></b>)</span>'.
 					'<tr><td class="label r">Цена продажи (за 1 '._tovarMeasure($r['measure_id']).'):*'.
 						'<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
 					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.

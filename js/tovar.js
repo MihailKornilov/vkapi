@@ -8,6 +8,8 @@ var _tovarEditExtend = function(o) {
 			set_position_id:0,
 			tovar_id_set:0,
 			measure_id:1,
+			measure_length:0,
+			measure_width:0,
 			about:'',
 			feature:[],
 			callback:function(res) {
@@ -39,7 +41,6 @@ var _tovarEditExtend = function(o) {
 				'</div>' +
 */
 				_tovarEditLabelName(o) +
-				_tovarEditLabelSet(o) +
 				_tovarEditLabelDop(o) +
 			'</div>',
 
@@ -90,7 +91,6 @@ var _tovarEditExtend = function(o) {
 			html =
 			_tovarEditLabelCat(o) +
 			_tovarEditLabelName(o) +
-			_tovarEditLabelSet(o) +
 			_tovarEditLabelDop(o),
 
 			dialog = _dialog({
@@ -140,32 +140,36 @@ var _tovarEditExtend = function(o) {
 	},
 	_tovarEditLabelName = function(o) {
 		return  '<table id="tab-name">' +
-					'<tr><td class="label w125 r">Название:*' +
+					'<tr><td class="label w125 r"><b>Название:</b>*' +
 						'<td><input type="hidden" id="name_id-add" value="' + o.name_id + '" />' +
 				
-					'<tr><td class="label r">Производитель:' +
+					'<tr><td class="label r"><b>Производитель</b>:' +
 						'<td><input type="hidden" id="vendor_id-add" value="' + o.vendor_id + '" />' +
 			(!o.vendor_id ? '<span class="prim">(не указывайте производителя, если его нет)</span>' : '') +
-
-					'<tr><td class="label r">Подробно:' +
+					'<tr><td class="label r"><b>Подробно:</b>' +
 						'<td><input type="text" id="name" value="' + o.name + '" placeholder="модель / версия / уточнение" />' +
+
+					'<tr><td><td>' +
+					'<tr><td class="label r w125 tdset2">Применение:' +
+						'<td><input type="hidden" id="set_position_id" value="' + o.set_position_id + '" />' +
+					'<tr class="tr-set' + (o.set_position_id ? '' : ' dn') + '">' +
+						'<td class="label topi r tdset3">Для товара:*' +
+						'<td><input type="hidden" id="te-tovar_id_set" value="' + o.tovar_id_set + '" />' +
+
+					'<tr><td><td>' +
+					'<tr><td class="label topi r">Доп. описание:<td><textarea id="about">' + _br(o.about) + '</textarea>' +
 				'</table>';
-	},
-	_tovarEditLabelSet = function(o) {
-		return '<div class="headName">Применение к другому товару:</div>' +
-			'<table class="bs10 w100p" id="tab-set">' +
-				'<tr><td class="label r w125 tdset2">Применение:' +
-					'<td><input type="hidden" id="set_position_id" value="' + o.set_position_id + '" />' +
-				'<tr class="tr-set' + (o.set_position_id ? '' : ' dn') + '">' +
-					'<td class="label topi r tdset3">Для товара:*' +
-					'<td><input type="hidden" id="te-tovar_id_set" value="' + o.tovar_id_set + '" />' +
-			'</table>';
 	},
 	_tovarEditLabelDop = function(o) {
 		return '<div class="headName">Характеристики:</div>' +
 			'<table class="bs10" id="tab-dop">' +
 				'<tr><td class="label r w125">Единица изменения:*<td><input type="hidden" id="measure_id" value="' + o.measure_id + '" />' +
-				'<tr><td class="label topi r">Описание товара:<td><textarea id="about">' + _br(o.about) + '</textarea>' +
+				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+					'<td class="label r">Длина:*<td><input type="text" class="w50" id="measure_length" value="' + o.measure_length + '" /> м.' +
+				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+					'<td class="label r">Ширина:*<td><input type="text" class="w50" id="measure_width" value="' + o.measure_width + '" /> м.' +
+				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+					'<td class="label r">Площадь:<td><b id="measure_area"></b> кв/м.' +
 			'</table>' +
 			'<input type="hidden" id="feature" />';
 	},
@@ -230,6 +234,12 @@ var _tovarEditExtend = function(o) {
 		$('#info-main').slideUp();
 		$('#ta-name').slideDown();
 	},
+	_tovarEditMeasureArea = function(v) {//подсчёт площади при изменении длины и ширины
+		var x = _ms($('#measure_length').val()),
+			y = _ms($('#measure_width').val()),
+			area = Math.round(x * y * 100) / 100;
+		$('#measure_area').html(area);
+	},
 	_tovarEditFunc = function(o, dialog) {
 		$('#name_id-add')._select({
 			width:180,
@@ -274,14 +284,21 @@ var _tovarEditExtend = function(o) {
 		});
 		$('#te-tovar_id_set').tovar({
 			set:0,
+			image:0,
 			tovar_id_not:o.id
 		});
 
+		$('#about').autosize();
+
 		$('#measure_id')._select({
 			width:200,
-			spisok:TOVAR_MEASURE_SPISOK
+			spisok:TOVAR_MEASURE_SPISOK,
+			func:function(v) {
+				$('.tr-area')[(TOVAR_MEASURE_AREA[v] ? 'remove' : 'add') + 'Class']('dn');
+			}
 		});
-		$('#about').autosize();
+		_tovarEditMeasureArea();
+		$('#measure_length,#measure_width').keyup(_tovarEditMeasureArea);
 
 		$('#feature').tovarFeature({spisok:o.feature});
 	},
@@ -299,6 +316,8 @@ var _tovarEditExtend = function(o) {
 			tovar_id_set:_num($('#te-tovar_id_set').val().split(':')[0]),
 
 			measure_id:_num($('#measure_id').val()),
+			measure_length:_ms($('#measure_length').val()),
+			measure_width:_ms($('#measure_width').val()),
 			about:$('#about').val(),
 			feature:$('#feature').tovarFeature('get')
 		};
@@ -316,6 +335,19 @@ var _tovarEditExtend = function(o) {
 			dialog.err('Не выбран товар');
 			$('.tdset3').addClass('tderr');
 			return false;
+		}
+
+		if(TOVAR_MEASURE_AREA[send.measure_id]) {
+			if(!send.measure_length) {
+				dialog.err('Некорректно указана длина');
+				$('#measure_length').focus();
+				return false;
+			}
+			if(!send.measure_width) {
+				dialog.err('Некорректно указана ширина');
+				$('#measure_width').focus();
+				return false;
+			}
 		}
 
 		return send;
@@ -957,12 +989,12 @@ $(document)
 	.on('click', '.tovar-avai-add', function() {
 		var html =  '<table class="bs10">' +
 						'<tr><td class="label r">Количество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
-						'<tr><td class="label r">Закупочная цена за ед.:' +
+						'<tr><td class="label r">Закупочная цена за 1 <b>' + TI.measure_name + '</b>:' +
 							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
 						'<tr><td class="label r">Примечание:<td><input type="text" id="about" class="w230" />' +
 					'</table>',
 			dialog = _dialog({
-				width:420,
+				width:450,
 				head:'Внесение наличия товара',
 				content:html,
 				submit:submit
@@ -1025,6 +1057,7 @@ $(document)
 					});
 					$('#client_id').clientSel({width:300,add:1});
 					$('#ta-articul')._radio(articulSel);
+					$('#sale-length,#sale-width').keyup(areaCalc);
 					if(res.count == 1) {
 						for(var key in arr);
 						$('#ta-articul')._radio(key);
@@ -1042,6 +1075,13 @@ $(document)
 			$('#ts-tab').removeClass('dn');
 			dialog.butSubmit('Применить');
 			$('#count').val(1).select();
+			sumCount();
+		}
+		function areaCalc() {
+			var x = _ms($('#sale-length').val()),
+				y = _ms($('#sale-width').val()),
+				area = Math.round(x * y * 100) / 100;
+			$('#count').val(area);
 			sumCount();
 		}
 		function sumCount() {
