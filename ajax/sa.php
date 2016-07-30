@@ -1268,21 +1268,21 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-
-	/*
 	case 'sa_user_action':
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
 
+		$tab = '';
 		$sql = "SHOW TABLES";
 		$q = query($sql);
-		$tab = '';
 		while($r = mysql_fetch_row($q)) {
 			$count = '';
 			if(!$count = sa_user_tab_test($r[0], 'viewer_id_add', $viewer_id))
 				if(!$count = sa_user_tab_test($r[0], 'viewer_id', $viewer_id))
 					if(!$count = sa_user_tab_test($r[0], 'admin_id', $viewer_id))
-						continue;
+						if(!$count = sa_user_tab_test($r[0], 'worker_id', $viewer_id))
+							if(!$count = sa_user_tab_test($r[0], 'executer_id', $viewer_id))
+								continue;
 			$tab .= '<tr><td>'.$r[0].'<td class="c">'.$count;
 		}
 
@@ -1290,33 +1290,8 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'sa_ws_status_change':
-		if(!$ws_id = _num($_POST['ws_id']))
-			jsonError('Неверный id');
-		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id;
-		if(!$ws = mysql_fetch_assoc(query($sql)))
-			jsonError('Организация не существует');
-		if($ws['status']) {
-			query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".$ws_id);
-			query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
-		} else {
-			if(query_value("SELECT `ws_id` FROM `vk_user` WHERE `viewer_id`=".$ws['admin_id']))
-				jsonError('За администратором закреплена другая организация');
-			query("UPDATE `workshop` SET `status`=1,`dtime_del`='0000-00-00 00:00:00' WHERE `id`=".$ws_id);
-			query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".$ws['admin_id']);
-			xcache_unset(CACHE_PREFIX.'viewer_'.$ws['admin_id']);
-		}
-		jsonSuccess();
-		break;
-	case 'sa_ws_del':
-		if(!$ws_id = _num($_POST['ws_id']))
-			jsonError();
-		foreach(sa_ws_tables() as $tab => $about)
-			query("DELETE FROM `".$tab."` WHERE `ws_id`=".$ws_id);
-		query("DELETE FROM `workshop` WHERE `id`=".$ws_id);
-		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
-		jsonSuccess();
-		break;
+	/*
+
 	case 'sa_ws_client_balans'://корректировка балансов клиентов
 		if(!$ws_id = _num($_POST['ws_id']))
 			jsonError();

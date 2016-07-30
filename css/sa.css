@@ -195,23 +195,3 @@
 #sa-app .name{width:180px}
 
 
-
-/* организации */
-#sa-ws{padding:10px 15px}
-#sa-ws .count{margin-bottom:5px}
-#sa-ws .id{text-align:right}
-#sa-ws .name a{font-weight:700}
-#sa-ws .name.del a{color:#aaa}
-#sa-ws .dtime{font-size:10px;color:#777;text-align:right}
-
-#sa-ws-info{padding:0 20px 20px 20px}
-#sa-ws-info .headName{margin:20px 0 0 0}
-#sa-ws-info .tab{border-spacing:6px}
-#sa-ws-info .ws_status_change,#sa-ws-info .ws_del,#sa-ws-info .ws_enter{margin-top:10px}
-#sa-ws-info .status{display:inline-block;color:green;background-color:#cfc;padding:3px 15px}
-#sa-ws-info .off{color:grey;background-color:#ddd}
-#sa-ws-info .counts{border-spacing:4px}
-#sa-ws-info .counts .tb{text-align:right}
-#sa-ws-info .counts .c{text-align:right;font-weight:700;padding:0 5px}
-#sa-ws-info .ws_client_balans,#sa-ws-info .ws_zayav_balans{margin-top:10px}
-

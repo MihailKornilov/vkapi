@@ -6,7 +6,8 @@ function sa_appCount() {
 function sa_userCount() {
 	$sql = "SELECT COUNT(*)
 			FROM `_vkuser`
-			WHERE `app_id`=".APP_ID;
+			WHERE `app_id`=".APP_ID."
+			  AND `last_seen`!='0000-00-00 00:00:00'";
 	return query_value($sql);
 }
 
@@ -30,7 +31,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<br />'.
 
 		'<h1>App:</h1>'.
-		'<a href="'.URL.'&p=sa&d=app">Приложения ('.sa_appCount().')</a>'.
+		'<a href="'.URL.'&p=sa&d=app">Приложения ('.sa_appCount().'): '._app('app_name').'</a>'.
 		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.sa_userCount().')</a>'.
 		'<br />'.
 
@@ -803,11 +804,13 @@ function sa_app_spisok() {
 				'<th>Дата создания'.
 				'<th>';
 	foreach($spisok as $r) {
+		$name = APP_ID == $r['id'] ? '<b>'.$r['app_name'].'</b>' : $r['app_name'];
+		$name = LOCAL ? '<a href="'.API_HTML.'/index.php'.'?api_id='.$r['id'].'&viewer_id='.VIEWER_ID.'&p=sa&d=app">'.$name.'</a>' : $name;
 		$send .=
 			'<tr>'.
 				'<td class="id">'.$r['id'].
 					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
-				'<td class="app_name">'.(LOCAL ? '<a href="'.API_HTML.'/index.php'.'?api_id='.$r['id'].'&viewer_id='.VIEWER_ID.'">'.$r['app_name'].'</a>' : $r['app_name']).
+				'<td class="app_name">'.$name.
 				'<td class="title">'.$r['title'].
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconEdit($r);
@@ -835,7 +838,8 @@ function sa_user_spisok() {
 	$sql = "SELECT *
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
-			ORDER BY `dtime_add` DESC";
+			  AND `last_seen`!='0000-00-00 00:00:00'
+			ORDER BY `last_seen` DESC";
 	$q = query($sql);
 	$all = mysql_num_rows($q);
 	$send = array(
@@ -856,7 +860,6 @@ function sa_user_spisok() {
 								: '').
 							'</div>'.
 							'<a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank"><b>'.$r['first_name'].' '.$r['last_name'].'</b></a>'.
-							($r['ws_id'] ? '<a class="ws_id" href="'.URL.'&p=sa&d=ws&id='.$r['ws_id'].'">ws: <b>'.$r['ws_id'].'</b></a>' : '').
 							($r['admin'] ? '<b class="adm">Админ</b>' : '').
 							'<div class="city">'.$r['city_title'].($r['country_title'] ? ', '.$r['country_title'] : '').'</div>'.
 							'<a class="action">Действия</a>'.
@@ -867,7 +870,7 @@ function sa_user_spisok() {
 function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей для пользователя в определённой таблице
 	$sql = "SELECT COUNT(*)
 			FROM information_schema.COLUMNS
-			WHERE TABLE_SCHEMA='".MYSQL_DATABASE."'
+			WHERE TABLE_SCHEMA='".GLOBAL_MYSQL_DATABASE."'
 			  AND TABLE_NAME='".$tab."'
 			  AND COLUMN_NAME='".$col."'";
 	if(query_value($sql)) {
@@ -879,93 +882,3 @@ function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей
 	return 0;
 }
 
-function sa_ws() {
-	$wsSpisok =
-		'<tr><th>id'.
-			'<th>Наименование'.
-			'<th>Админ'.
-			'<th>Дата создания';
-	$sql = "SELECT * FROM `_ws` WHERE `app_id`=".APP_ID." ORDER BY `id`";
-	$q = query($sql);
-	$count = mysql_num_rows($q);
-	while($r = mysql_fetch_assoc($q))
-		$wsSpisok .=
-			'<tr><td class="id">'.$r['id'].
-				'<td class="name'.($r['deleted'] ? ' del' : '').'">'.
-					'<a href="'.URL.'&p=sa&d=ws&id='.$r['id'].'">'.$r['name'].'</a>'.
-					'<div class="city">'.$r['city_name'].($r['country_id'] != 1 ? ', '.$r['country_name'] : '').'</div>'.
-				'<td>'._viewer($r['admin_id'], 'viewer_link').
-				'<td class="dtime">'.FullDataTime($r['dtime_add']);
-
-	return
-	sa_path('Организации').
-	'<div id="sa-ws">'.
-		'<div class="count">Всего <b>'.$count.'</b> организац'._end($count, 'ая', 'ии', 'ий').'.</div>'.
-		'<table class="_spisok">'.$wsSpisok.'</table>'.
-	'</div>';
-}
-function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
-	$sql = "SHOW TABLES";
-	$q = query($sql);
-	$send = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$v = $r[key($r)];
-		if(query_value("SHOW COLUMNS FROM `".$v."` WHERE Field='ws_id'"))
-			$send[$v] = $v;
-	}
-
-//	unset($send['vk_user']);
-	return $send;
-}
-function sa_ws_info($id) {
-	$sql = "SELECT * FROM `_ws` WHERE `app_id`=".APP_ID." AND `id`=".$id;
-	if(!$ws = query_assoc($sql))
-		return sa_ws();
-
-	$counts = '';
-	foreach(sa_ws_tables() as $tab) {
-		$c = query_value("SELECT COUNT(`id`) FROM `".$tab."`");
-		if($c)
-			$counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>';
-	}
-
-	$workers = '';
-	if(!$ws['deleted']) {
-		$sql = "SELECT *
-				FROM `_vkuser`
-				WHERE `app_id`=".APP_ID."
-				  AND `worker`
-				  AND `viewer_id`!=".$ws['admin_id'];
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			$workers .= _viewer($r['viewer_id'], 'viewer_link').'<br />';
-	}
-
-	return
-	sa_path('Организации', $ws['name']).
-	'<div id="sa-ws-info">'.
-		'<div class="headName">Информация об организации</div>'.
-		'<table class="tab">'.
-			'<tr><td class="label">Наименование:<td><b>'.$ws['name'].'</b>'.
-			'<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
-			'<tr><td class="label">Дата создания:<td>'.FullDataTime($ws['dtime_add']).
-			'<tr><td class="label">Статус:<td><div class="status'.($ws['deleted'] ? ' off' : '').'">'.($ws['deleted'] ? 'не ' : '').'активна</div>'.
-			($ws['deleted'] ? '<tr><td class="label">Дата удаления:<td>'.FullDataTime($ws['dtime_del']) : '').
-			'<tr><td class="label">Администратор:<td>'._viewer($ws['admin_id'], 'viewer_link').
-			(!$ws['deleted'] && $workers ? '<tr><td class="label top">Сотрудники:<td>'.$workers : '').
-		'</table>'.
-		'<div class="headName">Действия</div>'.
-		'<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['deleted'] ? 'Восстановить' : 'Деактивировать').' организацию</button></div>'.
-		'<br />'.
-		(!$ws['deleted'] ?
-			'<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту организацию</button></div><br />'
-		: '').
-		'<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление организации</button></div>'.
-		'<div class="headName">Записи в базе</div>'.
-		'<table class="counts">'.$counts.'</table>'.
-		'<div class="headName">Счётчики</div>'.
-		'<div class="vkButton ws_client_balans" val="'.$ws['id'].'"><button>Обновить балансы клиентов</button></div>'.
-		'<br />'.
-		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить в заявках: начисления, платежи, наличие счетов</button></div>'.
-	'</div>';
-}
