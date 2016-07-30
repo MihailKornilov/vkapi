@@ -1,7 +1,6 @@
 <?php
 require_once 'view/_vk.php';
 
-define('MYSQL_CONNECT', GLOBAL_MYSQL_CONNECT);
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
 _setup_global();

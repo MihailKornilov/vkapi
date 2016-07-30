@@ -1,13 +1,13 @@
 <?php
 function sa_appCount() {
 	$sql = "SELECT COUNT(`id`) FROM `_app`";
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql);
 }
 function sa_userCount() {
 	$sql = "SELECT COUNT(*)
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID;
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql);
 }
 
 function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
@@ -89,7 +89,7 @@ function sa_menu_spisok() {
 			WHERE `m`.`id`=`ma`.`menu_id`
 			  AND `ma`.`app_id`=".APP_ID."
 			ORDER BY `ma`.`sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	$send =
@@ -122,7 +122,7 @@ function sa_menu_spisok() {
 
 function sa_history() {//управление историей действий
 	$sql = "SELECT `id`,`name` FROM `_history_category` ORDER BY `sort`";
-	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	$category = query_selJson($sql);
 	return
 		'<script type="text/javascript">'.
 			'var CAT='.$category.
@@ -140,7 +140,7 @@ function sa_history() {//управление историей действий
 }
 function sa_history_spisok() {
 	$sql = "SELECT * FROM `_history_type` ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
@@ -159,7 +159,7 @@ function sa_history_spisok() {
 			WHERE `type_id`
 			  AND `app_id`=".APP_ID."
 			GROUP BY `type_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($spisok[$r['type_id']]))
 			$spisok[$r['type_id']]['count'] = $r['count'];
@@ -167,13 +167,13 @@ function sa_history_spisok() {
 
 	//ассоциации для категорий
 	$sql = "SELECT `id`,`name` FROM `_history_category`";
-	$cat = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	$cat = query_ass($sql);
 
 	//деление списка на категории
 	$sql = "SELECT `id`,`name`
 			FROM `_history_category`
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$category = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$r['type'] = array();//список элементов $spisok, которые привязаны к категориям
@@ -184,7 +184,7 @@ function sa_history_spisok() {
 	$sql = "SELECT *
 			FROM `_history_ids`
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$spisok[$r['type_id']]['ids'][] = $r['category_id'];
 		if(!$r['main'])
@@ -196,7 +196,7 @@ function sa_history_spisok() {
 			FROM `_history_ids`
 			WHERE `main`
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$category[$r['category_id']]['type'][$r['type_id']] = $spisok[$r['type_id']];
 		unset($spisok[$r['type_id']]);
@@ -249,7 +249,7 @@ function sa_history_cat() {//настройка категорий истории действий
 }
 function sa_history_cat_spisok() {
 	$sql = "SELECT * FROM `_history_category` ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
@@ -292,7 +292,7 @@ function sa_rule() {//управление историей действий
 }
 function sa_rule_spisok() {
 	$sql = "SELECT * FROM `_vkuser_rule_default` ORDER BY `key`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
@@ -335,7 +335,7 @@ function sa_balans() {//управление балансами
 }
 function sa_balans_spisok() {
 	$sql = "SELECT * FROM `_balans_category` ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
 
@@ -346,7 +346,7 @@ function sa_balans_spisok() {
 	}
 
 	$sql = "SELECT * FROM `_balans_action`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['action'][] = $r;
 
@@ -358,7 +358,7 @@ function sa_balans_spisok() {
 			FROM `_balans`
 			WHERE `app_id`=".APP_ID."
 			GROUP BY `action_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$actionCount = array();
 	while($r = mysql_fetch_assoc($q))
 		$actionCount[$r['action_id']] = $r['count'];
@@ -466,7 +466,7 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 			WHERE `type_id`=".$type_id."
 			".($sel !== false ? " AND `id` NOT IN (".$sel.")" : '')."
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	if($sel === false) {
@@ -476,7 +476,7 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 				FROM `_zayav_pole_use`
 				WHERE `pole_id` IN ("._idsGet($spisok).")
 				GROUP BY `pole_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$spisok[$r['pole_id']]['use'] = $r['count'];
 	}
@@ -522,7 +522,7 @@ function sa_tovar_measure_spisok() {
 				0 `tovar`
 			FROM `_tovar_measure`
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	$sql = "SELECT
@@ -530,7 +530,7 @@ function sa_tovar_measure_spisok() {
 				COUNT(`id`) `count`
 			FROM `_tovar`
 			GROUP BY `measure_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['measure_id']]['tovar'] = $r['count'];
 
@@ -609,7 +609,7 @@ function sa_zayav_service_link() {//меню списка видов заявок и получение SERVICE
 			FROM `_zayav_service`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!$spisok = query_arr($sql)) {
 		define('SERVICE_ID', 0);
 		return '';
 	}
@@ -656,7 +656,7 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 			  AND `zp`.`id`=`u`.`pole_id`
 			  AND `zp`.`type_id`=".$type_id."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Поля не определены.';
 
 	$send = '';
@@ -703,7 +703,7 @@ function sa_color_spisok() {
 				0 `zp`
 			FROM `_setup_color`
 			ORDER BY `name`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Цвета не внесены.';
 
 	$sql = "SELECT
@@ -712,7 +712,7 @@ function sa_color_spisok() {
 			FROM `_zayav`
 			WHERE `color_id`
 			GROUP BY `color_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['color_id']]['zayav'] = $r['c'];
 
@@ -722,7 +722,7 @@ function sa_color_spisok() {
 			FROM `_zayav`
 			WHERE `color_dop`
 			GROUP BY `color_dop`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['color_dop']]['zayav'] += $r['c'];
 
@@ -792,7 +792,7 @@ function sa_app_spisok() {
 				*
 			FROM `_app`
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Приложений нет.';
 
 	$send =
@@ -836,7 +836,7 @@ function sa_user_spisok() {
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `dtime_add` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$all = mysql_num_rows($q);
 	$send = array(
 		'all' => $all,
@@ -886,7 +886,7 @@ function sa_ws() {
 			'<th>Админ'.
 			'<th>Дата создания';
 	$sql = "SELECT * FROM `_ws` WHERE `app_id`=".APP_ID." ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$count = mysql_num_rows($q);
 	while($r = mysql_fetch_assoc($q))
 		$wsSpisok .=
@@ -919,7 +919,7 @@ function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 }
 function sa_ws_info($id) {
 	$sql = "SELECT * FROM `_ws` WHERE `app_id`=".APP_ID." AND `id`=".$id;
-	if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$ws = query_assoc($sql))
 		return sa_ws();
 
 	$counts = '';
@@ -936,7 +936,7 @@ function sa_ws_info($id) {
 				WHERE `app_id`=".APP_ID."
 				  AND `worker`
 				  AND `viewer_id`!=".$ws['admin_id'];
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$workers .= _viewer($r['viewer_id'], 'viewer_link').'<br />';
 	}

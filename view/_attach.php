@@ -14,7 +14,7 @@ function _attachValToList($arr, $keyName='attach_id') {//вставка ссылок на файлы
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$attach = query_arr($sql);
 
 	foreach($attach as $r) {
 		foreach($arrIds[$r['id']] as $id) {
@@ -47,7 +47,7 @@ function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 			WHERE `app_id`=".APP_ID.
 			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
 			($v['id'] ? " AND `id` IN(".$v['id'].")" : '');
-	$attach = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$attach = query_arr($sql);
 
 	$send = array();
 	$array = array();
@@ -78,7 +78,7 @@ function _attachArr($id) {//получение данных о файле в формате json для ajax
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID."
 			  AND `id`=".$id;
-	if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if($r = query_assoc($sql))
 		return array(
 			'name' => utf8($r['name']),
 			'link' => $r['link'],
@@ -114,7 +114,7 @@ function _attach_spisok($v=array()) {// список клиентов
 				COUNT(`id`) `all`,
 				SUM(`size`) `size`
 			FROM `_attach` WHERE ".$cond;
-	$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$r = query_assoc($sql);
 	if(!$all = $r['all'])
 		return array(
 			'all' => 0,
@@ -139,7 +139,7 @@ function _attach_spisok($v=array()) {// список клиентов
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 	$spisok = _zayavValToList($spisok);
 
 	$attach_ids = _idsGet($spisok);
@@ -149,7 +149,7 @@ function _attach_spisok($v=array()) {// список клиентов
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `attach_id` IN (".$attach_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['attach_id']]['zayav0'] = $r['id'];
 
@@ -158,7 +158,7 @@ function _attach_spisok($v=array()) {// список клиентов
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `attach1_id` IN (".$attach_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['attach1_id']]['zayav1'] = $r['id'];
 
@@ -167,7 +167,7 @@ function _attach_spisok($v=array()) {// список клиентов
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `attach_id` IN (".$attach_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$ze = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$spisok[$r['attach_id']]['ze'] = 1;
@@ -180,7 +180,7 @@ function _attach_spisok($v=array()) {// список клиентов
 			FROM `_money_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `attach_id` IN (".$attach_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['attach_id']]['expense_id'] = $r['id'];
 	$spisok = _expenseValToList($spisok);

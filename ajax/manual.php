@@ -19,7 +19,7 @@ switch(@$_POST['op']) {
 					'".addslashes($access)."',
 					"._maxSql('_manual_part')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'manual_part');
 
@@ -40,14 +40,14 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_manual_part`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_manual_part`
 				SET `name`='".addslashes($name)."',
 					`access`=".$access."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'manual_part');
 		xcache_unset(CACHE_PREFIX.'manual_part_sub');
@@ -62,21 +62,21 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_manual_part`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		//проверка на наличие страниц в разделе
 		$sql = "SELECT COUNT(*)
 				FROM `_manual`
 				WHERE `part_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_manual_part` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "DELETE FROM `_manual_part_sub` WHERE `part_id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'manual_part');
 		xcache_unset(CACHE_PREFIX.'manual_part_sub');
@@ -102,7 +102,7 @@ switch(@$_POST['op']) {
 					'".addslashes($name)."',
 					"._maxSql('_manual_part_sub')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'manual_part_sub');
 
@@ -138,9 +138,9 @@ switch(@$_POST['op']) {
 					".$access.",
 					"._maxSql('_manual')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$insert_id = query_insert_id('_manual', GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_manual');
 
 		$send['id'] = $insert_id;
 
@@ -163,7 +163,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_manual`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 
@@ -173,7 +173,7 @@ switch(@$_POST['op']) {
 					`name`='".addslashes($name)."',
 					`access`=".$access."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if($r['content'] != $content) {
 			$sql = "UPDATE `_manual`
@@ -181,7 +181,7 @@ switch(@$_POST['op']) {
 						`count_upd`=`count_upd`+1,
 						`dtime_upd`=CURRENT_TIMESTAMP
 					WHERE `id`=".$id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		$send['id'] = $id;
@@ -195,12 +195,12 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_manual`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 
 		$sql = "DELETE FROM `_manual` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['part_id'] = $r['part_id'];
 

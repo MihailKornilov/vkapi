@@ -10,11 +10,11 @@ switch(@$_POST['op']) {
 
 		//обновление глобальных значений
 		$sql = "UPDATE `_setup_global` SET `value`=`value`+1";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//обновление значений js всех приложений по отдельности
 		$sql = "UPDATE `_app` SET `js_values`=`js_values`+1";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -33,7 +33,7 @@ switch(@$_POST['op']) {
 		$explain = _bool($_POST['explain']);
 
 		$sql = ($explain ? 'EXPLAIN ' : '').trim($_POST['query']);
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 
 		if($nocache)
 			$sql = preg_replace('/SELECT/', 'SELECT NO_SQL_CACHE', $sql);
@@ -77,7 +77,7 @@ switch(@$_POST['op']) {
 
 		$sql = "SHOW TABLES LIKE '".$table."'";
 		if(!mysql_num_rows(query($sql)))
-			if(mysql_num_rows(query($sql, GLOBAL_MYSQL_CONNECT)))
+			if(mysql_num_rows(query($sql)))
 				$conn = GLOBAL_MYSQL_CONNECT;
 			else
 				jsonError();
@@ -138,9 +138,9 @@ switch(@$_POST['op']) {
 						'".addslashes(ATTACH_HTML.'/'.$fname)."',
 						".VIEWER_ID."
 					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
-			$id = query_insert_id('_attach', GLOBAL_MYSQL_CONNECT);
+			$id = query_insert_id('_attach');
 
 			setcookie('_attached', 1, time() + 3600, '/');
 			setcookie('_attached_id', $id, time() + 3600, '/');
@@ -157,7 +157,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$send['name'] = utf8($r['name']);
@@ -180,14 +180,14 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_attach`
 				SET `name`='".addslashes($name)."',
 					`zayav_id`=".$zayav_id."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 85,
@@ -199,7 +199,7 @@ switch(@$_POST['op']) {
 			$sql = "UPDATE `_zayav`
 					SET `attach".($zayav_save == 2 ? '1' : '')."_id`=".$id."
 					WHERE `id`=".$zayav_id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		$send['arr'] = _attachArr($id);
@@ -216,13 +216,13 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError('Файл был удалён');
 
 		$sql = "UPDATE `_attach`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -235,7 +235,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError('Файл уже был удалён');
 
 		$sql = "UPDATE `_attach`
@@ -243,30 +243,30 @@ switch(@$_POST['op']) {
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//удаление из расходов
 		$sql = "UPDATE `_money_expense`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//удаление из заявок
 		$sql = "UPDATE `_zayav`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "UPDATE `_zayav`
 				SET `attach1_id`=0
 				WHERE `attach1_id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//удаление из расходов по заявке
 		$sql = "UPDATE `_zayav_expense`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 86,
@@ -312,14 +312,14 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				ORDER BY `id` DESC
 				LIMIT 1";
-		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$r = query_assoc($sql);
 
 		//прикрепление изображений, если есть
 		$sql = "UPDATE `_image`
 				SET `note_id`=".$r['id'].",
 					`key`=''
 				WHERE `key`='".$key."'";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['html'] = utf8(_noteUnit($r + _viewer() + _noteImageOne($r['id'])));
 		$send['count'] = utf8(_noteCount(array(
@@ -344,7 +344,7 @@ switch(@$_POST['op']) {
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$note_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -367,7 +367,7 @@ switch(@$_POST['op']) {
 					`viewer_id_del`=0,
 					`dtime_del`='0000-00-00 00:00:00'
 				WHERE `id`=".$note_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -395,7 +395,7 @@ switch(@$_POST['op']) {
 					'".addslashes($txt)."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_noteCommentCountUpdate($note_id);
 
@@ -406,14 +406,14 @@ switch(@$_POST['op']) {
 				  AND `note_id`=".$note_id."
 				ORDER BY `id` DESC
 				LIMIT 1";
-		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$r = query_assoc($sql);
 
 		//прикрепление изображений, если есть
 		$sql = "UPDATE `_image`
 				SET `comment_id`=".$r['id'].",
 					`key`=''
 				WHERE `key`='".$key."'";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['html'] = utf8(_noteCommentUnit($r + _viewer() + _noteCommentImageOne($r['id'])));
 		jsonSuccess($send);
@@ -427,7 +427,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		//комментарий может удалить только руководитель или кто его внёс
@@ -439,7 +439,7 @@ switch(@$_POST['op']) {
 					`viewer_id_del`=".VIEWER_ID.",
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_noteCommentCountUpdate($r['note_id']);
 
@@ -454,7 +454,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `deleted`
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		//комментарий может восстановить только руководитель или кто его внёс
@@ -466,7 +466,7 @@ switch(@$_POST['op']) {
 					`viewer_id_del`=0,
 					`dtime_del`='0000-00-00 00:00:00'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_noteCommentCountUpdate($r['note_id']);
 
@@ -548,7 +548,7 @@ switch(@$_POST['op']) {
  ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
 				LIMIT 1";
-		$sort = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$sort = query_value($sql);
 
 		$sql = "INSERT INTO `_image` (
 					`app_id`,
@@ -593,7 +593,7 @@ switch(@$_POST['op']) {
 					".$sort.",
 					".VIEWER_ID."
 			)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_imageCookie(7);
 		break;
@@ -605,7 +605,7 @@ switch(@$_POST['op']) {
 				FROM `_image`
 				WHERE !`deleted`
 				  AND `id`=".$id;
-		if(!$im = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$im = query_assoc($sql))
 			jsonError();
 
 		$n = 0; //определение порядкового номера просматриваемого изображения
@@ -639,7 +639,7 @@ switch(@$_POST['op']) {
  ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
 ".($manual_id ? " AND `manual_id`=".$manual_id : '')."
 				ORDER BY `id`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 
 		$send['img'] = '';
 
@@ -664,7 +664,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_image`
 				SET `deleted`=1
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//обновление сортировки
 		$n = 0;
@@ -672,7 +672,7 @@ switch(@$_POST['op']) {
 			if($r['deleted'])
 				continue;
 			$sql = "UPDATE `_image` SET `sort`=".$n." WHERE `id`=".$r['id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			$n++;
 		}
 
@@ -697,7 +697,7 @@ switch(@$_POST['op']) {
 				  AND (`imei`='".$word."'
 				   OR `serial`='".$word."'
 				   OR `barcode`='".substr($word, 0, 12)."')";
-		if($id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if($id = query_value($sql))
 			$send['zayav_id'] = $id;
 		else
 			if(preg_match(REGEXP_NUMERIC, $word) && strlen($word) == 15)
@@ -715,7 +715,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_manual`
 				WHERE `id`=".$manual_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		_manual_answer_insert($manual_id, $val);

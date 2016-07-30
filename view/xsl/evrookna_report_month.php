@@ -177,7 +177,7 @@ function contentShow($sheet, $line) {
 			  AND !`deleted`
 	          AND `dtime_add` LIKE '".MON."-%'
 	        ORDER BY `id`";
-	if(!$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$zayav = query_arr($sql))
 		return $line;
 
 	$zayav = _clientValToList($zayav);
@@ -189,7 +189,7 @@ function contentShow($sheet, $line) {
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id` IN ("._idsGet($zayav).")";
-	$ze = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$ze = query_arr($sql);
 	$ze = _attachValToList($ze);
 	foreach($ze as $r) {
 		$r['sum'] = _cena($r['sum']);

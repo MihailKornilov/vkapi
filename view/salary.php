@@ -23,7 +23,7 @@ function _salary_spisok() {
 			  AND `worker`
 			  AND !`hidden`
 			ORDER BY `dtime_add`";
-	$worker = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$worker = query_arr($sql);
 
 	//произвольные начисления
 	$sql = "SELECT
@@ -33,7 +33,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] += $r['sum'];
@@ -46,7 +46,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] += $r['sum'];
@@ -59,7 +59,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		if(!isset($worker[$r['worker_id']]))
 			continue;
@@ -75,7 +75,7 @@ function _salary_spisok() {
 			  AND `worker_id`
 			  AND (!`year` OR !`mon`)
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		if(!isset($worker[$r['worker_id']]))
 			continue;
@@ -92,7 +92,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] -= $r['sum'];
@@ -106,7 +106,7 @@ function _salary_spisok() {
 			  AND `worker_id`
 			  AND !`deleted`
 			GROUP BY `worker_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['balans'] -= $r['sum'];
@@ -119,7 +119,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			  AND `balans`<0";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if(isset($worker[$r['worker_id']]))
 			$worker[$r['worker_id']]['dolg'] = _sumSpace(_cena(abs($r['balans'])));
@@ -175,7 +175,7 @@ function salary_month_list($v) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$acc[$r['mon']] = round($r['sum']);
 
@@ -188,7 +188,7 @@ function salary_month_list($v) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$acc[$r['mon']] += round($r['sum']);
 
@@ -201,7 +201,7 @@ function salary_month_list($v) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$acc[$r['mon']] += round($r['sum']);
 
@@ -214,7 +214,7 @@ function salary_month_list($v) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$acc[$r['mon']] -= round($r['sum']);
 
@@ -228,7 +228,7 @@ function salary_month_list($v) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$zp[$r['mon']] = round($r['sum']);
 
@@ -261,14 +261,14 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$worker_id;
-	$acc = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$acc = query_value($sql);
 
 	//бонусы
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$worker_id;
-	$bonus = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$bonus = query_value($sql);
 
 	//начисления по заявкам
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -276,14 +276,14 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 			WHERE `app_id`=".APP_ID."
 			  ".($onPay ? 'AND `year` AND `mon`' : '')."
 			  AND `worker_id`=".$worker_id;
-	$zayav = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = query_value($sql);
 
 	//вычеты
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$worker_id;
-	$deduct = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$deduct = query_value($sql);
 
 	//выданная зп
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -291,7 +291,7 @@ function salaryWorkerBalans($worker_id, $color=0) {//получение текущего баланса 
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$worker_id."
 			  AND !`deleted`";
-	$zp = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$zp = query_value($sql);
 
 	$balans = round($acc + $bonus + $zayav - $deduct - $zp + $start, 2);
 
@@ -358,7 +358,7 @@ function salary_worker_client($worker_id) {//блок связи с клиентом
 			  AND !`deleted`
 			  AND `worker_id`=".$worker_id."
 			LIMIT 1";
-	if(!$c = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$c = query_assoc($sql))
 		return '';
 
 	$c = _clientVal($c['id']);
@@ -379,7 +379,7 @@ function salary_worker_acc($filter) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
-	$accrual = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$accrual = query_arr($sql);
 
 	$sql = "SELECT
 				*,
@@ -390,7 +390,7 @@ function salary_worker_acc($filter) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
-	$bonus = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$bonus = query_arr($sql);
 	$bonus = _zayavValToList($bonus);
 
 	$sql = "SELECT
@@ -404,7 +404,7 @@ function salary_worker_acc($filter) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
-	$deduct = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$deduct = query_arr($sql);
 
 	$sql = "SELECT
 				*,
@@ -415,7 +415,7 @@ function salary_worker_acc($filter) {
 			  AND `worker_id`=".$filter['id']."
 			  AND `year`=".$filter['year']."
 			  AND `mon`=".$filter['mon'];
-	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = query_arr($sql);
 	$zayav = _zayavValToList($zayav);
 
 	$spisok = _arrayTimeGroup($accrual);
@@ -503,7 +503,7 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$filter['id']."
 			  AND (!`year` OR !`mon`)";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	$spisok = _zayavValToList($spisok);
@@ -530,7 +530,7 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 			WHERE `app_id`=".APP_ID."
 			  AND `sum_dolg`<0
 			  AND `id` IN (0".$zayav_ids.")";
-	$zayavDolgSum = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
+	$zayavDolgSum = abs(query_value($sql));
 
 	$send =
 		'<h3><b>Не начислено по заявкам</b>'.
@@ -561,7 +561,7 @@ function salary_worker_list($v) {
 			  AND `year`=".$v['year']."
 			  AND `mon`=".$v['mon']."
 			ORDER BY `id` DESC";
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 
 	if($v['list_type'] == 'js') {
 		$send = array();
@@ -587,7 +587,7 @@ function salary_worker_list($v) {
 			WHERE `salary_list_id` IN (".implode(',', array_keys($spisok)).")
 			  AND !`deleted`
 			GROUP BY `salary_list_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['salary_list_id']]['pay'] = _cena($r['sum']);
 
@@ -598,7 +598,7 @@ function salary_worker_list($v) {
 			  AND !`salary_avans`
 			  AND `salary_list_id` IN (".implode(',', array_keys($spisok)).")
 			GROUP BY `salary_list_id`";
-	$payNoAvans = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$payNoAvans = query_value($sql);
 
 	$send =
 		'<h3><b>Листы выдачи з/п</b></h3>'.
@@ -631,7 +631,7 @@ function salary_worker_zp($v) {
 			  AND `year`=".$v['year']."
 			  AND `mon`=".$v['mon']."
 			ORDER BY `id` DESC";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	$list = array();
@@ -641,7 +641,7 @@ function salary_worker_zp($v) {
 					`nomer`
 				FROM `_salary_list`
 				WHERE `id` IN (".$ids.")";
-		$list = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$list = query_ass($sql);
 	}
 
 	$zp = '';
@@ -695,7 +695,7 @@ function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полность
 			  AND `worker_id`
 			  AND !`salary_list_id`
 			  AND (!`year` OR !`mon`)";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return;
 
 	$dolg = $z['sum_accrual'] - $z['sum_pay'] > 0;
@@ -708,7 +708,7 @@ function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полность
 					SET `year`=".strftime('%Y').",
 						`mon`=".strftime('%m')."
 					WHERE `id`=".$r['id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			_balans(array(
 				'action_id' => 19,
 				'worker_id' => $r['worker_id'],
@@ -734,7 +734,7 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 			WHERE `app_id`=".APP_ID."
 			  AND `key`='RULE_SALARY_BONUS'
 			  AND `value`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return;
 
 	foreach($spisok as $r) {
@@ -746,12 +746,12 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 				WHERE `app_id`=".APP_ID."
 				  AND `zayav_id`=".$zayav_id."
 				  AND `worker_id`=".$r['viewer_id'];
-		$bonus = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$bonus = query_assoc($sql);
 
 		//удаление бонуса, если есть долг по заявке или нет прибыли
 		if($bonus && (BZDOLG || !PROFIT)) {
 			$sql = "DELETE FROM `_salary_bonus` WHERE `id`=".$bonus['id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			_balans(array(
 				'action_id' => 47,
@@ -792,7 +792,7 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 						`procent`=".$procent.",
 						`sum`=".$sum."
 					WHERE `id`=".$bonus['id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			_balans(array(
 				'action_id' => 46,
@@ -842,7 +842,7 @@ function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
 					".strftime('%Y').",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_balans(array(
 			'action_id' => 45,

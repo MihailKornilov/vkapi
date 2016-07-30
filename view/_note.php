@@ -4,7 +4,7 @@ function _noteQuery($note_id, $withDeleted=false) {//запрос данных по заметке
 	$sql = "SELECT *
 			FROM `_note`
 			WHERE `id`=".$note_id.$withDeleted;
-	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	return query_assoc($sql);
 }
 function _noteFilter($v) {
 	return array(
@@ -31,7 +31,7 @@ function _noteArr($v) {//запрос массива заметок (для общего списка, либо отдельн
 			  AND `page_name`='".$v['p']."'
 			  AND `page_id`=".$v['id']."
 			ORDER BY `id` DESC";
-	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	return query_arr($sql);
 }
 function _note($v=array()) {
 	$v = _noteFilter($v);
@@ -115,7 +115,7 @@ function _noteCommentSpisok($arr) {//прикрепление к списку заметок список коммен
 			WHERE !`deleted`
 			  AND `note_id` IN ("._idsGet($arr).")
 			ORDER BY `id` ASC";
-	$comment = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$comment = query_arr($sql);
 	$comment = _viewerValToList($comment);
 	$comment = _noteCommentImage($comment);
 
@@ -143,12 +143,12 @@ function _noteCommentCountUpdate($note_id) {//обновление количества комментариев
 			FROM `_note_comment`
 			WHERE !`deleted`
 			  AND `note_id`=".$note_id;
-	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$count = query_value($sql);
 
 	$sql = "UPDATE `_note`
 			SET `comment_count`=".$count."
 			WHERE `id`=".$note_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return $count;
 }
@@ -178,7 +178,7 @@ function _noteAdd($v) {//внесение новой заметки
 				'".addslashes($v['txt'])."',
 				".VIEWER_ID."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return true;
 }
@@ -191,7 +191,7 @@ function _noteCommentAdd($v) {//внесение комментария к заметке
 			  AND !`deleted`
 			ORDER BY `id` DESC
 			LIMIT 1";
-	if(!$note_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$note_id = query_value($sql))
 		return false;
 
 	$sql = "INSERT INTO `_note_comment` (
@@ -205,7 +205,7 @@ function _noteCommentAdd($v) {//внесение комментария к заметке
 				'".addslashes($v['txt'])."',
 				".VIEWER_ID."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	_noteCommentCountUpdate($note_id);
 
@@ -221,7 +221,7 @@ function _noteLast($v) {
 			  AND !`deleted`
 			ORDER BY `id` DESC
 			LIMIT 1";
-	$txt = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$txt = query_value($sql);
 	return $txt ? htmlspecialchars_decode($txt) : '';
 }
 
@@ -230,7 +230,7 @@ function _noteImageCount($key) {//получение количества изображений по ключу
 			FROM `_image`
 			WHERE !`deleted`
 			  AND `key`='".$key."'";
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql);
 }
 function _noteImage($arr) {//вставка изображений в массив заметок
 	$sql = "SELECT *
@@ -238,7 +238,7 @@ function _noteImage($arr) {//вставка изображений в массив заметок
 			WHERE !`deleted`
 			  AND `note_id` IN ("._idsGet($arr).")
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['note_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
 
@@ -253,7 +253,7 @@ function _noteCommentImage($arr) {//вставка изображений в массив комментариев
 			WHERE !`deleted`
 			  AND `comment_id` IN ("._idsGet($arr).")
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['comment_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
 
@@ -266,7 +266,7 @@ function _noteImageOne($note_id) {//получение изображений для конкретной заметки
 			WHERE !`deleted`
 			  AND `note_id`=".$note_id."
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$image = '';
 	while($r = mysql_fetch_assoc($q))
 		$image .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
@@ -280,7 +280,7 @@ function _noteCommentImageOne($comment_id) {//получение изображений для конкретн
 			WHERE !`deleted`
 			  AND `comment_id`=".$comment_id."
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$image = '';
 	while($r = mysql_fetch_assoc($q))
 		$image .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';

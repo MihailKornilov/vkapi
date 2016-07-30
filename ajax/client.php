@@ -20,7 +20,7 @@ switch(@$_POST['op']) {
 			($not_client_id ? " AND `id`!=".$not_client_id : '')."
 				ORDER BY `id` DESC
 				LIMIT 50";
-		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$spisok = query_arr($sql))
 			jsonSuccess($send);
 
 		foreach($spisok as $r) {
@@ -116,9 +116,9 @@ switch(@$_POST['op']) {
 
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$client_id = query_insert_id('_client', GLOBAL_MYSQL_CONNECT);
+		$client_id = query_insert_id('_client');
 
 		_clientFindUpdate($client_id);
 
@@ -155,7 +155,7 @@ switch(@$_POST['op']) {
 					WHERE `app_id`=".APP_ID."
 			          AND `id`!=".$client_id."
 					  AND `worker_id`=".$worker_id;
-			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(query_value($sql))
 				jsonError('Этот сотрудник связан с другим клиентом');
 		}
 
@@ -215,24 +215,24 @@ switch(@$_POST['op']) {
 
 					`from_id`="._clientFromGet()."
 			   WHERE `id`=".$client_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if($join) {
-			query("UPDATE `_money_accrual` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_money_income` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_money_refund` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_schet` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_remind` SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_note` SET `page_id`=".$client_id."  WHERE `page_name`='client' AND `page_id`=".$client2, GLOBAL_MYSQL_CONNECT);
-			query("UPDATE `_zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_money_accrual` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_money_income` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_money_refund` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_schet` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_remind` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_note` SET `page_id`=".$client_id."  WHERE `page_name`='client' AND `page_id`=".$client2);
+			query("UPDATE `_zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 //			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `_client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2, GLOBAL_MYSQL_CONNECT);
+			query("UPDATE `_client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2);
 
 			// доверенные лица переносятся новому клиенту
 			$sql = "UPDATE `_client`
 					SET `client_id_person`=".$client_id."
 					WHERE `client_id_person`=".$client2;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 //			_clientBalansUpdate($client_id);
 			//баланс для клиента
@@ -293,7 +293,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_client` SET `deleted`=1 WHERE `id`=".$client_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 4,
@@ -351,8 +351,8 @@ switch(@$_POST['op']) {
 					'".addslashes($pasp_data)."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$person_id = query_insert_id('_client', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$person_id = query_insert_id('_client');
 
 		_clientFindUpdate($client_id);
 		_clientFindUpdate($person_id);
@@ -405,7 +405,7 @@ switch(@$_POST['op']) {
 					`pasp_ovd`='".addslashes($pasp_ovd)."',
 					`pasp_data`='".addslashes($pasp_data)."'
 				WHERE `id`=".$person_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_clientFindUpdate($client_id);
 		_clientFindUpdate($person_id);
@@ -451,7 +451,7 @@ switch(@$_POST['op']) {
 					`poa_date_end`='0000-00-00',
 					`poa_attach_id`=0
 				WHERE `id`=".$person_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_clientFindUpdate($client_id);
 
@@ -492,7 +492,7 @@ switch(@$_POST['op']) {
 					`poa_date_end`='".$date_end."',
 					`poa_attach_id`=".$attach_id."
 				WHERE `id`=".$person_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_clientFindUpdate($client_id);
 
@@ -528,7 +528,7 @@ switch(@$_POST['op']) {
 					`poa_date_end`='0000-00-00',
 					`poa_attach_id`=0
 				WHERE `id`=".$person_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_clientFindUpdate($client_id);
 
@@ -562,13 +562,13 @@ switch(@$_POST['op']) {
 				FROM `_client_from`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_client_from`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
 		_appJsValues();
@@ -584,18 +584,18 @@ switch(@$_POST['op']) {
 				FROM `_client_from`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "SELECT COUNT(`id`)
 				FROM `_client`
 				WHERE `app_id`=".APP_ID."
 				  AND `from_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_client_from` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
 		_appJsValues();
@@ -613,7 +613,7 @@ switch(@$_POST['op']) {
 				SET `client_from_use`=".$use.",
 					`client_from_require`=".$require."
 				WHERE `id`=".APP_ID;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'app'.APP_ID);
 		_appJsValues();
@@ -641,7 +641,7 @@ function _clientFindUpdate($client_id) {// обновление быстрого поиска клиента
 			    IFNULL(CONCAT(`email`, ' '), ''),
 			    IFNULL(CONCAT(`org_email`, ' '), '')
 			) WHERE `id`=".$client_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _clientFromGet() {//получение id источника откуда пришёл клиент
 	if($from_id = _num($_POST['from_id']))
@@ -656,7 +656,7 @@ function _clientFromGet() {//получение id источника откуда пришёл клиент
 			WHERE `app_id`=".APP_ID."
 			  AND `name`='".addslashes($name)."'
 			LIMIT 1";
-	if(!$from_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!$from_id = query_value($sql)) {
 		$sql = "INSERT INTO `_client_from` (
 					`app_id`,
 					`name`
@@ -664,9 +664,9 @@ function _clientFromGet() {//получение id источника откуда пришёл клиент
 					".APP_ID.",
 					'".addslashes($name)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$from_id = query_insert_id('_client_from', GLOBAL_MYSQL_CONNECT);
+		$from_id = query_insert_id('_client_from');
 
 		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
 		_appJsValues();

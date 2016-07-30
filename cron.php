@@ -36,7 +36,7 @@ function zp_accrual() {//начисление ставки сотрудникам
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`
 			  AND `salary_rate_sum`>0";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$insert = 0;
 		switch($r['salary_rate_period']) {
@@ -61,7 +61,7 @@ function zp_accrual() {//начисление ставки сотрудникам
 					".$year.",
 					".$mon."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_balans(array(
 			'action_id' => 19,
@@ -117,7 +117,7 @@ function _cronAppParse() {//прохождение по всем приложениям
 				*
 			FROM `_app`
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		die('Приложений нет.');
 
 	$send = '';
@@ -140,7 +140,7 @@ function _cronSubmit() {//выполнение задач
 	$sql = "SELECT *
 			FROM `_app`
 			WHERE `id`=".APP_ID;
-	if(!$app = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$app = query_assoc($sql))
 		die('Приложение '.APP_ID.' не зарегистрировано.');
 
 	define('CACHE_PREFIX', 'CACHE_'.APP_ID.'_');

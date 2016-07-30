@@ -162,7 +162,7 @@ function zpPrint($sheet, $list) {
 			FROM `_salary_accrual`
 			WHERE `app_id`=".APP_ID."
 			  AND `salary_list_id`=".LIST_ID;
-	$accrual = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$accrual = query_arr($sql);
 
 	$sql = "SELECT
 				`id`,
@@ -174,7 +174,7 @@ function zpPrint($sheet, $list) {
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `salary_list_id`=".LIST_ID;
-	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = query_arr($sql);
 
 	$spisok = _arrayTimeGroup($accrual);
 	$spisok += _arrayTimeGroup($zayav, $spisok);
@@ -235,7 +235,7 @@ function zpPrint($sheet, $list) {
 			FROM `_salary_deduct`
 			WHERE `app_id`=".APP_ID."
 			  AND `salary_list_id`=".LIST_ID;
-	if($deduct = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+	if($deduct = query_arr($sql)) {
 		$sheet->setCellValue('A'.$line, 'Вычеты:');
 
 		//рисование рамки
@@ -260,7 +260,7 @@ function zpPrint($sheet, $list) {
 			  AND `salary_avans`
 			  AND `salary_list_id`=".LIST_ID."
 			ORDER BY `id` DESC";
-	if($avans = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+	if($avans = query_arr($sql)) {
 		$sheet->setCellValue('A'.$line, 'Выдан аванс:');
 
 		//рисование рамки
@@ -320,7 +320,7 @@ $sql = "SELECT *
 		FROM `_salary_list`
 		WHERE `app_id`=".APP_ID."
 		  AND `id`=".LIST_ID;
-if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+if(!$r = query_assoc($sql))
 	die(win1251('Листа выдачи не существует.'));
 
 define('WORKER_ID', _num($r['worker_id']));

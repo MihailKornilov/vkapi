@@ -89,7 +89,7 @@ $sql = "SELECT *
 		FROM `_zayav_kvit`
 		WHERE `app_id`=".APP_ID."
 		  AND `id`=".$id;
-if(!$k = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+if(!$k = query_assoc($sql))
 	die(' витанции не существует.');
 
 if(!$z = _zayavQuery($k['zayav_id']))

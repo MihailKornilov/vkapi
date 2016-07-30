@@ -23,7 +23,7 @@ function _manualPart($id=false, $i='name') {
 					`access`
 				FROM `_manual_part`
 				ORDER BY `sort`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -70,7 +70,7 @@ function _manualPartSub($id=false, $i='name') {
 					`name`
 				FROM `_manual_part_sub`
 				ORDER BY `sort`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -135,7 +135,7 @@ function _manual_main_spisok() {//главна€ страница
 			FROM `_manual_part`".
    (!SA ? " WHERE `access`" : '')."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '–азделов нет.';
 
 	$spisok = _manual_part_sub($spisok);
@@ -156,7 +156,7 @@ function _manual_main_spisok() {//главна€ страница
 }
 function _manual_part_sub($spisok) {//присвоение подразделов к разделам
 	$sql = "SELECT * FROM `_manual_part_sub` ORDER BY `sort`";
-	if(!$sub = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$sub = query_arr($sql))
 		return $spisok;
 
 	foreach($sub as $r) {
@@ -183,12 +183,12 @@ function _manual_menu_add() {//вывод списка меню дл€ SA
 }
 function _manual_part_js() {
 	$sql = "SELECT `id`,`name` FROM `_manual_part`";
-	$part = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	$part = query_selJson($sql);
 
 	return
 	'<script>'.
 		'var MANUAL_PART_SPISOK='.$part.','.
-			'MANUAL_PART_SUB_SPISOK='.Gvalues_obj('_manual_part_sub', '`part_id`,`name`', 'part_id', GLOBAL_MYSQL_CONNECT).';'.
+			'MANUAL_PART_SUB_SPISOK='.Gvalues_obj('_manual_part_sub', '`part_id`,`name`', 'part_id').';'.
 	'</script>';
 }
 
@@ -238,7 +238,7 @@ function _manual_page_spisok($part_id) {
 			WHERE `part_id`=".$part_id.
 	 (!SA ? " AND `access`" : '')."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '—траниц нет.';
 
 	$end = end($spisok);
@@ -264,7 +264,7 @@ function _manualPageCountInPart($part_id) {//если количество страниц в мануале =
 			FROM `_manual`
 			WHERE `part_id`=".$part_id.
 	 (!SA ? " AND `access`" : '');
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	if(mysql_num_rows($q) == 1) {
 		$r = mysql_fetch_assoc($q);
 		$page_id = $r['id'];
@@ -278,7 +278,7 @@ function _manual_page_info($id) {//отображение страницы мануала
 			FROM `_manual`
 			WHERE `id`=".$id.
 	 (!SA ? " AND `access`" : '');
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return _err('—траницы не существует.');
 
 	$_GET['part_id'] = $r['part_id'];
@@ -324,7 +324,7 @@ function _manual_page_image($id, $content) {//вставка изображений в страницу ман
 			FROM `_image`
 			WHERE !`deleted`
 			  AND `manual_id`=".$id;
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$s = _imageResize($r['big_x'], $r['big_y'], 426, 400);
 		$content = str_replace(
@@ -337,7 +337,7 @@ function _manual_page_image($id, $content) {//вставка изображений в страницу ман
 }
 function _manual_page_link_part($content) {//вставка ссылок на разделы мануала {part1}
 	$sql = "SELECT `id`,`name` FROM `_manual_part`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$content = str_replace(
 					'{part'.$r['id'].'}',
@@ -347,7 +347,7 @@ function _manual_page_link_part($content) {//вставка ссылок на разделы мануала {
 }
 function _manual_page_link_page($content) {//вставка ссылок на страницы мануала {page15}
 	$sql = "SELECT `id`,`name` FROM `_manual`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$content = str_replace(
 					'{page'.$r['id'].'}',
@@ -379,7 +379,7 @@ function _manual_answer($id) {
 			WHERE `manual_id`=".$id."
 			  AND `viewer_id`=".VIEWER_ID."
 			LIMIT 1";
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!$r = query_assoc($sql)) {
 		_manual_answer_insert($id);
 		return '';
 	}
@@ -395,7 +395,7 @@ function _manual_answer_insert($manual_id, $val=1) {
 			WHERE `manual_id`=".$manual_id."
 			  AND `viewer_id`=".VIEWER_ID."
 			LIMIT 1";
-	$id = _num(query_value($sql, GLOBAL_MYSQL_CONNECT));
+	$id = _num(query_value($sql));
 
 	$sql = "INSERT INTO `_manual_answer` (
 				`id`,
@@ -409,7 +409,7 @@ function _manual_answer_insert($manual_id, $val=1) {
 				".$val."
 			) ON DUPLICATE KEY UPDATE
 				`val`=VALUES(`val`)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 
 function _manual_new() {
@@ -425,7 +425,7 @@ function _manual_new_spisok() {
 			WHERE `part_id`=1".
 	 (!SA ? " AND `access`" : '')."
 			ORDER BY `id` DESC";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Ќовостей нет.';
 
 	$end = end($spisok);
@@ -454,14 +454,14 @@ function _menuInfoTop() {//информационное сообщение сверху страницы
 			  AND `access`
 			ORDER BY `id` DESC
 			LIMIT 1";
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return '';
 
 	$sql = "SELECT COUNT(*)
 			FROM `_manual_answer`
 			WHERE `manual_id`=".$r['id']."
 			  AND `viewer_id`=".VIEWER_ID;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return '';
 
 	return
@@ -519,11 +519,11 @@ function _manual_action_spisok($v=array()) {
 			WHERE ".$cond."
 			ORDER BY `dtime_add` DESC
 			LIMIT 100";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '—обытий нет.';
 
 	$sql = "SELECT `id`,`name` FROM `_manual`";
-	$page = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	$page = query_ass($sql);
 
 	$send = '<table class="_spisok">'.
 				'<tr>'.

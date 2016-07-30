@@ -6,7 +6,7 @@ function _imageValToList($arr, $type_id) {//вставка изображений в массив на осно
 			  AND !`sort`
 			  AND `".$type_id."`
 			  AND `".$type_id."` IN ("._idsGet($arr).")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r[$type_id]]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 
@@ -24,7 +24,7 @@ function _imageValToZayav($arr) {//вставка изображений в массив заявок
 			  AND !`deleted`
 			  AND !`sort`
 			  AND `zayav_id` IN ("._idsGet($arr).")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['zayav_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 
@@ -35,7 +35,7 @@ function _imageValToZayav($arr) {//вставка изображений в массив заявок
 				WHERE !`deleted`
 				  AND !`sort`
 				  AND `model_id` IN (".$ids.")";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			foreach($arr as $z) {
 				if(isset($z['image_small']))
@@ -66,7 +66,7 @@ function _image200($v) {//показ изображения шириной 200
 			FROM `_image`
 			WHERE ".$cond."
 			LIMIT 1";
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return _imageNoFoto($js);
 
 	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
@@ -94,7 +94,7 @@ function _imageSmall($v) {//получение одного маленького изображения
 			FROM `_image`
 			WHERE ".$cond."
 			LIMIT 1";
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return _imageNoFotoSmall();
 
 	return
@@ -193,7 +193,7 @@ function _imageQuery($id, $withDel=0) {//запрос данных одного изображения
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE `id`=".$id.$withDel;
-	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	return query_assoc($sql);
 }
 function _imageArr($id, $withDel=0) {//массив изображений по критению
 	if(!$im = _imageQuery($id, $withDel))
@@ -211,5 +211,5 @@ function _imageArr($id, $withDel=0) {//массив изображений по критению
 			  ".($im['key'] ? " AND `key`='".$im['key']."'" : '')."
 			  ".$withDel."
 			ORDER BY `sort`";
-	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	return query_arr($sql);
 }

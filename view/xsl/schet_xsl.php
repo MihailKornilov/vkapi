@@ -180,7 +180,7 @@ function xls_tabContent($sheet, $line) {
 			FROM `_schet_content`
 			WHERE `schet_id`=".SCHET_ID."
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$start = $line;
 	$n = 1;
 	$sum = 0;
@@ -377,7 +377,7 @@ function xls_nakl_tovar_spisok($sheet, $line) {
 			FROM `_schet_content`
 			WHERE `schet_id`=".SCHET_ID."
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$start = $line;
 	$n = 1;
 	$sum = 0;
@@ -692,14 +692,14 @@ if($s['zayav_id']) {
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `id`=".$s['zayav_id'];
-	if(!query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!query_assoc($sql))
 		die(win1251('Заявки не существует.'));
 }
 
 $sql = "SELECT *
 		FROM `_app`
 		WHERE `id`=".APP_ID;
-$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+$ws = query_assoc($sql);
 
 $page = 0;
 

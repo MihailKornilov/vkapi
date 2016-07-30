@@ -123,7 +123,7 @@ function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
 			FROM `_zayav_tovar`
 			WHERE `zayav_id`=".$z['id']."
 			LIMIT 1";
-	if($tovar_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if($tovar_id = query_value($sql))
 		$tovar = _tovarQuery($tovar_id);
 
 	$colLabel = pageNum($col);

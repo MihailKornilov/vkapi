@@ -20,7 +20,7 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."',
 					'".strtolower(addslashes($p))."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
 		xcache_unset(CACHE_PREFIX.'menu_app');
@@ -45,7 +45,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_menu`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_menu`
@@ -53,7 +53,7 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."',
 					`p`='".addslashes($p)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
 		xcache_unset(CACHE_PREFIX.'menu_app');
@@ -73,7 +73,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_menu`
 				SET `access_default`=".$v."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
 		xcache_unset(CACHE_PREFIX.'menu_app');
@@ -91,7 +91,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_menu_app`
 				SET `show`=".$v."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
 		xcache_unset(CACHE_PREFIX.'menu_app');
@@ -112,7 +112,7 @@ switch(@$_POST['op']) {
 
 		if($type_id) {
 			$sql = "SELECT COUNT(`id`) FROM `_history_type` WHERE `id`=".$type_id;
-			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(query_value($sql))
 				jsonError();
 		}
 
@@ -126,10 +126,10 @@ switch(@$_POST['op']) {
 					".$type_id.",
 					'".addslashes($txt)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if(!$type_id)
-			$type_id = query_insert_id('_history_type', GLOBAL_MYSQL_CONNECT);
+			$type_id = query_insert_id('_history_type');
 
 
 		sa_history_ids_insert($type_id, $ids);
@@ -152,33 +152,33 @@ switch(@$_POST['op']) {
 
 		if($type_id_current != $type_id) {
 			$sql = "SELECT COUNT(`id`) FROM `_history_type` WHERE `id`=".$type_id;
-			if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(query_value($sql))
 				jsonError();
 			$sql = "UPDATE `_history_type`
 					SET `id`=".$type_id."
 					WHERE `id`=".$type_id_current;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			//изменение на новый type_id записей истории действий
 			$sql = "UPDATE `_history`
 					SET `type_id`=".$type_id."
 					WHERE `type_id`=".$type_id_current;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			//изменение на новый type_id ids-истории действий
 			$sql = "UPDATE `_history_ids`
 					SET `type_id`=".$type_id."
 					WHERE `type_id`=".$type_id_current;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		$sql = "UPDATE `_history_type`
 				SET `txt`='".addslashes($txt)."'
 				WHERE `id`=".$type_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "DELETE FROM `_history_ids` WHERE `type_id`=".$type_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 		sa_history_ids_insert($type_id, $ids);
 
 
@@ -205,7 +205,7 @@ switch(@$_POST['op']) {
 					".$js_use.",
 					"._maxSql('_history_category')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['html'] = utf8(sa_history_cat_spisok());
 		jsonSuccess($send);
@@ -222,7 +222,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(`id`) FROM `_history_category` WHERE `id`=".$id;
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(!query_value($sql))
 			jsonError();
 
 		$sql = "UPDATE `_history_category`
@@ -230,7 +230,7 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."',
 					`js_use`=".$js_use."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['html'] = utf8(sa_history_cat_spisok());
 		jsonSuccess($send);
@@ -244,7 +244,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT COUNT(`id`) FROM `_vkuser_rule_default` WHERE `key`='".$key."'";
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError('Константа уже внесена в базу');
 
 		$sql = "INSERT INTO `_vkuser_rule_default` (
@@ -254,7 +254,7 @@ switch(@$_POST['op']) {
 					'".strtoupper(addslashes($key))."',
 					'".addslashes($about)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
@@ -277,14 +277,14 @@ switch(@$_POST['op']) {
 				FROM `_vkuser_rule_default`
 				WHERE `key`='".$key."'
 				  AND `id`!=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError('Константа уже внесена в базу');
 
 		$sql = "UPDATE `_vkuser_rule_default`
 		        SET `key`='".strtoupper(addslashes($key))."',
 		            `about`='".addslashes($about)."'
 		        WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
 		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');
@@ -303,25 +303,25 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_vkuser_rule_default` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_vkuser_rule_default`
 		        SET `value_".$value_name."`=".$v."
 		        WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//обнуление значения данной настройки по всем администраторам
 		if($value_name == 'admin') {
 			$sql = "SELECT `viewer_id`
 					FROM `_vkuser`
 					WHERE `admin`";
-			$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+			$ids = query_ids($sql);
 
 			$sql = "DELETE FROM `_vkuser_rule`
 					WHERE `key`='".$r['key']."'
 					  AND `viewer_id` IN (".$ids.")";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			foreach(_ids($ids, 1) as $viewer_id) {
 				xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
@@ -348,7 +348,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					'".addslashes($name)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
@@ -367,13 +367,13 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_balans_category`
 				WHERE `id`=".$id;
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(!query_value($sql))
 			jsonError();
 
 		$sql = "UPDATE `_balans_category`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
@@ -387,11 +387,11 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_balans_category`
 				WHERE `id`=".$id;
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(!query_value($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_balans_category` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_category');
 
@@ -415,7 +415,7 @@ switch(@$_POST['op']) {
 					'".addslashes($name)."',
 					".$minus."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
@@ -435,14 +435,14 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_balans_action`
 				WHERE `id`=".$id;
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(!query_value($sql))
 			jsonError();
 
 		$sql = "UPDATE `_balans_action`
 				SET `name`='".addslashes($name)."',
 					`minus`=".$minus."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
@@ -456,11 +456,11 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_balans_action`
 				WHERE `id`=".$id;
-		if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(!query_value($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_balans_action` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'balans_action');
 
@@ -483,18 +483,18 @@ switch(@$_POST['op']) {
 					'".addslashes($name)."',
 					'".addslashes($name)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$insert_id = query_insert_id('_zayav_service', GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_zayav_service');
 
 		$sql = "SELECT COUNT(*)
 				FROM `_zayav_service`
 				WHERE `app_id`=".APP_ID;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT) == 1) {
+		if(query_value($sql) == 1) {
 			$sql = "UPDATE `_zayav`
 					SET `service_id`=".$insert_id."
 					WHERE `app_id`=".APP_ID;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
@@ -514,7 +514,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_service`
 				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_appJsValues();
@@ -543,7 +543,7 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."',
 					'".addslashes($param1)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -563,7 +563,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_zayav_pole`
@@ -571,7 +571,7 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."',
 					`param1`='".addslashes($param1)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -584,18 +584,18 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError('id поля не существует');
 
 		$sql = "SELECT COUNT(*) FROM `_zayav_pole_use` WHERE `pole_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError('Это поле используется');
 
 		$sql = "DELETE FROM `_zayav_pole` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "ALTER TABLE `_zayav_pole` AUTO_INCREMENT=0";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -613,7 +613,7 @@ switch(@$_POST['op']) {
 				FROM `_zayav_pole_use`
 				WHERE `app_id`=".APP_ID."
 				  AND `service_id`=".$service_id;
-		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+		$ids = query_ids($sql);
 		
 		$send['html'] = utf8('<div id="sa-zayav-pole">'.sa_zayav_pole_spisok($type_id, $ids).'</div>');
 		jsonSuccess($send);
@@ -628,7 +628,7 @@ switch(@$_POST['op']) {
 		$param_v1 = _bool($_POST['param_v1']);
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$pole_id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "INSERT INTO `_zayav_pole_use` (
@@ -648,8 +648,8 @@ switch(@$_POST['op']) {
 					".$param_v1.",
 					"._maxSql('_zayav_pole_use')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$insert_id = query_insert_id('_zayav_pole_use', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$insert_id = query_insert_id('_zayav_pole_use');
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -668,11 +668,11 @@ switch(@$_POST['op']) {
 		$param_v1 = _bool($_POST['param_v1']);
 
 		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
-		if(!$u = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$u = query_assoc($sql))
 			jsonError();
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$u['pole_id'];
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_zayav_pole_use`
@@ -680,7 +680,7 @@ switch(@$_POST['op']) {
 					`require`=".$require.",
 					`param_v1`=".$param_v1."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -695,11 +695,11 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_zayav_pole_use` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
 		_globalJsValues();
@@ -732,7 +732,7 @@ switch(@$_POST['op']) {
 					".$area.",
 					"._maxSql('_setup_rubric', 'sort')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'tovar_measure');
 		_globalJsValues();
@@ -759,7 +759,7 @@ switch(@$_POST['op']) {
 					`fraction`=".$fraction.",
 					`area`=".$area."
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'tovar_measure');
 		_globalJsValues();
@@ -772,15 +772,15 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_tovar_measure` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `measure_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError('Эта единица измерения используется');
 
 		$sql = "DELETE FROM `_tovar_measure` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'tovar_measure');
 		_globalJsValues();
@@ -804,7 +804,7 @@ switch(@$_POST['op']) {
 					'".addslashes($predlog)."',
 					'".addslashes($name)."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
 		_appJsValues();
@@ -828,7 +828,7 @@ switch(@$_POST['op']) {
 				SET `predlog`='".addslashes($predlog)."',
 					`name`='".addslashes($name)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
 		_appJsValues();
@@ -841,19 +841,19 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "SELECT * FROM `_setup_color` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `color_id`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError();
 
 		$sql = "SELECT COUNT(`id`) FROM `_zayav` WHERE `color_dop`=".$id;
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_setup_color` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'setup_color');
 		_appJsValues();
@@ -882,13 +882,13 @@ switch(@$_POST['op']) {
 					WHERE !`deleted`
 					  AND `client_id`=`c`.`id`
 				) WHERE `app_id`=".APP_ID;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "SELECT *
 				FROM `_client`
 				WHERE `app_id`=".APP_ID."
 				  AND `balans`!=`balans_test`";
-		$client = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$client = query_arr($sql);
 
 		$spisok = '';
 		foreach($client as $r)
@@ -967,13 +967,13 @@ switch(@$_POST['op']) {
 					WHERE !`deleted`
 					  AND `zayav_id`=`z`.`id`
 				) WHERE `app_id`=".APP_ID;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "SELECT *
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
 				  AND `sum_dolg`!=`sum_dolg_test`";
-		$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$zayav = query_arr($sql);
 
 		$spisok = '';
 		foreach($zayav as $r)
@@ -1003,18 +1003,18 @@ switch(@$_POST['op']) {
 		$sql = "SELECT DISTINCT(`tovar_id_set`)
 				FROM `_tovar`
 				WHERE `tovar_id_set`";
-		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+		$ids = query_ids($sql);
 
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id` IN (".$ids.")";
-		$tovar = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$tovar = query_arr($sql);
 
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `tovar_id_set`
 				LIMIT ".$start.",500";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		$count = mysql_num_rows($q);
 		while($r = mysql_fetch_assoc($q)) {
 			$t = $tovar[$r['tovar_id_set']];
@@ -1029,7 +1029,7 @@ switch(@$_POST['op']) {
 			$sql = "UPDATE `_tovar`
 					SET `find`='".addslashes($find)."'
 					WHERE `id`=".$r['id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		if($count < 500)
@@ -1042,20 +1042,20 @@ switch(@$_POST['op']) {
 		break;
 	case 'sa_count_tovar_articul_update':
 		$sql = "SELECT DISTINCT `app_id` FROM `_tovar_avai`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$sql = "SELECT COUNT(`id`)
 					FROM `_tovar_avai`
 					WHERE !LENGTH(`articul`)
 					  AND `app_id`=".$r['app_id'];
-			if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(!$count = query_value($sql))
 				continue;
 
 			//получение максимального значения артикула
 			$sql = "SELECT MAX(`articul`)
 					FROM `_tovar_avai`
 					WHERE `app_id`=".$r['app_id'];
-			$max = _num(query_value($sql, GLOBAL_MYSQL_CONNECT)) + 1;
+			$max = _num(query_value($sql)) + 1;
 
 			for($n = 0; $n < $count; $n ++) {
 				$articul = $max;
@@ -1067,7 +1067,7 @@ switch(@$_POST['op']) {
 						  AND !LENGTH(`articul`)
 						ORDER BY `id` ASC
 						LIMIT 1";
-				query($sql, GLOBAL_MYSQL_CONNECT);
+				query($sql);
 
 				$max++;
 			}
@@ -1084,7 +1084,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `type_id`=1
 				GROUP BY `tovar_id`";
-		$tovar = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$tovar = query_arr($sql);
 
 		//движение товара: расход
 		$sql = "SELECT
@@ -1094,7 +1094,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `type_id`!=1
 				GROUP BY `tovar_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			if(!isset($tovar[$r['id']]))
 				$tovar[$r['id']] = array(
@@ -1113,7 +1113,7 @@ switch(@$_POST['op']) {
 				  AND `tovar_id`
 				  AND `tovar_avai_id`
 				GROUP BY `tovar_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$tovar[$r['id']]['count'] -= $r['count'];
 
@@ -1126,7 +1126,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `tovar_id`
 				GROUP BY `tovar_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			if(!isset($tovar[$r['id']]))
 				$tovar[$r['id']] = array(
@@ -1151,7 +1151,7 @@ switch(@$_POST['op']) {
 				FROM `_tovar_avai`
 				WHERE `app_id`=".APP_ID."
 				GROUP BY `tovar_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			if(!$r['count'] && empty($tovar[$r['id']]))
 				continue;
@@ -1237,7 +1237,7 @@ switch(@$_POST['op']) {
 					'".addslashes($secret)."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['html'] = utf8(sa_app_spisok());
 		jsonSuccess($send);
@@ -1260,7 +1260,7 @@ switch(@$_POST['op']) {
 					`app_name`='".addslashes($app_name)."',
 					`secret`='".addslashes($secret)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'app'.$id);
 
@@ -1329,7 +1329,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `ws_id`=".$ws_id."
 				  AND !`deleted`";
-		$client = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$client = query_arr($sql);
 
 		//начисления
 		$sql = "SELECT
@@ -1341,7 +1341,7 @@ switch(@$_POST['op']) {
 				  AND `client_id`
 				  AND !`deleted`
 				GROUP BY `client_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$client[$r['client_id']]['balans_new'] -= $r['sum'];
 
@@ -1356,7 +1356,7 @@ switch(@$_POST['op']) {
 				  AND !`zp_id`
 				  AND !`deleted`
 				GROUP BY `client_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$client[$r['client_id']]['balans_new'] += $r['sum'];
 
@@ -1370,7 +1370,7 @@ switch(@$_POST['op']) {
 				  AND `client_id`
 				  AND !`deleted`
 				GROUP BY `client_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$client[$r['client_id']]['balans_new'] -= $r['sum'];
 
@@ -1386,7 +1386,7 @@ switch(@$_POST['op']) {
 						(`id`,`balans`)
 					VALUES ".implode(',', $upd)."
 					ON DUPLICATE KEY UPDATE `balans`=VALUES(`balans`)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		$send['time'] = round(microtime(true) - TIME, 3);
@@ -1418,7 +1418,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `zayav_id`
 				GROUP BY `zayav_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['accrual'] = round($r['sum']);
 
@@ -1431,7 +1431,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `zayav_id`
 				GROUP BY `zayav_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['oplata'] = round($r['sum']);
 
@@ -1444,7 +1444,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `zayav_id`
 				GROUP BY `zayav_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['oplata'] -= round($r['sum']);
 
@@ -1457,7 +1457,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `zayav_id`
 				GROUP BY `zayav_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$zayav[$r['zayav_id']]['schet_exist'] = _num($r['count']) ? 1 : 0;
 
@@ -1508,6 +1508,6 @@ function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истор
 					".$id.",
 					".(!$i ? 1 : 0)."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 	}
 }

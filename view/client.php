@@ -23,7 +23,7 @@ function _clientDolgSum() {//показ суммы долга всех клиентов в верхнем правом уг
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `balans`<0";
-	if(!$dolg = abs(query_value($sql, GLOBAL_MYSQL_CONNECT)))
+	if(!$dolg = abs(query_value($sql)))
 		return '';
 
 	return '<div id="client-dolg-sum"><b>'._sumSpace($dolg).'</b> руб.</div>';
@@ -41,7 +41,7 @@ function client_list($v) {// страница со списком клиентов
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`";
-	$categoryShow = query_value($sql, GLOBAL_MYSQL_CONNECT) > 1;
+	$categoryShow = query_value($sql) > 1;
 	$category = array(
 		0 => 'Любая категория',
 		1 => 'Частные лица',
@@ -135,7 +135,7 @@ function _client_spisok($v=array()) {// список клиентов
 					WHERE `app_id`=".APP_ID."
 					 AND `client_id`
 					 AND `status`=1";
-			$cond .= " AND `id`".$not." IN (".query_ids($sql, GLOBAL_MYSQL_CONNECT).")";
+			$cond .= " AND `id`".$not." IN (".query_ids($sql).")";
 		}
 		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
@@ -143,7 +143,7 @@ function _client_spisok($v=array()) {// список клиентов
 					FROM `_client`
 					WHERE ".$cond."
 					  AND `balans`<0";
-			$dolg = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
+			$dolg = abs(query_value($sql));
 		}
 		if($filter['opl']) {
 			$cond .= " AND `balans`>0";
@@ -151,12 +151,12 @@ function _client_spisok($v=array()) {// список клиентов
 					FROM `_client`
 					WHERE ".$cond."
 					  AND `balans`>0";
-			$plus = abs(query_value($sql, GLOBAL_MYSQL_CONNECT));
+			$plus = abs(query_value($sql));
 		}
 	}
 
 	$sql = "SELECT COUNT(`id`) AS `all` FROM `_client` WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
 			'result' => 'Клиентов не найдено.'.$filter['clear'],
@@ -172,7 +172,7 @@ function _client_spisok($v=array()) {// список клиентов
 				FROM `_client`
 				WHERE ".$cond."
 				  AND `dtime_add` LIKE '".strftime('%Y-%m')."-%'";
-		$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$c = query_value($sql);
 		$newMonth = $c ? '<b class="'._tooltip('Новые за '._monthDef(strftime('%m')), -5, 'l').'+'.$c.'</b>' : '';
 
 		if($newMonth) {
@@ -181,7 +181,7 @@ function _client_spisok($v=array()) {// список клиентов
 					FROM `_client`
 					WHERE ".$cond."
 					  AND `dtime_add` LIKE '".TODAY." %'";
-			$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
+			$c = query_value($sql);
 			$newToday = $c ? '<span class="'._tooltip('Новые за сегодня', -10, 'l').'+'.$c.'</span>' : '';
 		}
 	}
@@ -203,7 +203,7 @@ function _client_spisok($v=array()) {// список клиентов
 			WHERE ".$cond."
 			ORDER BY `dtime_add` DESC
 			LIMIT "._startLimit($filter);
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		if(FIND) {
 			$r['fio'] = _findRegular($filter['find'], $r['fio']);
@@ -367,7 +367,7 @@ function _clientValToList($arr) {//вставка данных клиентов в массив по client_id
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
 			  AND `id` IN (".$ids.")";
-	$client = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$client = query_arr($sql);
 
 	foreach($client as $r) {
 		$org = $r['category_id'] != 1;
@@ -422,27 +422,27 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 function _clientDelAccess($client_id) {//разрешение на удаление клиента
 	//Наличие заявок
 	$sql = "SELECT COUNT(*) FROM `_zayav` WHERE !`deleted` AND `client_id`=".$client_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return false;
 
 	//Наличие начислений
 	$sql = "SELECT COUNT(*) FROM `_money_accrual` WHERE !`deleted` AND `client_id`=".$client_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return false;
 
 	//Наличие счетов на оплату
 	$sql = "SELECT COUNT(*) FROM `_schet` WHERE !`deleted` AND `client_id`=".$client_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return false;
 
 	//Наличие платежей
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `client_id`=".$client_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return false;
 
 	//Наличие возвратов
 	$sql = "SELECT COUNT(*) FROM `_money_refund` WHERE !`deleted` AND `client_id`=".$client_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return false;
 
 	return true;
@@ -454,7 +454,7 @@ function _clientQuery($client_id, $withDeleted=0) {//запрос данных об одном клие
 			WHERE `app_id`=".APP_ID.
 			  ($withDeleted ? '' : " AND !`deleted`")."
 			  AND `id`=".$client_id;
-	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	return query_assoc($sql);
 }
 function _clientDopLink($name, $arr) {//меню с дополнительными списками (заявки, начисления, платежи, история...)
 	return
@@ -482,7 +482,7 @@ function _clientZayavTypeId($client_id) {//получение первого id вида заявки клие
 			  AND `client_id`=".$client_id."
 			ORDER BY `service_id`
 			LIMIT 1";
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql);
 }
 function _clientInfoZayavCount($client_id) {//общее количество заявок всех видов у клиента
 	$sql = "SELECT COUNT(*)
@@ -490,7 +490,7 @@ function _clientInfoZayavCount($client_id) {//общее количество заявок всех видов
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `client_id`=".$client_id;
-	$send['all'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$send['all'] = query_value($sql);
 	return $send;
 }
 function _clientInfoZayavRight($client_id) {
@@ -500,7 +500,7 @@ function _clientInfoZayavRight($client_id) {
 			  AND !`deleted`
 			  AND `client_id`=".$client_id."
 			ORDER BY `service_id`";
-	$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	$arr = query_ass($sql);
 
 	if(count($arr) < 2)
 		return '';
@@ -545,7 +545,7 @@ function _clientInfo() {//вывод информации о клиенте
 			WHERE !`deleted`
 			  AND `client_id_person`=".$client_id."
 			  AND `poa_attach_id`";
-	$attach_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$attach_ids = query_ids($sql);
 
 	return
 		'<script type="text/javascript">'.
@@ -655,7 +655,7 @@ function _clientInfoPerson($client_id, $type='html') {// формирование списка дов
 			WHERE `id`=".$client_id."
 			  OR `client_id_person`=".$client_id."
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$person = array();
 	while($r = mysql_fetch_assoc($q)) {
 		if(!$r['fio'])
@@ -761,14 +761,14 @@ function _clientInfoWorker($client_id) {//список сотрудников для связки с клиент
 			  AND `worker_id`
 			  AND !`deleted`
 			  AND `id`!=".$client_id;
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$ids = query_ids($sql);
 
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`
 			  AND `hidden`";
-	$hidden = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$hidden = query_ids($sql);
 
 	$sql = "SELECT
 				`viewer_id`,
@@ -777,7 +777,7 @@ function _clientInfoWorker($client_id) {//список сотрудников для связки с клиент
 	        WHERE `app_id`=".APP_ID."
 	          AND `worker`
 	          AND `viewer_id` NOT IN (".$ids.",".$hidden.")";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 
 function _clientBalansUpdate($client_id) {//обновление баланса клиента
@@ -786,7 +786,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `client_id`=".$client_id;
-	$accrual = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$accrual = query_value($sql);
 
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_income`
@@ -795,7 +795,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 			  AND `confirm` NOT IN (1,3)
 			  AND !`deleted`
 			  AND `client_id`=".$client_id;
-	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$income = query_value($sql);
 
 	//Возвраты
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -803,14 +803,14 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `client_id`=".$client_id;
-	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$refund = query_value($sql);
 
 	$balans = $income - $accrual - $refund;
 
 	$sql = "UPDATE `_client`
 			SET `balans`=".$balans."
 			WHERE `id`=".$client_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return $balans;
 }
@@ -842,7 +842,7 @@ function _clientPoaSpisok($v=array()) {
 		 AND `poa_nomer`";
 
 	$sql = "SELECT COUNT(`id`) AS `all` FROM `_client` WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
 			'result' => 'Доверенностей нет.',
@@ -862,7 +862,7 @@ function _clientPoaSpisok($v=array()) {
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 
 	$spisok = _clientValToList($spisok);
 	$spisok = _attachValToList($spisok, 'poa_attach_id');
@@ -896,7 +896,7 @@ function _clientFromJs() {//список источников, из которых приходил клиент
 			FROM `_client_from`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `name`";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _clientFrom($id) {
 	$key = CACHE_PREFIX.'client_from'.APP_ID;
@@ -907,7 +907,7 @@ function _clientFrom($id) {
 				FROM `_client_from`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `name`";
-		$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_ass($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -934,7 +934,7 @@ function _client_from_spisok() {//список источников
 			FROM `_client_from`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `name`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Источники не определены.';
 
 	$sql = "SELECT
@@ -944,7 +944,7 @@ function _client_from_spisok() {//список источников
 			WHERE `app_id`=".APP_ID."
 			  AND `from_id`
 			GROUP BY `from_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['from_id']]['count'] = $r['count'];
 

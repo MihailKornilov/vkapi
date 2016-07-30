@@ -82,7 +82,7 @@ function _viewer($viewer_id=VIEWER_ID, $i='') {//получение данных о пользовате и
 				   AND `worker`
 				   AND !`hidden`
 				 ORDER BY `dtime_add`";
-		return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+		return query_selJson($sql);
 	}
 
 	if(is_array($viewer_id))
@@ -106,7 +106,7 @@ function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из 
 				FROM `_vkuser`
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id;
-		if(!$u = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$u = query_assoc($sql))
 			$u = _viewerUpdate($viewer_id);
 		xcache_set($key, $u, 86400);
 	}
@@ -146,7 +146,7 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 			WHERE `app_id`=".APP_ID."
 			  AND `viewer_id`=".$viewer_id."
 			LIMIT 1";
-	$id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$id = query_value($sql);
 
 	$sql = "INSERT INTO `_vkuser` (
 				`id`,
@@ -181,7 +181,7 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 				`country_title`=VALUES(`country_title`),
 				`city_id`=VALUES(`city_id`),
 				`city_title`=VALUES(`city_title`)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return _viewerCache($viewer_id);
 }
@@ -207,7 +207,7 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 				FROM `_vkuser`
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id` IN (".implode(',', array_unique(array_keys($ids))).")";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($u = mysql_fetch_assoc($q)) {
 			if(isset($viewer_ass[$u['viewer_id']]))
 				foreach($viewer_ass[$u['viewer_id']] as $id)
@@ -277,7 +277,7 @@ function _viewerWorkerQuery($viewer_id=VIEWER_ID) {//получение данных сотрудника
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`
 			  AND `viewer_id`=".$viewer_id;
-	return query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	return query_assoc($sql);
 }
 
 
@@ -316,7 +316,7 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 				SET `last_seen`=CURRENT_TIMESTAMP
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".VIEWER_ID;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 	}
 }
 
@@ -383,7 +383,7 @@ function _viewerRuleDefault($viewer_id=VIEWER_ID) {
 	$rule_admin = xcache_get($key);
 	if(empty($rule_admin)) {
 		$sql = "SELECT `key`,`value_admin` FROM `_vkuser_rule_default` ORDER BY `key`";
-		$rule_admin = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$rule_admin = query_ass($sql);
 		xcache_set($key, $rule_admin, 86400);
 	}
 
@@ -392,7 +392,7 @@ function _viewerRuleDefault($viewer_id=VIEWER_ID) {
 	$rule_worker = xcache_get($key);
 	if(empty($rule_worker)) {
 		$sql = "SELECT `key`,`value_worker` FROM `_vkuser_rule_default` ORDER BY `key`";
-		$rule_worker = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$rule_worker = query_ass($sql);
 		xcache_set($key, $rule_worker, 86400);
 	}
 
@@ -411,7 +411,7 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id."
 				ORDER BY `key`";
-		$rule = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$rule = query_ass($sql);
 		xcache_set($key, $rule, 86400);
 	}
 
@@ -431,7 +431,7 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 			$sql = "INSERT INTO `_vkuser_rule` (
 						`app_id`,`viewer_id`,`key`,`value`
 					) VALUES ".implode(',', $insert);
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 
 		if(!empty($defQ)) {
@@ -439,7 +439,7 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id."
 				  AND `key` NOT IN (".implode(',', $defQ).")";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 		}
 		xcache_unset($key);
 		return _viewerRule($viewer_id, $i);
@@ -463,7 +463,7 @@ function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к 
 				FROM `_menu_viewer`
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id;
-		$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_ass($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -471,7 +471,7 @@ function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к 
 	if(empty($arr)) {
 		$values = array();
 		$sql = "SELECT * FROM `_menu`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$values[] = "(".
 				APP_ID.",".
@@ -487,7 +487,7 @@ function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к 
 					`menu_id`,
 					`access`
 				) VALUES ".implode(',', $values);
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
 		return _viewerMenuAccess($viewer_id);

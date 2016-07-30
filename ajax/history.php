@@ -32,11 +32,11 @@ switch(@$_POST['op']) {
 				FROM `_history`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "DELETE FROM `_history` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;

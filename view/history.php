@@ -57,7 +57,7 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				".(_num(@$v['viewer_id']) ? $v['viewer_id'] : VIEWER_ID)."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 	return true;
 }
 function _historyFilter($v) {
@@ -87,7 +87,7 @@ function _history_spisok($v=array()) {
 		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
 	if($filter['category_id']) {
 		$sql = "SELECT `type_id` FROM `_history_ids` WHERE `category_id`=".$filter['category_id'];
-		$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+		$ids = query_ids($sql);
 		$cond .= " AND `type_id` IN (".$ids.")";
 	}
 	if($filter['client_id'])
@@ -102,7 +102,7 @@ function _history_spisok($v=array()) {
 	$add = HIST_LOCAL ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
 	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
 			'spisok' =>
@@ -125,7 +125,7 @@ function _history_spisok($v=array()) {
 			WHERE ".$cond."
 			ORDER BY `dtime_add` DESC
 			LIMIT "._start($filter).",".$filter['limit'];
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$history = array();
 	while($r = mysql_fetch_assoc($q)) {
 		if($r['invoice_id'])
@@ -183,7 +183,7 @@ function _history_types($history) {//перевод type_id в текст
 		$types[$r['type_id']] = $r['type_id'];
 
 	$sql = "SELECT * FROM `_history_type` WHERE `id` IN (".implode(',', $types).")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$types[$r['id']] = $r['txt'];
 
@@ -264,7 +264,7 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 			WHERE `app_id`=".APP_ID."
 			  AND `viewer_id_add`".
 			  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
-	$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql, GLOBAL_MYSQL_CONNECT);
+	$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql);
 
 	$sql = "SELECT
 	            `cat`.`id`,
@@ -281,7 +281,7 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 			  ".(VIEWER_ID_ONLY ? " AND `h`.`viewer_id_add`=".VIEWER_ID : '')."
 			GROUP BY `cat`.`id`
 			ORDER BY `cat`.`sort`";
-	$category = query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	$category = query_selJson($sql);
 	return
 	(!VIEWER_ID_ONLY ?
 		'<div class="findHead">Действия сотрудника</div>'.

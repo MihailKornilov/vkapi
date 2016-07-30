@@ -25,7 +25,7 @@ function _rubric($id='all', $i='name') {//Кеширование рубрик объявлений
 				FROM `_setup_rubric`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -66,7 +66,7 @@ function _rubricSub($id='all', $i='name') {//Кеширование рубрик объявлений
 				FROM `_setup_rubric_sub`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -184,7 +184,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 				FROM `_zayav_status`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -200,7 +200,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 				  ".(RULE_ZAYAV_EXECUTER ?  " AND `executer_id`=".VIEWER_ID : '')."
 				  AND !`deleted`
 				GROUP BY `status_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$arr[$r['status_id']]['count'] = $r['count'];
 
@@ -432,7 +432,7 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = query_arr($sql);
 
 	if(!isset($r['client_phone'])) {
 		foreach($zayav as $r)
@@ -501,7 +501,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 			  AND !`deleted`
 			  AND `status_id`
 			  AND `client_id` IN ("._keys($spisok).")";
-	if(!$status_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$status_ids = query_ids($sql))
 		return $spisok;
 
 	//примерение каждому из клиентов количества заявок, которое соответствует каждому статусу
@@ -516,7 +516,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 				  AND !`deleted`
 				  AND `client_id` IN ("._keys($spisok).")
 				GROUP BY `client_id`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$link = $r['count'] == 1 ? ' link' : '';
 			$href = $r['count'] == 1 ? ' href="'.URL.'&p=zayav&d=info&id='.$r['id'].'"' : '';
@@ -543,7 +543,7 @@ function _zayavExecuterToList($zayav) {//прописывание исполнителей в список заяв
 			WHERE `zayav_id` IN (".$ids.")
 			  AND `worker_id`
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$zayav[$r['zayav_id']]['executer_spisok'][] = _viewer($r['worker_id'], 'viewer_link_zp');
 	}
@@ -691,13 +691,13 @@ function _zayav_spisok($v) {
 					FROM `_zayav_expense_category`
 					WHERE `app_id`=".APP_ID."
 					  AND `dop`=4";
-			if($zeIds = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+			if($zeIds = query_ids($sql)) {
 				//id заявок, к которым прикреплены файлы
 				$sql = "SELECT DISTINCT(`zayav_id`)
 						FROM `_zayav_expense`
 						WHERE `app_id`=".APP_ID."
 						  AND `category_id` IN (".$zeIds.")";
-				$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+				$zayav_ids = query_ids($sql);
 
 				//инверсия
 				$cond .= " AND `id` NOT IN (".$zayav_ids.")";
@@ -716,7 +716,7 @@ function _zayav_spisok($v) {
 					WHERE `zt`.`app_id`=".APP_ID."
 					  AND `t`.`id`=`zt`.`tovar_id`
 					  AND `t`.`name_id`=".$filter['tovar_name_id'];
-			$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+			$zayav_ids = query_ids($sql);
 			$cond .= " AND `id` IN (".$zayav_ids.")";
 		}
 
@@ -725,7 +725,7 @@ function _zayav_spisok($v) {
 					FROM `_zayav_tovar`
 					WHERE `app_id`=".APP_ID."
 					  AND `tovar_id`=".$filter['tovar_id'];
-			$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+			$zayav_ids = query_ids($sql);
 			$cond .= " AND `id` IN (".$zayav_ids.")";
 		}
 
@@ -749,9 +749,8 @@ function _zayav_spisok($v) {
 				SUM(`count`) `count`
 			FROM `_zayav`
 			WHERE ".$cond;
-	$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$r = query_assoc($sql);
 	$all = $r['all'];
-	$count = $r['count'];
 
 	$zayav = array();
 
@@ -765,7 +764,7 @@ function _zayav_spisok($v) {
 				  AND `status_id`
 				  AND `nomer`=".$nomer."
 				LIMIT 1";
-		if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($r = query_assoc($sql)) {
 			$all++;
 			$filter['limit']--;
 			$r['nomer'] = '<em>'.$r['nomer'].'</em>';
@@ -783,14 +782,14 @@ function _zayav_spisok($v) {
 				  AND !`deleted`
 				  AND `nomer`=".$nomer."
 				LIMIT 1";
-		if($id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($id = query_value($sql)) {
 			$dogNomerId = $id;
 			$sql = "SELECT *
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$id;
-			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+			if($r = query_assoc($sql)) {
 				$all++;
 				$filter['limit']--;
 				$r['dogovor_nomer'] = '<em>'.$r['nomer'].'</em>';
@@ -830,7 +829,7 @@ function _zayav_spisok($v) {
 			WHERE ".$cond."
 			ORDER BY `".($filter['sort'] == 2 ? 'status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
 			LIMIT "._startLimit($filter);
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		if($nomer == $r['nomer'])
 			continue;
@@ -958,7 +957,7 @@ function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заяв
 			  AND `page_id` IN (".$ids.")
 			  AND !`deleted`
 			ORDER BY `page_id`,`id` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$zayav_id = 0; //выбор только верхней заметки в заявке
 	while($r = mysql_fetch_assoc($q)) {
 		if($zayav_id != $r['page_id']) {
@@ -980,7 +979,7 @@ function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заяв
 			WHERE `note_id` IN (".$note_ids.")
 			  AND !`deleted`
 			ORDER BY `id` ASC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$zayav_id = $zn[$r['note_id']];
 		$arr[$zayav_id]['note'] = $r['txt'];
@@ -1003,7 +1002,7 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 			FROM `_zayav_dogovor`
 			WHERE `app_id`=".APP_ID."
 			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$dog = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$dog = query_arr($sql);
 
 	foreach($dog as $r) {
 		foreach($arrIds[$r['id']] as $id) {
@@ -1034,7 +1033,7 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 	$sql = "SELECT `id`,`name`
 			FROM `_zayav_pole`
 			".($type_id ? " WHERE `type_id`=".$type_id : '');
-	$zpn = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	$zpn = query_ass($sql);
 
 	$send = array();
 	$sql = "SELECT *
@@ -1043,7 +1042,7 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 			  AND `service_id`=".$service_id."
 			  ".($type_id ? " AND `pole_id` IN ("._idsGet($zpn, 'key').")" : '')."
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$name = $r['label'] ? $r['label'] : $zpn[$r['pole_id']];
 		$label = $name.':';
@@ -1227,18 +1226,18 @@ function _zayavTovarName() {
 	$sql = "SELECT DISTINCT `tovar_id`
 			FROM `_zayav_tovar`
 			WHERE `app_id`=".APP_ID;
-	if(!$tovar_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$tovar_ids = query_ids($sql))
 		return '[]';
 
 	$sql = "SELECT DISTINCT `name_id`
 			FROM `_tovar`
 			WHERE `id` IN (".$tovar_ids.")";
-	$name_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$name_ids = query_ids($sql);
 
 	$sql = "SELECT `id`,`name`
 			FROM `_tovar_name`
 			WHERE `id` IN (".$name_ids.")";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _zayavTovarIds($service_id) {
 	$sql = "SELECT DISTINCT `zt`.`tovar_id`
@@ -1248,7 +1247,7 @@ function _zayavTovarIds($service_id) {
 			  AND `z`.`id`=`zt`.`zayav_id`
 			  AND !`z`.`deleted`
 			  AND `z`.`service_id`=".$service_id;
-	return query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	return query_ids($sql);
 }
 
 /* Информация о заявке */
@@ -1258,7 +1257,7 @@ function _zayavQuery($zayav_id, $withDel=0) {
 			WHERE `app_id`=".APP_ID."
 			  ".($withDel ? '' : ' AND !`deleted`')."
 			  AND `id`=".$zayav_id;
-	if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$z = query_assoc($sql))
 		return array();
 	return $z;
 }
@@ -1434,7 +1433,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 0;
 
 	//проверка на наличие возвратов
@@ -1443,7 +1442,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 0;
 
 	//проверка на наличие заключённых договоров
@@ -1452,7 +1451,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 0;
 
 	//проверка на наличие счетов на оплату
@@ -1461,7 +1460,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 0;
 
 	//проверка на наличие начислений зп сотрудникам
@@ -1470,7 +1469,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`
 			  AND `zayav_id`=".$zayav_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 0;
 
 	return 1;
@@ -1481,7 +1480,7 @@ function _zayavDogovor($z) {//отображение номера договора
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$z['id'];
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return '';
 
 	$title = 'от '._dataDog($r['data_create']).' г. на сумму '._cena($r['sum']).' руб.';
@@ -1508,7 +1507,7 @@ function _zayavDogovorJs($z) {
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `id`=".$z['dogovor_id'];
-	if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$r = query_assoc($sql))
 		return '';
 
 	$sql = "SELECT `invoice_id`
@@ -1517,7 +1516,7 @@ function _zayavDogovorJs($z) {
 			  AND !`deleted`
 			  AND `dogovor_id`=".$r['id']."
 			LIMIT 1";
-	$invoice_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$invoice_id = query_value($sql);
 
 	return
 		'id:'.$r['id'].','.
@@ -1572,7 +1571,7 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 			  AND !`deleted`
 			  AND `id`!=".$send['id']."
 			  AND `nomer`=".$send['nomer'];
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Ошибка: договор с номером <b>'.$send['nomer'].'</b> уже был заключен';
 
 	if(empty($send['fio']))
@@ -1589,7 +1588,7 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `id`=".$send['zayav_id'];
-	if(!$send['client_id'] = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$send['client_id'] = query_value($sql))
 		return 'Ошибка: заявки id='.$send['zayav_id'].' не существует, либо она была удалена';
 
 	return $send;
@@ -1604,7 +1603,7 @@ function _zayavDogovorPrint($v) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$v;
-		$v = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$v = query_assoc($sql);
 
 		$v['save'] = 1; //сохранить договор
 
@@ -1615,7 +1614,7 @@ function _zayavDogovorPrint($v) {
 					  AND !`deleted`
 					  AND `dogovor_id`=".$v['id']."
 					LIMIT 1";
-			$income_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+			$income_id = query_value($sql);
 		}
 	}
 
@@ -1798,7 +1797,7 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	$accrual = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$accrual = query_value($sql);
 
 	//платежи
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -1807,7 +1806,7 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			  AND `confirm` NOT IN (1,3)
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$income = query_value($sql);
 
 	//возвраты
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
@@ -1815,7 +1814,7 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$refund = query_value($sql);
 
 	$income -= $refund;
 
@@ -1825,14 +1824,14 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
-	$schet_count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$schet_count = query_value($sql);
 
 	//расходы
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id`=".$zayav_id;
-	$expense = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$expense = query_value($sql);
 
 	$sql = "UPDATE `_zayav`
 			SET `sum_accrual`=".$accrual.",
@@ -1842,14 +1841,14 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 				`sum_profit`=`sum_accrual`-`sum_expense`,
 				`schet_count`=".$schet_count."
 			WHERE `id`=".$zayav_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _zayavExecuterJs() {//список сотрудников, которые могут быть исполнителями
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`";
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$ids = query_ids($sql);
 
 	$sql = "SELECT `viewer_id`,1
 			FROM `_vkuser_rule`
@@ -1857,7 +1856,7 @@ function _zayavExecuterJs() {//список сотрудников, которые могут быть исполнител
 			  AND `key`='RULE_EXECUTER'
 			  AND `value`
 			  AND `viewer_id` IN (".$ids.")";
-	return query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_assJson($sql);
 }
 function _zayavTovarOneId($z) {//получение id товара, если используется один товар
 	if(!isset($z['zpu'][4]))
@@ -1867,7 +1866,7 @@ function _zayavTovarOneId($z) {//получение id товара, если используется один тов
 			FROM `_zayav_tovar`
 			WHERE `zayav_id`=".$z['id']."
 			LIMIT 1";
-	return query_value($sql, GLOBAL_MYSQL_CONNECT);
+	return query_value($sql);
 }
 function _zayavTovarValue($zayav_id) {//получение значения товаров для js в формате: tovar_id:count,4345:1
 	if(!$zayav_id)
@@ -1876,7 +1875,7 @@ function _zayavTovarValue($zayav_id) {//получение значения товаров для js в форм
 	$sql = "SELECT *
 			FROM `_zayav_tovar`
 			WHERE `zayav_id`=".$zayav_id;
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$arr = query_arr($sql))
 		return '';
 
 	$send = array();
@@ -1893,7 +1892,7 @@ function _zayavInfoTovar($z) {//информация о товаре
 			FROM `_zayav_tovar`
 			WHERE `zayav_id`=".$z['id']."
 			LIMIT 1";
-	if(!$tovar_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$tovar_id = query_value($sql))
 		return '';
 
 	if(!$tovar = _tovarQuery($tovar_id))
@@ -1925,7 +1924,7 @@ function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара
 	$sql = "SELECT *
 			FROM `_tovar`
 			WHERE `tovar_id_set`=".$tovar_id;
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$arr = query_arr($sql))
 		return '';
 
 	$arr = _tovarValToList($arr, 'id');
@@ -1960,7 +1959,7 @@ function _zayavImg($zayav_id, $tovar_id) {
 			  AND !`sort`
 			  AND (`app_id` AND `zayav_id`=".$zayav_id." OR !`app_id` AND `tovar_id`=".$tovar_id.")
 			ORDER BY `zayav_id` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		if($r['zayav_id'] || $r['tovar_id'])
 			break;
@@ -1985,7 +1984,7 @@ function _zayavKvit($zayav_id) {
 			  AND `active`
 			  AND `zayav_id`=".$zayav_id."
 			ORDER BY `id`";
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$arr = query_arr($sql))
 		return '';
 
 	$send = '<div class="headBlue">Квитанции</div>'.
@@ -2036,7 +2035,7 @@ function _zayavTovarPlace($place_id=false, $type=APP_TYPE) {
 			FROM `_zayav_tovar_place`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `place`";
-	$arr += query_ass($sql, GLOBAL_MYSQL_CONNECT);
+	$arr += query_ass($sql);
 
 	if($place_id === false)
 		return $arr;
@@ -2059,7 +2058,7 @@ function _zayavTovarPlaceUpdate($zayav_id, $place_id, $place_name) {// Обновлени
 				WHERE `app_id`=".APP_ID."
 				  AND `place`='".$place_name."'
 				LIMIT 1";
-		if(!$place_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		if(!$place_id = query_value($sql)) {
 			$sql = "INSERT INTO `_zayav_tovar_place` (
 						`app_id`,
 						`place`
@@ -2067,8 +2066,8 @@ function _zayavTovarPlaceUpdate($zayav_id, $place_id, $place_name) {// Обновлени
 						".APP_ID.",
 						'".addslashes($place_name)."'
 					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
-			$place_id = query_insert_id('_zayav_tovar_place', GLOBAL_MYSQL_CONNECT);
+			query($sql);
+			$place_id = query_insert_id('_zayav_tovar_place');
 			$placeNew++;
 		}
 	}
@@ -2078,7 +2077,7 @@ function _zayavTovarPlaceUpdate($zayav_id, $place_id, $place_name) {// Обновлени
 				SET `tovar_place_id`=".$place_id.",
 					`tovar_place_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if($z['tovar_place_id']) { //история вносится, если заявка изменяется
 			_history(array(
@@ -2099,9 +2098,9 @@ function _zayavTovarPlaceUpdate($zayav_id, $place_id, $place_name) {// Обновлени
 
 			//удаление пустых местонахождений
 			$sql = "SELECT DISTINCT `tovar_place_id` FROM `_zayav` WHERE `tovar_place_id`";
-			if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+			if($ids = query_ids($sql)) {
 				$sql = "DELETE FROM `_zayav_tovar_place` WHERE `id` NOT IN (".$ids.")";
-				query($sql, GLOBAL_MYSQL_CONNECT);
+				query($sql);
 			}
 
 			$placeNew += mysql_affected_rows();
@@ -2122,7 +2121,7 @@ function _zayav_tovar_several($z) {//список нескольких товаров для информации о 
 			FROM `_zayav_tovar`
 			WHERE `zayav_id`=".$z['id']."
 			ORDER BY `id`";
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$arr = query_arr($sql))
 		return '';
 
 	$arr =  _tovarValToList($arr);
@@ -2144,7 +2143,7 @@ function _zayavTovarValToList($arr) {//список нескольких товаров для информации 
 			FROM `_zayav_tovar`
 			WHERE `zayav_id` IN ("._idsGet($arr).")
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return $arr;
 
 	foreach($arr as $r)
@@ -2170,7 +2169,7 @@ function _cartridgeName($item_id) {
 		$arr = xcache_get($key);
 		if(empty($arr)) {
 			$sql = "SELECT `id`,`name` FROM `_setup_cartridge`";
-			$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+			$arr = query_ass($sql);
 			xcache_set($key, $arr, 86400);
 		}
 		foreach($arr as $id => $name)
@@ -2204,7 +2203,7 @@ function _zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по за
  			FROM `_zayav_cartridge`
  			WHERE `zayav_id`=".$zayav_id."
  			ORDER BY `id`";
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 
 	$spisok = _schetValToList($spisok);
 
@@ -2266,7 +2265,7 @@ function _zayavInfoCartridgeForSchet($ids) {//получение списка картриджей для вс
 			  AND `cost`
 			  AND !`schet_id`
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$schet = array();
 	$n = 1;
 	while($r = mysql_fetch_assoc($q)) {
@@ -2373,7 +2372,7 @@ function _zayavSrokCalendar($v=array()) {
 			  AND `srok`!='0000-00-00'
 			  AND `srok`<'".$day."'
 			  ".($executer_id ? " AND `executer_id`=".$executer_id : '');
-	$countBack = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$countBack = query_value($sql);
 
 	$sql = "SELECT COUNT(`id`)
 			FROM `_zayav`
@@ -2384,7 +2383,7 @@ function _zayavSrokCalendar($v=array()) {
 			  AND `srok`!='0000-00-00'
 			  AND `srok`>'".SROK_MON."-31'
 			  ".($executer_id ? " AND `executer_id`=".$executer_id : '');
-	$countNext = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$countNext = query_value($sql);
 
 	$send =
 		'<div id="zayav-srok-calendar">'.
@@ -2415,7 +2414,7 @@ function _zayavSrokCalendar($v=array()) {
 			  AND `srok` LIKE ('".SROK_MON."%')
 			  ".($executer_id ? " AND `executer_id`=".$executer_id : '')."
 			GROUP BY DATE_FORMAT(`srok`,'%d')";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$days = array();
 	while($r = mysql_fetch_assoc($q))
 		$days[$r['day']] = $r['count'];
@@ -2467,7 +2466,7 @@ function _zayavExpense($id='all', $i='name') {//категории расходов заявки из кеш
 				FROM `_zayav_expense_category`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -2551,7 +2550,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id`=".$zayav_id."
 			ORDER BY `id`";
-	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$arr = query_arr($sql);
 
 	if(empty($arr))
 		return '';
@@ -2566,7 +2565,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id`=".$zayav_id."
 			  AND !`deleted`";
-	$accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$accrual_sum = query_value($sql);
 
 	$send =
 		'<div class="headBlue but">'.
@@ -2629,7 +2628,7 @@ function _zayav_bonus_spisok($zayav_id) {
 			FROM `_salary_bonus`
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id`=".$zayav_id;
-	if(!$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$arr = query_arr($sql))
 		return '';
 
 	$send = '<table class="ze-spisok">';
@@ -2662,7 +2661,7 @@ function _service($i=false, $id=0) {
 				FROM `_zayav_service`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `id`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($arr = query_arr($sql)) {
 			foreach($arr as $k => $r)
 				$arr[$k]['const'] = array();
 		} else
@@ -2776,7 +2775,7 @@ function _serviceJsClient($arr, $client_id) {//список видов деятельности, которы
 			  AND `client_id`=".$client_id."
 			GROUP BY `service_id`
 			ORDER BY `service_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$send[$r['service_id']] = $ass[$r['service_id']].'<em>'.$r['count'].'</em>';
 
@@ -2819,7 +2818,7 @@ function _zayav_report_status_count($v) {//статусы с количеством заявок
 			WHERE ".$cond."
 			GROUP BY `status_id`
 			ORDER BY `status_id`";
-	if(!$spisok = query_ass($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_ass($sql))
 		return '';
 
 	$all = 0;
@@ -2851,7 +2850,7 @@ function _zayav_report_executer($v) {//исполнители с количеством заявок и суммой
 	$sql = "SELECT `id`
 			FROM `_zayav`
 			WHERE ".$cond;
-	if(!$zayav_ids = query_ids($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$zayav_ids = query_ids($sql))
 		return '';
 
 	$sql = "SELECT
@@ -2862,7 +2861,7 @@ function _zayav_report_executer($v) {//исполнители с количеством заявок и суммой
 			WHERE `zayav_id` IN (".$zayav_ids.")
 			  AND `worker_id`
 			GROUP BY `worker_id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	$summa = 0;
@@ -2906,7 +2905,7 @@ function _zayav_report_days($mon=0) {//отметка дней в календаре, в которые вноси
 			  AND !`deleted`
 			  AND `dtime_add` LIKE ('".($mon ? $mon : strftime('%Y-%m'))."%')
 			GROUP BY DATE_FORMAT(`dtime_add`,'%d')";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$days = array();
 	while($r = mysql_fetch_assoc($q))
 		$days[$r['day']] = 1;
@@ -2978,7 +2977,7 @@ function _zayav_report_spisok($v=array()) {
 			FROM `_zayav`
 			WHERE ".$cond."
 			ORDER BY `id`";
-	$zayav = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$zayav = query_arr($sql);
 
 	$zayav = _clientValToList($zayav);
 	$zayav = _dogovorValToList($zayav);

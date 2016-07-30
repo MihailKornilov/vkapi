@@ -33,7 +33,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		if($r['status'] != $status || $status == 1 && $r['day'] != $day) {
@@ -41,7 +41,7 @@ switch(@$_POST['op']) {
 			        SET `status`=".$status.
 				($status == 1 ? ",`day`='".$day."'" : '')."
 			        WHERE `id`=".$id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			_remind_history_add(array(
 				'remind_id' => $r['id'],
@@ -57,7 +57,7 @@ switch(@$_POST['op']) {
 						WHERE `app_id`=".APP_ID."
 						  AND `txt`='".addslashes($reason)."'
 						LIMIT 1";
-				$reason_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+				$reason_id = query_value($sql);
 
 				$sql = "INSERT INTO `_remind_reason` (
 							`id`,
@@ -69,7 +69,7 @@ switch(@$_POST['op']) {
 							'".addslashes($reason)."'
 						) ON DUPLICATE KEY UPDATE
 							`count`=`count`+1";
-				query($sql, GLOBAL_MYSQL_CONNECT);
+				query($sql);
 			}
 		}
 		jsonSuccess();
@@ -79,7 +79,7 @@ switch(@$_POST['op']) {
 				FROM `_remind_reason`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `count` DESC, `txt`";
-		$send['spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
+		$send['spisok'] = query_selArray($sql);
 		jsonSuccess($send);
 		break;
 	case 'remind_head_edit':
@@ -95,7 +95,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `status`=1
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		if($txt == $r['txt'] && $about == $r['about'])
@@ -105,7 +105,7 @@ switch(@$_POST['op']) {
 				SET `txt`='".addslashes($txt)."',
 					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;

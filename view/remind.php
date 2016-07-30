@@ -17,21 +17,21 @@ function _remind_stat() {
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
 			  AND `dtime_add` LIKE '".TODAY."%'";
-	$newToday = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$newToday = query_value($sql);
 
 	//новые текущая неделя
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
 			  "._period(0, 'sql');
-	$newWeek = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$newWeek = query_value($sql);
 
 	//новые текущий месяц
 	$sql = "SELECT COUNT(`id`)
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
 			  AND `dtime_add` LIKE '".strftime('%Y-%m-')."%'";
-	$newMonth = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$newMonth = query_value($sql);
 
 	$moveToday = _remind_stat_count(1) - $newToday;
 	$moveWeek = _remind_stat_count(1, 'week') - $newWeek;
@@ -72,7 +72,7 @@ function _remind_stat_count($status, $period=TODAY) {
 			WHERE `app_id`=".APP_ID."
 			  AND `status`=".$status."
 			  ".$cont;
-	$c = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$c = query_value($sql);
 	return $c ? $c : '';
 }
 function _remind_right() {
@@ -111,7 +111,7 @@ function _remind_history_add($v) {
 				'".addslashes($v['reason'])."',
 				".VIEWER_ID."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _remindTodayCount($plus_b=0) { //Получение количества напоминаний на сегодня
 	if(defined('REMIND_ACTIVE_COUNT')) {
@@ -124,7 +124,7 @@ function _remindTodayCount($plus_b=0) { //Получение количества напоминаний на се
 			WHERE `app_id`=".APP_ID."
 			  AND `status`=1
 			  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')";
-	define('REMIND_ACTIVE_COUNT', query_value($sql, GLOBAL_MYSQL_CONNECT));
+	define('REMIND_ACTIVE_COUNT', query_value($sql));
 
 	return _remindTodayCount($plus_b);
 }
@@ -134,7 +134,7 @@ function _remindTomorrowCount($plus_b=0) { //Получение количества напоминаний на
 			WHERE `app_id`=".APP_ID."
 			  AND `status`=1
 			  AND `day`=DATE_ADD('".TODAY."', INTERVAL 1 DAY)";
-	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$count = query_value($sql))
 		return '';
 
 	return '<em>'.$count.'</em>';
@@ -144,7 +144,7 @@ function _remindActiveCount() { //количество активных напоминаний
 			FROM `_remind`
 			WHERE `app_id`=".APP_ID."
 			  AND `status`=1";
-	$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$count = query_value($sql);
 
 	return $count ? $count : '';
 }
@@ -223,7 +223,7 @@ function _remind_spisok($v=array()) {
 	$sql = "SELECT COUNT(*)
 			FROM `_remind`
 			WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!$all = query_value($sql)) {
 		$send['spisok'] .= $filter['js'].'<div class="_empty">Напоминаний'.REMIND_TODAY_MSG.' нет.</div>';
 		return $send;
 	}
@@ -235,7 +235,7 @@ function _remind_spisok($v=array()) {
 			WHERE ".$cond."
 			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id` DESC' : '`day`')."
 			LIMIT "._startLimit($filter);
-	$remind = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$remind = query_arr($sql);
 
 	$remind = _remindHistory($remind);
 	$remind = _clientValToList($remind);
@@ -288,7 +288,7 @@ function _remindHistory($arr) {//добавление истории напоминаний в массив
 			FROM `_remind_history`
 			WHERE `remind_id` IN ("._keys($arr).")
 			ORDER BY `id` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['remind_id']]['history'][] = $r;
 
@@ -366,7 +366,7 @@ function _remind_add($v) {
 		$sql = "SELECT `client_id`
 				FROM `_zayav`
 				WHERE `id`=".$v['zayav_id'];
-		$v['client_id'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$v['client_id'] = query_value($sql);
 	}
 
 	$sql = "INSERT INTO `_remind` (
@@ -388,9 +388,9 @@ function _remind_add($v) {
 					".(empty($v['money_cut']) ? 0 : 1).",
 					".VIEWER_ID."
 				)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
-	$insert_id = query_insert_id('_remind', GLOBAL_MYSQL_CONNECT);
+	$insert_id = query_insert_id('_remind');
 
 	_remind_history_add(array(
 		'remind_id' => $insert_id,
@@ -429,10 +429,10 @@ function _remind_active_to_ready($ids) {//отметка выбранных активных напоминаний
 			WHERE `app_id`=".APP_ID."
 			  AND `status`=1
 			  AND `id` IN (".$ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$sql = "UPDATE `_remind` SET `status`=2 WHERE `id`=".$r['id'];
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_remind_history_add(array(
 			'remind_id' => $r['id'],

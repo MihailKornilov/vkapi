@@ -4,7 +4,7 @@ function _setup_global() {//получение констант-параметров для всех приложений
 	$key = CACHE_PREFIX.'setup_global';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT `key`,`value` FROM `_setup_global`";
-		$arr = query_ass($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_ass($sql);
 		xcache_set($key, $arr, 86400);
 	}
 	foreach($arr as $key => $value)
@@ -127,7 +127,7 @@ function setup_worker_spisok() {
 			  AND `worker`
 			  AND !`hidden`
 			ORDER BY `dtime_add`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	$send = '';
 	while($r = mysql_fetch_assoc($q)) {
 		$send .=
@@ -157,7 +157,7 @@ function setup_worker_rule($viewer_id) {
 			WHERE `app_id`=".APP_ID."
 			  AND `key`='RULE_HISTORY_VIEW'
 			  AND `viewer_id`<".VIEWER_MAX;
-	$hist_worker_all = query_assJson($sql, GLOBAL_MYSQL_CONNECT);
+	$hist_worker_all = query_assJson($sql);
 
 	return
 	'<script type="text/javascript">'.
@@ -267,7 +267,7 @@ function _setup_worker_rule_menu($viewer_id) {//вывод разделов меню с галочками
 			  AND `show`
 			  AND `m`.`id`!=11
 			ORDER BY `sort`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($viewer_id, $r['id']));
 
@@ -308,7 +308,7 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 			WHERE `app_id`=".APP_ID."
 			  AND `key`='".$key."'
 			  AND `viewer_id`=".$viewer_id;
-	if(!query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!query_value($sql)) {
 		$sql = "INSERT INTO `_vkuser_rule` (
 					`app_id`,
 					`viewer_id`,
@@ -320,7 +320,7 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 					'".strtoupper($key)."',
 					'".$v."'
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
@@ -333,7 +333,7 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 			WHERE `app_id`=".APP_ID."
 			  AND `viewer_id`=".$viewer_id."
 			  AND `key`='".$key."'";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 	xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
@@ -374,7 +374,7 @@ function setup_rekvisit() {
 		return _err('Недостаточно прав: Реквизиты организации');
 
 	$sql = "SELECT * FROM `_app` WHERE `id`=".APP_ID;
-	$g = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$g = query_assoc($sql);
 	return
 	'<script>'.
 		'var APP_TYPE='._selJson(_appType()).';'.
@@ -415,7 +415,7 @@ function setup_service() {
 			FROM `_zayav_service`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	$send = '';
@@ -452,7 +452,7 @@ function setup_expense_spisok() {
 			FROM `_money_expense_category`
 			WHERE `app_id`=".APP_ID." OR !`app_id`
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	//количество подкатегорий
@@ -462,7 +462,7 @@ function setup_expense_spisok() {
 			FROM `_money_expense_category_sub`
 			WHERE `app_id`=".APP_ID."
 			GROUP BY `category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['sub'] = $r['sub'];
 
@@ -474,7 +474,7 @@ function setup_expense_spisok() {
 			  AND !`deleted`
 			  AND `category_id`
 			GROUP BY `category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['count'] = $r['count'];
 
@@ -486,7 +486,7 @@ function setup_expense_spisok() {
 			  AND `deleted`
 			  AND `category_id`
 			GROUP BY `category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['deleted'] = $r['count'];
 
@@ -523,7 +523,7 @@ function setup_expense_sub($id) {
 			WHERE `app_id`=".APP_ID."
 			  AND `id`!=1
 			  AND `id`=".$id;
-	if(!$cat = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$cat = query_assoc($sql))
 		return 'Категории id = '.$id.' не существует.';
 
 	return
@@ -544,7 +544,7 @@ function setup_expense_sub_spisok($id) {
 			WHERE `app_id`=".APP_ID."
 			  AND `category_id`=".$id."
 			ORDER BY `name`";
-	$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$arr = query_arr($sql);
 	if(empty($arr))
 		return 'Список пуст.';
 
@@ -557,7 +557,7 @@ function setup_expense_sub_spisok($id) {
 			  AND `category_id`=".$id."
 			  AND `category_sub_id`
 			GROUP BY `category_sub_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['category_sub_id']]['count'] = $r['count'];
 
@@ -570,7 +570,7 @@ function setup_expense_sub_spisok($id) {
 			  AND `category_id`=".$id."
 			  AND `category_sub_id`
 			GROUP BY `category_sub_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$arr[$r['category_sub_id']]['deleted'] = $r['count'];
 
@@ -607,7 +607,7 @@ function setup_zayav_status_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		$spisok = setup_zayav_status_default();
 
 	$spisok = setup_zayav_status_next($spisok);
@@ -652,7 +652,7 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 	$sql = "SELECT *
 			FROM `_zayav_status_default`
 			ORDER BY `id`";
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 
 	$values = array();
 	foreach($spisok as $id => $r)
@@ -675,7 +675,7 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 				`sort`,
 				`id_old`
 			) VALUES ".implode(',', $values);
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	//применение новых статусов к заявкам
 	$sql = "UPDATE `_zayav` `z`
@@ -690,7 +690,7 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 			)
 			WHERE `app_id`=".APP_ID."
 			  AND `status_id`";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	//применение новых статусов к заявкам
 	$sql = "UPDATE `_history` `h`
@@ -710,7 +710,7 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 				)
 			WHERE `app_id`=".APP_ID."
 			  AND `type_id`=71";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
 	_appJsValues();
@@ -722,14 +722,14 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			ORDER BY `sort`";
-	return query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	return query_arr($sql);
 }
 function setup_zayav_status_next($spisok) {//получение ids следующих статусов
 	$sql = "SELECT *
 			FROM `_zayav_status_next`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['status_id']]['next'] .= ','.$r['next_id'];
 
@@ -745,7 +745,7 @@ function setup_zayav_status_next_js() {//получение ids следующих статусов для va
 			FROM `_zayav_status_next`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['status_id']][$r['next_id']] = 1;
 
@@ -763,7 +763,7 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 				`nouse`=0
 			WHERE `app_id`=".APP_ID."
 			  AND `default`";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return true;
 }
@@ -783,7 +783,7 @@ function setup_zayav_expense_spisok() {
 			FROM `_zayav_expense_category`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	$sql = "SELECT
@@ -793,7 +793,7 @@ function setup_zayav_expense_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `category_id`
 			GROUP BY `category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['use'] = $r['use'];
 
@@ -895,7 +895,7 @@ function setup_rubric_spisok() {
 			FROM `_setup_rubric`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 
@@ -907,7 +907,7 @@ function setup_rubric_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `rubric_id`
 			GROUP BY `rubric_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['rubric_id']]['sub'] = $r['count'];
 
@@ -920,7 +920,7 @@ function setup_rubric_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `rubric_id`
 			GROUP BY `rubric_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['rubric_id']]['zayav'] = $r['count'];
 
@@ -954,7 +954,7 @@ function setup_rubric_sub($id) {
 			FROM `_setup_rubric`
 			WHERE `app_id`=".APP_ID."
 			  AND `id`=".$id;
-	if(!$rub = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$rub = query_assoc($sql))
 		return 'Рубрики id = '.$id.' не существует. ';
 
 	return
@@ -975,7 +975,7 @@ function setup_rubric_sub_spisok($rubric_id) {
 			WHERE `app_id`=".APP_ID."
 			  AND `rubric_id`=".$rubric_id."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	//использование в заявках
@@ -987,7 +987,7 @@ function setup_rubric_sub_spisok($rubric_id) {
 			  AND `rubric_id`=".$rubric_id."
 			  AND `rubric_id_sub`
 			GROUP BY `rubric_id_sub`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['rubric_id_sub']]['zayav'] = $r['count'];
 
@@ -1035,7 +1035,7 @@ function setup_cartridge_spisok($edit_id=0) {
 			WHERE `type_id`=".$type_id."
 			GROUP BY `s`.`id`
 			ORDER BY `name`";
-		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$spisok = query_arr($sql))
 			continue;
 
 		$send .=
@@ -1127,13 +1127,13 @@ function setup_tovar_category_spisok() {//категории товаров
 			FROM `_tovar_category_use`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	$sql = "SELECT *
 			FROM `_tovar_category`
 			WHERE `id` IN ("._idsGet($spisok, 'category_id').")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		foreach($spisok as $sp)
 			if($r['id'] == $sp['category_id']) {
@@ -1178,7 +1178,7 @@ function setup_tovar_name_spisok() {
 				0 `tovar`
 			FROM `_tovar_name`
 			ORDER BY `name`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 	$sql = "SELECT
@@ -1187,7 +1187,7 @@ function setup_tovar_name_spisok() {
 			FROM `_tovar`
 			WHERE `category_id`
 			GROUP BY `name_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['name_id']]['tovar'] = $r['count'];
 
@@ -1222,7 +1222,7 @@ function setup_tovar_vendor_spisok() {
 				0 `tovar`
 			FROM `_tovar_vendor`
 			ORDER BY `name`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
 		$sql = "SELECT
@@ -1231,7 +1231,7 @@ function setup_tovar_vendor_spisok() {
 			FROM `_tovar`
 			WHERE `vendor_id`
 			GROUP BY `vendor_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['vendor_id']]['tovar'] = $r['count'];
 

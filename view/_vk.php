@@ -344,7 +344,7 @@ function _app($i='all') {//Получение данных о приложении
 		$sql = "SELECT *
 				FROM `_app`
 				WHERE `id`=".APP_ID;
-		if(!$arr = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$arr = query_assoc($sql))
 			_appError('Невозможно прочитать данные приложения для кеша.');
 		xcache_set($key, $arr, 86400);
 	}
@@ -466,7 +466,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 					*,
 					0 `show`
 				FROM `_menu`";
-		$menu = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$menu = query_arr($sql);
 		xcache_set($key, $menu, 86400);
 	}
 
@@ -475,7 +475,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 		$sql = "SELECT `menu_id` `id`
 				FROM `_menu_app`
 				WHERE `app_id`=".APP_ID;
-		$app = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$app = query_arr($sql);
 		xcache_set($key, $app, 86400);
 	}
 
@@ -488,7 +488,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 				FROM `_menu_app`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
-		$q = query($sql, GLOBAL_MYSQL_CONNECT);
+		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$sort[] = array('show'=>$r['show']) + $menu[$r['id']];
 		xcache_set($key, $sort, 86400);
@@ -506,7 +506,7 @@ function _menuCache() {//получение списка разделов меню из кеша
 					'".$id."',
 					'"._maxSql('_menu_app')."'
 				)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			xcache_unset(CACHE_PREFIX.'menu_app');
 			xcache_unset(CACHE_PREFIX.'menu_sort');
@@ -584,21 +584,21 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".TODAY." %'";
-	$today = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$today = query_value($sql);
 
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  "._period(0, 'sql');
-	$week = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$week = query_value($sql);
 
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `dtime_add` LIKE '".strftime('%Y-%m')."-%'";
-	$mon = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$mon = query_value($sql);
 
 	return
 	'<table class="menu-count">'.
@@ -1263,8 +1263,8 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
 	$save =
 		 'var VIEWER_MAX='.VIEWER_MAX.','.
 		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
- 		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`", GLOBAL_MYSQL_CONNECT).','.
-		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`", GLOBAL_MYSQL_CONNECT).','.
+ 		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`").','.
+		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`").','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
 		"\n".'ZAYAV_SKIDKA_SPISOK='._selJson(_zayavSkidka()).','.
 		"\n".'ZE_DOP_NAME='._assJson(_zayavExpenseDop()).','.
@@ -1318,7 +1318,7 @@ function _globalJsValues() {//Составление файла global.js, используемый во всех 
 	$sql = "UPDATE `_setup_global`
 			SET `value`=`value`+1
 			WHERE `key`='GLOBAL_VALUES'";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _appJsValues() {//для конкретного приложения
 	$save = 'var'.
@@ -1380,7 +1380,7 @@ function _appJsValues() {//для конкретного приложения
 	$sql = "UPDATE `_app`
 			SET `js_values`=`js_values`+1
 			WHERE `id`=".APP_ID;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	xcache_unset(CACHE_PREFIX.'app'.APP_ID);
 }
@@ -1429,7 +1429,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 			FROM `_vkuser`
 			WHERE `app_id`=".$app_id."
 			  AND `worker`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
 		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
@@ -1754,7 +1754,7 @@ function _color($color_id, $color_dop=0) {
 		$key = CACHE_PREFIX.'setup_color';
 		if(!$arr = xcache_get($key)) {
 			$sql = "SELECT * FROM `_setup_color`";
-			$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+			$arr = query_arr($sql);
 			xcache_set($key, $arr, 86400);
 		}
 		foreach($arr as $id => $r) {

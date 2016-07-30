@@ -69,8 +69,8 @@ switch(@$_POST['op']) {
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$send['id'] = query_insert_id('_zayav', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$send['id'] = query_insert_id('_zayav');
 
 		$sql = "INSERT INTO `_zayav_status_move` (
 					`app_id`,
@@ -85,7 +85,7 @@ switch(@$_POST['op']) {
 					'".$v['srok']."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_zayavTovarUpdate($send['id']);
 		_zayavNameUpdate($send['id'], $v);
@@ -128,25 +128,25 @@ switch(@$_POST['op']) {
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			$sql = "UPDATE `_money_income`
 					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			$sql = "UPDATE `_money_refund`
 					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			_clientBalansUpdate($z['client_id']);
 			_clientBalansUpdate($v['client_id']);
 		}
 
 		$sql = "UPDATE `_zayav` SET ".$v['update']." WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
@@ -190,13 +190,13 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 				SET `deleted`=1
 				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "SELECT IFNULL(SUM(`sum`),0)
 				FROM `_money_accrual`
 				WHERE !`deleted`
 				  AND `zayav_id`=".$zayav_id;
-		if($accrual_sum = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($accrual_sum = query_value($sql)) {
 			//удаление произвольных начислений
 			$sql = "UPDATE `_money_accrual`
 					SET `deleted`=1,
@@ -204,7 +204,7 @@ switch(@$_POST['op']) {
 						`dtime_del`=CURRENT_TIMESTAMP
 					WHERE !`deleted`
 					  AND `zayav_id`=".$zayav_id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 
 			_zayavBalansUpdate($zayav_id);
 
@@ -270,7 +270,7 @@ switch(@$_POST['op']) {
 					`executer_id`=".$executer_id.",
 					`srok`='".$srok."'
 				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "INSERT INTO `_zayav_status_move` (
 					`app_id`,
@@ -289,7 +289,7 @@ switch(@$_POST['op']) {
 					'".$srok."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 
 
@@ -336,7 +336,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 				SET `service_id`=".$service_id."
 				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 72,
@@ -383,7 +383,7 @@ switch(@$_POST['op']) {
 					".$tovar_id.",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 112,
@@ -426,7 +426,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_tovar_avai`
 				WHERE id=".$avai_id;
-		if(!$avai = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$avai = query_assoc($sql))
 			jsonError();
 
 		if(!$avai['count'])
@@ -481,7 +481,7 @@ switch(@$_POST['op']) {
 					".$avai['sum_buy'].",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_tovarAvaiUpdate($avai['tovar_id']);
 
@@ -516,7 +516,7 @@ switch(@$_POST['op']) {
 			$sql = "UPDATE `_zayav`
 					SET `srok`='".$day."'
 					WHERE `id`=".$zayav_id;
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			_history(array(
 				'type_id' => 52,
 				'client_id' => $z['client_id'],
@@ -547,7 +547,7 @@ switch(@$_POST['op']) {
 					WHERE `app_id`=".APP_ID."
 					  AND `worker`
 					  AND `viewer_id`=".$executer_id;
-			if(!query_value($sql, GLOBAL_MYSQL_CONNECT))
+			if(!query_value($sql))
 				jsonError();
 		}
 
@@ -555,7 +555,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_zayav` SET `executer_id`=".$executer_id." WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 58,
@@ -588,7 +588,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `zayav_id`=".$v['zayav_id'];
-		if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+		if(query_value($sql))
 			jsonError('Ошибка: на эту заявку уже заключён договор.');
 
 		foreach($v as $k => $r)
@@ -629,9 +629,9 @@ switch(@$_POST['op']) {
 					'".$v['link']."',
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$dog_id = query_insert_id('_zayav_dogovor', GLOBAL_MYSQL_CONNECT);
+		$dog_id = query_insert_id('_zayav_dogovor');
 		$v['id'] = $dog_id;
 
 		//Внесение начисления по договору
@@ -650,7 +650,7 @@ switch(@$_POST['op']) {
 					".$v['sum'].",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		//внесение баланса для клиента
 		_balans(array(
@@ -665,7 +665,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 		        SET `dogovor_id`=".$dog_id."
 		        WHERE `id`=".$v['zayav_id'];
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		// Внесение авансового платежа, если есть
 		_zayavDogovorAvansInsert($v);
@@ -695,7 +695,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$v['id'];
-		if(!$dog = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$dog = query_assoc($sql))
 			jsonError('Ошибка: договора не существует.');
 
 		foreach($v as $k => $r)
@@ -717,13 +717,13 @@ switch(@$_POST['op']) {
 					`avans`=".$v['avans'].",
 					`link`='".$v['link']."'
 				WHERE `id`=".$dog['id'];
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		// Обновление начисления по договору
 		$sql = "UPDATE `_money_accrual`
 				SET `sum`=".$v['sum']."
 				WHERE `dogovor_id`=".$dog['id'];
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if($dog['sum'] != $v['sum']) {
 			_balans(array(
@@ -743,12 +743,12 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `dogovor_id`=".$dog['id']."
 				LIMIT 1";
-		if($avans = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($avans = query_assoc($sql)) {
 			if(!$v['avans'] || !$v['invoice_id']) {//удаление платежа
 				$sql = "UPDATE `_money_income`
 						SET `deleted`=1
 						WHERE `id`=".$avans['id'];
-				query($sql, GLOBAL_MYSQL_CONNECT);
+				query($sql);
 				//баланс для расчётного счёта
 				_balans(array(
 					'action_id' => 2,
@@ -769,7 +769,7 @@ switch(@$_POST['op']) {
 						SET `sum`=".$v['avans'].",
 							`invoice_id`=".$v['invoice_id']."
 						WHERE `id`=".$avans['id'];
-				query($sql, GLOBAL_MYSQL_CONNECT);
+				query($sql);
 
 				if($avans['invoice_id'] != $v['invoice_id']) {
 					//удаление для предыдущего счёта
@@ -853,7 +853,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
 				  AND `id`=".$dogovor_id;
-		if(!$dog = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$dog = query_assoc($sql))
 			jsonError();
 
 		if(!$z = _zayavQuery($dog['zayav_id']))
@@ -902,7 +902,7 @@ switch(@$_POST['op']) {
 					`".$v."_cancel_viewer_id`=".VIEWER_ID.",
 					`".$v."_cancel_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$zpu = _zayavPole($z['service_id']);
 
@@ -963,7 +963,7 @@ switch(@$_POST['op']) {
 						FROM `_tovar_avai`
 						WHERE `app_id`=".APP_ID."
 						  AND `id`=".$tovar_avai_id;
-				if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+				if(!$r = query_assoc($sql))
 					jsonError('Наличия товара id'.$tovar_avai_id.' не существует');
 				if($tovar_count > $r['count'])
 					jsonError('Указанное количество превышает допустимое');
@@ -1001,8 +1001,8 @@ switch(@$_POST['op']) {
 					".$year.",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$insert_id = query_insert_id('_zayav_expense', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$insert_id = query_insert_id('_zayav_expense');
 
 		_zayavBalansUpdate($zayav_id);
 
@@ -1020,7 +1020,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_expense`
 				WHERE `id`=".$insert_id;
-		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$r = query_assoc($sql);
 		
 		_history(array(
 			'type_id' => 101,
@@ -1046,13 +1046,13 @@ switch(@$_POST['op']) {
 				FROM `_zayav_expense`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
-		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$r = query_assoc($sql);
 
 		if($r['salary_list_id'])
 			jsonError();
 
 		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_zayavBalansUpdate($r['zayav_id']);
 
@@ -1102,14 +1102,14 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND !`active`
 				  AND `zayav_id`=".$zayav_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "SELECT `tovar_id`
 				FROM `_zayav_tovar`
 				WHERE `zayav_id`=".$zayav_id."
 				ORDER BY `id`
 				LIMIT 1";
-		$tovar_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$tovar_id = query_value($sql);
 
 		$sql = "INSERT INTO `_zayav_kvit` (
 					`app_id`,
@@ -1148,8 +1148,8 @@ switch(@$_POST['op']) {
 					".$active.",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$send['id'] = query_insert_id('_zayav_kvit', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$send['id'] = query_insert_id('_zayav_kvit');
 
 		jsonSuccess($send);
 		break;
@@ -1179,8 +1179,8 @@ switch(@$_POST['op']) {
 					".$cost_restore.",
 					".$cost_chip."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$send['insert_id'] = query_insert_id('_setup_cartridge', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$send['insert_id'] = query_insert_id('_setup_cartridge');
 
 		xcache_unset(CACHE_PREFIX.'cartridge');
 		_appJsValues();
@@ -1194,7 +1194,7 @@ switch(@$_POST['op']) {
 			$send['spisok'] = utf8(setup_cartridge_spisok($send['insert_id']));
 		else {
 			$sql = "SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`";
-			$send['spisok'] = query_selArray($sql, GLOBAL_MYSQL_CONNECT);
+			$send['spisok'] = query_selArray($sql);
 		}
 
 		jsonSuccess($send);
@@ -1219,7 +1219,7 @@ switch(@$_POST['op']) {
 						".$zayav_id.",
 						".$id."
 					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
+			query($sql);
 			$cartgidge[] = '<u>'._cartridgeName($id).'</u>';
 		}
 
@@ -1247,7 +1247,7 @@ switch(@$_POST['op']) {
 		$prim = _txt($_POST['prim']);
 
 		$sql = "SELECT * FROM `_zayav_cartridge` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		if(!$z = _zayavQuery($r['zayav_id']))
@@ -1262,7 +1262,7 @@ switch(@$_POST['op']) {
 					`dtime_ready`=".($filling || $restore || $chip ? "CURRENT_TIMESTAMP" : "'0000-00-00 00:00:00'").",
 					`prim`='".addslashes($prim)."'
 				WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$changes =
 			_historyChange('Модель', _cartridgeName($r['cartridge_id']), _cartridgeName($cartridge_id)) .
@@ -1304,7 +1304,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav_cartridge`
 				WHERE `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError('Картриджа уже был удалён');
 
 		if($r['schet_id'])
@@ -1314,7 +1314,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "DELETE FROM `_zayav_cartridge` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 56,
@@ -1341,7 +1341,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_cartridge`
 				SET `schet_id`=".$schet_id."
 				WHERE `id` IN (".$ids.")";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -1354,7 +1354,7 @@ switch(@$_POST['op']) {
 				SET `zayav_report_cols_show`='".$ids."'
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".VIEWER_ID;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
 
@@ -1515,7 +1515,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 			$sql = "SELECT `find`
 					FROM `_tovar`
 					WHERE `id`=".$tovar_id;
-			$name = query_value($sql, GLOBAL_MYSQL_CONNECT);
+			$name = query_value($sql);
 		}
 	}
 
@@ -1531,7 +1531,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 			SET `name`='".addslashes($name)."',
 				`find`='".addslashes($find)."'
 			WHERE `id`=".$zayav_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	return $name;
 }
@@ -1554,9 +1554,9 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 				".$v['id'].",
 				".VIEWER_ID."
 			)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$income_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
+		$income_id = query_insert_id('_money_income');
 
 		//баланс для расчётного счёта
 		_balans(array(
@@ -1610,7 +1610,7 @@ function _zayavTovarUpdate($zayav_id) {//обновление списка товаров заявки
 		return;
 
 	$sql = "DELETE FROM `_zayav_tovar` WHERE `zayav_id`=".$zayav_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	$v = _txt($_POST['tovar']);
 	if(!$v)
@@ -1643,5 +1643,5 @@ function _zayavTovarUpdate($zayav_id) {//обновление списка товаров заявки
 				`tovar_id`,
 				`count`
 			) VALUES ".implode(',', $values);
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }

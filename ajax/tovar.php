@@ -102,9 +102,9 @@ switch(@$_POST['op']) {
 
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$send['id'] = query_insert_id('_tovar', GLOBAL_MYSQL_CONNECT);
+		$send['id'] = query_insert_id('_tovar');
 
 		_tovar_find_update($send['id']);
 		_tovar_feature_update($send['id']);
@@ -175,7 +175,7 @@ switch(@$_POST['op']) {
 					`measure_width`=".$measure_width.",
 					`measure_area`=".$measure_area."
 				WHERE `id`=".$tovar_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_tovar_find_update($tovar_id);
 		_tovar_feature_update($tovar_id);
@@ -207,7 +207,7 @@ switch(@$_POST['op']) {
 			jsonError($reason);
 
 		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_history(array(
 			'type_id' => 113,
@@ -252,7 +252,7 @@ switch(@$_POST['op']) {
 		if(!$v && $tovar_id_set) {
 			$cond_set = " AND `tovar_id_set`=".$tovar_id_set;
 			$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond.$cond_set;
-			if(query_value($sql, GLOBAL_MYSQL_CONNECT)) //если нет наличи€ по товару дл€ установки, то вывод всех по-умолчанию.
+			if(query_value($sql)) //если нет наличи€ по товару дл€ установки, то вывод всех по-умолчанию.
 				$cond .= $cond_set;
 			else $tovar_id_set = 0;
 		}
@@ -261,7 +261,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond;
 		$spisok = '';
 		$send['arr'] = array();
-		if($count = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($count = query_value($sql)) {
 			$order = $v || $tovar_id_set ? "`name_id` ASC,`vendor_id` ASC,`name` ASC" : "`id` DESC";
 			$sql = "SELECT
 						`t`.*
@@ -270,7 +270,7 @@ switch(@$_POST['op']) {
 					WHERE ".$cond."
 					ORDER BY ".$order."
 					LIMIT 20";
-			$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+			$arr = query_arr($sql);
 			$arr = _tovarValToList($arr, 'id');
 
 			foreach($arr as $id => $r) {
@@ -324,7 +324,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id` IN (".implode(',', array_keys($tovar)).")";
-		if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$spisok = query_arr($sql))
 			jsonError();
 
 		$spisok = _tovarValToList($spisok, 'id');
@@ -353,7 +353,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "DELETE FROM `_tovar_cost` WHERE `tovar_id`=".$tovar_id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$sql = "INSERT INTO `_tovar_cost` (
 					`app_id`,
@@ -366,7 +366,7 @@ switch(@$_POST['op']) {
 					".$sum_buy.",
 					".$sum_sell."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if($changes =
 			_historyChange('«акупка', _cena($r['sum_buy']), $sum_buy).
@@ -398,7 +398,7 @@ switch(@$_POST['op']) {
 				  AND `tovar_id`=".$tovar_id."
 				  AND `sum_buy`=".$sum_buy."
 				  AND `about`='".$about."'";
-		$avai_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$avai_id = query_value($sql);
 
 		$sql = "INSERT INTO `_tovar_avai` (
 					`id`,
@@ -418,10 +418,10 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."'
 				) ON DUPLICATE KEY UPDATE
 					`count`=`count`+".$count;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		if(!$avai_id)
-			$avai_id = query_insert_id('_tovar_avai', GLOBAL_MYSQL_CONNECT);
+			$avai_id = query_insert_id('_tovar_avai');
 
 		_tovarMoveInsert(array(
 			'tovar_id' => $tovar_id,
@@ -459,7 +459,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."
 				  AND `count`";
-		if($send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($send['arr'] = query_arr($sql)) {
 			$send['html'] = utf8(
 				'<div class="_info">'.
 					'ѕосле применени€ продажи будет произведЄн платЄж на указанный расчЄтный счЄт.'.
@@ -511,7 +511,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_tovar_avai`
 				WHERE id=".$avai_id;
-		if(!$avai = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$avai = query_assoc($sql))
 			jsonError();
 
 		if(!$avai['count'])
@@ -545,9 +545,9 @@ switch(@$_POST['op']) {
 					".$sum.",
 					".VIEWER_ID."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
-		$insert_id = query_insert_id('_money_income', GLOBAL_MYSQL_CONNECT);
+		$insert_id = query_insert_id('_money_income');
 
 		//баланс дл€ расчЄтного счЄта
 		_balans(array(
@@ -588,7 +588,7 @@ switch(@$_POST['op']) {
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."
 				  AND `count`";
-		if($send['arr'] = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($send['arr'] = query_arr($sql)) {
 			$send['html'] = utf8(
 				'<div class="_info">'.
 					'—писание товара производитс€ из наличи€.'.
@@ -626,7 +626,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_tovar_avai`
 				WHERE id=".$avai_id;
-		if(!$avai = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$avai = query_assoc($sql))
 			jsonError();
 
 		if(!$avai['count'])
@@ -665,14 +665,14 @@ switch(@$_POST['op']) {
 				FROM `_tovar_move`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
-		if(!$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		if(!$tovar = _tovarQuery($r['tovar_id']))
 			jsonError();
 
 		$sql = "DELETE FROM `_tovar_move` WHERE `id`=".$id;
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		_tovarAvaiUpdate($r['tovar_id']);
 
@@ -725,7 +725,7 @@ switch(@$_POST['op']) {
 			$sql = "SELECT `id`
 					FROM `_tovar_equip_name`
 					WHERE `name`='".addslashes($equip_name)."'";
-			if(!$equip_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+			if(!$equip_id = query_value($sql)) {
 				$sql = "INSERT INTO `_tovar_equip_name` (
 							`name`,
 							`viewer_id_add`
@@ -733,8 +733,8 @@ switch(@$_POST['op']) {
 							'".addslashes($equip_name)."',
 							".VIEWER_ID."
 						)";
-				query($sql, GLOBAL_MYSQL_CONNECT);
-				$equip_id = query_insert_id('_tovar_equip_name', GLOBAL_MYSQL_CONNECT);
+				query($sql);
+				$equip_id = query_insert_id('_tovar_equip_name');
 				xcache_unset(CACHE_PREFIX.'tovar_equip');
 			}
 		}
@@ -755,7 +755,7 @@ switch(@$_POST['op']) {
 					".$equip_id.",
 					"._maxSql('_tovar_equip')."
 				)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 
 		$send['check'] = utf8(_tovarEquipCheck($tovar_id, $ids_sel));
 		$send['equip_js'] = _tovarEquip('js', $tovar_id);
@@ -772,7 +772,7 @@ function _tovar_name_insert() {//обновление наименовани€ товара и получение его 
 			FROM `_tovar_name`
 			WHERE `name`='".addslashes($name_name)."'
 			LIMIT 1";
-	if(!$name_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+	if(!$name_id = query_value($sql)) {
 		$sql = "INSERT INTO `_tovar_name` (
 							`name`,
 							`viewer_id_add`
@@ -780,8 +780,8 @@ function _tovar_name_insert() {//обновление наименовани€ товара и получение его 
 							'" . addslashes($name_name) . "',
 							" . VIEWER_ID . "
 						)";
-		query($sql, GLOBAL_MYSQL_CONNECT);
-		$name_id = query_insert_id('_tovar_name', GLOBAL_MYSQL_CONNECT);
+		query($sql);
+		$name_id = query_insert_id('_tovar_name');
 		xcache_unset(CACHE_PREFIX . 'tovar_name');
 	}
 
@@ -800,7 +800,7 @@ function _tovar_vendor_get() {//получение id производител€. ¬несение нового на о
 			FROM `_tovar_vendor`
 			WHERE `name`='".addslashes($vendor_name)."'
 			LIMIT 1";
-	if($vendor_id = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if($vendor_id = query_value($sql))
 		return $vendor_id;
 
 	$sql = "INSERT INTO `_tovar_vendor` (
@@ -810,9 +810,9 @@ function _tovar_vendor_get() {//получение id производител€. ¬несение нового на о
 				'".addslashes($vendor_name)."',
 				".VIEWER_ID."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
-	$vendor_id = query_insert_id('_tovar_vendor', GLOBAL_MYSQL_CONNECT);
+	$vendor_id = query_insert_id('_tovar_vendor');
 	xcache_unset(CACHE_PREFIX.'tovar_vendor');
 
 	return $vendor_id;
@@ -835,11 +835,11 @@ function _tovar_find_update($tovar_id) {
 	$sql = "UPDATE `_tovar`
 			SET `find`='".addslashes($find)."'
 			WHERE `id`=".$tovar_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 	$sql = "DELETE FROM `_tovar_feature` WHERE `tovar_id`=".$tovar_id;
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 
 	if(empty($_POST['feature']))
 		return;
@@ -869,7 +869,7 @@ function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 				`name_id`,
 				`v`
 			) VALUES ".implode(',', $insert);
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 }
 function _tovar_formimg_send($r) {//форсирование данных товара дл€ отправки (при выборе товара)
 	$id = $r['id'];

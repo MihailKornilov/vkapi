@@ -64,11 +64,11 @@ function _tovarCategory($id=false, $i='name') {
 					0 `use`
 				FROM `_tovar_category`
 				ORDER BY `id`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT)) {
+		if($arr = query_arr($sql)) {
 			$sql = "SELECT `category_id`
 					FROM `_tovar_category_use`
 					WHERE `app_id`=".APP_ID;
-			$q = query($sql, GLOBAL_MYSQL_CONNECT);
+			$q = query($sql);
 			while($r = mysql_fetch_assoc($q))
 				$arr[$r['category_id']]['use'] = 1;
 			xcache_set($key, $arr, 86400);
@@ -113,7 +113,7 @@ function _tovarName($id=false, $i='name') {
 					`name`
 				FROM `_tovar_name`
 				ORDER BY `id`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -133,7 +133,7 @@ function _tovarVendor($id=false, $i='name') {
 					`name`
 				FROM `_tovar_vendor`
 				ORDER BY `id`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -157,7 +157,7 @@ function _tovarCategoryJs() {//категории товаров JS
 			WHERE `u`.`app_id`=".APP_ID."
 			  AND `u`.`category_id`=`c`.`id`
 			ORDER BY `u`.`sort`";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _tovarVendorJs() {//производители товаров JS
 	$sql = "SELECT
@@ -165,7 +165,7 @@ function _tovarVendorJs() {//производители товаров JS
 				`name`
 			FROM `_tovar_vendor`
 			ORDER BY `name`";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _tovarPosition($id=false) {//виды применения к другому товару
 	$arr = array(
@@ -194,7 +194,7 @@ function _tovarFeature($id=false, $i='name') {//названия характеристик товаров
 					`name`
 				FROM `_tovar_feature_name`
 				ORDER BY `id`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -213,14 +213,14 @@ function _tovarFeature($id=false, $i='name') {//названия характеристик товаров
 				WHERE `name`='".$name."'
 				ORDER BY `id`
 				LIMIT 1";
-		if(!$name_id = query_value($sql, GLOBAL_MYSQL_CONNECT)) {
+		if(!$name_id = query_value($sql)) {
 			$sql = "INSERT INTO `_tovar_feature_name` (
 						`name`
 					) VALUES (
 						'".addslashes($name)."'
 					)";
-			query($sql, GLOBAL_MYSQL_CONNECT);
-			$name_id = query_insert_id('_tovar_feature_name', GLOBAL_MYSQL_CONNECT);
+			query($sql);
+			$name_id = query_insert_id('_tovar_feature_name');
 			xcache_unset($key);
 			_appJsValues();
 		}
@@ -241,7 +241,7 @@ function _tovarFeatureJs() {//характеристики товаров JS
 				`name`
 			FROM `_tovar_feature_name`
 			ORDER BY `name`";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
 	$key = CACHE_PREFIX.'tovar_measure';
@@ -249,7 +249,7 @@ function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
 		$sql = "SELECT *
 				FROM `_tovar_measure`
 				ORDER BY `sort`";
-		if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
@@ -341,7 +341,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 				0 `zakaz_count`
 			FROM `_tovar`
 			WHERE `id` IN (".$tovar_ids.")";
-	if(!$tovar = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$tovar = query_arr($sql))
 		return $arr;
 
 	//получение данных товаров, на которые устанавливается запчасть
@@ -349,7 +349,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id` IN (".$ids.")";
-		if($set = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+		if($set = query_arr($sql))
 			foreach($tovar as $id => $r) {
 				if(!$r['tovar_id_set'])
 					continue;
@@ -372,7 +372,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			FROM `_tovar_cost`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id` IN (".$tovar_ids.")";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$tovar[$r['tovar_id']]['buy'] = $r['sum_buy'];
 		$tovar[$r['tovar_id']]['sell'] = $r['sum_sell'];
@@ -387,7 +387,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id` IN (".$tovar_ids.")
 			GROUP BY `tovar_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$tovar[$r['tovar_id']]['avai_count'] = _ms($r['count']);
 
@@ -399,7 +399,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			  AND `tovar_id` IN (".$tovar_ids.")
 			  AND `count`
 			ORDER BY `tovar_id`,`count` DESC";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$articul[$r['tovar_id']][$r['id']] = $r;
 
@@ -429,7 +429,7 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 			  AND `tovar_id` IN (".$tovar_ids.")
 ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
 			GROUP BY `tovar_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$tovar[$r['tovar_id']]['zakaz_count'] = $r['count'];
 
@@ -528,7 +528,7 @@ function _tovarArticulCreate() {//формирование очередного артикула товара
 	$sql = "SELECT MAX(`articul`)
 			FROM `_tovar_avai`
 			WHERE `app_id`=".APP_ID;
-	$max = _num(query_value($sql, GLOBAL_MYSQL_CONNECT));
+	$max = _num(query_value($sql));
 	
 	$max++;
 
@@ -546,31 +546,31 @@ function _tovarDelAccess($r) {//разрешение на удаление товара
 		return 'Товар был создан не в этом приложении';
 
 	$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `id`=".$r['tovar_id_set'];
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Этот товар применяется к другому товару';
 
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Производилась продажа товара';
 
 	$sql = "SELECT COUNT(*) FROM `_schet_content` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Товар используется в счётах на оплату';
 
 	$sql = "SELECT COUNT(*) FROM `_tovar_avai` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Товар есть в наличии';
 
 	$sql = "SELECT COUNT(*) FROM `_tovar_move` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'У товара есть история действий';
 
 	$sql = "SELECT COUNT(*) FROM `_zayav_expense` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Товар используется в расходах по заявкам';
 
 	$sql = "SELECT COUNT(*) FROM `_zayav_tovar` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(query_value($sql))
 		return 'Товар используется в заявках';
 
 	//причины на запрет удаления нет
@@ -639,7 +639,7 @@ function _tovar_category_name($category_id, $i='arr') {//список наименований по 
 	$sql = "SELECT DISTINCT(`name_id`)
 			FROM `_tovar`
 			WHERE `category_id`=".$category_id;
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$ids = query_ids($sql);
 
 	$nameIds = array();
 	foreach(_ids($ids, 1) as $r)
@@ -665,7 +665,7 @@ function _tovar_category_vendor($filter, $i='arr') {//список производителей по в
 			WHERE `vendor_id`
 			  AND `category_id`=".$filter['category_id'].
 				($filter['name_id'] ? " AND `name_id`=".$filter['name_id'] : '');
-	$ids = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$ids = query_ids($sql);
 
 	$vendorIds = array();
 	foreach(_ids($ids, 1) as $r)
@@ -688,7 +688,7 @@ function _tovar_stat($filter) {//статистика по товарам
 			FROM `_tovar_category_use`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `sort`";
-	$cat = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$cat = query_arr($sql);
 
 	//суммы в рублях для каждой категории
 	$summa = 0;
@@ -702,7 +702,7 @@ function _tovar_stat($filter) {//статистика по товарам
 			  AND `t`.`id`=`ta`.`tovar_id`
 			  AND `t`.`category_id` IN ("._idsGet($cat).")
 			GROUP BY `t`.`category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$cat[$r['id']]['sum'] = _cena($r['sum']);
 		$cat[$r['id']]['count'] = _cena($r['count']);
@@ -725,7 +725,7 @@ function _tovar_stat($filter) {//статистика по товарам
 				GROUP BY `t`.`id`
 			) `tt`
 			GROUP BY `tt`.`id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$cat[$r['id']]['pos'] = $r['count'];
 
@@ -765,7 +765,7 @@ function _tovar_category_spisok($filter) {
 			FROM `_tovar_category_use`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return array(
 			'all' => 0,
 			'result' => 'Категории не определены'.$filter['clear'],
@@ -824,7 +824,7 @@ function _tovar_category_spisok($filter) {
 			".$JOIN."
 			WHERE ".$cond."
 			GROUP BY `category_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['count'] = $r['count'];
 
@@ -845,7 +845,7 @@ function _tovar_category_spisok($filter) {
 			".$JOIN."
 			WHERE ".$cond."
 			GROUP BY `category_id`,`name_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		foreach($spisok as $sp)
 			if($r['category_id'] == $sp['id']) {
@@ -865,7 +865,7 @@ function _tovar_category_spisok($filter) {
 			".$JOIN."
 			WHERE ".$cond."
 			GROUP BY `category_id`,`name_id`,`vendor_id`";
-	$q = query($sql, GLOBAL_MYSQL_CONNECT);
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		foreach($spisok as $sp)
 			if($r['category_id'] == $sp['id']) {
@@ -959,7 +959,7 @@ function _tovar_spisok($filter) {
 
 
 	$sql = "SELECT COUNT(*) AS `all` FROM `_tovar` `t` ".$JOIN." WHERE ".$cond;
-	if(!$all = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
 			'result' =>
@@ -990,7 +990,7 @@ function _tovar_spisok($filter) {
 			WHERE ".$cond."
 			ORDER BY `name_id` ASC,`vendor_id` ASC,`name` ASC
 			LIMIT "._startLimit($filter);
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 
 	$spisok = _tovarValToList($spisok, 'id');
 
@@ -1052,14 +1052,14 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 				'' `tovar_set_name`
 			FROM `_tovar`
 			WHERE `id".($old ? '_old' : '')."`=".$tovar_id;
-	if(!$tovar = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$tovar = query_assoc($sql))
 		return array();
 
 	if($tovar['tovar_id_set']) {
 		$sql = "SELECT *
 				FROM `_tovar`
 				WHERE `id`=".$tovar['tovar_id_set'];
-		$r = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+		$r = query_assoc($sql);
 		$tovar['tovar_set_name'] =
 			($r['tovar_id_set'] ? '<b>'._tovarName($r['name_id']).'</b>' : _tovarName($r['name_id'])).
 			'<b>'.
@@ -1075,7 +1075,7 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 			WHERE `category_id`=".$tovar['category_id']."
 			  AND `name_id`=".$tovar['name_id']."
 			ORDER BY `sort`";
-	$tovar['equip_ids'] = query_ids($sql, GLOBAL_MYSQL_CONNECT);
+	$tovar['equip_ids'] = query_ids($sql);
 
 	//закупка и продажа
 	$sql = "SELECT *
@@ -1083,7 +1083,7 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			LIMIT 1";
-	$cost = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
+	$cost = query_assoc($sql);
 	$tovar['sum_buy'] = _cena(@$cost['sum_buy']);
 	$tovar['sum_sell'] = _cena(@$cost['sum_sell']);
 
@@ -1095,7 +1095,7 @@ function _tovarAvaiArticul($tovar_id, $radio=0) {
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			ORDER BY `count` DESC";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	return _tovarAvaiArticulTab($spisok, $radio);
@@ -1141,7 +1141,7 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			ORDER BY `count` DESC";
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return;
 
 	foreach($spisok as $r) {
@@ -1150,27 +1150,27 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 				FROM `_tovar_move`
 				WHERE `tovar_avai_id`=".$r['id']."
 				  AND `type_id`=1";
-		$count = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$count = query_value($sql);
 
 		//расход: движение товара
 		$sql = "SELECT IFNULL(SUM(`count`),0)
 				FROM `_tovar_move`
 				WHERE `tovar_avai_id`=".$r['id']."
 				  AND `type_id`!=1";
-		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$count -= query_value($sql);
 
 		//применение в расходах по заявкам
 		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_zayav_expense`
 				WHERE `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$count -= query_value($sql);
 
 		//продажа товара - платежи
 		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_money_income`
 				WHERE !`deleted`
 				  AND `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$count -= query_value($sql);
 
 		//счета на оплату
 		$sql = "SELECT IFNULL(SUM(`count`),0)
@@ -1180,7 +1180,7 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 				WHERE `s`.`id`=`sc`.`schet_id`
 				  AND !`deleted`
 				  AND `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$count -= query_value($sql);
 
 		if($r['count'] == $count)
 			continue;
@@ -1188,7 +1188,7 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 		$sql = "UPDATE `_tovar_avai`
 				SET `count`=".$count."
 				WHERE `id`=".$r['id'];
-		query($sql, GLOBAL_MYSQL_CONNECT);
+		query($sql);
 	}
 }
 function _tovarMoveInsert($v) {//внесение движения товара
@@ -1214,7 +1214,7 @@ function _tovarMoveInsert($v) {//внесение движения товара
 		$sql = "SELECT `client_id`
 				FROM `_zayav`
 				WHERE `id`=".$v['zayav_id'];
-		$v['client_id'] = query_value($sql, GLOBAL_MYSQL_CONNECT);
+		$v['client_id'] = query_value($sql);
 	}
 	
 	$sql = "INSERT INTO `_tovar_move` (
@@ -1242,9 +1242,9 @@ function _tovarMoveInsert($v) {//внесение движения товара
 				'".addslashes($v['about'])."',
 				".VIEWER_ID."
 			)";
-	query($sql, GLOBAL_MYSQL_CONNECT);
+	query($sql);
 	
-	$insert_id = query_insert_id('_tovar_move', GLOBAL_MYSQL_CONNECT);
+	$insert_id = query_insert_id('_tovar_move');
 
 	_tovarAvaiUpdate($v['tovar_id']);
 	
@@ -1338,7 +1338,7 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 			FROM `_tovar_avai`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar['id'];
-	$avai = _ms(query_value($sql, GLOBAL_MYSQL_CONNECT));
+	$avai = _ms(query_value($sql));
 
 	return
 		'<table id="avai-cost">'.
@@ -1395,7 +1395,7 @@ function _tovar_info_feature($tovar) {//характеристики товара
 			FROM `_tovar_feature`
 			WHERE `tovar_id`=".$tovar['id']."
 			ORDER BY `id`";
-	if($arr = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if($arr = query_arr($sql))
 		foreach($arr as $r) {
 			$send .=
 				'<tr><td class="label">'._tovarFeature($r['name_id']).':'.
@@ -1411,7 +1411,7 @@ function _tovar_info_feature_js($tovar_id) {
 			FROM `_tovar_feature`
 			WHERE `tovar_id`=".$tovar_id."
 			ORDER BY `id`";
-	return query_selJson($sql, GLOBAL_MYSQL_CONNECT);
+	return query_selJson($sql);
 }
 function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 	if($tovar['tovar_id_set'])
@@ -1420,7 +1420,7 @@ function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 	$sql = "SELECT *
 			FROM `_tovar`
 			WHERE `tovar_id_set`=".$tovar['id'];
-	if(!$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$spisok = query_arr($sql))
 		return '';
 
 	$send = '<h1>Запчасти:</h1>';
@@ -1444,7 +1444,7 @@ function _tovar_info_compat($tovar) {//совместимости товара
 			FROM `_tovar`
 			WHERE `tovar_id_compat`=".$tovar['tovar_id_compat']."
 			  AND `id`!=".$tovar['id'];
-	$spisok = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$spisok = query_arr($sql);
 	$spisok = _tovarValToList($spisok, 'id');
 
 	$send = '<h1>Совместимости:</h1>';
@@ -1467,7 +1467,7 @@ function _tovar_info_zayav($tovar_id) {//заявки по этому товару
 			FROM `_zayav_tovar`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id;
-	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$count = query_value($sql))
 		return '';
 	return
 		'<div id="ti-zayav">'.
@@ -1479,7 +1479,7 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 			FROM `_tovar_zakaz`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id;
-	if(!$count = query_value($sql, GLOBAL_MYSQL_CONNECT))
+	if(!$count = query_value($sql))
 		return '';
 	return '<div id="ti-zakaz">Заказ: '.$count.'</div>';
 }
@@ -1502,7 +1502,7 @@ function _tovar_info_move($tovar_id) {
 			FROM `_tovar_move`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id;
-	$move = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$move = query_arr($sql);
 	$move = _clientValToList($move);
 	$move = _zayavValToList($move);
 
@@ -1526,7 +1526,7 @@ function _tovar_info_move($tovar_id) {
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			  AND `tovar_avai_id`";
-	$ze = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$ze = query_arr($sql);
 	$ze = _zayavValToList($ze);
 
 	//продажа
@@ -1550,7 +1550,7 @@ function _tovar_info_move($tovar_id) {
 			  AND `tovar_id`=".$tovar_id."
 			  AND `tovar_avai_id`
 			  AND !`deleted`";
-	$mi = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$mi = query_arr($sql);
 	$mi = _clientValToList($mi);
 
 	//счёт на оплату
@@ -1577,7 +1577,7 @@ function _tovar_info_move($tovar_id) {
 			  AND `tovar_id`=".$tovar_id."
 			  AND `tovar_avai_id`
 			  AND !`s`.`deleted`";
-	$schet = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+	$schet = query_arr($sql);
 	$schet = _schetValToList($schet);
 
 	$spisok = _arrayTimeGroup($move);
@@ -1693,7 +1693,7 @@ function _tovarEquip($id=0, $i='') {//кеширование комплектации товаров
 	$key = CACHE_PREFIX.'tovar_equip';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT * FROM `_tovar_equip_name` ORDER BY `name`";
-		$arr = query_arr($sql, GLOBAL_MYSQL_CONNECT);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 	
