@@ -596,6 +596,7 @@ switch(@$_POST['op']) {
 
 		$sql = "INSERT INTO `_zayav_dogovor` (
 					`app_id`,
+					`template_id`,
 					`nomer`,
 					`data_create`,
 					`zayav_id`,
@@ -613,6 +614,7 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
+					".$v['template_id'].",
 					".$v['nomer'].",
 					'".$v['data_create']."',
 					".$v['zayav_id'].",

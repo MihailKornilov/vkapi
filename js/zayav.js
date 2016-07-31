@@ -537,9 +537,18 @@ var _zayavSpisok = function(v, id) {
 		return _zayavExecuter();
 	},
 
+	_zayavDogovor2 = function() {//договор для оказания услуг
+		DOG.template_id = 2;
+		_zayavDogovorCreate();
+	},
+	_zayavDogovor1 = function() {//договор для продажи товара
+		DOG.template_id = 1;
+		_zayavDogovorCreate();
+	},
 	_zayavDogovorCreate = function() {
 		var o = $.extend({
 			id:0,
+			template_id:0,
 			fio:'',
 			adres:'',
 			pasp_seria:'',
@@ -624,6 +633,7 @@ var _zayavSpisok = function(v, id) {
 				op:'dogovor_' + (o.id ? 'edit' : 'create'),
 				id:o.id,
 				zayav_id:ZI.id,
+				template_id:DOG.template_id,
 				fio:$('#fio').val(),
 				adres:$('#adres').val(),
 				pasp_seria:$('#pasp_seria').val(),
@@ -2174,9 +2184,14 @@ $(document)
 				});
 			}
 			if(ZI.pole[19]) {
-				name.push(DOG.id ? 'Изменить данные договора' : 'Заключить договор');
-				action.push(_zayavDogovorCreate);
-				if(DOG.id) {
+				if(!DOG.id) {
+					name.push('Договор на оказание услуг'); //template_id = 2
+					action.push(_zayavDogovor2);
+					name.push('Договор для продажи товара');//template_id = 1
+					action.push(_zayavDogovor1);
+				} else {
+					name.push('Изменить данные договора');
+					action.push(_zayavDogovorCreate);
 					name.push('Расторгнуть договор');
 					action.push(_zayavDogovorTerminate);
 				}
