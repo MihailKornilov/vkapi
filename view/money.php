@@ -571,7 +571,7 @@ function _incomeReceipt($id) {//товарный чек для платежа
 			'<th>'.FullData($money['dtime_add']).' г.'.
 		'</table>'.
 	'</div>'.
-	'<div class="head">Товарный чек №'.$money['id'].'</div>'.
+	'<div class="head">'.(TEMPLATE_2 ? 'Товарный чек' : 'Квитанция').' №'.$money['id'].'</div>'.
 	'<div class="shop">Магазин</div>'.
 	'<div class="shop-about">(наименование магазина, структурного подразделения, транспортного средства, и т.д.)</div>'.
 	'<table class="tab">'.
