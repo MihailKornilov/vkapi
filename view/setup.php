@@ -15,29 +15,6 @@ function _setup_global() {//получение констант-параметров для всех приложений
 
 // --- _setup --- раздел настроек приложения
 function _setup() {
-/*
-	$sub:   подстраницы основых страниц настроек.
-			Передаётся в виде:
-			array(
-				'worker' => 'rule'
-			);
-			где далее формируется название функции: setup_worker_rule()
-			Вызывается при условии наличия $_GET['id'], которое intval и не 0.
-*/
-	$page = array(
-		'my' => 'Мои настройки',
-		'worker' => 'Сотрудники',
-		'rekvisit' => 'Реквизиты организации',
-		'service' => 'SA: Виды деятельности',
-		'rubric' => 'Рубрики объявлений',
-		'cartridge' => 'Картриджи',
-		'expense' => 'Категории расходов',
-		'zayav_status' => 'Статусы заявок',
-		'zayav_expense' => 'Расходы по заявке',
-		'tovar' => 'Категории товаров',
-		'salary_list' => 'Лист выдачи з/п'
-	);
-
 	$sub = array(
 		'worker' => 'rule',
 		'rubric' => 'sub',
@@ -45,33 +22,20 @@ function _setup() {
 		'product' => 'sub'
 	);
 
-	if(!RULE_SETUP_WORKER)
-		unset($page['worker']);
-
-	if(!RULE_SETUP_REKVISIT)
-		unset($page['rekvisit']);
-
-	if(!RULE_SETUP_ZAYAV_STATUS)
-		unset($page['zayav_status']);
-
-	if(APP_ID != 3798718)
-		unset($page['cartridge']);
-
-	if(APP_ID != 3495523)
-		unset($page['rubric']);
-
-	if(!SA || _service('count') < 2)
-		unset($page['service']);
-
-	$d = empty($_GET['d']) || empty($page[$_GET['d']]) ? 'my' : $_GET['d'];
+	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
 
 	$id = _num(@$_GET['id']);
 	$func = 'setup_'.$d.(isset($sub[$d]) && $id ? '_'.$sub[$d] : '');
 	$left = function_exists($func) ? $func($id) : setup_my();
 
+
 	$links = '';
-	foreach($page as $p => $name)
-		$links .= '<a href="'.URL.'&p=setup&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
+	foreach(_menuCache('setup') as $r) {
+		//если не определены виды деятельности
+		if($r['p'] == 'service' && (!SA || _service('count') < 2))
+			continue;
+		$links .= '<a href="'.URL.'&p=setup&d='.$r['p'].'"'.($d == $r['p'] ? ' class="sel"' : '').'>'.$r['name'].'</a>';
+	}
 
 	return
 		'<div id="setup">'.
@@ -111,7 +75,7 @@ function setup_my() {
 }
 
 function setup_worker() {
-	if(!RULE_SETUP_WORKER)
+	if(!_viewerMenuAccess(15))
 		return _err('Недостаточно прав: управление сотрудниками');
 
 	return
@@ -142,7 +106,7 @@ function setup_worker_spisok() {
 	return $send;
 }
 function setup_worker_rule($viewer_id) {
-	if(!RULE_SETUP_WORKER)
+	if(!_viewerMenuAccess(15))
 		return _err('Недостаточно прав: управление сотрудниками.');
 
 	$u = _viewer($viewer_id);
@@ -219,26 +183,21 @@ function setup_worker_rule($viewer_id) {
 				'<tr><td class="label top"><b>Доступ к основным разделам меню:</b>'.
 					'<td id="td-rule-menu">'._setup_worker_rule_menu($viewer_id).
 
-				'<tr id="tr-rule-zayav"'.(_viewerMenuAccess($viewer_id, 2) ? '' : ' class="dn"').'>'.
+				'<tr id="tr-rule-zayav"'.(_viewerMenuAccess(2, $viewer_id) ? '' : ' class="dn"').'>'.
 					'<td class="label top"><b>Права в заявках:</b>'.
 					'<td id="td-rule-zayav">'.
 						_check('RULE_ZAYAV_EXECUTER', 'Видит только те заявки,<br />в которых является исполнителем', $rule['RULE_ZAYAV_EXECUTER']).
 
-				'<tr id="tr-rule-setup"'.(_viewerMenuAccess($viewer_id, 5) ? '' : ' class="dn"').'>'.
+				'<tr id="tr-rule-setup"'.(_viewerMenuAccess(5, $viewer_id) ? '' : ' class="dn"').'>'.
 					'<td class="label top"><b>Доступ к настройкам:</b>'.
-					'<td id="td-rule-setup">'.
-						_check('RULE_SETUP_WORKER', 'Сотрудники', $rule['RULE_SETUP_WORKER']).
-						'<div id="div-w-rule"'.($rule['RULE_SETUP_WORKER'] ? '' : ' style="display:none"').'>'.
-							_check('RULE_SETUP_RULES', 'Права сотрудников', $rule['RULE_SETUP_RULES']).
-						'</div>'.
-						_check('RULE_SETUP_REKVISIT', 'Реквизиты организации', $rule['RULE_SETUP_REKVISIT']).
-						_check('RULE_SETUP_INVOICE', 'Расчётные счета', $rule['RULE_SETUP_INVOICE']).
-						_check('RULE_SETUP_ZAYAV_STATUS', 'Статусы заявок', $rule['RULE_SETUP_ZAYAV_STATUS']).
+					'<td id="td-rule-setup">'._setup_worker_rule_menu_setup($viewer_id, $rule).
 				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить права всех сотрудников', -20).'Видит историю действий</a>:'.
 					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
 				'<tr><td><td>'.
 
 				'<tr><td><td><b>Деньги</b>'.
+				'<tr><td class="label">Управление расчётными счетами:'.
+					'<td>'._check('RULE_SETUP_INVOICE', '', $rule['RULE_SETUP_INVOICE']).
 				'<tr><td class="label">Видит историю операций<br />по расчётным счетам:'.
 					'<td>'._check('RULE_INVOICE_HISTORY', '', $rule['RULE_INVOICE_HISTORY']).
 				'<tr><td class="label">Видит переводы<br />по расчётным счетам:'.
@@ -256,20 +215,29 @@ function setup_worker_rule($viewer_id) {
 }
 function _setup_worker_rule_menu($viewer_id) {//вывод разделов меню с галочками
 	$send = '';
-	$sql = "SELECT
-				`m`.`id`,
-				`m`.`name`
-			FROM
-				`_menu` `m`,
-				`_menu_app` `ma`
-			WHERE `app_id`=".APP_ID."
-			  AND `m`.`id`=`ma`.`menu_id`
-			  AND `show`
-			  AND `m`.`id`!=11
-			ORDER BY `sort`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($viewer_id, $r['id']));
+	foreach(_menuCache() as $r) {
+		if($r['p'] == 'main')
+			continue;
+		if($r['p'] == 'manual')
+			continue;
+		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($r['id'], $viewer_id));
+	}
+
+	return $send;
+}
+function _setup_worker_rule_menu_setup($viewer_id, $rule) {//вывод разделов меню настроек с галочками
+	$send = '';
+	foreach(_menuCache('setup') as $r) {
+		if($r['p'] == 'my')
+			continue;
+
+		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($r['id'], $viewer_id));
+		if($r['p'] == 'worker')
+			$send .=
+				'<div id="div-worker-rule"'.(_viewerMenuAccess(15, $viewer_id) ? '' : ' style="display:none"').'>'.
+					_check('RULE_SETUP_RULES', 'Права сотрудников', $rule['RULE_SETUP_RULES']).
+				'</div>';
+	}
 
 	return $send;
 }
@@ -370,7 +338,7 @@ function _ruleInvoiceTransfer($id=false) {
 }
 
 function setup_rekvisit() {
-	if(!RULE_SETUP_REKVISIT)
+	if(!_viewerMenuAccess(13))
 		return _err('Недостаточно прав: Реквизиты организации');
 
 	$sql = "SELECT * FROM `_app` WHERE `id`=".APP_ID;
@@ -416,7 +384,7 @@ function setup_service() {
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
 	if(!$spisok = query_arr($sql))
-		return '';
+		return 'Виды деятельности не определены.';
 
 	$send = '';
 	foreach($spisok as $r) {
@@ -437,6 +405,9 @@ function setup_service() {
 }
 
 function setup_expense() {
+	if(!_viewerMenuAccess(19))
+		return _err('Недостаточно прав: категории расходов.');
+
 	return
 		'<div id="setup_expense">'.
 			'<div class="headName">Категории расходов организации<a class="add">Новая категория</a></div>'.
@@ -518,6 +489,9 @@ function setup_expense_spisok() {
 	return $send;
 }
 function setup_expense_sub($id) {
+	if(!_viewerMenuAccess(19))
+		return _err('Недостаточно прав: категории расходов.');
+
 	$sql = "SELECT *
 			FROM `_money_expense_category`
 			WHERE `app_id`=".APP_ID."
@@ -593,6 +567,9 @@ function setup_expense_sub_spisok($id) {
 
 
 function setup_zayav_status() {
+	if(!_viewerMenuAccess(16))
+		return _err('Недостаточно прав: статусы заявок.');
+
 	return
 		'<div id="setup_zayav_status">'.
 			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
@@ -712,7 +689,7 @@ function setup_zayav_status_default() {//формирование списка статусов по умолчан
 			  AND `type_id`=71";
 	query($sql);
 
-	xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'zayav_status');
 	_appJsValues();
 
 	$sql = "SELECT
@@ -770,6 +747,9 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 
 
 function setup_zayav_expense() {//категории расходов по заявке
+	if(!_viewerMenuAccess(17))
+		return _err('Недостаточно прав: расходы по заявке.');
+
 	return
 	'<div id="setup_zayav_expense">'.
 		'<div class="headName">Настройка категорий расходов по заявке<a class="add">Добавить</a></div>'.
@@ -823,6 +803,9 @@ function setup_zayav_expense_spisok() {
 }
 
 function setup_salary_list() {
+	if(!_viewerMenuAccess(22))
+		return _err('Недостаточно прав: листы выдачи з/п.');
+
 	return
 	'<div id="setup_salary_list">'.
 		'<div class="headName">Настройка листа выдачи з/п</div>'.
@@ -881,6 +864,9 @@ function salary_list_head() {
 
 
 function setup_rubric() {
+	if(!_viewerMenuAccess(18))
+		return _err('Недостаточно прав: рубрики объявлений.');
+
 	return
 	'<div id="setup_rubric">'.
 		'<div class="headName">Рубрики объявлений<a class="add" onclick="setupRubricEdit()">Новая рубрика</a></div>'.
@@ -950,6 +936,9 @@ function setup_rubric_spisok() {
 }
 
 function setup_rubric_sub($id) {
+	if(!_viewerMenuAccess(18))
+		return _err('Недостаточно прав: рубрики объявлений.');
+
 	$sql = "SELECT *
 			FROM `_setup_rubric`
 			WHERE `app_id`=".APP_ID."
@@ -1018,6 +1007,9 @@ function setup_rubric_sub_spisok($rubric_id) {
 
 
 function setup_cartridge() {
+	if(!_viewerMenuAccess(21))
+		return _err('Недостаточно прав: картриджи.');
+
 	return
 		'<div id="setup-cartridge">'.
 			'<div class="headName">Управление заправкой картриджей<a class="add" onclick="cartridgeNew()">Внести новый картридж</a></div>'.
@@ -1086,6 +1078,9 @@ function setup_cartridge_spisok($edit_id=0) {
 
 
 function setup_tovar() {
+	if(!_viewerMenuAccess(20))
+		return _err('Недостаточно прав: товары.');
+
 	return setup_tovar_category();
 	switch(@$_GET['d1']) {
 		case 'category': return setup_tovar_category();

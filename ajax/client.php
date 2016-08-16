@@ -570,7 +570,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'client_from');
 		_appJsValues();
 
 		$send['spisok'] = utf8(_client_from_spisok());
@@ -597,7 +597,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_client_from` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'client_from');
 		_appJsValues();
 
 		jsonSuccess();
@@ -615,7 +615,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".APP_ID;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'app'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'app');
 		_appJsValues();
 
 		jsonSuccess();
@@ -668,7 +668,7 @@ function _clientFromGet() {//получение id источника откуда пришёл клиент
 
 		$from_id = query_insert_id('_client_from');
 
-		xcache_unset(CACHE_PREFIX.'client_from'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'client_from');
 		_appJsValues();
 	}
 	return $from_id;

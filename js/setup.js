@@ -1289,14 +1289,16 @@ $(document)
 			});
 
 
-			$('#td-rule-menu ._check').click(function() {
+			$('#td-rule-menu ._check,#td-rule-setup ._check').click(function() {
 				var ch = $(this).find('input'),
 					send = {
 						op:'setup_menu_access',
 						viewer_id:window.RULE_VIEWER_ID || VIEWER_ID,
-						menu_id:ch.attr('id').split('RULE_MENU_')[1],
+						menu_id:_num(ch.attr('id').split('RULE_MENU_')[1]),
 						v:_bool(ch.val()) ? 0 : 1
 					};
+				if(!send.menu_id)
+					return;
 				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success)
 						_msg('Сохранено');
@@ -1313,15 +1315,13 @@ $(document)
 				$('#tr-rule-setup')[(v ? 'remove' : 'add') + 'Class']('dn');
 			});
 
-			$('#RULE_SETUP_WORKER')._check(function(v, id) {
-				$('#div-w-rule')[v ? 'show' : 'hide']();
+			$('#RULE_MENU_15')._check(function(v, id) {
+				$('#div-worker-rule')[v ? 'show' : 'hide']();
 				setupRuleCheck(v, id);
 				$('#RULE_SETUP_RULES')._check(0);
 			});
 			$('#RULE_SETUP_RULES')._check(setupRuleCheck);
-			$('#RULE_SETUP_REKVISIT')._check(setupRuleCheck);
 			$('#RULE_SETUP_INVOICE')._check(setupRuleCheck);
-			$('#RULE_SETUP_ZAYAV_STATUS')._check(setupRuleCheck);
 			$('#RULE_HISTORY_VIEW')._dropdown({
 				spisok:RULE_HISTORY_SPISOK,
 				func:setupRuleCheck

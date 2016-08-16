@@ -1310,7 +1310,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'invoice');
 		_appJsValues();
 
 		_history(array(
@@ -1363,7 +1363,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'invoice');
 		_appJsValues();
 
 		if($changes =
@@ -1406,7 +1406,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$invoice_id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'invoice');
 
 		_balans(array(
 			'action_id' => 5,
@@ -1445,7 +1445,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$invoice_id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'invoice');
 
 		_history(array(
 			'type_id' => 53,
@@ -1517,7 +1517,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_money_invoice` SET `deleted`=1 WHERE `id`=".$invoice_id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'invoice');
 		_appJsValues();
 
 		_balans(array(

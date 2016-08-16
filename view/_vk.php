@@ -339,7 +339,7 @@ function _footerGoogleAnalytics() {
 }
 
 function _app($i='all') {//Получение данных о приложении
-	$key = CACHE_PREFIX.'app'.APP_ID;
+	$key = CACHE_PREFIX.'app';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_app`
@@ -459,63 +459,25 @@ function _appType($i=false, $p=1) {//тип организации
 
 
 /* Разделы главного меню */
-function _menuCache() {//получение списка разделов меню из кеша
+function _menuCache($type='main') {//получение списка разделов меню из кеша
 	$key = CACHE_PREFIX.'menu';
 	if(!$menu = xcache_get($key)) {
-		$sql = "SELECT
-					*,
-					0 `show`
-				FROM `_menu`";
+		$sql = "SELECT `m`.*
+				FROM
+					`_menu` `m`,
+					`_menu_app` `ma`
+				WHERE `m`.`id`=`ma`.`menu_id`
+				  AND `ma`.`app_id`=".APP_ID."
+				ORDER BY `sort`";
 		$menu = query_arr($sql);
 		xcache_set($key, $menu, 86400);
 	}
 
-	$key = CACHE_PREFIX.'menu_app';
-	if(!$app = xcache_get($key)) {
-		$sql = "SELECT `menu_id` `id`
-				FROM `_menu_app`
-				WHERE `app_id`=".APP_ID;
-		$app = query_arr($sql);
-		xcache_set($key, $app, 86400);
-	}
+	foreach($menu as $id => $r)
+		if($r['type'] != $type || !_viewerMenuAccess($id))
+			unset($menu[$id]);
 
-	$key = CACHE_PREFIX.'menu_sort';
-	if(!$sort = xcache_get($key)) {
-		$sort = array();
-		$sql = "SELECT
-					`menu_id` `id`,
-					`show`
-				FROM `_menu_app`
-				WHERE `app_id`=".APP_ID."
-				ORDER BY `sort`";
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			$sort[] = array('show'=>$r['show']) + $menu[$r['id']];
-		xcache_set($key, $sort, 86400);
-	}
-
-
-	foreach($menu as $id => $r) {
-		if(empty($app[$id])) {
-			$sql = "INSERT INTO `_menu_app` (
-					`app_id`,
-					`menu_id`,
-					`sort`
-				) VALUES (
-					".APP_ID.",
-					'".$id."',
-					'"._maxSql('_menu_app')."'
-				)";
-			query($sql);
-
-			xcache_unset(CACHE_PREFIX.'menu_app');
-			xcache_unset(CACHE_PREFIX.'menu_sort');
-
-			$sort[] = $menu[$id];
-		}
-	}
-
-	return $sort;
+	return $menu;
 }
 function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa') return '';
@@ -526,21 +488,16 @@ function _menu() {//разделы основного меню
 		if($r['p'] == 'manual')
 			continue;
 
-		if(!_viewerMenuAccess(VIEWER_ID, $r['id']))
-			continue;
-
-		if($r['show']) {
-			$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
-			$main = $r['p'] == 'main' ? ' main' : '';
-			if($r['p'] == 'report')
-				$r['name'] .= _remindTodayCount(1);
-			if($r['p'] == 'money')
-				$r['name'] .= _invoiceTransferConfirmCount(1);
-			$link .=
-				'<a class="p'.$main.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
-					($r['p'] == 'main' ? '&nbsp;' : $r['name']).
-				'</a>';
-		}
+		$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
+		$main = $r['p'] == 'main' ? ' main' : '';
+		if($r['p'] == 'report')
+			$r['name'] .= _remindTodayCount(1);
+		if($r['p'] == 'money')
+			$r['name'] .= _invoiceTransferConfirmCount(1);
+		$link .=
+			'<a class="p'.$main.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
+				($r['p'] == 'main' ? '&nbsp;' : $r['name']).
+			'</a>';
 	}
 
 	return
@@ -553,13 +510,7 @@ function _menu() {//разделы основного меню
 function _menuMain() {//список ссылок главной страницы
 	$send = '';
 	foreach(_menuCache() as $r) {
-		if(!$r['show'])
-			continue;
-
 		if($r['p'] == 'main')
-			continue;
-
-		if(!_viewerMenuAccess(VIEWER_ID, $r['id']))
 			continue;
 
 		if($r['p'] == 'client')
@@ -608,7 +559,7 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 	'</table>';
 }
 function _menuAccess($menu_id) {//проверка доступа к разделу меню. Если нет, то перенаправление на список разделов
-	if(!_viewerMenuAccess(VIEWER_ID, $menu_id)) {
+	if(!_viewerMenuAccess($menu_id)) {
 		header('Location:'.URL.'&p=main');
 		exit;
 	}
@@ -1382,38 +1333,36 @@ function _appJsValues() {//для конкретного приложения
 			WHERE `id`=".APP_ID;
 	query($sql);
 
-	xcache_unset(CACHE_PREFIX.'app'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'app');
 }
 
-function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
-	xcache_unset(CACHE_PREFIX.'app'.$app_id);  //данные приложения
+function _globalCacheClear() {//очистка глобальных значений кеша
+	xcache_unset(CACHE_PREFIX.'app');  //данные приложения
 	xcache_unset(CACHE_PREFIX.'setup_global');  //список разделов меню
 	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
-	xcache_unset(CACHE_PREFIX.'menu_app');//значения для разделов меню для конкретного приложения
-	xcache_unset(CACHE_PREFIX.'menu_sort');//отсортированный список разделов меню с настройками
 	xcache_unset(CACHE_PREFIX.'manual_part');//разделы мануала
 	xcache_unset(CACHE_PREFIX.'manual_part_sub');//подразделы мануала
 	xcache_unset(CACHE_PREFIX.'setup_color');//цвета
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
-	xcache_unset(CACHE_PREFIX.'service'.$app_id);//виды деятельности
-	xcache_unset(CACHE_PREFIX.'invoice'.$app_id);//расчётные счета
-	xcache_unset(CACHE_PREFIX.'expense'.$app_id);//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'expense_sub'.$app_id);//подкатегории расходов организации
-	xcache_unset(CACHE_PREFIX.'client_from'.$app_id);//источники, откуда пришёл клиент
-	xcache_unset(CACHE_PREFIX.'zayav_expense'.$app_id);//категории расходов заявки
-	xcache_unset(CACHE_PREFIX.'zayav_status'.$app_id);//статусы заявки
+	xcache_unset(CACHE_PREFIX.'service');//виды деятельности
+	xcache_unset(CACHE_PREFIX.'invoice');//расчётные счета
+	xcache_unset(CACHE_PREFIX.'expense');//категории расходов организации
+	xcache_unset(CACHE_PREFIX.'expense_sub');//подкатегории расходов организации
+	xcache_unset(CACHE_PREFIX.'client_from');//источники, откуда пришёл клиент
+	xcache_unset(CACHE_PREFIX.'zayav_expense');//категории расходов заявки
+	xcache_unset(CACHE_PREFIX.'zayav_status');//статусы заявки
 	xcache_unset(CACHE_PREFIX.'tovar_name');
 	xcache_unset(CACHE_PREFIX.'tovar_vendor');
-	xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'tovar_category');
 	xcache_unset(CACHE_PREFIX.'tovar_feature_name');
 	xcache_unset(CACHE_PREFIX.'tovar_equip');
 	xcache_unset(CACHE_PREFIX.'tovar_measure');
 	xcache_unset(CACHE_PREFIX.'cartridge');
-	xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
-	xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
-	xcache_unset(CACHE_PREFIX.'gn'.APP_ID);
+	xcache_unset(CACHE_PREFIX.'rubric');
+	xcache_unset(CACHE_PREFIX.'rubric_sub');
+	xcache_unset(CACHE_PREFIX.'gn');
 
 
 	//сброс времени действия введённого пинкода
@@ -1427,7 +1376,7 @@ function _globalCacheClear($app_id=APP_ID) {//очистка глобальных значений кеша
 	//очистка кеша сотрудников приложения
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
-			WHERE `app_id`=".$app_id."
+			WHERE `app_id`=".APP_ID."
 			  AND `worker`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
@@ -1445,8 +1394,10 @@ function _cacheErr($txt='Неизвестное значение', $i='') {//
 
 function _check($id, $txt='', $v=0, $light=false) {
 	$v = $v ? 1 : 0;
+	$light = $light ? ' l' : '';
+	$e = $txt ? '' : ' e';
 	return
-	'<div class="_check check'.$v.($light ? ' l' : '').($txt ? '' : ' e').'" id="'.$id.'_check">'.
+	'<div class="_check check'.$v.$light.$e.'" id="'.$id.'_check">'.
 		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
 		$txt.
 	'</div>';

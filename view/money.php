@@ -658,7 +658,7 @@ function income_schet_spisok($schet) {//список платежей по конкретному счёту на 
 
 /* --- расходы --- */
 function _expense($id=0, $i='name') {//Список категорий расходов
-	$key = CACHE_PREFIX.'expense'.APP_ID;
+	$key = CACHE_PREFIX.'expense';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					*,
@@ -710,7 +710,7 @@ function _expense($id=0, $i='name') {//Список категорий расходов
 	return $arr[$id][$i];
 }
 function _expenseSub($id, $i='name') {//Список подкатегорий расходов
-	$key = CACHE_PREFIX.'expense_sub'.APP_ID;
+	$key = CACHE_PREFIX.'expense_sub';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_money_expense_category_sub`
@@ -1187,7 +1187,7 @@ function income_insert($v) {
 
 
 function _invoice($id=0, $i='name') {//получение списка счетов из кеша
-	$key = CACHE_PREFIX.'invoice'.APP_ID;
+	$key = CACHE_PREFIX.'invoice';
 	if(!$arr = xcache_get($key)) {
 		$arr = array();
 		$sql = "SELECT *

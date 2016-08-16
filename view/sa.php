@@ -20,7 +20,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 	'</div>'.
 	'<div id="sa-index">'.
 		'<h1>Global:</h1>'.
-		'<a href="'.URL.'&p=sa&d=menu">Разделы главного меню</a>'.
+		'<a href="'.URL.'&p=sa&d=menu">Разделы меню</a>'.
 		'<a href="'.URL.'&p=sa&d=history">История действий</a>'.
 		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a>'.
 		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
@@ -67,28 +67,28 @@ function sa_path($v1, $v2='') {
 
 
 
-function sa_menu() {//управление историей действий
+function sa_menu() {//управление разделами меню
 	return
-		sa_path('Разделы главного меню').
+		sa_path('Разделы меню').
 		'<div id="sa-menu">'.
-			'<div class="headName">Разделы меню<a class="add">Добавить</a></div>'.
+			'<div class="headName">Главное меню<a class="add" onclick="saMenuEdit()">Добавить</a></div>'.
 			'<div id="spisok">'.sa_menu_spisok().'</div>'.
+
+			'<div class="headName">Настройки<a class="add" onclick="saMenuEdit({tp:\'setup\'})">Добавить</a></div>'.
+			'<div id="setup-spisok">'.sa_menu_setup_spisok().'</div>'.
 		'</div>';
 }
-function sa_menu_spisok() {
+function sa_menu_spisok($id=0) {
 	$sql = "SELECT
-				`ma`.`id`,
-				`m`.`id` `menu_id`,
-				`m`.`name`,
-				`m`.`about`,
-				`m`.`p`,
-				`ma`.`show`,
-				`m`.`access_default`
-			FROM
-				`_menu` `m`,
-				`_menu_app` `ma`
-			WHERE `m`.`id`=`ma`.`menu_id`
-			  AND `ma`.`app_id`=".APP_ID."
+				`m`.*,
+				IFNULL(`ma`.`id`,0) `ma_id`
+			FROM `_menu` `m`
+
+			LEFT JOIN `_menu_app` `ma`
+			ON `m`.`id`=`ma`.`menu_id`
+			AND `ma`.`app_id`=".APP_ID."
+			
+			WHERE `m`.`type`='main'
 			ORDER BY `ma`.`sort`";
 	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
@@ -102,19 +102,81 @@ function sa_menu_spisok() {
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_menu_app">';
-	foreach($spisok as $r)
-		$send .= '<dd val="'.$r['id'].'">'.
-		'<table class="_spisok">'.
-			'<tr><td class="name" val="'.$r['menu_id'].'">'.
-					'<span>'.$r['name'].'</span>'.
-					'<div class="about">'.$r['about'].'</div>'.
-				'<td class="p">'.$r['p'].
-				'<td class="show">'._check('show'.$r['id'], '', $r['show']).
-				'<td class="access">'._check('access'.$r['id'], '', $r['access_default']).
-				'<td class="ed">'._iconEdit($r).
-		'</table>';
-
+	foreach($spisok as $r) {
+		if(!$r['ma_id'])
+			continue;
+		$send .= '<dd val="'.$r['ma_id'].'">'.
+		'<table class="_spisok">'.sa_menu_spisok_tr($r, $id).'</table>';
+	}
 	$send .= '</dl>';
+
+
+	//неиспользуемые разделы (не сортируются)
+	$send .= '<b class="db mt20">Не используются:</b>'.
+			 '<table class="_spisok nouse">';
+	foreach($spisok as $r) {
+		if($r['ma_id'])
+			continue;
+		$send .= sa_menu_spisok_tr($r, $id);
+	}
+	$send .= '</table>';
+
+
+	return $send;
+}
+function sa_menu_spisok_tr($r, $edited_id) {//элемент списка меню
+	return
+	'<tr'.($edited_id == $r['id'] ? ' class="edited"' : '').'>'.
+		'<td class="name" val="'.$r['id'].'">'.
+			'<span>'.$r['name'].'</span>'.
+			'<div class="about">'.$r['about'].'</div>'.
+		'<td class="p">'.$r['p'].
+		'<td class="show">'._check('show'.$r['id'], '', $r['ma_id']).
+		'<td class="access">'.($r['id'] == 12 ? '' : _check('access'.$r['id'], '', $r['access_default'])).
+		'<td class="ed">'._iconEdit($r);
+}
+function sa_menu_setup_spisok($id=0) {
+	$sql = "SELECT
+				`m`.*,
+				IFNULL(`ma`.`id`,0) `ma_id`
+			FROM `_menu` `m`
+
+			LEFT JOIN `_menu_app` `ma`
+			ON `m`.`id`=`ma`.`menu_id`
+			AND `ma`.`app_id`=".APP_ID."
+			
+			WHERE `m`.`type`='setup'
+			ORDER BY `ma`.`sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Название'.
+				'<th class="p">Link'.
+				'<th class="show">App<br />show'.
+				'<th class="access">user<br />access<br />default'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_menu_app">';
+	foreach($spisok as $r) {
+		if(!$r['ma_id'])
+			continue;
+		$send .= '<dd val="'.$r['ma_id'].'">'.
+		'<table class="_spisok">'.sa_menu_spisok_tr($r, $id).'</table>';
+	}
+	$send .= '</dl>';
+
+
+	//неиспользуемые разделы (не сортируются)
+	$send .= '<b class="db mt20">Не используются:</b>'.
+			 '<table class="_spisok nouse">';
+	foreach($spisok as $r) {
+		if($r['ma_id'])
+			continue;
+		$send .= sa_menu_spisok_tr($r, $id);
+	}
+	$send .= '</table>';
 
 	return $send;
 }
@@ -408,12 +470,13 @@ function sa_zayav() {//настройки заявок
 		+ Что сохраняется в name заявки
 		- Показывать или нет изображение
 		+ Включение-выключение функций:
-			- формирование договора
-			- печать квитации
-			- составление счёта на оплату
+			+ формирование договора
+			+ печать квитации
+			+ составление счёта на оплату
 	*/
 	switch(@$_GET['d1']) {
 		case 'edit':   return sa_zayav_pole(1);
+		case 'unit': return sa_zayav_pole(4);
 		case 'filter': return sa_zayav_pole(2);
 		case 'info':   return sa_zayav_pole(3);
 		case 'service': return sa_zayav_service();
@@ -424,6 +487,7 @@ function sa_zayav() {//настройки заявок
 		'<div id="sa-zayav">'.
 			'<div class="headName">Настройки заявок</div>'.
 			'<a href="'.URL.'&p=sa&d=zayav&d1=edit">Поля - внесение/редактирование заявки</a>'.
+			'<a href="'.URL.'&p=sa&d=zayav&d1=unit">Поля - единица списка заявок</a>'.
 			'<a href="'.URL.'&p=sa&d=zayav&d1=filter">Поля - фильтр заявок</a>'.
 			'<a href="'.URL.'&p=sa&d=zayav&d1=info">Поля - информация о заявке</a>'.
 			'<br />'.
@@ -435,11 +499,13 @@ function sa_zayav_pole_type($type_id=0) {//типы полей заявок
 		1 - edit: внесение/редактирование заявки
 		2 - filter: фильтр заявок
 		3 - info: информация о заявке
+		4 - unit: единица списка заявок
 	*/
 	$arr = array(
 		1 => 'внесение/редактирование заявки',
 		2 => 'фильтр заявок',
-		3 => 'информация о заявке'
+		3 => 'информация о заявке',
+		4 => 'единица списка заявок'
 	);
 	if($type_id)
 		return $arr[$type_id];
@@ -504,69 +570,6 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 	return $send;
 }
 
-
-
-function sa_tovar_measure() {//единицы измерения товаров
-	return
-		sa_path('Товары: единицы измерения').
-		'<div id="sa-measure">'.
-			'<div class="headName">'.
-				'Товары: единицы измерения'.
-				'<a class="add" onclick="saTovarMeasureEdit()">Новая единица измерения</a>'.
-			'</div>'.
-			'<div id="spisok" class="mar20">'.sa_tovar_measure_spisok().'</div>'.
-		'</div>';
-}
-function sa_tovar_measure_spisok() {
-	$sql = "SELECT
-				*,
-				0 `tovar`
-			FROM `_tovar_measure`
-			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql))
-		return 'Список пуст.';
-
-	$sql = "SELECT
-				DISTINCT `measure_id`,
-				COUNT(`id`) `count`
-			FROM `_tovar`
-			GROUP BY `measure_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['measure_id']]['tovar'] = $r['count'];
-
-	$send =
-		'<table class="_spisok mb1">'.
-			'<tr><th class="td-name">Название'.
-				'<th class="fraction w50">Дробь'.
-				'<th class="area w70">Площадь'.
-				'<th class="tovar w50">Товары'.
-				'<th class="ed">'.
-		'</table>'.
-		'<dl class="_sort" val="_tovar_measure">';
-	foreach($spisok as $r)
-		$send .= '<dd val="'.$r['id'].'">'.
-		'<table class="_spisok mb1">'.
-			'<tr><td class="td-name curM" val="'.$r['id'].'">'.
-					'<b class="short">'.$r['short'].'</b>'.
-					($r['name'] ? ' - ' : '').
-					'<span class="name">'.$r['name'].'</span>'.
-					'<div class="about">'.$r['about'].'</div>'.
-				'<td class="fraction center w50">'.($r['fraction'] ? 'да' : '').
-				'<td class="area center w70">'.($r['area'] ? 'да' : '').
-				'<td class="tovar center w50">'.($r['tovar'] ? $r['tovar'] : '').
-				'<td class="ed">'.
-					_iconEdit($r).
-					_iconDel($r + array('nodel'=>$r['tovar'])).
-		'</table>';
-
-	$send .= '</dl>';
-
-	return $send;
-}
-
-
-
 function sa_zayav_service() {
 	$link = sa_zayav_service_link();
 	return
@@ -591,6 +594,12 @@ function sa_zayav_service() {
 					'<th class="ed">'.
 			'</table>'.
 			'<dl id="spisok1" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(1).'</dl>'.
+
+			'<div class="zs-head">'.
+				'Единица списка заявок'.
+				'<button class="vk small" onclick="saZayavServicePoleAdd('.SERVICE_ID.',4)">Добавить поле</button>'.
+			'</div>'.
+			'<dl id="spisok4" class="_sort" val="_zayav_pole_use">'.sa_zayav_service_use(4).'</dl>'.
 
 			'<div class="zs-head">'.
 				'Фильтр заявок'.
@@ -680,6 +689,67 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 					'<td>'.
 					'<td class="ed">'._iconEdit($r)._iconDel($r).
 			'</table>';
+
+	return $send;
+}
+
+
+
+function sa_tovar_measure() {//единицы измерения товаров
+	return
+		sa_path('Товары: единицы измерения').
+		'<div id="sa-measure">'.
+			'<div class="headName">'.
+				'Товары: единицы измерения'.
+				'<a class="add" onclick="saTovarMeasureEdit()">Новая единица измерения</a>'.
+			'</div>'.
+			'<div id="spisok" class="mar20">'.sa_tovar_measure_spisok().'</div>'.
+		'</div>';
+}
+function sa_tovar_measure_spisok() {
+	$sql = "SELECT
+				*,
+				0 `tovar`
+			FROM `_tovar_measure`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Список пуст.';
+
+	$sql = "SELECT
+				DISTINCT `measure_id`,
+				COUNT(`id`) `count`
+			FROM `_tovar`
+			GROUP BY `measure_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['measure_id']]['tovar'] = $r['count'];
+
+	$send =
+		'<table class="_spisok mb1">'.
+			'<tr><th class="td-name">Название'.
+				'<th class="fraction w50">Дробь'.
+				'<th class="area w70">Площадь'.
+				'<th class="tovar w50">Товары'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_tovar_measure">';
+	foreach($spisok as $r)
+		$send .= '<dd val="'.$r['id'].'">'.
+		'<table class="_spisok mb1">'.
+			'<tr><td class="td-name curM" val="'.$r['id'].'">'.
+					'<b class="short">'.$r['short'].'</b>'.
+					($r['name'] ? ' - ' : '').
+					'<span class="name">'.$r['name'].'</span>'.
+					'<div class="about">'.$r['about'].'</div>'.
+				'<td class="fraction center w50">'.($r['fraction'] ? 'да' : '').
+				'<td class="area center w70">'.($r['area'] ? 'да' : '').
+				'<td class="tovar center w50">'.($r['tovar'] ? $r['tovar'] : '').
+				'<td class="ed">'.
+					_iconEdit($r).
+					_iconDel($r + array('nodel'=>$r['tovar'])).
+		'</table>';
+
+	$send .= '</dl>';
 
 	return $send;
 }

@@ -4,6 +4,7 @@ if(!SA)
 
 switch(@$_POST['op']) {
 	case 'sa_menu_add':
+		$type = _txt($_POST['type']);
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$p = _txt($_POST['p']);
@@ -12,23 +13,25 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "INSERT INTO `_menu` (
+					`type`,
 					`name`,
 					`about`,
 					`p`
 				) VALUES (
+					'".addslashes($type)."',
 					'".addslashes($name)."',
 					'".addslashes($about)."',
 					'".strtolower(addslashes($p))."'
 				)";
 		query($sql);
 
+		$sql = "SELECT `id` FROM `_menu` ORDER BY `id` DESC LIMIT 1";
+		$id = query_value($sql);
+
 		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app');
-		xcache_unset(CACHE_PREFIX.'menu_sort');
 
-		_menuCache();
-
-		$send['html'] = utf8(sa_menu_spisok());
+		$send['main'] = utf8(sa_menu_spisok($id));
+		$send['setup'] = utf8(sa_menu_setup_spisok($id));
 		jsonSuccess($send);
 		break;
 	case 'sa_menu_edit'://редактирование раздела главного меню
@@ -56,12 +59,31 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app');
-		xcache_unset(CACHE_PREFIX.'menu_sort');
 
-		_menuCache();
+		$send['main'] = utf8(sa_menu_spisok($id));
+		$send['setup'] = utf8(sa_menu_setup_spisok($id));
+		jsonSuccess($send);
+		break;
+	case 'sa_menu_show':
+		if(!$id = _num($_POST['id']))
+			jsonError();
 
-		$send['html'] = utf8(sa_menu_spisok());
+		if($v = _bool($_POST['v']))
+			$sql = "INSERT INTO `_menu_app` (
+						`app_id`,
+						`menu_id`
+					) VALUES (
+						".APP_ID.",
+						".$id."
+					)";
+		else
+			$sql = "DELETE FROM `_menu_app` WHERE `app_id`=".APP_ID." AND `menu_id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'menu');
+
+		$send['main'] = utf8(sa_menu_spisok($id));
+		$send['setup'] = utf8(sa_menu_setup_spisok($id));
 		jsonSuccess($send);
 		break;
 	case 'sa_menu_access'://доступ для пользователей по умолчанию
@@ -76,28 +98,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app');
-		xcache_unset(CACHE_PREFIX.'menu_sort');
 
-		_menuCache();
-		jsonSuccess();
-		break;
-	case 'sa_menu_show':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$v = _bool($_POST['v']);
-
-		$sql = "UPDATE `_menu_app`
-				SET `show`=".$v."
-				WHERE `id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'menu');
-		xcache_unset(CACHE_PREFIX.'menu_app');
-		xcache_unset(CACHE_PREFIX.'menu_sort');
-
-		_menuCache();
 		jsonSuccess();
 		break;
 
@@ -497,7 +498,7 @@ switch(@$_POST['op']) {
 			query($sql);
 		}
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		jsonSuccess();
@@ -516,7 +517,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_appJsValues();
 
 		jsonSuccess();
@@ -545,7 +546,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok($type_id));
@@ -573,7 +574,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		$send['html'] = utf8(sa_zayav_pole_spisok($r['type_id']));
@@ -597,7 +598,7 @@ switch(@$_POST['op']) {
 		$sql = "ALTER TABLE `_zayav_pole` AUTO_INCREMENT=0";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		jsonSuccess();
@@ -651,7 +652,7 @@ switch(@$_POST['op']) {
 		query($sql);
 		$insert_id = query_insert_id('_zayav_pole_use');
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		define('SERVICE_ID', $service_id);
@@ -682,7 +683,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		define('SERVICE_ID', _num($u['service_id']));
@@ -701,7 +702,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_zayav_pole_use` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
 
 		jsonSuccess();
@@ -1262,7 +1263,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'app'.$id);
+		xcache_unset(CACHE_PREFIX.'app');
 
 		$send['html'] = utf8(sa_app_spisok());
 		jsonSuccess($send);

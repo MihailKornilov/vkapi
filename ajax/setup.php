@@ -97,7 +97,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_worker_add':
-		if(!RULE_SETUP_WORKER)
+		if(!_viewerMenuAccess(15))
 			jsonError();
 
 		$viewer_id = _num($_POST['viewer_id']);
@@ -167,7 +167,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'setup_worker_del':
-		if(!RULE_SETUP_WORKER)
+		if(!_viewerMenuAccess(15))
 			jsonError();
 
 		if(!$viewer_id = _num($_POST['id']))
@@ -202,7 +202,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'setup_worker_save':
-		if(!RULE_SETUP_WORKER)
+		if(!_viewerMenuAccess(15))
 			jsonError();
 
 		if(!$viewer_id = _num($_POST['viewer_id']))
@@ -246,8 +246,6 @@ switch(@$_POST['op']) {
 		break;
 	case 'setup_worker_pin_clear':
 		if(!VIEWER_ADMIN)
-			jsonError();
-		if(!RULE_SETUP_WORKER)
 			jsonError();
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
@@ -366,38 +364,38 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_menu_access':
+		if(!_viewerMenuAccess(5))
+			jsonError();
 		if(!RULE_SETUP_RULES)
 			jsonError();
 
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
-	
-		$menu_id = _num($_POST['menu_id']);
+		if(!$menu_id = _num($_POST['menu_id']))
+			jsonError();
 		$v = _bool($_POST['v']);
 
-		if(_viewerMenuAccess($viewer_id, $menu_id) == $v)
+		if(_viewerMenuAccess($menu_id, $viewer_id) == $v)
 			jsonError();
 
-		$sql = "UPDATE `_menu_viewer`
-				SET `access`=".$v."
-				WHERE `app_id`=".APP_ID."
-				  AND `menu_id`=".$menu_id."
-				  AND `viewer_id`=".$viewer_id;
+		if($v)
+			$sql = "INSERT INTO `_menu_viewer` (
+						`app_id`,
+						`viewer_id`,
+						`menu_id`
+					) VALUES (
+						".APP_ID.",
+						".$viewer_id.",
+						".$menu_id."
+					)";
+		else
+			$sql = "DELETE FROM `_menu_viewer`
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".$viewer_id."
+					  AND `menu_id`=".$menu_id;
 		query($sql);
-		
+
 		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
-
-		jsonSuccess();
-		break;
-	
-	case 'RULE_SETUP_WORKER'://разрешать сотруднику изменять данные сотрудника
-		$_POST['h1'] = 1004;
-		$_POST['h0'] = 1005;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		_workerRuleQuery($_POST['viewer_id'], 'RULE_SETUP_RULES', 0);
 
 		jsonSuccess();
 		break;
@@ -414,15 +412,6 @@ switch(@$_POST['op']) {
 	case 'RULE_SETUP_RULES'://разрешать сотруднику настраивать права других сотрудников
 		$_POST['h1'] = 1006;
 		$_POST['h0'] = 1007;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_SETUP_REKVISIT'://разрешать сотруднику изменять реквизиты организации
-		$_POST['h1'] = 1008;
-		$_POST['h0'] = 1009;
 
 		if(!setup_worker_rule_save($_POST))
 			jsonError();
@@ -545,32 +534,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'RULE_SETUP_ZAYAV_STATUS'://разрешать сотруднику настраивать статусы заявок
-		if(!RULE_SETUP_RULES)
-			jsonError();
-
-		if(!$viewer_id = _num($_POST['viewer_id']))
-			jsonError();
-
-		$new = _num($_POST['v']);
-
-		$old = _viewerRule($viewer_id, 'RULE_SETUP_ZAYAV_STATUS');
-
-		if($old == $new)
-			jsonError();
-
-		_workerRuleQuery($viewer_id, 'RULE_SETUP_ZAYAV_STATUS', $new);
-
-		_history(array(
-			'type_id' => 1012,
-			'worker_id' => $viewer_id,
-			'v1' => '<table>'.
-						_historyChange('Настройка статусов заявок', _daNet($old), _daNet($new)).
-					'</table>'
-		));
-
-		jsonSuccess();
-		break;
 
 	case 'RULE_MY_PAY_SHOW_PERIOD'://мои настройки: показывать платежи: за день, неделю, месяц
 		_workerRuleQuery(VIEWER_ID, 'RULE_MY_PAY_SHOW_PERIOD', _num($_POST['v']));
@@ -582,7 +545,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_rekvisit':
-		if(!RULE_SETUP_REKVISIT)
+		if(!_viewerMenuAccess(13))
 			jsonError();
 
 		$type_id = _num($_POST['type_id']);
@@ -686,7 +649,7 @@ switch(@$_POST['op']) {
 
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_appJsValues();
 
 		$send['on'] = $active;
@@ -717,7 +680,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'service'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'service');
 		_appJsValues();
 
 		jsonSuccess();
@@ -740,7 +703,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense');
 		_appJsValues();
 
 		_history(array(
@@ -814,7 +777,7 @@ switch(@$_POST['op']) {
 
 		}
 
-		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense');
 		_appJsValues();
 
 		$send['html'] = utf8(setup_expense_spisok());
@@ -844,7 +807,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_money_expense_category_sub` WHERE `category_id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense');
 		_appJsValues();
 
 		_history(array(
@@ -883,7 +846,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense_sub');
 		_appJsValues();
 
 		_history(array(
@@ -954,7 +917,7 @@ switch(@$_POST['op']) {
 			}
 		}
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense_sub');
 		_appJsValues();
 
 		$send['html'] = utf8(setup_expense_sub_spisok($r['category_id']));
@@ -981,7 +944,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_money_expense_category_sub` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'expense_sub');
 		_appJsValues();
 
 		_history(array(
@@ -1011,7 +974,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric');
 		_appJsValues();
 
 		_history(array(
@@ -1043,7 +1006,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric');
 		_appJsValues();
 
 		if($changes =
@@ -1079,7 +1042,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_setup_rubric` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric');
 		_appJsValues();
 
 		_history(array(
@@ -1120,7 +1083,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric_sub');
 		_appJsValues();
 
 		_history(array(
@@ -1153,7 +1116,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric_sub');
 		_appJsValues();
 
 		if($changes =
@@ -1186,7 +1149,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_setup_rubric_sub` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'rubric_sub'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'rubric_sub');
 		_appJsValues();
 
 		_history(array(
@@ -1200,7 +1163,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'setup_zayav_status_add':
-		if(!RULE_SETUP_ZAYAV_STATUS)
+		if(!_viewerMenuAccess(16))
 			jsonError();
 
 		$name = _txt($_POST['name']);
@@ -1252,7 +1215,7 @@ switch(@$_POST['op']) {
 
 		setup_status_next_insert($id, $_POST);
 
-		xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_status');
 		_appJsValues();
 /*
 		_history(array(
@@ -1264,7 +1227,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'setup_zayav_status_edit':
-		if(!RULE_SETUP_ZAYAV_STATUS)
+		if(!_viewerMenuAccess(16))
 			jsonError();
 		if(!$id = _num($_POST['id']))
 			jsonError();
@@ -1313,7 +1276,7 @@ switch(@$_POST['op']) {
 		query($sql);
 		setup_status_next_insert($id, $_POST);
 
-		xcache_unset(CACHE_PREFIX.'zayav_status'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_status');
 		_appJsValues();
 /*
 		$changes =
@@ -1348,7 +1311,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_status` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
 		_appJsValues();
 
 		_history(array(
@@ -1380,7 +1343,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
 		_appJsValues();
 
 		_history(array(
@@ -1411,7 +1374,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
 		_appJsValues();
 
 		$changes =
@@ -1442,7 +1405,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_zayav_expense_category` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
 		_appJsValues();
 
 		_history(array(
@@ -1463,7 +1426,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".APP_ID;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'app'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'app');
 
 		jsonSuccess();
 		break;
@@ -1552,7 +1515,7 @@ switch(@$_POST['op']) {
 
 		setup_tovar_category_use_insert($insert_id);
 
-		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();
 
 		$send['html'] = utf8(setup_tovar_category_spisok());
@@ -1576,7 +1539,7 @@ switch(@$_POST['op']) {
 		        WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();
 
 		$send['html'] = utf8(setup_tovar_category_spisok());
@@ -1599,7 +1562,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `_tovar_category_use` WHERE `category_id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();
 
 		jsonSuccess();
@@ -1686,7 +1649,7 @@ switch(@$_POST['op']) {
 
 
 
-		xcache_unset(CACHE_PREFIX.'tovar_category'.APP_ID);
+		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();
 
 		$send['html'] = utf8(setup_tovar_category_spisok());

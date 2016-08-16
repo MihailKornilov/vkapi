@@ -55,7 +55,7 @@ function _tovar() {
 }
 
 function _tovarCategory($id=false, $i='name') {
-	$key = CACHE_PREFIX.'tovar_category'.APP_ID;
+	$key = CACHE_PREFIX.'tovar_category';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					`id`,

@@ -899,7 +899,7 @@ function _clientFromJs() {//список источников, из которых приходил клиент
 	return query_selJson($sql);
 }
 function _clientFrom($id) {
-	$key = CACHE_PREFIX.'client_from'.APP_ID;
+	$key = CACHE_PREFIX.'client_from';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
 					`id`,

@@ -1,5 +1,6 @@
 var saMenuEdit = function(o) {
 		o = $.extend({
+			tp:'main',
 			id:0,
 			name:'',
 			about:'',
@@ -25,6 +26,7 @@ var saMenuEdit = function(o) {
 		function submit() {
 			var send = {
 				op:'sa_menu_' + (o.id ? 'edit' : 'add'),
+				type:o.tp,
 				id:o.id,
 				name:$('#name').val(),
 				about:$('#about').val(),
@@ -44,8 +46,9 @@ var saMenuEdit = function(o) {
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
-					_msg('Внесено');
-					$('#spisok').html(res.html);
+					_msg();
+					$('#spisok').html(res.main);
+					$('#setup-spisok').html(res.setup);
 					sortable();
 				} else
 					dialog.abort();
@@ -500,9 +503,8 @@ var saMenuEdit = function(o) {
 	};
 
 $(document)
-	.on('click', '#sa-menu .add', saMenuEdit)
 	.on('click', '#sa-menu .img_edit', function() {
-		var t = _parent($(this), 'DD');
+		var t = _parent($(this), 'TR');
 		saMenuEdit({
 			id:t.find('.name').attr('val'),
 			name:t.find('.name span').html(),
@@ -510,26 +512,31 @@ $(document)
 			p:t.find('.p').html()
 		});
 	})
-	.on('click', '#sa-menu .access ._check', function() {//доступ для пользователей по умолчанию
-		var t = $(this),
-			p = _parent(t, 'DD'),
-			send = {
-				op:'sa_menu_access',
-				id:p.find('.name').attr('val'),
-				v:t.find('input').val()
-			};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success)
-				_msg();
-		}, 'json');
-	})
 	.on('click', '#sa-menu .show ._check', function() {//скрытие-показ разделов меню
 		var t = $(this),
+			inp = t.find('input'),
 			send = {
-			op:'sa_menu_show',
-			id:_parent(t, 'DD').attr('val'),
-			v:t.find('input').val()
-		};
+				op:'sa_menu_show',
+				id:inp.attr('id').split('show')[1],
+				v:inp.val()
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				$('#spisok').html(res.main);
+				$('#setup-spisok').html(res.setup);
+				sortable();
+			}
+		}, 'json');
+	})
+	.on('click', '#sa-menu .access ._check', function() {//доступ для пользователей по умолчанию
+		var t = $(this),
+			inp = t.find('input'),
+			send = {
+				op:'sa_menu_access',
+				id:inp.attr('id').split('access')[1],
+				v:t.find('input').val()
+			};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				_msg();

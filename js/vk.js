@@ -280,8 +280,11 @@ var VK_SCROLL = 0,
 					return true;
 				var dds = $(this).find('dd'),
 					arr = [];
-				for(var n = 0; n < dds.length; n++)
-					arr.push(dds.eq(n).attr('val'));
+				for(var n = 0; n < dds.length; n++) {
+					var v = _num(dds.eq(n).attr('val'));
+					if(v)
+						arr.push(v);
+				}
 				var send = {
 					op:'sort',
 					table:$(this).attr('val'),

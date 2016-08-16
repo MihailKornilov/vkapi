@@ -109,6 +109,21 @@ function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из 
 		if(!$u = query_assoc($sql))
 			$u = _viewerUpdate($viewer_id);
 		xcache_set($key, $u, 86400);
+
+		//проверка наличия у пользователя раздела "Мои настройки"
+		if(!_viewerMenuAccess(12, $viewer_id)) {
+			$sql = "INSERT INTO `_menu_viewer` (
+						`app_id`,
+						`viewer_id`,
+						`menu_id`
+					) VALUES (
+						".APP_ID.",
+						".$viewer_id.",
+						12
+					)";
+			query($sql);
+			xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
+		}
 	}
 	return $u;
 }
@@ -454,12 +469,13 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	return $i && isset($rule[$i]) ? $rule[$i] : $rule;
 }
 
-function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к разделам меню
+function _viewerMenuAccess($menu_id, $viewer_id=VIEWER_ID) {//права доступа к разделам меню
+	if(_viewer($viewer_id, 'viewer_admin'))
+		return 1;
+
 	$key = CACHE_PREFIX.'viewer_menu_access_'.$viewer_id;
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT
-					`menu_id`,
-					`access`
+		$sql = "SELECT `menu_id`,1
 				FROM `_menu_viewer`
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id;
@@ -467,35 +483,29 @@ function _viewerMenuAccess($viewer_id=VIEWER_ID, $menu_id=0) {//права доступа к 
 		xcache_set($key, $arr, 86400);
 	}
 
-	//установка доступа по умолчанию, если пусто 
+	//установка доступа по умолчанию, если пусто
 	if(empty($arr)) {
 		$values = array();
-		$sql = "SELECT * FROM `_menu`";
+		$sql = "SELECT * FROM `_menu` WHERE `access_default`";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$values[] = "(".
 				APP_ID.",".
 				$viewer_id.",".
-				$r['id'].",".
-				$r['access_default'].
+				$r['id'].
 			")";
 		}
 
 		$sql = "INSERT INTO `_menu_viewer` (
 					`app_id`,
 					`viewer_id`,
-					`menu_id`,
-					`access`
+					`menu_id`
 				) VALUES ".implode(',', $values);
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
-		return _viewerMenuAccess($viewer_id);
+		return _viewerMenuAccess($menu_id, $viewer_id);
 	}
-	
-	//возвращение всех разделов
-	if(!$menu_id)
-		return $arr;
 	
 	return _num(@$arr[$menu_id]);
 }
