@@ -923,6 +923,46 @@ $(document)
 		});
 	})
 
+	.on('click', '#setup_obdop .img_edit', function() {
+		var t = _parent($(this)),
+			id = t.attr('val'),
+			name = t.find('.name').html(),
+			cena = t.find('.cena').html(),
+			html = '<table class="bs10">' +
+				'<tr><td class="label">Наименование:<td><b>' + name + '</b>' +
+				'<tr><td class="label">Стоимость:<td><input type="text" id="cena" class="money" value="' + cena + '" /> руб.' +
+				'</table>',
+			dialog = _dialog({
+				head:'Редактирование параметра',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'setup_obdop_edit',
+				id:id,
+				cena:_num($('#cena').val())
+			};
+			if(!send.cena) {
+				dialog.err('Некорректно указана цена');
+				$('#cena').focus();
+				return;
+			}
+			
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 	.on('click', '#setup_zayav_expense .add', setupZayavExpense)
 	.on('click', '#setup_zayav_expense .img_edit', function() {
 		var t = _parent($(this), 'DD');

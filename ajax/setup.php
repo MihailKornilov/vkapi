@@ -1226,6 +1226,31 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_obdop_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$cena = _cena($_POST['cena']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_setup_gazeta_ob_dop`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `_setup_gazeta_ob_dop`
+				SET `cena`=".$cena."
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gazeta_obdop');
+//		GvaluesCreate();
+
+		$send['html'] = utf8(setup_obdop_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'setup_zayav_status_add':
 		if(!_viewerMenuAccess(16))
 			jsonError();

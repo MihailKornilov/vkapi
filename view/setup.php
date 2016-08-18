@@ -1256,7 +1256,7 @@ function setup_tovar_vendor_spisok() {
 
 
 
-function setup_polosa() {
+function setup_polosa() {//Купец: стоимость см2 для каждой полосы
 	return
 	'<div id="setup_polosa">'.
 		'<div class="headName">'.
@@ -1295,4 +1295,36 @@ function setup_polosa_spisok() {
 }
 
 
+
+
+
+
+function setup_obdop() {//Купец: дополнительные параметры объявлений
+	return
+	'<div id="setup_obdop">'.
+		'<div class="headName">Дополнительные параметры объявлений</div>'.
+		'<div id="spisok">'.setup_obdop_spisok().'</div>'.
+	'</div>';
+}
+function setup_obdop_spisok() {
+	$sql = "SELECT *
+			FROM `_setup_gazeta_ob_dop`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Наименование'.
+				'<th>Стоимость<br />руб.'.
+				'<th>';
+	foreach($spisok as $r)
+		$send .= '<tr val="'.$r['id'].'">'.
+			'<td class="name">'.$r['name'].
+			'<td class="cena w100 center">'._cena($r['cena']).
+			'<td class="ed">'._iconEdit($r);
+	$send .= '</table>';
+	return $send;
+}
 
