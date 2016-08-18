@@ -1245,3 +1245,54 @@ function setup_tovar_vendor_spisok() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+function setup_polosa() {
+	return
+	'<div id="setup_polosa">'.
+		'<div class="headName">'.
+			'Стоимость см&sup2; рекламы для каждой полосы'.
+			'<a class="add" onclick="setupPolosaCostEdit()">Новая полоса</a>'.
+		'</div>'.
+		'<div id="spisok">'.setup_polosa_spisok().'</div>'.
+	'</div>';
+}
+function setup_polosa_spisok() {
+	$sql = "SELECT *
+			FROM `_setup_gazeta_polosa_cost`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Полоса'.
+				'<th class="cena">Цена за см&sup2;<br />руб.'.
+				'<th class="pn">Указывать<br />номер<br />полосы'.
+				'<th class="ed">'.
+		'</table>'.
+		'<dl class="_sort" val="_setup_gazeta_polosa_cost">';
+	foreach($spisok as $id => $r)
+		$send .='<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name curM">'.$r['name'].
+					'<td class="cena center">'.round($r['cena'], 2).
+					'<td class="pn center">'.($r['polosa'] ? 'да' : '').
+					'<td class="ed">'._iconEdit($r).
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}
+
+
+

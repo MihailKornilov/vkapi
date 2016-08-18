@@ -1162,6 +1162,70 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_polosa_add':
+		if(!$cena = _cena($_POST['cena']))
+			jsonError();
+
+		$polosa = _bool($_POST['polosa']);
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `_setup_gazeta_polosa_cost` (
+					`app_id`,
+					`name`,
+					`cena`,
+					`polosa`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					".$cena.",
+					".$polosa.",
+					"._maxSql('_setup_gazeta_polosa_cost', 'sort')."
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gazeta_polosa');
+//		GvaluesCreate();
+
+		$send['html'] = utf8(setup_polosa_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_polosa_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$cena = _cena($_POST['cena']))
+			jsonError();
+
+		$polosa = _bool($_POST['polosa']);
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_setup_gazeta_polosa_cost`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `_setup_gazeta_polosa_cost`
+				SET `name`='".addslashes($name)."',
+					`cena`=".$cena.",
+					`polosa`=".$polosa."
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gazeta_polosa');
+//		GvaluesCreate();
+
+		$send['html'] = utf8(setup_polosa_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'setup_zayav_status_add':
 		if(!_viewerMenuAccess(16))
 			jsonError();

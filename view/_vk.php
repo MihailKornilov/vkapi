@@ -1363,6 +1363,7 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'rubric');
 	xcache_unset(CACHE_PREFIX.'rubric_sub');
 	xcache_unset(CACHE_PREFIX.'gn');
+	xcache_unset(CACHE_PREFIX.'gazeta_polosa');
 
 
 	//сброс времени действия введённого пинкода

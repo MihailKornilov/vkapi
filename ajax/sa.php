@@ -38,7 +38,7 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$name = _txt($_POST['name']);
+		$name = win1251(trim($_POST['name']));
 		$about = _txt($_POST['about']);
 		$p = _txt($_POST['p']);
 

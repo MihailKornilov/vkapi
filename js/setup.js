@@ -252,6 +252,61 @@ var setupRuleCheck = function(v, id) {
 			}, 'json');
 		}
 	},
+	setupPolosaCostEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:'',
+			cena:'',
+			polosa:0
+		}, o);
+
+		var html = '<table class="bs10">' +
+				'<tr><td class="label">Наименование:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+				'<tr><td class="label">Цена за см&sup2;:<td><input type="text" id="cena" class="money" value="' + o.cena + '" /> руб.' +
+				'<tr><td class="label">Указывать<br />номер полосы:<td><input type="hidden" id="polosa" value="' + o.polosa + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:390,
+				head:o.id ? 'Редактирование данных полосы' : 'Внесение новой полосы',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+		$('#polosa')._check();
+
+		function submit() {
+			var send = {
+				op:'setup_polosa_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				cena:_cena($('#cena').val()),
+				polosa:$('#polosa').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			if(!send.cena) {
+				dialog.err('Некорректно указана цена');
+				$('#cena').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	},
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,
@@ -844,7 +899,6 @@ $(document)
 			id:t.attr('val'),
 			name:t.find('.name').html().replace(/\"/g, '&quot;')
 		});
-
 	})
 	.on('click', '#setup_rubric_sub .img_del', function() {
 		_dialogDel({
@@ -855,6 +909,17 @@ $(document)
 				$('#spisok').html(res.html);
 				sortable();
 			}
+		});
+	})
+
+	.on('click', '#setup_polosa .img_edit', function() {
+		var t = _parent($(this), 'DD');
+		setupPolosaCostEdit({
+			id:t.attr('val'),
+			name:t.find('.name').html().replace(/\"/g, '&quot;'),
+			cena:t.find('.cena').html(),
+			polosa:t.find('.pn').html() ? 1 : 0
+
 		});
 	})
 
