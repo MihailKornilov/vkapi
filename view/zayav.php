@@ -1566,7 +1566,7 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 		return 'Ошибка: некорректный идентификатор договора';
 	if(!_num($v['zayav_id']))
 		return 'Ошибка: неверный номер заявки';
-	if(!_num($v['template_id']))
+	if(!_num($v['id']) && !_num($v['template_id']))
 		return 'Ошибка: неверный id шаблона договора';
 	if(!_num($v['nomer']))
 		return 'Ошибка: некорректно указан номер договора';

@@ -226,3 +226,15 @@
 #setup_polosa .name{width:170px}
 #setup_polosa .cena{width:80px}
 #setup_polosa .pn{width:70px}
+
+
+
+
+
+
+/* Стоиомость длины объявления */
+#setup_oblen table{border-spacing:5px 12px;margin:30px 0 0 50px}
+#setup_oblen td{text-align:right}
+#setup_oblen input{width:30px;text-align:right}
+#setup_oblen .vk{margin:10px 0 0 150px}
+

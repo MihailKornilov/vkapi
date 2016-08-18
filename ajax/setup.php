@@ -1251,6 +1251,52 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_oblen_edit':
+		if(!$txt_len_first = _num($_POST['txt_len_first']))
+			jsonError();
+		if(!$txt_cena_first = _num($_POST['txt_cena_first']))
+			jsonError();
+		if(!$txt_len_next = _num($_POST['txt_len_next']))
+			jsonError();
+		if(!$txt_cena_next = _num($_POST['txt_cena_next']))
+			jsonError();
+
+		if(TXT_LEN_FIRST == $txt_len_first &&
+		   TXT_CENA_FIRST == $txt_cena_first &&
+		   TXT_LEN_NEXT == $txt_len_next &&
+		   TXT_CENA_NEXT == $txt_cena_next)
+			jsonError();
+
+		$sql = "UPDATE `_setup_global`
+				SET `value`=".$txt_len_first."
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='TXT_LEN_FIRST'";
+		query($sql);
+
+		$sql = "UPDATE `_setup_global`
+				SET `value`=".$txt_cena_first."
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='TXT_CENA_FIRST'";
+		query($sql);
+
+		$sql = "UPDATE `_setup_global`
+				SET `value`=".$txt_len_next."
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='TXT_LEN_NEXT'";
+		query($sql);
+
+		$sql = "UPDATE `_setup_global`
+				SET `value`=".$txt_cena_next."
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='TXT_CENA_NEXT'";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'setup_global');
+//		GvaluesCreate();
+
+		jsonSuccess();
+		break;
+
 	case 'setup_zayav_status_add':
 		if(!_viewerMenuAccess(16))
 			jsonError();

@@ -307,6 +307,51 @@ var setupRuleCheck = function(v, id) {
 			}, 'json');
 		}
 	},
+	setupObLenEdit = function() {
+		var but = $('#setup_oblen .vk'),
+			send = {
+				op:'setup_oblen_edit',
+				txt_len_first:_num($('#txt_len_first').val()),
+				txt_cena_first:_num($('#txt_cena_first').val()),
+				txt_len_next:_num($('#txt_len_next').val()),
+				txt_cena_next:_num($('#txt_cena_next').val())
+			};
+
+		if(!send.txt_len_first) {
+			err(-2, 98);
+			$('#txt_len_first').focus();
+			return;
+		}
+		if(!send.txt_cena_first) {
+			err(-2, 191);
+			$('#txt_cena_first').focus();
+			return;
+		} else if(!send.txt_len_next) {
+			err(25, 98);
+			$('#txt_len_next').focus();
+			return;
+		} else if(!send.txt_cena_next) {
+			err(25, 191);
+			$('#txt_cena_next').focus();
+			return;
+		}
+		but.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			but.removeClass('_busy');
+			if(res.success)
+				_msg('Сохранено!');
+		}, 'json');
+		function err(top, left) {
+			$('#setup_oblen').vkHint({
+				msg:'<SPAN class="red">Некорректный ввод</SPAN>',
+				top:top,
+				left:left,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	},
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,

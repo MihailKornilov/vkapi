@@ -3,7 +3,9 @@
 function _setup_global() {//получение констант-параметров для всех приложений
 	$key = CACHE_PREFIX.'setup_global';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT `key`,`value` FROM `_setup_global`";
+		$sql = "SELECT `key`,`value`
+				FROM `_setup_global`
+				WHERE `app_id` IN (".APP_ID.",0)";
 		$arr = query_ass($sql);
 		xcache_set($key, $arr, 86400);
 	}
@@ -1297,8 +1299,6 @@ function setup_polosa_spisok() {
 
 
 
-
-
 function setup_obdop() {//Купец: дополнительные параметры объявлений
 	return
 	'<div id="setup_obdop">'.
@@ -1327,4 +1327,25 @@ function setup_obdop_spisok() {
 	$send .= '</table>';
 	return $send;
 }
+
+
+
+function setup_oblen() {//Купец: стоимость длины объявления
+	return
+	'<div id="setup_oblen">'.
+		'<div class="headName">Настройка стоимости длины объявления</div>'.
+		'<table>'.
+            '<tr><td>Первые'.
+				'<td><input type="text" value="'.TXT_LEN_FIRST.'" id="txt_len_first" />'.
+				'<td>символов:'.
+                '<td><input type="text" value="'.TXT_CENA_FIRST.'" id="txt_cena_first" /> руб.'.
+            '<tr><td>Последующие'.
+				'<td><input type="text" value="'.TXT_LEN_NEXT.'" id="txt_len_next" />'.
+				'<td>символов:'.
+                '<td><input type="text" value="'.TXT_CENA_NEXT.'" id="txt_cena_next" /> руб.'.
+        '</table>'.
+		'<button class="vk" onclick="setupObLenEdit()">Сохранить</button>'.
+	'</div>';
+}
+
 

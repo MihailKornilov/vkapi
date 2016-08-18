@@ -9,7 +9,9 @@ switch(@$_POST['op']) {
 		_appJsValues();
 
 		//обновление глобальных значений
-		$sql = "UPDATE `_setup_global` SET `value`=`value`+1";
+		$sql = "UPDATE `_setup_global`
+				SET `value`=`value`+1
+				WHERE !`app_id`";
 		query($sql);
 
 		//обновление значений js всех приложений по отдельности
