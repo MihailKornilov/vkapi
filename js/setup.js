@@ -352,6 +352,71 @@ var setupRuleCheck = function(v, id) {
 			});
 		}
 	},
+	setupGnEdit = function(o) {
+		o = $.extend({
+			id:0,
+			week:'',
+			general:'',
+			print:'',
+			public:'',
+			pc:8
+		}, o);
+		var html = '<table class="setup-gn-tab bs10">' +
+				'<tr><td class="label r">Номер выпуска:' +
+					'<td><input type="text" id="week_nomer" maxlength="2" value="' + o.week + '" />' +
+						'<input type="text" id="general_nomer" maxlength="4" value="' + o.general + '" />' +
+				'<tr><td class="label r">День отправки в печать:<td><input type="hidden" id="day_print" value="' + o.print + '" />' +
+				'<tr><td class="label r">День выхода:<td><input type="hidden" id="day_public" value="' + o.public + '" />' +
+				'<tr><td class="label r">Количество полос:<td><input type="hidden" id="polosa_count" value="' + o.pc + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:320,
+				head:(o.id ? 'Редактирование' : 'Добавление') + ' номера газеты',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+		$('#week_nomer').focus();
+		$('#week_nomer,#general_nomer').keyEnter(submit);
+		$('#day_print')._calendar({lost:1});
+		$('#day_public')._calendar({lost:1});
+		$('#polosa_count')._select({
+			width:50,
+			spisok:[{uid:4,title:"4"},{uid:6,title:"6"},{uid:8,title:"8"},{uid:10,title:"10"},{uid:12,title:"12"}]
+		});
+		function submit() {
+			var send = {
+				op:'setup_gn_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				week_nomer:_num($('#week_nomer').val()),
+				general_nomer:_num($('#general_nomer').val()),
+				day_print:$('#day_print').val(),
+				day_public:$('#day_public').val(),
+				polosa_count:$('#polosa_count').val(),
+				year:$('#dopLinks .sel').html()
+			};
+			if(!send.week_nomer) {
+				dialog.err('Некорректно указан номер недели выпуска');
+				$('#week_nomer').focus();
+				return;
+			}
+			if(!send.general_nomer) {
+				dialog.err('Некорректно указан общий номер выпуска');
+				$('#general_nomer').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#dopLinks').html(res.year);
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,
@@ -1006,6 +1071,147 @@ $(document)
 					dialog.abort();
 			}, 'json');
 		}
+	})
+
+	.on('click', '#setup_gn .link', function() {//список номеров за выбранный год
+		var t = $(this),
+			send = {
+				op:'setup_gn_spisok_get',
+				year:t.html()
+			};
+		t.parent().find('.sel').removeClass('sel');
+		t.addClass('sel');
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				$('#spisok').html(res.html);
+		}, 'json');
+	})
+	.on('click', '#setup_gn .vk', function() {
+		var t = $(this),
+			year = $('#dopLinks .sel').html(),
+			html = '<table class="setup-gn-tab bs10">' +
+				'<tr><td colspan="2">' +
+					'<div class="gn-info">' +
+						'Для создания списка номеров газет <b>' + year + '</b> года ' +
+						'укажите данные <b>первого номера</b>, который будет выходить в этом году.<br />' +
+						'Все поля обязательны для заполнения.' +
+					'</div>' +
+				'<tr><td class="label r">Первый номер выпуска:' +
+					'<td><input type="text" id="week_nomer" maxlength="2" value="1" />' +
+						'<input type="text" id="general_nomer" maxlength="4" value="' + GN_MAX + '" />' +
+				'<tr><td class="label r">Дни отправки в печать:<td><input type="hidden" id="day_print" value="1" />' +
+				'<tr><td class="label r">Дни выхода:<td><input type="hidden" id="day_public" value="4" />' +
+				'<tr><td class="label r">Количество полос:<td><input type="hidden" id="polosa_count" value="8" />' +
+				'<tr><td class="label r">Первый день выхода:<td><input type="hidden" id="day_first" value="' + year + '-01-01" />' +
+				'</table>',
+			dialog = _dialog({
+				width:320,
+				head:'Создание списка номеров газеты',
+				content:html,
+				butSubmit:'Создать',
+				submit:submit
+			}),
+			weeks = [
+				{uid:0,title:'Понедельник'},
+				{uid:1,title:'Вторник'},
+				{uid:2,title:'Среда'},
+				{uid:3,title:'Четверг'},
+				{uid:4,title:'Пятница'},
+				{uid:5,title:'Суббота'},
+				{uid:6,title:'Воскресенье'}
+			];
+		$('#week_nomer').focus();
+		$('#week_nomer,#general_nomer').keyEnter(submit);
+		$('#day_print')._select({width:100, spisok:weeks});
+		$('#day_public')._select({width:100, spisok:weeks});
+		$('#polosa_count')._select({
+			width:50,
+			spisok:[{uid:4,title:"4"},{uid:6,title:"6"},{uid:8,title:"8"},{uid:10,title:"10"},{uid:12,title:"12"}]
+		});
+		$('#day_first')._calendar({lost:1});
+		function submit() {
+			var send = {
+				op:'setup_gn_spisok_create',
+				year:year,
+				week_nomer:_num($('#week_nomer').val()),
+				general_nomer:_num($('#general_nomer').val()),
+				day_print:$('#day_print').val(),
+				day_public:$('#day_public').val(),
+				polosa_count:$('#polosa_count').val(),
+				day_first:$('#day_first').val()
+			};
+			if(!send.week_nomer) {
+				dialog.err('Некорректно указан номер недели выпуска');
+				$('#week_nomer').focus();
+				return;
+			}
+			if(!send.general_nomer) {
+				dialog.err('Некорректно указан общий номер выпуска');
+				$('#general_nomer').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#dopLinks').html(res.year);
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	})
+	.on('click', '#setup_gn #gn-clear', function() {
+		var t = $(this),
+			year = t.attr('val'),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Очищение списка номеров газеты',
+				content:'<center>Подтвердите удаление списка номеров газеты<br />за ' + year + ' год.</center>',
+				butSubmit:'Очистить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'setup_gn_clear',
+				year:year
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#dopLinks').html(res.year);
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '#setup_gn .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		setupGnEdit({
+			id:t.attr('val'),
+			week:p.find('.nomer b').html(),
+			general:p.find('.nomer span').html(),
+			print:p.find('.print s').html(),
+			public:p.find('.pub s').html(),
+			pc:p.find('.pc').html()
+		});
+	})
+	.on('click', '#setup_gn .img_del', function() {
+		var t = $(this);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'номера газеты',
+			op:'setup_gn_del',
+			func:function() {
+				_parent(t).remove();
+			}
+		});
 	})
 
 	.on('click', '#setup_zayav_expense .add', setupZayavExpense)

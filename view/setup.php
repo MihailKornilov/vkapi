@@ -1349,3 +1349,77 @@ function setup_oblen() {//Купец: стоимость длины объявления
 }
 
 
+
+
+
+function setup_gn() {
+	define('CURRENT_YEAR', strftime('%Y', time()));
+	$sql = "SELECT MAX(`general_nomer`)+1
+			FROM `_setup_gazeta_nomer`
+			WHERE `app_id`=".APP_ID;
+	$gnMax = query_value($sql);
+	return
+	'<script>var GN_MAX="'.$gnMax.'";</script>'.
+	'<div id="setup_gn">'.
+		'<div class="headName">'.
+			'Номера выпусков газеты'.
+			'<a class="add" onclick="setupGnEdit()">Новый номер</a>'.
+		'</div>'.
+		'<div id="dopLinks">'.setup_gn_year().'</div>'.
+		'<div id="spisok">'.setup_gn_spisok().'</div>'.
+	'</div>';
+}
+function setup_gn_year($y=CURRENT_YEAR) {
+	$sql = "SELECT
+            	SUBSTR(MIN(`day_public`),1,4) AS `begin`,
+            	SUBSTR(MAX(`day_public`),1,4) AS `end`,
+            	MAX(`general_nomer`) AS `max`
+            FROM `_setup_gazeta_nomer`
+   			WHERE `app_id`=".APP_ID."
+            LIMIT 1";
+	$r = mysql_fetch_assoc(query($sql));
+	if(!$r['begin'])
+		$r = array(
+			'begin' => CURRENT_YEAR,
+			'end' => CURRENT_YEAR
+		);
+	$send = '';
+	for($n = $r['begin']; $n <= $r['end'] + 1; $n++)
+		$send .= '<a class="link'.($n == $y ? ' sel' : '').'">'.$n.'</a>';
+	return $send;
+}
+function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
+	$sql = "SELECT *
+			FROM `_setup_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `day_public` LIKE '".$y."-%'
+			ORDER BY `general_nomer`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return
+			'Номера газет, которые будут выходить в '.$y.' году, не определены.'.
+			'<button class="vk">Создать список</button>';
+	$send =
+		'<a id="gn-clear" val="'.$y.'">Очистить список за '.$y.' год</a>'.
+		'<table class="_spisok">'.
+			'<tr><th>Номер<br />выпуска'.
+				'<th>День отправки<br />в печать'.
+				'<th>День выхода'.
+				'<th>Кол-во<br />полос'.
+				'<th>';
+	$cur = time() - 86400;
+	while($r = mysql_fetch_assoc($q)) {
+		$grey = $cur > strtotime($r['day_print']) ? 'grey' : '';
+		$edit = $gnedit == $r['general_nomer'] ? ' edit' : '';
+		$class = $grey || $edit ? ' class="'.$grey.$edit.'"' : '';
+		$send .= '<tr'.$class.'>'.
+			'<td class="nomer center"><b>'.$r['week_nomer'].'</b> (<span>'.$r['general_nomer'].'</span>)'.
+			'<td class="print r">'.FullData($r['day_print'], 0, 1, 1).'<s>'.$r['day_print'].'</s>'.
+			'<td class="pub r">'.FullData($r['day_public'], 0, 1, 1).'<s>'.$r['day_public'].'</s>'.
+			'<td class="pc">'.$r['polosa_count'].
+			'<td class="ed">'._iconEdit($r)._iconDel($r);
+	}
+	$send .= '</table>';
+	return $send;
+}
+

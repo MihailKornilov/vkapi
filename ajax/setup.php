@@ -1297,6 +1297,216 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'setup_gn_spisok_get':
+		if(!preg_match(REGEXP_YEAR, $_POST['year']))
+			jsonError();
+
+		$year = _num($_POST['year']);
+
+		$send['html'] = utf8(setup_gn_spisok($year));
+		jsonSuccess($send);
+		break;
+	case 'setup_gn_spisok_create':
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$week_nomer = _num($_POST['week_nomer']))
+			jsonError();
+		if(!$general_nomer = _num($_POST['general_nomer']))
+			jsonError();
+		if(!$day_print = _num($_POST['day_print']))
+			jsonError();
+		if(!$day_public = _num($_POST['day_public']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day_first']))
+			jsonError();
+		if(!$polosa_count = _num($_POST['polosa_count']))
+			jsonError();
+
+		$day_first = $_POST['day_first'];
+
+		$sql = "SELECT `general_nomer`
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `general_nomer`=".$general_nomer;
+		if(query_value($sql))
+			jsonError('Номер газеты <b>'.$general_nomer.'</b> уже есть в списке');
+
+		// Первая неделя
+		$weekFirst = strtotime($day_first);
+		// Номер дня первой недели
+		$printFirst = date('w', $weekFirst);
+		if($printFirst == 0)
+			$printFirst = 7;
+		// Приведение первой недели к понедельнику
+		if($printFirst != 1)
+			$weekFirst -= 86400 * ($printFirst - 1);
+		// Определение первого дня следующего года, если цикл за него уходит, то остановка
+		$timeEnd = strtotime($year.'-12-31');
+		$gnArr = array();
+		while($weekFirst < $timeEnd) {
+			array_push($gnArr,
+				'('.
+			        APP_ID.','.
+			        $general_nomer++.','.
+			        $week_nomer++.','.
+			        'DATE_ADD("'.strftime('%Y-%m-%d', $weekFirst).'", INTERVAL '.$day_print.' DAY),'.
+			        'DATE_ADD("'.strftime('%Y-%m-%d', $weekFirst).'", INTERVAL '.$day_public.' DAY),'.
+					$polosa_count.
+				')'
+			);
+			$weekFirst += 604800;
+		}
+
+		$sql = 'INSERT INTO `_setup_gazeta_nomer` (
+					`app_id`,
+					`general_nomer`,
+					`week_nomer`,
+					`day_print`,
+					`day_public`,
+					`polosa_count`
+				) VALUES '.implode(',', $gnArr);
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gn');
+//		GvaluesCreate();
+
+		$send['year'] = utf8(setup_gn_year($year));
+		$send['html'] = utf8(setup_gn_spisok($year));
+		jsonSuccess($send);
+		break;
+	case 'setup_gn_clear':
+		if(!$year = _num($_POST['year']))
+			jsonError();
+
+		$sql = "DELETE FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND (`day_print` LIKE '".$year."-%'
+				   OR `day_public` LIKE '".$year."-%')";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gn');
+//		GvaluesCreate();
+
+		$send['year'] = utf8(setup_gn_year($year));
+		$send['html'] = utf8(setup_gn_spisok($year));
+		jsonSuccess($send);
+		break;
+	case 'setup_gn_add':
+		if(!$week_nomer = _num($_POST['week_nomer']))
+			jsonError('Некорректно указан номер недели выпуска');
+		if(!$general_nomer = _num($_POST['general_nomer']))
+			jsonError('Некорректно указан общий номер выпуска');
+		if(!preg_match(REGEXP_DATE, $_POST['day_print']))
+			jsonError('Некорректно указана дата отправки в печать');
+		if(!preg_match(REGEXP_DATE, $_POST['day_public']))
+			jsonError('Некорректно указана дата выхода газеты');
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$polosa_count = _num($_POST['polosa_count']))
+			jsonError();
+		$day_print = $_POST['day_print'];
+		$day_public = $_POST['day_public'];
+
+		$sql = "SELECT `general_nomer`
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `general_nomer`=".$general_nomer;
+		if(query_value($sql))
+			jsonError('Номер газеты <b>'.$general_nomer.'</b> уже есть в списке');
+
+		$sql = "INSERT INTO `_setup_gazeta_nomer` (
+					`app_id`,
+					`week_nomer`,
+					`general_nomer`,
+					`day_print`,
+					`day_public`,
+					`polosa_count`
+				) VALUES (
+					".APP_ID.",
+					".$week_nomer.",
+					".$general_nomer.",
+					'".$day_print."',
+					'".$day_public."',
+					".$polosa_count."
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gn');
+//		GvaluesCreate();
+
+		$send['year'] = utf8(setup_gn_year($year));
+		$send['html'] = utf8(setup_gn_spisok($year, $general_nomer));
+		jsonSuccess($send);
+		break;
+	case 'setup_gn_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$week_nomer = _num($_POST['week_nomer']))
+			jsonError('Некорректно указан номер недели выпуска');
+		if(!$general_nomer = _num($_POST['general_nomer']))
+			jsonError('Некорректно указан общий номер выпуска');
+		if(!preg_match(REGEXP_DATE, $_POST['day_print']))
+			jsonError('Некорректно указана дата отправки в печать');
+		if(!preg_match(REGEXP_DATE, $_POST['day_public']))
+			jsonError('Некорректно указана дата выхода газеты');
+		if(!$year = _num($_POST['year']))
+			jsonError();
+		if(!$polosa_count = _num($_POST['polosa_count']))
+			jsonError();
+		$day_print = $_POST['day_print'];
+		$day_public = $_POST['day_public'];
+
+		$sql = "SELECT `general_nomer`
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`!=".$id."
+				  AND `general_nomer`=".$general_nomer;
+		if(query_value($sql))
+			jsonError('Номер газеты <b>'.$general_nomer.'</b> уже есть в списке');
+
+		$sql = "SELECT *
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `_setup_gazeta_nomer`
+				SET `week_nomer`=".$week_nomer.",
+					`general_nomer`=".$general_nomer.",
+					`day_print`='".$day_print."',
+					`day_public`='".$day_public."',
+					`polosa_count`=".$polosa_count."
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gn');
+//		GvaluesCreate();
+
+		$send['year'] = utf8(setup_gn_year($year));
+		$send['html'] = utf8(setup_gn_spisok($year, $general_nomer));
+		jsonSuccess($send);
+		break;
+	case 'setup_gn_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `_setup_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "DELETE FROM `_setup_gazeta_nomer` WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'gn');
+//		GvaluesCreate();
+
+		jsonSuccess();
+		break;
+
 	case 'setup_zayav_status_add':
 		if(!_viewerMenuAccess(16))
 			jsonError();

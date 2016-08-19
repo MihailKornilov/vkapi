@@ -238,3 +238,31 @@
 #setup_oblen input{width:30px;text-align:right}
 #setup_oblen .vk{margin:10px 0 0 150px}
 
+
+
+
+
+/* Номера газет */
+#setup_gn .headName{margin-bottom:0}
+#setup_gn #dopLinks{margin-bottom:10px}
+#setup_gn .vk{margin:20px 0 0 150px}
+#setup_gn ._spisok{width:100%}
+#setup_gn .grey *{color:#999}
+#setup_gn .pc{text-align:center}
+#setup_gn .edit{background-color:#ffa}
+#setup_gn s{display:none}
+#setup_gn #gn-clear{
+	display:block;
+	color:#e33;
+	text-align:right;
+	margin-bottom:8px;
+}
+.setup-gn-tab #week_nomer{width:15px;text-align:right;margin-right:6px}
+.setup-gn-tab #general_nomer{width:30px;text-align:right}
+.setup-gn-tab .gn-info{
+	border:#ddd solid 1px;
+	padding:6px 10px;
+	background-color:#ffe;
+	text-align:justify;
+	margin-bottom:10px;
+}
