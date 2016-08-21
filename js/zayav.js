@@ -2210,8 +2210,10 @@ $(document)
 					})
 				});
 			}
-
-			name.push('Изменить статус заявки');        action.push(_zayavStatus);
+			if(ZI.pole[45]) {
+				name.push('Изменить статус заявки');
+				action.push(_zayavStatus);
+			}
 			name.push('Начислить');                     action.push(_accrualAdd);
 			name.push('<b>Принять платёж</b>');         action.push(_incomeAdd);
 			name.push('Возврат');                       action.push(_refundAdd);

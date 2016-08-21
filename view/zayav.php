@@ -407,11 +407,15 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 
 	return _cacheErr('неизвестный ключ статуса', $i);
 }
-function _zayavStatusButton($z) {
+function _zayavStatusButton($z) {//кнопка статуса в информации о заявке
+	if(empty($z['zpu'][45]))
+		return '';
+
 	if($z['status_day'] == '0000-00-00')
 		$z['status_day'] = $z['status_dtime'];
 
 	return
+	'<tr><td class="label">Статус:<td>'.
 		'<div id="zayav-status-button"'._zayavStatus($z['status_id'], 'bg').'>'.
 			'<b class="hd">'._zayavStatus($z['status_id']).'</b> '.
 			(_zayavStatus($z['status_id'], 'day_fact') ? FullData($z['status_day'], 1) : '').
@@ -1402,8 +1406,6 @@ function _zayav_info() {
 	  ($z['sum_cost'] ? '<tr><td class="label">Стоимость:<td><b>'.$z['sum_cost'].'</b> руб.' : '').
 	  ($z['pay_type'] ? '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']) : '').
 
-						'<tr><td class="label">Статус:<td>'._zayavStatusButton($z).
-
 					(isset($zpu[10]) || $z['executer_id'] ?
 						'<tr><td class="label r">Исполнитель:'.
 							'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />'
@@ -1412,6 +1414,8 @@ function _zayav_info() {
 					(isset($zpu[13]) || $z['srok'] != '0000-00-00' ?
 		                '<tr><td class="label">Срок:<td><input type="hidden" id="srok" value="'.$z['srok'].'" />'
 					: '').
+
+						_zayavStatusButton($z).
 
 					(isset($zpu[22]) || $z['attach_id'] ?
 						'<tr><td class="label">'._br(isset($zpu[22]) ? $zpu[22]['name'] : 'Документ').':'.
