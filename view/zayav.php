@@ -1229,6 +1229,8 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 		
 				'<table class="tab">'.
 //			 ($r['count'] ? '<tr><td class="label">Количество:<td><b>'.$r['count'].'</b> шт.' : '').
+			_zayavUnit43($z).
+			_zayavUnit44($z, $zpu).
 		($z['dogovor_id'] ? '<tr><td class="label top">Договор:<td class="dog">'.$z['dogovor_line'] : '').
 	(!$filter['client_id'] && $z['client_id'] ? '<tr><td class="label">Клиент:<td>'.$z['client_go'] : '').
 			 ($z['adres'] ? '<tr><td class="label top">Адрес:<td>'.$z['adres'] : '').
@@ -1247,6 +1249,20 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 		'<div class="note">'.$z['note'].'</div>'.
 
 	'</div>';
+}
+function _zayavUnit43($z) {//единица списка заявки: рубрика
+	if(!$z['rubric_id'])
+		return '';
+	return
+	'<tr><td class="label">Рубрика:<td>'._rubric($z['rubric_id']).
+		($z['rubric_id_sub'] ? '<span class="ug">»</span>'._rubricSub($z['rubric_id_sub']) : '');
+}
+function _zayavUnit44($z, $zpu) {//единица списка заявки: текст
+	if(!isset($zpu[44]))
+		return '';
+	if(empty($z['about']))
+		return '';
+	return '<tr><td class="label top">Текст:<td><div class="about">'.$z['about'].'</div>';
 }
 function _zayavTovarName() {
 	$sql = "SELECT DISTINCT `tovar_id`

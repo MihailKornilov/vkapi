@@ -384,7 +384,52 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
-	
+
+	saZayavBalans = function(id) {//правка баланса избранной заявки
+		var dialog = _dialog({
+			top:20,
+			width:500,
+			head:'Обновление балансов заявок',
+			load:1,
+			butSubmit:''
+		});
+
+		$.post(AJAX_MAIN, {op:'sa_zayav_load'}, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+			} else
+				dialog.loadError();
+		}, 'json');
+		return dialog;
+	},
+	saZayavBalansRepair = function(id) {//правка баланса избранной заявки
+		var send = {
+				op:'sa_zayav_balans_repair',
+				zayav_id:id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				$('#rep' + id).remove();
+			}
+		}, 'json');
+	},
+	saZayavBalansRepairAll = function(ids) {//правка баланса нескольких заявок
+		var send = {
+			op:'sa_zayav_balans_repair_all',
+			ids:ids
+		};
+		$('#rep-all').addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			$('#rep-all').removeClass('_busy');
+			if(res.success) {
+				_msg();
+				zbDialog.close();
+				zbDialog = saZayavBalans();
+			}
+		}, 'json');
+	},
+
 	saColorEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -898,42 +943,6 @@ $(document)
 
 	})
 
-	.on('click', '#sa-count .zayav', function() {
-		var dialog = _dialog({
-			top:20,
-			width:500,
-			head:'Обновление балансов заявок',
-			load:1,
-			butSubmit:''
-		});
-
-		var send = {
-			op:'sa_count_zayav_load'
-		};
-
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-			} else
-				dialog.loadError();
-		}, 'json');
-
-	})
-	.on('click', '.zayav-balans-repair', function() {
-		var t = $(this),
-			send = {
-				op:'sa_count_zayav_balans_repair',
-				zayav_id:t.attr('val')
-			};
-
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				_msg();
-				t.remove();
-			}
-		}, 'json');
-
-	})
 	.on('click', '#sa-count .tovar-set-find-update', function() {
 		var t = $(this),
 			send = {

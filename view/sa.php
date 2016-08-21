@@ -824,23 +824,23 @@ function sa_color_spisok() {
 
 function sa_count() {
 	return
-		sa_path('Счётчики').
-		'<div id="sa-count">'.
-			'<div class="headName">Счётчики</div>'.
-			'<button class="vk client">Клиенты</button>'.
-			'<br />'.
-			'<br />'.
-			'<button class="vk zayav">Заявки</button>'.
-			'<br />'.
-			'<br />'.
-			'<button class="vk tovar-set-find-update">Обновить find товаров-запчастей <em></em></button>'.
-			'<br />'.
-			'<br />'.
-			'<button class="vk tovar-articul-update">Обновить артикулы товаров</button>'.
-			'<br />'.
-			'<br />'.
-			'<button class="vk tovar-avai-check">Проверка корректности наличия товара</button>'.
-		'</div>';
+	sa_path('Счётчики').
+	'<div id="sa-count">'.
+		'<div class="headName">Счётчики</div>'.
+		'<button class="vk client">Клиенты</button>'.
+		'<br />'.
+		'<br />'.
+		'<button class="vk" onclick="zbDialog=saZayavBalans()">Заявки</button>'.
+		'<br />'.
+		'<br />'.
+		'<button class="vk tovar-set-find-update">Обновить find товаров-запчастей <em></em></button>'.
+		'<br />'.
+		'<br />'.
+		'<button class="vk tovar-articul-update">Обновить артикулы товаров</button>'.
+		'<br />'.
+		'<br />'.
+		'<button class="vk tovar-avai-check">Проверка корректности наличия товара</button>'.
+	'</div>';
 }
 
 

@@ -1394,94 +1394,6 @@ function _cacheErr($txt='Неизвестное значение', $i='') {//
 	return '<span class="red">'.$txt.$i.'.</span>';
 }
 
-function _check($id, $txt='', $v=0, $light=false) {
-	$v = $v ? 1 : 0;
-	$light = $light ? ' l' : '';
-	$e = $txt ? '' : ' e';
-	return
-	'<div class="_check check'.$v.$light.$e.'" id="'.$id.'_check">'.
-		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
-		$txt.
-	'</div>';
-}
-function _checkNew($v=array()) {
-	$v = array(
-		'id' => @$v['id'],
-		'txt' => @$v['txt'],
-		'value' => _bool(@$v['value']),
-		'light' => _bool(@$v['light']) ? ' l' : '',
-		'disabled' => _bool(@$v['disabled']) ? ' disabled' : '',
-		'block' => _bool(@$v['block']) ? ' block' : ''
-	);
-	return
-	'<div class="_check check'.$v['value'].$v['block'].$v['disabled'].$v['light'].($v['txt'] ? '' : ' e').'" id="'.$v['id'].'_check">'.
-		'<input type="hidden" id="'.$v['id'].'" value="'.$v['value'].'" />'.
-		$v['txt'].
-	'</div>';
-}
-function _radio($id, $list, $value=0, $light=0, $block=1) {
-	$spisok = '';
-	foreach($list as $uid => $title) {
-		$sel = $uid == $value ? 'on' : 'off';
-		$l = $light ? ' l' : '';
-		$spisok .= '<div class="'.$sel.$l.'" val="'.$uid.'"><s></s>'.$title.'</div>';
-	}
-	return
-	'<div class="_radio'.($block ? ' block' : '').'" id="'.$id.'_radio">'.
-		'<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
-		$spisok.
-	'</div>';
-}
-
-function _end($count, $o1, $o2, $o5=false) {
-	if($o5 === false) $o5 = $o2;
-	if($count / 10 % 10 == 1)
-		return $o5;
-	else
-		switch($count % 10) {
-			case 1: return $o1;
-			case 2: return $o2;
-			case 3: return $o2;
-			case 4: return $o2;
-		}
-	return $o5;
-}
-function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
-	$znak = $sum < 0 ? -1 : 1;
-	$sum *= $znak;
-	$send = '';
-	$floor = floor($sum);
-	$drob = round($sum - $floor, 2) * 100;
-	while($floor > 0) {
-		$del = $floor % 1000;
-		$floor = floor($floor / 1000);
-		if(!$del) $send = ' 000'.$send;
-		elseif($del < 10) $send = ($floor ? ' 00' : '').$del.$send;
-		elseif($del < 100) $send = ($floor ? ' 0' : '').$del.$send;
-		else $send = ' '.$del.$send;
-	}
-	$send = $send ? trim($send) : 0;
-	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
-	return ($znak < 0 ? '-' : '').$send;
-}
-function _tooltip($msg, $left=0, $ugolSide='') {
-	return
-		' _tooltip">'.
-		'<div class="ttdiv"'.($left ? ' style="left:'.$left.'px"' : '').'>'.
-			'<div class="ttmsg">'.$msg.'</div>'.
-			'<div class="ttug'.($ugolSide ? ' '.$ugolSide : '').'"></div>'.
-		'</div>';
-}
-
-function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
-function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
-function mb_ucfirst($txt) {//делание заклавной первую букву текста
-	mb_internal_encoding('UTF-8');
-	$txt = utf8($txt);
-	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
-	return win1251($txt);
-}
-
 function _rightLink($id, $spisok, $val=0) {
 	$a = '';
 	foreach($spisok as $uid => $title)
@@ -1606,6 +1518,94 @@ function _engRusChar($word) { //Перевод символов раскладки с английского на русс
 			$send .= $char[$word[$n]];
 	return $send;
 }
+function _check($id, $txt='', $v=0, $light=false) {
+	$v = $v ? 1 : 0;
+	$light = $light ? ' l' : '';
+	$e = $txt ? '' : ' e';
+	return
+	'<div class="_check check'.$v.$light.$e.'" id="'.$id.'_check">'.
+		'<input type="hidden" id="'.$id.'" value="'.$v.'" />'.
+		$txt.
+	'</div>';
+}
+function _checkNew($v=array()) {
+	$v = array(
+		'id' => @$v['id'],
+		'txt' => @$v['txt'],
+		'value' => _bool(@$v['value']),
+		'light' => _bool(@$v['light']) ? ' l' : '',
+		'disabled' => _bool(@$v['disabled']) ? ' disabled' : '',
+		'block' => _bool(@$v['block']) ? ' block' : ''
+	);
+	return
+	'<div class="_check check'.$v['value'].$v['block'].$v['disabled'].$v['light'].($v['txt'] ? '' : ' e').'" id="'.$v['id'].'_check">'.
+		'<input type="hidden" id="'.$v['id'].'" value="'.$v['value'].'" />'.
+		$v['txt'].
+	'</div>';
+}
+function _radio($id, $list, $value=0, $light=0, $block=1) {
+	$spisok = '';
+	foreach($list as $uid => $title) {
+		$sel = $uid == $value ? 'on' : 'off';
+		$l = $light ? ' l' : '';
+		$spisok .= '<div class="'.$sel.$l.'" val="'.$uid.'"><s></s>'.$title.'</div>';
+	}
+	return
+	'<div class="_radio'.($block ? ' block' : '').'" id="'.$id.'_radio">'.
+		'<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
+		$spisok.
+	'</div>';
+}
+
+function _end($count, $o1, $o2, $o5=false) {
+	if($o5 === false) $o5 = $o2;
+	if($count / 10 % 10 == 1)
+		return $o5;
+	else
+		switch($count % 10) {
+			case 1: return $o1;
+			case 2: return $o2;
+			case 3: return $o2;
+			case 4: return $o2;
+		}
+	return $o5;
+}
+function _sumSpace($sum) {//Приведение суммы к удобному виду с пробелами
+	$znak = $sum < 0 ? -1 : 1;
+	$sum *= $znak;
+	$send = '';
+	$floor = floor($sum);
+	$drob = round($sum - $floor, 2) * 100;
+	while($floor > 0) {
+		$del = $floor % 1000;
+		$floor = floor($floor / 1000);
+		if(!$del) $send = ' 000'.$send;
+		elseif($del < 10) $send = ($floor ? ' 00' : '').$del.$send;
+		elseif($del < 100) $send = ($floor ? ' 0' : '').$del.$send;
+		else $send = ' '.$del.$send;
+	}
+	$send = $send ? trim($send) : 0;
+	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
+	return ($znak < 0 ? '-' : '').$send;
+}
+function _tooltip($msg, $left=0, $ugolSide='') {
+	return
+		' _tooltip">'.
+		'<div class="ttdiv"'.($left ? ' style="left:'.$left.'px"' : '').'>'.
+			'<div class="ttmsg">'.$msg.'</div>'.
+			'<div class="ttug'.($ugolSide ? ' '.$ugolSide : '').'"></div>'.
+		'</div>';
+}
+
+function win1251($txt) { return iconv('UTF-8', 'WINDOWS-1251//TRANSLIT', $txt); }
+function utf8($txt) { return iconv('WINDOWS-1251', 'UTF-8', $txt); }
+function mb_ucfirst($txt) {//делание заклавной первую букву текста
+	mb_internal_encoding('UTF-8');
+	$txt = utf8($txt);
+	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
+	return win1251($txt);
+}
+
 function unescape($str){
 	$escape_chars = '0410 0430 0411 0431 0412 0432 0413 0433 0490 0491 0414 0434 0415 0435 0401 0451 0404 0454 '.
 		'0416 0436 0417 0437 0418 0438 0406 0456 0419 0439 041A 043A 041B 043B 041C 043C 041D 043D '.

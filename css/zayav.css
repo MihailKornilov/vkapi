@@ -37,6 +37,14 @@
 }
 ._zayav-unit .name em{font-weight:bold;font-size:12px}
 ._zayav-unit b em{font-weight:bold}
+._zayav-unit .ug{margin:0 5px;color:#777}
+._zayav-unit .about{
+	border:#eee solid 1px;
+	font:14px Times New Roman;
+	background-color:#fffff0;
+	padding:2px 4px;
+	display:inline-block;
+}
 /* Номер и дата */
 ._zayav-unit .zd{
 	float:right;

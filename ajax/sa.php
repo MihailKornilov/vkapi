@@ -919,7 +919,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'sa_count_zayav_load':
+	case 'sa_zayav_load':
 /*
 		UPDATE `_zayav` `z`
 		SET `sum_accrual`=(
@@ -970,31 +970,52 @@ switch(@$_POST['op']) {
 				) WHERE `app_id`=".APP_ID;
 		query($sql);
 
-		$sql = "SELECT *
+		$sql = "SELECT COUNT(`id`)
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
 				  AND `sum_dolg`!=`sum_dolg_test`";
+		$all = query_value($sql);
+
+		$sql = "SELECT *
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `sum_dolg`!=`sum_dolg_test`
+				LIMIT 1000";
 		$zayav = query_arr($sql);
 
 		$spisok = '';
 		foreach($zayav as $r)
 			$spisok .= '<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">Заявка <b>#'.$r['id'].'</b></a> '.
-					   '<a class="zayav-balans-repair" val="'.$r['id'].'">исправить</a>'.
+					   '<a onclick="saZayavBalansRepair('.$r['id'].')" id="rep'.$r['id'].'">исправить</a>'.
 					   '<br />';
 
 		$send['html'] = utf8(
-			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
-			'<div>Различия: '.count($zayav).'</div>'.
+			'<div>app: '.APP_ID.' - '._app('app_name').'</div>'.
+			'<div>Всего: <b>'.$all.'</b></div>'.
+		(count($zayav) ?
+			'<div>Показано '.count($zayav).':'.
+				' <a onclick="saZayavBalansRepairAll(\''._idsGet($zayav).'\')" id="rep-all">исправить всё</a>'.
+			'</div>'
+		: '').
 			'<br />'.
 			$spisok
 		);
 		jsonSuccess($send);
 		break;
-	case 'sa_count_zayav_balans_repair':
+	case 'sa_zayav_balans_repair':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
 		_zayavBalansUpdate($zayav_id);
+
+		jsonSuccess();
+		break;
+	case 'sa_zayav_balans_repair_all':
+		if(!$ids = _ids($_POST['ids'], 1))
+			jsonError();
+
+		foreach($ids as $zayav_id)
+			_zayavBalansUpdate($zayav_id);
 
 		jsonSuccess();
 		break;
