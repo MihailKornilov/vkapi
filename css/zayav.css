@@ -250,10 +250,31 @@
 	padding:0 10px 10px 0;
 	min-width:385px;
 }
-#_zayav-info .headName{margin:10px 0}
+#_zayav-info .headName{margin:10px 0 0}
 #_zayav-info table .headName{max-width:480px}
 #_zayav-info .headName ._dropdown{float:right}
-#_zayav-info ._info{margin-bottom:5px}
+/* Блок с суммами начислений и платежей */
+#_zayav-info #pay-tab{
+	border-collapse:collapse;
+	margin:-1px 0 10px;
+}
+#_zayav-info #pay-tab td{
+	border:#DEE3EF solid 1px;
+	padding:4px 15px 6px;
+	text-align:center;
+	vertical-align:top;
+	font:bold 14px tahoma;
+}
+#_zayav-info #pay-tab .grey{margin-bottom:5px}
+#_zayav-info #pay-tab span{font-size:14px}
+#_zayav-info .cost{color:#777;cursor:default}
+#_zayav-info .acc{color:#07a;cursor:default}
+#_zayav-info .pay{color:#090;cursor:default}
+#_zayav-info .dolg{color:#c22}
+#_zayav-info #pay-tab.nopaid{background:#fff0f0}
+#_zayav-info #pay-tab.paid{background:#efe}
+
+#_zayav-info ._info{margin:10px 0 5px}
 #_zayav-info #tab{border-spacing:8px}
 #_zayav-info .label{width:70px;white-space:nowrap}
 #_zayav-info #added{
@@ -266,9 +287,6 @@
 #_zayav-info .img_word{margin:0 15px -4px -2px}
 #_zayav-info .img_cancel{margin:0 0 -1px 5px}
 #_zayav-info .attach-canceled{margin-left:5px;color:#999;cursor:default}
-#_zayav-info .acc{color:#07a;cursor:default}
-#_zayav-info .pay{color:#090;cursor:default}
-#_zayav-info #sum-diff{color:#888;margin-left:10px}
 #_zayav-info #right{vertical-align:top;padding:10px 0}
 #_zayav-info #foto{width:200px;text-align:center}
 #_zayav-info div.page{margin:0 10px}

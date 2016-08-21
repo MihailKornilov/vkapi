@@ -3,7 +3,7 @@ function _zayav() {
 	if(function_exists('zayavCase'))
 		return zayavCase();
 	if(@$_GET['d'] == 'info')
-		return _zayav_info();
+		return _zayavInfo();
 	
 	//вывести список заявок, в котором использовался конкретный товар (переход со страницы информации о товаре)
 	if($tovar_id = _num(@$_GET['from_tovar_id'])) {
@@ -1307,7 +1307,7 @@ function _zayavQuery($zayav_id, $withDel=0) {
 		return array();
 	return $z;
 }
-function _zayav_info() {
+function _zayavInfo() {
 	if(!$zayav_id = _num(@$_GET['id']))
 		return _err('Страницы не существует');
 
@@ -1330,9 +1330,6 @@ function _zayav_info() {
 	$z['sum_cost'] = _cena($z['sum_cost']);
 	$z['sum_accrual'] = _cena($z['sum_accrual']);
 	$z['sum_pay'] = _cena($z['sum_pay']);
-
-	//разница начислений и платежей
-	$sum_diff = abs($z['sum_dolg']) ? ($z['sum_dolg'] < 0 ? 'нед' : 'пред').'оплачено <b>'._sumSpace(abs($z['sum_dolg'])).'</b> руб.' : '';
 
 	return
 	_attachJs(array('zayav_id'=>$zayav_id)).
@@ -1390,10 +1387,12 @@ function _zayav_info() {
 			'<tr><td id="left">'.
 
 					'<div class="headName">'.
-						_zayav_info_category($z).
+						_zayavInfoCategory($z).
 						$z['name'].
 						'<input type="hidden" id="zayav-action" />'.
 					'</div>'.
+
+					_zayavInfoPay($z).
 
 	 ($z['about'] ? '<div class="_info">'._br($z['about']).'</div>' : '').
 
@@ -1403,7 +1402,6 @@ function _zayav_info() {
 						_zayav_tovar_several($z).
 		 ($z['adres'] ? '<tr><td class="label">Адрес:<td>'.$z['adres'] : '').
 	($z['dogovor_id'] ? '<tr><td class="label">Договор:<td>'._zayavDogovor($z) : '').
-	  ($z['sum_cost'] ? '<tr><td class="label">Стоимость:<td><b>'.$z['sum_cost'].'</b> руб.' : '').
 	  ($z['pay_type'] ? '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']) : '').
 
 					(isset($zpu[10]) || $z['executer_id'] ?
@@ -1429,11 +1427,6 @@ function _zayav_info() {
 								 _zayavAttachCancel($z, 34)
 					: '').
 
-   ($z['sum_accrual'] ? '<tr><td class="label">Начислено:<td><b class="acc">'._sumSpace($z['sum_accrual']).'</b> руб.' : '').
-	   ($z['sum_pay'] ? '<tr><td class="label">Оплачено:'.
-							'<td><b class="pay">'._sumSpace($z['sum_pay']).'</b> руб.'.
-				   ($sum_diff ? '<span id="sum-diff">'.$sum_diff.'</span>' : '')
-		: '').
 					'</table>'.
 
 					'<div id="added">'.
@@ -1453,13 +1446,13 @@ function _zayav_info() {
 		'</table>'.
 
 		'<div class="page dn">'.
-			'<div class="headName">'._zayav_info_category($z).$z['name'].' - история действий</div>'.
+			'<div class="headName">'._zayavInfoCategory($z).$z['name'].' - история действий</div>'.
 			$history['spisok'].
 		'</div>'.
 
 	'</div>';
 }
-function _zayav_info_category($z) {//отображение названия категории заявки
+function _zayavInfoCategory($z) {//отображение названия категории заявки
 	if(!$z['service_id'])
 		return '';
 
@@ -1519,6 +1512,42 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 		return 0;
 
 	return 1;
+}
+function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, платежи
+	if(!$z['sum_cost'] && !$z['sum_accrual'] && !$z['sum_pay'])
+		return '';
+
+	//подсветка таблицы на основании долга заявки
+	$class = '';
+	if($z['sum_accrual'] || $z['sum_pay'])
+		if(_cena(abs($z['sum_dolg'])))
+			$class = ' class="nopaid"';
+		else $class = ' class="paid"';
+
+	return
+	'<table id="pay-tab"'.$class.'>'.
+		'<tr>'.
+
+		($z['sum_cost'] ?
+			'<td class="cost">'.
+				'<div class="grey">Cтоимость</div>'.
+				_sumSpace($z['sum_cost'])
+		: '').
+
+			'<td class="acc">'.
+				'<div class="grey">Начислено</div>'.
+				($z['sum_accrual'] ? _sumSpace($z['sum_accrual']) : '').
+
+			'<td class="pay">'.
+				'<div class="grey">Оплачено</div>'.
+				($z['sum_pay'] ? _sumSpace($z['sum_pay']) : '').
+
+		(abs($z['sum_dolg']) ?
+			'<td>'.
+				'<div class="grey">'.($z['sum_dolg'] < 0 ? 'Не ' : 'Пред').'оплачено</div>'.
+				'<span class="'.($z['sum_dolg'] < 0 ? 'dolg' : 'pay').'">'._sumSpace(abs($z['sum_dolg'])).'</span>'
+		: '').
+	'</table>';
 }
 function _zayavDogovor($z) {//отображение номера договора
 	$sql = "SELECT *
