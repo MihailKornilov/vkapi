@@ -1544,7 +1544,7 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 
 		(abs($z['sum_dolg']) ?
 			'<td>'.
-				'<div class="grey">'.($z['sum_dolg'] < 0 ? 'Не ' : 'Пред').'оплачено</div>'.
+				'<div class="grey">'.($z['sum_dolg'] < 0 ? 'Не оплачено' : 'Предоплата').'</div>'.
 				'<span class="'.($z['sum_dolg'] < 0 ? 'dolg' : 'pay').'">'._sumSpace(abs($z['sum_dolg'])).'</span>'
 		: '').
 	'</table>';
