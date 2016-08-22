@@ -1775,7 +1775,6 @@ $.fn.gnGet = function(o) {
 	return t;
 };
 
-
 $(document)
 	.on('click', '#_zayav .clear', function() {
 		$('#find')._search('clear');    ZAYAV.find = '';
@@ -2343,6 +2342,10 @@ $(document)
 					top:-82,
 					left:-24
 				})
+			});
+			$('#lost-count').click(function() {//отображение прошедших номеров газеты
+				$(this).parent().find('.lost').show()
+				$(this).remove();
 			});
 		}
 		if($('#zayav-report').length) {

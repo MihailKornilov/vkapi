@@ -197,7 +197,8 @@ var saMenuEdit = function(o) {
 			id:0,
 			name:'',
 			about:'',
-			param1:''
+			param1:'',
+			param2:''
 		}, o);
 
 		var html =
@@ -206,6 +207,7 @@ var saMenuEdit = function(o) {
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
 					'<tr><td class="label">Параметр 1:<td><input type="text" id="param1" class="w250" placeholder="название параметра" value="' + o.param1 + '" />' +
+					'<tr><td class="label">Параметр 2:<td><input type="text" id="param2" class="w250" placeholder="название параметра" value="' + o.param2 + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
@@ -225,7 +227,8 @@ var saMenuEdit = function(o) {
 				type_id:SAZP_TYPE_ID,
 				name:$('#name').val(),
 				about:$('#about').val(),
-				param1:$('#param1').val()
+				param1:$('#param1').val(),
+				param2:$('#param2').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -263,7 +266,8 @@ var saMenuEdit = function(o) {
 						type_id:type_id,
 						name:t.find('.name').html(),
 						about:t.find('.about').html(),
-						param1:t.find('.param').html()
+						param1:t.find('.param1').html(),
+						param2:t.find('.param2').html()
 					});
 				});
 			} else
@@ -281,7 +285,9 @@ var saMenuEdit = function(o) {
 			label:'',
 			require:0,
 			param1:'',
-			param_v1:0
+			param_v1:0,
+			param2:'',
+			param_v2:0
 		}, o);
 
 		var html =
@@ -296,6 +302,9 @@ var saMenuEdit = function(o) {
 					'<tr' + (o.param1 ? '' : ' class="dn"') + '>' +
 						'<td class="label"><b>' + o.param1 + ':</b>' +
 						'<td><input type="hidden" id="param_v1" value="' + o.param_v1 + '" />' +
+					'<tr' + (o.param2 ? '' : ' class="dn"') + '>' +
+						'<td class="label"><b>' + o.param2 + ':</b>' +
+						'<td><input type="hidden" id="param_v2" value="' + o.param_v2 + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:490,
@@ -308,6 +317,7 @@ var saMenuEdit = function(o) {
 		$('#label').focus();
 		$('#require')._check();
 		$('#param_v1')._check();
+		$('#param_v2')._check();
 
 		function submit() {
 			var send = {
@@ -317,7 +327,8 @@ var saMenuEdit = function(o) {
 				pole_id:o.pole_id,
 				label:$('#label').val(),
 				require:$('#require').val(),
-				param_v1:$('#param_v1').val()
+				param_v1:$('#param_v1').val(),
+				param_v2:$('#param_v2').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -807,7 +818,8 @@ $(document)
 			id:t.attr('val'),
 			name:p.find('.name').html(),
 			about:p.find('.about').html(),
-			param1:p.find('.param').html()
+			param1:p.find('.param1').html(),
+			param2:p.find('.param2').html()
 		});
 	})
 	.on('click', '#sa-zayav-pole .img_del', function() {
@@ -844,7 +856,9 @@ $(document)
 			type_id:p.find('.type_id').val(),
 			require:p.find('.require').val(),
 			param1:p.find('.param1').val(),
-			param_v1:p.find('.param_v1').val()
+			param_v1:p.find('.param_v1').val(),
+			param2:p.find('.param2').val(),
+			param_v2:p.find('.param_v2').val()
 		});
 	})
 	.on('click', '#sa-zayav-service .img_del', function() {

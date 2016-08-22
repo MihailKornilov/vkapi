@@ -283,6 +283,7 @@
 	text-align:right;
 	margin:10px 0;
 }
+#_zayav-info .ug{margin:0 7px;color:#777}
 #_zayav-info .dogn{cursor:default}/* номер договора */
 #_zayav-info .img_word{margin:0 15px -4px -2px}
 #_zayav-info .img_cancel{margin:0 0 -1px 5px}
@@ -302,6 +303,14 @@
 #_zayav-info #tsev td{border:#ddd solid 1px;padding:3px 8px}
 #_zayav-info #tsev .n{color:#999}
 #_zayav-info .kvit_defect{color:#777}
+/* “аблица номеров выпуска газеты */
+#_zayav-info .gn tr{background-color:#DFD}
+#_zayav-info .gn em{margin-left:3px;color:#888}
+#_zayav-info .gn .dop{color:#444;font-size:10px}
+#_zayav-info tr#lost-count{text-align:center;background:#eee;cursor:pointer;color:#555}
+#_zayav-info tr#lost-count:hover{background:#F9F9F9}
+#_zayav-info .gn tr.lost{background:#F9F9F9;display:none}
+#_zayav-info .gn tr.lost td{color:#777}
 
 
 

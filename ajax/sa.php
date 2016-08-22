@@ -529,6 +529,7 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$param1 = _txt($_POST['param1']);
+		$param2 = _txt($_POST['param2']);
 
 		if(!$name)
 			jsonError();
@@ -537,12 +538,14 @@ switch(@$_POST['op']) {
 					`type_id`,
 					`name`,
 					`about`,
-					`param1`
+					`param1`,
+					`param2`
 				) VALUES (
 					".$type_id.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
-					'".addslashes($param1)."'
+					'".addslashes($param1)."',
+					'".addslashes($param2)."'
 				)";
 		query($sql);
 
@@ -559,6 +562,7 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
 		$param1 = _txt($_POST['param1']);
+		$param2 = _txt($_POST['param2']);
 
 		if(!$name)
 			jsonError();
@@ -570,7 +574,8 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_pole`
 				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
-					`param1`='".addslashes($param1)."'
+					`param1`='".addslashes($param1)."',
+					`param2`='".addslashes($param2)."'
 				WHERE `id`=".$id;
 		query($sql);
 
@@ -627,6 +632,7 @@ switch(@$_POST['op']) {
 		$name_use = _txt($_POST['label']);
 		$require = _bool($_POST['require']);
 		$param_v1 = _bool($_POST['param_v1']);
+		$param_v2 = _bool($_POST['param_v2']);
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$pole_id;
 		if(!$r = query_assoc($sql))
@@ -639,6 +645,7 @@ switch(@$_POST['op']) {
 					`label`,
 					`require`,
 					`param_v1`,
+					`param_v2`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
@@ -647,6 +654,7 @@ switch(@$_POST['op']) {
 					'".addslashes($name_use)."',
 					".$require.",
 					".$param_v1.",
+					".$param_v2.",
 					"._maxSql('_zayav_pole_use')."
 				)";
 		query($sql);
@@ -667,6 +675,7 @@ switch(@$_POST['op']) {
 		$name_use = _txt($_POST['label']);
 		$require = _bool($_POST['require']);
 		$param_v1 = _bool($_POST['param_v1']);
+		$param_v2 = _bool($_POST['param_v2']);
 
 		$sql = "SELECT * FROM `_zayav_pole_use` WHERE `id`=".$id;
 		if(!$u = query_assoc($sql))
@@ -679,7 +688,8 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_pole_use`
 				SET `label`='".addslashes($name_use)."',
 					`require`=".$require.",
-					`param_v1`=".$param_v1."
+					`param_v1`=".$param_v1.",
+					`param_v2`=".$param_v2."
 				WHERE `id`=".$id;
 		query($sql);
 

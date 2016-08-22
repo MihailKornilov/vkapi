@@ -108,11 +108,13 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$arr[$r['general_nomer']] = array(
+				'general_nomer' => $r['general_nomer'],
 				'week' => $r['week_nomer'],
 				'day_print' => $r['day_print'],
 				'day_public' => $r['day_public'],
 				'pub' => FullData($r['day_public'], 1, 1, 1),
-				'pc' => $r['polosa_count']
+				'pc' => $r['polosa_count'],
+				'lost' => strtotime($r['day_print']) < time() //прошедший номер
 			);
 		xcache_set($key, $arr, 86400);
 	}
@@ -172,6 +174,54 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 		return _cacheErr('неизвестный ключ номера газеты', $i);
 
 	return $arr[$nomer][$i];
+}
+function _obDop($id, $i='name') {//Дополнительные параметры для объявлений
+	$key = CACHE_PREFIX.'gazeta_obdop';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_setup_gazeta_ob_dop`
+				WHERE `app_id`=".APP_ID;
+		$arr = query_arr($sql);
+		xcache_set($key, $arr, 86400);
+	}
+
+	if(!$id)
+		return '';
+
+	//неизвестный id
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id дополнительного параметра', $id);
+
+	//неизвестный ключ
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ дополнительного параметра', $i);
+
+	//конкретный дополнительный параметр
+	return $arr[$id][$i];
+}
+function _polosa($id, $i='name') {//Название полосы для рекламы
+	$key = CACHE_PREFIX.'gazeta_polosa';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_setup_gazeta_polosa_cost`
+				WHERE `app_id`=".APP_ID;
+		$arr = query_arr($sql);
+		xcache_set($key, $arr, 86400);
+	}
+
+	if(!$id)
+		return '';
+
+	//неизвестный id
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id полосы газеты', $id);
+
+	//неизвестный ключ
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ полосы газеты', $i);
+
+	//конкретная полоса газеты
+	return $arr[$id][$i];
 }
 
 
@@ -1012,7 +1062,8 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 			'label' => $label,
 			'name' => $name,
 			'require' => $r['require'],
-			'v1' => $r['param_v1']
+			'v1' => $r['param_v1'],
+			'v2' => $r['param_v2']
 		);
 	}
 
@@ -1097,11 +1148,11 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 				  '<td><input type="hidden" id="ze-pay_type" value="'.@$z['pay_type'].'" />',
 
 		31 => '<tr><td class="label topi">{label}'.
-				  '<td><input type="text" id="ze-size_x" maxlength="5" />'.
+				  '<td><input type="text" id="ze-size_x" maxlength="5" value="'.(_cena(@$z['size_x']) ? _cena($z['size_x']) : '').'" />'.
                     '<b class="xb">x</b>'.
-                    '<input type="text" id="ze-size_y" maxlength="5" />'.
+                    '<input type="text" id="ze-size_y" maxlength="5" value="'.(_cena(@$z['size_y']) ? _cena($z['size_y']) : '').'" />'.
                     ' = '.
-					'<input type="text" id="ze-kv_sm" readonly> см<sup>2</sup>',
+					'<input type="text" id="ze-kv_sm" readonly value="'.(_cena(@$z['size_x']) && _cena(@$z['size_y'])? round($z['size_x'] * $z['size_y']) : '').'" /> см<sup>2</sup>',
 
 		37 => '<tr><td class="label">{label}'.
 				  '<td><input type="text" id="ze-phone" value="'.@$z['phone'].'" />',
@@ -1232,11 +1283,12 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 				'<a class="name">'.$z['name'].'</a>'.
 		
 				'<table class="tab">'.
+		($z['dogovor_id'] ? '<tr><td class="label top">Договор:<td class="dog">'.$z['dogovor_line'] : '').
+	(!$filter['client_id'] && $z['client_id'] ? '<tr><td class="label">Клиент:<td>'.$z['client_go'] : '').
 //			 ($r['count'] ? '<tr><td class="label">Количество:<td><b>'.$r['count'].'</b> шт.' : '').
 			_zayavUnit43($z).
 			_zayavUnit44($z, $zpu).
-		($z['dogovor_id'] ? '<tr><td class="label top">Договор:<td class="dog">'.$z['dogovor_line'] : '').
-	(!$filter['client_id'] && $z['client_id'] ? '<tr><td class="label">Клиент:<td>'.$z['client_go'] : '').
+			_zayavUnit46($z, $zpu).
 			 ($z['adres'] ? '<tr><td class="label top">Адрес:<td>'.$z['adres'] : '').
 	         ($z['schet'] ? '<tr><td class="label topi">Счета:<td>'.$z['schet'] : '').
 				'</table>'.
@@ -1267,6 +1319,20 @@ function _zayavUnit44($z, $zpu) {//единица списка заявки: текст
 	if(empty($z['about']))
 		return '';
 	return '<tr><td class="label top">Текст:<td><div class="about">'.$z['about'].'</div>';
+}
+function _zayavUnit46($z, $zpu) {//единица списка заявки: размер
+	if(!isset($zpu[46]))
+		return '';
+
+	$size_x = round($z['size_x'], 1);
+	$size_y = round($z['size_y'], 1);
+
+	if(!$size_x || !$size_y)
+		return '';
+
+	return
+	'<tr><td class="label">Размер:'.
+		'<td>'.$size_x.' x '.$size_y.' = <b>'.round($size_x * $size_y).'</b> см&sup2;';
 }
 function _zayavTovarName() {
 	$sql = "SELECT DISTINCT `tovar_id`
@@ -1325,11 +1391,11 @@ function _zayavInfo() {
 	$zpu = _zayavPole($z['service_id']);
 	$z['zpu'] = $zpu;
 
-	$history = _history(array('zayav_id'=>$zayav_id));
-
 	$z['sum_cost'] = _cena($z['sum_cost']);
 	$z['sum_accrual'] = _cena($z['sum_accrual']);
 	$z['sum_pay'] = _cena($z['sum_pay']);
+
+	$history = _history(array('zayav_id'=>$zayav_id));
 
 	return
 	_attachJs(array('zayav_id'=>$zayav_id)).
@@ -1343,6 +1409,8 @@ function _zayavInfo() {
 				'client_link:"'.addslashes(_clientVal($z['client_id'], 'link')).'",'.
 				'name:"'.addslashes($z['name']).'",'.
 				'about:"'.addslashes(str_replace("\n", '', $z['about'])).'",'.
+				'size_x:'.$z['size_x'].','.
+				'size_y:'.$z['size_y'].','.
 				'count:'.$z['count'].','.
 				'status_id:'.$z['status_id'].','.
 				'status_day:"'.($z['status_day'] == '0000-00-00' ? '' : $z['status_day']).'",'.
@@ -1398,7 +1466,14 @@ function _zayavInfo() {
 
 					'<table id="tab">'.
 	 ($z['client_id'] ? '<tr><td class="label">Клиент:<td>'._clientVal($z['client_id'], 'go') : '').
-		 ($z['count'] ? '<tr><td class="label">Количество:<td><b>'.$z['count'].'</b> шт.' : '').
+
+	                _zayavUnit46($z, $zpu).
+					_zayavUnit43($z).
+
+				(isset($zpu[47]) && $z['count'] ?
+			            '<tr><td class="label">Количество:<td><b>'.$z['count'].'</b> шт.'
+				: '').
+
 						_zayav_tovar_several($z).
 		 ($z['adres'] ? '<tr><td class="label">Адрес:<td>'.$z['adres'] : '').
 	($z['dogovor_id'] ? '<tr><td class="label">Договор:<td>'._zayavDogovor($z) : '').
@@ -1426,6 +1501,8 @@ function _zayavInfo() {
 							'<td><input type="hidden" id="attach1_id" value="'.$z['attach1_id'].'" />'.
 								 _zayavAttachCancel($z, 34)
 					: '').
+
+						_zayavInfoPublic($z, $zpu).
 
 					'</table>'.
 
@@ -1548,6 +1625,45 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 				'<span class="'.($z['sum_dolg'] < 0 ? 'dolg' : 'pay').'">'._sumSpace(abs($z['sum_dolg'])).'</span>'
 		: '').
 	'</table>';
+}
+function _zayavInfoPublic($z, $zpu) {//номера выхода газеты
+	if(!isset($zpu[48]))
+		return '';
+
+	$sql = "SELECT *
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `zayav_id`=".$z['id']."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return '';
+
+	$send =
+		'<table class="_spisok gn">'.
+			'<tr><th>Номер'.
+				'<th>Выход'.
+				'<th>Цена'.
+				($zpu[48]['v1'] ? '<th>Дополнительно' : '').
+				($zpu[48]['v2'] ? '<th>Полоса' : '');
+	$lost = 0;
+	foreach($spisok as $r)
+		if(_gn($r['gazeta_nomer_id'], 'lost'))
+			$lost++;
+	$send .= ($lost ? '<tr id="lost-count"><td colspan="4">Показать прошедшие выходы ('.$lost.')' : '');
+
+	foreach($spisok as $r) {
+		$gn = _gn($r['gazeta_nomer_id']);
+		$send .=
+			'<tr'.($gn['lost'] ? ' class="lost"' : '').'>'.
+				'<td class="w50 r"><b>'.$gn['week'].'</b><em>('.$gn['general_nomer'].')</em>'.
+				'<td class="dtime">'.$gn['pub'].
+				'<td class="cena r">'._cena($r['cena']).
+				($zpu[48]['v1'] ? '<td class="dop">'._obDop($r['dop']) : '').
+				($zpu[48]['v2'] ? '<td class="dop">'._polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-я' : '') : '');
+	}
+	$send .= '</table>';
+
+	return '<tr><td class="label topi">Номера выпуска:<td>'.$send;
 }
 function _zayavDogovor($z) {//отображение номера договора
 	$sql = "SELECT *
