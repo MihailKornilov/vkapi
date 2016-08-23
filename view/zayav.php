@@ -845,6 +845,7 @@ function _zayav_spisok($v) {
 			WHERE ".$cond;
 	$r = query_assoc($sql);
 	$all = $r['all'];
+	$count = $r['count'];
 
 	$zayav = array();
 
@@ -903,10 +904,12 @@ function _zayav_spisok($v) {
 			'filter' => $filter
 		);
 
+	$zpu = _zayavPole($filter['service_id'], 4);
+
 	$send = array(
 		'all' => $all,
 		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').
-				//	($count ? '<span id="z-count">('.$count.' шт.)</span>' : '').
+					(!empty($zpu[49]['v1']) && $count ? '<span id="z-count">('.$count.' шт.)</span>' : '').
 					$filter['clear'],
 		'spisok' => $filter['js'],
 		'filter' => $filter
@@ -932,8 +935,6 @@ function _zayav_spisok($v) {
 
 		$zayav[$r['id']] = $r;
 	}
-
-	$zpu = _zayavPole($filter['service_id'], 4);
 
 	if(!$filter['client_id'])
 		$zayav = _clientValToList($zayav);
@@ -1285,10 +1286,10 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 				'<table class="tab">'.
 		($z['dogovor_id'] ? '<tr><td class="label top">Договор:<td class="dog">'.$z['dogovor_line'] : '').
 	(!$filter['client_id'] && $z['client_id'] ? '<tr><td class="label">Клиент:<td>'.$z['client_go'] : '').
-//			 ($r['count'] ? '<tr><td class="label">Количество:<td><b>'.$r['count'].'</b> шт.' : '').
-			_zayavUnit43($z).
-			_zayavUnit44($z, $zpu).
-			_zayavUnit46($z, $zpu).
+			_zayavUnit43($z).       //рубрика
+			_zayavUnit44($z, $zpu). //текст
+			_zayavUnit46($z, $zpu). //размер
+			_zayavUnit49($z, $zpu). //количество
 			 ($z['adres'] ? '<tr><td class="label top">Адрес:<td>'.$z['adres'] : '').
 	         ($z['schet'] ? '<tr><td class="label topi">Счета:<td>'.$z['schet'] : '').
 				'</table>'.
@@ -1333,6 +1334,13 @@ function _zayavUnit46($z, $zpu) {//единица списка заявки: размер
 	return
 	'<tr><td class="label">Размер:'.
 		'<td>'.$size_x.' x '.$size_y.' = <b>'.round($size_x * $size_y).'</b> см&sup2;';
+}
+function _zayavUnit49($z, $zpu) {//единица списка заявки: количество
+	if(!isset($zpu[49]))
+		return '';
+	if(!$z['count'])
+		return '';
+	return '<tr><td class="label">Количество:<td><b>'.$z['count'].'</b> шт.';
 }
 function _zayavTovarName() {
 	$sql = "SELECT DISTINCT `tovar_id`
