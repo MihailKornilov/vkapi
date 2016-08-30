@@ -249,16 +249,9 @@ switch(@$_POST['op']) {
 //			jsonError();
 
 		$executer_id = _num($_POST['executer_id']);
-
-		if(!preg_match(REGEXP_DATE, $_POST['srok']))
-			jsonError();
-		$srok = $_POST['srok'];
-
+		$srok = _txt($_POST['srok']);
 		$status_day = $_POST['status_day'];
 		$comm = _txt($_POST['comm']);
-
-//		if(ZAYAV_INFO_SROK && $status_id == 1 && $srok == '0000-00-00')
-//			jsonError();
 
 		if($z['status_id'] == $status_id)
 			jsonError();
@@ -267,10 +260,16 @@ switch(@$_POST['op']) {
 				SET `status_id`=".$status_id.",
 					`status_dtime`=CURRENT_TIMESTAMP,
 					`status_day`='".$status_day."',
-					`executer_id`=".$executer_id.",
-					`srok`='".$srok."'
+					`executer_id`=".$executer_id."
 				WHERE `id`=".$zayav_id;
 		query($sql);
+
+		if(preg_match(REGEXP_DATE, $srok)) {
+			$sql = "UPDATE `_zayav`
+					SET `srok`='".$srok."'
+					WHERE `id`=".$zayav_id;
+			query($sql);
+		}
 
 		$sql = "INSERT INTO `_zayav_status_move` (
 					`app_id`,
@@ -286,7 +285,7 @@ switch(@$_POST['op']) {
 					".$z['status_id'].",
 					".$status_id.",
 					".$executer_id.",
-					'".$srok."',
+					'".($srok ? $srok : '0000-00-00')."',
 					".VIEWER_ID."
 				)";
 		query($sql);
