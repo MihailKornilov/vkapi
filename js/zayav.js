@@ -53,8 +53,9 @@ var _zayavSpisok = function(v, id) {
 		});
 	},
 	_zayavEdit = function(sid) {
-		var zayav_id = window.ZI ? ZI.id : 0,
-			service_id = zayav_id ? ZI.service_id : sid || 0,
+		var service_id = zayav_id ? ZI.service_id : sid || 0,
+			zayav_id = window.ZI ? ZI.id : 0,
+			zayav_param = ZAYAV_POLE_PARAM[service_id] || {},//подолнительные параметры полей за€вки
 			client_adres = '', //адрес клиента дл€ подстановки в строку јдрес
 			equip_js = [],     //список комплектации дл€ select, которые были не выбраны дл€ конкретного товара
 			equip_tovar_id = 0,//id товара, по которому будет формироватьс€ комплектаци€
@@ -149,8 +150,14 @@ var _zayavSpisok = function(v, id) {
 				$('#ze-sum_cost')
 					.attr('readonly', !v)
 					.focus();
-				if(!v)
-					$('#ze-gn').gnGet('update');
+				var sum = _cena($('#ze-sum_cost').val());
+				$('#ze-gn').gnGet('manual', v);
+				$('#ze-gn').gnGet('summa', sum);
+				$('#ze-gn').gnGet('update');
+			});
+			$('#ze-sum_cost').keyup(function(v) {
+				$('#ze-gn').gnGet('summa', _cena($(this).val()));
+				$('#ze-gn').gnGet('update');
 			});
 
 			// 16 - –асчЄт
@@ -163,12 +170,14 @@ var _zayavSpisok = function(v, id) {
 			$('#ze-gn').gnGet({
 				dop_title0:'ƒоп. параметр не указан',
 				dop_spisok:GAZETA_OBDOP_SPISOK,
+				four_free:zayav_param[38] ? zayav_param[38][0] : 0,
 				func:function(v) {
 					if(_num($('#ze-sum_cost_manual').val()))
 						return;
 					$('#ze-sum_cost').val(v.summa);
 				}
 			});
+			_zayavObCalc();
 
 			// 39 - —кидка
 			$('#ze-skidka')._select({
@@ -282,6 +291,7 @@ var _zayavSpisok = function(v, id) {
 				place_other:$('#tovar-place').attr('val'), // 12
 				srok:$('#ze-srok').val(),               // 13
 				note:$('#ze-note').val(),               // 14
+				sum_manual:_bool($('#ze-sum_cost_manual').val()),// 15:v1
 				sum_cost:$('#ze-sum_cost').val(),       // 15
 				pay_type:$('#ze-pay_type').val(),       // 16
 				equip:equipGet(1),                      // 4:v1
@@ -304,7 +314,7 @@ var _zayavSpisok = function(v, id) {
 	},
 	_zayavObCalc = function() {// ¬ычисление стоимости объ€влени€
 		var CALC = $('#ze-about-calc');
-		if(!CALC.length)
+		if(!CALC.length || !$('#ze-gn').length)
 			return;
 
 		var txt_sum = 0, // сумма только за текст
@@ -1415,10 +1425,13 @@ $.fn.gnGet = function(o, o1) {
 			window[win].cenaSet(o1);
 		if(o == 'update')
 			window[win].update();
+		if(o == 'summa')
+			window[win].summa(o1);
+		if(o == 'manual')
+			window[win].manual(o1);
 
-		return true;
+		return t;
 	}
-
 
 	o = $.extend({
 		show:4,     // количество номеров, которые показываютс€ изначально, а также отступ от уже выбранных
@@ -1427,8 +1440,10 @@ $.fn.gnGet = function(o, o1) {
 		dop_spisok:[],
 		pn_show:0,  // показывать выбор номеров полос
 		gns:null,   // выбранные номера (дл€ редактировани€)
+		four_free:0,// каждый 4-й номер бесплатно
 		skidka:0,
 		manual:0,   // установлена ли галочка дл€ ввода общей суммы вручную
+		summa:0,    // Ќужно если установлена галочка manual: обща€ стоимость всех объ€влений, получаема€ снаружи. «атем она делитс€ на все активные номера.
 		func:function() {}
 	}, o);
 
@@ -1490,7 +1505,6 @@ $.fn.gnGet = function(o, o1) {
 		dopDef = gnGet.find("#dopDef"),      // ¬ыбор дополнительных параметров по умолчанию
 		selCount = gnGet.find('#selCount'),  //  оличество выбранных номеров
 		gnCena = 0,   // ÷ена за один номер
-		gnSumma = 0,  // »тогова€ сумма
 		summa_manual = 0,
 		skidka_sum = 0;
 
@@ -1578,6 +1592,7 @@ $.fn.gnGet = function(o, o1) {
 								'<td class="td"><span class="g">выход</span> ' + sp.txt +
 								'<td class="cena" id="cena' + n + '">' +
 						'</table>' +
+						'<input type="hidden" id="exact' + n + '" />' + //точна€ цена: миллионные доли
 					'<td class="vdop">' +
 						'<input type="hidden" id="vdop' + n + '" value="' + sp.dop + '" /> ' +
 						'<input type="hidden" id="pn' + n + '" value="' + sp.pn + '" />' +
@@ -1668,39 +1683,43 @@ $.fn.gnGet = function(o, o1) {
 		gnsValUpdate();
 	}
 	function cenaSet() {// ”становка цены в выбранные номера
-		var four = 0;
+		var four = o.four_free ? 4 : 1000,
+			count = 0,
+			cena = 0;
+		//подсчЄт количества объ€влений, в которые нужно вписать стоимость (с учЄтом бесплатного номера)
+		if(o.manual) {
+			gnsAA(function(sp) {
+				four--;
+				if(!four)
+					four = 4;
+				else
+					count++;
+			});
+			cena = Math.round((o.summa / count) * 1000000) / 1000000;
+		}
+
+		four = o.four_free ? 4 : 1000;
 		gnsAA(function(sp, nn) {
 			var c = 0,
 				dop = _num($('#vdop' + nn).val());
-			four++;
-			if(four == 4) {
-				four = 0;
+			four--;
+			if(!four) {
+				four = 4;
 				c = 0;
 			} else
-				c = gnCena ? gnCena + (dop ? GAZETA_OBDOP_CENA[dop] : 0) : 0;
+				if(o.manual)
+					c = cena;
+				else
+					c = gnCena ? gnCena + (dop ? GAZETA_OBDOP_CENA[dop] : 0) : 0;
 			$('#cena' + nn).html(Math.round(c * 100) / 100);
+			$('#exact' + nn).val(c);
 		});
 
 
 		return;
-		var sum = 0,
-			count = 0;
 		switch(o.category1) {
 			case 1:
 				
-				if(o.manual) {
-					gnsActionActive(function(sp) {
-						if(!sp.prev) {
-							four++;
-							if (four == 4)
-								four = 0;
-							else
-								count++;
-						}
-					});
-					four = 0;
-					sum = Math.round((summa_manual / count) * 1000000) / 1000000;
-				}
 				gnsActionActive(function(sp) {
 					if(!sp.prev) {
 						four++;
@@ -1757,20 +1776,20 @@ $.fn.gnGet = function(o, o1) {
 		}
 	}
 	function gnsValUpdate() {//обновление выбранных значений номеров
-		var arr = [];
-		gnSumma = 0;
+		var arr = [],
+			sum = 0;
 		gnsAA(function(sp, v) {
 			var dop = _num($('#vdop' + v).val()),
-				c = _cena($('#cena' + v).html());
+				c = $('#exact' + v).val() * 1;
 			arr.push(v + ':' + dop + ':' + c);
-			gnSumma += c;
+			sum += c;
 		});
 
 		t.val(arr.join('###'));
 		$('#ze-note').val(t.val()); //todo удалить
 
 		o.func({
-			summa:gnSumma
+			summa:sum
 		});
 
 		//вывод количества выбранных номеров
@@ -1791,7 +1810,16 @@ $.fn.gnGet = function(o, o1) {
 		cenaSet();
 		gnsValUpdate();
 	};
-	t.update = gnsValUpdate;
+	t.update = function() {
+		cenaSet();
+		gnsValUpdate();
+	};
+	t.summa = function(v) {
+		o.summa = v;
+	};
+	t.manual = function(v) {
+		o.manual = v;
+	};
 
 	window[win] = t;
 	return t;

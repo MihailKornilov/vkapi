@@ -1093,6 +1093,24 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 
 	return $send;
 }
+function _zayavPoleParamJs() {//используемые параметры заявки в формате JS
+	$sql = "SELECT *
+			FROM `_zayav_pole_use`
+			WHERE `app_id`=".APP_ID."
+			  AND (`param_v1` OR `param_v2`)
+			ORDER BY `service_id`";
+	if(!$spisok = query_arr($sql))
+		return '{}';
+
+	$send = array();
+	foreach($spisok as $r)
+		$send[$r['service_id']][$r['pole_id']] = '['.$r['param_v1'].','.$r['param_v2'].']';
+
+	foreach($send as $i => $r)
+		$send[$i] = _assJson($send[$i]);
+
+	return str_replace('"', '', _assJson($send));
+}
 function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 	$service_id = _num(@$v['service_id']);
 	$client_id = _num(@$v['client_id']);
@@ -1158,13 +1176,13 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 		
 		15 => (@$zpu[15]['v1'] ?
 			   '<tr><td class="label">Указать стоимость вручную:'.
-					'<td>'._check('ze-sum_cost_manual')
+					'<td>'._check('ze-sum_cost_manual', '', _bool(@$z['sum_manual']))
 			  : '').
 			   '<tr><td class="label">{label}'.
 				   '<td><input type="text" '.
 							  'class="money" '.
 							  'id="ze-sum_cost" '.
-		   (@$zpu[15]['v1'] ? 'readonly ' : '').
+		   (@$zpu[15]['v1'] && !_bool(@$z['sum_manual']) ? 'readonly ' : '').
 							  'value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" '.
 						'/> руб.',
 
@@ -1688,7 +1706,7 @@ function _zayavInfoPublic($z, $zpu) {//номера выхода газеты
 			'<tr'.($gn['lost'] ? ' class="lost"' : '').'>'.
 				'<td class="w50 r"><b>'.$gn['week'].'</b><em>('.$gn['general_nomer'].')</em>'.
 				'<td class="dtime">'.$gn['pub'].
-				'<td class="cena r">'._cena($r['cena']).
+				'<td class="cena r">'.round($r['cena'], 2).
 				($zpu[48]['v1'] ? '<td class="dop">'._obDop($r['dop']) : '').
 				($zpu[48]['v2'] ? '<td class="dop">'._polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-я' : '') : '');
 	}

@@ -662,6 +662,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
+		_appJsValues();
 
 		define('SERVICE_ID', $service_id);
 		$send['html'] = utf8(sa_zayav_service_use($r['type_id'], $insert_id));
@@ -695,6 +696,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
+		_appJsValues();
 
 		define('SERVICE_ID', _num($u['service_id']));
 		$send['html'] = utf8(sa_zayav_service_use($r['type_id'], $id));
@@ -714,6 +716,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'service');
 		_globalJsValues();
+		_appJsValues();
 
 		jsonSuccess();
 		break;

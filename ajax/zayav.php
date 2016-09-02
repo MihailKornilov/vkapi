@@ -30,6 +30,7 @@ switch(@$_POST['op']) {
 					`rubric_id_sub`,
 
 					`srok`,
+					`sum_manual`,
 					`sum_cost`,
 					`pay_type`,
 					`equip`,
@@ -59,6 +60,7 @@ switch(@$_POST['op']) {
 					".$v['rubric_id_sub'].",
 
 					'".$v['srok']."',
+					".$v['sum_manual'].",
 					".$v['sum_cost'].",
 					".$v['pay_type'].",
 					'".$v['equip']."',
@@ -1461,9 +1463,11 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 		jsonError('Не заполнено поле '.$zpu[14]['name']);
 
 	$v['sum_cost'] = _cena(@$_POST['sum_cost']);
+	$v['sum_manual'] = _bool(@$_POST['sum_manual']);
 	if($u = @$zpu[15]) {
 		if($u['require'] && !$v['sum_cost'])
 			jsonError('Некорректно заполнено поле '.$u['name']);
+		$upd[] = "`sum_manual`=".$v['sum_manual'];
 		$upd[] = "`sum_cost`=".$v['sum_cost'];
 	}
 
@@ -1496,7 +1500,7 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 				$gn[] = array(
 					'gn_id' => $gn_id,
 					'dop' => _num($ex[1]),
-					'cena' => _cena($ex[2])
+					'cena' => round($ex[2], 6)
 				);
 			}
 			$v['gn'] = $gn;
@@ -1693,4 +1697,6 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 				`cena`
 			) VALUES ".implode(',', $insert);
 	query($sql);
+
+	_zayavBalansUpdate($zayav_id);
 }

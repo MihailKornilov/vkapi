@@ -1304,6 +1304,7 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_STATUS_REMIND_ASS='._zayavStatus('js_remind_ass').','.
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='._zayavStatus('js_day_fact_ass').','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
+		"\n".'ZAYAV_POLE_PARAM='._zayavPoleParamJs().','.        //используемые доп.параметры полей заявки
 		
 		_setup_global('js').
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
