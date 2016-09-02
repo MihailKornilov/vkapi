@@ -90,6 +90,7 @@ switch(@$_POST['op']) {
 		_zayavTovarUpdate($send['id']);
 		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
+		_zayavGazetaNomerUpdate($send['id'], $v);
 
 		_note(array(
 			'add' => 1,
@@ -1484,6 +1485,24 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 		$upd[] = "`phone`='".addslashes($v['phone'])."'";
 	}
 
+	$v['gn'] = _txt(@$_POST['gn']);
+	if($u = @$zpu[38]) {
+		if(!empty($v['gn'])){
+			$gn = array();
+			foreach(explode('###', $v['gn']) as $r) {
+				$ex = explode(':', $r);
+				if(!$gn_id = _num($ex[0]))
+					jsonError('Некорректный id номера газеты');
+				$gn[] = array(
+					'gn_id' => $gn_id,
+					'dop' => _num($ex[1]),
+					'cena' => _cena($ex[2])
+				);
+			}
+			$v['gn'] = $gn;
+		}
+	}
+
 	$v['rubric_id'] = _num(@$_POST['rubric_id']);
 	$v['rubric_id_sub'] = _num(@$_POST['rubric_id_sub']);
 	if($u = @$zpu[40]) {
@@ -1644,5 +1663,34 @@ function _zayavTovarUpdate($zayav_id) {//обновление списка товаров заявки
 				`tovar_id`,
 				`count`
 			) VALUES ".implode(',', $values);
+	query($sql);
+}
+function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
+	if(empty($v['zpu'][38]))
+		return;
+
+	$sql = "DELETE FROM `_zayav_gazeta_nomer` WHERE `zayav_id`=".$zayav_id;
+	query($sql);
+
+	if(empty($v['gn']))
+		return;
+
+	$insert = array();
+	foreach($v['gn'] as $r)
+		$insert[] = '('.
+			APP_ID.','.
+			$zayav_id.','.
+			$r['gn_id'].','.
+			$r['dop'].','.
+			$r['cena'].
+		')';
+
+	$sql = "INSERT INTO `_zayav_gazeta_nomer` (
+				`app_id`,
+				`zayav_id`,
+				`gazeta_nomer_id`,
+				`dop`,
+				`cena`
+			) VALUES ".implode(',', $insert);
 	query($sql);
 }

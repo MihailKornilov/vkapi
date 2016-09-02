@@ -305,17 +305,19 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError();
 
-		$about = $r['about'].'<br />Платёж от <u>'.$dtime.'</u>.';
+		$about = $r['about'].'<br />Возврат платёжа от <u>'.$dtime.'</u>.';
 
 		$sql = "INSERT INTO `_money_refund` (
 					`app_id`,
 					`invoice_id`,
+					`zayav_id`,
 					`sum`,
 					`about`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
 					".$r['invoice_id'].",
+					".$r['zayav_id'].",
 					".$r['sum'].",
 					'".addslashes($about)."',
 					".VIEWER_ID."
@@ -328,6 +330,8 @@ switch(@$_POST['op']) {
 				SET `refund_id`=".$insert_id."
 				WHERE `id`=".$id;
 		query($sql);
+
+		_zayavBalansUpdate($r['zayav_id']);
 
 		_balans(array(
 			'action_id' => 13,

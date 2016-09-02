@@ -145,13 +145,20 @@
 #_client-zayav-add-tab .u._busy span{visibility:hidden}
 
 
-/* внесение новой заявки */
-#_zayav-add-tab #equip-spisok div{display:block;margin-bottom:5px}
+
+
 
 /* Внесение/редактирование заявки */
 .zayav-edit_dialog .label{width:170px;text-align:right}
 .zayav-edit_dialog #ze-name{width:250px}
 .zayav-edit_dialog #ze-about{width:250px}
+.zayav-edit_dialog #ze-about-calc{
+	color:#583;
+	margin:3px;
+	height:28px;
+	display:none;
+}
+.zayav-edit_dialog #ze-about-calc span{font-size:10px;color:#888;margin-left:10px}
 .zayav-edit_dialog #ze-count{width:40px}
 .zayav-edit_dialog #ze-adres{width:231px}
 .zayav-edit_dialog #client-adres_check{margin:0 0 -3px 5px}
@@ -164,6 +171,7 @@
 .zayav-edit_dialog #ze-kv_sm{width:45px;cursor:default;background:#f2f2f2}
 .zayav-edit_dialog .xb{font:12px Trebuchet MS;margin:0 5px;color:#777}
 .zayav-edit_dialog sup{font-size:10px;position:relative;top:2px}
+.zayav-edit_dialog #ze-sum_cost:read-only{background:#f3f3f3}
 
 
 #ze-equip-spisok._busy{background-position:left}
@@ -174,11 +182,11 @@
 
 
 /* Список номеров газеты при внесении и редактировании заявок */
-#gnGet{margin:-3px 0 15px -5px}
+#gnGet{margin:-3px 0 30px 115px}
 #gnGet #dopLinks{padding:0 0 5px 5px;border:none;background-color:transparent}
 #gnGet #dopLinks a{margin-right:5px}
 #gnGet ._dropdown{margin-right:7px}
-#gnGet #dopDef_dropdown{margin:-4px 0 0 7px}
+#gnGet #dopDef_dropdown{margin:-4px 0 0 12px}
 #gnGet .gn-spisok{margin-left:-127px}
 #gnGet #darr{
 	font-size:12px;

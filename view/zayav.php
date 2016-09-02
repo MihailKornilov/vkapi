@@ -107,7 +107,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 				ORDER BY `general_nomer`";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
-			$arr[$r['general_nomer']] = array(
+			$arr[$r['id']] = array(
 				'general_nomer' => $r['general_nomer'],
 				'week' => $r['week_nomer'],
 				'day_print' => $r['day_print'],
@@ -131,6 +131,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 		$gn = array();
 		foreach($arr as $n => $r)
 			array_push($gn, "\n".$n.':{'.
+				'gen:'.$r['general_nomer'].','.
 				'week:'.$r['week'].','.
 				'pub:"'.$r['day_public'].'",'.
 				'txt:"'.FullData($r['day_public'], 0, 0, 1).'",'.
@@ -187,6 +188,22 @@ function _obDop($id, $i='name') {//Дополнительные параметры для объявлений
 
 	if(!$id)
 		return '';
+
+	//список названий для select
+	if($id == 'js_name') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = $r['name'];
+		return _selJson($send);
+	}
+
+	//цены в ассоциативном массиве JS
+	if($id == 'js_cena') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = _cena($r['cena']);
+		return _assJson($send);
+	}
 
 	//неизвестный id
 	if(!isset($arr[$id]))
@@ -1092,7 +1109,8 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 				 '<td><input type="text" id="ze-name" value="'.@$z['name'].'" />',
 
 		2 => '<tr><td class="label topi">{label}'.
-				 '<td><textarea id="ze-about">'.@$z['about'].'</textarea>',
+				 '<td><textarea id="ze-about">'.@$z['about'].'</textarea>'.
+				 (@$zpu[2]['v1'] ? '<div id="ze-about-calc"></div>' : ''),
 		
 		3 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" class="money" id="ze-count" value="'.@$z['count'].'" /> шт.',
@@ -1143,7 +1161,12 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 					'<td>'._check('ze-sum_cost_manual')
 			  : '').
 			   '<tr><td class="label">{label}'.
-				   '<td><input type="text" class="money" id="ze-sum_cost" value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" /> руб.',
+				   '<td><input type="text" '.
+							  'class="money" '.
+							  'id="ze-sum_cost" '.
+		   (@$zpu[15]['v1'] ? 'readonly ' : '').
+							  'value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" '.
+						'/> руб.',
 
 		16 => '<tr><td class="label topi">{label}'.
 				  '<td><input type="hidden" id="ze-pay_type" value="'.@$z['pay_type'].'" />',
@@ -1159,7 +1182,7 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 				  '<td><input type="text" id="ze-phone" value="'.@$z['phone'].'" />',
 
 		38 => '<tr><td class="label top">{label}'.
-				  '<td><input type="hidden" id="ze-gn" />',
+			  '<tr><td colspan="2"><input type="hidden" id="ze-gn" />',
 
 		39 => '<tr><td class="label">{label}'.
 				  '<td><input type="hidden" id="ze-skidka" />',
@@ -2009,6 +2032,13 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
 	$accrual = query_value($sql);
+
+	//номера газет
+	$sql = "SELECT IFNULL(SUM(`cena`),0)
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `zayav_id`=".$zayav_id;
+	$accrual += query_value($sql);
 
 	//платежи
 	$sql = "SELECT IFNULL(SUM(`sum`),0)

@@ -1,16 +1,30 @@
 <?php
 // --- Global ---
-function _setup_global() {//получение констант-параметров для всех приложений
+function _setup_global($i='const') {//получение констант-параметров для всех приложений
 	$key = CACHE_PREFIX.'setup_global';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT `key`,`value`
+		$sql = "SELECT *
 				FROM `_setup_global`
 				WHERE `app_id` IN (".APP_ID.",0)";
-		$arr = query_ass($sql);
+		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
-	foreach($arr as $key => $value)
-		define($key, $value);
+
+	if($i == 'const') {
+		foreach($arr as $r)
+			define($r['key'], $r['value']);
+		return;
+	}
+
+	if($i == 'js') {
+		$send = '';
+		foreach($arr as $r) {
+			if($r['app_id'] != APP_ID)
+				continue;
+			$send .= "\n".$r['key'].'='.$r['value'].',';
+		}
+		return $send;
+	}
 }
 
 

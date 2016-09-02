@@ -269,7 +269,8 @@ var _accrualAdd = function(o) {
 				'После внесения возврата не забудьте удалить начисление, чтобы выровнять баланс клиента.' +
 			'</div>' +
 			'<table id="_refund-add-tab">' +
-				'<tr><td class="label">Клиент:<td>' + ZI.client_link +
+(ZI.client_id ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
+                '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
 				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + _invoiceIncomeInsert(1) + '" />' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 				'<tr><td class="label">Причина:<td><input type="text" id="about" />' +
@@ -1963,7 +1964,7 @@ $(document)
 		var t = $(this),
 			id = t.attr('val'),
 			p = _parent(t),
-			sum = p.find('.sum').html(),
+			sum = p.attr('val'),
 			dtime = p.find('.refund-dtime').val(),
 			html =
 				'<div class="_info">' +

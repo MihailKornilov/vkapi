@@ -82,9 +82,10 @@ var _zayavSpisok = function(v, id) {
 				dialog.loadError();
 		}, 'json');
 
-
 		function zLoaded() {
-			$('#ze-about').autosize();
+			$('#ze-about')
+				.autosize()
+				.keyup(_zayavObCalc);
 
 			// 5 - Клиент
 			if(!$('#ze-client-name').length)
@@ -143,6 +144,15 @@ var _zayavSpisok = function(v, id) {
 			// 14 - Заметка
 			$('#ze-note').autosize();
 			
+			// 15 - Стоимость
+			$('#ze-sum_cost_manual')._check(function(v) {//указание стоимости вручную или нет
+				$('#ze-sum_cost')
+					.attr('readonly', !v)
+					.focus();
+				if(!v)
+					$('#ze-gn').gnGet('update');
+			});
+
 			// 16 - Расчёт
 			$('#ze-pay_type')._radio({
 				light:1,
@@ -151,11 +161,12 @@ var _zayavSpisok = function(v, id) {
 
 			// 38 - Номера выпуска
 			$('#ze-gn').gnGet({
-				func:function() {
-//					if($('#summa').attr('readonly')) {
-//						$('#summa').val(window.gnGet.summa());
-//						$('#skidka-txt').html(window.gnGet.skidka());
-//					}
+				dop_title0:'Доп. параметр не указан',
+				dop_spisok:GAZETA_OBDOP_SPISOK,
+				func:function(v) {
+					if(_num($('#ze-sum_cost_manual').val()))
+						return;
+					$('#ze-sum_cost').val(v.summa);
 				}
 			});
 
@@ -273,7 +284,8 @@ var _zayavSpisok = function(v, id) {
 				note:$('#ze-note').val(),               // 14
 				sum_cost:$('#ze-sum_cost').val(),       // 15
 				pay_type:$('#ze-pay_type').val(),       // 16
-				equip:equipGet(1)                       // 4:v1
+				equip:equipGet(1),                      // 4:v1
+				gn:$('#ze-gn').val()                    // 38
 			};
 
 			dialog.process();
@@ -289,6 +301,45 @@ var _zayavSpisok = function(v, id) {
 				}
 			}, 'json');
 		}
+	},
+	_zayavObCalc = function() {// Вычисление стоимости объявления
+		var CALC = $('#ze-about-calc');
+		if(!CALC.length)
+			return;
+
+		var txt_sum = 0, // сумма только за текст
+			podr_about = '', // подробное расписывание длины объявления
+			txt = $('#ze-about').val()
+					.replace(/\./g, '')    // точки
+					.replace(/,/g, '')     // запятые
+					.replace(/\//g, '')    // слеш /
+					.replace(/\"/g, '')    // двойные кавычки
+					.replace(/( +)/g, ' ') // вторые пробелы
+					.replace( /^\s+/g, '') // пробелы в начале
+					.replace( /\s+$/g, '');// пробелы в конце
+
+		CALC['slide' + (txt.length ? 'Down' : 'Up')](150);
+
+		if(!txt.length)
+			CALC.html('');
+		else {
+			txt_sum += TXT_CENA_FIRST * 1;
+			if(txt.length > TXT_LEN_FIRST) {
+				podr_about = ' = ';
+				var CEIL = Math.ceil((txt.length - TXT_LEN_FIRST) / TXT_LEN_NEXT);
+				podr_about += TXT_LEN_FIRST;
+				var LAST = txt.length - TXT_LEN_FIRST - (CEIL - 1) * TXT_LEN_NEXT;
+				txt_sum += CEIL * TXT_CENA_NEXT;
+				if(TXT_LEN_NEXT == LAST) CEIL++;
+				if(CEIL > 1) podr_about += ' + ' + TXT_LEN_NEXT;
+				if(CEIL > 2) podr_about += 'x' + (CEIL - 1);
+				if(TXT_LEN_NEXT > LAST) podr_about += ' + ' + LAST;
+			}
+			var html = 'Длина: <b>' + txt.length + '</b>' + podr_about + '<br />' +
+					   'Цена: <b>' + txt_sum + '</b> руб.<span>(без учёта доп. параметров)</span>';
+			CALC.html(html);
+		}
+		$('#ze-gn').gnGet('cena', txt_sum);
 	},
 	_zayavStatus = function() {//Изменение статуса заявки
 		var spisok = '';
@@ -1351,20 +1402,30 @@ $.fn.cartridge = function(o) {
 		add();
 	}
 };
-$.fn.gnGet = function(o) {
+$.fn.gnGet = function(o, o1) {
 	var t = $(this),
-		attr_id = t.attr('id');
+		attr_id = t.attr('id'),
+		win = attr_id + '_gnGet';
 
 	if(!attr_id)
 		return;
+
+	if(typeof o == 'string') {
+		if(o == 'cena')
+			window[win].cenaSet(o1);
+		if(o == 'update')
+			window[win].update();
+
+		return true;
+	}
+
 
 	o = $.extend({
 		show:4,     // количество номеров, которые показываются изначально, а также отступ от уже выбранных
 		add:8,      // количество номеров, добавляющихся к показу
 		dop_title0:'',//Доп. параметр не указан           Полоса не указана
 		dop_spisok:[],
-		pn_show:0,  //показывать выбор номеров полос
-		category:1, //todo удалить
+		pn_show:0,  // показывать выбор номеров полос
 		gns:null,   // выбранные номера (для редактирования)
 		skidka:0,
 		manual:0,   // установлена ли галочка для ввода общей суммы вручную
@@ -1393,11 +1454,13 @@ $.fn.gnGet = function(o) {
 	t.after(html);
 
 	$(document)
+		.off('click', '#darr')
 		.on('click', '#darr', function() {// Разворачивание списка
 			gns_begin = gns_end;
 			gns_end += o.add;
 			gnsPrint();
 		})
+		.off('click', '.gns-week')
 		.on('click', '.gns-week', function() {// Действие по нажатию на номер газеты
 			dopMenuA.removeClass('sel'); //очищение выделения периода, если был выбран
 			var th = $(this),
@@ -1406,8 +1469,9 @@ $.fn.gnGet = function(o) {
 			th[(sel ? 'add': 'remove') + 'Class']('gnsel');
 			th.removeClass('prev');
 
+			gnsDopPrint(v, sel);
+			cenaSet();
 			gnsValUpdate();
-			o.func();
 /*
 			GN_ASS[v].prev = 0;
 			GN_ASS[v].sel = sel;
@@ -1416,33 +1480,7 @@ $.fn.gnGet = function(o) {
 			if(o.dop_spisok.length) {
 				if(o.pn_show)
 					$('#pn' + v).val(0)._dropdown('remove');
-				$('#vdop' + v).val(0)._dropdown(!sel ? 'remove' : {
-					title0:o.dop_title0,
-					spisok:o.dop_spisok,
-					func:function(id) {
-						GN_ASS[v].dop = id;
-						cenaSet();
-						o.func();
-						if(o.pn_show) {
-							GN_ASS[v].pn = 0;
-							$('#pn' + v).val(0)._dropdown('remove');
-							if(POLOSA_NUM[id]) {
-								var pc = [];
-								for(n = 2; n < GN_ASS[v].pc; n++)
-									pc.push({uid:n,title:n + '-я'});
-								$('#pn' + v)._dropdown({
-									title0:'??',
-									spisok:pc,
-									func:function(pn) {
-										GN_ASS[v].pn = pn;
-									}
-								});
-							}
-						}
-					}
-				});
 			}
-			cenaSet();
 */
 		});
 
@@ -1451,7 +1489,8 @@ $.fn.gnGet = function(o) {
 		dopMenuA = gnGet.find('#dopLinks a'),// Список меню с периодами
 		dopDef = gnGet.find("#dopDef"),      // Выбор дополнительных параметров по умолчанию
 		selCount = gnGet.find('#selCount'),  // Количество выбранных номеров
-		cena = 0,   // Цена за один номер
+		gnCena = 0,   // Цена за один номер
+		gnSumma = 0,  // Итоговая сумма
 		summa_manual = 0,
 		skidka_sum = 0;
 
@@ -1476,7 +1515,7 @@ $.fn.gnGet = function(o) {
 	} else
 */
 	gnsPrint();
-	dopMenu();
+	gnsDopAll();
 
 	dopMenuA.click(function() {// выбор номеров на месяц, 3 месяца, полгода и год начиная сначала
 		var t = $(this),
@@ -1493,8 +1532,27 @@ $.fn.gnGet = function(o) {
 			return i < v ? 'gnsel' : '';
 		});
 
+		if(o.dop_spisok.length)
+			gnsAA(function(sp, nn) {
+				gnsDopPrint(nn, 1);
+/*
+				if(o.pn_show && POLOSA_NUM[sp.dop]) {
+					var pc = [];
+					for(var n = 2; n < GN_ASS[sp.n].pc; n++)
+						pc.push({uid:n,title:n + '-я'});
+					$('#pn' + sp.n)._dropdown({
+						title0:'??',
+						spisok:pc,
+						func:function(pn) {
+							GN_ASS[sp.n].pn = pn;
+						}
+					});
+				}
+*/
+			});
+
+		cenaSet();
 		gnsValUpdate();
-		o.func();
 	});
 	function gnsPrint(first, count) {// Вывод списка номеров
 		if(first) {// Список номеров выводится с самого начала, а не догружается
@@ -1511,10 +1569,12 @@ $.fn.gnGet = function(o) {
 				//end++;
 				continue;
 			}
+			//(sp.sel ? ' gnsel' : '') + для редактирования
+			//(sp.prev ? ' prev' : '') + для редактирования
 			html +=
 				'<table><tr>' +
-					'<td><table class="gns-week' + (sp.sel ? ' gnsel' : '') + (sp.prev ? ' prev' : '') + '" val="' + n + '">' +
-							'<tr><td class="td"><b>' + sp.week + '</b><span class="g">(' + n + ')</span>' +
+					'<td><table class="gns-week" val="' + n + '">' +
+							'<tr><td class="td"><b>' + sp.week + '</b><span class="g">(' + sp.gen + ')</span>' +
 								'<td class="td"><span class="g">выход</span> ' + sp.txt +
 								'<td class="cena" id="cena' + n + '">' +
 						'</table>' +
@@ -1526,49 +1586,8 @@ $.fn.gnGet = function(o) {
 		html += gns_end < GN_LAST ? '<div id="darr">&darr; &darr; &darr;</div>' : '';
 		gns[first ? 'html' : 'append'](html);
 		gns.animate({height:(gns.find('.gns-week').length * pix) + 'px'}, 300);
-		if(first && o.dop_spisok.length)
-			gnsActionActive(function(sp) {
-				$('#vdop' + sp.n)._dropdown({
-					title0:o.dop_title0,
-					spisok:o.dop_spisok,
-					func:function(v) {
-						GN_ASS[sp.n].dop = v;
-						cenaSet();
-						o.func();
-						if(o.pn_show) {
-							GN_ASS[sp.n].pn = 0;
-							$('#pn' + sp.n).val(0)._dropdown('remove');
-							if(POLOSA_NUM[v]) {
-								var pc = [];
-								for(n = 2; n < GN_ASS[sp.n].pc; n++)
-									pc.push({uid:n,title:n + '-я'});
-								$('#pn' + sp.n)._dropdown({
-									title0:'??',
-									spisok:pc,
-									func:function(pn) {
-										GN_ASS[sp.n].pn = pn;
-									}
-								});
-							}
-						}
-					}
-				});
-				if(o.pn_show && POLOSA_NUM[sp.dop]) {
-					var pc = [];
-					for(var n = 2; n < GN_ASS[sp.n].pc; n++)
-						pc.push({uid:n,title:n + '-я'});
-					$('#pn' + sp.n)._dropdown({
-						title0:'??',
-						spisok:pc,
-						func:function(pn) {
-							GN_ASS[sp.n].pn = pn;
-						}
-					});
-				}
-			});
-		cenaSet();
 	}
-	function dopMenu() {
+	function gnsDopAll() {//выпадающий список с дополнительным параметром для установки всем выбранным номерам
 		dopDef._dropdown(!o.dop_spisok.length ? 'remove' : {
 			head:'всем...',
 			headgrey:1,
@@ -1576,9 +1595,10 @@ $.fn.gnGet = function(o) {
 			nosel:1,
 			spisok:o.dop_spisok,
 			func:function(id) {
-				gnsActionActive(function(sp) {
+				gnsAA(function(sp, nn) {
+					$('#vdop' + nn)._dropdown(id);
+/*
 					if(!sp.prev) {
-						$('#vdop' + sp.n)._dropdown(id);
 						sp.dop = id;
 						if(o.pn_show) {
 							sp.pn = 0;
@@ -1596,19 +1616,51 @@ $.fn.gnGet = function(o) {
 							});
 						}
 					}
+*/
 				});
 				cenaSet();
-				o.func();
+				gnsValUpdate();
 			}
 		});
 	}
-	function gnsActionActive(func, all) {// Применение действия к выбранным номерам
-		for(var n = GN_FIRST; n <= GN_LAST; n++) {
-			var sp = GN_ASS[n];
-			if(!sp)
-				continue; // Eсли номер пропущен, тогда нет действия
-			if(all || sp.sel)
-				func(sp, n);
+	function gnsDopPrint(v, sel) {//выпадающий список с дополнительным параметром для конкретного номера газеты
+		$('#vdop' + v)
+			.val(0)
+			._dropdown(!sel ? 'remove' : {
+				title0:o.dop_title0,
+				spisok:o.dop_spisok,
+				func:function(id) {
+					cenaSet();
+					gnsValUpdate();
+	/*					if(o.pn_show) {
+						GN_ASS[v].pn = 0;
+						$('#pn' + v).val(0)._dropdown('remove');
+						if(POLOSA_NUM[id]) {
+							var pc = [];
+							for(n = 2; n < GN_ASS[v].pc; n++)
+								pc.push({uid:n,title:n + '-я'});
+							$('#pn' + v)._dropdown({
+								title0:'??',
+								spisok:pc,
+								func:function(pn) {
+									GN_ASS[v].pn = pn;
+								}
+							});
+						}
+					}
+	*/
+				}
+			});
+	}
+	function gnsAA(func, all) {// gnsActionActive: Применение действия к выбранным номерам
+		var week = $('.gns-week'),
+			gnsel = [];
+		for(var n = 0; n < week.length; n++) {
+			var sp = week.eq(n),
+				sel = sp.hasClass('gnsel'),
+				v = _num(sp.attr('val'));
+			if(all || sel)
+				func(sp, v);
 		}
 	}
 	function gnsClear() {// Очистка выбранных номеров
@@ -1616,11 +1668,26 @@ $.fn.gnGet = function(o) {
 		gnsValUpdate();
 	}
 	function cenaSet() {// Установка цены в выбранные номера
+		var four = 0;
+		gnsAA(function(sp, nn) {
+			var c = 0,
+				dop = _num($('#vdop' + nn).val());
+			four++;
+			if(four == 4) {
+				four = 0;
+				c = 0;
+			} else
+				c = gnCena ? gnCena + (dop ? GAZETA_OBDOP_CENA[dop] : 0) : 0;
+			$('#cena' + nn).html(Math.round(c * 100) / 100);
+		});
+
+
+		return;
 		var sum = 0,
 			count = 0;
-		switch(o.category) {
+		switch(o.category1) {
 			case 1:
-				var four = 0;
+				
 				if(o.manual) {
 					gnsActionActive(function(sp) {
 						if(!sp.prev) {
@@ -1644,7 +1711,7 @@ $.fn.gnGet = function(o) {
 						if(o.manual)
 							sp.cena = sum;
 						else
-							sp.cena = cena ? cena + (sp.dop ? OBDOP_CENA_ASS[sp.dop] : 0) : 0;
+							sp.cena = gnCena ? gnCena + (sp.dop ? OBDOP_CENA_ASS[sp.dop] : 0) : 0;
 					}
 					gnGet.find('#cena' + sp.n).html(Math.round(sp.cena * 100) / 100);
 				});
@@ -1689,84 +1756,44 @@ $.fn.gnGet = function(o) {
 				});
 		}
 	}
-	function summaGet() {
-		var sum = 0;
-		gnsActionActive(function(sp) {
-			if(!sp.prev)
-				sum += sp.cena;
-		});
-		return Math.round(sum * 100) / 100;
-	}
-
 	function gnsValUpdate() {//обновление выбранных значений номеров
-		var week = $('.gns-week'),
-			gnsel = [];
-		for(var n = 0; n < week.length; n++) {
-			var sp = week.eq(n);
-			if(sp.hasClass('gnsel'))
-				gnsel.push(sp.attr('val'));
-		}
-		t.val(gnsel.join());
-		$('#ze-note').val(gnsel.join()); //todo удалить
+		var arr = [];
+		gnSumma = 0;
+		gnsAA(function(sp, v) {
+			var dop = _num($('#vdop' + v).val()),
+				c = _cena($('#cena' + v).html());
+			arr.push(v + ':' + dop + ':' + c);
+			gnSumma += c;
+		});
+
+		t.val(arr.join('###'));
+		$('#ze-note').val(t.val()); //todo удалить
+
+		o.func({
+			summa:gnSumma
+		});
 
 		//вывод количества выбранных номеров
-		var countHtml = 'Выбран' + _end(gnsel.length, ['', 'о']) + ' ' +
-						 gnsel.length + ' номер' + _end(gnsel.length, ['', 'a', 'ов']) +
+		var countHtml = 'Выбран' + _end(arr.length, ['', 'о']) + ' ' +
+						 arr.length + ' номер' + _end(arr.length, ['', 'a', 'ов']) +
 						 '<a>очистить</a>';
 		selCount
-			.html(gnsel.length ? countHtml : '')
+			.html(arr.length ? countHtml : '')
 			.find('a').click(function() {
 				gnsClear();
 				gnsPrint(1);
 				dopMenuA.removeClass('sel');
-				o.func();
 			});
 	}
 
-	t.cena = function(c) {
-		cena = c || 0;
+	t.cenaSet = function(c) {
+		gnCena = c || 0;
 		cenaSet();
+		gnsValUpdate();
 	};
-	t.skidka = function(v) {
-		if(v != undefined) {
-			o.skidka = v;
-			cenaSet();
-			return '';
-		}
-		return o.category == 2 && skidka_sum ? 'Сумма скидки: <b>' + skidka_sum + '</b> руб.' : '';
-	};
-	t.summa = summaGet;
-	t.clear = function(v) {
-		o.category = v;
-		o.manual = 0;
-		o.skidka = 0;
-		skidka_sum = 0;
-		summa_manual = 0;
-		dopMenuA.removeClass('sel');
-		gnsClear();
-		gnsPrint(1);
-		dopMenu();
-	};
-	t.manual = function(v, sum) {
-		o.manual = v;
-		summa_manual = summaGet();
-		cenaSet();
-		o.func();
-	};
-	t.manualSumma = function(sum) {
-		summa_manual = REGEXP_CENA.test(sum) ? sum.replace(',', '.') * 1 : 0;
-		cenaSet();
-	};
-	t.result = function() {
-		var spisok = [],
-			no_polosa = 0; // проверка, все ли полосы выбраны
-		gnsActionActive(function(sp) {
-			if(o.category == 2 && !sp.dop)
-				no_polosa = 1;
-			spisok.push(sp.n + ':' + sp.cena + ':' + sp.dop + ':' + sp.pn);
-		});
-		return no_polosa ? 'no_polosa' : spisok.join();
-	};
+	t.update = gnsValUpdate;
+
+	window[win] = t;
 	return t;
 };
 

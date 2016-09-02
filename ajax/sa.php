@@ -929,73 +929,107 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'sa_zayav_load':
-/*
-		UPDATE `_zayav` `z`
-		SET `sum_accrual`=(
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_accrual`
-					WHERE !`deleted`
-					  AND `zayav_id`=`z`.`id`
-				),
-			`sum_pay`=(
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_income`
-					WHERE !`deleted`
-					  AND `confirm` NOT IN (1,3)
-					  AND `zayav_id`=`z`.`id`
-				) - (
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_refund`
-					WHERE !`deleted`
-					  AND `zayav_id`=`z`.`id`
-				),
-			`sum_dolg`=`sum_pay`-`sum_accrual`,
-			`sum_expense`=(
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_zayav_expense`
-					WHERE `zayav_id`=`z`.`id`
-				),
-			`sum_profit`=`sum_accrual`-`sum_expense`
-		WHERE `app_id`=3978722;
-
-*/
-		$sql = "UPDATE `_zayav` `z`
-				SET `sum_dolg_test`=(
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_income`
-					WHERE `confirm` NOT IN (1,3)
-					  AND !`deleted`
-					  AND `zayav_id`=`z`.`id`
-				) - (
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_accrual`
-					WHERE !`deleted`
-					  AND `zayav_id`=`z`.`id`
-				) - (
-					SELECT IFNULL(SUM(`sum`),0)
-					FROM `_money_refund`
-					WHERE !`deleted`
-					  AND `zayav_id`=`z`.`id`
-				) WHERE `app_id`=".APP_ID;
+	case 'sa_zayav_load'://получение заявок, у которых некорректны суммы
+		//сброс флага проверки
+		$sql = "UPDATE `_zayav`
+				SET `sum_test`=0
+				WHERE `app_id`=".APP_ID;
 		query($sql);
+
+		//начисления
+		$sql = "UPDATE `_zayav` `z`
+				SET `sum_test`=IF(
+					(
+						SELECT IFNULL(SUM(`sum`),0)
+						FROM `_money_accrual`
+						WHERE !`deleted`
+						  AND `zayav_id`=`z`.`id`
+					) + (
+						SELECT IFNULL(SUM(`cena`),0)
+						FROM `_zayav_gazeta_nomer`
+						WHERE `zayav_id`=`z`.`id`
+					) = `sum_accrual`,0,1
+				)
+				WHERE `app_id`=".APP_ID;
+		query($sql);
+
+		//платежи
+		$sql = "UPDATE `_zayav` `z`
+				SET `sum_test`=IF(
+					(
+						SELECT IFNULL(SUM(`sum`),0)
+						FROM `_money_income`
+						WHERE `confirm` NOT IN (1,3)
+						  AND !`deleted`
+						  AND `zayav_id`=`z`.`id`
+					) - (
+						SELECT IFNULL(SUM(`sum`),0)
+						FROM `_money_refund`
+						WHERE !`deleted`
+						  AND `zayav_id`=`z`.`id`
+					) = `sum_pay`,0,2
+				)
+				WHERE `app_id`=".APP_ID."
+				  AND !`sum_test`";
+		query($sql);
+
+		//балансы - долги
+		$sql = "UPDATE `_zayav`
+				SET `sum_test`=IF(`sum_dolg`=`sum_pay`-`sum_accrual`,0,3)
+				WHERE `app_id`=".APP_ID."
+				  AND !`sum_test`";
+		query($sql);
+
+		//расходы
+		$sql = "UPDATE `_zayav` `z`
+				SET `sum_test`=IF(
+					(
+						SELECT IFNULL(SUM(`sum`),0)
+						FROM `_zayav_expense`
+						WHERE `zayav_id`=`z`.`id`
+					) = `sum_expense`,0,4
+				)
+				WHERE `app_id`=".APP_ID."
+				  AND !`sum_test`";
+		query($sql);
+
+		//прибыль
+		$sql = "UPDATE `_zayav`
+				SET `sum_test`=IF(`sum_profit`=`sum_accrual`-`sum_expense`,0,5)
+				WHERE `app_id`=".APP_ID."
+				  AND !`sum_test`";
+		query($sql);
+
+
+
+
+
 
 		$sql = "SELECT COUNT(`id`)
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `sum_dolg`!=`sum_dolg_test`";
+				  AND `sum_test`";
 		$all = query_value($sql);
 
 		$sql = "SELECT *
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `sum_dolg`!=`sum_dolg_test`
+				  AND `sum_test`
 				LIMIT 1000";
 		$zayav = query_arr($sql);
+
+		$sumErr = array(
+			1 => 'начисление',
+			2 => 'платёж',
+			3 => 'долг',
+			4 => 'расход',
+			5 => 'прибыль'
+		);
 
 		$spisok = '';
 		foreach($zayav as $r)
 			$spisok .= '<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">Заявка <b>#'.$r['id'].'</b></a> '.
+					   '&nbsp;&nbsp;<span class="grey">('.$sumErr[$r['sum_test']].')</span>&nbsp;&nbsp; '.
 					   '<a onclick="saZayavBalansRepair('.$r['id'].')" id="rep'.$r['id'].'">исправить</a>'.
 					   '<br />';
 

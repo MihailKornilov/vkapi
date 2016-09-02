@@ -502,7 +502,7 @@ function _income_unit($r, $filter=array()) {
 	$refund = $r['refund_id'] ? ' ref' : '';
 	$deleted = $r['deleted'] ? ' deleted' : '';
 	return
-		'<tr class="_income-unit'.$prepay.$refund.$deleted.'">'.
+		'<tr class="_income-unit'.$prepay.$refund.$deleted.'" val="'._sumSpace($r['sum']).'">'.
 			'<td class="sum '.$r['type'].(@$filter['zayav_id'] ? _tooltip('Платёж', 8) : '">')._sumSpace($r['sum']).
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).

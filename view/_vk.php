@@ -1304,12 +1304,16 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_STATUS_REMIND_ASS='._zayavStatus('js_remind_ass').','.
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='._zayavStatus('js_day_fact_ass').','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
+		
+		_setup_global('js').
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
 		"\n".'RUBRIC_SUB_SPISOK='._rubricSub('js').','.
 		"\n".'GN_ASS='._gn('js_ass').','.
 		"\n".'GN_FIRST='._gn('first').','.
 		"\n".'GN_LAST='._gn('last').','.
+		"\n".'GAZETA_OBDOP_SPISOK='._obDop('js_name').','.
+		"\n".'GAZETA_OBDOP_CENA='._obDop('js_cena').','.
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.
