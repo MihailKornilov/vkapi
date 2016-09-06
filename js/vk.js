@@ -432,7 +432,8 @@ var VK_SCROLL = 0,
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
 	_br = function(v) {
-		return v.replace(new RegExp('<br />','g'), "\n");
+		return v.replace(new RegExp('<br />','g'), "\n")
+				.replace(new RegExp('<br>','g'), "\n");
 	},
 	_copySel = function(arr, id) {//копирование массива дл€ селекта. ≈сли указан id - игнорируетс€
 		var send = [];
@@ -1852,6 +1853,10 @@ $.fn._select = function(o) {
 			}
 			return t;
 		case 'object':
+			//если это первый вход, то пропуск
+			if(o.width || o.func)
+				break;
+
 			if('length' in o) {
 				s = window[id + '_select'];
 				s.spisok(o);
@@ -1880,7 +1885,7 @@ $.fn._select = function(o) {
 
 	o.clear = o.write && !o.multiselect;
 
-	if(o.multiselect)
+	if(o.multiselect || o.write_save)
 		o.write = true;
 
 	var inpWidth = o.width - 17 - 5 - 4;

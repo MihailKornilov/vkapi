@@ -3,7 +3,7 @@
 	right:5px;
 	top:5px;
 	border:#ddb solid 1px;
-	background-color:#ffd;
+	background:#ffd;
 	box-shadow: 0 0 8px rgba(0,0,0,0.5);
 	z-index:999999;
 }
@@ -25,8 +25,8 @@
 	border-right:#bdb solid 1px;
 	border-bottom:#bdb solid 1px;
 }
-#_debug .dmenu a:hover{background-color:#afa;text-decoration:none}
-#_debug .dmenu a.sel{background-color:#aea}
+#_debug .dmenu a:hover{background:#afa;text-decoration:none}
+#_debug .dmenu a.sel{background:#aea}
 #_debug ul{margin:10px 8px 5px 23px}
 #_debug li{margin-bottom:7px;word-wrap:break-word}
 #_debug li .sql-un,#_debug li b{
@@ -44,14 +44,14 @@
 	width:560px;
 	border:#ccc solid 1px;
 	padding:3px 5px;
-	background-color:#ccc;
+	background:#ccc;
 }
 #_debug .sql-hd a{margin-left:20px}
 #_debug .sql-hd._busy{background-position:518px center}
 #_debug .sql-hd h3{float:right}
 #_debug .exp{width:558px;margin-top:-1px}
 #_debug .exp *{font-size:10px}
-#_debug .exp table{width:100%;border-collapse:collapse;background-color:#f8f8f8}
+#_debug .exp table{width:100%;border-collapse:collapse;background:#f8f8f8}
 #_debug .exp td,#_debug .exp th{border:#ccc solid 1px;padding:2px 4px}
 #_debug .exp th{font-weight:bold}
 #_debug .cookie{margin:10px}
@@ -61,11 +61,11 @@
 #_debug .ajax{margin:10px}
 #_debug .ajax .hd{
 	margin:15px 0 3px;
-	background-color:#eec;
+	background:#eec;
 	padding:4px 7px 5px;
 }
-#_debug .ajax .hd.res1{background-color:#cec}
-#_debug .ajax .hd.res0{background-color:#ecc}
+#_debug .ajax .hd.res1{background:#cec}
+#_debug .ajax .hd.res0{background:#ecc}
 #_debug #repeat{margin-left:20px}
 #_debug #res-success{float:right;color:#0a0;text-decoration:underline}
 #_debug #res-error{float:right;color:#a00;text-decoration:underline}

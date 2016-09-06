@@ -13,7 +13,7 @@ function _setup_global($i='const') {//получение констант-параметров для всех при
 	if($i == 'const') {
 		foreach($arr as $r)
 			define($r['key'], $r['value']);
-		return;
+		return true;
 	}
 
 	if($i == 'js') {
@@ -25,6 +25,8 @@ function _setup_global($i='const') {//получение констант-параметров для всех при
 		}
 		return $send;
 	}
+
+	return true;
 }
 
 

@@ -312,13 +312,8 @@ function sa_history_cat() {//настройка категорий истории действий
 }
 function sa_history_cat_spisok() {
 	$sql = "SELECT * FROM `_history_category` ORDER BY `sort`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
+	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
 
 	$send =
 		'<table class="_spisok">'.

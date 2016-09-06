@@ -2081,7 +2081,8 @@ function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
 function _schetCount() {//количество счетов в приложении (для показа ссылки на счета)
 	$sql = "SELECT COUNT(*)
 			FROM `_schet`
-			WHERE `app_id`=".APP_ID;
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`";
 	return query_value($sql);
 }
 function _schetValToList($arr) {//данные о счёте, подставляемые в список

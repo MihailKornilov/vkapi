@@ -1,0 +1,82 @@
+#devstory-footer{
+	background:#F7F7F7;
+	border-top:#e8e8e8 solid 1px;
+	padding:3px 5px;
+}
+#devstory-footer .grey{margin-left:7px}
+#devstory-footer .setup-my{margin-left:80px}
+#devstory-footer .dev-page{
+	float:right;
+	color:#999;
+}
+
+
+/* Главная страница */
+#devstory{min-height:400px}
+#devstory #part-spisok{margin:10px}
+#devstory .part-u{border-spacing:2px}
+#devstory .part-u .name{font:bold 15px tahoma}
+#devstory .part-u td{padding:15px;background:#eff1ff}
+#devstory .part-u .ed{width:20px;white-space:nowrap}
+
+#devstory .task-u{
+	border:#eee solid 1px;
+	border-radius:4px;
+	border-right:#ddd solid 1px;
+	border-bottom:#ddd solid 1px;
+	margin:15px 10px;
+}
+#devstory .task-u .pp{
+	padding:6px;
+	background:#f5f5f5;
+	color:#555;
+	font-size:12px;
+}
+#devstory .task-u .pp b{font-size:12px}
+#devstory .task-u .dtime{float:right;color:#888;font-size:10px}
+#devstory .task-u .img_edit{float:right;margin-left:10px}
+#devstory .task-u .name{
+	font-size:15px;
+	margin:8px;
+	font-weight:bold;
+}
+#devstory .task-u .about{
+	margin:8px;
+}
+#devstory .td-status{border-left:#eee solid 1px}
+#devstory .task-u .st{font-size:15px;margin:8px 0 10px}
+/* статус: в процессе */
+#devstory .status1 .pp{background:#f5f5d5}
+#devstory .status1 .td-status{background:#ffd}
+#devstory .status1 .st{color:#883}
+/* статус: пауза */
+#devstory .status2 .pp{background:#d5f5f5}
+#devstory .status2 .td-status{background:#dff}
+#devstory .status2 .st{color:#388}
+/* статус: выполнено */
+#devstory .status3 .pp{background:#d5f5d5}
+#devstory .status3 .td-status{background:#dfd}
+#devstory .status3 .st{color:#383}
+/* статус: отменено */
+#devstory .status4{opacity:.4;background:#eee}
+#devstory .status4 .pp{background:#d9d9d9}
+
+#devstory .st-action{
+	display:block;
+	padding:8px;
+	text-align:center;
+	text-decoration:none;
+	margin:5px;
+}
+#devstory .st-action:hover{background:#e9edf1}
+
+
+
+
+
+
+
+
+
+
+

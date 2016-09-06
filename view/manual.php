@@ -96,7 +96,7 @@ function _manualMenu() {//разделы основного меню
 	);
 
 	if(!SA)
-		unset($menu['actiom']);
+		unset($menu['action']);
 	
 	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
 		$_GET['d'] = 'main';

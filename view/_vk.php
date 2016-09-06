@@ -36,6 +36,7 @@ require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/manual.php';
 require_once GLOBAL_DIR.'/view/sa.php';
+require_once GLOBAL_DIR.'/modul/devstory/devstory.php';
 
 _dbConnect('GLOBAL_');  //подключение к базе данных
 
@@ -193,6 +194,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script type="text/javascript" src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
 	: '').
 
+		_devstory_script(). //История разработки
+
 		//Руководство
 	(@$_GET['p'] == 'manual' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/manual'.MIN.'.css?'.VERSION.'" />'.
@@ -222,6 +225,7 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 		case 'report': _menuAccess(6); return _report();
 		case 'setup':  _menuAccess(5); return _setup();
 		case 'manual': _menuAccess(10); return _manual();
+		case 'devstory': return _devstory();
 		case 'print':  _print_document(); exit;
 		case 'sa':
 			if(!SA) {
@@ -275,9 +279,8 @@ function _footer() {
 		$v[] = '"'.$k.'":"'.$val.'"';
 	}
 
-	mysql_close();
-
 	return
+			_devstory_footer().
 			_debug().
 			'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
 		'</div>'.
@@ -482,6 +485,7 @@ function _menuCache($type='main') {//получение списка разделов меню из кеша
 function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa') return '';
 	if(@$_GET['p'] == 'manual') return '';
+	if(@$_GET['p'] == 'devstory') return '';
 
 	$link = '';
 	foreach(_menuCache() as $r) {
@@ -869,6 +873,14 @@ function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	);
 
 	return '<div'.$v['id'].' class="img_edit'.$v['class']._tooltip('Изменить', -52, 'r').'</div>';
+}
+function _iconAdd($v=array()) {//иконка добавления записи
+	$v = array(
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+	);
+
+	return '<div'.$v['id'].' class="img_add'.$v['class']._tooltip('Добавить', -51, 'r').'</div>';
 }
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
@@ -1370,6 +1382,7 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'gn');
 	xcache_unset(CACHE_PREFIX.'gazeta_obdop');
 	xcache_unset(CACHE_PREFIX.'gazeta_polosa');
+	xcache_unset(CACHE_PREFIX.'devstory_part');
 
 
 	//сброс времени действия введённого пинкода

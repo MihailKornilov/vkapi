@@ -4,13 +4,13 @@
 	font:11px normal;
 	font-family: tahoma, verdana, arial, sans-serif, Lucida Sans;
 }
-body{background-color:#fff}
+body{background:#fff}
 a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
 input,textarea{border:#ccc solid 1px;padding:3px 3px 4px 3px;outline:none}
-input[type="text"]:disabled{color:#777;background-color:#f0f0f0;border-color:#ccc}
+input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
 textarea{resize:none}
@@ -20,7 +20,7 @@ table{border:0;border-spacing:0}
 /* Основное окно фрейма */
 #frameBody{
 	position:relative;
-	background-color:#FFF;
+	background:#FFF;
 	width:625px;
 	border-bottom:#DAE1E8 solid 1px;
 	overflow:hidden;
@@ -64,7 +64,7 @@ table{border:0;border-spacing:0}
 	vertical-align:top;
 	padding:8px 8px 20px 8px;
 	width:140px;
-	background-color:#f7f7f7;
+	background:#f7f7f7;
 	border-left:#dae1e8 solid 1px;
 	height:450px;
 }
@@ -80,15 +80,15 @@ table{border:0;border-spacing:0}
 .result #filter-clear{float:right}
 .result.norm{font-weight:normal}
 
-#admin{text-align:center;background-color:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
+#admin{text-align:center;background:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
 #admin a{color:#888;font-size:10px}
 #admin .on{color:#0b0}
 
 
 
-.noauth{background-color:#F7F7F7;padding:25px}
+.noauth{background:#F7F7F7;padding:25px}
 .noauth *{font-size:12px}
-.noauth div{border:#ddd solid 1px;padding:70px 10px;background-color:#FFF;color:#888;text-align:center}
+.noauth div{border:#ddd solid 1px;padding:70px 10px;background:#FFF;color:#888;text-align:center}
 .norules{margin:10px;padding:15px;border:#ddd solid 1px;color:#900}
 ._err{
 	margin:5px;
@@ -96,7 +96,7 @@ table{border:0;border-spacing:0}
 	text-align:center;
 	border:#edd solid 1px;
 	color:#d00;
-	background-color:#fff5f5;
+	background:#fff5f5;
 }
 
 
@@ -107,7 +107,7 @@ table{border:0;border-spacing:0}
 	height:100%;
 	top:0;
 	left:0;
-	background-color:#ff9;
+	background:#ff9;
 	opacity:0;
 }
 
@@ -120,16 +120,17 @@ td.topi{padding-top:3px}
 td.r{text-align:right}
 
 
-._sort dd{background-color:#fff}
+._sort dd{background:#fff}
 
 /* Заголовки-описания */
-.headName {
+.headName{
 	color:#31618C;
 	font:bold 12px Tahoma;
 	border-bottom:#DEE3EF solid 1px;
 	padding:2px 0;
 	margin:5px 20px;
 }
+.headName.m1{margin:10px 10px 5px}
 a.add{float:right;color:#68A;cursor:pointer}
 a.add:hover{text-decoration:underline;color:#357}
 
@@ -152,7 +153,7 @@ a.add:hover{text-decoration:underline;color:#357}
 .findHead{color:#555;font-weight:bold;margin:20px 0 4px 0}
 
 ._info{
-	background-color:#ffe;
+	background:#ffe;
 	border:#ddb 1px solid;
 	padding:4px 10px;
 	text-align:justify;
@@ -279,7 +280,7 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 /* Путь в верхней строке */
-.path{background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px}
+.path{background:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px}
 .path a{font-weight:bold}
 .path span{float:right}
 .path SPAN a{font-weight:normal}
@@ -293,17 +294,17 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-._select{background-color:#fff;display:inline-block;position:relative}
+._select{background:#fff;display:inline-block;position:relative}
 ._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
 ._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
-._select.disabled .seltab{border-color:#ccc;background-color:#f0f0f0}
+._select.disabled .seltab{border-color:#ccc;background:#f0f0f0}
 ._select .selsel{vertical-align:top;padding-bottom:2px}
 ._select .selinp{
 	position:relative;
 	border:none;
 	padding:1px 0 1px 3px;
 	margin:2px 2px 0;
-	background-color:transparent;
+	background:transparent;
 }
 ._select .selinp._busy{background-position:right center}
 ._select.disabled .selinp{color:#777}
