@@ -88,7 +88,7 @@ var devStoryMainEdit = function(o) {//создание, редактирование основного раздела
 				name:$('#name').val(),
 				about:$('#about').val()
 			};
-			if(!send.part_sub_id && !o.part_sub_name) {
+			if(!send.part_sub_id && !send.part_sub_name) {
 				dialog.err('Не указан подраздел');
 				return;
 			}
