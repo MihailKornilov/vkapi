@@ -220,13 +220,12 @@
 	overflow: hidden;
 }
 #gnGet .gnsel{background-color:#BFB}
+#gnGet .prev{background-color:#FFB}
 #gnGet .gnsel .cena{
 	border-left:#DDD solid 1px;
 	background-color:#EFE;
-	cursor:pointer;
 	color:#444;
 }
-#gnGet .prev{background-color:#FFB}
 #gnGet .vdop{padding-left:8px}
 #gnGet #selCount{
 	width:127px;

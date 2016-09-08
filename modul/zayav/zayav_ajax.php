@@ -153,6 +153,7 @@ switch(@$_POST['op']) {
 
 		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
+		_zayavGazetaNomerUpdate($zayav_id, $v);
 
 		if($changes =
 			(isset($zpu[5])  ? _historyChange($zpu[5]['name'], $z['client_id'], $v['client_id'], _clientVal($z['client_id'], 'go'), _clientVal($v['client_id'], 'go')) : '').
@@ -1673,7 +1674,9 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 	if(empty($v['zpu'][38]))
 		return;
 
-	$sql = "DELETE FROM `_zayav_gazeta_nomer` WHERE `zayav_id`=".$zayav_id;
+	$sql = "DELETE FROM `_zayav_gazeta_nomer`
+			WHERE `zayav_id`=".$zayav_id."
+			  AND `gazeta_nomer_id`>="._gn('first');
 	query($sql);
 
 	if(empty($v['gn']))

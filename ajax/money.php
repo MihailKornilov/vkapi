@@ -233,10 +233,14 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Платежа не существует');
 
-		if(TODAY != substr($r['dtime_add'], 0, 10))
-			jsonError();
+		//если платёж уже подтверждён
+		if($r['confirm'] == 2)
+			jsonError('Платёж был подтверждён');
+
+		if($r['confirm'] != 1 && TODAY != substr($r['dtime_add'], 0, 10))
+			jsonError('Время для удаления платежа истекло');
 
 		$sql = "UPDATE `_money_income`
 				SET `deleted`=1,
@@ -740,10 +744,10 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Расхода не существует');
 
 		if(TODAY != substr($r['dtime_add'], 0, 10))
-			jsonError();
+			jsonError('Время для удаления расхода истекло');
 
 		$sql = "UPDATE `_money_expense`
 				SET `deleted`=1,

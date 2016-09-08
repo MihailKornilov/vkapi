@@ -17,7 +17,7 @@ $_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
 
 require_once GLOBAL_DIR_AJAX.'/vk.php';
 require_once GLOBAL_DIR_AJAX.'/client.php';
-require_once GLOBAL_DIR_AJAX.'/zayav.php';
+require_once GLOBAL_DIR.'/modul/zayav/zayav_ajax.php';
 require_once GLOBAL_DIR_AJAX.'/tovar.php';
 require_once GLOBAL_DIR_AJAX.'/money.php';
 require_once GLOBAL_DIR_AJAX.'/remind.php';

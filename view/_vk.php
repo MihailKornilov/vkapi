@@ -27,7 +27,7 @@ require_once GLOBAL_DIR.'/view/_calendar.php';
 require_once GLOBAL_DIR.'/view/_debug.php';
 
 require_once GLOBAL_DIR.'/view/client.php';
-require_once GLOBAL_DIR.'/view/zayav.php';
+require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
 require_once GLOBAL_DIR.'/view/tovar.php';
 require_once GLOBAL_DIR.'/view/money.php';
 require_once GLOBAL_DIR.'/view/history.php';
@@ -160,10 +160,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/client'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/client'.MIN.'.js?'.VERSION.'"></script>'.
 
-		//Заявки
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/zayav'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/zayav'.MIN.'.js?'.VERSION.'"></script>'.
-
+		_zayav_script(). //заявки
+		
 		//Товары
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/tovar'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/tovar'.MIN.'.js?'.VERSION.'"></script>'.
@@ -884,7 +882,7 @@ function _iconAdd($v=array()) {//иконка добавления записи
 }
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
-	if(!empty($v['nodel']) || !empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
+	if(!empty($v['nodel']) || empty($v['del']) && !empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
 		return '';
 
 	$v = array(

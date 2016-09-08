@@ -500,6 +500,8 @@ function income_spisok($filter=array()) {
 function _income_unit($r, $filter=array()) {
 	$prepay = $r['prepay'] ? ' prepay' : '';
 	$refund = $r['refund_id'] ? ' ref' : '';
+	$confirm = $r['confirm'] == 1;
+	$confirmed = $r['confirm'] == 2;
 	$deleted = $r['deleted'] ? ' deleted' : '';
 	return
 		'<tr class="_income-unit'.$prepay.$refund.$deleted.'" val="'._sumSpace($r['sum']).'">'.
@@ -508,7 +510,7 @@ function _income_unit($r, $filter=array()) {
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'.
 				'<a href="'.URL.'&p=print&d=receipt&id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>'.
-				_iconDel($r + array('class'=>'income-del','nodel'=>($refund || $r['dogovor_id'])));
+				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm));
 }
 function incomeAbout($r, $filter=array()) {
 	$about = '';

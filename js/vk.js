@@ -605,10 +605,8 @@ var VK_SCROLL = 0,
 					dialog.close();
 					_msg('Удалено');
 					o.func(res);
-				} else {
-					dialog.abort();
-					dialog.err(res.text);
-				}
+				} else
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},

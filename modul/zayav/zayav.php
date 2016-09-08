@@ -16,6 +16,14 @@ function _zayav() {
 	return _zayav_list(_hashFilter('zayav'._service('current')));
 }
 
+function _zayav_script() {//скрипты для заявок
+	if(PIN_ENTER)
+		return '';
+
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/zayav/zayav'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/zayav/zayav'.MIN.'.js?'.VERSION.'"></script>';
+}
 function _rubric($id='all', $i='name') {//Кеширование рубрик объявлений
 	$key = CACHE_PREFIX.'rubric';
 	if(!$arr = xcache_get($key)) {
@@ -146,9 +154,11 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 		if(empty($arr))
 			return 0;
 
-		foreach($arr as $n => $r)
-			if(strtotime($r['day_print']) > time())
-				return $n;
+		foreach($arr as $n => $r) {
+			if(strtotime($r['day_print']) < time())
+				continue;
+			return $n;
+		}
 
 		return 0;
 	}
@@ -1461,6 +1471,7 @@ function _zayavInfo() {
 				'size_x:'.$z['size_x'].','.
 				'size_y:'.$z['size_y'].','.
 				'count:'.$z['count'].','.
+				'gns:'._zayavInfoGazetaNomerJS($zayav_id).','.
 				'status_id:'.$z['status_id'].','.
 				'status_day:"'.($z['status_day'] == '0000-00-00' ? '' : $z['status_day']).'",'.
 				'executer_id:'.$z['executer_id'].','.
@@ -1551,7 +1562,7 @@ function _zayavInfo() {
 								 _zayavAttachCancel($z, 34)
 					: '').
 
-						_zayavInfoPublic($z, $zpu).
+						_zayavInfoGazetaNomer($z, $zpu).
 
 					'</table>'.
 
@@ -1640,7 +1651,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 	return 1;
 }
 function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, платежи
-	if(!$z['sum_cost'] && !$z['sum_accrual'] && !$z['sum_pay'])
+	if((!$z['sum_cost'] || !empty($z['zpu'][38])) && !$z['sum_accrual'] && !$z['sum_pay'])
 		return '';
 
 	//подсветка таблицы на основании долга заявки
@@ -1654,7 +1665,7 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 	'<table id="pay-tab"'.$class.'>'.
 		'<tr>'.
 
-		($z['sum_cost'] ?
+		($z['sum_cost'] && empty($z['zpu'][38]) ?
 			'<td class="cost">'.
 				'<div class="grey">Cтоимость</div>'.
 				_sumSpace($z['sum_cost'])
@@ -1675,7 +1686,30 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 		: '').
 	'</table>';
 }
-function _zayavInfoPublic($z, $zpu) {//номера выхода газеты
+function _zayavInfoGazetaNomerJS($zayav_id) {
+	$sql = "SELECT *
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `zayav_id`=".$zayav_id."
+			  AND `gazeta_nomer_id`>="._gn('first')."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return '{}';
+
+	$send = array();
+	foreach($spisok as $r)
+		$send[] =
+			$r['gazeta_nomer_id'].':'.
+				'['.
+					$r['dop'].','.
+					round($r['cena'], 6).','.
+					$r['polosa'].','.
+					$r['id'].
+				']';
+
+	return '{'.implode(',', $send).'}';
+}
+function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 	if(!isset($zpu[48]))
 		return '';
 
