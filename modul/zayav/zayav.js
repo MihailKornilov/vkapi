@@ -59,6 +59,7 @@ var _zayavSpisok = function(v, id) {
 			client_adres = '', //адрес клиента для подстановки в строку Адрес
 			equip_js = [],     //список комплектации для select, которые были не выбраны для конкретного товара
 			equip_tovar_id = 0,//id товара, по которому будет формироваться комплектация
+			manual = $('#ze-sum_cost_manual').length,
 			dialog = _dialog({
 				width:560,
 				top:20,
@@ -204,12 +205,12 @@ var _zayavSpisok = function(v, id) {
 						  ) : [],
 				four_free:zp38 ? zp38[0] : 0,
 				pn_show:zp38 ? zp38[1] : 0,
-				manual:_num($('#ze-sum_cost_manual').val()),
+				manual:manual ? _num($('#ze-sum_cost_manual').val()) : 1,
 				summa:_cena($('#ze-sum_cost').val()),
 				skidka:_num($('#ze-skidka').val()),
 				func:function(v) {
 					$('#ze-skidka_sum').html('');
-					if(_num($('#ze-sum_cost_manual').val()))
+					if(_num(manual ? $('#ze-sum_cost_manual').val() : 1))
 						return;
 					$('#ze-sum_cost').val(v.summa);
 					$('#ze-skidka_sum').html(v.skidka_sum ? 'Сумма скидки: ' + v.skidka_sum + ' руб.' : '');
@@ -1763,7 +1764,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 		});
 
 		t.val(arr.join('###'));
-		$('#ze-note').val(t.val()); //todo удалить
+//		$('#ze-note').val(t.val()); //todo удалить
 
 		o.func({
 			summa:Math.round(sum * 100) / 100,
