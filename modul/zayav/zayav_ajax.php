@@ -28,6 +28,10 @@ switch(@$_POST['op']) {
 
 					`rubric_id`,
 					`rubric_id_sub`,
+					`size_x`,
+					`size_y`,
+
+					`skidka`,
 
 					`srok`,
 					`sum_manual`,
@@ -58,6 +62,10 @@ switch(@$_POST['op']) {
 
 					".$v['rubric_id'].",
 					".$v['rubric_id_sub'].",
+					".$v['size_x'].",
+					".$v['size_y'].",
+
+					".$v['skidka'].",
 
 					'".$v['srok']."',
 					".$v['sum_manual'].",
@@ -1483,6 +1491,15 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 	if(@$zpu[4] && $zpu[4]['v1'])
 		$upd[] = "`equip`='".$v['equip']."'";
 
+	$v['size_x'] = _cena(@$_POST['size_x']);
+	$v['size_y'] = _cena(@$_POST['size_y']);
+	if($u = @$zpu[31]) {
+		if($u['require'] && (!$v['size_x'] || !$v['size_y']))
+			jsonError('Некорректно заполнено поле '.$u['name']);
+		$upd[] = "`size_x`=".$v['size_x'];
+		$upd[] = "`size_y`=".$v['size_y'];
+	}
+
 	$v['phone'] = _txt(@$_POST['phone']);
 	if($u = @$zpu[37]) {
 		if($u['require'] && !$v['phone'])
@@ -1498,14 +1515,25 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 				$ex = explode(':', $r);
 				if(!$gn_id = _num($ex[0]))
 					jsonError('Некорректный id номера газеты');
+				if($u['v2'] && !_num($ex[1]))
+					jsonError('Полоса указана не на всех выбранных номерах');
 				$gn[] = array(
 					'gn_id' => $gn_id,
 					'dop' => _num($ex[1]),
-					'cena' => round($ex[2], 6)
+					'pn' => _num($ex[2]),
+					'skidka' => _num($ex[3]),
+					'cena' => round($ex[4], 6)
 				);
 			}
 			$v['gn'] = $gn;
 		}
+	}
+
+	$v['skidka'] = _num(@$_POST['skidka']);
+	if($u = @$zpu[39]) {
+		if($u['require'] && !$v['skidka'])
+			jsonError('Не указана скидка');
+		$upd[] = "`skidka`=".$v['skidka'];
 	}
 
 	$v['rubric_id'] = _num(@$_POST['rubric_id']);
@@ -1683,23 +1711,33 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 		return;
 
 	$insert = array();
-	foreach($v['gn'] as $r)
+	foreach($v['gn'] as $r) {
+		$skidka_sum = $r['skidka'] ? round($r['cena'] / (100 - $r['skidka']) * 100 - $r['cena'], 6) : 0;
 		$insert[] = '('.
 			APP_ID.','.
 			$zayav_id.','.
 			$r['gn_id'].','.
 			$r['dop'].','.
-			$r['cena'].
+			$r['pn'].','.
+			$r['cena'].','.
+			$r['skidka'].','.
+			$skidka_sum.
 		')';
+	}
+
 
 	$sql = "INSERT INTO `_zayav_gazeta_nomer` (
 				`app_id`,
 				`zayav_id`,
 				`gazeta_nomer_id`,
 				`dop`,
-				`cena`
+				`polosa`,
+				`cena`,
+				`skidka`,
+				`skidka_sum`
 			) VALUES ".implode(',', $insert);
 	query($sql);
 
+	_clientBalansUpdate($v['client_id']);
 	_zayavBalansUpdate($zayav_id);
 }

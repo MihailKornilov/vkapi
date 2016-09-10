@@ -142,7 +142,7 @@ function _gn($nomer='all', $i='') {//ѕолучение информации о всех номерах газеты 
 				'gen:'.$r['general_nomer'].','.
 				'week:'.$r['week'].','.
 				'pub:"'.$r['day_public'].'",'.
-				'txt:"'.FullData($r['day_public'], 0, 0, 1).'",'.
+				'txt:"'.FullData($r['day_public'], 0, 1, 1).'",'.
 				'pc:'.$r['pc'].
 			'}');
 	
@@ -231,13 +231,38 @@ function _polosa($id, $i='name') {//Ќазвание полосы дл€ рекламы
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_setup_gazeta_polosa_cost`
-				WHERE `app_id`=".APP_ID;
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `sort`";
 		$arr = query_arr($sql);
 		xcache_set($key, $arr, 86400);
 	}
 
-	if(!$id)
-		return '';
+	//список названий дл€ select
+	if($id == 'js_name') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = $r['name'];
+		return _selJson($send);
+	}
+
+	//цены в ассоциативном массиве JS
+	if($id == 'js_cena') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = _cena($r['cena']);
+		return _assJson($send);
+	}
+
+	//требуетс€ ли указание полосы в ассоциативном массиве JS
+	if($id == 'js_polosa') {
+		$send = array();
+		foreach($arr as $r) {
+			if(!$r['polosa'])
+				continue;
+			$send[$r['id']] = 1;
+		}
+		return _assJson($send);
+	}
 
 	//неизвестный id
 	if(!isset($arr[$id]))
@@ -247,7 +272,7 @@ function _polosa($id, $i='name') {//Ќазвание полосы дл€ рекламы
 	if(!isset($arr[$id][$i]))
 		return _cacheErr('неизвестный ключ полосы газеты', $i);
 
-	//конкретна€ полоса газеты
+	//значение по ключу конкретной полоса газеты
 	return $arr[$id][$i];
 }
 
@@ -1194,7 +1219,8 @@ function _zayavPoleEdit($v=array()) {//¬несение/редактирование за€вки
 							  'id="ze-sum_cost" '.
 		   (@$zpu[15]['v1'] && !_bool(@$z['sum_manual']) ? 'readonly ' : '').
 							  'value="'.(_cena(@$z['sum_cost']) ? _cena($z['sum_cost']) : '').'" '.
-						'/> руб.',
+						'/> руб.'.
+						'<span id="ze-skidka_sum"></span>',
 
 		16 => '<tr><td class="label topi">{label}'.
 				  '<td><input type="hidden" id="ze-pay_type" value="'.@$z['pay_type'].'" />',
@@ -1204,7 +1230,7 @@ function _zayavPoleEdit($v=array()) {//¬несение/редактирование за€вки
                     '<b class="xb">x</b>'.
                     '<input type="text" id="ze-size_y" maxlength="5" value="'.(_cena(@$z['size_y']) ? _cena($z['size_y']) : '').'" />'.
                     ' = '.
-					'<input type="text" id="ze-kv_sm" readonly value="'.(_cena(@$z['size_x']) && _cena(@$z['size_y'])? round($z['size_x'] * $z['size_y']) : '').'" /> см<sup>2</sup>',
+					'<input type="text" id="ze-kv_sm" readonly /> см<sup>2</sup>',
 
 		37 => '<tr><td class="label">{label}'.
 				  '<td><input type="text" id="ze-phone" value="'.@$z['phone'].'" />',
@@ -1213,7 +1239,7 @@ function _zayavPoleEdit($v=array()) {//¬несение/редактирование за€вки
 			  '<tr><td colspan="2"><input type="hidden" id="ze-gn" />',
 
 		39 => '<tr><td class="label">{label}'.
-				  '<td><input type="hidden" id="ze-skidka" />',
+				  '<td><input type="hidden" id="ze-skidka" value="'.@$z['skidka'].'" />',
 
 		40 => '<tr><td class="label">{label}'.
 				   '<td><input type="hidden" id="ze-rubric_id" value="'.@$z['rubric_id'].'" />'.
@@ -1648,6 +1674,15 @@ function _zayavToDel($zayav_id) {//можно ли удал€ть за€вку..
 	if(query_value($sql))
 		return 0;
 
+	//проверка на наличие номеров газеты, которые уже выходили
+	$sql = "SELECT COUNT(`id`)
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `zayav_id`=".$zayav_id."
+			  AND `gazeta_nomer_id`<"._gn('first');
+	if(query_value($sql))
+		return 0;
+
 	return 1;
 }
 function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начислени€, платежи
@@ -1702,8 +1737,9 @@ function _zayavInfoGazetaNomerJS($zayav_id) {
 			$r['gazeta_nomer_id'].':'.
 				'['.
 					$r['dop'].','.
-					round($r['cena'], 6).','.
 					$r['polosa'].','.
+					$r['skidka'].','.
+					round($r['cena'], 6).','.
 					$r['id'].
 				']';
 

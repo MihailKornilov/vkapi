@@ -26,7 +26,7 @@ require_once GLOBAL_DIR.'/view/_attach.php';
 require_once GLOBAL_DIR.'/view/_calendar.php';
 require_once GLOBAL_DIR.'/view/_debug.php';
 
-require_once GLOBAL_DIR.'/view/client.php';
+require_once GLOBAL_DIR.'/modul/client/client.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
 require_once GLOBAL_DIR.'/view/tovar.php';
 require_once GLOBAL_DIR.'/view/money.php';
@@ -156,10 +156,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 (PIN_ENTER ? '' :
 
-		//Клиенты
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/client'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/client'.MIN.'.js?'.VERSION.'"></script>'.
-
+		_client_script().//клиенты
 		_zayav_script(). //заявки
 		
 		//Товары
@@ -1325,6 +1322,9 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'GN_LAST='._gn('last').','.
 		"\n".'GAZETA_OBDOP_SPISOK='._obDop('js_name').','.
 		"\n".'GAZETA_OBDOP_CENA='._obDop('js_cena').','.
+		"\n".'GAZETA_POLOSA_SPISOK='._polosa('js_name').','.
+		"\n".'GAZETA_POLOSA_CENA='._polosa('js_cena').','.
+		"\n".'GAZETA_POLOSA_POLOSA='._polosa('js_polosa').','.
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_cartridge` ORDER BY `name`").','.

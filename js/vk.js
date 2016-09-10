@@ -11,6 +11,7 @@ var VK_SCROLL = 0,
 	REGEXP_NUMERIC_MINUS = /^-?\d+$/,
 	REGEXP_CENA =          /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_CENA_MINUS =    /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
+	REGEXP_SIZE =          /^[\d]+(.[\d]{1})?(,[\d]{1})?$/,
 	REGEXP_MS =            /^[\d]+(.[\d]{1,3})?(,[\d]{1,3})?$/,
 	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
@@ -326,7 +327,8 @@ var VK_SCROLL = 0,
 		var val = minus ? REGEXP_NUMERIC_MINUS.test(v) : REGEXP_NUMERIC.test(v);
 		return val ? v * 1 : 0;
 	},
-	_cena = function(v, minus) {
+	_cena = function(v, minus) {//цена в виде: 100    16,34     0.5
+		//Может быть отрицательным значением
 		if(typeof v == 'string')
 			v = v.replace(',', '.');
 		if(v == 0)
@@ -334,6 +336,15 @@ var VK_SCROLL = 0,
 		if(minus && REGEXP_CENA_MINUS.test(v))
 			return v * 1;
 		if(!REGEXP_CENA.test(v))
+			return 0;
+		return v * 1;
+	},
+	_size = function(v) {//размер в виде: 100    16,3    (только десятичные дроби, не может быть отрицательным)
+		if(typeof v == 'string')
+			v = v.replace(',', '.');
+		if(v == 0)
+			return 0;
+		if(!REGEXP_SIZE.test(v))
 			return 0;
 		return v * 1;
 	},

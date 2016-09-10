@@ -166,12 +166,20 @@
 .zayav-edit_dialog #ze-serial{width:250px}
 .zayav-edit_dialog #ze-phone{width:250px}
 .zayav-edit_dialog #ze-note{width:251px;height:40px}
-.zayav-edit_dialog #ze-size_x{width:30px}
-.zayav-edit_dialog #ze-size_y{width:30px}
-.zayav-edit_dialog #ze-kv_sm{width:45px;cursor:default;background:#f2f2f2}
+.zayav-edit_dialog #ze-size_x,
+.zayav-edit_dialog #ze-size_y{width:40px}
+.zayav-edit_dialog #ze-size_x.err,
+.zayav-edit_dialog #ze-size_y.err{background:#fdd}
+.zayav-edit_dialog #ze-kv_sm{
+	width:50px;
+	cursor:default;
+	background:#f4f4f4;
+	font-weight:bold;
+}
 .zayav-edit_dialog .xb{font:12px Trebuchet MS;margin:0 5px;color:#777}
 .zayav-edit_dialog sup{font-size:10px;position:relative;top:2px}
 .zayav-edit_dialog #ze-sum_cost:read-only{background:#f3f3f3}
+.zayav-edit_dialog #ze-skidka_sum{margin-left:5px;color:#999;font-size:10px}
 
 
 #ze-equip-spisok._busy{background-position:left}
@@ -182,11 +190,11 @@
 
 
 /* Список номеров газеты при внесении и редактировании заявок */
-#gnGet{margin:-3px 0 30px 115px}
+#gnGet{margin:-3px 0 30px 100px}
 #gnGet #dopLinks{padding:0 0 5px 5px;border:none;background-color:transparent}
 #gnGet #dopLinks a{margin-right:5px}
-#gnGet ._dropdown{margin-right:7px}
-#gnGet #dopDef_dropdown{margin:-4px 0 0 12px}
+#gnGet ._dropdown{margin-right:5px}
+#gnGet #dopDef_dropdown{margin:-4px 0 0 4px}
 #gnGet .gn-spisok{margin-left:-127px}
 #gnGet #darr{
 	font-size:12px;
@@ -199,7 +207,7 @@
 }
 #gnGet #darr:hover{background-color:#e1e7ed;color:#444}
 #gnGet .gns-week {
-	width:245px;
+	width:236px;
 	background-color:#FFF;
 	border:#DDD solid 1px;
 	margin-bottom:2px;
@@ -207,7 +215,7 @@
 	height:19px;
 }
 #gnGet .gns-week:hover{border:#99A solid 1px}
-#gnGet .td { padding:2px 3px; color:#333; font-size:10px; }
+#gnGet .td {padding:2px 3px;color:#333;font-size:10px}
 #gnGet .td b,#gnGet .td tt{font-size:10px}
 #gnGet .g{color:#888;margin-left:3px;font-size:10px}
 #gnGet .cena {

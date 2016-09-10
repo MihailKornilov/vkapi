@@ -1,11 +1,10 @@
 <?php
+function _client_script() {//скрипты для клиентов
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/client/client'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/client/client'.MIN.'.js?'.VERSION.'"></script>';
+}
 function _clientCase($v=array()) {//вывод информации с клиентами для приложения
-	$filterDef = $v + array(
-		'CLIENT_FILTER_DOLG' => 1,//галочка-фильтр "должники"
-		'CLIENT_FILTER_OPL' => 1  //галочка-фильтр "предоплата"
-	);
-	foreach($filterDef as $name => $key)
-		define($name, $key);
 	switch(@$_GET['d']) {
 		case 'info': return _clientInfo();
 		case 'poa': return _clientPoa();
@@ -781,6 +780,10 @@ function _clientInfoWorker($client_id) {//список сотрудников для связки с клиент
 }
 
 function _clientBalansUpdate($client_id) {//обновление баланса клиента
+	if(empty($client_id))
+		return 0;
+
+	//начисления
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_accrual`
 			WHERE `app_id`=".APP_ID."
@@ -788,6 +791,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 			  AND `client_id`=".$client_id;
 	$accrual = query_value($sql);
 
+	//платежи без учёта проданных товаров клиенту
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
@@ -805,7 +809,20 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 			  AND `client_id`=".$client_id;
 	$refund = query_value($sql);
 
-	$balans = $income - $accrual - $refund;
+	//Номера газет
+	$sql = "SELECT `id`
+			FROM `_zayav`
+			WHERE `client_id`=".$client_id."
+			  AND !`deleted`";
+	if($ids = query_ids($sql)) {
+		$sql = "SELECT IFNULL(SUM(`cena`),0)
+				FROM `_zayav_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id` IN (".$ids.")";
+		$gn = query_value($sql);
+	}
+
+	$balans = $income - $accrual - $refund - $gn;
 
 	$sql = "UPDATE `_client`
 			SET `balans`=".$balans."
