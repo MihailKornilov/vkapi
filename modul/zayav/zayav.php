@@ -759,6 +759,8 @@ function _zayavFilter($v) {
 		'tovar_id' => 0,
 		'gn_year' => strftime('%Y'),  //год номеров газеты 51
 		'gn_nomer_id' => _gn('first'),//номер газеты 51
+		'gn_polosa' => 0,             //полоса (дл€ рекламы)
+		'gn_polosa_color' => 0,       //цветность полосы
 		'deleted' => 0,
 		'deleted_only' => 0
 	);
@@ -783,6 +785,8 @@ function _zayavFilter($v) {
 		'tovar_id' => _num(@$v['tovar_id']),
 		'gn_year' => _num(@$v['gn_year']) ? $v['gn_year'] : $default['gn_year'],
 		'gn_nomer_id' => _num(@$v['gn_nomer_id']) ? $v['gn_nomer_id'] : $default['gn_nomer_id'],
+		'gn_polosa' => _num(@$v['gn_polosa']),
+		'gn_polosa_color' => _num(@$v['gn_polosa_color']),
 		'deleted' => _bool(@$v['deleted']),
 		'deleted_only' => _bool(@$v['deleted_only']),
 		'clear' => ''
@@ -945,10 +949,26 @@ function _zayav_spisok($v) {
 			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
 
 		if($filter['gn_nomer_id']) {
+			//дополнительное условие по номеру полосы
+			$polosaCond = '';
+			if($filter['gn_polosa'])
+				switch($filter['gn_polosa']) {
+					case 1: $polosaCond = " AND `dop`=1"; break;  //перва€
+					case 102: $polosaCond = " AND `dop`=2"; break;//последн€€
+					case 103: $polosaCond = " AND `dop`=3"; break;//¬нутренн€€ чЄрно-бела€
+					case 104: $polosaCond = " AND `dop`=4"; break;//¬нутренн€€ цветна€
+					case 105: $polosaCond = " AND `dop` IN (3,4) AND !`polosa`"; break;//¬нутренн€€ (номер полосы не указан)
+					default:
+						$polosaCond = " AND `polosa`=".$filter['gn_polosa'];
+						if($filter['gn_polosa_color'])
+							$polosaCond .= " AND `dop`=".$filter['gn_polosa_color'];
+				}
+
 			$sql = "SELECT DISTINCT `zayav_id`
 					FROM `_zayav_gazeta_nomer`
 					WHERE `app_id`=".APP_ID."
-					  AND `gazeta_nomer_id`=".$filter['gn_nomer_id'];
+					  AND `gazeta_nomer_id`=".$filter['gn_nomer_id'].
+					  $polosaCond;
 			$zayav_ids = query_ids($sql);
 			$cond .= " AND `id` IN (".$zayav_ids.")";
 		}
@@ -1335,6 +1355,7 @@ function _zayavPoleEdit($v=array()) {//¬несение/редактирование за€вки
 	'<table class="bs10">'.$send.'</table>';
 }
 function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
+	$zpu = _zayavPole($v['service_id'], 2);
 	$pole = array(
 		17 => '<div id="find"></div>',
 
@@ -1374,7 +1395,23 @@ function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
 			  '</script>'.
 			  '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="gn_year" value="'.$v['gn_year'].'" />'.
-			  '<input type="hidden" id="gn_nomer_id" value="'.$v['gn_nomer_id'].'" />'
+			  '<input type="hidden" id="gn_nomer_id" value="'.$v['gn_nomer_id'].'" />'.
+			(@$zpu[51]['v1'] ?
+			  '<div class="findHead">ѕолоса</div>'.
+			  '<input type="hidden" id="gn_polosa" value="'.$v['gn_polosa'].'" />'.
+			  '<div id="gn_polosa_color_filter"'.($v['gn_polosa'] > 1 && $v['gn_polosa'] < _gn($v['gn_nomer_id'], 'pc') ? '' : ' class="dn"').'>'.
+					_radio('gn_polosa_color',
+							array(
+								0 => 'Ћюба€ цветность',
+								3 => '„Єрно-бела€',
+								4 => '÷ветна€'
+							),
+							$v['gn_polosa_color'],
+							1
+					).
+			  '</div>'
+
+			: '')
 	);
 
 	$send = '';

@@ -10,6 +10,9 @@ var _zayavSpisok = function(v, id) {
 				$('#spisok').html(res.spisok);
 				if(id == 'gn_year')
 					$('#gn_nomer_id')._radio('spisokUpdate', res.gn_year_spisok);
+				//показ/скрытие цветности полосы
+				if($('#gn_polosa').length)
+					$('#gn_polosa_color_filter')[ZAYAV.gn_polosa > 1 && ZAYAV.gn_polosa < GN_ASS[ZAYAV.gn_nomer_id].pc ? 'show' : 'hide']();
 			}
 		}, 'json');
 	},
@@ -398,6 +401,22 @@ var _zayavSpisok = function(v, id) {
 			CALC.html(html);
 		}
 		$('#ze-gn').gnGet('cena', txt_sum);
+	},
+	_zayavPolosa = function() {
+		if(!$('#gn_polosa').length)
+			return;
+		var pc = [{uid:1,title:'ѕерва€'}];
+		for(var n = 2; n < GN_ASS[$('#gn_nomer_id').val()].pc; n++)
+			pc.push({uid:n,title:n + '-€'});
+		pc.push({uid:102,title:'ѕоследн€€ ' + n + '-€'});
+		pc.push({uid:103,title:'¬нутренн€€ чЄрно-бела€'});
+		pc.push({uid:104,title:'¬нутренн€€ цветна€'});
+		pc.push({uid:105,title:'¬нутренн€€ (номер не указан)'});
+		$('#gn_polosa')._select({
+			title0:'Ћюба€ полоса',
+			spisok:pc,
+			func:_zayavSpisok
+		});
 	},
 	_zayavStatus = function() {//»зменение статуса за€вки
 		var spisok = '';
@@ -1836,6 +1855,8 @@ $(document)
 
 		$('#gn_year')._yearLeaf('cur');     ZAYAV.gn_year = (new Date()).getFullYear();
 		$('#gn_nomer_id')._radio(GN_FIRST); ZAYAV.gn_nomer_id = GN_FIRST;
+		$('#gn_polosa')._select(0);         ZAYAV.gn_polosa = 0;
+		$('#gn_polosa_color')._radio(0);    ZAYAV.gn_polosa_color = 0;
 
 		$('#deleted')._check(0);		ZAYAV.deleted = 0;
 		$('#deleted_only')._check(0);	ZAYAV.deleted_only = 0;
@@ -2203,7 +2224,9 @@ $(document)
 					spisok:ZAYAV_GN_YEAR_SPISOK,
 					func:_zayavSpisok
 				});
-
+			_zayavPolosa();
+			$('#gn_polosa_color')._radio(_zayavSpisok);
+			
 			$('#deleted')._check(_zayavSpisok);
 			$('#deleted_only')._check(_zayavSpisok);
 		}

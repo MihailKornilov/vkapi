@@ -11,6 +11,14 @@ function sa_userCount() {
 	return query_value($sql);
 }
 
+function _sa_script() {
+	if(@$_GET['p'] != 'sa')
+		return '';
+
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/sa/sa'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/sa/sa'.MIN.'.js?'.VERSION.'"></script>';
+}
 function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
 	return
 	'<div class="path">'.

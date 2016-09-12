@@ -35,7 +35,7 @@ require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/manual.php';
-require_once GLOBAL_DIR.'/view/sa.php';
+require_once GLOBAL_DIR.'/modul/sa/sa.php';
 require_once GLOBAL_DIR.'/modul/devstory/devstory.php';
 
 _dbConnect('GLOBAL_');  //подключение к базе данных
@@ -159,6 +159,7 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		_client_script().//клиенты
 		_zayav_script(). //за€вки
 		_tovar_script(). //товары
+		_sa_script().    //—уперадмин (SA)
 
 		//ƒеньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
@@ -192,13 +193,7 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 	(@$_GET['p'] == 'manual' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/manual'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/manual'.MIN.'.js?'.VERSION.'"></script>'
-	: '').
-
-		//—уперадмин (SA)
-	(@$_GET['p'] == 'sa' ?
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/sa'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/sa'.MIN.'.js?'.VERSION.'"></script>'
-	: '')
+	: '')		
 ).
 
 	//debug
