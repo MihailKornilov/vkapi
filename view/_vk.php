@@ -28,7 +28,7 @@ require_once GLOBAL_DIR.'/view/_debug.php';
 
 require_once GLOBAL_DIR.'/modul/client/client.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
-require_once GLOBAL_DIR.'/view/tovar.php';
+require_once GLOBAL_DIR.'/modul/tovar/tovar.php';
 require_once GLOBAL_DIR.'/view/money.php';
 require_once GLOBAL_DIR.'/view/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
@@ -158,10 +158,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		_client_script().//клиенты
 		_zayav_script(). //заявки
-		
-		//Товары
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/tovar'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/tovar'.MIN.'.js?'.VERSION.'"></script>'.
+		_tovar_script(). //товары
 
 		//Деньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
@@ -1084,6 +1081,16 @@ function _selJson($arr) {
 	}
 	return '['.implode(',',$send).']';
 }
+function _selArray($arr) {//список для _select при отправке через ajax
+	$send = array();
+	foreach($arr as $uid => $title) {
+		$send[] = array(
+			'uid' => $uid,
+			'title' => utf8(addslashes(htmlspecialchars_decode(trim($title))))
+		);
+	}
+	return $send;
+}
 function _assJson($arr) {//Ассоциативный массив
 	$send = array();
 	foreach($arr as $id => $v)
@@ -1381,6 +1388,7 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'gazeta_obdop');
 	xcache_unset(CACHE_PREFIX.'gazeta_polosa');
 	xcache_unset(CACHE_PREFIX.'devstory_part');
+	xcache_unset(CACHE_PREFIX.'devstory_keyword');
 
 
 	//сброс времени действия введённого пинкода

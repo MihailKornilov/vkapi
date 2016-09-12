@@ -47,14 +47,53 @@ switch(@$_POST['op']) {
 		$send['part'] = utf8(_devstory_part_spisok());
 		jsonSuccess($send);
 		break;
-	case 'devstory_task_add'://внесение нового раздела
+
+	case 'devstory_task_load'://загрузка данных задачи для внесения или редактирования
 		if(!SA)
 			jsonError();
 
-		if(!$part_id = _num($_POST['part_id']))
+		$part_id = _num($_POST['part_id']);
+		$keyword_ids = 0;
+		if($task_id = _num($_POST['task_id'])) {
+			$sql = "SELECT *
+					FROM `_devstory_task`
+					WHERE `id`=".$task_id;
+			if(!$r = query_assoc($sql))
+				jsonError();
+			$part_id = $r['part_id'];
+
+			$sql = "SELECT `keyword_id`
+					FROM `_devstory_keyword_use`
+					WHERE `task_id`=".$task_id;
+			$keyword_ids = query_ids($sql);
+		}
+
+		$sql = "SELECT
+					`word`.`id`,
+					`name`
+				FROM
+					`_devstory_keyword` `word`,
+					`_devstory_keyword_use` `use`
+				WHERE `word`.`id`=`keyword_id`
+				  AND `part_id`=".$part_id."
+				ORDER BY `name`";
+		$keyword_spisok = query_selArray($sql);
+
+		$send = array(
+			'part_name' => utf8(_devstoryPart($part_id)),
+			'keyword_ids' => $keyword_ids,
+			'keyword_spisok' => $keyword_spisok,
+			'name' => isset($r) ? utf8($r['name']) : '',
+			'about' => isset($r) ? utf8($r['about']) : ''
+		);
+
+		jsonSuccess($send);
+		break;
+	case 'devstory_task_add'://внесение новой задачи
+//		if(!SA)
 			jsonError();
 
-		if(!$part_sub_id = _devstoryTaskEditPartSubId($part_id))
+		if(!$part_id = _num($_POST['part_id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
@@ -68,11 +107,13 @@ switch(@$_POST['op']) {
 					`name`,
 					`about`
 				) VALUES (
-					".$part_sub_id.",
+					".$part_id.",
 					'".addslashes($name)."',
 					'".addslashes($about)."'
 				)";
 		query($sql);
+
+		_devstoryTaskKeywordUpdate($task_id, $part_id);
 
 		jsonSuccess();
 		break;
@@ -80,13 +121,7 @@ switch(@$_POST['op']) {
 		if(!SA)
 			jsonError();
 
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		if(!$part_id = _num($_POST['part_id']))
-			jsonError();
-
-		if(!$part_sub_id = _devstoryTaskEditPartSubId($part_id))
+		if(!$task_id = _num($_POST['id']))
 			jsonError();
 
 		$name = _txt($_POST['name']);
@@ -97,16 +132,17 @@ switch(@$_POST['op']) {
 
 		$sql = "SELECT *
 				FROM `_devstory_task`
-				WHERE `id`=".$id;
+				WHERE `id`=".$task_id;
 		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `_devstory_task`
-				SET `part_id`=".$part_sub_id.",
-					`name`='".addslashes($name)."',
+				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."'
-				WHERE `id`=".$id;
+				WHERE `id`=".$task_id;
 		query($sql);
+
+		_devstoryTaskKeywordUpdate($task_id, $r['part_id']);
 
 		jsonSuccess();
 		break;
@@ -266,31 +302,41 @@ switch(@$_POST['op']) {
 		break;
 }
 
-function _devstoryTaskEditPartSubId($part_id) {//получение id подраздела при внесении/редактировании задачи
-	if(!$part_sub_id = _num($_POST['part_sub_id'])) {
-		$part_sub_name = _txt($_POST['part_sub_name']);
-		if(!$part_sub_name)
-			return 0;
-
+function _devstoryTaskKeywordUpdate($task_id, $part_id) {//обновление ключевых слов задачи
+	$ids = _ids($_POST['keyword_ids']);
+	$keyword = _txt($_POST['keyword']);
+	if($keyword) {
 		$sql = "SELECT `id`
-				FROM `_devstory_part`
-				WHERE `parent_id`=".$part_id."
-				  AND `name`='".addslashes($part_sub_name)."'
+				FROM `_devstory_keyword`
+				WHERE `name`='".addslashes($keyword)."'
 				LIMIT 1";
-		if(!$part_sub_id = query_value($sql)) {
-			$sql = "INSERT INTO `_devstory_part` (
-						`parent_id`,
-						`name`
-					) VALUES (
-						".$part_id.",
-						'".addslashes($part_sub_name)."'
-					)";
+		if(!$keyword_id = query_value($sql)) {
+			$sql = "INSERT INTO `_devstory_keyword`
+						(`name`)
+					VALUES 
+						('".addslashes($keyword)."')";
 			query($sql);
-			$part_sub_id = query_insert_id('_devstory_part');
-			xcache_unset(CACHE_PREFIX.'devstory_part');
+			xcache_unset(CACHE_PREFIX.'devstory_keyword');
+			$keyword_id = query_insert_id('_devstory_keyword');
 		}
+		$ids = $ids ? $ids.','.$keyword_id : $keyword_id;
+	} else {
+		$sql = "DELETE FROM `_devstory_keyword_use`
+				WHERE `task_id`=".$task_id;
+		query($sql);
 	}
-	return $part_sub_id;
+
+	if($ids) {
+		$insert = array();
+		foreach(_ids($ids ,1) as $r)
+			$insert[] = "(".$part_id.",".$task_id.",".$r.")";
+		$sql = "INSERT INTO `_devstory_keyword_use` (
+					`part_id`,
+					`task_id`,
+					`keyword_id`
+				) VALUES ".implode(',', $insert);
+		query($sql);
+	}
 }
 function _devstoryTaskSpentUpdate($task_id) {//обновление количества минут, потраченых на задачу
 	$sql = "SELECT IFNULL(SUM(`spent`),0)

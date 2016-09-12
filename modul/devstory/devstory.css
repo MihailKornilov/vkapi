@@ -40,8 +40,14 @@
 	margin:8px;
 	font-weight:bold;
 }
-#devstory .task-u .about{
-	margin:8px;
+#devstory .task-u .about{margin:8px}
+#devstory .task-u .word{
+	display:inline-block;
+	margin:0 5px;
+	padding:3px 8px;
+	border:#cdd solid 1px;
+	background:#eff;
+	color:#555;
 }
 #devstory .td-status{border-left:#eee solid 1px}
 #devstory .task-u .st{font-size:15px;margin:8px 0 10px}

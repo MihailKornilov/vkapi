@@ -54,6 +54,12 @@ function _tovar() {
 	'</div>';
 }
 
+function _tovar_script() {//скрипты для товаров
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/tovar/tovar'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/tovar/tovar'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function _tovarCategory($id=false, $i='name') {
 	$key = CACHE_PREFIX.'tovar_category';
 	if(!$arr = xcache_get($key)) {

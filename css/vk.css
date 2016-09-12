@@ -431,7 +431,6 @@ a.add:hover{text-decoration:underline;color:#357}
 ._calendar .caldays td{line-height:23px;width:26px;text-align:center}
 ._calendar .sel{cursor:pointer}
 ._calendar .lost{color:#777}
-._calendar .b{font-weight:bold}
 ._calendar .sel:hover,._calendar .set{background-color:#e1e7ed}
 
 
@@ -1158,12 +1157,14 @@ button.vk.grey:hover{background-color:#999}
 .w200{width:200px}
 .w230{width:230px}
 .w250{width:250px}
+.w400{width:400px}
 .mar8{margin:8px}
 .mar20{margin:20px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
+.b{font-weight:bold}
 .red{color:#E22}
 .grey{color:#888}
 .db{display:block}

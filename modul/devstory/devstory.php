@@ -42,7 +42,7 @@ function _devstoryPart($id=false, $i='name') {
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
 				FROM `_devstory_part`
-				ORDER BY `sort`,`id`";
+				ORDER BY `sort`";
 		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
@@ -53,39 +53,58 @@ function _devstoryPart($id=false, $i='name') {
 	//список JS для select
 	if($id == 'js') {
 		$spisok = array();
-		foreach($arr as $r) {
-			if(!$r['parent_id'])
-				continue;
-			$spisok[$r['parent_id']][$r['id']] = $r['name'];
-		}
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
 
-		$js = array();
-		foreach($spisok as $uid => $r)
-			$js[] = $uid.':'._selJson($r);
-
-		return '{'.implode(',', $js).'}';
+		return _assJson($spisok);
 	}
 
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id раздела разработки', $id);
 
-	if($i == 'path') {
-		$send = '';
-		$u = $arr[$id];
-		while($u['parent_id']) {
-			$send .= ' » '.$u['name'].'</b>';
-			$u = $arr[$u['parent_id']];
-		}
-		return '<b>'.$u['name'].'</b>'.$send;
-	}
-
-	if($i == 'parent_name'){
-		$parent_id = $arr[$id]['parent_id'];
-		return $arr[$parent_id]['name'];
-	}
-
 	if(!isset($arr[$id][$i]))
 		return _cacheErr('неизвестный ключ раздела разработки', $i);
+
+	return $arr[$id][$i];
+}
+function _devstoryKeyword($id=false, $i='name') {
+	$key = CACHE_PREFIX.'devstory_keyword';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT *
+				FROM `_devstory_keyword`
+				ORDER BY `id`";
+		if($arr = query_arr($sql))
+			xcache_set($key, $arr, 86400);
+	}
+
+	if($id == 'all')
+		return $arr;
+
+	//список JS для select
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
+
+		return _assJson($spisok);
+	}
+
+	//слова в списке задач
+	if($id = 'task') {
+		if(!$i)
+			return '';
+		$send = '';
+		foreach(explode(',', $i) as $r)
+			if($r)
+				$send .= '<span class="word">'.$arr[$r]['name'].'</span>';
+		return $send;
+	}
+
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id ключевого слова', $id);
+
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ ключевого слова', $i);
 
 	return $arr[$id][$i];
 }
@@ -149,14 +168,13 @@ function _devstory_part() {
 	return
 		'<div class="headName m1">'.
 			'Основные разделы'.
-			(SA ? '<a class="add" onclick="devStoryMainEdit()">Новый раздел</a>' : '').
+			(SA ? '<a class="add" onclick="devStoryPartEdit()">Новый раздел</a>' : '').
 		'</div>'.
 		'<div id="part-spisok">'._devstory_part_spisok().'</div>';
 }
 function _devstory_part_spisok() {//список разделов
 	$sql = "SELECT *
 			FROM `_devstory_part`
-			WHERE !`parent_id`
 			ORDER BY `sort`";
 	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
@@ -170,7 +188,7 @@ function _devstory_part_spisok() {//список разделов
 							'<a class="name">'.$r['name'].'</a>'.
 					(SA ?
 						'<td class="ed">'.
-							'<div class="img_add m30'._tooltip('Добавить задачу', -94, 'r').'</div>'.
+							'<div onclick="devStoryTaskEdit('.$r['id'].')" class="img_add m30'._tooltip('Добавить задачу', -94, 'r').'</div>'.
 							_iconEdit($r)
 					: '').
 				'</table>';
@@ -186,12 +204,26 @@ function _devstory_task() {
 		'<div id="spisok">'._devstory_task_spisok().'</div>';
 }
 function _devstory_task_spisok() {
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 `keyword`
 			FROM `_devstory_task`
 			WHERE !`deleted`
 			ORDER BY `dtime_add` DESC";
 	if(!$spisok = query_arr($sql))
 		return 'Задач не найдено.';
+
+	//id ключевых слов
+	$sql = "SELECT *
+			FROM `_devstory_keyword_use`
+			WHERE `task_id` IN ("._idsGet($spisok).")
+			ORDER BY `id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$spisok[$r['task_id']]['keyword'] .= ','.$r['keyword_id'];
+	}
+
+
 
 	//есть ли выполняющаяся задача. Если есть, то невозможно запускать другие задачи на выполнение
 	$sql = "SELECT COUNT(*)
@@ -204,9 +236,10 @@ function _devstory_task_spisok() {
 		$send .=
 			'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
 				'<div class="pp">'.
-			   (SA ? _iconEdit($r) : '').
+			  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').
 					'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-					_devstoryPart($r['part_id'], 'path').
+					'<b>'._devstoryPart($r['part_id']).'</b>'.
+					_devstoryKeyword('task', $r['keyword']).
 				'</div>'.
 				'<table class="w100p">'.
 					'<tr><td class="top">'.
@@ -228,10 +261,6 @@ function _devstory_task_spisok() {
 	(SA && $r['status_id'] == 2 ? '<a class="st-action cancel red">отменить</a>' : '').
 
 				'</table>'.
-				'<input type="hidden" class="part_id" value="'._devstoryPart($r['part_id'], 'parent_id').'" />'.
-				'<input type="hidden" class="part_name" value="'._devstoryPart($r['part_id'], 'parent_name').'" />'.
-				'<input type="hidden" class="part_sub_id" value="'.$r['part_id'].'" />'.
-				'<input type="hidden" class="part_sub_name" value="'._devstoryPart($r['part_id']).'" />'.
 			'</div>';
 	}
 

@@ -789,14 +789,20 @@ $.fn._check = function(o) {
 	}
 	return t;
 };
-$.fn._radio = function(o) {
+$.fn._radio = function(o, o1) {
 	var t = $(this),
 		n,
-		id = t.attr('id');
+		attr_id = t.attr('id'),
+		win = attr_id + '_radio';
 
 	switch(typeof o){
 		case 'number':
 		case 'string':
+			if(o == 'spisokUpdate') {
+				window[win].spisokUpdate(o1);
+				return;
+			}
+			
 			var p = t.parent();
 			if(p.hasClass('_radio')) {
 				p.find('.on').removeClass('on').addClass('off');
@@ -814,7 +820,7 @@ $.fn._radio = function(o) {
 		case 'function': _click(o);	return t;
 		case 'object':
 			if('length' in o) {
-				var div = $('#' + id + '_radio').find('div'),
+				var div = $('#' + attr_id + '_radio').find('div'),
 					len = div.length;
 				for(n = 0; n < div.length; n++) {
 					var eq = div.eq(n);
@@ -832,37 +838,44 @@ $.fn._radio = function(o) {
 		block:1,
 		func:function() {}
 	}, o);
-	var list = '',
-		val = t.val(),
-		spisok = [];
+	var val = t.val();
 
-	if(o.title0)
-		spisok = [{uid:0,title:o.title0}];
-	for(n = 0; n < o.spisok.length; n++)
-		spisok.push(o.spisok[n]);
-	for(n = 0; n < spisok.length; n++) {
-		var sp = spisok[n],
-			sel = val == sp.uid ? 'on' : 'off',
-			l = o.light ? ' l' : '';
-		list += '<div class="' + sel + l + '" ' +
-					 'val="' + sp.uid + '"' +
-					(o.right ? ' style="margin-right:' + o.right + 'px"' : '') +
-				'>' +
-						'<s></s>' +
-						sp.title +
-				'</div>';
-	}
-	t.wrap('<div class="_radio' + (o.block ? ' block' : '') + '" id="' + id + '_radio">');
-	t.after(list);
+	t.wrap('<div class="_radio' + (o.block ? ' block' : '') + '" id="' + attr_id + '_radio">');
+	_radioSpisokPrint(o.spisok);
 	_click(o.func);
 
+	function _radioSpisokPrint(spisok) {
+		var list = '';
+		if(o.title0)
+			spisok.unshift([{uid:0,title:o.title0}]);
+		for(n = 0; n < spisok.length; n++) {
+			var sp = spisok[n],
+				sel = val == sp.uid ? 'on' : 'off',
+				l = o.light ? ' l' : '';
+			list += '<div class="' + sel + l + '" ' +
+						 'val="' + sp.uid + '"' +
+						(o.right ? ' style="margin-right:' + o.right + 'px"' : '') +
+					'>' +
+							'<s></s>' +
+							sp.title +
+					'</div>';
+		}
+		t.after(list);
+	}
 	function _click(func) {
-		$(document).off('click', '#' + id + '_radio .on,#' + id + '_radio .off');
-		$(document).on('click', '#' + id + '_radio .on,#' + id + '_radio .off', function() {
-			func(_num(t.val()), id);
+		$(document).off('click', '#' + attr_id + '_radio .on,#' + attr_id + '_radio .off');
+		$(document).on('click', '#' + attr_id + '_radio .on,#' + attr_id + '_radio .off', function() {
+			func(_num(t.val()), attr_id);
 		});
 	}
 
+	t.spisokUpdate = function(v) {
+		t.parent().find('div').remove();
+console.log(v);
+		_radioSpisokPrint(v);
+	};
+	
+	window[win] = t;
 	return t;
 };
 $.fn._search = function(o, v) {
@@ -1127,29 +1140,42 @@ $.fn._calendar = function(o) {
 		daysPrint();
 	}
 };
-$.fn.years = function(o) {// перелистывание годов
+$.fn._yearLeaf = function(o) {// перелистывание годов
 	var t = $(this),
-		id = t.attr('id'),
-		val = t.val();
+		attr_id = t.attr('id'),
+		val = t.val(),
+		win = attr_id + '_yearLeaf',
+		curYear = (new Date()).getFullYear();
 
-	if(!id)
+	if(!attr_id)
 		return;
 
+	if(typeof o == 'string') {
+		if(o == 'cur')
+			window[win].cur();
+
+		return t;
+	}
+
 	o = $.extend({
-		year:(new Date()).getFullYear(),
+		year:curYear,
 		start:function() {},
 		func:function() {},
 		center:function() {}
 	}, o);
 
-	if(val)
-		o.year = val * 1;
+	if(_num(val))
+		o.year = _num(val);
+	else
+		t.val(o.year);
+
+
 
 	var html =
-		'<div class="years" id="years_' + id + '">' +
+		'<div class="years" id="years_' + attr_id + '">' +
 			'<TABLE>' +
 				'<TR><TD class="but">&laquo;' +
-					'<TD id="ycenter"><SPAN>' + o.year + '</SPAN>' +
+					'<TD id="ycenter"><span>' + o.year + '</span>' +
 					'<TD class="but">&raquo;' +
 			'</TABLE>' +
 		'</div>';
@@ -1159,8 +1185,8 @@ $.fn.years = function(o) {// перелистывание годов
 	var years = {
 		left:0,
 		speed:2,
-		span:$('#years_' + id + ' #ycenter SPAN'),
-		width:Math.round($('#years_' + id + ' #ycenter').css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
+		span:$('#years_' + attr_id + ' #ycenter SPAN'),
+		width:Math.round($('#years_' + attr_id + ' #ycenter').css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
 		ismove:0
 	};
 	years.next = function(side) {
@@ -1191,18 +1217,26 @@ $.fn.years = function(o) {// перелистывание годов
 					span.html(o.year);
 					y.left = y.width * side;
 					t.val(o.year);
-					o.func(o.year, id);
+					o.func(o.year, attr_id);
 				}
 			}, 25);
 		}
 	};
 
-	$('#years_' + id + ' #ycenter').click(function() {
-		o.center(o.year, id);
+	$('#years_' + attr_id + ' #ycenter').click(function() {
+		o.center(o.year, attr_id);
 	});
 
-	$('#years_' + id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
-	$('#years_' + id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
+	$('#years_' + attr_id + ' .but:first').mousedown(function () { allmon = 1; years.next(-1); });
+	$('#years_' + attr_id + ' .but:eq(1)').mousedown(function () { allmon = 1; years.next(1); });
+
+	t.cur = function() {
+		t.val(curYear);
+		years.span.html(curYear);
+	};
+
+	window[win] = t;
+	return t;
 };
 $.fn.keyEnter = function(func) {
 	$(this).keydown(function(e) {

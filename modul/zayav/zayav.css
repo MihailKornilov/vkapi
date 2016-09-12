@@ -11,6 +11,16 @@
 #_zayav ._check{margin-top:10px}
 /* Срок выполнения заявки */
 	#_zayav .zayav-srok{float:right}
+/* Номера газет */
+#gn_nomer_id_select .selun b{display:inline-block;width:14px;text-align:right;margin-right:2px}
+#gn_nomer_id_select .selun span{display:inline;color:#555}
+#gn_nomer_id_select .selun.ov span{color:#ddd}
+#gn_nomer_id_select .selun .lost,#nomer_select .selun .lost *{color:#888}
+#gn_nomer_id_select .selun.ov .lost,#nomer_select .selun.ov .lost *{color:#bbb}
+
+#gn_nomer_id_radio div{font-size:10px}
+#gn_nomer_id_radio .lost{text-decoration:line-through;color:#999}
+
 #_zayav #deleted_check{margin-top:20px}
 #_zayav #deleted-only-div{margin-top:5px}
 #_zayav ._empty{margin:10px}

@@ -122,6 +122,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 				'day_public' => $r['day_public'],
 				'pub' => FullData($r['day_public'], 1, 1, 1),
 				'pc' => $r['polosa_count'],
+				'pub_count' => '',  //количество выпусков для конкретного вида деятельности
 				'lost' => strtotime($r['day_print']) < time() //прошедший номер
 			);
 		xcache_set($key, $arr, 86400);
@@ -147,6 +148,67 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 			'}');
 	
 		return '{'.implode(',', $gn).'}';
+	}
+
+	//ассоциативный список номеров газет для JS
+	if($nomer == 'js_year_spisok' || $nomer == 'arr_year_spisok') {
+		if(empty($arr))
+			return '[]';
+
+		$year = $i['gn_year'];
+		$service_id = $i['service_id'];
+
+		if(!preg_match(REGEXP_YEAR, $year))
+			return '[]';
+
+		$inYear = array();
+		foreach($arr as $id => $r)
+			if($year == substr($r['day_public'], 0, 4))
+				$inYear[$id] = $r;
+
+		if(empty($inYear))
+			return '[]';
+
+		// количество выходов для каждого номера
+		$sql = "SELECT
+					`gazeta_nomer_id`,
+					COUNT(`gn`.`id`) `count`
+				FROM
+					`_zayav_gazeta_nomer` `gn`,
+					`_zayav` `z`
+				WHERE `z`.`app_id`=".APP_ID."
+				  AND `z`.`id`=`gn`.`zayav_id`
+				  AND `z`.`service_id`=".$service_id."
+				  AND `gazeta_nomer_id` IN ("._idsGet($inYear, 'key').")
+				GROUP BY `gazeta_nomer_id`";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			$inYear[$r['gazeta_nomer_id']]['pub_count'] = $r['count'];
+
+		$gn = array();
+		foreach($inYear as $id => $r) {
+			$ex = explode('-', $r['day_public']);
+			$public = abs($ex[2]).' '._monthCut($ex[1]);
+
+/*			$gn[$id] = array(
+				'title' => $r['week'].' ('.$r['general_nomer'].') выход '.$public,
+				'content' =>
+					'<div'.($r['lost'] ? ' class="lost"' : '').'>'.
+						'<b>'.$r['week'].'</b>'.
+						'('.$r['general_nomer'].')'.
+						'<span> выход '.$public.'</span>'.
+					 '</div>'
+			);
+*/
+			$gn[$id] =
+				'<span'.($r['lost'] ? ' class="lost"' : '').'>'.
+					'<b>'.$r['week'].'</b> '.
+					'('.$r['general_nomer'].')'.
+				'</span>'.
+				' вых. '.$public.
+				'<em>'.$r['pub_count'].'</em>';
+		}
+		return $nomer == 'js_year_spisok' ? _selJson($gn) : _selArray($gn);
 	}
 
 	//первый активный номер
@@ -695,6 +757,8 @@ function _zayavFilter($v) {
 		'noattach1' => 0,
 		'tovar_name_id' => 0,
 		'tovar_id' => 0,
+		'gn_year' => strftime('%Y'),  //год номеров газеты 51
+		'gn_nomer_id' => _gn('first'),//номер газеты 51
 		'deleted' => 0,
 		'deleted_only' => 0
 	);
@@ -717,6 +781,8 @@ function _zayavFilter($v) {
 		'noattach1' => _bool(@$v['noattach1']),
 		'tovar_name_id' => _num(@$v['tovar_name_id']),
 		'tovar_id' => _num(@$v['tovar_id']),
+		'gn_year' => _num(@$v['gn_year']) ? $v['gn_year'] : $default['gn_year'],
+		'gn_nomer_id' => _num(@$v['gn_nomer_id']) ? $v['gn_nomer_id'] : $default['gn_nomer_id'],
 		'deleted' => _bool(@$v['deleted']),
 		'deleted_only' => _bool(@$v['deleted_only']),
 		'clear' => ''
@@ -877,6 +943,15 @@ function _zayav_spisok($v) {
 
 		if($filter['tovar_place_id'])
 			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
+
+		if($filter['gn_nomer_id']) {
+			$sql = "SELECT DISTINCT `zayav_id`
+					FROM `_zayav_gazeta_nomer`
+					WHERE `app_id`=".APP_ID."
+					  AND `gazeta_nomer_id`=".$filter['gn_nomer_id'];
+			$zayav_ids = query_ids($sql);
+			$cond .= " AND `id` IN (".$zayav_ids.")";
+		}
 
 		if(VIEWER_ADMIN) {
 			if($filter['deleted']) {
@@ -1292,7 +1367,14 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 
 		33 => '<script>var ZAYAV_TOVAR_IDS="'._zayavTovarIds($v['service_id']).'";</script>'.
 			  '<div class="findHead">{label}</div>'.
-			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />'
+			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />',
+
+		51 => '<script>'.
+				'var ZAYAV_GN_YEAR_SPISOK='._gn('js_year_spisok', $v).';'.
+			  '</script>'.
+			  '<div class="findHead">{label}</div>'.
+			  '<input type="hidden" id="gn_year" value="'.$v['gn_year'].'" />'.
+			  '<input type="hidden" id="gn_nomer_id" value="'.$v['gn_nomer_id'].'" />'
 	);
 
 	$send = '';
@@ -1334,7 +1416,7 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 	// начисления и платежи
 	$pay = '';
 	if($z['sum_accrual'] || $z['sum_pay']) {
-		$diff = $z['sum_dolg'] ? ($z['sum_dolg'] < 0 ? 'Недо' : 'Предо').'плата '.abs($z['sum_dolg']).' руб.' : 'Оплачено';
+		$diff = abs($z['sum_dolg']) ? ($z['sum_dolg'] < 0 ? 'Недо' : 'Предо').'плата '.abs($z['sum_dolg']).' руб.' : 'Оплачено';
 		$diffClass = $z['sum_accrual'] != $z['sum_pay'] ? ' diff' : '';
 		$pay = '<div class="balans'.$diffClass.'">'.
 				'<span class="acc'._tooltip('Начислено', -39).$z['sum_accrual'].'</span>/'.
@@ -1418,6 +1500,13 @@ function _zayavUnit49($z, $zpu) {//единица списка заявки: количество
 	if(!$z['count'])
 		return '';
 	return '<tr><td class="label">Количество:<td><b>'.$z['count'].'</b> шт.';
+}
+function _zayavUnit50($z, $zpu) {//единица списка заявки: полоса (газета)
+	if(!isset($zpu[50]))
+		return '';
+	return
+		'<tr><td class="label">Полоса:'.
+			'<td>'.$z['polosa_id'];
 }
 function _zayavTovarName() {
 	$sql = "SELECT DISTINCT `tovar_id`
@@ -1749,11 +1838,14 @@ function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 	if(!isset($zpu[48]))
 		return '';
 
-	$sql = "SELECT *
-			FROM `_zayav_gazeta_nomer`
-			WHERE `app_id`=".APP_ID."
+	$sql = "SELECT `z`.*
+			FROM
+				`_zayav_gazeta_nomer` `z`,
+				`_setup_gazeta_nomer` `s`
+			WHERE `s`.`id`=`z`.`gazeta_nomer_id`
+			  AND `z`.`app_id`=".APP_ID."
 			  AND `zayav_id`=".$z['id']."
-			ORDER BY `id`";
+			ORDER BY `s`.`general_nomer`";
 	if(!$spisok = query_arr($sql))
 		return '';
 

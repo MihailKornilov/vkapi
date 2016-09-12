@@ -243,6 +243,7 @@ switch(@$_POST['op']) {
 		if($data['filter']['page'] == 1)
 			$send['all'] = utf8($data['result']);
 		$send['spisok'] = utf8($data['spisok']);
+		$send['gn_year_spisok'] = _gn('arr_year_spisok', $data['filter']);
 		jsonSuccess($send);
 		break;
 

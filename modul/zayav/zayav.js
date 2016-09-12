@@ -8,6 +8,8 @@ var _zayavSpisok = function(v, id) {
 			if(res.success) {
 				$('.result').html(res.all);
 				$('#spisok').html(res.spisok);
+				if(id == 'gn_year')
+					$('#gn_nomer_id')._radio('spisokUpdate', res.gn_year_spisok);
 			}
 		}, 'json');
 	},
@@ -1832,6 +1834,9 @@ $(document)
 		$('#tovar_id').tovar('cancel');	ZAYAV.tovar_id = 0;
 		$('#tovar_place_id')._select(0);ZAYAV.tovar_place_id = 0;
 
+		$('#gn_year')._yearLeaf('cur');     ZAYAV.gn_year = (new Date()).getFullYear();
+		$('#gn_nomer_id')._radio(GN_FIRST); ZAYAV.gn_nomer_id = GN_FIRST;
+
 		$('#deleted')._check(0);		ZAYAV.deleted = 0;
 		$('#deleted_only')._check(0);	ZAYAV.deleted_only = 0;
 
@@ -2183,6 +2188,21 @@ $(document)
 				spisok:ZAYAV_TOVAR_PLACE_SPISOK,
 				func:_zayavSpisok
 			});
+
+			$('#gn_year')._yearLeaf({func:_zayavSpisok});
+/*			$('#gn_nomer_id')._select({
+				width:155,
+				spisok:ZAYAV_GN_YEAR_SPISOK,
+				func:_zayavSpisok
+			});
+*/
+			if($('#gn_nomer_id').length)
+				$('#gn_nomer_id')._radio({
+					right:0,
+					light:1,
+					spisok:ZAYAV_GN_YEAR_SPISOK,
+					func:_zayavSpisok
+				});
 
 			$('#deleted')._check(_zayavSpisok);
 			$('#deleted_only')._check(_zayavSpisok);

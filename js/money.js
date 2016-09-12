@@ -470,7 +470,7 @@ var _accrualAdd = function(o) {
 				_expenseSpisok(v, id);
 			}
 		});
-		$('#year').years({func:_expenseSpisok});
+		$('#year')._yearLeaf({func:_expenseSpisok});
 		$('#mon')._radio({
 			spisok:EXPENSE_MON,
 			light:1,
@@ -2448,7 +2448,7 @@ $(document)
 					}
 				}
 			});
-			$('#year').years({func:_salarySpisok});
+			$('#year')._yearLeaf({func:_salarySpisok});
 			$('#salmon')._radio({func:_salarySpisok});
 			_salaryNoAccRecalcHint();
 		}
