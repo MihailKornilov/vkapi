@@ -838,16 +838,18 @@ $.fn._radio = function(o, o1) {
 		block:1,
 		func:function() {}
 	}, o);
-	var val = t.val();
+
+	var val = _num(t.val());
+//	t.val(val);
 
 	t.wrap('<div class="_radio' + (o.block ? ' block' : '') + '" id="' + attr_id + '_radio">');
-	_radioSpisokPrint(o.spisok);
+	_radioSpisokPrint(_copySel(o.spisok));
 	_click(o.func);
 
 	function _radioSpisokPrint(spisok) {
 		var list = '';
 		if(o.title0)
-			spisok.unshift([{uid:0,title:o.title0}]);
+			spisok.unshift({uid:0,title:o.title0});
 		for(n = 0; n < spisok.length; n++) {
 			var sp = spisok[n],
 				sel = val == sp.uid ? 'on' : 'off',
@@ -871,7 +873,6 @@ $.fn._radio = function(o, o1) {
 
 	t.spisokUpdate = function(v) {
 		t.parent().find('div').remove();
-console.log(v);
 		_radioSpisokPrint(v);
 	};
 	
