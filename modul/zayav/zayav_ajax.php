@@ -359,6 +359,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
 	case 'zayav_tovar_place_change':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -371,7 +372,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
 	case 'zayav_tovar_zakaz':// заказ товара из заявки
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -1166,6 +1166,30 @@ switch(@$_POST['op']) {
 		$send['id'] = query_insert_id('_zayav_kvit');
 
 		jsonSuccess($send);
+		break;
+
+	case 'zayav_gn_polosa_nomer_change'://изменение номера полосы из списка заявок (для рекламы)
+		if(!$zgn_id = _num($_POST['zgn_id']))
+			jsonError();
+
+		$polosa = _num($_POST['polosa']);
+
+		$sql = "SELECT *
+				FROM `_zayav_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$zgn_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		if($r['polosa'] == $polosa)
+			jsonError();
+
+		$sql = "UPDATE `_zayav_gazeta_nomer`
+				SET `polosa`=".$polosa."
+				WHERE `id`=".$zgn_id;
+		query($sql);
+
+		jsonSuccess();
 		break;
 
 	case 'cartridge_new'://внесение новой модели картриджа

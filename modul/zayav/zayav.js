@@ -13,6 +13,7 @@ var _zayavSpisok = function(v, id) {
 				//показ/скрытие цветности полосы
 				if($('#gn_polosa').length)
 					$('#gn_polosa_color_filter')[ZAYAV.gn_polosa > 1 && ZAYAV.gn_polosa < GN_ASS[ZAYAV.gn_nomer_id].pc ? 'show' : 'hide']();
+				_zayavPolosaNomerDropdown();
 			}
 		}, 'json');
 	},
@@ -417,6 +418,38 @@ var _zayavSpisok = function(v, id) {
 			spisok:pc,
 			func:_zayavSpisok
 		});
+	},
+	_zayavPolosaNomerDropdown = function() {
+		var pnc = $('.zayav-polosa-nomer'),
+			pc = [],
+			n;
+
+		if(!pnc.length)
+			return;
+
+		for(n = 2; n < GN_ASS[ZAYAV.gn_nomer_id].pc; n++)
+			pc.push({uid:n,title:n + '-я'});
+
+		for(n = 0; n < pnc.length; n++) {
+			var sp = pnc.eq(n);
+
+			$('#' + sp.attr('id'))._dropdown({
+				title0:'??',
+				spisok:pc,
+				func:function(v, attr_id) {
+					var send = {
+						op:'zayav_gn_polosa_nomer_change',
+						zgn_id:_num($('#' + attr_id).attr('val')),
+						polosa:v
+					};
+					$.post(AJAX_MAIN, send, function(res) {
+						if(res.success)
+							_msg();
+					}, 'json');
+				}
+			});
+			sp.removeClass('zayav-polosa-nomer');
+		}
 	},
 	_zayavStatus = function() {//Изменение статуса заявки
 		var spisok = '';
@@ -2229,6 +2262,9 @@ $(document)
 			
 			$('#deleted')._check(_zayavSpisok);
 			$('#deleted_only')._check(_zayavSpisok);
+
+			_zayavPolosaNomerDropdown();
+			_nextCallback = _zayavPolosaNomerDropdown;
 		}
 		if($('#_zayav-info').length) {
 			$('.a-page').click(function() {

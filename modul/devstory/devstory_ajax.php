@@ -90,7 +90,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'devstory_task_add'://внесение новой задачи
-//		if(!SA)
+		if(!SA)
 			jsonError();
 
 		if(!$part_id = _num($_POST['part_id']))
@@ -112,6 +112,8 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."'
 				)";
 		query($sql);
+
+		$task_id = query_insert_id('_devstory_task');
 
 		_devstoryTaskKeywordUpdate($task_id, $part_id);
 

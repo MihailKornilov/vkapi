@@ -43,6 +43,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 	},
 	devStoryTaskEdit = function(part_id, task_id) {//создание, редактирование задачи
 		task_id = _num(task_id);
+		part_id = _num(part_id);
 		var dialog = _dialog({
 				top:30,
 				width:550,
@@ -53,7 +54,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 			}),
 			send = {
 				op:'devstory_task_load',
-				part_id:_num(part_id),
+				part_id:part_id,
 				task_id:task_id
 			};
 
@@ -90,6 +91,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 			var send = {
 				op:'devstory_task_' + (task_id ? 'edit' : 'add'),
 				id:task_id,
+				part_id:part_id,
 				keyword_ids:$('#keyword_ids').val(),
 				keyword:$('#keyword_ids')._select('inp'),
 				name:$('#name').val(),
