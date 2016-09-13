@@ -30,7 +30,7 @@ require_once GLOBAL_DIR.'/modul/client/client.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
 require_once GLOBAL_DIR.'/modul/tovar/tovar.php';
 require_once GLOBAL_DIR.'/view/money.php';
-require_once GLOBAL_DIR.'/view/history.php';
+require_once GLOBAL_DIR.'/modul/history/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
@@ -156,18 +156,15 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 (PIN_ENTER ? '' :
 
-		_client_script().//клиенты
-		_zayav_script(). //заявки
-		_tovar_script(). //товары
-		_sa_script().    //Суперадмин (SA)
+		_client_script().   // Клиенты
+		_zayav_script().    // заявки
+		_history_script().  // История действий
+		_tovar_script().    // товары
+		_sa_script().       // Суперадмин (SA)
 
 		//Деньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.API_HTML.'/js/money'.MIN.'.js?'.VERSION.'"></script>'.
-
-		//История действий
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/history'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/history'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Напоминания
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/remind'.MIN.'.css?'.VERSION.'" />'.

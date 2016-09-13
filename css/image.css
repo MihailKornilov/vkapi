@@ -67,7 +67,12 @@ a._iview .img_minidel{
 	bottom:20px;
 
 }
-#_image-but-200{display:block;text-align:center;padding:10px}
+#_image-but-200{
+	display:block;
+	width:200px;
+	text-align:center;
+	padding:10px 0;
+}
 #_image-but-200:hover{background:#e9edf1;text-decoration:none}
 
 /* Диалоговое окно для закрузки изображения */

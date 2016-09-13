@@ -1781,7 +1781,9 @@ function _zayavInfo() {
 					_zayavInfoMoney($zayav_id).
 					_note().
 
-				'<td id="right">'._zayavInfoTovar($z).
+				'<td id="right">'.
+ (isset($zpu[52]) ? _zayavImg($zayav_id) : '').
+					_zayavInfoTovar($z).
 		'</table>'.
 
 		'<div class="page dn">'.
@@ -1961,7 +1963,9 @@ function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 	}
 	$send .= '</table>';
 
-	return '<tr><td class="label topi">Номера выпуска:<td>'.$send;
+	return
+		'<tr><td class="label">Номера выпуска:<td>'.
+		'<tr><td colspan="2">'.$send;
 }
 function _zayavDogovor($z) {//отображение номера договора
 	$sql = "SELECT *
@@ -2407,8 +2411,8 @@ function _zayavInfoTovar($z) {//информация о товаре
 		return '';
 
 	return
+	_zayavImg($z['id'], $tovar_id).
 	'<div id="zayav-tovar">'.
-		'<div class="center">'._zayavImg($z['id'], $tovar_id).'</div>'.
 		'<div class="headBlue">Информация о товаре</div>'.
 
 		'<div id="content">'.
@@ -2425,10 +2429,10 @@ function _zayavInfoTovar($z) {//информация о товаре
 (isset($z['zpu'][12]) ? '<tr><th>Нахождение:<td><a id="zayav-tovar-place-change">'._zayavTovarPlace($z['tovar_place_id']).'</a>' : '').
 			'</table>'.
 		'</div>'.
-		_zayavInfoTovarSet($tovar_id, $z['id']).
+		_zayavInfoTovarSet($tovar_id).
 	'</div>';
 }
-function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара заявки
+function _zayavInfoTovarSet($tovar_id) {//список запчастей для товара заявки
 	$sql = "SELECT *
 			FROM `_tovar`
 			WHERE `tovar_id_set`=".$tovar_id;
@@ -2460,12 +2464,12 @@ function _zayavInfoTovarSet($tovar_id, $zayav_id) {//список запчастей для товара
 	'</div>'.
 	'<div id="zp-spisok">'.$spisok.'</div>';
 }
-function _zayavImg($zayav_id, $tovar_id) {
+function _zayavImg($zayav_id, $tovar_id=0) {
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
 			  AND !`sort`
-			  AND (`app_id` AND `zayav_id`=".$zayav_id." OR !`app_id` AND `tovar_id`=".$tovar_id.")
+			  AND (`app_id` AND `zayav_id`=".$zayav_id.($tovar_id ? " OR !`app_id` AND `tovar_id`=".$tovar_id : '').")
 			ORDER BY `zayav_id` DESC";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
@@ -2477,13 +2481,15 @@ function _zayavImg($zayav_id, $tovar_id) {
 
 	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
 	return
-	'<img class="_iview" '.
-		'val="'.$r['id'].'" '.
-		'width="'.$size['x'].'" '.
-		'height="'.$size['y'].'" '.
-		'src="'.$r['path'].$r['big_name'].'" '.
-	'/>'.
-	_imageBut200('zayav_id:'.$zayav_id);
+	'<div>'.
+		'<img class="_iview" '.
+			'val="'.$r['id'].'" '.
+			'width="'.$size['x'].'" '.
+			'height="'.$size['y'].'" '.
+			'src="'.$r['path'].$r['big_name'].'" '.
+		'/>'.
+		_imageBut200('zayav_id:'.$zayav_id).
+	'</div>';
 }
 function _zayavKvit($zayav_id) {
 	$sql = "SELECT *

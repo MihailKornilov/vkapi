@@ -6,6 +6,15 @@ function _history($v=array()) {
 	return _history_spisok($v);
 }
 
+function _history_script() {//скрипты и стили
+	if(PIN_ENTER)
+		return '';
+
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/history/history'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/history/history'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function _history_insert($v=array()) {//внесение истории действий
 	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
 	$client_id = _num(@$v['client_id']);
