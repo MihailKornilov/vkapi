@@ -504,8 +504,8 @@ var saMenuEdit = function(o) {
 				'<table class="sa-tab">' +
 					'<tr><td class="label"><b>app_id</b>:<td><input id="app_id" type="text" value="' + o.id + '"' + (o.id ? ' disabled' : '') + ' />' +
 					'<tr><td class="label">title:<td><input id="title" type="text" value="' + o.title + '" />' +
-					'<tr><td class="label">Название:<td><input id="app_name" type="text" value="' + o.app_name + '" />' +
-					'<tr><td class="label">secret:<td><input id="secret" type="text" value="' + o.secret + '" />' +
+					'<tr><td class="label">Название:<td><input type="text" id="app_name" class="w230" value="' + o.app_name + '" />' +
+					'<tr><td class="label">secret:<td><input type="text" id="secret" class="w230" value="' + o.secret + '" />' +
 				'</table>',
 			dialog = _dialog({
 				head:(o.id ? 'Изменение' : 'Добавление нового') + ' приложения',
@@ -1030,7 +1030,7 @@ $(document)
 		saAppEdit({
 			id:t.attr('val'),
 			title:p.find('.title').html(),
-			app_name:p.find('.app_name').html(),
+			app_name:p.find('.name').val(),
 			secret:p.find('.secret').val()
 		});
 	})

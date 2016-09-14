@@ -888,6 +888,7 @@ function sa_app_spisok() {
 		$send .=
 			'<tr>'.
 				'<td class="id">'.$r['id'].
+					'<input type="hidden" class="name" value="'.$r['app_name'].'" />'.
 					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
 				'<td class="app_name">'.$name.
 				'<td class="title">'.$r['title'].
