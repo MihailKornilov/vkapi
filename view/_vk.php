@@ -38,6 +38,8 @@ require_once GLOBAL_DIR.'/view/manual.php';
 require_once GLOBAL_DIR.'/modul/sa/sa.php';
 require_once GLOBAL_DIR.'/modul/devstory/devstory.php';
 
+require_once GLOBAL_DIR.'/modul/kupezz/kupezz.php';
+
 _dbConnect('GLOBAL_');  //подключение к базе данных
 
 
@@ -161,6 +163,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		_history_script().  // История действий
 		_tovar_script().    // товары
 		_sa_script().       // Суперадмин (SA)
+		_kupezz_script().   // Купец - бесплатные объявления
 
 		//Деньги
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
@@ -225,6 +228,8 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 				default:            return sa_global_index();
 				case 'historycat':  return sa_history_cat();
 			}
+
+		case 'kupezz': return kupezz_index();
 	}
 
 	return '';
@@ -353,11 +358,14 @@ function _appAuth() {//Проверка авторизации в приложении
 	_app();
 	_getVkUser(); //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода
 
-	if(!VIEWER_WORKER)
+	if(!_app('enter'))
+		_appError('Вход в приложение закрыт.');
+
+	if(_app('enter') == 1 && !VIEWER_WORKER)
 		_appError('Невозможно выполнить вход в приложение.');
 
-	if(!RULE_APP_ENTER)
-		_appError('Невозможно выполнить вход в приложение.');
+	if(_app('enter') == 1 && !RULE_APP_ENTER)
+		_appError('Вход в приложение недоступен.');
 
 	if(LOCAL)
 		return;
@@ -470,6 +478,7 @@ function _menu() {//разделы основного меню
 	if(@$_GET['p'] == 'sa') return '';
 	if(@$_GET['p'] == 'manual') return '';
 	if(@$_GET['p'] == 'devstory') return '';
+	if(@$_GET['p'] == 'kupezz') return '';
 
 	$link = '';
 	foreach(_menuCache() as $r) {
@@ -1149,7 +1158,7 @@ function _filterJs($name, $filter) {//формирование условий поиска в формате js
 	}
 
 	$filter['js'] =
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var '.$name.'={'.implode(',', $spisok).'};'.
 		'</script>';
 

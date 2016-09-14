@@ -643,14 +643,25 @@ var VK_SCROLL = 0,
 		}
 		return t;
 	},
-	_busy = function(v) {//отображение прогресса ожидания в mainLinks
-		var m = $('#_menu');
+	_busy = function(v, obj) {//отображение прогресса ожидания
+		//установка места прогресса
+		if(v == 'set') {
+			window.BUSY_OBJ = obj;
+			return;
+		}
+
+		if(!window.BUSY_OBJ)
+			window.BUSY_OBJ = $('#_menu');
+
+		var m = window.BUSY_OBJ;
 		if(v === 0) {
 			m.removeClass('_busy');
 			return;
 		}
+
 		if(m.hasClass('_busy'))
 			return true;
+
 		m.addClass('_busy');
 	},
 	_filterSpisok = function(arr, v, id) {//подготовка данных для отправки на сервер. Сохранение в cookies

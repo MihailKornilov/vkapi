@@ -41,6 +41,14 @@ function _rubric($id='all', $i='name') {// еширование рубрик объ€влений
 	if($id == 'all')
 		return $arr;
 
+	//все рубрики
+	if($id == 'ass') {//ассоциативный список id => name
+		$send = array();
+		foreach($arr as $id => $r)
+			$send[$id] = $r['name'];
+		return $send;
+	}
+
 	//список JS дл€ select
 	if($id == 'js') {
 		$spisok = array();

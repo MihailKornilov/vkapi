@@ -18,6 +18,9 @@ function _devstory_footer() {//текст в нижней части приложения
 	if(!SA)
 		return '';
 
+	if(APP_ID == 2881875 && !SA)
+		return '';
+
 	if(PIN_ENTER)
 		return '';
 

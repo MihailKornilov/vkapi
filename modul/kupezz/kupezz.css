@@ -1,0 +1,73 @@
+#kupezz-ob .left{padding:0 10px}
+#kupezz-ob .td-find{background-color:#f7f7f7;border-bottom:#dae1e8 solid 1px}
+#kupezz-ob ._empty{margin-top:10px}
+#kupezz-ob .my{float:right}
+
+#kupezz-ob .region{margin-top:0}
+#kupezz-ob .region._busy{background-position:right center;color:#555}
+
+#kupezz-ob .rightLink b{float:right;color:#999}
+#kupezz-ob .rightLink .sel b{color:#ccc}
+#kupezz-ob #city_id_select{margin-top:4px}
+#kupezz-ob #withfoto_check{margin-top:4px}
+#kupezz-ob #nokupez_check{margin-top:15px}
+#kupezz-ob ._next{margin-bottom:10px}
+
+
+
+.ob-unit{margin:10px 0 5px;border-bottom:#ddd solid 1px}
+.ob-unit .utab{width:100%;border-spacing:3px}
+.ob-unit .txt{font-size:12px;vertical-align:top;text-align:justify}
+.ob-unit .txt .dop{font-size:12px}
+.ob-unit .txt em{font-size:12px;background-color:#e1e7ed}
+.ob-unit.show .txt{cursor:pointer}
+.ob-unit .full{
+	display:block;
+	width:100px;
+	white-space:nowrap;
+	margin-top:2px;
+	color:#91A4B8;
+	font-weight:bold;
+}
+.ob-unit .full:hover{color:#45688E;text-decoration:none}
+.ob-unit .rub,.ob-unit .rubsub{font-size:12px;color:#282;font-weight:bold}
+.ob-unit u{text-decoration:none;font-size:12px;margin:0 3px}
+.ob-unit .tel,#_post .tel{
+	background-image:url("data:image/gif;base64,R0lGODlhEwALAOYAAAAAAP///66Ym6igpJ2Um/Tz9J+co8XBy66rs7q5vMTDxsnIzLu5wnx7hGhncmlpdGVlb2lpcoODjIyMlbm5vrW1udra3c7O0O7u7+jo6dfX2GxteGhpcmprc3d4gKyttLO0u66vtb/AxYaIkKGjrJyeps/Q1MbHy8XGytbX22xudZqco5+hqJ6gp6mrsoCDi4mLkZ+hp6qsssjJzL2+wbO0t9fY25mboKSmq2lsc5ufqK+yucnLz7e4uqipq7/AwpOYoaqtsr7Aw9TW2Z6hpaGlqpedo7G2u8PFx+Pk5eLj5N/g4d3e387P0MnKy6OorNDT1dTX2dPW2KyxtNHa3snMzcLHyLS4uLS3t6+yssjLy+/x8fP09O7v7+zt7fH08vD08fL08u/x7+zt7Ojp5dDHwtapme7u7s3NzcnJyf///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAGoALAAAAAATAAsAAAdQgGqCTIRphodphEyCglJSiJCIjmqPiIqXkJWGhZGckEyIGaKWh2qbhxlpqamnaYyChqujrK+Moaq4pbU0oaOHNLVqWDS8kcRYwcJYy8zNr4EAOw==");
+	background-color:transparent;
+	background-repeat:no-repeat;
+	background-position:0 3px;
+	padding-left:24px;
+	margin-top:3px;
+	color:#606060;
+	font:bold 14px Times New Roman;
+}
+.ob-unit img{float:right;margin:0 0 5px 8px}
+.ob-unit .adres{color:#bbb;padding-bottom:3px}
+.ob-unit .adres a{float:right;margin-right:10px}
+.ob-unit .edit{
+	font-size:10px;
+	color:#555;
+	padding:2px 2px 2px 7px;
+	background-color:#dfd;
+}
+.ob-unit.archive .edit{background-color:#e7e7e7}
+.ob-unit .last{
+	display:inline-block;
+	margin:5px 10px 4px;
+	font-size:10px;
+	font-weight:bold;
+	color:#0a0;
+}
+.ob-unit.archive .last{color:#777}
+.ob-unit.deleted .edit{background-color:#733;color:#aaa}
+.ob-unit.deleted .last{color:#c55}
+.ob-unit:not(:hover) .icon{display:none}
+.ob-unit .icon{
+	float:right;
+	display:inline-block;
+	background-color:#fff;
+	padding:3px 4px;
+	border:#ddd solid 1px
+}
+.ob-unit.edited{background-color:#ffffe2}

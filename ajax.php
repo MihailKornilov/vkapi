@@ -27,4 +27,6 @@ require_once GLOBAL_DIR_AJAX.'/manual.php';
 require_once GLOBAL_DIR.'/modul/sa/sa_ajax.php';
 require_once GLOBAL_DIR.'/modul/devstory/devstory_ajax.php';
 
+require_once GLOBAL_DIR.'/modul/kupezz/kupezz_ajax.php';
+
 jsonError();
