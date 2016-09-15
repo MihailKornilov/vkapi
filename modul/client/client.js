@@ -420,7 +420,7 @@ $(document)
 	.on('click', '#client .unit', function() {
 		_scroll('set', $(this).attr('id'));
 	})
-	.on('click', '#client #filter_clear', function() {
+	.on('click', '#client .vk.red', function() {
 		$('#find')._search('clear');    CLIENT.find = '';
 		$('#category_id')._radio(0);    CLIENT.category_id = 0;
 		$('#dolg')._check(0);           CLIENT.dolg = 0;

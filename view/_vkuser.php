@@ -267,6 +267,7 @@ function _viewerFormat($u) {//формирование данных пользователя
 
 		'viewer_country_id' => $u['country_id'],
 		'viewer_city_id' => $u['city_id'],
+		'viewer_city_name' => $u['city_title'],
 
 		'pin' => $u['pin'],
 

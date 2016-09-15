@@ -611,7 +611,7 @@ function _tovarFilter($v) {
 
 	foreach($default as $k => $r)
 		if($r != $filter[$k]) {
-			$filter['clear'] = '<a id="filter_clear">Очистить фильтр</a>';
+			$filter['clear'] = '<button class="vk small red">Очистить фильтр</button>';
 			break;
 		}
 	return $filter;

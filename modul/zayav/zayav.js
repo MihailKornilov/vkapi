@@ -1867,7 +1867,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 };
 
 $(document)
-	.on('click', '#_zayav .clear', function() {
+	.on('click', '#_zayav .vk.red', function() {
 		$('#find')._search('clear');    ZAYAV.find = '';
 		$('#sort')._radio(1);           ZAYAV.sort = 1;
 		$('#desc')._check(0);           ZAYAV.desc = 0;

@@ -933,7 +933,7 @@ $(document)
 		});
 	})
 
-	.on('click', '#_tovar #filter_clear', function() {
+	.on('click', '#_tovar .vk.red', function() {
 		$('#find')._search('clear');    TOVAR.find = '';
 		_tovarIcon(2);                  TOVAR.icon_id = 2;
 		$('#group')._radio(0);          TOVAR.group = 0;

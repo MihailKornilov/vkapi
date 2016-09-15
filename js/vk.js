@@ -442,7 +442,10 @@ var VK_SCROLL = 0,
 		$('#_wait')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL);
 	},
-	_br = function(v) {
+	_br = function(v, back) {
+		if(back)
+			return v.replace(new RegExp("\n",'g'), '<br />')
+					.replace(new RegExp("\n",'g'), '<br>');
 		return v.replace(new RegExp('<br />','g'), "\n")
 				.replace(new RegExp('<br>','g'), "\n");
 	},
@@ -2387,7 +2390,7 @@ $.fn._selectColor = function(o) {//вывод селектов для выбора цветов
 		dopSpan[v ? 'show' : 'hide']();
 	}
 };
-$.fn._rubric = function() {//вывод селектов для выбора рубрики и подрубрики
+$.fn._rubric = function(o) {//вывод селектов для выбора рубрики и подрубрики
 /*
 	прицепляется к первому input
 	второй должен быть с таким же id + _sub
@@ -2397,6 +2400,10 @@ $.fn._rubric = function() {//вывод селектов для выбора рубрики и подрубрики
 
 	if(!attr_id)
 		return;
+
+	o = $.extend({
+		func:function() {}
+	}, o);
 
 	var rub = $('#' + attr_id),
 		sub = $('#' + attr_id + '_sub');
@@ -2408,6 +2415,7 @@ $.fn._rubric = function() {//вывод селектов для выбора рубрики и подрубрики
 		func:function(id) {
 			sub.val(0)._select('remove');
 			subPrint(id);
+			o.func();
 		}
 	});
 
@@ -2420,7 +2428,10 @@ $.fn._rubric = function() {//вывод селектов для выбора рубрики и подрубрики
 			sub._select({
 				width:153,
 				title0:'подрубрика не выбрана',
-				spisok:RUBRIC_SUB_SPISOK[id]
+				spisok:RUBRIC_SUB_SPISOK[id],
+				func:function() {
+					o.func();
+				}
 			});
 		}
 	}

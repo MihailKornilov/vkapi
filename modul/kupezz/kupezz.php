@@ -49,7 +49,7 @@ function kupezz_ob() {//Главная страница с объявлениями
 	foreach($sub as $n => $sp)
 		$city[] = $n.':['.implode(',', $sp).']';
 
-	$rubric = array(0 =>'Все объявления') + _rubric('ass');
+	$rubric = array(0 => 'Все объявления') + _rubric('ass');
 	//Количество объявлений для каждой рубрики
 	$sql = "SELECT
 				`rubric_id`,
@@ -68,8 +68,13 @@ function kupezz_ob() {//Главная страница с объявлениями
 
 	return
 	'<script>'.
-		'var COUNTRIES='._selJson($country).','.
+		'var VIEWER_LINK="'.addslashes(_viewer(VIEWER_ID, 'viewer_link')).'",'.
+			'CITY_ID='._viewer(VIEWER_ID, 'viewer_city_id').','.
+			'CITY_NAME="'.addslashes(_viewer(VIEWER_ID, 'viewer_city_name')).'",'.
+			'COUNTRY_ID='._viewer(VIEWER_ID, 'viewer_country_id').','.
+			'COUNTRIES='._selJson($country).','.
 			'CITIES={'.implode(',', $city).'},'.
+			'RUBRIC_SUB_ASS='._rubricSub('js_ass').','.
 			'U={'.
 				'photo:"'.addslashes(_viewer(VIEWER_ID, 'viewer_photo')).'"'.
 			'};'.
@@ -78,7 +83,7 @@ function kupezz_ob() {//Главная страница с объявлениями
 
 		'<table class="td-find bs10 w100p">'.
 			'<tr><td><div id="find"></div>'.
-				'<td class="r"><button class="vk">Разместить объявление</button>'.
+				'<td class="r"><button class="vk" onclick="kupezzObEdit()">Разместить объявление</button>'.
 		'</table>'.
 
 		'<div class="result">'.@$data['result'].'</div>'.
@@ -102,9 +107,21 @@ function kupezz_ob() {//Главная страница с объявлениями
 	'</div>';
 }
 function kupezz_obFilter($v=array()) {
-	return array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
+	$default = array(
+		'page' => 1,
+		'limit' =>20,
+		'find' => '',
+		'find_query' => 0,
+		'country_id' => 1,
+		'city_id' => 0,
+		'rubric_id' => 0,
+		'rubric_id_sub' => 0,
+		'withfoto' => 0,
+		'nokupez' => 0
+	);
+	$filter = array(
+		'page' => _num(@$v['page']) ? $v['page'] : $default['page'],
+		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
 		'find_query' => _num(@$v['find_query']),
 		'country_id' => _num(@$v['country_id']),
@@ -112,8 +129,16 @@ function kupezz_obFilter($v=array()) {
 		'rubric_id' => _num(@$v['rubric_id']),
 		'rubric_id_sub' => _num(@$v['rubric_id_sub']),
 		'withfoto' => _num(@$v['withfoto']),
-		'nokupez' => _num(@$v['nokupez'])
+		'nokupez' => _num(@$v['nokupez']),
+		'clear' => ''
 	);
+	foreach($default as $k => $r)
+		if($r != $filter[$k]) {
+			$filter['clear'] = '<button class="vk small red">Очистить фильтр</button>';
+			break;
+		}
+
+	return $filter;
 }
 function kupezz_ob_spisok($v=array()) {
 	$filter = kupezz_obFilter($v);
@@ -155,7 +180,7 @@ function kupezz_ob_spisok($v=array()) {
 	}
 */
 
-	$links = '<a href="'.URL.'&p=ob&d=my" class="my">Мои объявления</a>';
+	$links = '<a href="'.URL.'&p=ob&d=my" class="my">Мои объявления</a>'.$filter['clear'];
 	if(!$all)
 		return array(
 			'all' => 0,
@@ -227,7 +252,7 @@ function kupezz_ob_unit($r) {
 				'<span class="dop dn">'.$hidden.'</span>';
 
 	return
-	'<div class="ob-unit show'.(isset($r['edited']) ? ' edited' : '').'" id="ob'.$r['id'].'">'.
+	'<div class="ob-unit'.(isset($r['edited']) ? ' edited' : '').'" id="ob'.$r['id'].'" val="'.$r['id'].'">'.
 		'<table class="utab">'.
 			'<tr><td class="txt">'.
   ($r['image_id'] ? '<img src="'.$r['image_link'].'" />': '').

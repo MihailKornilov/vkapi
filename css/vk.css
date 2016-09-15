@@ -79,6 +79,8 @@ table{border:0;border-spacing:0}
 }
 .result #filter-clear{float:right}
 .result.norm{font-weight:normal}
+.result .vk.red{margin:-7px 0 0 20px}
+
 
 #admin{text-align:center;background:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
 #admin a{color:#888;font-size:10px}
@@ -1157,6 +1159,7 @@ button.vk.grey:hover{background-color:#999}
 .w200{width:200px}
 .w230{width:230px}
 .w250{width:250px}
+.w300{width:300px}
 .w400{width:400px}
 .mar8{margin:8px}
 .mar20{margin:20px}

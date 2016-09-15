@@ -94,6 +94,15 @@ function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
 	if($id == 'js') {
 		$spisok = array();
 		foreach($arr as $r)
+			$spisok[][$r['id']] = $r['name'];
+
+		return _assJson($spisok);
+	}
+
+	//ассоциативный список JS
+	if($id == 'js_ass') {
+		$spisok = array();
+		foreach($arr as $r)
 			$spisok[$r['rubric_id']][$r['id']] = $r['name'];
 
 		$js = array();
@@ -835,7 +844,7 @@ function _zayavFilter($v) {
 	);
 	foreach($default as $k => $r)
 		if($r != $filter[$k]) {
-			$filter['clear'] = '<a class="clear">ќчистить фильтр</a>';
+			$filter['clear'] = '<button class="vk small red">ќчистить фильтр</button>';
 			break;
 		}
 
