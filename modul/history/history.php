@@ -90,7 +90,7 @@ function _history_spisok($v=array()) {
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID;
-//	   " AND `type_id` IN (39)";//todo удалить
+//	   " AND `type_id` IN (128)";//todo удалить
 
 	if($filter['viewer_id_add'])
 		$cond .= " AND `viewer_id_add`=".$filter['viewer_id_add'];
@@ -110,7 +110,7 @@ function _history_spisok($v=array()) {
 
 	$add = HIST_LOCAL ? '' : '<div id="history-add" class="img_add m30'._tooltip('Добавить событие', -60).'</div>';
 
-	$sql = "SELECT COUNT(`id`) `all` FROM `_history` WHERE ".$cond;
+	$sql = "SELECT COUNT(`id`) FROM `_history` WHERE ".$cond;
 	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
@@ -200,6 +200,7 @@ function _history_types($history) {//перевод type_id в текст
 		'client_name',
 		'client_link',
 		'zayav_link',
+		'ob_id',
 		'dogovor_nomer',
 		'dogovor_data',
 		'dogovor_sum',
@@ -268,12 +269,20 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 
 	define('VIEWER_ID_ONLY', !$v['client_id'] && RULE_HISTORY_VIEW == 1);
 
-	$sql = "SELECT DISTINCT `viewer_id_add`
+	$worker = '[]';
+	//если более 100 сотрудников (пользователей), то селект с сотрудниками не выводится
+	$sql = "SELECT COUNT(DISTINCT `viewer_id_add`)
 			FROM `_history`
-			WHERE `app_id`=".APP_ID."
-			  AND `viewer_id_add`".
-			  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
-	$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql);
+			WHERE `app_id`=".APP_ID;
+	if(query_value($sql) < 100) {
+		$sql = "SELECT DISTINCT `viewer_id_add`
+				FROM `_history`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id_add`".
+				  ($v['client_id'] ? " AND `client_id`=".$v['client_id'] : '');
+		$worker = VIEWER_ID_ONLY ? '[]' : query_workerSelJson($sql);
+	}
+
 
 	$sql = "SELECT
 	            `cat`.`id`,

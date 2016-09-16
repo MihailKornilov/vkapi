@@ -29,7 +29,7 @@ require_once GLOBAL_DIR.'/view/_debug.php';
 require_once GLOBAL_DIR.'/modul/client/client.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
 require_once GLOBAL_DIR.'/modul/tovar/tovar.php';
-require_once GLOBAL_DIR.'/view/money.php';
+require_once GLOBAL_DIR.'/modul/money/money.php';
 require_once GLOBAL_DIR.'/modul/history/history.php';
 require_once GLOBAL_DIR.'/view/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
@@ -160,14 +160,11 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		_client_script().   // Клиенты
 		_zayav_script().    // заявки
+		_money_script().    // Деньги
 		_history_script().  // История действий
 		_tovar_script().    // товары
 		_sa_script().       // Суперадмин (SA)
 		_kupezz_script().   // Купец - бесплатные объявления
-
-		//Деньги
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/money'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/money'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Напоминания
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/remind'.MIN.'.css?'.VERSION.'" />'.
@@ -1320,7 +1317,7 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='._zayavStatus('js_day_fact_ass').','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
 		"\n".'ZAYAV_POLE_PARAM='._zayavPoleParamJs().','.        //используемые доп.параметры полей заявки
-		
+
 		_setup_global('js').
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.

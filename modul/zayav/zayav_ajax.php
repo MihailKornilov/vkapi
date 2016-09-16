@@ -101,6 +101,7 @@ switch(@$_POST['op']) {
 		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
 		_zayavGazetaNomerUpdate($send['id'], $v);
+		kupezzZayavObUpdate($send['id'], $v);
 
 		_note(array(
 			'add' => 1,
@@ -162,6 +163,8 @@ switch(@$_POST['op']) {
 		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
 		_zayavGazetaNomerUpdate($zayav_id, $v);
+		kupezzZayavObUpdate($zayav_id, $v);
+
 
 		if($changes =
 			(isset($zpu[5])  ? _historyChange($zpu[5]['name'], $z['client_id'], $v['client_id'], _clientVal($z['client_id'], 'go'), _clientVal($v['client_id'], 'go')) : '').

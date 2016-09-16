@@ -1,9 +1,9 @@
 <?php
-if(!SA)
-	jsonError();
-
 switch(@$_POST['op']) {
 	case 'manual_part_add'://внесение нового раздела
+		if(!SA)
+			jsonError();
+
 		$name = _txt($_POST['name']);
 		$access = _bool($_POST['access']);
 
@@ -28,6 +28,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_part_edit'://редактирование раздела
+		if(!SA)
+			jsonError();
+
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
@@ -56,6 +59,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_part_del'://удаление страницы мануала
+		if(!SA)
+			jsonError();
+
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
@@ -85,6 +91,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'manual_part_sub_add'://внесение нового подраздела
+		if(!SA)
+			jsonError();
+
 		if(!$part_id = _num($_POST['part_id']))
 			jsonError();
 
@@ -112,6 +121,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'manual_page_add'://внесение новой страницы
+		if(!SA)
+			jsonError();
+
 		if(!$part_id = _num($_POST['part_id']))
 			jsonError();
 
@@ -147,6 +159,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_page_edit'://редактирование страницы мануала
+		if(!SA)
+			jsonError();
+
 		if(!$id = _num($_POST['id']))
 			jsonError();
 		if(!$part_id = _num($_POST['part_id']))
@@ -189,6 +204,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'manual_page_del'://удаление страницы мануала
+		if(!SA)
+			jsonError();
+
 		if(!$id = _num($_POST['id']))
 			jsonError();
 

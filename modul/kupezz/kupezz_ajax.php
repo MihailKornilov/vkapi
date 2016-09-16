@@ -54,6 +54,9 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
+		$insert_id = query_insert_id('kupezz_ob');
+
+
 /*
 		//сохранение изображений
 		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='".VIEWER_ID."' ORDER BY `sort`";
@@ -101,7 +104,17 @@ switch(@$_POST['op']) {
 			}
 		}
 */
-		jsonSuccess();
+
+		$sql = "SELECT
+					*,
+					1 `edited`
+				FROM `kupezz_ob`
+				WHERE `id`=".$insert_id;
+		$r = query_assoc($sql);
+
+		$send['ob'] = utf8(kupezz_ob_unit($r));
+		$send['my'] = utf8(kupezz_my_unit($r));
+		jsonSuccess($send);
 		break;
 	case 'kupezz_ob_edit':
 		if(!$id = _num($_POST['id']))
@@ -199,8 +212,17 @@ switch(@$_POST['op']) {
 
 		$ob['edited'] = 1;
 */
-//		$send['html'] = utf8($my ? ob_my_unit($ob) : ob_unit($ob));
-		jsonSuccess();
+
+		$sql = "SELECT
+					*,
+					1 `edited`
+				FROM `kupezz_ob`
+				WHERE `id`=".$id;
+		$r = query_assoc($sql);
+
+		$send['ob'] = utf8(kupezz_ob_unit($r));
+		$send['my'] = utf8(kupezz_my_unit($r));
+		jsonSuccess($send);
 		break;
 	case 'kupezz_ob_spisok':
 		$_POST['find'] = win1251(@$_POST['find']);
@@ -211,6 +233,33 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'kupezz_ob_load':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		$sql = "SELECT *
+				FROM `kupezz_ob`
+				WHERE !`deleted` 
+				  ".(SA ? '' : "AND `viewer_id_add`=".VIEWER_ID)."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$send = array(
+			'id' => $id,
+			'rubric_id' => _num($r['rubric_id']),
+			'rubric_id_sub' => _num($r['rubric_id_sub']),
+			'txt' => utf8($r['txt']),
+			'telefon' => utf8($r['telefon']),
+//			'images' => utf8(_imageAdd(array('owner'=>'ob'.$r['id']))),
+			'country_id' => _num($r['country_id']),
+			'city_id' => _num($r['city_id']),
+			'city_name' => utf8($r['city_name']),
+			'viewer_id_show' => _num($r['viewer_id_show']),
+			'viewer_id_add' => _num($r['viewer_id_add']),
+			'active' => strtotime($r['day_active']) - time() + 86400 < 0 ? 0 : 1
+		);
+		jsonSuccess($send);
+		break;
 	case 'kupezz_ob_post':
 		if(!$id = _num($_POST['id']))
 			jsonError();
@@ -237,7 +286,7 @@ switch(@$_POST['op']) {
 			'view' => _num(kupezz_ob_view_count($ob))
 		);
 
-		if(SA || $ob['viewer_id_show'] && $ob['viewer_id_add'])
+		if(SA && $ob['viewer_id_add'] || $ob['viewer_id_show'] && $ob['viewer_id_add'])
 			$send += array(
 				'viewer_id' => _num($ob['viewer_id_add']),
 				'viewer_photo' => _viewer($ob['viewer_id_add'], 'viewer_photo'),
@@ -316,7 +365,7 @@ switch(@$_POST['op']) {
 				'sa' => 1,
 				'sa_viewer_id' => _num($ob['viewer_id_add']),
 				'sa_name' => $ob['viewer_id_add'] ? utf8(_viewer($ob['viewer_id_add'], 'viewer_name')) : '',
-				'sa_gazeta_id' => _num($ob['gazeta_id'])
+				'sa_zayav_id' => _num($ob['zayav_id'])
 			);
 
 		jsonSuccess($send);

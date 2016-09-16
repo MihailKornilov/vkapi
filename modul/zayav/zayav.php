@@ -94,15 +94,6 @@ function _rubricSub($id='all', $i='name') {// еширование рубрик объ€влений
 	if($id == 'js') {
 		$spisok = array();
 		foreach($arr as $r)
-			$spisok[][$r['id']] = $r['name'];
-
-		return _assJson($spisok);
-	}
-
-	//ассоциативный список JS
-	if($id == 'js_ass') {
-		$spisok = array();
-		foreach($arr as $r)
 			$spisok[$r['rubric_id']][$r['id']] = $r['name'];
 
 		$js = array();

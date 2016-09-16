@@ -48,6 +48,12 @@ function _money() {
 		$content;
 }
 
+function _money_script() {//скрипты и стили
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/money/money'.MIN.'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.API_HTML.'/modul/money/money'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 	if(!_cena($sum))
 		return;

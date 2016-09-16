@@ -194,9 +194,12 @@ function sa_menu_setup_spisok($id=0) {
 function sa_history() {//управление историей действий
 	$sql = "SELECT `id`,`name` FROM `_history_category` ORDER BY `sort`";
 	$category = query_selJson($sql);
+	$sql = "SELECT MAX(`id`)+1 FROM `_history_type` WHERE `id`<500";
+	$max = query_value($sql);
 	return
-		'<script type="text/javascript">'.
-			'var CAT='.$category.
+		'<script>'.
+			'var CAT='.$category.','.
+				'TYPE_ID_MAX='.$max.';'.
 		'</script>'.
 		sa_path('»стори€ действий').
 		'<div id="sa-history">'.

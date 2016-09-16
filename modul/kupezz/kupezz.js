@@ -170,11 +170,21 @@ var cityGet = function(val, city_id, city_name) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					return;
-					if($('.vk.red').length)
-						$('.vk.red').trigger('click');
-					else
-						kupezzObSpisok();
+					if(o.id) {
+						var ob = $('#ob' + o.id);
+						if(send.active) {
+							if($('#kupezz-ob').length)
+								ob.after(res.ob);
+							if($('#kupezz-my').length)
+								ob.after(res.my);
+						}
+						ob.remove();
+						return;
+					}
+					if($('#kupezz-ob').length)
+						$('.left').prepend(res.ob);
+					if($('#kupezz-my').length)
+						$('.left').prepend(res.my);
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -279,7 +289,7 @@ var cityGet = function(val, city_id, city_name) {
 			viewer_name:'',
 			viewer_photo:'',
 			dtime:'Дата и время',
-			sa_gazeta_id:0,
+			sa_zayav_id:0,
 			sa_viewer_id:0,
 			sa_name:''
 		}, o);
@@ -298,7 +308,7 @@ var cityGet = function(val, city_id, city_name) {
 				'</div>' +
 			(o.sa ?
 				'<div class="psa">' +
-					(o.sa_gazeta_id ? 'КупецЪ' : '') +
+					(o.sa_zayav_id ? 'КупецЪ' : '') +
 					(o.sa_viewer_id ? '<a href="' + URL + '&p=admin&id=' + o.sa_viewer_id + '">' + o.sa_name + '</a>' : '') +
 					'<div class="ed">' +
 						'<a class="to-arch">в архив</a>' +
@@ -420,6 +430,9 @@ $(document)
 
 		kupezzObSpisok(1, 'country_id');
 	})
+	.on('mouseover', '#kupezz-ob .edited,#kupezz-my .edited', function() {
+		$(this).removeClass('edited');
+	})
 	.on('click', '.ob-unit a.rub', function(e) {
 		e.stopPropagation();
 		var v = _num($(this).attr('val'));
@@ -437,7 +450,7 @@ $(document)
 		KUPEZZ_OB.rubric_id_sub = sub_id;
 		kupezzObSpisok(v, 'rubric_id');
 	})
-	.on('click', '.ob-unit', function() {
+	.on('click', '#kupezz-ob .ob-unit', function() {
 		var t = $(this),
 			full = t.find('.full');
 		if(full.length) {
@@ -454,6 +467,28 @@ $(document)
 			_wait(false);
 			if(res.success)
 				_post(res);
+		}, 'json');
+	})
+	.on('click', '#kupezz-my .img_edit', function() {//редактирование объявления из Моих объявлений
+		var t = $(this),
+			send = {
+				op:'kupezz_ob_load',
+				id:t.attr('val')
+			},
+			dialog = _dialog({
+				top:20,
+				width:550,
+				head:'Редактирование объявления',
+				load:1,
+				butSubmit:''
+			});
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.close();
+				kupezzObEdit(res);
+			} else
+				dialog.loadError();
 		}, 'json');
 	})
 

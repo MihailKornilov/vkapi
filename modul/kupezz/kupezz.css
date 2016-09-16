@@ -71,7 +71,7 @@
 	padding:3px 4px;
 	border:#ddd solid 1px
 }
-.ob-unit.edited{background-color:#ffffe2}
+.ob-unit.edited{background-color:#ffd}
 
 
 
@@ -83,6 +83,11 @@
 #ob-create-rules li{margin-bottom:5px}
 
 
+
+/*  */
+#kupezz-my .left{padding:0 10px 10px}
+#kupezz-my .vk{margin-bottom:20px}
+#kupezz-my .ob-unit{margin-top:7px;padding-top:0;cursor:default}
 
 
 

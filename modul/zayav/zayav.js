@@ -65,7 +65,6 @@ var _zayavSpisok = function(v, id) {
 			client_adres = '', //адрес клиента дл€ подстановки в строку јдрес
 			equip_js = [],     //список комплектации дл€ select, которые были не выбраны дл€ конкретного товара
 			equip_tovar_id = 0,//id товара, по которому будет формироватьс€ комплектаци€
-			manual = $('#ze-sum_cost_manual').length,
 			dialog = _dialog({
 				width:560,
 				top:20,
@@ -196,9 +195,9 @@ var _zayavSpisok = function(v, id) {
 				$('#ze-gn').gnGet('cena', xy);
 			});
 
-
 			// 38 - Ќомера выпуска
-			var zp38 = zayav_param[38];
+			var zp38 = zayav_param[38],
+				manual = $('#ze-sum_cost_manual').length;
 			$('#ze-gn').gnGet({
 				gns:zayav_id ? ZI.gns : {},
 				dop_title0:zp38 ? (

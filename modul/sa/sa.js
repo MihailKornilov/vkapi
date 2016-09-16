@@ -1068,7 +1068,7 @@ $(document)
 			$('.add.const').click(function() {
 				var html =
 						'<table class="sa-tab" id="sa-history-tab">' +
-							'<tr><td class="label">type_id:<td><input type="text" id="type_id" />' +
+							'<tr><td class="label">type_id:<td><input type="text" id="type_id" value="' + TYPE_ID_MAX + '" />' +
 							'<tr><td class="label topi">Текст:<td><textarea id="txt"></textarea>' +
 							'<tr><td class="label">Категория:<td><input type="hidden" id="category_ids" />' +
 						'</table>',
