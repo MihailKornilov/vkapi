@@ -56,6 +56,10 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('kupezz_ob');
 
+		_history(array(
+			'type_id' => 129,
+			'ob_id' => $insert_id
+		));
 
 /*
 		//сохранение изображений
@@ -172,46 +176,22 @@ switch(@$_POST['op']) {
 //					`image_id`=".$ob['image_id'].",
 //					`image_link`='".$ob['image_link']."'
 
-
-/*
-		$changes = '';
-		if($r['rubric_id'] != $ob['rubric_id'])
-			$changes .= '<tr><th>Рубрика:<td>'._rubric($r['rubric_id']).'<td>»<td>'._rubric($ob['rubric_id']);
-		if($r['rubric_sub_id'] != $ob['rubric_sub_id'])
-			$changes .= '<tr><th>Подрубрика:<td>'._rubricsub($r['rubric_sub_id']).'<td>»<td>'._rubricsub($ob['rubric_sub_id']);
-		if($r['txt'] != $ob['txt'])
-			$changes .= '<tr><th>Текст:<td>'.nl2br($r['txt']).'<td>»<td>'.nl2br($ob['txt']);
-		if($r['telefon'] != $ob['telefon'])
-			$changes .= '<tr><th>Телефон:<td>'.$r['telefon'].'<td>»<td>'.$ob['telefon'];
-		if($r['country_id'] != $ob['country_id'] || $r['city_id'] != $ob['city_id'])
-			$changes .= '<tr><th>Регион:'.
-							'<td>'.$r['country_name'].''.($r['city_id'] ? ', '.$r['city_name'] : '').
-							'<td>»'.
-							'<td>'.$ob['country_name'].''.($ob['city_id'] ? ', '.$ob['city_name'] : '');
-		if($r['viewer_id_show'] != $ob['viewer_id_show'])
-			$changes .= '<tr><th>Показывать имя из VK:<td>'.($r['viewer_id_show'] ? 'да' : 'нет').'<td>»<td>'.($ob['viewer_id_show'] ? 'да' : 'нет');
-		if($r['image_id'] != $ob['image_id'])
-			$changes .= '<tr><th>Главная фотография:'.
-							'<td>'.($r['image_id'] ? '<img src="'.$r['image_link'].'" class="_iview" val="'.$r['image_id'].'" />' : '').
-							'<td>»'.
-							'<td>'.($ob['image_id'] ? '<img src="'.$ob['image_link'].'" class="_iview" val="'.$ob['image_id'].'" />' : '');
-		if($r['day_active'] != $ob['day_active'])
-			$changes .= '<tr><th>Активность:'.
-							'<td>'.($r['day_active'] == '0000-00-00' || strtotime($r['day_active']) < time() ? 'в архиве' : 'до '.FullData($r['day_active'])).
-							'<td>»'.
-							'<td>'.($ob['day_active'] == '0000-00-00' ? 'в архиве' : 'до '.FullData($ob['day_active']));
-		if($changes)
-			_historyInsert(
-				10,
-				array(
-					'ob_id' => $id,
-					'value' => '<table>'.$changes.'</table>'
-				),
-				'vk_history'
-			);
-
-		$ob['edited'] = 1;
-*/
+		$region_old = $r['country_name'].($r['city_id'] ? ', '.$r['city_name'] : '');
+		$region_new = $country_name.($city_id ? ', '.$city_name : '');
+		$active_old = $r['day_active'] == '0000-00-00' || strtotime($r['day_active']) < time() ? 'в архиве' : 'до '.FullData($r['day_active']);
+		$active_new = $day_active == '0000-00-00' ? 'в архиве' : 'до '.FullData($day_active);
+		if($changes =
+			_historyChange('Рубрика', _rubric($r['rubric_id'], $r['rubric_id_sub']), _rubric($rubric_id, $rubric_id_sub)).
+			_historyChange('Текст', $r['txt'], $txt).
+			_historyChange('Телефон', $r['telefon'], $telefon).
+			_historyChange('Регион', $region_old, $region_new).
+			_historyChange('Показывать имя из VK', _daNet($r['viewer_id_show']), _daNet($viewer_id_show)).
+			_historyChange('Активность', $active_old, $active_new)
+		)	_history(array(
+				'type_id' => 123,
+				'ob_id' => $id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		$sql = "SELECT
 					*,
@@ -390,7 +370,43 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
+		_history(array(
+			'type_id' => 130,
+			'ob_id' => $id
+		));
+
 		jsonSuccess();
+		break;
+	case 'kupezz_ob_del'://удаление объявления
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `kupezz_ob`
+				WHERE !`deleted`
+				  AND `viewer_id_add`=".VIEWER_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `kupezz_ob` SET `deleted`=1 WHERE`id`=".$id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 124,
+			'ob_id' => $id
+		));
+
+		jsonSuccess();
+		break;
+
+	case 'kupezz_my_spisok':
+		$_POST['find'] = win1251(@$_POST['find']);
+		$data = kupezz_my_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['result'] = utf8($data['result']);
+		$send['spisok'] = utf8($data['spisok']);
+		jsonSuccess($send);
 		break;
 }
 

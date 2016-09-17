@@ -2,7 +2,7 @@
 function _client_script() {//скрипты для клиентов
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/client/client'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/modul/client/client'.MIN.'.js?'.VERSION.'"></script>';
+		'<script src="'.API_HTML.'/modul/client/client'.MIN.'.js?'.VERSION.'"></script>';
 }
 function _clientCase($v=array()) {//вывод информации с клиентами для приложения
 	switch(@$_GET['d']) {
@@ -547,7 +547,7 @@ function _clientInfo() {//вывод информации о клиенте
 	$attach_ids = query_ids($sql);
 
 	return
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var CI={'.
 				'id:'.$client_id.','.
 				'category_id:'.$c['category_id'].','.

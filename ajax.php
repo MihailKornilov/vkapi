@@ -20,7 +20,7 @@ require_once GLOBAL_DIR.'/modul/client/client_ajax.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav_ajax.php';
 require_once GLOBAL_DIR.'/modul/tovar/tovar_ajax.php';
 require_once GLOBAL_DIR.'/modul/money/money_ajax.php';
-require_once GLOBAL_DIR_AJAX.'/remind.php';
+require_once GLOBAL_DIR.'/modul/remind/remind_ajax.php';
 require_once GLOBAL_DIR.'/modul/history/history_ajax.php';
 require_once GLOBAL_DIR_AJAX.'/setup.php';
 require_once GLOBAL_DIR_AJAX.'/manual.php';

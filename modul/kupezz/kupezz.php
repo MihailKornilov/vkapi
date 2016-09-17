@@ -165,7 +165,7 @@ function kupezz_ob() {//Главная страница с объявлениями
 			GROUP BY `rubric_id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$rubric[$r['rubric_id']] .= '<b>'.$r['count'].'</b>';
+		$rubric[$r['rubric_id']] .= '<em>'.$r['count'].'</em>';
 
 	$data = kupezz_ob_spisok();
 
@@ -360,10 +360,27 @@ function kupezz_ob_unit($r) {
 
 function kupezz_my() {
 	$data = kupezz_my_spisok();
+
+	//активные объявления
+	$sql = "SELECT COUNT(*)
+			FROM `kupezz_ob`
+			WHERE `viewer_id_add`=".VIEWER_ID."
+			  AND !`deleted`
+			  AND `day_active`>=DATE_FORMAT(NOW(),'%Y-%m-%d')";
+	$active_count = query_value($sql);
+
+	//архивные объявления
+	$sql = "SELECT COUNT(*)
+			FROM `kupezz_ob`
+			WHERE `viewer_id_add`=".VIEWER_ID."
+			  AND !`deleted`
+			  AND `day_active`<DATE_FORMAT(NOW(),'%Y-%m-%d')";
+	$archive_count = query_value($sql);
+
 	$status = array(
 		0 => 'Все объявления',
-		1 => 'Активные',
-		2 => 'Архив',
+		1 => 'Активные<em>'.($active_count ? $active_count : '').'</em>',
+		2 => 'В архиве<em>'.($archive_count ? $archive_count : '').'</em>',
 	);
 	return
 	'<div id="kupezz-my">'.
@@ -373,7 +390,9 @@ function kupezz_my() {
 			'<tr><td class="left">'.$data['spisok'].
 				'<td class="right">'.
 					'<button class="vk w100p" onclick="kupezzObEdit()">Новое объявление</button>'.
-					_rightLink('status', $status).
+					'<div id="find"></div>'.
+					'<div class="findHead region">Статус объявления</div>'.
+					_radio('status', $status, 0, 'l').
 		'</table>'.
 	'</div>';
 }
@@ -381,6 +400,7 @@ function kupezz_myFilter($v=array()) {
 	return array(
 		'page' => _num(@$v['page']) ? _num($v['page']) : 1,
 		'limit' => _num(@$v['limit']) ? _num($v['limit']) : 20,
+		'find' => trim(@$v['find']),
 		'status' => _num(@$v['status']),
 		'viewer_id' => SA && _num(@$v['viewer_id']) ? _num($v['viewer_id']) : VIEWER_ID,
 		'deleted' => SA ? _bool(@$v['deleted']) : 0
@@ -392,6 +412,9 @@ function kupezz_my_spisok($v=array()) {
 
 	$cond = (SA && $filter['deleted'] ? '' : "!`deleted` AND ").
 			"`viewer_id_add`=".$filter['viewer_id'];
+
+	if($filter['find'])
+		$cond .= " AND `txt` LIKE '%".$filter['find']."%'";
 
 	switch($filter['status']) {
 		case 1: $cond .= " AND !`deleted` AND `day_active`>=DATE_FORMAT(NOW(),'%Y-%m-%d')"; break;
@@ -421,8 +444,11 @@ function kupezz_my_spisok($v=array()) {
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
 	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
+		if($filter['find'])
+			$r['txt'] = _findRegular($filter['find'], $r['txt']);
 		$send['spisok'] .= kupezz_my_unit($r);
+	}
 
 	$send['spisok'] .= _next($filter + array(
 		'all' => $all
@@ -450,7 +476,7 @@ function kupezz_my_unit($r) {
 		(!$r['deleted'] ?
 			'<div class="icon">'.
 				'<div val="'.$r['id'].'" class="img_edit ob-edit'._tooltip('Редактировать', -48).'</div>'.
-				(!SA || $r['viewer_id_add'] == VIEWER_ID ? '<div val="'.$r['id'].'" class="img_del'._tooltip('Удалить', -27).'</div>' : '').
+				(!SA || $r['viewer_id_add'] == VIEWER_ID ? '<div onclick="kupezzObMyDel('.$r['id'].')" class="img_del'._tooltip('Удалить', -27).'</div>' : '').
 			'</div>'
 		: '').
 		'</div>'.

@@ -12,7 +12,7 @@ function _history_script() {//скрипты и стили
 
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/history/history'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/modul/history/history'.MIN.'.js?'.VERSION.'"></script>';
+		'<script src="'.API_HTML.'/modul/history/history'.MIN.'.js?'.VERSION.'"></script>';
 }
 
 function _history_insert($v=array()) {//внесение истории действий
@@ -32,6 +32,7 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				`client_id`,
 				`zayav_id`,
+				`ob_id`,
 				`dogovor_id`,
 				`attach_id`,
 				`schet_id`,
@@ -52,6 +53,7 @@ function _history_insert($v=array()) {//внесение истории действий
 
 				".$client_id.",
 				".$zayav_id.",
+				"._num(@$v['ob_id']).",
 				"._num(@$v['dogovor_id']).",
 				"._num(@$v['attach_id']).",
 				"._num(@$v['schet_id']).",
@@ -308,7 +310,7 @@ function _history_right($v=array()) {//вывод условий поиска для истории действий
 		(strlen($category) > 2 ? '<div class="findHead">Категория</div>' : '').
 		'<input type="hidden" id="category_id" />'.
 
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var HIST_WORKER='.$worker.','.
 				'HIST_CAT='.$category.';'.
 			'_historyRight();'.

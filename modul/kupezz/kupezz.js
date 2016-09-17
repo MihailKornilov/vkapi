@@ -172,12 +172,11 @@ var cityGet = function(val, city_id, city_name) {
 					_msg();
 					if(o.id) {
 						var ob = $('#ob' + o.id);
-						if(send.active) {
+						if(send.active)
 							if($('#kupezz-ob').length)
 								ob.after(res.ob);
-							if($('#kupezz-my').length)
-								ob.after(res.my);
-						}
+						if($('#kupezz-my').length)
+							ob.after(res.my);
 						ob.remove();
 						return;
 					}
@@ -281,6 +280,17 @@ var cityGet = function(val, city_id, city_name) {
 		}, 'json');
 
 	},
+	kupezzObMyDel = function(id) {//удаление объ€влени€
+		_dialogDel({
+			id:id,
+			head:'объ€влени€',
+			op:'kupezz_ob_del',
+			func:function() {
+				$('#ob' + id).remove();
+			}
+		});
+	},
+
 	_post = function(o) {
 		o = $.extend({
 			id:0,
@@ -416,6 +426,20 @@ var cityGet = function(val, city_id, city_name) {
 			$('#_post').remove();
 			_backfon(false);
 		}
+	},
+	kupezzObMySpisok = function(v, id) {
+		if(id == 'find') {
+			$('#status')._radio(0);
+			KUPEZZ_MY.status = 0;
+		}
+		_filterSpisok(KUPEZZ_MY, v, id);
+		$.post(AJAX_MAIN, KUPEZZ_MY, function(res) {
+			if(res.success) {
+				$('.result').html(res.result);
+				$('.left').html(res.spisok);
+			}
+		}, 'json');
+
 	};
 
 $(document)
@@ -521,5 +545,16 @@ $(document)
 			});
 			$('#withfoto')._check(kupezzObSpisok);
 			$('#nokupez')._check(kupezzObSpisok);
+		}
+		if($('#kupezz-my').length) {
+			_busy('set', $('.result'));
+			$('#find')._search({
+				width:138,
+				focus:1,
+				enter:1,
+				txt:'Ѕыстрый поиск',
+				func:kupezzObMySpisok
+			});
+			$('#status')._radio(kupezzObMySpisok);
 		}
 	});

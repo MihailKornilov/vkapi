@@ -51,7 +51,7 @@ function _money() {
 function _money_script() {//скрипты и стили
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/money/money'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/modul/money/money'.MIN.'.js?'.VERSION.'"></script>';
+		'<script src="'.API_HTML.'/modul/money/money'.MIN.'.js?'.VERSION.'"></script>';
 }
 
 function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
@@ -325,7 +325,7 @@ function _refund_right() {
 	return
 		'<div class="f-label">Счета</div>'.
 		'<input type="hidden" id="invoice_id" />'.
-		'<script type="text/javascript">_refundLoad();</script>';
+		'<script>_refundLoad();</script>';
 }
 
 /* --- платежи --- */
@@ -355,7 +355,7 @@ function income_top($sel) { //Условия поиска сверху для платежей
 						'sel' => $sel
 					)).
 		'</table>'.
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var INCOME_WORKER='.$worker.';'.
 			'incomeLoad();'.
 		'</script>';
@@ -784,7 +784,7 @@ function _expenseValToList($arr) {//вставка данных расходов организации в массив
 function expense() {
 	$data = expense_spisok();
 	return
-		'<script type="text/javascript" src="/.vkapp/.js/highcharts.js"></script>'.
+		'<script src="/.vkapp/.js/highcharts.js"></script>'.
 		'<table class="tabLR" id="money-expense">'.
 			'<tr><td class="left">'.
 					'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.
@@ -793,7 +793,7 @@ function expense() {
 				'<td class="right">'.expense_right().
 		'</table>'.
 
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var ATTACH={},'.
 (VIEWER_ADMIN ? 'GRAF='.expense_graf($data['filter']).',' : '').
 				'EXPENSE_MON='._selJson(expenseMonthSum()).';'.
@@ -917,7 +917,7 @@ function expense_spisok($v=array()) {
 	$send['filter'] = $filter;
 
 	$js = !PAGE1 ? '' :
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var EXPENSE={'.
 				'limit:'.$filter['limit'].','.
 				'invoice_id:'.$filter['invoice_id'].','.
@@ -1890,7 +1890,7 @@ function balans_show($v) {//вывод таблицы с балансами конкретного счёта
 			'</div>'.
 		'</div>'.
 
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var BALANS={'.
 				'limit:'.$filter['limit'].','.
 				'category_id:'.$filter['category_id'].','.

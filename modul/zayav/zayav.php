@@ -22,7 +22,7 @@ function _zayav_script() {//скрипты для заявок
 
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/zayav/zayav'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/modul/zayav/zayav'.MIN.'.js?'.VERSION.'"></script>';
+		'<script src="'.API_HTML.'/modul/zayav/zayav'.MIN.'.js?'.VERSION.'"></script>';
 }
 function _rubric($id='all', $i='name') {//Кеширование рубрик объявлений
 	$key = CACHE_PREFIX.'rubric';
@@ -1227,7 +1227,83 @@ function _dogovorValToList($arr) {//вставка данных договора в массив по dogovor_
 
 	return $arr;
 }
+function _zayavObWord() {//Печать объявлений в формате Word
+	$back = ' <button onclick="history.back()">назад</button>';
 
+	if(!$gn = _num(@$_GET['gn']))
+		die('Получен некорректный номер газеты.'.$back);
+
+	if(!$service_id = _num(@$_GET['service_id']))
+		die('Получен некорректный id вида деятельности.'.$back);
+
+	$zpu = _zayavPole($service_id, 2);
+	if(empty($zpu[54]))
+		die('Для данного вида деятельности список номеров не может быть распечатан.'.$back);
+
+	$sql = "SELECT
+				`pub`.`id`,
+				`rub`.`name` AS `rub`,
+				IFNULL(`sub`.`name`,'') `sub`,
+				`z`.`about` `txt`,
+				`z`.`phone`,
+				`z`.`adres`,
+				IFNULL(`dop`.`name`,'') `dop`,
+				`z`.`viewer_id_add`,
+				`z`.`onpay_checked`
+			FROM `_zayav_gazeta_nomer` `pub`
+				LEFT JOIN `_setup_gazeta_nomer` `sgn` ON `sgn`.`id`=`pub`.`gazeta_nomer_id`
+				LEFT JOIN `_zayav` AS `z` ON `pub`.`zayav_id`=`z`.`id`
+				LEFT JOIN `_setup_rubric` AS `rub` ON `z`.`rubric_id`=`rub`.`id`
+				LEFT JOIN `_setup_rubric_sub` AS `sub` ON `z`.`rubric_id_sub`=`sub`.`id`
+				LEFT JOIN `_setup_gazeta_ob_dop` AS `dop` ON `pub`.`dop`=`dop`.`id`
+			WHERE `pub`.`app_id`=".APP_ID."
+			  AND `pub`.`gazeta_nomer_id`=".$gn."
+			  AND `z`.`service_id`=".$service_id."
+			ORDER BY
+			    `rub`.`sort`,
+			    `sub`.`sort`,
+			    `z`.`about`";
+	if(!$spisok = query_arr($sql))
+		die('Нет объявлений для номера '.$gn.'.'.$back);
+
+	$word = 'Список объявлений для номера <b>'._gn($gn, 'general_nomer').'</b>:';  // Составление объявлений для отправки
+	$rub = '';   // Контроль рубрик
+	$sub = '';// Контроль подрубрик
+	foreach($spisok as $r) {
+		// Проверка, оплачено ли интернет-объявление
+		if($r['viewer_id_add'] == VIEWER_ONPAY && !$r['onpay_checked'])
+			continue;
+
+		// Если рубрика изменилась, то печать
+		if ($rub != $r['rub']) {
+			$rub = $r['rub'];
+			$word .= '<div class="rub">'.$rub.'</div>';
+		}
+		// Если подрубрика изменилась, то печать
+		if ($sub != $r['sub']) {
+			$sub = $r['sub'];
+			$word .= '<div class="sub">'.$sub.'</div>';
+		}
+		$word .=
+			'<div class="unit">'.
+				$r['txt'].' '.
+				($r['phone'] ? '<b>Тел.: '.$r['phone'].'</b>' : '').' '.
+				($r['adres'] ? ($r['phone'] ? ', ' : '').'<b>Адрес: '.$r['adres'].'</b>' : '').
+				($r['dop'] ? '<span class="dop">('.$r['dop'].')</span>' : '').
+			'</div>';
+	}
+
+	$doc = new clsMsDocGenerator(
+	    $pageOrientation = 'PORTRAIT',
+	    $pageType = 'A4',
+	    $cssFile = GLOBAL_DIR.'/css/ob-word.css',
+	    $topMargin = 0.5,
+	    $rightMargin = 1.0,
+	    $bottomMargin = 0.5,
+	    $leftMargin = 1.0);
+	$doc->addParagraph($word);
+	$doc->output('ob-word-nomer-'._gn($gn, 'general_nomer'));
+}
 
 
 /* Поля заявки */
@@ -1454,7 +1530,11 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 					).
 			  '</div>'
 
-			: '')
+			: ''),
+		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=print&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('', 20).
+				'<div class="img_word"></div>'.
+				'открыть в формате Word'.
+			  '</a>'
 	);
 
 	$send = '';

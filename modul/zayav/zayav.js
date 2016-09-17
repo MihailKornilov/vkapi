@@ -10,12 +10,20 @@ var _zayavSpisok = function(v, id) {
 				$('#spisok').html(res.spisok);
 				if(id == 'gn_year')
 					$('#gn_nomer_id')._radio('spisokUpdate', res.gn_year_spisok);
+				_zayavObWordNomer();
 				//показ/скрытие цветности полосы
 				if($('#gn_polosa').length)
 					$('#gn_polosa_color_filter')[ZAYAV.gn_polosa > 1 && ZAYAV.gn_polosa < GN_ASS[ZAYAV.gn_nomer_id].pc ? 'show' : 'hide']();
 				_zayavPolosaNomerDropdown();
 			}
 		}, 'json');
+	},
+	_zayavObWordNomer = function() {//подстановка выбранного номера газеты в подсказку
+		if(!$('#obWordPrint').length)
+			return;
+		var gn = GN_ASS[ZAYAV.gn_nomer_id];
+		$('#obWordPrint .ttmsg').html('Ќомер ' + gn.week + '(' + gn.gen + ')');
+
 	},
 	_zayavSpisokTovarNameFilter = function(dis) {//фильтр виды товаров (св€зан с фильтром конктерный товар)
 		if(!$('#tovar_name_id').length)
@@ -2263,6 +2271,7 @@ $(document)
 			$('#deleted_only')._check(_zayavSpisok);
 
 			_zayavPolosaNomerDropdown();
+			_zayavObWordNomer();
 			_nextCallback = _zayavPolosaNomerDropdown;
 		}
 		if($('#_zayav-info').length) {

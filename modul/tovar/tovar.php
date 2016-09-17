@@ -57,7 +57,7 @@ function _tovar() {
 function _tovar_script() {//скрипты для товаров
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/tovar/tovar'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/modul/tovar/tovar'.MIN.'.js?'.VERSION.'"></script>';
+		'<script src="'.API_HTML.'/modul/tovar/tovar'.MIN.'.js?'.VERSION.'"></script>';
 }
 
 function _tovarCategory($id=false, $i='name') {
@@ -1273,7 +1273,7 @@ function _tovar_info() {//информация о товаре
 	define('MEASURE', _tovarMeasure($r['measure_id']));
 
 	return
-	'<script type="text/javascript">'.
+	'<script>'.
 		'var TI={'.
 			'id:'.$tovar_id.','.
 			'category_id:'.$r['category_id'].','.

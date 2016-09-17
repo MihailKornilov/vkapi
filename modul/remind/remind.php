@@ -8,6 +8,11 @@ function _remind($i='spisok', $v=array()) {
 	}
 	return '';
 }
+function _remind_script() {//скрипты и стили
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/remind/remind'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/remind/remind'.MIN.'.js?'.VERSION.'"></script>';
+}
 function _remind_stat() {
 	if(!SA)
 		return '';
@@ -404,7 +409,7 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 	$data = _remind_spisok(array('zayav_id'=>$zayav_id));
 
 	$send =
-		'<script type="text/javascript">'.
+		'<script>'.
 			'var ZAYAV_REMIND={'.
 				'active:'.$data['active'].','.
 				'active_spisok:['.implode(',', $data['active_spisok']).']'.

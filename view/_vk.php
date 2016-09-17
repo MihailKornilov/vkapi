@@ -31,7 +31,7 @@ require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
 require_once GLOBAL_DIR.'/modul/tovar/tovar.php';
 require_once GLOBAL_DIR.'/modul/money/money.php';
 require_once GLOBAL_DIR.'/modul/history/history.php';
-require_once GLOBAL_DIR.'/view/remind.php';
+require_once GLOBAL_DIR.'/modul/remind/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
 require_once GLOBAL_DIR.'/view/setup.php';
 require_once GLOBAL_DIR.'/view/manual.php';
@@ -50,6 +50,7 @@ function _const() {
 		_appError();
 
 	define('VIEWER_ID', $viewer_id);
+	define('VIEWER_ONPAY', 2147000001);
 	define('APP_ID', $app_id);
 	define('CACHE_PREFIX', 'CACHE_'.APP_ID.'_');
 
@@ -124,18 +125,18 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 	define('MIN', DEBUG ? '' : '.min');
 	return
 		//Отслеживание ошибок в скриптах
-		(SA ? '<script type="text/javascript" src="/.vkapp/.js/errors.js"></script>' : '').
+		(SA ? '<script src="/.vkapp/.js/errors.js"></script>' : '').
 
 		//Стороние скрипты
-		'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
-		'<script type="text/javascript" src="/.vkapp/.js/jquery-ui.min.js"></script>'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+		'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
+		'<script src="/.vkapp/.js/jquery-ui.min.js"></script>'.
+		'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
 		//Установка начального значения таймера.
-		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
+		(SA ? '<script>var TIME=(new Date()).getTime();</script>' : '').
 
 		//Установка стандартных значений для JS
-		'<script type="text/javascript">'.
+		'<script>'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
 			'var VIEWER_ID='.VIEWER_ID.','.
 				'VIEWER_ADMIN='.VIEWER_ADMIN.','.
@@ -149,12 +150,12 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/vk'.MIN.'.js?'.VERSION.'"></script>'.
+		'<script src="'.API_HTML.'/js/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Переменные _global для всех приложений
-		'<script type="text/javascript" src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
+		'<script src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
 
-		'<script type="text/javascript" src="'.API_HTML.'/js/values/app_'.APP_ID.'.js?'.APP_VALUES.'"></script>'.
+		'<script src="'.API_HTML.'/js/values/app_'.APP_ID.'.js?'.APP_VALUES.'"></script>'.
 
 (PIN_ENTER ? '' :
 
@@ -162,26 +163,23 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		_zayav_script().    // заявки
 		_money_script().    // Деньги
 		_history_script().  // История действий
+		_remind_script().   // Напоминания
 		_tovar_script().    // товары
 		_sa_script().       // Суперадмин (SA)
 		_kupezz_script().   // Купец - бесплатные объявления
 
-		//Напоминания
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/remind'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/remind'.MIN.'.js?'.VERSION.'"></script>'.
-
 		//З/п сотрудников
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/salary'.MIN.'.css?'.VERSION.'" />'.
-//		'<script type="text/javascript" src="'.API_HTML.'/js/salary'.MIN.'.js?'.VERSION.'"></script>'.
+//		'<script src="'.API_HTML.'/js/salary'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Изображения
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/image'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
+		'<script src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Настройки
 	(@$_GET['p'] == 'setup' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/setup'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
+		'<script src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
 	: '').
 
 		_devstory_script(). //История разработки
@@ -189,14 +187,14 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Руководство
 	(@$_GET['p'] == 'manual' ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/manual'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/manual'.MIN.'.js?'.VERSION.'"></script>'
+		'<script src="'.API_HTML.'/js/manual'.MIN.'.js?'.VERSION.'"></script>'
 	: '')		
 ).
 
 	//debug
 	(SA ?
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/debug'.MIN.'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
+		'<script src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
 	: '');
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
@@ -268,7 +266,7 @@ function _footer() {
 	return
 			_devstory_footer().
 			_debug().
-			'<script type="text/javascript">hashSet({'.implode(',', $v).'});</script>'.
+			'<script>hashSet({'.implode(',', $v).'});</script>'.
 		'</div>'.
 //		_footerYandexMetrika().
 		_footerGoogleAnalytics().
@@ -280,7 +278,7 @@ function _footerYandexMetrika() {
 
 	return
 	'<!-- Yandex.Metrika counter -->'.
-		'<script type="text/javascript">'.
+		'<script>'.
 		    '(function (d, w, c) {'.
 		        '(w[c] = w[c] || []).push(function() {'.
 		            'try {'.
@@ -379,10 +377,10 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 				'<title>Error</title>'.
 
 
-				'<script type="text/javascript" src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
-				'<script type="text/javascript" src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+				'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
+				'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
 
-				'<script type="text/javascript">'.
+				'<script>'.
 					'var VIEWER_ID='.VIEWER_ID.','.
 						'APP_ID='.APP_ID.','.
 						'API_HTML="'.API_HTML.'",'.
@@ -390,7 +388,7 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 				'</script>'.
 
 				'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk.min.css" />'.
-				'<script type="text/javascript" src="'.API_HTML.'/js/vk.min.js"></script>'.
+				'<script src="'.API_HTML.'/js/vk.min.js"></script>'.
 
 			'</head>'.
 			'<body>'.
@@ -787,7 +785,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 			'<input type="password" id="pin" maxlength="10">'.
 			'<button class="vk" onclick="pinEnter()">Вход</button>'.
 			'<div class="red">&nbsp;</div>'.
-			'<script type="text/javascript">pinLoad('.(PIN_LEN * 7).')</script>'.
+			'<script>pinLoad('.(PIN_LEN * 7).')</script>'.
 		'</div>'.
 		_footer();
 
@@ -1776,6 +1774,7 @@ function _print_document() {//вывод на печать документов
 		case 'erm':
 			require_once GLOBAL_DIR.'/view/xsl/evrookna_report_month.php';
 			break;
+		case 'ob_word': _zayavObWord(); break;
 		default: die('Документ не найден.');
 	}
 	exit;

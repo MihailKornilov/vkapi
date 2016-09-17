@@ -142,7 +142,7 @@ function setup_worker_rule($viewer_id) {
 	$hist_worker_all = query_assJson($sql);
 
 	return
-	'<script type="text/javascript">'.
+	'<script>'.
 		'var RULE_VIEWER_ID='.$viewer_id.','.
 			'RULE_HISTORY_ALL='.$hist_worker_all.';'.
 	'</script>'.

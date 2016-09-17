@@ -325,7 +325,7 @@ function salary_worker($v) {
 	$acc_show = $filter['acc_show'] ? ' class="acc-show"' : '';
 
 	return
-	'<script type="text/javascript">'.
+	'<script>'.
 		'var SALARY={'.
 			'worker_id:'.$filter['id'].','.
 			'year:'.$filter['year'].','.

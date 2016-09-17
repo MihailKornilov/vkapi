@@ -80,6 +80,7 @@ table{border:0;border-spacing:0}
 .result #filter-clear{float:right}
 .result.norm{font-weight:normal}
 .result .vk.red{margin:-7px 0 0 20px}
+.result._busy{background-position:center right;color:#47688D}
 
 
 #admin{text-align:center;background:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
@@ -491,6 +492,8 @@ a.add:hover{text-decoration:underline;color:#357}
 .rightLink a.sel img{float:right;margin-top:3px}
 .rightLink a.off{color:#888}
 .rightLink a.off:hover{border:#eee solid 1px;background:#eee}
+.rightLink em{float:right;color:#999}
+.rightLink .sel em{color:#ccc}
 
 /* Дополнительное меню */
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 10px}

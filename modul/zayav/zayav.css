@@ -8,8 +8,14 @@
 #_zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
 #_zayav .rightLink b{float:right}
 #_zayav ._check{margin-top:10px}
+
 /* Срок выполнения заявки */
-	#_zayav .zayav-srok{float:right}
+#_zayav .zayav-srok{float:right}
+
+/* Ссылка на объявления в формате Word */
+#obWordPrint{display:inline-block;margin-top:20px}
+#obWordPrint .img_word{margin-bottom:-3px}
+
 /* Номера газет */
 #gn_nomer_id_select .selun b{display:inline-block;width:14px;text-align:right;margin-right:2px}
 #gn_nomer_id_select .selun span{display:inline;color:#555}
