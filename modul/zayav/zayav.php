@@ -1531,7 +1531,7 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 			  '</div>'
 
 			: ''),
-		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=print&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('', 20).
+		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=print&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('Номер не определён', 5).
 				'<div class="img_word"></div>'.
 				'открыть в формате Word'.
 			  '</a>'

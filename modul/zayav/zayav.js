@@ -12,7 +12,7 @@ var _zayavSpisok = function(v, id) {
 					$('#gn_nomer_id')._radio('spisokUpdate', res.gn_year_spisok);
 				_zayavObWordNomer();
 				//показ/скрытие цветности полосы
-				if($('#gn_polosa').length)
+				if($('#gn_polosa').length && GN_ASS[ZAYAV.gn_nomer_id])
 					$('#gn_polosa_color_filter')[ZAYAV.gn_polosa > 1 && ZAYAV.gn_polosa < GN_ASS[ZAYAV.gn_nomer_id].pc ? 'show' : 'hide']();
 				_zayavPolosaNomerDropdown();
 			}
@@ -22,6 +22,8 @@ var _zayavSpisok = function(v, id) {
 		if(!$('#obWordPrint').length)
 			return;
 		var gn = GN_ASS[ZAYAV.gn_nomer_id];
+		if(!gn)
+			return;
 		$('#obWordPrint .ttmsg').html('Номер ' + gn.week + '(' + gn.gen + ')');
 
 	},
@@ -413,10 +415,13 @@ var _zayavSpisok = function(v, id) {
 	_zayavPolosa = function() {
 		if(!$('#gn_polosa').length)
 			return;
-		var pc = [{uid:1,title:'Первая'}];
-		for(var n = 2; n < GN_ASS[$('#gn_nomer_id').val()].pc; n++)
-			pc.push({uid:n,title:n + '-я'});
-		pc.push({uid:102,title:'Последняя ' + n + '-я'});
+		var gn = GN_ASS[ZAYAV.gn_nomer_id],
+			pc = [{uid:1,title:'Первая'}];
+		if(gn) {
+			for(var n = 2; n < gn.pc; n++)
+				pc.push({uid:n, title:n + '-я'});
+			pc.push({uid:102, title:'Последняя ' + n + '-я'});
+		}
 		pc.push({uid:103,title:'Внутренняя чёрно-белая'});
 		pc.push({uid:104,title:'Внутренняя цветная'});
 		pc.push({uid:105,title:'Внутренняя (номер не указан)'});
