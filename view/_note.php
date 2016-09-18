@@ -229,18 +229,19 @@ function _noteImageCount($key) {//получение количества изображений по ключу
 	$sql = "SELECT COUNT(`id`)
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `key`='".$key."'";
+			  AND `unit_name`='".$key."'";
 	return query_value($sql);
 }
 function _noteImage($arr) {//вставка изображений в массив заметок
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `note_id` IN ("._idsGet($arr).")
+			  AND `unit_name`='note'
+			  AND `unit_id` IN ("._idsGet($arr).")
 			ORDER BY `sort`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$arr[$r['note_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+		$arr[$r['unit_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
 
 	return $arr;
 }
@@ -251,11 +252,12 @@ function _noteCommentImage($arr) {//вставка изображений в массив комментариев
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `comment_id` IN ("._idsGet($arr).")
+			  AND `unit_name`='comment'
+			  AND `unit_id` IN ("._idsGet($arr).")
 			ORDER BY `sort`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$arr[$r['comment_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
+		$arr[$r['unit_id']]['image'] .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
 
 	return $arr;
 }
@@ -264,7 +266,8 @@ function _noteImageOne($note_id) {//получение изображений для конкретной заметки
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `note_id`=".$note_id."
+			  AND `unit_name`='note'
+			  AND `unit_id`=".$note_id."
 			ORDER BY `sort`";
 	$q = query($sql);
 	$image = '';
@@ -278,7 +281,8 @@ function _noteCommentImageOne($comment_id) {//получение изображений для конкретн
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `comment_id`=".$comment_id."
+			  AND `unit_name`='comment'
+			  AND `unit_id`=".$comment_id."
 			ORDER BY `sort`";
 	$q = query($sql);
 	$image = '';
@@ -286,5 +290,4 @@ function _noteCommentImageOne($comment_id) {//получение изображений для конкретн
 		$image .= '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['big_name'].'">';
 
 	return array('image'=>$image);
-
 }

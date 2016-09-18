@@ -292,7 +292,7 @@ switch(@$_POST['op']) {
 
 		$page_name = _txt($_POST['page_name']);
 		$txt = _txt($_POST['txt']);
-		$key = _txt(@$_POST['key']);
+		$key = _txt($_POST['key']);
 
 		$imageCount = _noteImageCount($key);
 		if(!$txt && !$imageCount)
@@ -307,7 +307,6 @@ switch(@$_POST['op']) {
 		)))
 			jsonError();
 
-
 		$sql = "SELECT *
 				FROM `_note`
 				WHERE `app_id`=".APP_ID."
@@ -318,9 +317,9 @@ switch(@$_POST['op']) {
 
 		//прикрепление изображений, если есть
 		$sql = "UPDATE `_image`
-				SET `note_id`=".$r['id'].",
-					`key`=''
-				WHERE `key`='".$key."'";
+				SET `unit_name`='note',
+					`unit_id`=".$r['id']."
+				WHERE `unit_name`='".$key."'";
 		query($sql);
 
 		$send['html'] = utf8(_noteUnit($r + _viewer() + _noteImageOne($r['id'])));
@@ -378,7 +377,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$txt = _txt($_POST['txt']);
-		$key = _txt(@$_POST['key']);
+		$key = _txt($_POST['key']);
 
 		if(!$txt && !_noteImageCount($key))
 			jsonError();
@@ -412,9 +411,9 @@ switch(@$_POST['op']) {
 
 		//прикрепление изображений, если есть
 		$sql = "UPDATE `_image`
-				SET `comment_id`=".$r['id'].",
-					`key`=''
-				WHERE `key`='".$key."'";
+				SET `unit_name`='comment',
+					`unit_id`=".$r['id']."
+				WHERE `unit_name`='".$key."'";
 		query($sql);
 
 		$send['html'] = utf8(_noteCommentUnit($r + _viewer() + _noteCommentImageOne($r['id'])));
@@ -496,10 +495,11 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'image_upload'://добавление изображения
-		$key = _txt($_POST['key']);
-		$zayav_id = _num($_POST['zayav_id']);
-		$tovar_id = _num($_POST['tovar_id']);
-		$manual_id = _num($_POST['manual_id']);
+		$unit_name = _txt(@$_POST['unit_name']);
+		$unit_id = _num(@$_POST['unit_id']);
+
+		if(!$unit_name)
+			jsonError();
 
 		$f = $_FILES['f1'];
 		$im = null;
@@ -545,10 +545,8 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_image`
 				WHERE !`deleted`
-	  ".($key ? " AND `key`='".$key."'" : '')."
- ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
- ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
-".($manual_id ? " AND `manual_id`=".$manual_id : '')."
+				  AND `unit_name`='".$unit_name."'
+				  AND `unit_id`=".$unit_id."
 				LIMIT 1";
 		$sort = query_value($sql);
 
@@ -566,11 +564,9 @@ switch(@$_POST['op']) {
 					`big_y`,
 					`big_size`,
 
-					`zayav_id`,
-					`tovar_id`,
-					`manual_id`,
+					`unit_name`,
+					`unit_id`,
 
-					`key`,
 					`sort`,
 					`viewer_id_add`
 				) VALUES (
@@ -587,11 +583,9 @@ switch(@$_POST['op']) {
 					".$big['y'].",
 					".$big['size'].",
 
-					'".$zayav_id."',
-					'".$tovar_id."',
-					'".$manual_id."',
+					'".$unit_name."',
+					".$unit_id.",
 
-					'".addslashes($key)."',
 					".$sort.",
 					".VIEWER_ID."
 			)";
@@ -628,18 +622,27 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'image_obj_get':
-		$key = _txt(@$_POST['key']);
-		$zayav_id = _num(@$_POST['zayav_id']);
-		$tovar_id = _num(@$_POST['tovar_id']);
-		$manual_id = _num(@$_POST['manual_id']);
+		$unit_name = _txt(@$_POST['unit_name']);
+		$unit_id = _num(@$_POST['unit_id']);
+
+		if(!$unit_name)
+			jsonError();
+
+		//очищение списка картинок по требованию
+		if(_num(@$_POST['clear'])) {
+			$sql = "UPDATE `_image`
+					SET `deleted`=1
+					WHERE !`deleted`
+					  AND `unit_name`='".$unit_name."'
+					  AND `unit_id`=".$unit_id;
+			query($sql);
+		}
 
 		$sql = "SELECT *
 				FROM `_image`
 				WHERE !`deleted`
-	  ".($key ? " AND `key`='".$key."'" : '')."
- ".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
- ".($tovar_id ? " AND `tovar_id`=".$tovar_id : '')."
-".($manual_id ? " AND `manual_id`=".$manual_id : '')."
+				  AND `unit_name`='".$unit_name."'
+				  AND `unit_id`=".$unit_id."
 				ORDER BY `id`";
 		$arr = query_arr($sql);
 
@@ -647,7 +650,7 @@ switch(@$_POST['op']) {
 
 		foreach($arr as $r) {
 			$send['img'] .=
-			'<a class="_iview" val="'.$r['id'].($key ? '#'.$key : '').'">'.
+			'<a class="_iview" val="'.$r['id'].'">'.
 				'<div class="div-del"></div>'.
 				'<div class="img_minidel'._tooltip(utf8('Удалить'), -29).'</div>'.
 				'<img src="'.$r['path'].$r['small_name'].'">'.

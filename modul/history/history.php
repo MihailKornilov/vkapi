@@ -21,8 +21,8 @@ function _history_insert($v=array()) {//внесение истории действий
 	$zayav_id = _num(@$v['zayav_id']);
 
 	if(!$client_id && $zayav_id) {//если указана заявка, но не указан клиент, обновляется id клиента
-		$r = _zayavQuery($zayav_id);
-		$client_id = $r['client_id'];
+		if($r = _zayavQuery($zayav_id, 1))
+			$client_id = $r['client_id'];
 	}
 
 	$sql = "INSERT INTO `_history` (

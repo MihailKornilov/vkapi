@@ -14,6 +14,15 @@ function _manual() {
 	return _manual_main();
 }
 
+function _manual_script() {//скрипты и стили
+	if(@$_GET['p'] != 'manual')
+		return '';
+
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/manual/manual'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/manual/manual'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function _manualPart($id=false, $i='name') {
 	$key = CACHE_PREFIX.'manual_part';
 	if(!$arr = xcache_get($key)) {
@@ -323,7 +332,9 @@ function _manual_page_image($id, $content) {//вставка изображений в страницу ман
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
-			  AND `manual_id`=".$id;
+			  AND `unit_name`='manual'
+			  AND `unit_id`=".$id."
+			ORDER BY `id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$s = _imageResize($r['big_x'], $r['big_y'], 426, 400);

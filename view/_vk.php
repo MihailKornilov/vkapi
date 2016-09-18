@@ -33,8 +33,8 @@ require_once GLOBAL_DIR.'/modul/money/money.php';
 require_once GLOBAL_DIR.'/modul/history/history.php';
 require_once GLOBAL_DIR.'/modul/remind/remind.php';
 require_once GLOBAL_DIR.'/view/salary.php';
-require_once GLOBAL_DIR.'/view/setup.php';
-require_once GLOBAL_DIR.'/view/manual.php';
+require_once GLOBAL_DIR.'/modul/setup/setup.php';
+require_once GLOBAL_DIR.'/modul/manual/manual.php';
 require_once GLOBAL_DIR.'/modul/sa/sa.php';
 require_once GLOBAL_DIR.'/modul/devstory/devstory.php';
 
@@ -159,12 +159,14 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 (PIN_ENTER ? '' :
 
+		_manual_script().   // Мануал
 		_client_script().   // Клиенты
 		_zayav_script().    // заявки
 		_money_script().    // Деньги
 		_history_script().  // История действий
 		_remind_script().   // Напоминания
 		_tovar_script().    // товары
+		_setup_script().    // Настройки
 		_sa_script().       // Суперадмин (SA)
 		_kupezz_script().   // Купец - бесплатные объявления
 
@@ -176,19 +178,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/image'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
 
-		//Настройки
-	(@$_GET['p'] == 'setup' ?
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/setup'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/js/setup'.MIN.'.js?'.VERSION.'"></script>'
-	: '').
-
-		_devstory_script(). //История разработки
-
-		//Руководство
-	(@$_GET['p'] == 'manual' ?
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/manual'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/js/manual'.MIN.'.js?'.VERSION.'"></script>'
-	: '')		
+		_devstory_script() //История разработки
 ).
 
 	//debug

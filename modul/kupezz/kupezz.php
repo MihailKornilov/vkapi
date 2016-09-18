@@ -64,18 +64,24 @@ function _kupezz_script() {
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.js?'.VERSION.'"></script>';
 }
-function kupezzZayavObUpdate($zayav_id, $v) {//внесение/обновление обявления, которое вносится из редакции
-	if(empty($v['zpu'][53]))
-		return false;
-
+function kupezzZayavObUpdate($zayav_id) {//внесение/обновление обявления, которое вносится из редакции
 	if(!$z = _zayavQuery($zayav_id, 1))
 		return false;
+
+	$zpu = _zayavPole($z['service_id'], 1);
+	if(empty($zpu[53]))
+		return false;
+
+	if($z['deleted']) {
+		$sql = "UPDATE `kupezz_ob` SET `deleted`=1 WHERE `zayav_id`=".$zayav_id;
+		query($sql);
+		return true;
+	}
 
 	$sql = "SELECT IFNULL(MAX(`gazeta_nomer_id`),0)
 			FROM `_zayav_gazeta_nomer`
 			WHERE `zayav_id`=".$zayav_id;
 	$gnMax = query_value($sql);
-
 
 
 	//получение id рубрики на основании слова
@@ -235,7 +241,8 @@ function kupezz_ob_spisok($v=array()) {
 	$filter = kupezz_obFilter($v);
 	$filter = _filterJs('KUPEZZ_OB', $filter);
 
-	$cond = "!`deleted` AND `day_active`>=DATE_FORMAT(NOW(), '%Y-%m-%d')";
+	$cond = "!`ob`.`deleted` AND `day_active`>=DATE_FORMAT(NOW(), '%Y-%m-%d')";
+	$withFoto = '';
 
 	if($filter['find'])
 		$cond .= " AND `txt` LIKE '%".$filter['find']."%'";
@@ -248,11 +255,11 @@ function kupezz_ob_spisok($v=array()) {
 	if($filter['rubric_id_sub'])
 		$cond .= " AND `rubric_id_sub`=".$filter['rubric_id_sub'];
 	if($filter['withfoto'])
-		$cond .= " AND `image_id`";
+		$withFoto .= " RIGHT JOIN `_image` `im` ON `unit_name`='ob' AND `unit_id`=`ob`.`id`";
 	if(SA && $filter['nokupez'])
 		$cond .= " AND !`zayav_id`";
 
-	$sql = "SELECT COUNT(`id`) FROM `kupezz_ob` WHERE ".$cond;
+	$sql = "SELECT COUNT(*) FROM `kupezz_ob` `ob` ".$withFoto." WHERE ".$cond;
 	$all = query_value($sql);
 
 /*
@@ -287,13 +294,16 @@ function kupezz_ob_spisok($v=array()) {
 		'filter' => $filter
 	);
 
-	$sql = "SELECT *
-			FROM `kupezz_ob`
+	$sql = "SELECT `ob`.*
+			FROM `kupezz_ob` `ob`
+			".$withFoto."
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
 	$ob = query_arr($sql);
 
+	$ob = _imageValToList($ob, 'ob', 1);
+	
 	foreach($ob as $r) {
 		if($filter['find'])
 			$r['txt'] = _findRegular($filter['find'], $r['txt']);
@@ -346,7 +356,7 @@ function kupezz_ob_unit($r) {
 	'<div class="ob-unit'.(isset($r['edited']) ? ' edited' : '').'" id="ob'.$r['id'].'" val="'.$r['id'].'">'.
 		'<table class="utab">'.
 			'<tr><td class="txt">'.
-  ($r['image_id'] ? '<img src="'.$r['image_link'].'" />': '').
+					$r['image_small'].
 					'<a class="rub" val="'.$r['rubric_id'].'">'._rubric($r['rubric_id']).'</a><u>»</u>'.
 					($r['rubric_id_sub'] ? '<a class="rubsub" val="'.$r['rubric_id'].'_'.$r['rubric_id_sub'].'">'._rubricSub($r['rubric_id_sub']).'</a><u>»</u>' : '').
 					$txt.
@@ -443,8 +453,11 @@ function kupezz_my_spisok($v=array()) {
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT "._startLimit($filter);
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
+	$ob = query_arr($sql);
+
+	$ob = _imageValToList($ob, 'ob', 1);
+
+	foreach($ob as $r) {
 		if($filter['find'])
 			$r['txt'] = _findRegular($filter['find'], $r['txt']);
 		$send['spisok'] .= kupezz_my_unit($r);
@@ -482,7 +495,7 @@ function kupezz_my_unit($r) {
 		'</div>'.
 		'<table class="utab">'.
 			'<tr><td class="txt">'.
-					($r['image_id'] ? '<img src="'.$r['image_link'].'" class="_iview" val="'.$r['image_id'].'" />' : '').
+					$r['image_small'].
 					'<span class="rub">'._rubric($r['rubric_id']).'</span><u>»</u>'.
 					($r['rubric_id_sub'] ? '<span class="rubsub">'._rubricSub($r['rubric_id_sub']).'</span><u>»</u>' : '').
 					nl2br($r['txt']).

@@ -1,18 +1,18 @@
 <?php
-function _imageValToList($arr, $type_id) {//вставка изображений в массив на основании параметра
+function _imageValToList($arr, $unit_name, $empty=0) {//вставка изображений в массив на основании параметра
 	$sql = "SELECT *
 			FROM `_image`
 			WHERE !`deleted`
 			  AND !`sort`
-			  AND `".$type_id."`
-			  AND `".$type_id."` IN ("._idsGet($arr).")";
+			  AND `unit_name`='".$unit_name."'
+			  AND `unit_id` IN ("._idsGet($arr).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$arr[$r[$type_id]]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+		$arr[$r['unit_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 
 	foreach($arr as $id => $r)
 		if(!isset($r['image_small']))
-			$arr[$id]['image_small'] = '<img src="'.API_HTML.'/img/nofoto-s.gif">';
+			$arr[$id]['image_small'] = $empty ? '' : '<img src="'.API_HTML.'/img/nofoto-s.gif">';
 
 	return $arr;
 }
@@ -23,26 +23,31 @@ function _imageValToZayav($arr) {//вставка изображений в массив заявок
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND !`sort`
-			  AND `zayav_id` IN ("._idsGet($arr).")";
+			  AND `unit_name`='zayav'
+			  AND `unit_id` IN ("._idsGet($arr).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$arr[$r['zayav_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+		$arr[$r['unit_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 
-	//далее изображения моделей устройств
-	if($ids = _idsGet($arr, 'base_model_id')) {
+	//далее изображения товаров
+	$sql = "SELECT
+				DISTINCT(`tovar_id`) `id`,
+				`zayav_id`
+			FROM `_zayav_tovar`
+			WHERE `zayav_id` IN ("._idsGet($arr).")";
+	if($zt = query_ass($sql)) {
 		$sql = "SELECT *
 				FROM `_image`
 				WHERE !`deleted`
 				  AND !`sort`
-				  AND `model_id` IN (".$ids.")";
+				  AND `unit_name`='tovar'
+				  AND `unit_id` IN ("._idsGet($zt, 'key').")";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
-			foreach($arr as $z) {
-				if(isset($z['image_small']))
-					continue;
-				if($r['model_id'] == $z['base_model_id'])
-					$arr[$z['id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
-			}
+			$zayav_id = $zt[$r['unit_id']];
+			if(isset($arr[$zayav_id]['image_small']))
+				continue;
+			$arr[$zayav_id]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
 		}
 	}
 
@@ -54,12 +59,16 @@ function _imageValToZayav($arr) {//вставка изображений в массив заявок
 }
 function _image200($v) {//показ изображения шириной 200
 	$cond = "!`deleted` AND !`sort`";
-	$js = ''; //параметр, который передаёт на кого будет загрузка изображения
 
-	//запчасти
+	//параметр владельца изображения
+	$unit_name = 'default';
+	$unit_id = 0;
+
+	//товары
 	if($tovar_id = _num(@$v['tovar_id'])) {
-		$cond .= " AND `tovar_id`=".$tovar_id;
-		$js = 'tovar_id:'.$tovar_id;
+		$cond .= " AND `unit_name`='tovar' AND `unit_id`=".$tovar_id;
+		$unit_name = 'tovar';
+		$unit_id = $tovar_id;
 	}
 
 	$sql = "SELECT *
@@ -67,7 +76,7 @@ function _image200($v) {//показ изображения шириной 200
 			WHERE ".$cond."
 			LIMIT 1";
 	if(!$r = query_assoc($sql))
-		return _imageNoFoto($js);
+		return _imageNoFoto($unit_name, $unit_id);
 
 	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
 	return
@@ -77,44 +86,17 @@ function _image200($v) {//показ изображения шириной 200
 		 'height="'.$size['y'].'" '.
 		 'src="'.$r['path'].$r['big_name'].'" '.
 	'/>'.
-	_imageBut200($js);
+	_imageBut200($unit_name, $unit_id);
 }
-function _imageSmall($v) {//получение одного маленького изображения
-	$cond = "!`deleted` AND !`sort`";
-
-	//товары
-	if($tovar_id = _num(@$v['tovar_id']))
-		$cond .= " AND `tovar_id`=".$tovar_id;
-
-	//модель устройств
-	if($model_id = _num(@$v['model_id']))
-		$cond .= " AND `model_id`=".$model_id;
-
-	$sql = "SELECT *
-			FROM `_image`
-			WHERE ".$cond."
-			LIMIT 1";
-	if(!$r = query_assoc($sql))
-		return _imageNoFotoSmall();
-
+function _imageBut200($unit_name, $unit_id) {//кнопка загрузки изображения шириной 200
+	return '<a id="_image-but-200" onclick="_imageAdd({unit_name:\''.$unit_name.'\',unit_id:'.$unit_id.'})">Загрузить изображение</a>';
+}
+function _imageNoFoto($unit_name, $unit_id) {//пустое изображение 200х200 с возможностью выбора загрузки файла
 	return
-	'<img class="_iview" '.
-		 'val="'.$r['id'].'" '.
-		 'src="'.$r['path'].$r['small_name'].'" '.
-	'/>';
-}
-function _imageBut200($js) {//кнопка загрузки изображения шириной 200
-	return '<a id="_image-but-200" onclick="_imageAdd({'.$js.'})">Загрузить изображение</a>';
-}
-function _imageNoFoto($js) {//пустое изображение 200х200 с возможностью выбора загрузки файла
-	return
-	'<div id="_image-no-foto" onclick="_imageAdd({'.$js.'})">'.
+	'<div id="_image-no-foto" onclick="_imageAdd({unit_name:\''.$unit_name.'\',unit_id:'.$unit_id.'})">'.
 		'<a id="_image-but">Загрузить изображение</a>'.
 		'<img src="'.API_HTML.'/img/nofoto-b.gif" />'.
 	'</div>';
-}
-function _imageNoFotoSmall() {//пустое изображение 80х80
-	return '<img src="'.API_HTML.'/img/nofoto-s.gif" />';
 }
 function _imageX($x_cur, $y_cur, $x_new, $y_new) {//получение ширины картинки на основании исходных данных
 	$arr = _imageResize($x_cur, $y_cur, $x_new, $y_new);
@@ -195,20 +177,15 @@ function _imageQuery($id, $withDel=0) {//запрос данных одного изображения
 			WHERE `id`=".$id.$withDel;
 	return query_assoc($sql);
 }
-function _imageArr($id, $withDel=0) {//массив изображений по критению
+function _imageArr($id, $withDel=0) {//массив изображений по критерию
 	if(!$im = _imageQuery($id, $withDel))
 		return array();
 
 	$withDel = $withDel ? '' : ' AND !`deleted`';
 	$sql = "SELECT *
 			FROM `_image`
-			WHERE `model_id`=".$im['model_id']."
-			  AND `zayav_id`=".$im['zayav_id']."
-			  AND `tovar_id`=".$im['tovar_id']."
-			  AND `manual_id`=".$im['manual_id']."
-			  AND `note_id`=".$im['note_id']."
-			  AND `comment_id`=".$im['comment_id']."
-			  ".($im['key'] ? " AND `key`='".$im['key']."'" : '')."
+			WHERE `unit_name`='".$im['unit_name']."'
+			  AND `unit_id`=".$im['unit_id']."
 			  ".$withDel."
 			ORDER BY `sort`";
 	return query_arr($sql);

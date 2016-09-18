@@ -104,7 +104,11 @@ var _manualPartEdit = function(o) {
 				$('#name').focus()
 			}
 		});
-		$('#img')._image({manual_id:o.id});
+		$('#img')._image({
+			unit_name:'manual',
+			unit_id:o.id
+		});
+
 		$('#content').autosize();
 		
 		$('.__info').mouseover(function() { paste = '<div class="_info">' + window.getSelection() + '</div>'; });

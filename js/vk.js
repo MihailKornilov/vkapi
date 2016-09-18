@@ -2675,15 +2675,15 @@ $(document)
 		e.stopPropagation();
 		var t = $(this),
 			img = t.parent().next(),
-			key = t.attr('val'),
-			send = {
-				op:'image_obj_get',
-				key:key
-			};
+			key = t.attr('val');//уникальный ключ для идентификации конкретной заметки, по которому будут прикрепляться изображения
 		_imageAdd({
-			key:key,
+			unit_name:key,
 			func:function() {
 				img.addClass('_busy').html('&nbsp;');
+				var send = {
+					op:'image_obj_get',
+					unit_name:key
+				};
 				$.post(AJAX_MAIN, send, function(res) {
 					img.removeClass('_busy').html(res.success ? res.img : '');
 					t.next().focus();

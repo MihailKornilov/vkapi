@@ -1,9 +1,8 @@
 var _imageAdd = function(o) {
 		o = $.extend({
 			key:0,//ключ по которому будет прикрепляться изображение, например, к заметке
-			zayav_id:0,
-			tovar_id:0,
-			manual_id:0,
+			unit_name:'default',
+			unit_id:0,
 			func:function() {
 				location.reload();
 			}
@@ -26,10 +25,8 @@ var _imageAdd = function(o) {
 					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="image-frame">' +
 						'<input type="hidden" name="op" value="image_upload" />' +
 						'<input type="file" name="f1" id="file" accept="image/jpeg,image/png,image/gif,image/tiff" />' +
-						'<input type="hidden" name="key" value="' + o.key + '" />' +
-						'<input type="hidden" name="zayav_id" value="' + o.zayav_id + '" />' +
-						'<input type="hidden" name="tovar_id" value="' + o.tovar_id + '" />' +
-						'<input type="hidden" name="manual_id" value="' + o.manual_id + '" />' +
+						'<input type="hidden" name="unit_name" value="' + o.unit_name + '" />' +
+						'<input type="hidden" name="unit_id" value="' + o.unit_id + '" />' +
 					'</form>' +
 					'<button class="vk">Выбрать изображение</button>' +
 				'</h1>' +
@@ -100,15 +97,20 @@ var _imageAdd = function(o) {
 };
 
 $.fn._image = function(o) {
+	var t = $(this),
+		attr_id = t.attr('id');
+
+	if(!attr_id)
+		return;
+	
 	o = $.extend({
 		op:'image_obj_get',
-		zayav_id:0,
-		tovar_id:0,
-		manual_id:0
+		unit_name:'default',
+		unit_id:0,
+		clear:0     //очищать список изображений по исходным данным (при первом получении изображений)
 	}, o);
 
-	var t = $(this),
-		html = '<div id="_image-obj">' +
+	var html = '<div id="_image-obj">' +
 			'<div id="im-spisok"></div>' +
 			'<a id="im-add" class="_busy"><span>загрузить изображение</span></a>' +
 		'</div>';
@@ -124,6 +126,7 @@ $.fn._image = function(o) {
 	});
 
 	spisokLoad();
+	o.clear = 0;
 
 	function spisokLoad() {
 		o.func = undefined;

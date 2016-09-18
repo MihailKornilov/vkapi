@@ -83,7 +83,7 @@ var cityGet = function(val, city_id, city_name) {
 				'<tr><td class="label r top">Текст:<td><textarea id="add-txt" class="w300">' + _br(o.txt) + '</textarea>' +
 				'<tr><td class="label r">Контактные телефоны:' +
 					'<td><input type="text" id="telefon" class="w300" maxlength="200" value="' + o.telefon + '" />' +
-//				'<tr><td><td>' +_imageAdd(array('owner'=>VIEWER_ID)).
+				'<tr><td class="label r top">Изображения:<td id="img">' +
 				'<tr><td class="label r topi">Регион:' +
 					'<td><input type="hidden" id="add-country_id" value="' + COUNTRY_ID + '" />' +
 						'<input type="hidden" id="add-city_id" />' +
@@ -115,10 +115,15 @@ var cityGet = function(val, city_id, city_name) {
 		});
 		$('#add-txt').autosize().focus().keyup(kupezzObEditPreview);
 		$("#telefon").keyup(kupezzObEditPreview);
+		$('#img')._image({
+			unit_name:o.id ? 'ob' : 'ob_new',
+			unit_id:o.id ? o.id : VIEWER_ID,
+			clear:o.id ? 0 : 1
+		});
 		$('#viewer_id_show')._check({
 			func:kupezzObEditPreview
 		});
-		if(!COUNTRY_ASS[COUNTRY_ID]) // проверка наличия страны в списке
+		if(!COUNTRY_ASS[COUNTRY_ID])     // проверка наличия страны в списке
 			$('#add-country_id').val(0); //если нет, страна сбрасывается
 		cityShow();
 		cityGet('', CITY_ID, CITY_NAME);
@@ -334,6 +339,7 @@ var cityGet = function(val, city_id, city_name) {
 		  (o.city ? '<div class="city">' + o.city + '</div>' : '') +
 					'<div class="meter">Просмотры: ' + o.view + '</div>' +
 				'</div>' +
+/*
 				'<div class="foot">' +
 					'<div class="msg">' + (o.msg ? o.msg : '') + '</div>' +
 					'<input type="text" id="inp" placeholder="Отправить сообщение автору объявления.." />' +
@@ -346,6 +352,7 @@ var cityGet = function(val, city_id, city_name) {
 								'<input type="hidden" id="only_author" />' +
 					'</table>' +
 				'</div>' +
+*/
 			'</div>';
 
 		if($('#_post').length)

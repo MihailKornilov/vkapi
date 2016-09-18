@@ -101,7 +101,7 @@ switch(@$_POST['op']) {
 		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
 		_zayavGazetaNomerUpdate($send['id'], $v);
-		kupezzZayavObUpdate($send['id'], $v);
+		kupezzZayavObUpdate($send['id']);
 
 		_note(array(
 			'add' => 1,
@@ -163,7 +163,7 @@ switch(@$_POST['op']) {
 		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
 		_zayavGazetaNomerUpdate($zayav_id, $v);
-		kupezzZayavObUpdate($zayav_id, $v);
+		kupezzZayavObUpdate($zayav_id);
 
 
 		if($changes =
@@ -231,6 +231,8 @@ switch(@$_POST['op']) {
 				'sum' => $accrual_sum
 			));
 		}
+
+		kupezzZayavObUpdate($zayav_id);
 
 		_history(array(
 			'type_id' => 80,

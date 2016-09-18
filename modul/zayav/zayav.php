@@ -2557,15 +2557,22 @@ function _zayavImg($zayav_id, $tovar_id=0) {
 			FROM `_image`
 			WHERE !`deleted`
 			  AND !`sort`
-			  AND (`app_id` AND `zayav_id`=".$zayav_id.($tovar_id ? " OR !`app_id` AND `tovar_id`=".$tovar_id : '').")
-			ORDER BY `zayav_id` DESC";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		if($r['zayav_id'] || $r['tovar_id'])
-			break;
+			  AND `unit_name`='zayav'
+			  AND `unit_id`=".$zayav_id."
+			LIMIT 1";
+	if(!$r = query_assoc($sql)) {
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND !`sort`
+				  AND `unit_name`='tovar'
+				  AND `unit_id`=".$tovar_id."
+				LIMIT 1";
+		$r = query_assoc($sql);
+	}
 
-	if(!$r['id'])
-		return _imageNoFoto('zayav_id:'.$zayav_id);
+	if(empty($r))
+		return _imageNoFoto('zayav', $zayav_id);
 
 	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
 	return
@@ -2576,7 +2583,7 @@ function _zayavImg($zayav_id, $tovar_id=0) {
 			'height="'.$size['y'].'" '.
 			'src="'.$r['path'].$r['big_name'].'" '.
 		'/>'.
-		_imageBut200('zayav_id:'.$zayav_id).
+		_imageBut200('zayav', $zayav_id).
 	'</div>';
 }
 function _zayavKvit($zayav_id) {

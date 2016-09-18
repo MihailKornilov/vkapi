@@ -56,6 +56,14 @@ switch(@$_POST['op']) {
 
 		$insert_id = query_insert_id('kupezz_ob');
 
+		//присвоение картинок объявлению
+		$sql = "UPDATE `_image`
+				SET `unit_name`='ob',
+					`unit_id`=".$insert_id."
+				WHERE `unit_name`='ob_new'
+				  AND `unit_id`=".VIEWER_ID;
+		query($sql);
+
 		_history(array(
 			'type_id' => 129,
 			'ob_id' => $insert_id
@@ -275,57 +283,60 @@ switch(@$_POST['op']) {
 			);
 
 
-/*
 		//изображения
 		$img = array();
-		$sql = "SELECT * FROM `images` WHERE !`deleted` AND `owner`='ob".$ob['id']."' ORDER BY `sort`";
+		$sql = "SELECT *
+				FROM `_image`
+				WHERE !`deleted`
+				  AND `unit_name`='ob'
+				  AND `unit_id`=".$id."
+				ORDER BY `sort`";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
 			$img[] = $r;
 
 		$images = '';
 		switch(count($img)) {
-			case 1: $images = obImgBuild($img, 1); break;
-			case 2: $images = obImgBuild($img, 2); break;
-			case 3: $images = obImgBuild($img, 3); break;
-			case 4: $images = obImgBuild($img, 4); break;
+			case 1: $images = kupezzObImgBuild($img, 1); break;
+			case 2: $images = kupezzObImgBuild($img, 2); break;
+			case 3: $images = kupezzObImgBuild($img, 3); break;
+			case 4: $images = kupezzObImgBuild($img, 4); break;
 			case 5:
-				$images = obImgBuild($img, 3);
+				$images = kupezzObImgBuild($img, 3);
 				array_shift($img);
 				array_shift($img);
 				array_shift($img);
-				$images .= obImgBuild($img, 2);
+				$images .= kupezzObImgBuild($img, 2);
 				break;
 			case 6:
-				$images = obImgBuild($img, 3);
+				$images = kupezzObImgBuild($img, 3);
 				array_shift($img);
 				array_shift($img);
 				array_shift($img);
-				$images .= obImgBuild($img, 3);
+				$images .= kupezzObImgBuild($img, 3);
 				break;
 			case 7:
-				$images = obImgBuild($img, 4);
+				$images = kupezzObImgBuild($img, 4);
 				array_shift($img);
 				array_shift($img);
 				array_shift($img);
 				array_shift($img);
-				$images .= obImgBuild($img, 3);
+				$images .= kupezzObImgBuild($img, 3);
 				break;
 			case 8:
-				$images = obImgBuild($img, 3);
+				$images = kupezzObImgBuild($img, 3);
 				array_shift($img);
 				array_shift($img);
 				array_shift($img);
-				$images .= obImgBuild($img, 2);
+				$images .= kupezzObImgBuild($img, 2);
 				array_shift($img);
 				array_shift($img);
-				$images .= obImgBuild($img, 3);
+				$images .= kupezzObImgBuild($img, 3);
 				break;
 		}
 
 		if($images)
-			$send['o']['images'] = $images;
-*/
+			$send['images'] = $images;
 
 
 /*
@@ -389,7 +400,7 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError();
 
-		$sql = "UPDATE `kupezz_ob` SET `deleted`=1 WHERE`id`=".$id;
+		$sql = "UPDATE `kupezz_ob` SET `deleted`=1 WHERE `id`=".$id;
 		query($sql);
 
 		_history(array(
@@ -444,4 +455,46 @@ function kupezz_ob_view_count($ob) {//получение количества просмотров конкретног
 	query($sql);
 
 	return $view + 1;
+}
+function kupezzObImgBuild($img, $count) {
+	$sizes = array(
+		1 => 498,
+		2 => 246,
+		3 => 162,
+		4 => 120
+	);
+	$size = $sizes[$count];
+	$h = 0;
+	for($k = 0; $k < $count; $k++) {
+		$s = _imageResize($img[$k]['big_x'], $img[$k]['big_y'], $size, $count > 1 ? $size + 100 : $size);
+		$h += $s['y'];
+	}
+	$h = floor($h / $count);
+
+	$w = 0;
+	for($k = 0; $k < $count; $k++) {
+		$s = _imageResize($img[$k]['big_x'], $img[$k]['big_y'], 504, $h);
+		$img[$k]['x'] = $s['x'];
+		$img[$k]['y'] = $s['y'];
+		$w += $s['x'];
+	}
+
+	if($w + $count * 6 > 504) {
+		$diff = ceil(($w + $count * 6 - 504) / $count);
+		$h = 0;
+		for($k = 0; $k < $count; $k++) {
+			$s = _imageResize($img[$k]['big_x'], $img[$k]['big_y'], $img[$k]['x'] - $diff, $img[$k]['y']);
+			$img[$k]['x'] = $s['x'];
+			$h += $s['y'];
+		}
+		$h = floor($h / $count);
+	}
+
+	$send = '';
+	for($k = 0; $k < $count; $k++) {
+		$i = $img[$k];
+		$send .= '<img src="'.$i['path'].$i['big_name'].'" width="'.$i['x'].'" height="'.$h.'" class="_iview" val="'.$i['id'].'" />';
+	}
+
+	return $send;
 }

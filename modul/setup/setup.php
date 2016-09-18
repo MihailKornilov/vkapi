@@ -64,6 +64,15 @@ function _setup() {
 		'</div>';
 }
 
+function _setup_script() {//скрипты и стили
+	if(@$_GET['p'] != 'setup')
+		return '';
+
+	return
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/setup/setup'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/setup/setup'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function setup_my() {
 	return
 	'<div id="setup_my">'.
