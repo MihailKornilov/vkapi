@@ -81,6 +81,24 @@
 
 
 
+/* клиенты */
+#sa-client{margin:10px 20px}
+#sa-client .headName{margin:0 0 10px}
+#sa-client a{display:block}
+
+#sa-client-pole .headName{margin:10px}
+#sa-client-pole #spisok{margin:10px 10px 30px}
+#sa-client-pole .sel{cursor:pointer}
+#sa-client-pole .sel:hover{background:#ffa}
+#sa-client-pole td{vertical-align:top}
+#sa-client-pole .id{text-align:right;color:#777}
+#sa-client-pole .name{width:180px;font-weight:bold}
+#sa-client-pole .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-client-pole .param{font-size:10px;color:red;margin-top:5px;font-weight:bold}
+#sa-client-pole .use{text-align:center;width:40px}
+#sa-client-pole .ed{padding-top:4px}
+
+
 /* заявки */
 #sa-zayav{margin:10px 20px}
 #sa-zayav .headName{margin:0 0 10px}

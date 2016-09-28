@@ -1321,7 +1321,7 @@ var _accrualAdd = function(o) {
 					'<tr><td class="label">Аванс:<td><input type="hidden" id="salary_avans" value="' + o.salary_avans + '" />' +
 					'<tr><td class="label">Комментарий:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
 					'<tr' + (SALARY.list.length ? '' : ' class="dn"') + '>' +
-						'<td class="label">Лист выдачи:' +
+						'<td class="label">' + LIST_VYDACI + ':' +
 						'<td><input type="hidden" id="salary_list_id" value="' + o.salary_list_id + '" />' +
 				'</table>',
 			dialog = _dialog({

@@ -126,7 +126,7 @@ function zpPrint($sheet, $list) {
 
 	$line = 1;
 
-	$sheet->setCellValue('A'.$line, 'Лист выдачи зп №'.$list['nomer'].': '.utf8(_monthDef(LIST_MON)).' '.LIST_YEAR);
+	$sheet->setCellValue('A'.$line, LIST_VYDACI.' №'.$list['nomer'].': '.utf8(_monthDef(LIST_MON)).' '.LIST_YEAR);
 	$sheet->mergeCells('A'.$line.':'.COLLAST.$line);
 	$sheet->getStyle('A'.$line)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 	$sheet->getStyle('A'.$line)->getFont()->setBold(true);

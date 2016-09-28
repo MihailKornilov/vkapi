@@ -24,7 +24,7 @@ require_once GLOBAL_DIR.'/view/_image.php';
 require_once GLOBAL_DIR.'/view/_date.php';
 require_once GLOBAL_DIR.'/view/_attach.php';
 require_once GLOBAL_DIR.'/view/_calendar.php';
-require_once GLOBAL_DIR.'/view/_debug.php';
+require_once GLOBAL_DIR.'/modul/debug/debug.php';
 
 require_once GLOBAL_DIR.'/modul/client/client.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav.php';
@@ -67,7 +67,7 @@ function _const() {
 	define('APP_FIRST_LOAD', !empty($_GET['referrer'])); //первый запуск приложения
 
 	$SA[982006] = 1;    // Корнилов Михаил
-//	$SA[1382858] = 1; // Серёга Ш.
+//	$SA[1382858] = 1;   // Серёга Ш.
 //	$SA[166424274] = 1; // тестовая запись
 	define('SA', isset($SA[VIEWER_ID]));
 
@@ -105,6 +105,7 @@ function _const() {
 
 	define('PATH_DOGOVOR', ATTACH_PATH.'/dogovor');
 	define('LINK_DOGOVOR', ATTACH_HTML.'/dogovor');
+	define('LIST_VYDACI', APP_ID == 3978722 ? 'Акт выполненных работ' : 'Лист выдачи з/п');//todo удалить. Для Евроокон: Акт выполненных работ
 }
 
 function _header() {
@@ -159,6 +160,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 (PIN_ENTER ? '' :
 
+		_debug_script().    // debug
+
 		_manual_script().   // Мануал
 		_client_script().   // Клиенты
 		_zayav_script().    // заявки
@@ -179,13 +182,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<script src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
 
 		_devstory_script() //История разработки
-).
-
-	//debug
-	(SA ?
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/debug'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/js/debug'.MIN.'.js?'.VERSION.'"></script>'
-	: '');
+);
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
 	switch(@$_GET['p']) {
@@ -644,23 +641,6 @@ function jsonError($values=null) {
 function jsonSuccess($send=array()) {
 	$send['success'] = 1;
 	die(json_encode($send + jsonDebugParam()));
-}
-function jsonDebugParam() {//возвращение дополнительных параметров json, если включен debug
-	if(DEBUG) {
-		global $sqlQuery, $sqlTime;
-		$d = debug_backtrace();
-		return array(
-			'post' => $_POST,
-			'link' => 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'],
-			'php_time' => round(microtime(true) - TIME, 3),
-			'sql_count' => count($sqlQuery),
-			'sql_time' => round($sqlTime, 3),
-			'sql' => utf8(implode('', $sqlQuery)),
-			'php_file' => $d[1]['file'],
-			'php_line' => $d[1]['line']
-		);
-	}
-	return array();
 }
 
 function _hashRead() {
@@ -1305,6 +1285,8 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_STATUS_DAY_FACT_ASS='._zayavStatus('js_day_fact_ass').','.
 		"\n".'ZAYAV_TOVAR_PLACE_SPISOK='._selJson(_zayavTovarPlace()).','.
 		"\n".'ZAYAV_POLE_PARAM='._zayavPoleParamJs().','.        //используемые доп.параметры полей заявки
+
+		"\n".'LIST_VYDACI="'.LIST_VYDACI.'",'. //todo
 
 		_setup_global('js').
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.

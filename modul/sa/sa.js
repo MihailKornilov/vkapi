@@ -146,6 +146,50 @@ var saMenuEdit = function(o) {
 		}
 	},
 
+	saClientPoleEdit = function(o) {
+		o = $.extend({
+			id:0,
+			name:'',
+			about:''
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label">Тип поля:<td><b>' + SA_CLIENT_POLE_TYPE_NAME + '</b>' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+					'<tr><td class="label top">Описание:<td><textarea id="about" class="w250">' + o.about + '</textarea>' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:(o.id ? 'Изменение' : 'Добавление') + ' поля клиента',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+		$('#about').autosize();
+
+		function submit() {
+			var send = {
+				op:'sa_client_pole_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				type_id:SA_CLIENT_POLE_TYPE_ID,
+				name:$('#name').val(),
+				about:$('#about').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
 	saServiceEdit = function(o) {//добавление/редактирование названия вида деятельности
 		o = $.extend({
 			id:0,
@@ -807,6 +851,28 @@ $(document)
 			op:'sa_balans_action_del',
 			func:function(res) {
 				$('#spisok').html(res.html);
+			}
+		});
+	})
+
+	.on('click', '#sa-client-pole .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saClientPoleEdit({
+			id:t.attr('val'),
+			name:p.find('.name').html(),
+			about:p.find('.about').html()
+		});
+	})
+	.on('click', '#sa-client-pole .img_del', function() {
+		var t = $(this),
+			p = _parent(t);
+		_dialogDel({
+			id:t.attr('val'),
+			head:'поля',
+			op:'sa_client_pole_del',
+			func:function() {
+				p.remove();
 			}
 		});
 	})

@@ -469,6 +469,82 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'sa_client_pole_add'://внесение нового поля заявки
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_client_pole` (
+					`type_id`,
+					`name`,
+					`about`
+				) VALUES (
+					".$type_id.",
+					'".addslashes($name)."',
+					'".addslashes($about)."'
+				)";
+		query($sql);
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+
+		$send['html'] = utf8(sa_client_pole_spisok($type_id));
+		jsonSuccess($send);
+		break;
+	case 'sa_client_pole_edit'://редактирование поля клиентов
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		$about = _txt($_POST['about']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "SELECT * FROM `_client_pole` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `_client_pole`
+				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+
+		$send['html'] = utf8(sa_client_pole_spisok($r['type_id']));
+		jsonSuccess($send);
+		break;
+	case 'sa_client_pole_del'://удаление поля заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_client_pole` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('id поля не существует');
+
+		$sql = "SELECT COUNT(*) FROM `_client_pole_use` WHERE `pole_id`=".$id;
+		if(query_value($sql))
+			jsonError('Это поле используется');
+
+		$sql = "DELETE FROM `_client_pole` WHERE `id`=".$id;
+		query($sql);
+
+		$sql = "ALTER TABLE `_client_pole` AUTO_INCREMENT=0";
+		query($sql);
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+
+		jsonSuccess();
+		break;
+
 	case 'sa_service_add'://внесение нового вида деятельности
 		$name = _txt($_POST['name']);
 

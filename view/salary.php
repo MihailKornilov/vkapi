@@ -566,14 +566,14 @@ function salary_worker_list($v) {
 	if($v['list_type'] == 'js') {
 		$send = array();
 		foreach($spisok as $r)
-			$send[$r['id']] = 'Лист выдачи з/п №'.$r['nomer'];
+			$send[$r['id']] = LIST_VYDACI.' №'.$r['nomer'];
 		return _selJson($send);
 	}
 
 	if($v['list_type'] == 'array') {
 		$send = array();
 		foreach($spisok as $r)
-			$send[$r['id']] = 'Лист выдачи з/п №'.$r['nomer'];
+			$send[$r['id']] = LIST_VYDACI.' №'.$r['nomer'];
 		return _sel($send);
 	}
 
@@ -612,7 +612,7 @@ function salary_worker_list($v) {
 	foreach($spisok as $r) {
 		$diff = $r['sum'] - $r['pay'];
 		$send .=
-			'<tr><td class="about"><a class="img_xls" val="'.$r['id'].'">Лист выдачи з/п №'.$r['nomer'].'</a>'.
+			'<tr><td class="about"><a class="img_xls" val="'.$r['id'].'">'.LIST_VYDACI.' №'.$r['nomer'].'</a>'.
 				'<td class="sum acc">'._sumSpace(_cena($r['sum'])).
 				'<td class="sum pay">'.($r['pay'] ? _sumSpace($r['pay']) : '').
 				'<td class="sum '.($diff < 0 ? 'red'._tooltip('Выдано больше, чем начислено', -60) : 'grey">')._sumSpace($diff).
@@ -658,7 +658,7 @@ function salary_worker_zp($v) {
 				$r['about'].
 				($r['salary_list_id'] ?
 					'<div class="nl">'.
-						'Лист выдачи з/п №'.$list[$r['salary_list_id']].
+						LIST_VYDACI.' №'.$list[$r['salary_list_id']].
 						($r['salary_avans'] ? ', аванс' : '').
 					'.</div>'
 				: '').

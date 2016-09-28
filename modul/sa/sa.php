@@ -32,6 +32,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=history">История действий</a>'.
 		'<a href="'.URL.'&p=sa&d=rule">Права сотрудников</a>'.
 		'<a href="'.URL.'&p=sa&d=balans">Балансы</a>'.
+		'<a href="'.URL.'&p=sa&d=client">Клиенты</a>'.
 		'<a href="'.URL.'&p=sa&d=zayav">Заявки</a>'.
 		'<a href="'.URL.'&p=sa&d=tovar_measure">Товары: единицы измерения</a>'.
 		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
@@ -465,6 +466,108 @@ function sa_balans_action_spisok($arr, $count) {
 
 	return $send;
 }
+
+
+
+
+function sa_client() {//настройки клиентов
+	switch(@$_GET['d1']) {
+		case 'edit':   return sa_client_pole(1);
+//		case 'unit':   return sa_zayav_pole(4);
+//		case 'filter': return sa_zayav_pole(2);
+//		case 'info':   return sa_zayav_pole(3);
+		case 'service': return sa_zayav_service();
+	}
+
+	return
+		sa_path('Настройки клиентов').
+		'<div id="sa-client">'.
+			'<div class="headName">Настройки клиентов</div>'.
+			'<a href="'.URL.'&p=sa&d=client&d1=edit">Поля - внесение/редактирование клиента</a>'.
+			'<a href="'.URL.'&p=sa&d=client&d1=unit">Поля - единица списка клиентов</a>'.
+			'<a href="'.URL.'&p=sa&d=client&d1=filter">Поля - фильтр клиентов</a>'.
+			'<a href="'.URL.'&p=sa&d=client&d1=info">Поля - информация о клиенте</a>'.
+			'<br />'.
+			'<a href="'.URL.'&p=sa&d=client&d1=category"><b>Категории клиентов и использование полей</b></a>'.
+		'</div>';
+}
+function sa_client_pole_type($type_id=0) {//типы полей клиентов
+	/*
+		1 - edit: внесение/редактирование
+		2 - filter: фильтр
+		3 - info: информация о клиенте
+		4 - unit: единица списка клиентов
+	*/
+	$arr = array(
+		1 => 'внесение/редактирование клиента',
+		2 => 'фильтр клиентов',
+		3 => 'информация о клиенте',
+		4 => 'единица списка клиентов'
+	);
+	if($type_id)
+		return $arr[$type_id];
+	return $arr;
+}
+function sa_client_pole($type_id) {
+	return
+		'<script>'.
+			'var SA_CLIENT_POLE_TYPE_ID='.$type_id.','.
+				'SA_CLIENT_POLE_TYPE_NAME="'.sa_zayav_pole_type($type_id).'";'.
+		'</script>'.
+		sa_path('<a href="'.URL.'&p=sa&d=client">Настройки клиентов</a>', sa_zayav_pole_type($type_id)).
+		'<div id="sa-client-pole">'.
+			'<div class="headName">'.
+				'Настройки полей: '.sa_zayav_pole_type($type_id).
+				'<a class="add" onclick="saClientPoleEdit()">Новое поле</a>'.
+			'</div>'.
+			'<div id="spisok">'.sa_client_pole_spisok($type_id).'</div>'.
+		'</div>';
+}
+function sa_client_pole_spisok($type_id, $sel=false) {//отображение списка всех полей клиента
+	//$sel - возможность выбора для составления таблицы
+	$sql = "SELECT *
+			FROM `_client_pole`
+			WHERE `type_id`=".$type_id."
+			".($sel !== false ? " AND `id` NOT IN (".$sel.")" : '')."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return 'Список пуст.';
+
+	if($sel === false) {
+		$sql = "SELECT
+					`pole_id`,
+					COUNT(`id`) `count`
+				FROM `_client_pole_use`
+				WHERE `pole_id` IN ("._idsGet($spisok).")
+				GROUP BY `pole_id`";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			$spisok[$r['pole_id']]['use'] = $r['count'];
+	}
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>'.
+				'<th>Наименование'.
+				'<th>Описание'.
+	   ($sel === false ? '<th>use' : '').
+	   ($sel === false ? '<th>' : '');
+	foreach($spisok as $r)
+		$send .=
+			'<tr'.($sel !== false ? ' class="sel" val="'.$r['id'].'"' : '').'>'.
+				'<td class="id">'.$r['id'].
+				'<td class="name">'.$r['name'].
+				'<td>'.
+					'<div class="about">'.$r['about'].'</div>'.
+	   ($sel === false ? '<td class="use">'.(@$r['use'] ? $r['use'] : '') : '').
+	   ($sel === false ? '<td class="ed">'._iconEdit($r)._iconDel($r + array('nodel'=>_num(@$r['use']))) : '');
+	$send .= '</table>';
+
+	return $send;
+}
+
+
+
 
 
 

@@ -688,7 +688,7 @@ switch(@$_POST['op']) {
 			_historyChange('Описание', $r['about'], $about).
 			_historyChange('Сотрудник', $r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '', $worker_id ? _viewer($worker_id, 'viewer_name') : '').
 			_historyChange('Аванс', _daNet($r['salary_avans']),  _daNet($salary_avans)).
-			_historyChange('Лист выдачи',
+			_historyChange(LIST_VYDACI,
 					$r['salary_list_id'] ? '№'.$list[$r['salary_list_id']] : '',
 					$salary_list_id ? '№'.$list[$salary_list_id] : '').
 			_historyChange('Месяц', $mon_old, $mon_new))

@@ -51,6 +51,16 @@ function _debug() {
 	}
 	return $send;
 }
+
+function _debug_script() {//скрипты и стили
+	if(!SA)
+		return '';
+	
+	return
+	'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/debug/debug'.MIN.'.css?'.VERSION.'" />'.
+	'<script src="'.API_HTML.'/modul/debug/debug'.MIN.'.js?'.VERSION.'"></script>';
+}
+
 function _debug_cookie_count() {
 	$count = 0;
 	if(!empty($_COOKIE))
@@ -89,4 +99,22 @@ function _pre_arr($v) {// проверка, €вл€етс€ ли переменна€ массивом. ≈сли да, то
 		return $send;
 	}
 	return $v;
+}
+
+function jsonDebugParam() {//возвращение дополнительных параметров json, если включен debug
+	if(!DEBUG)
+		return array();
+
+	global $sqlQuery, $sqlTime;
+	$d = debug_backtrace();
+	return array(
+		'post' => $_POST,
+		'link' => 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'],
+		'php_time' => round(microtime(true) - TIME, 3),
+		'sql_count' => count($sqlQuery),
+		'sql_time' => round($sqlTime, 3),
+		'sql' => utf8(implode('', $sqlQuery)),
+		'php_file' => $d[1]['file'],
+		'php_line' => $d[1]['line']
+	);
 }
