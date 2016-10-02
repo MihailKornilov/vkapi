@@ -853,7 +853,7 @@ $.fn._radio = function(o, o1) {
 		func:function() {}
 	}, o);
 
-	var val = _num(t.val());
+	var val = _num(t.val(), 1);
 //	t.val(val);
 
 	t.wrap('<div class="_radio' + (o.block ? ' block' : '') + '" id="' + attr_id + '_radio">');
