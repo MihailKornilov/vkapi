@@ -606,6 +606,9 @@ switch(@$_POST['op']) {
 					'<tr><td class="label r">Причина:*<td><input type="text" id="about" class="w250" />'.
 				'</table>'
 			);
+
+			foreach($send['arr'] as $r)
+				$send['arr'][$r['id']]['count'] = _ms($r['count']);
 		}
 
 		$send['count'] = count($send['arr']);
@@ -615,7 +618,7 @@ switch(@$_POST['op']) {
 	case 'tovar_writeoff':// продажа товара
 		if(!$avai_id = _num($_POST['avai_id']))
 			jsonError();
-		if(!$count = _num($_POST['count']))
+		if(!$count = _ms($_POST['count']))
 			jsonError();
 
 		$about = _txt($_POST['about']);

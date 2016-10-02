@@ -387,7 +387,7 @@ var _tovarEditExtend = function(o) {
 			}, 'json');
 		}
 	},
-	_tovarWriteOff = function() {//продажа товара из информации о заявке
+	_tovarWriteOff = function() {//списание товара из информации о заявке
 		var dialog = _dialog({
 				top:20,
 				width:490,
@@ -435,7 +435,7 @@ var _tovarEditExtend = function(o) {
 			var send = {
 				op:'tovar_writeoff',
 				avai_id:avai_id,
-				count:_num($('#count').val()),
+				count:_ms($('#count').val()),
 				about:$.trim($('#about').val())
 			};
 
