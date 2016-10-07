@@ -544,6 +544,151 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'sa_client_category_add'://внесение новой категории клиентов
+		$name = _txt($_POST['name']);
+
+		if(!$name)
+			jsonError();
+
+		$sql = "INSERT INTO `_client_category` (
+					`app_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		$insert_id = query_insert_id('_client_category');
+
+		xcache_unset(CACHE_PREFIX.'client_category');
+		_globalJsValues();
+
+		jsonSuccess();
+		break;
+	case 'sa_client_category_edit'://редактирование категории клиентов
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `_client_category`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'client_category');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'sa_client_category_pole_load':
+		$category_id = _num($_POST['category_id']);
+
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+
+		$sql = "SELECT `pole_id`
+				FROM `_client_pole_use`
+				WHERE `app_id`=".APP_ID."
+				  AND `category_id`=".$category_id;
+		$ids = query_ids($sql);
+
+		$send['html'] = utf8('<div id="sa-client-pole">'.sa_client_pole_spisok($type_id, $ids).'</div>');
+		jsonSuccess($send);
+		break;
+	case 'sa_client_category_pole_add'://добавление выбранного поля клиента
+		if(!$pole_id = _num($_POST['pole_id']))
+			jsonError('Некорректный id поля');
+		if(!$category_id = _num($_POST['category_id']))
+			jsonError('Некорректный id категории');
+
+		$name_use = _txt($_POST['label']);
+		$require = _bool($_POST['require']);
+
+		$sql = "SELECT * FROM `_client_pole` WHERE `id`=".$pole_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Отсутствует поле в базе');
+
+		$sql = "INSERT INTO `_client_pole_use` (
+					`app_id`,
+					`category_id`,
+					`pole_id`,
+					`label`,
+					`require`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".$category_id.",
+					".$pole_id.",
+					'".addslashes($name_use)."',
+					".$require.",
+					"._maxSql('_client_pole_use')."
+				)";
+		query($sql);
+		$insert_id = query_insert_id('_client_pole_use');
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+		_appJsValues();
+
+		define('CLIENT_CATEGORY_ID', $category_id);
+		$send['html'] = utf8(sa_client_category_use($r['type_id'], $insert_id));
+		$send['type_id'] = $r['type_id'];
+		jsonSuccess($send);
+		break;
+	case 'sa_client_category_pole_edit'://редактирование выбранного поля заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name_use = _txt($_POST['label']);
+		$require = _bool($_POST['require']);
+
+		$sql = "SELECT * FROM `_client_pole_use` WHERE `id`=".$id;
+		if(!$u = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `_client_pole` WHERE `id`=".$u['pole_id'];
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `_client_pole_use`
+				SET `label`='".addslashes($name_use)."',
+					`require`=".$require."
+				WHERE `id`=".$id;
+		query($sql);
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+		_appJsValues();
+
+		define('CLIENT_CATEGORY_ID', $u['category_id']);
+		$send['html'] = utf8(sa_client_category_use($r['type_id'], $id));
+		$send['type_id'] = $r['type_id'];
+		jsonSuccess($send);
+		break;
+	case 'sa_client_category_pole_del'://удаление выбранного поля заявки
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `_client_pole_use` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "DELETE FROM `_client_pole_use` WHERE `id`=".$id;
+		query($sql);
+
+//		xcache_unset(CACHE_PREFIX.'service');
+		_globalJsValues();
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
+
 
 	case 'sa_service_add'://внесение нового вида деятельности
 		$name = _txt($_POST['name']);

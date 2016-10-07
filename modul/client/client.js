@@ -60,7 +60,6 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 				clientPeopleTab(o) +
 				'<table class="ca-table' + (o.category_id == 2 ? '' : ' dn') + '" id="org">' +
 					'<tr><td class="label"><b>Название организации:</b><td><input type="text" id="org_name" value="' + o.org_name + '" />' +
-					'<tr><td class="label">Телефон:<td><input type="text" id="org_phone" value="' + o.org_phone + '" />' +
 					'<tr><td class="label">Факс<td><input type="text" id="org_fax" value="' + o.org_fax + '" />' +
 					'<tr><td class="label topi">Адрес:<td><textarea id="org_adres">' + _br(o.org_adres) + '</textarea>' +
 					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + o.org_inn + '" />' +
@@ -103,11 +102,6 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		});
 
 		if(o.id) {
-			$('#worker_id')._select({
-				width:220,
-				title0:'Сотрудник не выбран',
-				spisok:CI.workers
-			});
 			$('#client2').clientSel({
 				width:258,
 				category_id:CI.category_id,
@@ -131,20 +125,6 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 				indent:80
 			});
 		}
-
-		$('#from_id')._select({
-			width:220,
-			title0:'источник не указан',
-			write:1,
-			write_save:1,
-			spisok:CLIENT_FROM_SPISOK
-		});
-		$('#td-from').vkHint({
-			msg:'Укажите источник, из которого клиент узнал о нашей организации.',
-			width:140,
-			top:-80,
-			left:20
-		});
 
 		function submit() {
 			var send = {
@@ -224,61 +204,186 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 		}
 	},
 
-	clientPersonEdit = function(o) {
-		o = $.extend({
-			id:0,
-			fio:'',
-			phone:'',
-			adres:'',
-			post:'',
-			pasp_seria:'',
-			pasp_nomer:'',
-			pasp_adres:'',
-			pasp_ovd:'',
-			pasp_data:''
-		}, o);
-		var html = '<div id="client-add-tab">' + clientPeopleTab(o, 1) + '</div>',
+	_clientEdit = function(category_id) {
+		var CI = window.CI || {},
+			client_id = _num(CI.id),
+			category_id = _num(category_id),
 			dialog = _dialog({
-				top:80,
-				width:400,
-				head:o.id ? 'Редактирование доверенного лица' : 'Нoвое доверенное лицо',
-				content:html,
-				butSubmit:o.id ? 'Применить' : 'Добавить',
+				width:480,
+				top:30,
+				padding:0,
+				class:'client-edit',
+				head:client_id ? 'Редактирование данных клиента' : 'Внесение нового клиента',
+				load:1,
+				butSubmit:client_id ? 'Сохранить' : 'Внести',
 				submit:submit
+			}),
+			send = {
+				op:'client_edit_load',
+				category_id:category_id,
+				client_id:client_id
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				loaded();
+			} else
+				dialog.loadError();
+		}, 'json');
+
+		function loaded() {
+			dialog.content.find('#dopLinks .link').click(function() {
+				var t = $(this),
+					p = t.parent(),
+					v = _num(t.attr('val'));
+
+				p.find('.sel').removeClass('sel');
+				t.addClass('sel');
+
+				dialog.content.find('.tabs').addClass('dn');
+				dialog.content.find('.tab' + v).removeClass('dn');
+
+				$('#ce-category_id').val(v);
 			});
-		$('#person-fio').focus();
-		$('#person-adres').autosize();
+			dialog.content.find('textarea').autosize();
+
+			var skidka = $('.ce-skidka');
+			for(var n = 0; n < skidka.length; n++)
+				skidka.eq(n)._select({
+					spisok:SKIDKA_SPISOK,
+					title0:'Скидка не выбрана'
+				});
+
+			$('#ce-worker_id')._select({
+				width:220,
+				title0:'Сотрудник не выбран',
+				spisok:CI.workers
+			});
+
+			$('#from_id')._select({
+				width:220,
+				title0:'источник не указан',
+				write:1,
+				write_save:1,
+				spisok:CLIENT_FROM_SPISOK
+			});
+			$('#td-from').vkHint({
+				msg:'Укажите источник, из которого клиент узнал о нашей организации.',
+				width:140,
+				top:-80,
+				left:20
+			});
+		}
 
 		function submit() {
-			var send = {
-				op:'client_person_' + (o.id ? 'edit' : 'add'),
-				id:o.id,
-				client_id:CI.id,
-				fio:$('#person-fio').val(),
-				phone:$('#person-phone').val(),
-				adres:$('#person-adres').val(),
-				post:$('#person-post').val(),
-				pasp_seria:$('#person-pasp_seria').val(),
-				pasp_nomer:$('#person-pasp_nomer').val(),
-				pasp_adres:$('#person-pasp_adres').val(),
-				pasp_ovd:$('#person-pasp_ovd').val(),
-				pasp_data:$('#person-pasp_data').val()
-			};
-			if(!send.fio) {
-				dialog.err('Не указано ФИО');
-				$('#person-fio').focus();
-				return;
-			}
+			var cid = _num($('#ce-category_id').val()), //категория
+				send = {
+					op:client_id ? 'client_edit' : 'client_add',
+					id:client_id,
+					category_id:cid,
+
+					name:$('#ce-name' + cid).val(),
+					phone:$('#ce-phone' + cid).val(),
+					adres:$('#ce-adres' + cid).val(),
+					post:$('#ce-post' + cid).val(),
+
+					pasp_seria:$('#pasp-seria' + cid).val(),
+					pasp_nomer:$('#pasp-nomer' + cid).val(),
+					pasp_adres:$('#pasp-adres' + cid).val(),
+					pasp_ovd:$('#pasp-ovd' + cid).val(),
+					pasp_data:$('#pasp-data' + cid).val(),
+
+					fax:$('#ce-fax' + cid).val(),
+					email:$('#ce-email' + cid).val(),
+					inn:$('#ce-inn' + cid).val(),
+					kpp:$('#ce-kpp' + cid).val(),
+
+					skidka:$('#ce-skidka' + cid).val(),
+
+					worker_id:_num($('#ce-worker_id').val()),
+
+					from_id:_num($('#from_id').val()),
+					from_name:$('#from_id')._select('inp')
+
+	//				join:_num($('#join').val()),
+	//				client2:_num($('#client2').val())
+				};
 
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
-					$('#person-spisok').html(res.html);
+					dialog.close();
+					_msg();
+					location.href = URL + '&p=client&d=info&id=' + res.id;
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
+	_clientPersonAdd = function(o) {
+		var html =
+				'<div class="headName">Выберите доверенное лицо из существующих клиентов:</div>' +
+				'<input type="hidden" id="person_id" />' +
+				'<br />' +
+				'<br />' +
+				'<br />' +
+				'<div class="headName">или введите данные нового доверенного лица:</div>' +
+				'<div class="person-new _busy">&nbsp;</div>',
+			dialog = _dialog({
+				top:40,
+				width:400,
+				head:'Нoвое доверенное лицо',
+				class:'person-add',
+				content:html,
+				butSubmit:'Добавить',
+				submit:submit
+			}),
+			category_id = 0;
+
+		$('#person_id').clientSel({
+			width:355,
+			not_client_id:CI.id
+		});
+
+		$.post(AJAX_MAIN, {op:'client_person_load'}, function(res) {
+			$('.person-new').removeClass('_busy');
+			if(res.success) {
+				$('.person-new').html(res.html);
+				category_id = res.category_id;
+			} else
+				$('.person-new').html('Не удалось загрузить форму для доверенного лица');
+		}, 'json');
+
+		function submit() {
+			var send = {
+				op:'client_person_add',
+				category_id:category_id,
+				client_id:CI.id,
+				person_id:_num($('#person_id').val()),
+
+				name:$('#ce-name' + category_id).val(),
+				phone:$('#ce-phone' + category_id).val(),
+				adres:$('#ce-adres' + category_id).val(),
+				post:$('#ce-post' + category_id).val(),
+
+				pasp_seria:$('#pasp-seria' + category_id).val(),
+				pasp_nomer:$('#pasp-nomer' + category_id).val(),
+				pasp_adres:$('#pasp-adres' + category_id).val(),
+				pasp_ovd:$('#pasp-ovd' + category_id).val(),
+				pasp_data:$('#pasp-data' + category_id).val()
+			};
+
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#ci-person').html(res.html);
 					CI.person = res.array;
 					dialog.close();
 					_msg();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
@@ -361,7 +466,7 @@ $.fn.clientSel = function(o) {
 
 	if(o.add)
 		o.add = function() {
-			clientEdit({
+			_clientEdit({
 				callback:function(res) {
 					o.client_id = res.uid;
 					clientsGet();
@@ -427,26 +532,16 @@ $(document)
 		$('#opl')._check(0);            CLIENT.opl = 0;
 		$('#worker')._check(0);         CLIENT.worker = 0;
 		$('#remind')._select(0);        CLIENT.remind = 0;
+		$('#skidka')._select(0);        CLIENT.skidka = 0;
 		_clientSpisok();
 	})
-	.on('mouseenter', '#client .comm', function() {
-		var t = $(this),
-			v = t.attr('val');
-		t.vkHint({
-			msg:v,
-			width:200,
-			ugol:'right',
-			top:-2,
-			left:-227,
-			indent:'top',
-			show:1
-		})
-	})
+
 	.on('click', '.client-pasp-show', function() {//показ полей для заполнения паспортных данных
-		var p = $(this).parent().parent();
-		p.parent().find('.dn').removeClass('dn');
-		p.parent().find('.focus').focus();
-		p.remove();
+		var t = $(this),
+			cid = _num(t.attr('val'));
+		t.parent().parent().remove();
+		$('.client-pasp' + cid).removeClass('dn');
+		$('#pasp-seria' + cid).focus();
 	})
 
 	.on('click', '.client-info-go', function(e) {
@@ -454,17 +549,12 @@ $(document)
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
 	})
 
-	.on('click', '#client-info #person-add', clientPersonEdit)
-	.on('click', '#client-info .person-edit', function() {
-		var id = $(this).attr('val');
-		clientPersonEdit(CI.person[id]);
-	})
 	.on('click', '#client-info .person-poa', function() {//внесение доверенности
 		var id = $(this).attr('val'),
 			person = CI.person[id],
 			html = '<table class="_dialog-tab">' +
 					'<tr><td class="label w125">Организация:<td><b>' + CI.name + '</b>' +
-					'<tr><td class="label">Доверенное лицо:<td>' + person.fio +
+					'<tr><td class="label">Доверенное лицо:<td>' + person.name +
 					'<tr><td class="label">Номер доверенности:<td><input type="text" id="nomer" class="money" value="' + person.poa_nomer + '" />' +
 					'<tr><td class="label">Дата выдачи:<td><input type="hidden" id="date_begin" value="' + person.poa_date_begin + '" />' +
 					'<tr><td class="label">Дата окончания:<td><input type="hidden" id="date_end" value="' + person.poa_date_end + '" />' +
@@ -512,7 +602,7 @@ $(document)
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
-					$('#person-spisok').html(res.html);
+					$('#ci-person').html(res.html);
 					CI.person = res.array;
 					dialog.close();
 					_msg();
@@ -527,7 +617,7 @@ $(document)
 			head:'доверенного лица',
 			op:'client_person_del',
 			func:function(res) {
-				$('#person-spisok').html(res.html);
+				$('#ci-person').html(res.html);
 				CI.person = res.array;			}
 		});
 	})
@@ -601,6 +691,12 @@ $(document)
 				],
 				func: _clientSpisok
 			});
+			$('#skidka')._select({
+				width: 140,
+				spisok:CLIENT_SKIDKA,
+				title0:'не выбрана',
+				func: _clientSpisok
+			});
 		}
 		if($('#client-info').length) {
 			$('a.link:first').addClass('sel');
@@ -620,7 +716,6 @@ $(document)
 					client:CI.name
 				});
 			});
-			$('#client-edit').click(clientEdit);
 			$('#client-del').click(function() {
 				_dialogDel({
 					id:CI.id,

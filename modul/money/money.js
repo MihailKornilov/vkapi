@@ -480,8 +480,8 @@ var _accrualAdd = function(o) {
 		_expenseGraf();
 	},
 	_expenseGraf = function() {
-		if(!VIEWER_ADMIN)
-			return;
+//		if(!VIEWER_ADMIN)
+//			return;
 		$('#container').highcharts({
 	        chart: {
 	            type: 'bar',

@@ -795,7 +795,8 @@ function expense() {
 
 		'<script>'.
 			'var ATTACH={},'.
-(VIEWER_ADMIN ? 'GRAF='.expense_graf($data['filter']).',' : '').
+//(VIEWER_ADMIN ? 'GRAF='.expense_graf($data['filter']).',' : '').
+				'GRAF='.expense_graf($data['filter']).','.
 				'EXPENSE_MON='._selJson(expenseMonthSum()).';'.
 			'_expenseLoad();'.
 		'</script>';

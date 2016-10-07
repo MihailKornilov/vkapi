@@ -687,18 +687,6 @@ var VK_SCROLL = 0,
 				continue;
 			_cookie(COOKIE_PREFIX + name + '_' + i, escape(arr[i]));
 		}
-
-/*
-		if(v.find) loc += '.find=' + escape(v.find);
-		else {
-			if(v.dolg > 0) loc += '.dolg=' + v.dolg;
-			if(v.active > 0) loc += '.active=' + v.active;
-			if(v.comm > 0) loc += '.comm=' + v.comm;
-			if(v.opl > 0) loc += '.opl=' + v.opl;
-		}
-		VK.callMethod('setLocation', hashLoc + loc);
-*/
-//		_cookie(VIEWER_ID + '_client_find', escape(v.find));
 	},
 	_nextCallback = function() {},//функция, которая выполняется после вывода на экран продолжения списка
 	_yearAss = function(start) {//получение списка годов

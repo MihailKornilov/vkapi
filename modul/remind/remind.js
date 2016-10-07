@@ -2,7 +2,7 @@ var _remindAdd = function() {
 		var html =
 				'<table class="_remind-add-tab">' +
 					 (window.ZI ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					(window.CI ? '<tr><td class="label">Клиент:<td>' + CI.fio : '') +
+					(window.CI ? '<tr><td class="label">Клиент:<td>' + CI.name : '') +
 					'<tr><td class="label">Задача:<td><input type="text" id="txt" />' +
 					'<tr><td class="label top">Подробно:<td><textarea id="about"></textarea>' +
 					'<tr><td class="label">День выполнения:<td><input type="hidden" id="day" />' +

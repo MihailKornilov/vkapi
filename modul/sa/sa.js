@@ -189,6 +189,132 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
+	saClientCategoryEdit = function(o) {//добавление/редактирование названия вида деятельности
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label">Название:' +
+						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Изменение' : 'Внесение новой') + ' категории клиенов',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'sa_client_category_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано название');
+				$('#name').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					document.location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	saClientCategoryPoleLoad = function(category_id, type_id) {
+		var dialog = _dialog({
+				top:20,
+				width:600,
+				head:'Добавление поля клиента - выбор',
+				load:1,
+				butSubmit:''
+			}),
+			send = {
+				op:'sa_client_category_pole_load',
+				category_id:category_id,
+				type_id:type_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				$('.sel').click(function() {
+					dialog.close();
+					var t = $(this);
+					saClientCategoryPoleEdit({
+						pole_id:t.find('.id').html(),
+						category_id:category_id,
+						type_id:type_id,
+						name:t.find('.name').html(),
+						about:t.find('.about').html()
+					});
+				});
+			} else
+				dialog.loadError(res.text);
+		}, 'json');
+	},
+	saClientCategoryPoleEdit = function(o) {
+		o = $.extend({
+			id:0,
+			category_id:0,
+			type_id:0,
+			pole_id:0,
+			name:'',
+			about:'',
+			label:'',
+			require:0
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label w150">Исходное название:<td><b>' + o.name + '</b>' +
+		 (o.about ? '<tr><td class="label topi">Описание:<td><div class="_info">' + o.about + '</div>' : '') +
+					'<tr><td class="label topi">Альтернативное название:' +
+						'<td><textarea id="label" class="w250">' + o.label + '</textarea>' +
+					'<tr' + (o.type_id == 1 ? '' : ' class="dn"') + '>' +
+						'<td class="label">Обязательное заполнение:' +
+						'<td><input type="hidden" id="require" value="' + o.require + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:490,
+				head:(o.id ? 'Изменение' : 'Добавление') + ' поля клиента',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#label').focus();
+		$('#require')._check();
+
+		function submit() {
+			var send = {
+				op:'sa_client_category_pole_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				category_id:o.category_id,
+				pole_id:o.pole_id,
+				label:$('#label').val(),
+				require:$('#require').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok' + res.type_id).html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 
 	saServiceEdit = function(o) {//добавление/редактирование названия вида деятельности
 		o = $.extend({
@@ -235,7 +361,6 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
-
 	saZayavPoleEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -871,6 +996,40 @@ $(document)
 			id:t.attr('val'),
 			head:'поля',
 			op:'sa_client_pole_del',
+			func:function() {
+				p.remove();
+			}
+		});
+	})
+	.on('mouseover', '#sa-client-category .show', function() {
+		$(this).removeClass('show');
+	})
+	.on('click', '#sa-client-category .edit', function() {
+		var t = $(this);
+		saClientCategoryEdit({
+			id:t.attr('val'),
+			name:$('.link.sel').html()
+		});
+	})
+	.on('click', '#sa-client-category .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saClientCategoryPoleEdit({
+			id:t.attr('val'),
+			name:p.find('.e-name').val(),
+			about:p.find('.about').html(),
+			label:p.find('.e-label').val(),
+			type_id:p.find('.type_id').val(),
+			require:p.find('.require').val()
+		});
+	})
+	.on('click', '#sa-client-category .img_del', function() {
+		var t = $(this),
+			p = _parent(t, 'DD');
+		_dialogDel({
+			id:t.attr('val'),
+			head:'поля',
+			op:'sa_client_category_pole_del',
 			func:function() {
 				p.remove();
 			}

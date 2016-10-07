@@ -1,41 +1,18 @@
-#client-add-tab .ca-table{border-spacing:8px;margin:10px}
-#client-add-tab #dopLinks{padding:20px 0 10px 176px}
-#client-add-tab .label{width:150px;text-align:right}
-#client-add-tab input,
-#client-add-tab textarea
-	{width:250px}
-#client-add-tab #adres,
-#client-add-tab #person-adres,
-#client-add-tab #org_adres,
-#client-add-tab #person-org_adres
-	{height:30px}
-
-#client-add-tab span.label{color:#777;margin:0 8px 0 30px}
-#client-add-tab #pasp_seria,
-#client-add-tab #person-pasp_seria
-	{width:55px}
-#client-add-tab #pasp_nomer,
-#client-add-tab #person-pasp_nomer
-	{width:114px}
-#client-add-tab #pasp_data,
-#client-add-tab #person-pasp_data
-	{width:180px}
+/* Внесение/редактирование клиента */
+.client-edit_dialog #dopLinks{padding:20px 10px}
+.client-edit_dialog .tabs{padding:10px 0}
+.client-edit_dialog .label{width:150px}
+.client-edit_dialog span.label{color:#777;margin:0 8px 0 28px}
+.client-edit_dialog textarea{height:27px}
 
 
-/* добавление доверенного лица при внесении нового клиента и в информации о клиенте */
-#client-add-tab #person-add {
-	padding:10px;
-	text-align: center;
-	display:block;
-	text-decoration:none;
-	margin:0 20px 20px 20px;
-}
-#client-add-tab #person-add:hover{background-color:#e9edf1}
 
-#client-person-tab{border-spacing:10px}
-#client-person-tab .label{text-align:right}
-#client-person-tab input{width:220px}
-#client-person-tab textarea{width:220px;height:30px}
+
+.person-add_dialog .headName{margin:5px 0 10px}
+.person-add_dialog .label{width:80px}
+.person-add_dialog span.label{color:#777;margin:0 8px 0 28px}
+
+
 
 /* Список клиентов */
 #client #find-tab{
@@ -71,17 +48,6 @@
 #client .post{margin-left:4px;font-size:10px;color:#777}
 #client .unit em{background-color:#FFC;border-bottom:#FE2 solid 1px}
 #client .unit .post em{font-size:10px}
-#client .comm{
-	display:inline-block;
-	width:14px;
-	height:14px;
-	margin-right:4px;
-	position:relative;
-	top:3px;
-	background-image:url("data:image/gif;base64,R0lGODlhDgAOAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAOAA4AAAMiSLoi+681CKWjyk68d+0eA17iSBJWJpVairraC7d0K9dOAgA7");
-	background-repeat:no-repeat;
-	background-position:0 0;
-}
 #client ._next{margin:0 10px}
 #client ._empty{margin:10px}
 
@@ -114,11 +80,12 @@
 	border:#e8e8aa solid 1px;
 	padding:3px 8px;
 }
-#client-info #ci-tab{border-spacing:4px;margin:0 10px 0 28px}
+#client-info #ci-tab{border-spacing:6px 7px;margin:0 10px 0 26px}
 
-#client-info #pasp-head{margin:8px 0 3px 20px;color:#31618C}
-#client-info #pasp-tab{border-spacing:2px;margin-left:28px}
+#client-info #pasp-tab{border-spacing:2px 0}
 #client-info #pasp-tab .label{width:85px}
+
+#ci-to-person{margin:5px 5px 0 32px}
 
 #client-info #ci-person{margin:15px 0 0 20px}
 #client-info #ci-person h1{color:#31618C;margin:0 35px 5px 0}
@@ -127,7 +94,6 @@
 #client-info #ci-person .n{width:15px;text-align:right;color:#777}
 #client-info #ci-person .adres{font-size:10px}
 #client-info #ci-person .adres tt{font-size:10px;color:#777}
-#client-info #ci-person .td-person-ed{width:35px;white-space:nowrap}
 #client-info #ci-person .poa{
 	padding:2px 5px;
 	margin-top:3px;

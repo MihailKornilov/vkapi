@@ -835,7 +835,7 @@ function _zayavFilter($v) {
 	);
 	foreach($default as $k => $r)
 		if($r != $filter[$k]) {
-			$filter['clear'] = '<button class="vk small red">Очистить фильтр</button>';
+			$filter['clear'] = '<button class="vk small red fr">Очистить фильтр</button>';
 			break;
 		}
 
@@ -1713,6 +1713,9 @@ function _zayavTovarIds($service_id) {
 
 /* Информация о заявке */
 function _zayavQuery($zayav_id, $withDel=0) {
+	if(!$zayav_id)
+		return array();
+
 	$sql = "SELECT *
 			FROM `_zayav`
 			WHERE `app_id`=".APP_ID."
@@ -1720,6 +1723,7 @@ function _zayavQuery($zayav_id, $withDel=0) {
 			  AND `id`=".$zayav_id;
 	if(!$z = query_assoc($sql))
 		return array();
+
 	return $z;
 }
 function _zayavInfo() {
@@ -2074,7 +2078,7 @@ function _zayavDogovorJs($z) {
 		$c = _clientVal($z['client_id']);
 		return
 			'nomer_next:'._maxSql('_zayav_dogovor', 'nomer', 1).','.
-			'fio:"'.addslashes($c['fio']).'",'.
+			'fio:"'.addslashes($c['name']).'",'.
 			'adres:"'.addslashes($c['adres']).'",'.
 			'pasp_seria:"'.addslashes($c['pasp_seria']).'",'.
 			'pasp_nomer:"'.addslashes($c['pasp_nomer']).'",'.

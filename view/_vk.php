@@ -158,9 +158,10 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 
 		'<script src="'.API_HTML.'/js/values/app_'.APP_ID.'.js?'.APP_VALUES.'"></script>'.
 
+		_debug_script().    // debug
+
 (PIN_ENTER ? '' :
 
-		_debug_script().    // debug
 
 		_manual_script().   // ћануал
 		_client_script().   //  лиенты
@@ -487,6 +488,13 @@ function _menu() {//разделы основного меню
 	'</div>';
 }
 function _menuMain() {//список ссылок главной страницы
+	//получение количества доверенностей клиентов
+	$sql = "SELECT COUNT(`id`)
+			FROM `_client_person`
+			WHERE `app_id`=".APP_ID."
+		      AND `poa_nomer`";
+	$poaCount = query_value($sql);
+
 	$send = '';
 	foreach(_menuCache() as $r) {
 		if($r['p'] == 'main')
@@ -494,8 +502,7 @@ function _menuMain() {//список ссылок главной страницы
 
 		if($r['p'] == 'client')
 			$r['about'] .=
-				'<a href="'.URL.'&p=client&d=poa">ƒоверенности</a>'.
-				'<br />'.
+				($poaCount ? '<a href="'.URL.'&p=client&d=poa">ƒоверенности</a><br />' : '').
 				'<a href="'.URL.'&p=client&d=from">ќткуда пришЄл клиент</a>';
 		if($r['p'] == 'zayav')
 			$r['about'] .= _menuMainZayav();
@@ -1193,11 +1200,11 @@ function _globalJsValues() {//—оставление файла global.js, используемый во всех 
 	//одинаковые дл€ всех приложений:
 	$save =
 		 'var VIEWER_MAX='.VIEWER_MAX.','.
-		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
+//		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
  		"\n".'COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `_setup_color` ORDER BY `name`").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `_setup_color` ORDER BY `predlog`").','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
-		"\n".'ZAYAV_SKIDKA_SPISOK='._selJson(_zayavSkidka()).','.
+		"\n".'SKIDKA_SPISOK='._selJson(_zayavSkidka()).','.
 		"\n".'ZE_DOP_NAME='._assJson(_zayavExpenseDop()).','.
 		"\n".'RULE_HISTORY_SPISOK='._selJson(_ruleHistoryView()).','.
 		"\n".'RULE_INVOICE_TRANSFER_SPISOK='._selJson(_ruleInvoiceTransfer()).','.
@@ -1336,6 +1343,7 @@ function _globalCacheClear() {//очистка глобальных значений кеша
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию дл€ руководител€
 	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию дл€ сотрудников
 	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
+	xcache_unset(CACHE_PREFIX.'client_category');//категории клиентов
 	xcache_unset(CACHE_PREFIX.'service');//виды де€тельности
 	xcache_unset(CACHE_PREFIX.'invoice');//расчЄтные счета
 	xcache_unset(CACHE_PREFIX.'expense');//категории расходов организации

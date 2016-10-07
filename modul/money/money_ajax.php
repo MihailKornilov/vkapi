@@ -534,7 +534,7 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8($data['spisok']);
 		if($data['filter']['page'] == 1) {
 			$send['mon'] = _sel(expenseMonthSum($_POST));
-			if(VIEWER_ADMIN)
+//			if(VIEWER_ADMIN)
 				$send['graf'] = expense_graf($data['filter'], 'arr');
 		}
 		jsonSuccess($send);

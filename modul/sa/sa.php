@@ -473,10 +473,8 @@ function sa_balans_action_spisok($arr, $count) {
 function sa_client() {//настройки клиентов
 	switch(@$_GET['d1']) {
 		case 'edit':   return sa_client_pole(1);
-//		case 'unit':   return sa_zayav_pole(4);
-//		case 'filter': return sa_zayav_pole(2);
-//		case 'info':   return sa_zayav_pole(3);
-		case 'service': return sa_zayav_service();
+		case 'info':   return sa_client_pole(3);
+		case 'category': return sa_client_category();
 	}
 
 	return
@@ -484,25 +482,15 @@ function sa_client() {//настройки клиентов
 		'<div id="sa-client">'.
 			'<div class="headName">Настройки клиентов</div>'.
 			'<a href="'.URL.'&p=sa&d=client&d1=edit">Поля - внесение/редактирование клиента</a>'.
-			'<a href="'.URL.'&p=sa&d=client&d1=unit">Поля - единица списка клиентов</a>'.
-			'<a href="'.URL.'&p=sa&d=client&d1=filter">Поля - фильтр клиентов</a>'.
 			'<a href="'.URL.'&p=sa&d=client&d1=info">Поля - информация о клиенте</a>'.
 			'<br />'.
 			'<a href="'.URL.'&p=sa&d=client&d1=category"><b>Категории клиентов и использование полей</b></a>'.
 		'</div>';
 }
 function sa_client_pole_type($type_id=0) {//типы полей клиентов
-	/*
-		1 - edit: внесение/редактирование
-		2 - filter: фильтр
-		3 - info: информация о клиенте
-		4 - unit: единица списка клиентов
-	*/
 	$arr = array(
 		1 => 'внесение/редактирование клиента',
-		2 => 'фильтр клиентов',
-		3 => 'информация о клиенте',
-		4 => 'единица списка клиентов'
+		3 => 'информация о клиенте'
 	);
 	if($type_id)
 		return $arr[$type_id];
@@ -566,6 +554,112 @@ function sa_client_pole_spisok($type_id, $sel=false) {//отображение списка всех 
 	return $send;
 }
 
+function sa_client_category() {
+	$link = sa_client_category_link();
+	return
+		sa_path('<a href="'.URL.'&p=sa&d=client">Настройки клиентов</a>', 'Категории и поля').
+		'<div id="sa-client-category">'.
+			'<div class="headName">'.
+				'Категории клиентов и использование полей'.
+				'<a class="add" onclick="saClientCategoryEdit()">Новая категория клиентов</a>'.
+				'<a class="add edit" val="'.CLIENT_CATEGORY_ID.'">edit</a>'.
+			'</div>'.
+
+			$link.
+
+			'<div class="hd">'.
+				'Новый клиент'.
+				'<button class="vk small" onclick="saClientCategoryPoleLoad('.CLIENT_CATEGORY_ID.',1)">Добавить поле</button>'.
+				'<button class="vk small red" onclick="_clientEdit('.CLIENT_CATEGORY_ID.')">Предосмотр</button>'.
+			'</div>'.
+			'<table class="_spisok mb1">'.
+				'<tr><th class="w50">pole_id'.
+					'<th class="w250">Название поля'.
+					'<th>Доп. параметры'.
+					'<th class="ed">'.
+			'</table>'.
+			'<dl id="spisok1" class="_sort" val="_client_pole_use">'.sa_client_category_use(1).'</dl>'.
+
+			'<div class="hd">'.
+				'Информация о клиенте'.
+				'<button class="vk small" onclick="saClientCategoryPoleLoad('.CLIENT_CATEGORY_ID.',3)">Добавить поле</button>'.
+			'</div>'.
+			'<dl id="spisok3" class="_sort" val="_client_pole_use">'.sa_client_category_use(3).'</dl>'.
+		'</div>';
+}
+function sa_client_category_link() {//меню списка видов заявок и получение CLIENT_CATEGORY_ID
+	_clientCategoryOneCheck();
+
+	$sql = "SELECT *
+			FROM `_client_category`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	$spisok = query_arr($sql);
+
+	if(!$id = _num(@$_GET['id']))
+		$id = key($spisok);
+
+	$exist = 0; //проверка, чтобы id категории клиента совпадал с существующими, иначе ставится по умолчанию
+	foreach($spisok as $r)
+		if($r['id'] == $id) {
+			$exist = 1;
+			break;
+		}
+
+	if(!$exist) {
+		reset($spisok);
+		$id = key($spisok);
+	}
+
+	$link = '';
+	foreach($spisok as $r) {
+		$sel = $r['id'] == $id ? ' sel' : '';
+		$link .= '<a href="'.URL.'&p=sa&d=client&d1=category&id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+	}
+
+	define('CLIENT_CATEGORY_ID', $id);
+
+	return '<div id="dopLinks">'.$link.'</div>';
+}
+function sa_client_category_use($type_id, $show=0) {//использование полей для конкретного вида деятельности
+	$sql = "SELECT
+				`u`.`id`,
+				`u`.`pole_id`,
+				`cp`.`name`,
+				`cp`.`about`,
+				`u`.`label`,
+				`u`.`require`
+			FROM
+			    `_client_pole_use` `u`,
+				`_client_pole` `cp`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".CLIENT_CATEGORY_ID."
+			  AND `cp`.`id`=`u`.`pole_id`
+			  AND `cp`.`type_id`=".$type_id."
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Поля не определены.';
+
+	$send = '';
+	foreach($spisok as $r)
+		$send .=
+		'<dd val="'.$r['id'].'">'.
+			'<table class="_spisok mb1'.($show == $r['id'] ? ' show' : '').'">'.
+				'<tr><td class="w50 r">'.$r['pole_id'].
+					'<td class="w250 curM">'.
+						'<div class="name">'._br($r['label'] ? $r['label'] : $r['name']).($r['require'] ? ' *' : '').'</div>'.
+						'<div class="label">'.($r['label'] ? $r['name'] : '').'</div>'.
+						'<div class="about">'.$r['about'].'</div>'.
+						'<input type="hidden" class="e-name" value="'.$r['name'].'" />'.
+						'<input type="hidden" class="e-label" value="'.$r['label'].'" />'.
+						'<input type="hidden" class="require" value="'.$r['require'].'" />'.
+						'<input type="hidden" class="type_id" value="'.$type_id.'" />'.
+					'<td>'.
+					'<td class="ed">'._iconEdit($r)._iconDel($r).
+			'</table>';
+
+	return $send;
+}
 
 
 

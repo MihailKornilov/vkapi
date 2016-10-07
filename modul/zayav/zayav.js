@@ -238,7 +238,7 @@ var _zayavSpisok = function(v, id) {
 			$('#ze-skidka')._select({
 				width:70,
 				title0:'нет',
-				spisok:ZAYAV_SKIDKA_SPISOK,
+				spisok:SKIDKA_SPISOK,
 				func:function(v) {
 					$('#ze-gn').gnGet('skidka', v);
 				}

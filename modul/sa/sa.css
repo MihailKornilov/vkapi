@@ -99,6 +99,28 @@
 #sa-client-pole .ed{padding-top:4px}
 
 
+#sa-client-category{margin:10px 10px 50px}
+#sa-client-category .headName{margin:0 0 10px}
+#sa-client-category .edit{margin-right:10px;color:red}
+#sa-client-category .hd{
+	font:22px Verdana;
+	margin:10px 0 1px;
+	padding:6px 10px;
+	background:#ded;
+	color:#282;
+}
+#sa-client-category .hd button{float:right;margin:4px 0 0 8px}
+#sa-client-category ._sort{margin-bottom:40px}
+#sa-client-category .show{background:#ffc}
+#sa-client-category .name{font-weight:bold}
+#sa-client-category .label{font-weight:bold;color:#999;margin-bottom:3px}
+#sa-client-category .about{font-size:10px;color:#888;white-space:pre-line}
+#sa-client-category .ed{width:35px}
+
+
+
+
+
 /* заявки */
 #sa-zayav{margin:10px 20px}
 #sa-zayav .headName{margin:0 0 10px}

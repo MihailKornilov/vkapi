@@ -1168,6 +1168,8 @@ button.vk.grey:hover{background-color:#999}
 .mar20{margin:20px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}
+.mb10{margin-bottom:10px}
+.mb20{margin-bottom:20px}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 .b{font-weight:bold}
@@ -1177,6 +1179,7 @@ button.vk.grey:hover{background-color:#999}
 .dn{display:none}
 .vh{visibility:hidden}
 .center{text-align:center}
+.fr{float:right}
 
 /* Курсоры */
 .curM{cursor:move}
