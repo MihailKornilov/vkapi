@@ -990,7 +990,7 @@ function _zayav_spisok($v) {
 		if($filter['tovar_place_id'])
 			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
 
-		if($filter['gn_nomer_id']) {
+		if($filter['gn_nomer_id'] && !$filter['client_id']) {
 			//дополнительное условие по номеру полосы
 			$polosaCond = '';
 			if($filter['gn_polosa'])
@@ -1819,7 +1819,7 @@ function _zayavInfo() {
 	 ($z['about'] ? '<div class="_info">'._br($z['about']).'</div>' : '').
 
 					'<table id="tab">'.
-	 ($z['client_id'] ? '<tr><td class="label">Клиент:<td>'._clientVal($z['client_id'], 'go') : '').
+	 ($z['client_id'] ? '<tr><td class="label top">Клиент:<td>'._clientVal($z['client_id'], 'go') : '').
 
 	                _zayavUnit46($z, $zpu).
 					_zayavUnit43($z).
@@ -2056,7 +2056,7 @@ function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 	$send .= '</table>';
 
 	return
-		'<tr><td class="label">Номера выпуска:<td>'.
+		'<tr><td colspan="2" class="label">Номера выпуска:<td>'.
 		'<tr><td colspan="2">'.$send;
 }
 function _zayavDogovor($z) {//отображение номера договора

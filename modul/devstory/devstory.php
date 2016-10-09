@@ -209,7 +209,9 @@ function _devstory_task() {
 function _devstory_task_spisok() {
 	$sql = "SELECT
 				*,
-				0 `keyword`
+				0 `keyword`,
+				0 `min`,
+				0 `day`
 			FROM `_devstory_task`
 			WHERE !`deleted`
 			ORDER BY `dtime_add` DESC";
@@ -222,17 +224,30 @@ function _devstory_task_spisok() {
 			WHERE `task_id` IN ("._idsGet($spisok).")
 			ORDER BY `id`";
 	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
+	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['task_id']]['keyword'] .= ','.$r['keyword_id'];
-	}
-
-
 
 	//есть ли выполняющаяся задача. Если есть, то невозможно запускать другие задачи на выполнение
 	$sql = "SELECT COUNT(*)
 			FROM `_devstory_task`
 			WHERE `status_id`=1";
 	$started = query_value($sql);
+
+	//количество дней, потраченное на выполнение задачи
+	$sql = "SELECT
+				`task_id`,
+				COUNT(*) `day`
+			FROM (
+				SELECT
+					`task_id`
+				FROM `_devstory_time`
+				WHERE `task_id` IN ("._idsGet($spisok).")
+				GROUP BY `task_id`,SUBSTRING(`time_start`,1,10)
+			) `dt`
+			GROUP BY `task_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['task_id']]['day'] = $r['day'];
 
 	$send = '';
 	foreach($spisok as $r) {
@@ -250,6 +265,8 @@ function _devstory_task_spisok() {
 							'<div class="about">'._br($r['about']).'</div>'.
 						'<td class="td-status top w150">'.
 							'<div class="st center">'._devstoryStatus($r['status_id']).'</div>'.
+
+							_devstory_task_spent($r).
 
 	(SA && $r['status_id'] == 0 && !$started ?
 								'<a class="st-action start">начать выполнение</a>'
@@ -269,7 +286,23 @@ function _devstory_task_spisok() {
 
 	return $send;
 }
+function _devstory_task_spent($r) {//отображение затраченного времени для каждой задачи
+	if(!$r['spent'])
+		return '';
 
+	$hour = floor($r['spent'] / 60);
+	$min = $r['spent'] - $hour * 60;
+	$min = $min < 10 ? '0'.$min : $min;
+	$hour = $hour ? '<b>'.$hour.'</b> ч. ' : '';
+
+	return
+	'<table class="bs5">'.
+		'<tr><td class="label r">Затрачено'.
+			'<td>'.$hour.'<b>'.$min.'</b> мин.'.
+		'<tr><td class="label r">в течение'.
+			'<td><b>'.$r['day'].'</b> '._end($r['day'], 'дня', 'дней').'.'.
+	'</table>';
+}
 
 
 

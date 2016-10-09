@@ -52,13 +52,13 @@
 #devstory .td-status{border-left:#eee solid 1px}
 #devstory .task-u .st{font-size:15px;margin:8px 0 10px}
 /* статус: в процессе */
-#devstory .status1 .pp{background:#f5f5d5}
-#devstory .status1 .td-status{background:#ffd}
-#devstory .status1 .st{color:#883}
+#devstory .status1 .pp{background:#fcc}
+#devstory .status1 .td-status{background:#fee}
+#devstory .status1 .st{color:#a33}
 /* статус: пауза */
-#devstory .status2 .pp{background:#d5f5f5}
-#devstory .status2 .td-status{background:#dff}
-#devstory .status2 .st{color:#388}
+#devstory .status2 .pp{background:#f5f5d5}
+#devstory .status2 .td-status{background:#ffd}
+#devstory .status2 .st{color:#883}
 /* статус: выполнено */
 #devstory .status3 .pp{background:#d5f5d5}
 #devstory .status3 .td-status{background:#dfd}

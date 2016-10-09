@@ -230,7 +230,7 @@ function _clientPoleInfo($id, $v=array()) {//ассоциативный массив HTML используе
 		case 7://email
 			if(empty($v['email']))
 				return '';
-			return '<tr><td class="label">{label}:<td>'.$v['email'];
+			return '<tr><td class="label wsnw">{label}:<td>'.$v['email'];
 
 		case 8://ИНН
 			if(empty($v['inn']))
