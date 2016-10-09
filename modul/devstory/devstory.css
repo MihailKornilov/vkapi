@@ -52,9 +52,9 @@
 #devstory .td-status{border-left:#eee solid 1px}
 #devstory .task-u .st{font-size:15px;margin:8px 0 10px}
 /* статус: в процессе */
-#devstory .status1 .pp{background:#fcc}
-#devstory .status1 .td-status{background:#fee}
-#devstory .status1 .st{color:#a33}
+#devstory .status1 .pp{background:#ccf}
+#devstory .status1 .td-status{background:#eef}
+#devstory .status1 .st{color:#33a}
 /* статус: пауза */
 #devstory .status2 .pp{background:#f5f5d5}
 #devstory .status2 .td-status{background:#ffd}
