@@ -49,6 +49,42 @@
 	background:#eff;
 	color:#555;
 }
+
+/* затраченное время по дням в графическом формате */
+#devstory .task-u .spent{position:relative}
+#devstory .task-u .spent .head{position:relative;z-index:11}
+#devstory .task-u .spent:not(:hover) .period{display:none}
+#devstory .task-u .period{
+	position:absolute;
+	right:5px;
+	top:-5px;
+	width:530px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	background:#ffe;
+	padding:55px 10px 10px;
+	z-index:10;
+}
+#devstory .task-u .period-hour td{
+	width:19px;
+	text-align:center;
+	font-size:10px;
+	color:#999;
+}
+#devstory .task-u .period-hour .line{
+	border-bottom:#ccc solid 1px;
+	border-right:#ccc solid 1px;
+	height:4px;
+}
+#devstory .task-u .period-hour .line.first{width:18px;border-left:#ccc solid 1px}
+#devstory .task-u .graf{
+	display:inline-block;
+	height:20px;
+	border:#ddd;
+	background:#f1f1f1;
+}
+#devstory .task-u .active{background:#aea;cursor:pointer}
+#devstory .task-u .active:hover{background:#9d9}
+
 #devstory .td-status{border-left:#eee solid 1px}
 #devstory .task-u .st{font-size:15px;margin:8px 0 10px}
 /* статус: в процессе */

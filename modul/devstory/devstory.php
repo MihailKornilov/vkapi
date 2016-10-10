@@ -210,8 +210,8 @@ function _devstory_task_spisok() {
 	$sql = "SELECT
 				*,
 				0 `keyword`,
-				0 `min`,
-				0 `day`
+				0 `day`,
+				'' `period`
 			FROM `_devstory_task`
 			WHERE !`deleted`
 			ORDER BY `dtime_add` DESC";
@@ -248,6 +248,45 @@ function _devstory_task_spisok() {
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['task_id']]['day'] = $r['day'];
+
+	//список периодов выполнения по дням (для графического представления)
+	$sql = "SELECT *
+			FROM `_devstory_time`
+			WHERE `task_id` IN ("._idsGet($spisok).")
+			ORDER BY `id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$start = explode(' ', $r['time_start']);
+		if(empty($spisok[$r['task_id']]['period'][$start[0]]))
+			$spisok[$r['task_id']]['period'][$start[0]] = array();
+
+		$end = explode(' ', $r['time_end']);
+
+		$hour = floor($r['spent'] / 60);
+		$min = $r['spent'] - $hour * 60;
+		$min = $min < 10 ? '0'.$min : $min;
+		$hour = $hour ? $hour.' ч. ' : '';
+		$msg = $hour.$min.' мин.<br />'.substr($start[1], 0, 5).' - '.substr($end[1], 0, 5);
+
+
+		if($start[0] != $end[0]) {
+			$spisok[$r['task_id']]['period'][$start[0]][] = array(
+				'start' => $start[1],
+				'end' => '23:59:59',
+				'msg' => $msg
+			);
+			$spisok[$r['task_id']]['period'][$end[0]][] = array(
+				'start' => '00:00:00',
+				'end' => $end[1],
+				'msg' => $msg
+			);
+		} else
+			$spisok[$r['task_id']]['period'][$start[0]][] = array(
+				'start' => $start[1],
+				'end' => $end[1],
+				'msg' => $msg
+			);
+	}
 
 	$send = '';
 	foreach($spisok as $r) {
@@ -295,13 +334,75 @@ function _devstory_task_spent($r) {//отображение затраченного времени для каждой
 	$min = $min < 10 ? '0'.$min : $min;
 	$hour = $hour ? '<b>'.$hour.'</b> ч. ' : '';
 
+	$period = '';
+	if(!empty($r['period']) && $r['status_id'] != 4) {
+		$period = '<div class="period">'.
+					'<table class="bs5">';
+
+		$period .= '<tr><td><td>'.
+					'<table class="period-hour"><tr>';
+		for($n = 0; $n < 24; $n++)
+			$period .= '<td>'.$n;
+
+		$period .= '<tr>';
+		for($n = 0; $n < 24; $n++)
+			$period .= '<td class="line'.(!$n ? ' first' : '').'">';
+
+		$period .= '</table>';
+
+		foreach($r['period'] as $day => $i) {
+			$period .= '<tr><td class="label r">'.FullData($day, 1, 1).
+						   '<td>';
+
+			$full = 480;
+			foreach($i as $key => $k) {
+				//пустота в начале
+				if(!$key && $k['start'] != '00:00:00') {
+					$ex = explode(':', $k['start']);
+					$w = round(($ex[0] * 60 + intval($ex[1])) / 3);
+					$period .= '<div class="graf" style="width:'.$w.'px"></div>';
+					$full -= $w;
+				}
+
+				//активное действие
+				$ex = explode(':', $k['start']);
+				$start = round(($ex[0] * 60 + intval($ex[1])) / 3);
+				$ex = explode(':', $k['end']);
+				$end = round(($ex[0] * 60 + intval($ex[1])) / 3);
+				$w = $end - $start;
+				$period .= '<div style="width:'.$w.'px" class="graf active'._tooltip($k['msg'], -76, 'r', 1).'</div>';
+				$full -= $w;
+
+				//пустота в центре
+				if(isset($i[$key + 1])) {
+					$ex = explode(':', $k['end']);
+					$start = round(($ex[0] * 60 + intval($ex[1])) / 3);
+					$ex = explode(':', $i[$key + 1]['start']);
+					$end = round(($ex[0] * 60 + intval($ex[1])) / 3);
+					$w = $end - $start;
+					$period .= '<div class="graf" style="width:'.$w.'px"></div>';
+					$full -= $w;
+				}
+
+				//пустота в конце
+				if($key == count($i) - 1 && $k['end'] != '23:59:59')
+					$period .= '<div class="graf" style="width:'.$full.'px"></div>';
+			}
+		}
+
+		$period .= '</table></div>';
+	}
+
 	return
-	'<table class="bs5">'.
-		'<tr><td class="label r">Затрачено'.
-			'<td>'.$hour.'<b>'.$min.'</b> мин.'.
-		'<tr><td class="label r">в течение'.
-			'<td><b>'.$r['day'].'</b> '._end($r['day'], 'дня', 'дней').'.'.
-	'</table>';
+	'<div class="spent">'.
+		$period.
+		'<table class="bs5 curP head">'.
+			'<tr><td class="label r">Затрачено'.
+				'<td>'.$hour.'<b>'.$min.'</b> мин.'.
+			'<tr><td class="label r">в течение'.
+				'<td><b>'.$r['day'].'</b> '._end($r['day'], 'дня', 'дней').'.'.
+		'</table>'.
+	'</div>';
 }
 
 
