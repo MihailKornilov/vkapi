@@ -122,11 +122,11 @@ function zpPrint($sheet, $list) {
 	define('SUMBUK', $buk[$n]);//буква где стоит сумма
 
 	define('COLLAST', $buk[count($pole) - 1]);//буква последней колонки
-	define('ABOUTBUK', $buk[count($pole)]);//буква - описание вычетов и авансов
+	define('ABOUTBUK', $buk[count($pole) - 1]);//буква - описание вычетов и авансов
 
 	$line = 1;
 
-	$sheet->setCellValue('A'.$line, LIST_VYDACI.' №'.$list['nomer'].': '.utf8(_monthDef(LIST_MON)).' '.LIST_YEAR);
+	$sheet->setCellValue('A'.$line, utf8(LIST_VYDACI).' №'.$list['nomer'].': '.utf8(_monthDef(LIST_MON)).' '.LIST_YEAR);
 	$sheet->mergeCells('A'.$line.':'.COLLAST.$line);
 	$sheet->getStyle('A'.$line)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 	$sheet->getStyle('A'.$line)->getFont()->setBold(true);

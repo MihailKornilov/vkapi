@@ -1013,6 +1013,7 @@ function _arrayTimeGroup($arr, $spisok=array()) {//группировка массива по ключу 
 		$key = strtotime($r['dtime_add']);
 		while(isset($send[$key]))
 			$key++;
+		$r['id'] = $key;
 		$send[$key] = $r;
 	}
 	return $send;
