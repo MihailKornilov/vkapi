@@ -186,6 +186,9 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 );
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
+	if(!SA && APP_ID == 2881875 && @$_GET['p'] != 'kupezz')
+		header('Location:'.URL.'&p=kupezz');
+
 	switch(@$_GET['p']) {
 		case 'main': return _menuMain();
 		case 'client': _menuAccess(1); return _clientCase();
@@ -199,7 +202,7 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 		case 'print':  _print_document(); exit;
 		case 'sa':
 			if(!SA) {
-				header('Location:'.URL);
+				header('Location:'.URL.'&p=setup');
 				exit;
 			}
 			if(!empty($_GET['d'])) {
@@ -212,7 +215,12 @@ function _global_index() {//пути переходов по ссылкам глобальных разделов
 				case 'historycat':  return sa_history_cat();
 			}
 
-		case 'kupezz': return kupezz_index();
+		case 'kupezz':
+			if(APP_ID != 2881875) {
+				header('Location:'.URL.'&p=setup');
+				exit;
+			}
+			return kupezz_index();
 	}
 
 	return '';

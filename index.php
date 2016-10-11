@@ -5,7 +5,11 @@ require_once 'view/_vk.php';
 header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 
 
+
 _const();               //установка основных констант
+
+//if(!SA) _appError('Вход в приложение будет недоступен некоторое время');
+
 _appAuth();             //получение данных о приложении, проверка авторизации
 _setup_global();
 _pinCheck();
