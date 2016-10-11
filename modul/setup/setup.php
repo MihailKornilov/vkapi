@@ -831,11 +831,11 @@ function setup_zayav_expense_spisok() {
 
 function setup_salary_list() {
 	if(!_viewerMenuAccess(22))
-		return _err('Недостаточно прав: листы выдачи з/п.');
+		return _err('Недостаточно прав: '.LIST_VYDACI.'.');
 
 	return
 	'<div id="setup_salary_list">'.
-		'<div class="headName">Настройка листа выдачи з/п</div>'.
+		'<div class="headName">'.LIST_VYDACI.': настройка</div>'.
 		'<div class="spisok">'.setup_salary_list_spisok().'</div>'.
 		'<div class="center mt20"><button class="vk">Сохранить</button></div>'.
 	'</div>';
@@ -859,7 +859,7 @@ function setup_salary_list_spisok() {
 
 	$send =
 	'<table class="_spisok">'.
-		'<tr><th class="name">Название столбца листа выдачи'.
+		'<tr><th class="name">Название столбца в документе XLS'.
 	'</table>'.
 	'<dl class="_sort no">';
 	foreach($pole as $id => $name)

@@ -2102,8 +2102,10 @@ function _schetValToList($arr) {//данные о счёте, подставляемые в список
 			$ids[$r['schet_id']] = 1;
 			$arrIds[$r['schet_id']][] = $key;
 		}
+
 	if(empty($ids))
 		return $arr;
+
 	$sql = "SELECT
 	            *
 			FROM `_schet`
@@ -2287,6 +2289,9 @@ function _schetPayCorrect($schet_id) {//поправка в счёте суммы платежей, которые
 	query($sql);
 }
 function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка заявок
+	if(empty($zayav))
+		return array();
+
 	$sql = "SELECT *
 			FROM `_schet`
 			WHERE `app_id`=".APP_ID."
@@ -2297,6 +2302,7 @@ function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка зая
 		$form = _schetValForm($r);
 		$zayav[$r['zayav_id']]['schet'] .= $form['schet_link'];
 	}
+
 	return $zayav;
 }
 

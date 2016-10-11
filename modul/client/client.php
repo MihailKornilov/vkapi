@@ -1148,6 +1148,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 	$refund = query_value($sql);
 
 	//Ќомера газет
+	$gn = 0;
 	$sql = "SELECT `id`
 			FROM `_zayav`
 			WHERE `client_id`=".$client_id."

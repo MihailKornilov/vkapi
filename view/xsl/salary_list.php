@@ -163,6 +163,7 @@ function zpPrint($sheet, $list) {
 			WHERE `app_id`=".APP_ID."
 			  AND `salary_list_id`=".LIST_ID;
 	$accrual = query_arr($sql);
+	$accrual = _zayavValToList($accrual);
 
 	$sql = "SELECT
 				`id`,
@@ -174,14 +175,13 @@ function zpPrint($sheet, $list) {
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `salary_list_id`=".LIST_ID;
-	$zayav = query_arr($sql);
+	$ze = query_arr($sql);
+	$ze = _zayavValToList($ze);
 
 	$spisok = _arrayTimeGroup($accrual);
-	$spisok += _arrayTimeGroup($zayav, $spisok);
+	$spisok += _arrayTimeGroup($ze, $spisok);
 
-	$spisok = _zayavValToList($spisok);
 	$spisok = _dogovorValToList($spisok);
-
 
 	krsort($spisok);
 	$start = $line;

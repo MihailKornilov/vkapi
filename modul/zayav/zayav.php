@@ -1045,7 +1045,6 @@ function _zayav_spisok($v) {
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
-				  AND `status_id`
 				  AND `nomer`=".$nomer."
 				LIMIT 1";
 		if($r = query_assoc($sql)) {
@@ -1145,6 +1144,9 @@ function _zayav_spisok($v) {
 	return $send;
 }
 function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заявок
+	if(empty($arr))
+		return array();
+
 	$ids = implode(',', array_keys($arr));
 
 	$zn = array(); //ассоциация: id заметки -> id заявки
@@ -1821,14 +1823,15 @@ function _zayavInfo() {
 					'<table id="tab">'.
 	 ($z['client_id'] ? '<tr><td class="label top">Клиент:<td>'._clientVal($z['client_id'], 'go') : '').
 
-	                _zayavUnit46($z, $zpu).
-					_zayavUnit43($z).
+	                _zayavUnit46($z, $zpu). //размер
+					_zayavUnit43($z).       //рубрика
 
 				(isset($zpu[47]) && $z['count'] ?
 			            '<tr><td class="label">Количество:<td><b>'.$z['count'].'</b> шт.'
 				: '').
 
 						_zayav_tovar_several($z).
+		 ($z['phone'] ? '<tr><td class="label">'.(isset($zpu[37]) ? $zpu[37]['name'] : 'Тел.').':<td>'.$z['phone'] : '').
 		 ($z['adres'] ? '<tr><td class="label">Адрес:<td>'.$z['adres'] : '').
 	($z['dogovor_id'] ? '<tr><td class="label">Договор:<td>'._zayavDogovor($z) : '').
 	  ($z['pay_type'] ? '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']) : '').

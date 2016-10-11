@@ -1132,7 +1132,7 @@ switch(@$_POST['op']) {
 					   '<br />';
 
 		$send['html'] = utf8(
-			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
+			'<div>app: '.APP_ID.' - '._app('app_name').'</div>'.
 			'<div>Различия: '.count($client).'</div>'.
 			'<br />'.
 			$spisok
@@ -1484,7 +1484,7 @@ switch(@$_POST['op']) {
 		$spisok .= '</table>';
 
 		$send['html'] = utf8(
-			'<div>app: '.APP_ID.' - '._app('name').'</div>'.
+			'<div>app: '.APP_ID.' - '._app('app_name').'</div>'.
 			'<br />'.
 			'<div>Товары с ошибками: <b>'.count($tovar).'</b></div>'.
 			'<br />'.
@@ -1757,7 +1757,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 */
-
 }
 
 function sa_history_ids_insert($type_id, $ids) {//внесение категорий типам истории действий

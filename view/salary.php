@@ -601,7 +601,7 @@ function salary_worker_list($v) {
 	$payNoAvans = query_value($sql);
 
 	$send =
-		'<h3><b>Листы выдачи з/п</b></h3>'.
+		'<h3><b>'.LIST_VYDACI.'</b></h3>'.
 		'<table class="_spisok">'.
 			'<tr><th>Наименование'.
 				'<th>Начислено'.

@@ -1584,7 +1584,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 
 	$zpu = $v['zpu'];
 
-	$name = '';
+	$name = $z['name'];
 
 	if(isset($zpu[1]))
 		$name = $v['name'];
@@ -1604,6 +1604,9 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 
 	if(!$name && isset($zpu[23]))
 		$name = 'Картриджи';
+
+	if(!$name && $z['service_id'])
+		$name = _service('name', $z['service_id']).' '.$z['nomer'];
 
 	if(!$name)
 		$name = 'Заявка #'.$z['nomer'];
