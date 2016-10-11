@@ -3141,7 +3141,8 @@ function _zayavExpenseDopVal($r) {//значение дополнительного поля
 	if($r['tovar_id']) {
 		$arr = _tovarValToList(array($r['id']=>$r));
 		$r = $arr[$r['id']];
-		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'._ms($r['tovar_count']).'</b>' : ': '.$r['tovar_count']).' '.$r['tovar_measure_name'];
+		$count = _ms($r['tovar_count']);
+		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'.$count.'</b>' : ': '.$count).' '.$r['tovar_measure_name'];
 	}
 
 	if($r['attach_id']) {
