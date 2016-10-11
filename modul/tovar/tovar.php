@@ -354,7 +354,8 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 	if($ids = _idsGet($tovar, 'tovar_id_set')) {
 		$sql = "SELECT *
 				FROM `_tovar`
-				WHERE `id` IN (".$ids.")";
+				WHERE `id` IN (".$ids.")
+				  AND !`deleted`";
 		if($set = query_arr($sql))
 			foreach($tovar as $id => $r) {
 				if(!$r['tovar_id_set'])
@@ -551,9 +552,9 @@ function _tovarDelAccess($r) {//разрешение на удаление товара
 	if(!$r['app_id'])
 		return 'Товар был создан не в этом приложении';
 
-	$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `id`=".$r['tovar_id_set'];
-	if(query_value($sql))
-		return 'Этот товар применяется к другому товару';
+//	$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `id`=".$r['tovar_id_set'];
+//	if(query_value($sql))
+//		return 'Этот товар применяется к другому товару';
 
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `tovar_id`=".$tovar_id;
 	if(query_value($sql))
@@ -1425,7 +1426,8 @@ function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 
 	$sql = "SELECT *
 			FROM `_tovar`
-			WHERE `tovar_id_set`=".$tovar['id'];
+			WHERE `tovar_id_set`=".$tovar['id']."
+			  AND !`deleted`";
 	if(!$spisok = query_arr($sql))
 		return '';
 

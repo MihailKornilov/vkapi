@@ -2527,7 +2527,8 @@ function _zayavInfoTovar($z) {//информация о товаре
 function _zayavInfoTovarSet($tovar_id) {//список запчастей для товара заявки
 	$sql = "SELECT *
 			FROM `_tovar`
-			WHERE `tovar_id_set`=".$tovar_id;
+			WHERE `tovar_id_set`=".$tovar_id."
+			  AND !`deleted`";
 	if(!$arr = query_arr($sql))
 		return '';
 
