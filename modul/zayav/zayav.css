@@ -5,7 +5,13 @@
 	vertical-align:top;
 }
 #_zayav #find{margin-top:15px}
-#_zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
+#_zayav .right{
+	width:155px;
+	border:0;
+	padding-bottom:150px;
+	padding-left:0;
+	height:1200px;
+}
 #_zayav .rightLink b{float:right}
 #_zayav ._check{margin-top:10px}
 

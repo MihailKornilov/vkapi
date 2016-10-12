@@ -21,10 +21,11 @@
 #money-income #deleted_check{margin-top:15px}
 #money-income #deleted_only_check{margin-top:7px;display:none}
 #money-income #path{margin:10px}
-#money-income #summa{margin-bottom:7px}
 #money-income #spisok{margin:0 10px 10px}
 #money-income .income-client{font-size:10px;color:#777}
 #money-income .income-client a{font-size:10px}
+#money-income ._empty{margin-top:20px}
+#income-invoice-sum{width:350px}
 
 ._income-unit.prepay{background-color:#ffe}
 ._income-unit.ref{background-color:#fee}

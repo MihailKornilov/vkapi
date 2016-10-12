@@ -131,7 +131,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 				'pub' => FullData($r['day_public'], 1, 1, 1),
 				'pc' => $r['polosa_count'],
 				'pub_count' => '',  //количество выпусков для конкретного вида деятельности
-				'lost' => strtotime($r['day_print']) < time() //прошедший номер
+				'lost' => strtotime($r['day_public']) < time() //прошедший номер
 			);
 		xcache_set($key, $arr, 86400);
 	}
@@ -225,7 +225,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 			return 0;
 
 		foreach($arr as $n => $r) {
-			if(strtotime($r['day_print']) < time())
+			if(strtotime($r['day_public']) < time())
 				continue;
 			return $n;
 		}

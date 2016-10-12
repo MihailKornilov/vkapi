@@ -391,7 +391,35 @@ function income_path($data) {//путь с датой
 		(MON ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.YEAR.'">'.YEAR.'</a> » ' : '<b>'.YEAR.'</b>').
 		(DAY ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
 		(DAY ? '<b>'.intval(DAY).$to.'</b>' : '').
-		'<a class="_income-add add">Внести платёж</a>';
+		'<button class="vk fr _income-add">Внести платёж</button>';
+}
+function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёту
+	$sql = "SELECT
+				`invoice_id` `id`,
+				COUNT(`id`) `count`,
+				SUM(`sum`) `sum`
+			FROM `_money_income`
+			WHERE ".$data['cond']."
+			GROUP BY `invoice_id`
+			ORDER BY `invoice_id`";
+	if(!$arr = query_arr($sql))
+		return '';
+
+	$send = '<table class="_spisok l w400 mb10">';
+	foreach($arr as $r) {
+		$send .=
+			'<tr>'.
+				'<td class="type">'._invoice($r['id']).
+				'<td class="w50 center">'.$r['count'].
+				'<td class="w100 r">'._sumSpace($r['sum'], 1);
+	}
+	$send .=
+		'<tr><td class="r"><b>Всего:</b>'.
+			'<td class="center"><b>'.$data['all'].'</b>'.
+			'<td class="r"><b>'._sumSpace($data['sum'], 1).'</b>';
+	$send .= '</table>';
+
+	return $send;
 }
 function income_day($day) {
 	$data = income_spisok(array('period'=>$day));
@@ -479,12 +507,11 @@ function income_spisok($filter=array()) {
 	$money = _dogovorValToList($money);
 	$money = _tovarValToList($money);
 
+	$send['cond'] = $cond;
+
 	$send['spisok'] = $filter['page'] != 1 ? '' :
 		$filter['js'].
-		'<div id="summa">'.
-			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').
-			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
-		'</div>'.
+		income_invoice_sum($send).
 		'<table class="_spisok">'.
 			'<tr><th>Сумма'.
 				'<th>Описание'.
