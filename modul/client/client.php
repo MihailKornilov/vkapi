@@ -742,7 +742,7 @@ function _regFilter($v) {//проверка регулярного выражения на недопустимые символ
 		return '';
 	return '/('.$v.')/iu';
 }
-function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром поиске на русском и английском языках
+function _findRegular($find, $v, $empty=0, $noSpace=0) {//проверка и выделение при быстром поиске на русском и английском языках
 	$engRus = _engRusChar($find);
 	$reg = _regFilter($find);
 
@@ -751,6 +751,10 @@ function _findRegular($find, $v, $empty=0) {//проверка и выделение при быстром п
 	$send = _findMatch($reg, $v, 1);
 	if(!$send)
 		$send = _findMatch($regEngRus, $v, 1);
+
+	if(!$send && $noSpace)
+		if(@preg_match($reg, preg_replace( '/\s+/', '', $v)))
+			$send = $v;
 
 	if(!$empty && !$send)
 		return $v;

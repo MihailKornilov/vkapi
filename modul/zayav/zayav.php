@@ -857,11 +857,9 @@ function _zayav_list($v=array()) {
 				'<td class="right">'.
 					'<button class="vk fw" onclick="_zayavEdit('.$v['service_id'].')">Ќова€ за€вка</button>'.
 					_zayavPoleFilter($v).
-	(VIEWER_ADMIN ? '<div class="nofind'.$v['nofind'].'">'.
-						_check('deleted', '+ удалЄнные за€вки', $v['deleted'], 1).
-						'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
-							_check('deleted_only', 'только удалЄнные', $v['deleted_only'], 1).
-						'</div>'.
+	(VIEWER_ADMIN ? _check('deleted', '+ удалЄнные за€вки', $v['deleted'], 1).
+					'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
+						_check('deleted_only', 'только удалЄнные', $v['deleted_only'], 1).
 					'</div>'
 	: '').
 		'</table>'.
@@ -919,15 +917,44 @@ function _zayav_spisok($v) {
 		$cond .= " AND `executer_id`=".VIEWER_ID;
 
 	define('SROK', $filter['finish'] != '0000-00-00');
+	define('FIND', !empty($filter['find']));
 
 	$nomer = 0;
 
-	$FIND = !empty($filter['find']);
 
-	if($FIND) {
+	if(FIND) {
 		$engRus = _engRusChar($filter['find']);
-		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
-			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
+
+		$cond .= " AND (`find` LIKE '%".$filter['find']."%'
+					OR `about` LIKE '%".$filter['find']."%'
+					OR `phone` LIKE '%".$filter['find']."%'
+					OR `adres` LIKE '%".$filter['find']."%'
+
+					OR REPLACE(`phone`,' ','') LIKE '%".$filter['find']."%'
+					".
+			($engRus ?
+				  " OR `find` LIKE '%".$engRus."%'
+					OR `about` LIKE '%".$engRus."%'
+					OR `phone` LIKE '%".$engRus."%'
+					OR `adres` LIKE '%".$engRus."%'
+				  "
+			: '').")";
+		
+		//просмотр услови€ быстрого поиска в клиентах в пол€х: name, phone
+		$sql = "SELECT `id`
+				FROM `_client`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				   AND (`name` LIKE '%".$filter['find']."%' OR `phone` LIKE '%".$filter['find']."%')";
+		if($client_ids = query_ids($sql)) {
+			$sql = "SELECT DISTINCT `id`
+					FROM `_zayav`
+					WHERE `app_id`=".APP_ID."
+					  AND `client_id` IN (".$client_ids.")";
+			$zayav_ids = query_ids($sql);
+			$cond .= " OR `id` IN (".$zayav_ids.")";
+		}
+
 		if($filter['page'] == 1)
 			$nomer = _num($filter['find']);
 	} else {
@@ -1015,16 +1042,16 @@ function _zayav_spisok($v) {
 			$cond .= " AND `id` IN (".$zayav_ids.")";
 		}
 
-		if(VIEWER_ADMIN) {
-			if($filter['deleted']) {
-				if($filter['deleted_only'])
-					$cond .= " AND `deleted`";
-			} else
-				$cond .= " AND !`deleted`";
-		}
-
 		if(!SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
 			$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
+	}
+
+	if(VIEWER_ADMIN) {
+		if($filter['deleted']) {
+			if($filter['deleted_only'])
+				$cond .= " AND `deleted`";
+		} else
+			$cond .= " AND !`deleted`";
 	}
 
 	$sql = "SELECT
@@ -1119,7 +1146,16 @@ function _zayav_spisok($v) {
 			continue;
 		$r['sum_accrual'] = round($r['sum_accrual']);
 		$r['sum_pay'] = round($r['sum_pay']);
-		$r['name'] = $FIND ? _findRegular($filter['find'], $r['name']) : $r['name'];
+		if(FIND) {
+			$r['name'] = _findRegular($filter['find'], $r['name']);
+			$r['about'] = _findRegular($filter['find'], $r['about']);
+
+			if(!$phone = _findRegular($filter['find'], $r['phone'], 1))
+				$phone = _findRegular($filter['find'], $r['phone'], 1, 1);
+			$r['phone'] = $phone;
+
+			$r['adres'] = _findRegular($filter['find'], $r['adres'], 1);
+		}
 
 		$zayav[$r['id']] = $r;
 	}
@@ -1559,7 +1595,7 @@ function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
 /*
 
 		//подсветка номера договора при быстром поиске
-		if($FIND && $r['dogovor_id'])
+		if(FIND && $r['dogovor_id'])
 			$r['dogovor_line'] = _findRegular($filter['find'], $r['dogovor_line']);
 
 
@@ -1586,6 +1622,8 @@ function _zayavPoleUnit($zpu, $z, $filter) {//пол€ единицы списка за€вок
 			'</div>';
 	}
 
+	if(FIND && !$filter['client_id'] && $z['client_id'])
+		$z['client_go'] = _findRegular($filter['find'], $z['client_go']);
 
 	return
 	'<div class="_zayav-unit'.$deleted.'"'.
@@ -1612,6 +1650,7 @@ function _zayavPoleUnit($zpu, $z, $filter) {//пол€ единицы списка за€вок
 			_zayavUnit46($z, $zpu). //размер
 			_zayavUnit49($z, $zpu). //количество
 			_zayavUnit50($z, $zpu, $filter). //полоса
+	 (FIND && $z['phone'] ? '<tr><td class="label">“елефон:<td>'.$z['phone'] : '').
 			 ($z['adres'] ? '<tr><td class="label top">јдрес:<td>'.$z['adres'] : '').
 	         ($z['schet'] ? '<tr><td class="label topi">—чета:<td>'.$z['schet'] : '').
 				'</table>'.
@@ -1641,7 +1680,7 @@ function _zayavUnit44($z, $zpu) {//единица списка за€вки: текст
 		return '';
 	if(empty($z['about']))
 		return '';
-	return '<tr><td class="label top">“екст:<td><div class="about">'.$z['about'].'</div>';
+	return '<tr><td class="label topi">“екст:<td><div class="about">'.$z['about'].'</div>';
 }
 function _zayavUnit46($z, $zpu) {//единица списка за€вки: размер
 	if(!isset($zpu[46]))
@@ -1673,6 +1712,7 @@ function _zayavUnit50($z, $zpu, $filter) {//единица списка за€вки: полоса (газет
 		'<tr><td class="label">ѕолоса:'.
 			'<td>'.
 				'<b>'.$gn['week'].'</b> ('.$gn['general_nomer'].') '.
+	($z['gn_polosa_id'] ?
 				'<div class="polosa-rek'.($gn['lost'] ? ' lost' : '').'">'.
 					$z['gn_polosa_name'].
 		(_polosa($z['gn_polosa_id'], 'polosa') ?
@@ -1681,7 +1721,8 @@ function _zayavUnit50($z, $zpu, $filter) {//единица списка за€вки: полоса (газет
 							'val="'.$z['gn_zgn_id'].'" '.
 							'class="zayav-polosa-nomer" '.
 							'value="'.$z['gn_polosa_nomer'].'" />'
-		: '').
+		: '')
+	: '').
 				'</div>'.
 				'<b>'.$z['gn_polosa_cena'].'</b> руб.';
 }
@@ -2054,7 +2095,9 @@ function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 				'<td class="dtime">'.$gn['pub'].
 				'<td class="cena r">'.round($r['cena'], 2).
 				($zpu[48]['v1'] ? '<td class="dop">'._obDop($r['dop']) : '').
-				($zpu[48]['v2'] ? '<td class="dop">'._polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-€' : '') : '');
+				($zpu[48]['v2'] ?
+					'<td class="dop">'.($r['dop'] ? _polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-€' : '') : '')
+				: '');
 	}
 	$send .= '</table>';
 

@@ -68,6 +68,8 @@
 	padding:2px 4px;
 	display:inline-block;
 }
+._zayav-unit .about em{font:14px Times New Roman}
+
 /* Номер и дата */
 ._zayav-unit .zd{
 	position:absolute;
