@@ -171,7 +171,10 @@ function _attach_spisok($v=array()) {// список клиентов
 	$ze = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$spisok[$r['attach_id']]['ze'] = 1;
-		$ze[$r['attach_id']] = array('zayav_id'=>$r['zayav_id']);
+		$ze[$r['attach_id']] = array(
+			'id' => $r['attach_id'],
+			'zayav_id' => $r['zayav_id']
+		);
 	}
 	$ze = _zayavValToList($ze);
 
