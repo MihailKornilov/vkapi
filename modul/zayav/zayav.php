@@ -940,12 +940,12 @@ function _zayav_spisok($v) {
 				  "
 			: '').")";
 		
-		//просмотр условия быстрого поиска в клиентах в полях: name, phone
+		//просмотр условия быстрого поиска в клиентах в полях: name
 		$sql = "SELECT `id`
 				FROM `_client`
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
-				   AND (`name` LIKE '%".$filter['find']."%' OR `phone` LIKE '%".$filter['find']."%')";
+				   AND`name` LIKE '%".$filter['find']."%'";
 		if($client_ids = query_ids($sql)) {
 			$sql = "SELECT DISTINCT `id`
 					FROM `_zayav`
