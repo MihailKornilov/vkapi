@@ -453,6 +453,38 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'RULE_WORKER_SALARY_VIEW'://видит з/п сотрудников
+		if(!RULE_SETUP_RULES)
+			jsonError();
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError();
+
+		$new = _num($_POST['v']);
+
+		$old = _viewerRule($viewer_id, 'RULE_WORKER_SALARY_VIEW');
+
+		if($old == $new)
+			jsonError();
+
+		_workerRuleQuery($viewer_id, 'RULE_WORKER_SALARY_VIEW', $new);
+
+		$arr = array(
+			0 => 'нет',
+			1 => 'только свою',
+			2 => 'всех сотрудников'
+		);
+
+		_history(array(
+			'type_id' => 1012,
+			'worker_id' => $viewer_id,
+			'v1' => '<table>'.
+						_historyChange('Видит з/п', $arr[$old], $arr[$new]).
+					'</table>'
+		));
+
+		jsonSuccess();
+		break;
 	case 'setup_history_view_worker_all'://видимость истории действий для всех сотрудников
 		if(!RULE_SETUP_RULES)
 			jsonError();

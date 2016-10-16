@@ -1682,6 +1682,10 @@ $(document)
 				spisok:RULE_HISTORY_SPISOK,
 				func:setupRuleCheck
 			});
+			$('#RULE_WORKER_SALARY_VIEW')._dropdown({
+				spisok:[{uid:0,title:"нет"},{uid:1,title:"только свою"},{uid:2,title:"всех сотрудников"}],
+				func:setupRuleCheck
+			});
 			$('#RULE_INVOICE_HISTORY')._check(setupRuleCheck);
 			$('#RULE_INVOICE_TRANSFER')._dropdown({
 				spisok:RULE_INVOICE_TRANSFER_SPISOK,

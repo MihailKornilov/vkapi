@@ -3,6 +3,9 @@ function _salary() {
 	if(_num(@$_GET['id']))
 		return salary_worker($_GET);
 
+	if(RULE_WORKER_SALARY_VIEW == 1)
+		return salary_worker(array('id'=>VIEWER_ID));
+
 	return
 		'<div id="salary">'.
 			'<div class="headName">Зарплата сотрудников</div>'.
@@ -22,6 +25,7 @@ function _salary_spisok() {
 			WHERE `app_id`=".APP_ID."
 			  AND `worker`
 			  AND !`hidden`
+			  ".(RULE_WORKER_SALARY_VIEW == 1 ? " AND `viewer_id`=".VIEWER_ID : '')."
 			ORDER BY `dtime_add`";
 	$worker = query_arr($sql);
 
@@ -319,6 +323,9 @@ function salary_worker($v) {
 
 	if(!$r = _viewerWorkerQuery($filter['id']))
 		return _err('Сотрудника не существует.');
+
+	if(RULE_WORKER_SALARY_VIEW == 1 && $filter['id'] != VIEWER_ID)
+		return _err('Нет прав для просмотра.');
 
 	define('WORKER_OK', true);//для вывода фильтра
 

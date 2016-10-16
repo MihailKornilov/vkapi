@@ -220,8 +220,10 @@ function setup_worker_rule($viewer_id) {
 				'<tr id="tr-rule-setup"'.(_viewerMenuAccess(5, $viewer_id) ? '' : ' class="dn"').'>'.
 					'<td class="label top"><b>Доступ к настройкам:</b>'.
 					'<td id="td-rule-setup">'._setup_worker_rule_menu_setup($viewer_id, $rule).
-				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить права всех сотрудников', -20).'Видит историю действий</a>:'.
+				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить для всех сотрудников', -20).'Видит историю действий</a>:'.
 					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
+				'<tr><td class="label">Видит з/п:'.
+					'<td><input type="hidden" id="RULE_WORKER_SALARY_VIEW" value="'.$rule['RULE_WORKER_SALARY_VIEW'].'" />'.
 				'<tr><td><td>'.
 
 				'<tr><td><td><b>Деньги</b>'.

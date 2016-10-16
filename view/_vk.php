@@ -577,6 +577,13 @@ function _report() {
 			$d = 'remind';
 	}
 
+	if(!RULE_WORKER_SALARY_VIEW) {
+		unset($pages['salary']);
+		if($d == 'salary')
+			$d = 'remind';
+	}
+
+
 	$rightLink = '<div class="rightLink">';
 	if($pages)
 		foreach($pages as $p => $name)
@@ -601,9 +608,13 @@ function _report() {
 			$right .= _remind('right');
 			break;
 		case 'salary':
+			if(!RULE_WORKER_SALARY_VIEW)
+				break;
 			$left = _salary();
 			if(defined('WORKER_OK')) {
 				$filter = salaryFilter($_GET);
+				if(RULE_WORKER_SALARY_VIEW == 1)
+					$filter['id'] = VIEWER_ID;
 				$right =
 					'<div id="salary-filter">'.
 						'<input type="hidden" id="year" value="'.$filter['year'].'" />'.
