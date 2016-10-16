@@ -2114,7 +2114,7 @@ $(document)
 							'<h1>Перевод между счетами</h1>' +
 							'<h2>Перевести денежные средства на другой расчётный счёт.</h2>' +
 						'</div>' +
-				(VIEWER_ADMIN ?
+				(VIEWER_ADMIN || RULE_SETUP_INVOICE ?
 					(balans ?
 						'<div class="u" val="2">' +
 							'<h1>Внести деньги на счёт</h1>' +

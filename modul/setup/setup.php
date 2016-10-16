@@ -165,6 +165,8 @@ function setup_worker_rule($viewer_id) {
 					'<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="vklink">—траница з/п</a>'.
 		'</table>'.
 
+		setup_worker_rule_val($viewer_id).
+
 		'<div class="headName">ƒанные сотрудника</div>'.
 		'<table class="rtab">'.
 			'<tr><td class="lab">‘амили€:<td><input type="text" id="last_name" value="'.$u['viewer_last_name'].'" />'.
@@ -239,6 +241,30 @@ function setup_worker_rule($viewer_id) {
 
 	'</div>';
 
+}
+function setup_worker_rule_val($viewer_id) {//список всех возможных переменных прав сотрудника
+	if(!SA)
+		return '';
+
+	$sql = "SELECT *
+			FROM `_vkuser_rule`
+			WHERE `app_id`=".APP_ID."
+			  AND `viewer_id`=".$viewer_id."
+			ORDER BY `key`";
+	$spisok = '<table class="_spisok dn l">';
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$spisok .=
+			'<tr><td>'.$r['key'].
+				'<td class="w50 center">'.($r['value'] ? $r['value'] : '');
+	}
+	$spisok .= '</table>';
+
+	return
+	'<div class="mt10">'.
+		'<a class="fr mb10" onclick="$(this).next().toggle()">SA: переменные прав</a>'.
+		$spisok.
+	'</div>';
 }
 function _setup_worker_rule_menu($viewer_id) {//вывод разделов меню с галочками
 	$send = '';

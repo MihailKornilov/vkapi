@@ -1419,6 +1419,7 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 
 function invoice() {//страница со списком счетов и переводами между счетами
 	return
+	'<script>var RULE_SETUP_INVOICE='.RULE_SETUP_INVOICE.';</script>'.
 	'<div id="money-invoice">'.
 		'<div class="headName">'.
 			'Расчётные счета'.
