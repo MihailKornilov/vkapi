@@ -18,6 +18,8 @@
 /* —рок выполнени€ за€вки */
 #_zayav .zayav-srok{float:right}
 
+#_zayav #ob_onpay_check{margin-top:20px;color:red}
+
 /* —сылка на объ€влени€ в формате Word */
 #obWordPrint{display:inline-block;margin-top:20px}
 #obWordPrint .img_word{margin-bottom:-3px}

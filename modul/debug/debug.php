@@ -102,7 +102,7 @@ function _pre_arr($v) {// проверка, является ли переменная массивом. Если да, то
 }
 
 function jsonDebugParam() {//возвращение дополнительных параметров json, если включен debug
-	if(!DEBUG)
+	if(!@DEBUG)
 		return array();
 
 	global $sqlQuery, $sqlTime;

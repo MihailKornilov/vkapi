@@ -69,7 +69,7 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "SELECT
-					`word`.`id`,
+					DISTINCT `word`.`id`,
 					`name`
 				FROM
 					`_devstory_keyword` `word`,
@@ -233,24 +233,26 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_devstory_task`
 				WHERE `id`=".$task_id."
-				  AND `status_id`=1";
+				  AND `status_id` IN(1,2)";
 		if(!$r = query_assoc($sql))
 			jsonError();
 
-		$sql = "SELECT *
-				FROM `_devstory_time`
-				WHERE `task_id`=".$task_id."
-				  AND `time_end`='0000-00-00 00:00:00'";
-		if(!$tm = query_assoc($sql))
-			jsonError();
+		if($r['status_id'] == 1) {
+			$sql = "SELECT *
+					FROM `_devstory_time`
+					WHERE `task_id`=".$task_id."
+					  AND `time_end`='0000-00-00 00:00:00'";
+			if(!$tm = query_assoc($sql))
+				jsonError();
 
-		$spent = round((strtotime($time) - strtotime($tm['time_start'])) / 60);
+			$spent = round((strtotime($time) - strtotime($tm['time_start'])) / 60);
 
-		$sql = "UPDATE `_devstory_time`
-				SET `time_end`='".addslashes($time)."',
-					`spent`=".$spent."
-				WHERE `id`=".$tm['id'];
-		query($sql);
+			$sql = "UPDATE `_devstory_time`
+					SET `time_end`='".addslashes($time)."',
+						`spent`=".$spent."
+					WHERE `id`=".$tm['id'];
+			query($sql);
+		}
 
 		$sql = "UPDATE `_devstory_task`
 				SET `status_id`=3

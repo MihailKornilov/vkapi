@@ -1883,6 +1883,7 @@ $(document)
 		$('#find')._search('clear');    ZAYAV.find = '';
 		$('#sort')._radio(1);           ZAYAV.sort = 1;
 		$('#desc')._check(0);           ZAYAV.desc = 0;
+		$('#ob_onpay')._check(0);       ZAYAV.ob_onpay = 0;
 		$('#zayav-status-filter').removeClass('us');ZAYAV.status = 0;
 
 		$('#finish').zayavSrok('0000-00-00');ZAYAV.finish = '0000-00-00';
@@ -2203,6 +2204,7 @@ $(document)
 				.inp(ZAYAV.find);
 			$('#sort')._radio(_zayavSpisok);
 			$('#desc')._check(_zayavSpisok);
+			$('#ob_onpay')._check(_zayavSpisok);
 			$('#status').rightLink(_zayavSpisok);
 
 			$('#finish').zayavSrok({

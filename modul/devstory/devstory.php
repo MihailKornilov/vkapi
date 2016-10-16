@@ -295,7 +295,7 @@ function _devstory_task_spisok() {
 				'<div class="pp">'.
 			  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').
 					'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-					'<b>'._devstoryPart($r['part_id']).'</b>'.
+					'<b class="part_name">'._devstoryPart($r['part_id']).'</b>'.
 					_devstoryKeyword('task', $r['keyword']).
 				'</div>'.
 				'<table class="w100p">'.
@@ -312,9 +312,10 @@ function _devstory_task_spisok() {
 	: '').
 
 	(SA && $r['status_id'] == 1 ? '<a class="st-action pause">приостановить</a>' : '').
-	(SA && $r['status_id'] == 1 ? '<a class="st-action ready">выполнено</a>' : '').
+	(SA && $r['status_id'] == 1 ? '<a class="st-action ready"><b>выполнено</b></a>' : '').
 
 	(SA && $r['status_id'] == 2 && !$started ? '<a class="st-action next">продолжить</a>' : '').
+	(SA && $r['status_id'] == 2 ? '<a class="st-action ready from-pause"><b>выполнено</b></a>' : '').
 
 	(SA && $r['status_id'] == 1 ? '<a class="st-action cancel red">отменить</a>' : '').
 	(SA && $r['status_id'] == 2 ? '<a class="st-action cancel red">отменить</a>' : '').

@@ -787,6 +787,7 @@ function _zayavFilter($v) {
 		'find' => '',
 		'sort' => 1,
 		'desc' => 0,
+		'ob_onpay' => 0,
 		'status' => 0,
 		'finish' => '0000-00-00',
 		'executer_id' => 0,
@@ -813,6 +814,7 @@ function _zayavFilter($v) {
 		'find' => trim(@$v['find']),
 		'sort' => _num(@$v['sort']) ? _num(@$v['sort']) : 1,
 		'desc' => _bool(@$v['desc']),
+		'ob_onpay' => _bool(@$v['ob_onpay']),
 		'status' => _num(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
 		'executer_id' => intval(@$v['executer_id']),
@@ -958,92 +960,96 @@ function _zayav_spisok($v) {
 		if($filter['page'] == 1)
 			$nomer = _num($filter['find']);
 	} else {
-		if($filter['client_id'])
-			$cond .= " AND `client_id`=".$filter['client_id'];
-		if($filter['status'])
-			$cond .= " AND `status_id`=".$filter['status'];
-		if(SROK)
-			$cond .= " AND `srok`='".$filter['finish']."' AND `status_id` IN ("._zayavStatus('srok_ids').")";
-		if($filter['paytype'])
-			$cond .= " AND `pay_type`=".$filter['paytype'];
-		if($filter['noschet'])
-			$cond .= " AND !`schet_count`";
-		if($filter['executer_id'])
-			$cond .= " AND `executer_id`=".($filter['executer_id'] < 0 ? 0 : $filter['executer_id']);
-		if($filter['nofile']) {
-			//получение id расходов по за€вке из настроек, к которым прикрепл€етс€ файл
-			$sql = "SELECT `id`
-					FROM `_zayav_expense_category`
-					WHERE `app_id`=".APP_ID."
-					  AND `dop`=4";
-			if($zeIds = query_ids($sql)) {
-				//id за€вок, к которым прикреплены файлы
-				$sql = "SELECT DISTINCT(`zayav_id`)
-						FROM `_zayav_expense`
+		if($filter['ob_onpay'])
+			$cond .= " AND `onpay_checked`=2";
+		else {
+			if($filter['client_id'])
+				$cond .= " AND `client_id`=".$filter['client_id'];
+			if($filter['status'])
+				$cond .= " AND `status_id`=".$filter['status'];
+			if(SROK)
+				$cond .= " AND `srok`='".$filter['finish']."' AND `status_id` IN ("._zayavStatus('srok_ids').")";
+			if($filter['paytype'])
+				$cond .= " AND `pay_type`=".$filter['paytype'];
+			if($filter['noschet'])
+				$cond .= " AND !`schet_count`";
+			if($filter['executer_id'])
+				$cond .= " AND `executer_id`=".($filter['executer_id'] < 0 ? 0 : $filter['executer_id']);
+			if($filter['nofile']) {
+				//получение id расходов по за€вке из настроек, к которым прикрепл€етс€ файл
+				$sql = "SELECT `id`
+						FROM `_zayav_expense_category`
 						WHERE `app_id`=".APP_ID."
-						  AND `category_id` IN (".$zeIds.")";
-				$zayav_ids = query_ids($sql);
+						  AND `dop`=4";
+				if($zeIds = query_ids($sql)) {
+					//id за€вок, к которым прикреплены файлы
+					$sql = "SELECT DISTINCT(`zayav_id`)
+							FROM `_zayav_expense`
+							WHERE `app_id`=".APP_ID."
+							  AND `category_id` IN (".$zeIds.")";
+					$zayav_ids = query_ids($sql);
 
-				//инверси€
-				$cond .= " AND `id` NOT IN (".$zayav_ids.")";
-			}
-		}
-
-		if($filter['noattach'])
-			$cond .= " AND !`attach_id` AND !`attach_cancel`";
-		if($filter['noattach1'])
-			$cond .= " AND !`attach1_id` AND !`attach1_cancel`";
-
-		if($filter['tovar_name_id']) {
-			$sql = "SELECT DISTINCT `zayav_id`
-					FROM `_zayav_tovar` `zt`,
-						`_tovar` `t`
-					WHERE `zt`.`app_id`=".APP_ID."
-					  AND `t`.`id`=`zt`.`tovar_id`
-					  AND `t`.`name_id`=".$filter['tovar_name_id'];
-			$zayav_ids = query_ids($sql);
-			$cond .= " AND `id` IN (".$zayav_ids.")";
-		}
-
-		if($filter['tovar_id']) {
-			$sql = "SELECT DISTINCT `zayav_id`
-					FROM `_zayav_tovar`
-					WHERE `app_id`=".APP_ID."
-					  AND `tovar_id`=".$filter['tovar_id'];
-			$zayav_ids = query_ids($sql);
-			$cond .= " AND `id` IN (".$zayav_ids.")";
-		}
-
-		if($filter['tovar_place_id'])
-			$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
-
-		if($filter['gn_nomer_id'] && !$filter['client_id']) {
-			//дополнительное условие по номеру полосы
-			$polosaCond = '';
-			if($filter['gn_polosa'])
-				switch($filter['gn_polosa']) {
-					case 1: $polosaCond = " AND `dop`=1"; break;  //перва€
-					case 102: $polosaCond = " AND `dop`=2"; break;//последн€€
-					case 103: $polosaCond = " AND `dop`=3"; break;//¬нутренн€€ чЄрно-бела€
-					case 104: $polosaCond = " AND `dop`=4"; break;//¬нутренн€€ цветна€
-					case 105: $polosaCond = " AND `dop` IN (3,4) AND !`polosa`"; break;//¬нутренн€€ (номер полосы не указан)
-					default:
-						$polosaCond = " AND `polosa`=".$filter['gn_polosa'];
-						if($filter['gn_polosa_color'])
-							$polosaCond .= " AND `dop`=".$filter['gn_polosa_color'];
+					//инверси€
+					$cond .= " AND `id` NOT IN (".$zayav_ids.")";
 				}
+			}
 
-			$sql = "SELECT DISTINCT `zayav_id`
-					FROM `_zayav_gazeta_nomer`
-					WHERE `app_id`=".APP_ID."
-					  AND `gazeta_nomer_id`=".$filter['gn_nomer_id'].
-					  $polosaCond;
-			$zayav_ids = query_ids($sql);
-			$cond .= " AND `id` IN (".$zayav_ids.")";
+			if($filter['noattach'])
+				$cond .= " AND !`attach_id` AND !`attach_cancel`";
+			if($filter['noattach1'])
+				$cond .= " AND !`attach1_id` AND !`attach1_cancel`";
+
+			if($filter['tovar_name_id']) {
+				$sql = "SELECT DISTINCT `zayav_id`
+						FROM `_zayav_tovar` `zt`,
+							`_tovar` `t`
+						WHERE `zt`.`app_id`=".APP_ID."
+						  AND `t`.`id`=`zt`.`tovar_id`
+						  AND `t`.`name_id`=".$filter['tovar_name_id'];
+				$zayav_ids = query_ids($sql);
+				$cond .= " AND `id` IN (".$zayav_ids.")";
+			}
+
+			if($filter['tovar_id']) {
+				$sql = "SELECT DISTINCT `zayav_id`
+						FROM `_zayav_tovar`
+						WHERE `app_id`=".APP_ID."
+						  AND `tovar_id`=".$filter['tovar_id'];
+				$zayav_ids = query_ids($sql);
+				$cond .= " AND `id` IN (".$zayav_ids.")";
+			}
+
+			if($filter['tovar_place_id'])
+				$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
+
+			if($filter['gn_nomer_id'] && !$filter['client_id']) {
+				//дополнительное условие по номеру полосы
+				$polosaCond = '';
+				if($filter['gn_polosa'])
+					switch($filter['gn_polosa']) {
+						case 1: $polosaCond = " AND `dop`=1"; break;  //перва€
+						case 102: $polosaCond = " AND `dop`=2"; break;//последн€€
+						case 103: $polosaCond = " AND `dop`=3"; break;//¬нутренн€€ чЄрно-бела€
+						case 104: $polosaCond = " AND `dop`=4"; break;//¬нутренн€€ цветна€
+						case 105: $polosaCond = " AND `dop` IN (3,4) AND !`polosa`"; break;//¬нутренн€€ (номер полосы не указан)
+						default:
+							$polosaCond = " AND `polosa`=".$filter['gn_polosa'];
+							if($filter['gn_polosa_color'])
+								$polosaCond .= " AND `dop`=".$filter['gn_polosa_color'];
+					}
+
+				$sql = "SELECT DISTINCT `zayav_id`
+						FROM `_zayav_gazeta_nomer`
+						WHERE `app_id`=".APP_ID."
+						  AND `gazeta_nomer_id`=".$filter['gn_nomer_id'].
+						  $polosaCond;
+				$zayav_ids = query_ids($sql);
+				$cond .= " AND `id` IN (".$zayav_ids.")";
+			}
+
+			if(!SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
+				$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 		}
-
-		if(!SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
-			$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 	}
 
 	if(VIEWER_ADMIN) {
@@ -1572,7 +1578,9 @@ function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
 		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=print&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('Ќомер не определЄн', 5).
 				'<div class="img_word"></div>'.
 				'открыть в формате Word'.
-			  '</a>'
+			  '</a>',
+
+		55 => _zayavObOnpay($v)
 	);
 
 	$send = '';
@@ -1585,8 +1593,10 @@ function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
 			continue;
 
 		$unit = str_replace('{label}', $r['name'], $pole[$pole_id]);
+
 		if($pole_id != 17 && $pole_id != 18)
 			$unit = '<div class="nofind'.$v['nofind'].'">'.$unit.'</div>';
+
 		$send .= $unit;
 	}
 
@@ -1753,6 +1763,18 @@ function _zayavTovarIds($service_id) {
 			  AND `z`.`service_id`=".$service_id;
 	return query_ids($sql);
 }
+function _zayavObOnpay($v) {
+	$sql = "SELECT COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `onpay_checked`=2";
+	if(!$count = query_value($sql))
+		return '';
+
+	return _check('ob_onpay', '{label} (<b>'.$count.'</b>)', $v['ob_onpay']);
+}
+
 
 /* »нформаци€ о за€вке */
 function _zayavQuery($zayav_id, $withDel=0) {

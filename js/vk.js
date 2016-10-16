@@ -2390,6 +2390,8 @@ $.fn._rubric = function(o) {//вывод селектов для выбора рубрики и подрубрики
 		return;
 
 	o = $.extend({
+		w_rub:100,//длина селекта рубрики
+		w_sub:100,//длина селекта подрубрики
 		func:function() {}
 	}, o);
 
@@ -2397,7 +2399,7 @@ $.fn._rubric = function(o) {//вывод селектов для выбора рубрики и подрубрики
 		sub = $('#' + attr_id + '_sub');
 
 	rub._select({
-		width:100,
+		width:o.w_rub,
 		title0:'не выбрана',
 		spisok:RUBRIC_SPISOK,
 		func:function(id) {
@@ -2414,7 +2416,7 @@ $.fn._rubric = function(o) {//вывод селектов для выбора рубрики и подрубрики
 	function subPrint(id) {
 		if(RUBRIC_SUB_SPISOK[id]) {
 			sub._select({
-				width:153,
+				width:o.w_sub,
 				title0:'подрубрика не выбрана',
 				spisok:RUBRIC_SUB_SPISOK[id],
 				func:function() {
@@ -2892,16 +2894,19 @@ $(document)
 	.ready(function() {
 		FB = $('#frameBody');
 		FH = $('#frameHidden');
-		_fbhs();
 
-		window.frameHidden.onresize = _fbhs;
+		if(FB.length) {
+			_fbhs();
 
-		sortable();
+			window.frameHidden.onresize = _fbhs;
 
-		VK.callMethod('scrollWindow', _scroll());
+			sortable();
 
-		VK.callMethod('scrollSubscribe');
-		VK.addCallback('onScroll', function(top) {
-			VK_SCROLL = top;
-		});
+			VK.callMethod('scrollWindow', _scroll());
+
+			VK.callMethod('scrollSubscribe');
+			VK.addCallback('onScroll', function(top) {
+				VK_SCROLL = top;
+			});
+		}
 	});

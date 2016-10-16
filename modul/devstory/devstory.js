@@ -114,14 +114,26 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 		}
 	},
 	devStoryTaskAction = function(p, o) {//действие над задачей
-		var html =
+		var d = new Date(),
+			mon = d.getMonth() + 1,
+			day = d.getDate(),
+			hour = d.getHours(),
+			min = d.getMinutes(),
+			sec = d.getSeconds(),
+			dtime = d.getFullYear() + '-' +
+					(mon < 10 ? '0' : '') + mon + '-' +
+					(day < 10 ? '0' : '') + day + ' ' +
+					(hour < 10 ? '0' : '') + hour + ':' +
+					(min < 10 ? '0' : '') + min + ':' +
+					(sec < 10 ? '0' : '') + sec,
+			html =
 				'<table class="bs10">' +
 					'<tr><td class="label r w70">Раздел:' +
-						'<td>' + p.find('.part_name').val() +
-							' » ' + p.find('.part_sub_name').val() +
-					'<tr><td class="label r">Задача:<td><b>' + p.find('.name').html() + '</b>' +
-					'<tr><td class="label r">Время:' +
-						'<td><input type="text" id="time" class="w125" value="' + DTIME + '" />' +
+						'<td><u>' + p.find('.part_name').html() + '</u>' +
+					'<tr><td class="label r top">Задача:<td><b>' + p.find('.name').html() + '</b>' +
+					'<tr' + (o.from_pause ? ' class="dn"' : '') + '>' +
+						'<td class="label r">Время:' +
+						'<td><input type="text" id="time" class="w125" value="' + dtime + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:420,
@@ -196,9 +208,10 @@ $(document)
 			o = {
 				head:'Задача выполнена',
 				but:'Выполнено',
-				op:'ready'
+				op:'ready',
+				from_pause:t.hasClass('from-pause')
 			};
-			devStoryTaskAction(p, o);
+		devStoryTaskAction(p, o);
 	})
 	.on('click', '#devstory .st-action.cancel', function() {
 		var t = $(this),
@@ -210,6 +223,3 @@ $(document)
 			};
 			devStoryTaskAction(p, o);
 	});
-
-
-
