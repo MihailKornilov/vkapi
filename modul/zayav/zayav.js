@@ -710,6 +710,69 @@ var _zayavSpisok = function(v, id) {
 		return _zayavExecuter();
 	},
 
+	_zayavOnpayPublic = function() {
+		var html =
+				'<div>' +
+					'Прежде чем разрешить публикацию объявления, проверьте следующие параметры:<br /><br />' +
+					'1. Объявление не должно содержать ошибок.<br />' +
+					'2. Объявление должно выполнять условия размещения.<br />' +
+					'3. Должен быть зачислен платёж от Onpay.' +
+					'' +
+				'</div>',
+			dialog = _dialog({
+				head:'Проверка интернет-объявления',
+				content:html,
+				butSubmit:'Разрешить публикацию',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'zayav_onpay_public',
+				zayav_id:ZI.id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Объявление проверено');
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	_zayavOnpayPublicNo = function() {
+		var html =
+				'<div>' +
+					'Объявление не будет удалено.' +
+					'<br />' +
+					'Оно не попадёт ни в один из номеров газеты, пока публикация не будет разрешена.' +
+				'</div>',
+			dialog = _dialog({
+				head:'Проверка интернет-объявления',
+				content:html,
+				butSubmit:'Запретить публикацию',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'zayav_onpay_public_no',
+				zayav_id:ZI.id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
 	_zayavDogovor2 = function() {//договор для оказания услуг
 		DOG.template_id = 2;
 		_zayavDogovorCreate();

@@ -203,7 +203,8 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_zayav`
-				SET `deleted`=1
+				SET `deleted`=1,
+					`onpay_checked`=0
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -250,6 +251,53 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8($data['spisok']);
 		$send['gn_year_spisok'] = _gn('arr_year_spisok', $data['filter']);
 		jsonSuccess($send);
+		break;
+
+	case 'zayav_onpay_public':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError('Некорректный id заявки');
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError('Заявки id:'.$zayav_id.' не существует');
+
+		if($z['onpay_checked'] != 2 && $z['onpay_checked'] != 3)
+			jsonError('Объявление не нуждается в разрешении на публикацию');
+
+		$sql = "UPDATE `_zayav`
+				SET `onpay_checked`=1
+				WHERE `id`=".$zayav_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 104,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id
+		));
+
+		jsonSuccess();
+		break;
+	case 'zayav_onpay_public_no':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError('Некорректный id заявки');
+
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError('Заявки id:'.$zayav_id.' не существует');
+
+		if($z['onpay_checked'] != 2)
+			jsonError('Объявление не нуждается в разрешении на публикацию');
+
+		$sql = "UPDATE `_zayav`
+				SET `onpay_checked`=3
+				WHERE `id`=".$zayav_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 131,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id
+		));
+
+		jsonSuccess();
 		break;
 
 	case 'zayav_status':

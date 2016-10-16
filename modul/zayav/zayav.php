@@ -1292,8 +1292,7 @@ function _zayavObWord() {//Печать объявлений в формате Word
 				`z`.`phone`,
 				`z`.`adres`,
 				IFNULL(`dop`.`name`,'') `dop`,
-				`z`.`viewer_id_add`,
-				`z`.`onpay_checked`
+				`z`.`viewer_id_add`
 			FROM `_zayav_gazeta_nomer` `pub`
 				LEFT JOIN `_setup_gazeta_nomer` `sgn` ON `sgn`.`id`=`pub`.`gazeta_nomer_id`
 				LEFT JOIN `_zayav` AS `z` ON `pub`.`zayav_id`=`z`.`id`
@@ -1303,6 +1302,7 @@ function _zayavObWord() {//Печать объявлений в формате Word
 			WHERE `pub`.`app_id`=".APP_ID."
 			  AND `pub`.`gazeta_nomer_id`=".$gn."
 			  AND `z`.`service_id`=".$service_id."
+			  AND `z`.`onpay_checked` NOT IN (2,3)
 			ORDER BY
 			    `rub`.`sort`,
 			    `sub`.`sort`,
@@ -1314,10 +1314,6 @@ function _zayavObWord() {//Печать объявлений в формате Word
 	$rub = '';   // Контроль рубрик
 	$sub = '';// Контроль подрубрик
 	foreach($spisok as $r) {
-		// Проверка, оплачено ли интернет-объявление
-		if($r['viewer_id_add'] == VIEWER_ONPAY && !$r['onpay_checked'])
-			continue;
-
 		// Если рубрика изменилась, то печать
 		if ($rub != $r['rub']) {
 			$rub = $r['rub'];
@@ -1925,6 +1921,26 @@ function _zayavInfo() {
 						_zayavInfoGazetaNomer($z, $zpu).
 
 					'</table>'.
+
+					($z['onpay_checked'] == 2 ?
+						'<div class="onpay _info">'.
+							'Данное объявление будет публиковаться в печатном формате<br />только после проверки.'.
+							'<br />'.
+							'<br />'.
+							'<button class="vk" onclick="_zayavOnpayPublic()">Разрешить публикацию</button>'.
+							'&nbsp;&nbsp;&nbsp;&nbsp;'.
+							'<button class="vk red" onclick="_zayavOnpayPublicNo()">Не разрешать</button>'.
+						'</div>'
+					: '').
+
+					($z['onpay_checked'] == 3 ?
+						'<div class="onpay _info">'.
+							'Публикация объявленя была <b>запрещена</b>.'.
+							'<br />'.
+							'<br />'.
+							'<button class="vk" onclick="_zayavOnpayPublic()">Разрешить публикацию</button>'.
+						'</div>'
+					: '').
 
 					'<div id="added">'.
 						'Заявку '._viewerAdded($z['viewer_id_add']).' '.

@@ -363,6 +363,11 @@
 #_zayav-info tr#lost-count:hover{background:#F9F9F9}
 #_zayav-info .gn tr.lost{background:#F9F9F9;display:none}
 #_zayav-info .gn tr.lost td{color:#777}
+#_zayav-info .onpay{
+	margin:10px 120px;
+	text-align:center;
+	padding:15px;
+}
 
 
 
