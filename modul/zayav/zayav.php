@@ -242,6 +242,15 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 		return key($arr);
 	}
 
+	if($nomer == 'gn_max') {
+		if(empty($arr))
+			return 0;
+
+		end($arr);
+		$id = key($arr);
+		return $arr[$id]['general_nomer'] + 1;
+	}
+
 	//неизвестный номер
 	if(!isset($arr[$nomer]))
 		return _cacheErr('неизвестный номер газеты', $nomer);

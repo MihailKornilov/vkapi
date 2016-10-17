@@ -1407,12 +1407,8 @@ function setup_oblen() {//Купец: стоимость длины объявления
 
 function setup_gn() {
 	define('CURRENT_YEAR', strftime('%Y', time()));
-	$sql = "SELECT MAX(`general_nomer`)+1
-			FROM `_setup_gazeta_nomer`
-			WHERE `app_id`=".APP_ID;
-	$gnMax = query_value($sql);
 	return
-	'<script>var GN_MAX="'.$gnMax.'";</script>'.
+	'<script>var GN_MAX="'._gn('gn_max').'";</script>'.
 	'<div id="setup_gn">'.
 		'<div class="headName">'.
 			'Номера выпусков газеты'.
@@ -1462,7 +1458,7 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 				'<th>';
 	$cur = time() - 86400;
 	while($r = mysql_fetch_assoc($q)) {
-		$grey = $cur > strtotime($r['day_print']) ? 'grey' : '';
+		$grey = _gn($r['id'], 'lost') ? 'grey' : '';
 		$edit = $gnedit == $r['general_nomer'] ? ' edit' : '';
 		$class = $grey || $edit ? ' class="'.$grey.$edit.'"' : '';
 		$send .= '<tr'.$class.'>'.

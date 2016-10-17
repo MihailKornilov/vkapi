@@ -1400,7 +1400,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gn');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['year'] = utf8(setup_gn_year($year));
 		$send['html'] = utf8(setup_gn_spisok($year));
@@ -1417,7 +1417,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gn');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['year'] = utf8(setup_gn_year($year));
 		$send['html'] = utf8(setup_gn_spisok($year));
@@ -1464,7 +1464,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gn');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['year'] = utf8(setup_gn_year($year));
 		$send['html'] = utf8(setup_gn_spisok($year, $general_nomer));
@@ -1513,7 +1513,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gn');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['year'] = utf8(setup_gn_year($year));
 		$send['html'] = utf8(setup_gn_spisok($year, $general_nomer));
@@ -1534,7 +1534,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gn');
-//		GvaluesCreate();
+		_appJsValues();
 
 		jsonSuccess();
 		break;
