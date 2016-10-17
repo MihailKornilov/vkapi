@@ -986,14 +986,22 @@ function expense_spisok($v=array()) {
 				'<th>Дата'.
 				'<th>';
 
-	foreach($expense as $r)
+	foreach($expense as $r) {
+		//todo временно, на удаление. Вера может удалять расходы в Евроокнах
+		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
+			$r['del'] = 1;
+
 		$send['spisok'] .=
 			'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 				'<td class="sum"><b>'._sumSpace($r['sum']).'</b>'.
 				'<td>'.expenseAbout($r).
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'.
-					($r['category_id'] != 1 ? _iconEdit($r)._iconDel($r) : '');
+					($r['category_id'] != 1 ?
+						_iconEdit($r).
+						_iconDel($r)
+					: '');
+	}
 
 	$send['spisok'] .= _next($filter + array(
 			'all' => $all,

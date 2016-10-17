@@ -746,6 +746,7 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError('Расхода не существует');
 
+		if(APP_ID == 3978722 && VIEWER_ID == 172136415) {} else //todo временно, на удаление. Вера может удалять расходы в Евроокнах
 		if(TODAY != substr($r['dtime_add'], 0, 10))
 			jsonError('Время для удаления расхода истекло');
 
