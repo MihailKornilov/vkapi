@@ -1411,6 +1411,14 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 	$tovar = _zayavTovarValue($zayav_id);
 	$zpu = _zayavPole($service_id, 1);
 
+	//получение размера скидки
+	$skidka = 0;
+	if($zayav_id)
+		$skidka = $z['skidka'];
+	else if($client_id)
+		$skidka = _clientVal($client_id, 'skidka');
+
+
 	$pole = array(
 		1 => '<tr><td class="label">{label}'.
 				 '<td><input type="text" id="ze-name" value="'.@$z['name'].'" />',
@@ -1493,7 +1501,7 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 			  '<tr><td colspan="2"><input type="hidden" id="ze-gn" />',
 
 		39 => '<tr><td class="label">{label}'.
-				  '<td><input type="hidden" id="ze-skidka" value="'.@$z['skidka'].'" />',
+				  '<td><input type="hidden" id="ze-skidka" value="'.$skidka.'" />',
 
 		40 => '<tr><td class="label">{label}'.
 				   '<td><input type="hidden" id="ze-rubric_id" value="'.@$z['rubric_id'].'" />'.
@@ -2048,6 +2056,12 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 			$class = ' class="nopaid"';
 		else $class = ' class="paid"';
 
+	//получение суммы скидки
+	$sql = "SELECT SUM(`skidka_sum`)
+			FROM `_zayav_gazeta_nomer`
+			WHERE `zayav_id`=".$z['id'];
+	$skidka_sum = round(query_value($sql), 2);
+
 	return
 	'<table id="pay-tab"'.$class.'>'.
 		'<tr>'.
@@ -2061,6 +2075,10 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 			'<td class="acc">'.
 				'<div class="grey">Начислено</div>'.
 				($z['sum_accrual'] ? _sumSpace($z['sum_accrual']) : '').
+				($skidka_sum ?
+					'<div class="grey mt5">Скидка '.$z['skidka'].'%</div>'.
+					'<div class="grey"><b>'._sumSpace($skidka_sum).'</b> руб.</div>'
+				: '').
 
 			'<td class="pay">'.
 				'<div class="grey">Оплачено</div>'.

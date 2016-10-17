@@ -35,6 +35,7 @@ switch(@$_POST['op']) {
 				$unit['content'] = utf8($name.'<span>'.$phone.'</span>');
 			if($adres)
 				$unit['adres'] = utf8($adres);
+			$unit['skidka'] = _num($r['skidka']);
 			$send['spisok'][] = $unit;
 		}
 		jsonSuccess($send);

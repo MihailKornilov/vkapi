@@ -113,6 +113,10 @@ var _zayavSpisok = function(v, id) {
 						client_adres = uid ? item.adres : '';
 						if(_num($('#client-adres').val()))
 							$('#ze-adres').val(client_adres);
+						if($('#ze-skidka').length) {
+							$('#ze-skidka')._select(item.skidka);
+							$('#ze-gn').gnGet('skidka', item.skidka);
+						}
 					}
 				});
 
@@ -366,16 +370,14 @@ var _zayavSpisok = function(v, id) {
 					_msg();
 					_scroll('set', 'u' + res.id);
 					location.href = URL + '&p=zayav&d=info&id=' + res.id;
-				} else {
-					dialog.abort();
-					dialog.err(res.text);
-				}
+				} else
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
 	_zayavObCalc = function() {// Вычисление стоимости объявления
 		var CALC = $('#ze-about-calc');
-		if(!CALC.length || !$('#ze-gn').length)
+		if(!CALC.length || !$('#ze-gn').length || !$('#ze-about').length)
 			return;
 
 		var txt_sum = 0, // сумма только за текст
@@ -1725,7 +1727,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 				prev = '',
 				dop = 0,
 				pn = 0,
-				skidka = 0,
+				skidka = o.skidka,
 				cena = '',
 				gnid = 0;
 			if(!sp) // если номер пропущен, тогда не выводится

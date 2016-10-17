@@ -654,6 +654,7 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 
 		define($prefix.'INN', $c['inn']);
 		define($prefix.'KPP', $c['kpp']);
+		define($prefix.'SKIDKA', $c['skidka']);
 	}
 
 	$send = array(
@@ -674,7 +675,8 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		'go' => constant($prefix.'GO'),
 
 		'inn' => constant($prefix.'INN'),
-		'kpp' => constant($prefix.'KPP')
+		'kpp' => constant($prefix.'KPP'),
+		'skidka' => constant($prefix.'SKIDKA')
 	);
 
 	return $i ? $send[$i] : $send;
