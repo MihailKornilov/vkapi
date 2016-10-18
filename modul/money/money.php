@@ -987,10 +987,6 @@ function expense_spisok($v=array()) {
 				'<th>';
 
 	foreach($expense as $r) {
-		//todo временно, на удаление. Вера может удалять расходы в Евроокнах
-		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
-			$r['del'] = 1;
-
 		$send['spisok'] .=
 			'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 				'<td class="sum"><b>'._sumSpace($r['sum']).'</b>'.
