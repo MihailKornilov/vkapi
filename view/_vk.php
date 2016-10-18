@@ -1590,9 +1590,9 @@ function _end($count, $o1, $o2, $o5=false) {
 		}
 	return $o5;
 }
-function _sumSpace($sum, $oo=0) {//Приведение суммы к удобному виду с пробелами
-	$znak = $sum < 0 ? -1 : 1;
-	$sum *= $znak;
+function _sumSpace($sum, $oo=0, $znak=',') {//Приведение суммы к удобному виду с пробелами
+	$minus = $sum < 0 ? -1 : 1;
+	$sum *= $minus;
 	$send = '';
 	$floor = floor($sum);
 	$drob = round($sum - $floor, 2) * 100;
@@ -1605,9 +1605,9 @@ function _sumSpace($sum, $oo=0) {//Приведение суммы к удобному виду с пробелами
 		else $send = ' '.$del.$send;
 	}
 	$send = $send ? trim($send) : 0;
-	$send = $drob ? $send.'.'.($drob < 10 ? 0 : '').$drob : $send;
-	$send = $oo && !$drob ? $send.'.00' : $send;
-	return ($znak < 0 ? '-' : '').$send;
+	$send = $drob ? $send.$znak.($drob < 10 ? 0 : '').$drob : $send;
+	$send = $oo && !$drob ? $send.$znak.'00' : $send;
+	return ($minus < 0 ? '-' : '').$send;
 }
 function _tooltip($msg, $left=0, $ugolSide='', $x2=0) {
 	//x2: в две строки
