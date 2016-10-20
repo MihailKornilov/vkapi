@@ -10,7 +10,7 @@
 	border:0;
 	padding-bottom:150px;
 	padding-left:0;
-	height:1200px;
+	height:1350px;
 }
 #_zayav .rightLink b{float:right}
 #_zayav ._check{margin-top:10px}
@@ -638,6 +638,7 @@
 }
 #_zayav-expense .sum{font:11px arial}
 #_zayav-expense .sum b{font:bold 11px arial}
+#_zayav-expense .sum.paid{background:#dfe;color:#070}
 #_zayav-expense .count{
 	text-align:right;
 	color:#292;
@@ -645,7 +646,7 @@
 	white-space:nowrap;
 }
 #_zayav-expense em{font-size:10px;white-space:nowrap}
-#_zayav-expense tr:not(.list):hover em{color:#ddd}
+#_zayav-expense tr:not(.list):hover :not(.paid) em{color:#ddd}
 #_zayav-expense .img_del{position:absolute;right:1px}
 #_zayav-expense tr:not(:hover) .img_del{display:none}
 #_zayav-expense .plus{background-color:#dfd;color:#272}
@@ -672,9 +673,17 @@
 
 
 
+/* Файлы-счета на оплату в расходах по завке */
+#ze-attach-schet tr .to-pay{color:#c44;font-weight:bold}
+#ze-attach-schet tr:not(:hover) .to-pay{visibility:hidden}
+#ze-attach-schet .paid{
+	background:#dfe;
+	color:#383;
+	cursor:default;
+}
+#ze-attach-schet em{background:#ffc;border-bottom:1px solid #FE2}
 
-
-
+#no_pay_check{margin-top:12px}
 
 
 /* Диалог формирования квитанции */

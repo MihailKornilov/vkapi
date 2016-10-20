@@ -567,7 +567,8 @@ function _report() {
 		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
 		'salary' => 'З/п сотрудников',
 		'zayav' => 'Заявки',
-		'attach' => 'Файлы'
+		'attach' => 'Файлы',
+		'attach_schet' => 'Приреплённые счета'
 	);
 
 
@@ -583,6 +584,11 @@ function _report() {
 			$d = 'remind';
 	}
 
+	if(!_zayavExpense('attach_schet')) {
+		unset($pages['attach_schet']);
+		if($d == 'attach_schet')
+			$d = 'remind';
+	}
 
 	$rightLink = '<div class="rightLink">';
 	if($pages)
@@ -623,8 +629,14 @@ function _report() {
 			}
 			break;
 		case 'zayav': return _zayav_report();
-		case 'attach':
-			$left = _attach_list();
+		case 'attach': $left = _attach_list(); break;
+		case 'attach_schet':
+			$left = _zayav_expense_attach_schet();
+			$right =
+					'<div class="findHead">Фильтр</div>'.
+					'<div id="find"></div>'.
+					_check('no_pay', 'Счёт не оплачен', 1).
+					'<div class="mt10">'._check('no_attach', 'Счёт не прикреплён').'</div>';
 			break;
 	}
 

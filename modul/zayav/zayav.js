@@ -1162,6 +1162,42 @@ var _zayavSpisok = function(v, id) {
 		}
 	},
 
+	_zayavExpenseAttachSchetSpisok = function(v, id) {
+		ZE_ATTACH_SCHET.page = 1;
+		ZE_ATTACH_SCHET[id] = v;
+		$.post(AJAX_MAIN, ZE_ATTACH_SCHET, function(res) {
+			if(res.success)
+				$('#ze-attach-schet').html(res.spisok);
+		}, 'json');
+	},
+	_zayavExpenseAttachSchetPay = function(id) {
+		var html =
+				'<center>Подтверждение оплаты счёта.</center>',
+			dialog = _dialog({
+				head:'Подтверждение оплаты счёта',
+				content:html,
+				padding:30,
+				butSubmit:'Счёт оплачен',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'ze_attach_schet_pay',
+				id:id
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
 	_zayavKvit = function() {//формирование квитанции
 		var html = '<table class="zayav-print bs10">' +
 				'<tr><td class="label">Дата приёма:<td>' + KVIT.dtime +
@@ -2558,5 +2594,16 @@ $(document)
 			$('.zayav-erm').click(function() {
 				location.href = URL + '&p=print&d=erm&mon=' + $(this).attr('val');
 			});
+		}
+		if($('#ze-attach-schet').length) {
+			$('#find')._search({
+				width:138,
+				focus:1,
+				txt:'Быстрый поиск...',
+				enter:1,
+				func:_zayavExpenseAttachSchetSpisok
+			});
+			$('#no_pay')._check(_zayavExpenseAttachSchetSpisok);
+			$('#no_attach')._check(_zayavExpenseAttachSchetSpisok);
 		}
 	});

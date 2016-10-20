@@ -1703,14 +1703,19 @@ switch(@$_POST['op']) {
 	case 'setup_zayav_expense_add':
 		$name = _txt($_POST['name']);
 		$dop = _num($_POST['dop']);
+		$param = _num($_POST['param']);
 
 		if(empty($name))
 			jsonError();
+
+		if($dop != 4)
+			$param = 0;
 
 		$sql = "INSERT INTO `_zayav_expense_category` (
 					`app_id`,
 					`name`,
 					`dop`,
+					`param`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
@@ -1737,9 +1742,14 @@ switch(@$_POST['op']) {
 
 		$name = _txt($_POST['name']);
 		$dop = _num($_POST['dop']);
+		$param = _num($_POST['param']);
 
 		if(empty($name))
 			jsonError();
+
+		if($dop != 4)
+			$param = 0;
+
 
 		$sql = "SELECT * FROM `_zayav_expense_category` WHERE `id`=".$id;
 		if(!$r = query_assoc($sql))
@@ -1747,7 +1757,8 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_zayav_expense_category`
 				SET `name`='".addslashes($name)."',
-					`dop`=".$dop."
+					`dop`=".$dop.",
+					`param`=".$param."
 				WHERE `id`=".$id;
 		query($sql);
 
@@ -1756,7 +1767,8 @@ switch(@$_POST['op']) {
 
 		$changes =
 			_historyChange('Наименование', $r['name'], $name).
-			_historyChange('Дополнительное поле', $r['dop'], $dop, _zayavExpenseDop($r['dop']), _zayavExpenseDop($dop));
+			_historyChange('Доп. поле', _zayavExpenseDop($r['dop']), _zayavExpenseDop($dop)).
+			_historyChange('Ведение прикреплённых счетов', _daNet($r['param']), _daNet($param));
 		if($changes)
 			_history(array(
 				'type_id' => 1028,

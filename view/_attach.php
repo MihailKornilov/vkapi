@@ -1,28 +1,33 @@
 <?php
-function _attachValToList($arr, $keyName='attach_id') {//вставка ссылок на файлы в массив по attach_id
-	$ids = array();
-	$arrIds = array();
-	foreach($arr as $key => $r)
-		if(!empty($r[$keyName])) {
-			$ids[$r[$keyName]] = 1;
-			$arrIds[$r[$keyName]][] = $key;
-		}
-	if(empty($ids))
+function _attachValToList($arr, $key='attach_id') {//вставка ссылок на файлы в массив по attach_id
+	if(empty($arr))
+		return array();
+
+	foreach($arr as $r)
+		$arr[$r['id']] += array(
+			'attach_name' => '',
+			'attach_link' => ''
+		);
+
+
+	if(!$attach_ids = _idsGet($arr, $key))
 		return $arr;
 
 	$sql = "SELECT *
 			FROM `_attach`
 			WHERE `app_id`=".APP_ID."
-			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$attach = query_arr($sql);
+			  AND `id` IN (".$attach_ids.")";
+	if(!$attach = query_arr($sql))
+		return $arr;
 
-	foreach($attach as $r) {
-		foreach($arrIds[$r['id']] as $id) {
-			$arr[$id] += array(
-				'attach_name' => $r['name'],
-				'attach_link' => _attachLink($r),
-			);
-		}
+	foreach($arr as $id => $r) {
+		if(!_num(@$r[$key]))
+			continue;
+
+		$att = $attach[$r[$key]];
+
+		$arr[$id]['attach_name'] = $att['name'];
+		$arr[$id]['attach_link'] = _attachLink($att);
 	}
 
 	return $arr;

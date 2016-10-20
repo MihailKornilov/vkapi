@@ -169,6 +169,7 @@
 #setup_zayav_expense .name{width:130px}
 #setup_zayav_expense td.name{cursor:move}
 #setup_zayav_expense .dop{width:150px}
+#setup_zayav_expense .param-info{font-size:10px;color:#2a2}
 #setup_zayav_expense .use{width:55px;text-align:center}
 #setup_zayav_expense .ed{width:35px}
 

@@ -840,19 +840,26 @@ function setup_zayav_expense_spisok() {
 			'<th class="ed">'.
 	'</table>'.
 	'<dl class="_sort" val="_zayav_expense_category">';
-	foreach($spisok as $id => $r)
+	foreach($spisok as $id => $r) {
+		$param = '';
+		if($r['dop'] == 4 && $r['param'])
+			$param = 'Ведение прикреплённых счетов';
 		$send .=
 		'<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
 				'<tr><td class="name">'.$r['name'].
 					'<td class="dop">'.
 						($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
-						'<input class="hdop" type="hidden" value="'.$r['dop'].'" />'.
+						'<div class="param-info">'.$param.'</div>'.
+						'<input type="hidden" class="hdop" value="'.$r['dop'].'" />'.
+						'<input type="hidden" class="param" value="'.$r['param'].'" />'.
 					'<td class="use">'.($r['use'] ? $r['use'] : '').
 					'<td class="ed">'.
 						_iconEdit().
 						(!$r['use'] ? _iconDel() : '').
 			'</table>';
+
+	}
 	$send .= '</dl>';
 	return $send;
 }

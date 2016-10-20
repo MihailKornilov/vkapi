@@ -421,13 +421,19 @@ var setupRuleCheck = function(v, id) {
 		o = $.extend({
 			id:0,
 			name:'',
-			dop:0
+			dop:0,
+			param:0
 		}, o);
 
 		var html =
 				'<table id="setup-tab">' +
-					'<tr><td class="label">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
-					'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" value="' + o.dop + '" />' +
+					'<tr><td class="label">Наименование:' +
+						'<td><input id="name" type="text" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Дополнительное поле:' +
+						'<td><input id="dop" type="hidden" value="' + o.dop + '" />' +
+					'<tr class="tr-param' + (o.dop == 4 ? '' : ' dn') + '">' +
+						'<td>' +
+						'<td><input id="param" type="hidden" value="' + o.param + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:400,
@@ -438,14 +444,25 @@ var setupRuleCheck = function(v, id) {
 			});
 
 		$('#name').focus();
-		$('#dop')._radio({light:1,spisok:ZAYAV_EXPENSE_DOP});
+		$('#dop')._radio({
+			light:1,
+			spisok:ZAYAV_EXPENSE_DOP,
+			func:function(v) {
+				$('.tr-param')[(v == 4 ? 'remove' : 'add') + 'Class']('dn');
+				$('#param')._check(0);
+			}
+		});
+		$('#param')._check({
+			name:'ведение прикреплённых счетов'
+		});
 
 		function submit() {
 			var send = {
 				op:'setup_zayav_expense_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
 				name:$('#name').val(),
-				dop:$('#dop').val()
+				dop:$('#dop').val(),
+				param:$('#param').val()
 			};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
@@ -1220,7 +1237,8 @@ $(document)
 		setupZayavExpense({
 			id:t.attr('val'),
 			name:t.find('.name').html(),
-			dop:t.find('.hdop').val()
+			dop:_num(t.find('.hdop').val()),
+			param:_num(t.find('.param').val())
 		});
 	})
 	.on('click', '#setup_zayav_expense .img_del', function() {

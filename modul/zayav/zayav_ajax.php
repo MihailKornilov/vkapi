@@ -1116,7 +1116,10 @@ switch(@$_POST['op']) {
 		$r = query_assoc($sql);
 
 		if($r['salary_list_id'])
-			jsonError();
+			jsonError('Расход учтён в листе выдачи з/п');
+
+		if($r['v1'])
+			jsonError('Расход отмечен как "Счёт оплачен"');
 
 		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;
 		query($sql);
@@ -1151,6 +1154,48 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(_zayav_expense_spisok($r['zayav_id']));
 		jsonSuccess($send);
 		break;
+
+	case 'ze_attach_schet_spisok':
+		$_POST['find'] = win1251(@$_POST['find']);
+		$data = _zayav_expense_attach_schet_spisok($_POST);
+		$send['spisok'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
+	case 'ze_attach_schet_pay':
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id расхода по заявке');
+
+		$sql = "SELECT *
+				FROM `_zayav_expense`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Pасхода по заявке не существует');
+
+		if(!$z = _zayavQuery($r['zayav_id']))
+			jsonError('Заявки id:'.$r['zayav_id'].' не существует');
+
+		if($r['v1'])
+			jsonError('Счёт уже был оплачен');
+
+		$sql = "UPDATE `_zayav_expense`
+				SET `v1`=1,
+					`v1_viewer_id`=".VIEWER_ID.",
+					`v1_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 132,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'attach_id' => $r['attach_id'],
+			'v1' => _cena($r['sum'])
+		));
+
+		jsonSuccess();
+		break;
+
 
 	case 'zayav_kvit':
 		if(!$zayav_id = _num($_POST['zayav_id']))

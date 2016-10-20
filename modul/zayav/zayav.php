@@ -3184,10 +3184,7 @@ function _zayavSrokCalendar($v=array()) {
 function _zayavExpense($id='all', $i='name') {//категории расходов заявки из кеша
 	$key = CACHE_PREFIX.'zayav_expense';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT
-					`id`,
-					`name`,
-					`dop`
+		$sql = "SELECT *
 				FROM `_zayav_expense_category`
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `sort`";
@@ -3216,6 +3213,31 @@ function _zayavExpense($id='all', $i='name') {//категории расходов заявки из кеш
 		foreach($arr as $r)
 			$spisok[$r['id']] = $r['dop'];
 		return _assJson($spisok);
+	}
+
+	//проверка: используется ли ведение прикреплённых счетов в расходе по заявке
+	if($id == 'attach_schet') {
+		foreach($arr as $r) {
+			if($r['dop'] != 4)
+				continue;
+			if($r['param'])
+				return 1;
+		}
+		return 0;
+	}
+
+	//список id категорий, в которых используется введение прикреплённых счетов
+	if($id == 'attach_schet_ids') {
+		$ids = array();
+		foreach($arr as $r) {
+			if($r['dop'] != 4)
+				continue;
+			if($r['param'])
+				$ids[] = $r['id'];
+		}
+		if(empty($ids))
+			return 0;
+		return implode(',', $ids);
 	}
 
 	//неизвестный id
@@ -3326,12 +3348,19 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			'<tr class="l'.$inserted.$list.'">'.
 				'<td class="name">'.$ze['name'].
 				'<td'.(!$r['tovar_avai_id'] ? ' colspan="2"' : '').'>'.$dop.
+					($ze['dop'] == 4 && $ze['param'] ? '<a class="grey fr" href="'.URL.'&p=report&d=attach_schet">к списку счетов</a>' : '').
 		($r['tovar_avai_id'] ?
 				'<td class="count"><b>'._ms($r['tovar_count']).'</b> '.$r['tovar_measure_name']
 		: '').
-				'<td class="sum">'.
+				'<td class="sum'.($r['v1'] ? ' paid' : '').
+					($r['v1'] ?
+						_tooltip('Счёт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -130, 'r', 1)
+					: '">').
+
 					'<em>'._sumSpace($sum).' р.</em>'.
-					(!$r['salary_list_id'] ? '<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>' : '');
+					(!$r['salary_list_id'] && !$r['v1'] ?
+						'<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>'
+					: '');
 	}
 
 	$ost = $accrual_sum - $expense_sum;
@@ -3373,6 +3402,114 @@ function _zayav_bonus_spisok($zayav_id) {
 }
 
 
+
+
+/* Ведение прикреплённых счетов в расходах по заявке */
+function _zayav_expense_attach_schet() {
+	$data = _zayav_expense_attach_schet_spisok();
+	return
+	'<div id="ze-attach-schet" class="mar8">'.
+		$data['spisok'].
+	'</div>';
+}
+function _zayav_expense_attach_schetFilter($v) {
+	$filter = array(
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'find' => trim(@$v['find']),
+		'no_attach' => _num(@$v['no_attach']),
+		'no_pay' => !isset($v['no_pay']) ? 1 : _num($v['no_pay'])
+	);
+	return $filter;
+}
+function _zayav_expense_attach_schet_spisok($v=array()) {// список клиентов
+	$filter = _zayav_expense_attach_schetFilter($v);
+	$filter = _filterJs('ZE_ATTACH_SCHET', $filter);
+
+	$cond = "`ze`.`app_id`=".APP_ID."
+		 AND `ze`.`category_id` IN ("._zayavExpense('attach_schet_ids').")";
+
+	$JOIN = '';
+
+	if($filter['find']) {
+		if(_cena($filter['find']))
+			$cond .= " AND `ze`.`sum`="._cena($filter['find']);
+		else
+			$JOIN = "RIGHT JOIN `_attach` `att`
+					 ON `att`.`id`=`ze`.`attach_id`
+					AND `att`.`name` LIKE '%".$filter['find']."%'";
+	}
+
+	if($filter['no_attach'])
+		$cond .= " AND !`ze`.`attach_id`";
+	if($filter['no_pay'])
+		$cond .= " AND !`ze`.`v1`";
+
+	$sql = "SELECT
+				COUNT(*) `all`,
+				SUM(`ze`.`sum`) `sum`
+			FROM `_zayav_expense` `ze`
+			".$JOIN."
+			WHERE ".$cond;
+	if(!$r = query_assoc($sql))
+		return array(
+			'spisok' => $filter['js'].'<div class="_empty">Счетов не найдено.</div>',
+			'filter' => $filter
+		);
+
+	$all = $r['all'];
+	$send['filter'] = $filter;
+	$send['spisok'] = $filter['js'];
+
+	$sql = "SELECT *
+			FROM `_zayav_expense` `ze`
+			".$JOIN."
+			WHERE ".$cond."
+			ORDER BY `ze`.`id` DESC
+			LIMIT "._startLimit($filter);
+	$spisok = query_arr($sql);
+	$spisok = _zayavValToList($spisok);
+	$spisok = _attachValToList($spisok);
+
+	$send['spisok'] .= $filter['page'] != 1 ? '' :
+		'Показан'._end($all, ' ', 'о ').$all.
+			' файл'._end($all, '', 'а', 'ов').
+			'-сч'._end($all, 'ёт', 'ёта', 'етов').
+			($filter['no_pay'] ? ' на сумму <b>'._sumSpace($r['sum']).'</b> руб.' : '').
+		'<table class="_spisok mt5">'.
+			'<tr>'.
+				'<th>Счёт'.
+				'<th>Сумма'.
+				'<th>Дата<br />внесения';
+
+	foreach($spisok as $r) {
+		if($filter['find'])
+			$r['attach_link'] = _findRegular($filter['find'], $r['attach_link']);
+		$send['spisok'] .=
+			'<tr class="l">'.
+				'<td>Заявка '.$r['zayav_link_name'].
+					'<div>'.$r['attach_link'].'</div>'.
+			(!$r['v1'] ?
+					'<div class="to-pay fr">'.
+						'Счёт не оплачен. '.
+						'<a onclick="_zayavExpenseAttachSchetPay('.$r['id'].')">Изменить на "<b>оплачено</b>"</a>'.
+					'</div>'
+			: '').
+				'<td class="w70 r '.($r['v1'] ? 'paid' : 'grey').
+					($r['v1'] ?
+						_tooltip('Счёт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -50, '', 1)
+					: '">').
+					_sumSpace($r['sum'], 1).
+				'<td class="dtime">'._dtimeAdd($r);
+	}
+
+	$send['spisok'] .= _next($filter + array(
+		'all' => $all,
+		'tr' => 1
+	));
+
+	return $send;
+}
 
 
 
