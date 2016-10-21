@@ -3354,7 +3354,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		: '').
 				'<td class="sum'.($r['v1'] ? ' paid' : '').
 					($r['v1'] ?
-						_tooltip('—чЄт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -130, 'r', 1)
+						_tooltip('—чЄт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'viewer_sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -130, 'r', 1)
 					: '">').
 
 					'<em>'._sumSpace($sum).' р.</em>'.
@@ -3461,7 +3461,7 @@ function _zayav_expense_attach_schet_spisok($v=array()) {// список клиентов
 	$send['filter'] = $filter;
 	$send['spisok'] = $filter['js'];
 
-	$sql = "SELECT *
+	$sql = "SELECT `ze`.*
 			FROM `_zayav_expense` `ze`
 			".$JOIN."
 			WHERE ".$cond."
@@ -3497,7 +3497,7 @@ function _zayav_expense_attach_schet_spisok($v=array()) {// список клиентов
 			: '').
 				'<td class="w70 r '.($r['v1'] ? 'paid' : 'grey').
 					($r['v1'] ?
-						_tooltip('—чЄт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -50, '', 1)
+						_tooltip('—чЄт оплачен '.FullDataTime($r['v1_dtime'], 1).'<br>изменил'.(_viewer($r['v1_viewer_id'], 'viewer_sex') == 1 ? 'a' : '').' '._viewer($r['v1_viewer_id'], 'viewer_name'), -50, '', 1)
 					: '">').
 					_sumSpace($r['sum'], 1).
 				'<td class="dtime">'._dtimeAdd($r);
