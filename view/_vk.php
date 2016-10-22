@@ -1765,29 +1765,29 @@ function _print_document() {//вывод на печать документов
 
 	switch(@$_GET['d']) {
 		case 'kvit_html':
-			require_once GLOBAL_DIR.'/view/xsl/kvit_html.php';
+			require_once GLOBAL_DIR.'/view/xls/kvit_html.php';
 			break;
 		case 'kvit_comtex':
-			require_once GLOBAL_DIR.'/view/xsl/kvit_comtex.php';
+			require_once GLOBAL_DIR.'/view/xls/kvit_comtex.php';
 			break;
 		case 'kvit_cartridge':
-			require_once GLOBAL_DIR.'/view/xsl/kvit_cartridge.php';
+			require_once GLOBAL_DIR.'/view/xls/kvit_cartridge.php';
 			break;
 		case 'zp_zakaz':
-			require_once GLOBAL_DIR.'/view/xsl/zp_zakaz.php';
+			require_once GLOBAL_DIR.'/view/xls/zp_zakaz.php';
 			break;
 		case 'schet':
-			require_once GLOBAL_DIR.'/view/xsl/schet_xsl.php';
+			require_once GLOBAL_DIR.'/view/xls/schet_xls.php';
 			break;
 		case 'receipt': _incomeReceiptPrint(); break;
 		case 'salary_list':
-			require_once GLOBAL_DIR.'/view/xsl/salary_list.php';
+			require_once GLOBAL_DIR.'/view/xls/salary_list.php';
 			break;
 		case 'radiomaster':
-			require_once GLOBAL_DIR.'/view/xsl/price_radiomaster.php';
+			require_once GLOBAL_DIR.'/view/xls/price_radiomaster.php';
 			break;
 		case 'erm':
-			require_once GLOBAL_DIR.'/view/xsl/evrookna_report_month.php';
+			require_once GLOBAL_DIR.'/view/xls/evrookna_report_month.php';
 			break;
 		case 'ob_word': _zayavObWord(); break;
 		default: die('ƒокумент не найден.');

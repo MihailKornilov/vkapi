@@ -1467,7 +1467,7 @@ var _accrualAdd = function(o) {
 				_schetEdit(res);
 			});
 			$('#schet-print').click(function() {
-				_schetPrintXsl(res.schet_id);
+				_schetPrintXls(res.schet_id);
 			});
 			$('#schet-pass').click(function() {
 				_schetPass(res.schet_id, res.nomer);
@@ -1801,7 +1801,7 @@ var _accrualAdd = function(o) {
 						switch(v) {
 							case 1: _schetInfo({id:schet_id}); break;
 							case 2: _schetInfo({id:schet_id,edit:1}); break;
-							case 3: _schetPrintXsl(schet_id); break;
+							case 3: _schetPrintXls(schet_id); break;
 							case 4: _schetPass(schet_id, nomer); break;
 							case 5: _schetPassCancel(schet_id, nomer); break;
 							case 6: _schetPay(schet_id, nomer); break;
@@ -1812,7 +1812,7 @@ var _accrualAdd = function(o) {
 			}
 		}
 	},
-	_schetPrintXsl = function(schet_id) {
+	_schetPrintXls = function(schet_id) {
 		location.href = URL + '&p=print&d=schet&schet_id=' + schet_id;
 	},
 	_schetPass = function(schet_id, nomer) {//передача счёта клиенту
