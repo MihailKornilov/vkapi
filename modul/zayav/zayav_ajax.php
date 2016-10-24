@@ -1115,10 +1115,10 @@ switch(@$_POST['op']) {
 				  AND `id`=".$id;
 		$r = query_assoc($sql);
 
-		if($r['salary_list_id'])
+		if($r['salary_list_id'] && !SA)
 			jsonError('Расход учтён в листе выдачи з/п');
 
-		if($r['v1'])
+		if($r['v1'] && !SA)
 			jsonError('Расход отмечен как "Счёт оплачен"');
 
 		$sql = "DELETE FROM `_zayav_expense` WHERE `id`=".$id;

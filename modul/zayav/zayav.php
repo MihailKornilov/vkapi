@@ -3358,7 +3358,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 					: '">').
 
 					'<em>'._sumSpace($sum).' р.</em>'.
-					(!$r['salary_list_id'] && !$r['v1'] ?
+					(!$r['salary_list_id'] && !$r['v1'] || SA?
 						'<div val="'.$r['id'].'" class="img_del m15'._tooltip('Удалить', -46, 'r').'</div>'
 					: '');
 	}
