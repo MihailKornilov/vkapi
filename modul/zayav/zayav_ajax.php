@@ -1679,21 +1679,22 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названи€ за€вки и строки 
 
 	$name = $z['name'];
 
+	//название пишетс€ вручную
 	if(isset($zpu[1]))
 		$name = $v['name'];
 
-	if(!$name && (isset($zpu[4]) || isset($zpu[11]))) {
-		if(@$_POST['tovar']) {
-			$ex = explode(',', $_POST['tovar']);
-			$ex = explode(':', $ex[0]);
-			$tovar_id = $ex[0];
-	
-			$sql = "SELECT `find`
-					FROM `_tovar`
-					WHERE `id`=".$tovar_id;
-			$name = query_value($sql);
-		}
-	}
+	if(!$name || $name && !isset($zpu[1]))
+		if(isset($zpu[4]) || isset($zpu[11]))
+			if(@$_POST['tovar']) {
+				$ex = explode(',', $_POST['tovar']);
+				$ex = explode(':', $ex[0]);
+				$tovar_id = $ex[0];
+
+				$sql = "SELECT `find`
+						FROM `_tovar`
+						WHERE `id`=".$tovar_id;
+				$name = query_value($sql);
+			}
 
 	if(!$name && isset($zpu[23]))
 		$name = ' артриджи';

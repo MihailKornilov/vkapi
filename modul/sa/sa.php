@@ -1072,7 +1072,7 @@ function sa_template_default_spisok() {
 					'<br />'.
 					$r['attach_link'].
 					'<input type="hidden" class="attach_id" value="'.$r['attach_id'].'" />'.
-				'<td><span class="grey">Имя ссылки:</span> '.
+				'<td><span class="grey">Текст ссылки:</span> '.
 					'<span class="name_link">'.$r['name_link'].'</span>'.
 					'<br />'.
 					'<span class="grey">Имя файла:</span> '.
@@ -1114,7 +1114,7 @@ function sa_template_var($spisok, $table_name) {
 	if(empty($spisok))
 		return '';
 
-	$send = '<table class="_spisok mar8 w400">';
+	$send = '<table class="_spisok mar8">';
 	foreach($spisok as $r) {
 		$send .=
 			'<tr><td class="w125 b">'.$r['v'].
