@@ -267,3 +267,16 @@
 	text-align:justify;
 	margin-bottom:10px;
 }
+
+
+
+
+
+
+
+/* Шаблоны документов */
+#setup_document_template .vk.small{margin-top:-3px}
+#setup_document_template .unit{margin-left:10px}
+
+#setup_document_template_info .headName{margin:10px 0 5px}
+#setup_document_template_info .var{font-weight:bold;width:120px}

@@ -2520,16 +2520,17 @@ $(document)
 					}
 				});
 			$('#attach_id')._attach({
+				type:'icon',
 				title:'Прикрепить документ',
-				icon:1,
-				zayav_id:ZI.id,
-				zayav_save:1
+				table_name:'_zayav',
+				table_row:ZI.id
 			});
 			$('#attach1_id')._attach({
+				type:'icon',
 				title:'Прикрепить документ',
-				icon:1,
-				zayav_id:ZI.id,
-				zayav_save:2
+				table_name:'_zayav',
+				table_row:ZI.id,
+				col_name:'attach1_id'
 			});
 			$('#attach_cancel,#attach1_cancel').click(function() {//отмена прикрепления документа
 				var t = $(this),

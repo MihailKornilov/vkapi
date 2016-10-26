@@ -43,35 +43,26 @@ function _attachLink($r) {//формирование ссылки на скачивание файла
 function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 	$v = array(
 		'id' => _ids(@$v['id']),
-		'array' => _num(@$v['array']), //передача списка массивом через ajax
 		'zayav_id' => _num(@$v['zayav_id'])
 	);
 
 	$sql = "SELECT *
 			FROM `_attach`
-			WHERE `app_id`=".APP_ID.
+			WHERE `app_id` IN (".APP_ID.",0)".
 			($v['zayav_id'] ? " AND `zayav_id`=".$v['zayav_id'] : '').
 			($v['id'] ? " AND `id` IN(".$v['id'].")" : '');
 	$attach = query_arr($sql);
 
 	$send = array();
-	$array = array();
 	foreach($attach as $r) {
 		$send[] =
 			$r['id'].':{'.
 				'name:"'.addslashes($r['name']).'",'.
 				'link:"'.addslashes($r['link']).'",'.
-				'size:'.$r['size'].
+				'size:'.$r['size'].','.
+				'noedit:'.$r['noedit'].
 			'}';
-		$array[intval($r['id'])] = array(
-			'name' => utf8($r['name']),
-			'link' => $r['link'],
-			'size' => $r['size']
-		);
 	}
-
-	if($v['array'])
-		return $array;
 
 	return
 	'<script>'.
@@ -108,7 +99,7 @@ function _attachFilter($v) {
 	);
 	return $filter;
 }
-function _attach_spisok($v=array()) {// список клиентов
+function _attach_spisok($v=array()) {// список файлов
 	$filter = _attachFilter($v);
 	$filter = _filterJs('ATTACH', $filter);
 

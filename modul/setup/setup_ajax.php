@@ -621,6 +621,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".APP_ID;
 		query($sql);
 
+		xcache_unset(CACHE_PREFIX.'app');
+
 		$changes =
 			_historyChange('Вид организации', _appType($r['type_id']), _appType($type_id)).
 			_historyChange('Название организации', $r['name'], $name).
@@ -2043,6 +2045,46 @@ switch(@$_POST['op']) {
 
 		$send['html'] = utf8(setup_tovar_category_spisok());
 		jsonSuccess($send);
+		break;
+
+	case 'setup_template_add':
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
+		$sql = "INSERT INTO `_template` (
+					`app_id`,
+					`name`,
+					`name_link`,
+					`name_file`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					'".addslashes($name)."',
+					'".addslashes($name)."',
+					".VIEWER_ID."
+				)";
+		query($sql);
+		$insert_id = query_insert_id('_template');
+
+		$send['id'] = $insert_id;
+		jsonSuccess($send);
+		break;
+	case 'setup_template_save':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$name_link = _txt($_POST['name_link']))
+			jsonError('Не указан тексе ссылки');
+		if(!$name_file = _txt($_POST['name_file']))
+			jsonError('Не указано имя файла документа');
+
+		$sql = "UPDATE `_template`
+				SET `name_link`='".addslashes($name_link)."',
+					`name_file`='".addslashes($name_file)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		jsonSuccess();
 		break;
 }
 

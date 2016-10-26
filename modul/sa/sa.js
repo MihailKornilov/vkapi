@@ -661,6 +661,166 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
+
+	saTemplateDefaultEdit = function(o) {//Внесение/редактирование шаблонов по умолчанию
+		o = $.extend({
+			id:0,
+			name:'',
+			attach_id:0,
+			name_link:'',
+			name_file:'',
+			use:''
+		}, o);
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label r">Название:' +
+						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+					'<tr><td class="label r">Файл шаблона:' +
+						'<td><input type="hidden" id="attach_id" value="' + o.attach_id + '" />' +
+					'<tr><td class="label r">Текст ссылки:' +
+						'<td><input type="text" id="name_link" class="w250" value="' + o.name_link + '" />' +
+					'<tr><td class="label r">Имя файла документа:' +
+						'<td><input type="text" id="name_file" class="w250" value="' + o.name_file + '" />' +
+					'<tr><td class="label r">Применение:' +
+						'<td><input type="text" id="use" class="w100" value="' + o.use + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:440,
+				head:(o.id ? 'Изменение' : 'Добавление нового') + ' шаблона',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#attach_id')._attach({
+			type:'button',
+			title:'загрузить шаблон',
+			format:'xls,xlsx'
+		});
+
+		function submit() {
+			var send = {
+				op:'sa_template_default_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				attach_id:$('#attach_id').val(),
+				name_link:$('#name_link').val(),
+				name_file:$('#name_file').val(),
+				use:$('#use').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok-def').html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	saTemplateGroupEdit = function(o) {//Внесение/редактирование группы шаблонов документов
+		o = $.extend({
+			id:0,
+			name:'',
+			table_name:''
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label">Название:' +
+						'<td><input type="text" id="name" class="w230" value="' + o.name + '" />' +
+					'<tr><td class="label">Таблица:' +
+						'<td><input type="text" id="table_name" class="w230" value="' + o.table_name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Изменение' : 'Добавление новой') + ' группы шаблонов',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'sa_template_group_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val(),
+				table_name:$('#table_name').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	saTemplateVarEdit = function(id) {//Внесение/редактирование группы шаблонов документов
+		var dialog = _dialog({
+				width:400,
+				head:(id ? 'Изменение' : 'Добавление новой') + ' переменной для шаблонов',
+				load:1,
+				butSubmit:id ? 'Сохранить' : 'Внести',
+				submit:submit
+			}),
+			send = {
+				op:'sa_template_var_load',
+				id:id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				loaded(res);
+			else
+				dialog.loadError();
+		}, 'json');
+
+		function loaded(res) {
+			var html =
+				'<table class="bs10">' +
+					'<tr><td class="label r">Группа:' +
+						'<td><input type="hidden" id="group_id" value="' + res.group_id + '" />' +
+					'<tr><td class="label r">Название:' +
+						'<td><input type="text" id="name" class="w230" value="' + res.name + '" />' +
+					'<tr><td class="label r">Код:' +
+						'<td><input type="text" id="v" class="w150 b" value="' + res.v + '" />' +
+					'<tr><td class="label r">Колонка в таблице:' +
+						'<td><input type="text" id="col_name" class="w150" value="' + res.col_name + '" />' +
+				'</table>';
+			dialog.content.html(html);
+
+			$('#group_id')._select({
+				width:200,
+				title0:'Группа не выбрана',
+				spisok:res.group_spisok
+			});
+		}
+		function submit() {
+			var send = {
+				op:'sa_template_var_' + (id ? 'edit' : 'add'),
+				id:id,
+				group_id:$('#group_id').val(),
+				name:$('#name').val(),
+				v:$('#v').val(),
+				col_name:$('#col_name').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
 	saAppEdit = function(o) {
 		o = $.extend({
 			id:'',
@@ -1142,6 +1302,19 @@ $(document)
 			func:function(res) {
 				$('#spisok').html(res.html);
 			}
+		});
+	})
+
+	.on('click', '#sa-template #spisok-def .img_edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saTemplateDefaultEdit({
+			id:t.attr('val'),
+			name:p.find('.name').html(),
+			attach_id:p.find('.attach_id').val(),
+			name_link:p.find('.name_link').html(),
+			name_file:p.find('.name_file').html(),
+			use:p.find('.use').html()
 		});
 	})
 

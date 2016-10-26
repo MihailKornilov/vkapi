@@ -191,6 +191,21 @@
 #sa-color-add input{width:200px}
 
 
+
+
+
+
+
+/* шаблоны документов */
+#sa-template #spisok-def{margin:10px 20px 60px}
+#sa-template #spisok{margin:10px 20px 40px}
+
+
+
+
+
+
+
 /* пользователи */
 #sa-user .un{padding-bottom:8px;margin:8px;border-bottom:#dae1e8 solid 1px}
 #sa-user .tab{width:100%}

@@ -42,12 +42,12 @@ switch(@$_POST['op']) {
 
 		$f = $_FILES['f1'];
 		switch($f['type']) {
-			case 'application/pdf':             //pdf
-			case 'application/rtf':             //rtf
-			case 'application/msword':          //doc
 			case 'application/vnd.ms-excel':    //xls
 			case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':       //xlsx
+			case 'application/msword':          //doc
 			case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': //docx
+			case 'application/rtf':             //rtf
+			case 'application/pdf':             //pdf
 			case 'image/jpeg':
 			case 'image/png':
 				break;
@@ -97,44 +97,71 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'attach_save'://сохранение файла после его загрузки
-		if(!$id = _num($_POST['id']))
-			jsonError();
+		if(!$attach_id = _num($_POST['attach_id']))
+			jsonError('Некорректный id файла');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название файла');
 
-		if($zayav_id = _num($_POST['zayav_id']))
-			if(!$z = _zayavQuery($zayav_id))
-				jsonError();
+		$table_name = _txt($_POST['table_name']);
+		$table_row = _num($_POST['table_row']);
+		$col_name = _txt($_POST['col_name']);
 
-		$zayav_save = _num($_POST['zayav_save']);
-		$name = _txt($_POST['name']);
+		$zayav_id = 0;
+
+		if($table_name) {
+			$sql = "SHOW TABLES LIKE '".$table_name."'";
+			if(!query_value($sql))
+				jsonError('Таблицы не существует');
+
+			if(!$table_row)
+				jsonError('Не указан id записи в таблице');
+				
+			$sql = "SELECT COUNT(*)
+					FROM `".$table_name."`
+					WHERE `app_id`=".APP_ID."
+					  AND `id`=".$table_row;
+			if(!query_value($sql))
+				jsonError('Записи в таблице не существует');
+
+			if(!$col_name)
+				jsonError('Не указано название колонки в таблице');
+
+			$sql = "DESCRIBE `".$table_name."` `".$col_name."`";
+			if(!query_value($sql))
+				jsonError('Названия колонки в таблице не существует');
+
+			if($table_name == '_zayav')
+				$zayav_id = $table_row;
+		}
 
 		$sql = "SELECT *
 				FROM `_attach`
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
-				  AND `id`=".$id;
+				  AND `id`=".$attach_id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Файла не существует');
 
 		$sql = "UPDATE `_attach`
 				SET `name`='".addslashes($name)."',
 					`zayav_id`=".$zayav_id."
-				WHERE `id`=".$id;
+				WHERE `id`=".$attach_id;
 		query($sql);
 
 		_history(array(
 			'type_id' => 85,
-			'attach_id' => $id,
+			'attach_id' => $attach_id,
 			'zayav_id' => $zayav_id
 		));
 
-		if($zayav_id && $zayav_save) {
-			$sql = "UPDATE `_zayav`
-					SET `attach".($zayav_save == 2 ? '1' : '')."_id`=".$id."
-					WHERE `id`=".$zayav_id;
+		if($table_name) {
+			$sql = "UPDATE `".$table_name."`
+					SET `".$col_name."`=".$attach_id."
+					WHERE `id`=".$table_row;
 			query($sql);
 		}
 
-		$send['arr'] = _attachArr($id);
+		$send['arr'] = _attachArr($attach_id);
 		jsonSuccess($send);
 		break;
 	case 'attach_edit'://редактирование данных файла
@@ -196,6 +223,12 @@ switch(@$_POST['op']) {
 
 		//удаление из расходов по заявке
 		$sql = "UPDATE `_zayav_expense`
+				SET `attach_id`=0
+				WHERE `attach_id`=".$id;
+		query($sql);
+
+		//удаление из шаблонов документов
+		$sql = "UPDATE `_template`
 				SET `attach_id`=0
 				WHERE `attach_id`=".$id;
 		query($sql);

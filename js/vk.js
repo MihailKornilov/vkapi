@@ -1441,26 +1441,59 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 
 	// ._attach: блок, в котором происходят все манипуляции с файлом
 	// ._attach-add: ссылка для открывания окна добавления файла
+	// o.type: link, icon, button
+	// o.format: all - все форматы файлов, либо перечисление нужных через запятую
+
 
 	if(!window.ATTACH)
 		ATTACH = {};
 
 	var t = $(this),
-		attach_id = _num(t.val());
+		attr_id = t.attr('id'),
+		attach_id = _num(t.val()),
+		html,
+		format = {
+			xls:'Microsoft Excel 97-2003',
+			xlsx:'Excel 2007',
+			doc:'Microsoft Word 97-2003',
+			docx:'Microsoft Word 2007',
+			rtf:'текстовый Word',
+			pdf:'Adobe Acrobat Reader',
+			jpg:'изображение в формате JPG',
+			png:'изображение в формате PNG'
+		},
+		mime = {
+			xls:'application/vnd.ms-excel',
+			xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			doc:'application/msword',
+			docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			rtf:'application/rtf',
+			pdf:'application/pdf',
+			jpg:'image/jpeg',
+			png:'image/png'
+		};
+
+	if(!attr_id)
+		return;
 
 	o = $.extend({
+		type:'link',
 		title:'прикрепить файл',
-		icon:0,//показывать ссылку в виде иконки документа
-		zayav_id:0,
-		zayav_save:0,//сразу прикреплять к заявке, как только будет загружен
+		format:'all',           //форматы файлов
+		table_name:'',          //таблица, к которой прикрепляется pole
+		table_row:0,            //id строки в таблице, по которой применяется pole_name
+		col_name:'attach_id',   //название колонки в таблице
 		func:function() {}
 	}, o);
 
 	t.wrap('<div class="_attach">');
 
-	var html = '<a class="_attach-add">' + o.title + '</a>';
-	if(o.icon)
-		html = '<a class="_attach-add img_doc' + _tooltip(o.title, -13, 'l') + '</a>';
+	switch(o.type) {
+		case 'link':
+		default: html = '<a class="_attach-add">' + o.title + '</a>'; break;
+		case 'icon':html = '<a class="_attach-add img_doc' + _tooltip(o.title, -13, 'l') + '</a>'; break;
+		case 'button': html = '<button class="_attach-add vk small grey">' + o.title + '</button>';
+	}
 
 	t.parent().append(html);
 
@@ -1473,31 +1506,48 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 	attachAdd.click(add);
 	menu(attach_id);
 
+	function formatPrint() {
+		var send = '',
+			i;
+		if(o.format != 'all') {
+			var spl = o.format.split(','),
+				arr = [];
+			for(i in spl) {
+				var sp = spl[i];
+				if(!format[sp])
+					continue;
+				arr[sp] = format[sp];
+			}
+			format = arr;
+		}
+		for(i in format)
+			send += '<p><b>' + i + '</b> - ' + format[i];
+		return send;
+	}
+	function acceptMime() {
+		var send = [];
+		for(var i in format)
+			send.push(mime[i]);
+		return send.join();
+	}
+
 	function add() {//окно для загрузки файла
 		var html =
 			'<div id="attach-add-tab">' +
 				'<div class="_info">' +
-					'<u>Поддерживаемые типы файлов:</u>' +
-					'<br />' +
-					'<br /><b>xls</b> - Microsoft Excel 97-2003' +
-					'<br /><b>xlsx</b> - Excel 2007' +
-					'<br /><b>doc</b> - Microsoft Word 97-2003' +
-					'<br /><b>docx</b> - Microsoft Word 2007' +
-					'<br /><b>rtf</b> - текстовый Word' +
-					'<br /><b>pdf</b> - Adobe Acrobat Reader' +
-					'<br /><b>jpg</b> - изображение в формате JPG' +
-					'<br /><b>png</b> - изображение в формате PNG' +
+					'<p><u>Поддерживаемые типы файлов:</u>' +
+					formatPrint() +
 				'</div>' +
 				'<h1>' +
 					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="attach-frame">' +
 						'<input type="hidden" name="op" value="attach_upload" />' +
-						'<input type="file" name="f1" id="file" />' +
+						'<input type="file" name="f1" id="file" accept="' + acceptMime() + '" />' +
 					'</form>' +
 					'<button class="vk">Выбрать файл</button>' +
 				'</h1>' +
 				'<iframe name="attach-frame"></iframe>' +
 				'<table id="tab">' +
-					'<tr><td class="label r">Название файла:<td><input type="text" id="name" />' +
+					'<tr><td class="label r">Название файла:<td><input type="text" id="attach-name" />' +
 					'<tr><td class="label r">Размер:<td><b id="size">0</b> Кб' +
 				'</table>' +
 			'</div>',
@@ -1540,7 +1590,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 				};
 				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
-						$('#name').val(res.name);
+						$('#attach-name').val(res.name);
 						$('#size').html(res.size);
 						tab.addClass('uploaded');
 						dialog.butSubmit('Сохранить');
@@ -1552,48 +1602,56 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 		function submit() {
 			var send = {
 				op:'attach_save',
-				id:attach_id,
-				zayav_id:o.zayav_id,
-				zayav_save:o.zayav_save,
-				name:$.trim($('#name').val())
+				attach_id:attach_id,
+				name:$('#attach-name').val(),
+
+				table_name:o.table_name,
+				table_row:o.table_row,
+				col_name:o.col_name
 			};
-			if(!send.name)
-				dialog.err('Не указано название файла');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						attach.addClass('ex');
-						t.val(attach_id);
-						ATTACH[attach_id] = res.arr;
-						menu();
-						o.func(attach_id);
-					}
-				}, 'json');
-			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					attach.addClass('ex');
+					t.val(attach_id);
+					ATTACH[attach_id] = res.arr;
+					menu();
+					o.func(attach_id);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
 		}
 	}
 	function menu() {
 		if(!attach_id)
 			return;
 
-		var at = ATTACH[attach_id];
+		var at = ATTACH[attach_id],
+			spisok = [];
+		if(!at)
+			return;
+
+		spisok.push({uid:1,title:'Скачать (' + Math.round(at.size / 1024) + ' кб.)'});
+
+		if(!at.noedit)
+			spisok.push({uid:2,title:'Изменить название'});
+
+		spisok.push({uid:3,title:'Загрузить другой файл'});
+
+		if(!at.noedit)
+			spisok.push({uid:4,title:'Удалить'});
 
 		t._dropdown({
 			head:at.name,
 			nosel:1,
-			spisok:[
-				{uid:1,title:'Скачать (' + Math.round(at.size / 1024) + ' кб.)'},
-				{uid:2,title:'Изменить'},
-				{uid:3,title:'Удалить'}
-			],
+			spisok:spisok,
 			func:function(v) {
 				switch(v) {
 					case 1: location.href = at.link; break;
 					case 2: edit(); break;
-					case 3: del(); break;
+					case 3: add(); break;
+					case 4: del(); break;
 				}
 			}
 		});
@@ -1603,7 +1661,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 		var html =
 			'<div id="attach-add-tab" class="uploaded">' +
 				'<table id="tab">' +
-					'<tr><td class="label r">Название файла:<td><input type="text" id="name" value="' + at.name + '" />' +
+					'<tr><td class="label r">Название файла:<td><input type="text" id="attach-name" value="' + at.name + '" />' +
 					'<tr><td class="label r">Размер:<td><b id="size">' + Math.round(at.size / 2014) + '</b> Кб' +
 				'</table>' +
 			'</div>',
@@ -1619,7 +1677,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			var send = {
 				op:'attach_edit',
 				id:attach_id,
-				name:$.trim($('#name').val())
+				name:$.trim($('#attach-name').val())
 			};
 			if(!send.name)
 				dialog.err('Не указано название файла');
@@ -1663,7 +1721,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			indent:'center',
 			top:0,
 			left:0,
-			show:0,	  // выводить ли подсказку после загрузки страницы
+			show:0,	     // выводить ли подсказку после загрузки страницы
 			delayShow:0, // задержка перед всплытием
 			delayHide:0, // задержка перед скрытием
 			correct:0,   // настройка top и left

@@ -136,6 +136,7 @@ td.r{text-align:right}
 .headName.m1{margin:10px 10px 5px}
 a.add{float:right;color:#68A;cursor:pointer}
 a.add:hover{text-decoration:underline;color:#357}
+.headName .vk.small{margin-top:-6px}
 
 .headBlue{
 	background:#E1E7ED;
@@ -1153,6 +1154,7 @@ button.vk.grey:hover{background-color:#999}
 
 
 /* Короткие стили */
+.w15{width:15px}
 .w50{width:50px}
 .w70{width:70px}
 .w100{width:100px}
@@ -1168,6 +1170,7 @@ button.vk.grey:hover{background-color:#999}
 .mar8{margin:8px}
 .mar20{margin:20px}
 .mt5{margin-top:5px}
+.mr5{margin-right:5px}
 .mt10{margin-top:10px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}

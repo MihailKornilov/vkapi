@@ -718,6 +718,44 @@ var setupRuleCheck = function(v, id) {
 					dialog.abort();
 			}, 'json');
 		}
+	},
+
+	setupTemplateEdit = function(o) {//создание/редактирование шаблона документов
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var t = $(this),
+			html = '<table class="bs10">' +
+					'<tr><td class="label r">Название:' +
+						'<td><input type="text" id="name" class="w200" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Создание нового' ) + ' шаблона',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'setup_template_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.href = URL + '&p=setup&d=document_template&id=' + res.id;
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
 	};
 
 $(document)
@@ -1758,6 +1796,42 @@ $(document)
 					if(res.success)
 						_msg('Информация сохранена.');
 				}, 'json');
+			});
+		}
+		if($('#setup_document_template_info').length) {
+			$('#attach_id')._attach({
+				type:'button',
+				title:'загрузить шаблон',
+				format:'xls,xlsx',
+				table_name:'_template',
+				table_row:window.TEMPLATE_ID
+			});
+			$('.save').click(function() {
+				var t = $(this),
+					send = {
+						op:'setup_template_save',
+						id:TEMPLATE_ID,
+						name_link:$('#name_link').val(),
+						name_file:$('#name_file').val()
+					};
+				t.addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					t.removeClass('_busy');
+					if(res.success)
+						_msg('Информация сохранена.');
+					else
+						t.vkHint({
+							msg:'<span class="red">' + res.text + '</span>',
+							show:1,
+							indent:40,
+							top:-58,
+							left:-6,
+							remove:1
+						});
+				}, 'json');
+			});
+			$('.var').click(function() {
+				$(this).select();
 			});
 		}
 	});

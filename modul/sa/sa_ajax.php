@@ -1,7 +1,6 @@
 <?php
-if(!SA)
-	jsonError();
 
+if(SA)
 switch(@$_POST['op']) {
 	case 'sa_menu_add':
 		$type = _txt($_POST['type']);
@@ -1094,6 +1093,139 @@ switch(@$_POST['op']) {
 		_appJsValues();
 
 		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'sa_template_default_add'://Новый шаблон по умолчанию
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+		if(!$name_link = _txt($_POST['name_link']))
+			jsonError('Не указан текст ссылки');
+		if(!$name_file = _txt($_POST['name_file']))
+			jsonError('Не указано имя файла документа');
+
+		$attach_id = _num($_POST['attach_id']);
+		$use = _txt($_POST['use']);
+
+		$sql = "INSERT INTO `_template_default` (
+					`name`,
+					`attach_id`,
+					`name_link`,
+					`name_file`,
+					`use`
+				) VALUES (
+					'".addslashes($name)."',
+					".$attach_id.",
+					'".addslashes($name_link)."',
+					'".addslashes($name_file)."',
+					'".addslashes($use)."'
+				)";
+		query($sql);
+
+		$send['html'] = utf8(sa_template_default_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_template_default_edit'://редактирование шаблона по умолчанию
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+		if(!$name_link = _txt($_POST['name_link']))
+			jsonError('Не указан текст ссылки');
+		if(!$name_file = _txt($_POST['name_file']))
+			jsonError('Не указано имя файла документа');
+
+		$attach_id = _num($_POST['attach_id']);
+		$use = _txt($_POST['use']);
+
+		$sql = "UPDATE `_template_default`
+				SET `name`='".addslashes($name)."',
+					`attach_id`=".$attach_id.",
+					`name_link`='".addslashes($name_link)."',
+					`name_file`='".addslashes($name_file)."',
+					`use`='".addslashes($use)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		$send['html'] = utf8(sa_template_default_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_template_group_add'://Новая группа переменных для шаблонов
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название группы');
+		if(!$table_name = _txt($_POST['table_name']))
+			jsonError('Не указано название таблицы');
+
+		$sql = "SHOW TABLES LIKE '".$table_name."'";
+		if(!query_value($sql))
+			jsonError('Таблицы "'.$table_name.'" не существует');
+
+		$sql = "INSERT INTO `_template_var_group` (
+					`name`,
+					`table_name`,
+					`sort`
+				) VALUES (
+					'".addslashes($name)."',
+					'".addslashes($table_name)."',
+					"._maxSql('_template_var_group')."
+				)";
+		query($sql);
+
+		$send['html'] = utf8(sa_template_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_template_var_load':
+		$sql = "SELECT `id`,`name`
+				FROM `_template_var_group`
+				ORDER BY `sort`";
+		$send['group_spisok'] = query_selArray($sql);
+		
+		$send['group_id'] = 0;
+		$send['name'] = '';
+		$send['v'] = '{}';
+		$send['col_name'] = '';
+		jsonSuccess($send);
+		break;
+	case 'sa_template_var_add'://Новая переменная для шаблонов
+		if(!$group_id = _num($_POST['group_id']))
+			jsonError('Не указана группа');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+		if(!$v = _txt($_POST['v']))
+			jsonError('Не указан код');
+		if(!$col_name = _txt($_POST['col_name']))
+			jsonError('Не указана колонка таблицы');
+
+		$sql = "SELECT *
+				FROM `_template_var_group`
+				WHERE `id`=".$group_id;
+		if(!$group = query_assoc($sql))
+			jsonError('Группы id'.$group_id.' не существует');
+
+		$sql = "SHOW TABLES LIKE '".$group['table_name']."'";
+		if(!query_value($sql))
+			jsonError('Таблицы "'.$group['table_name'].'" не существует');
+
+		$sql = "DESCRIBE `".$group['table_name']."` `".$col_name."`";
+		if(!query_value($sql))
+			jsonError('Колонки `'.$group['table_name'].'`.`'.$col_name.'` не существует');
+
+		$sql = "INSERT INTO `_template_var` (
+					`group_id`,
+					`name`,
+					`v`,
+					`col_name`,
+					`sort`
+				) VALUES (
+					".$group_id.",
+					'".addslashes($name)."',
+					'".addslashes($v)."',
+					'".addslashes($col_name)."',
+					"._maxSql('_template_var')."
+				)";
+		query($sql);
+
+		$send['html'] = utf8(sa_template_spisok());
 		jsonSuccess($send);
 		break;
 

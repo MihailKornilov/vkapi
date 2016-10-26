@@ -543,6 +543,7 @@ function _income_unit($r, $filter=array()) {
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'.
 				'<a href="'.URL.'&p=print&d=receipt&id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>'.
+//				'<a href="'.URL.'&p=print&d=template&id=1&income_id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -153, 'r').'</a>'.
 				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm));
 }
 function incomeAbout($r, $filter=array()) {

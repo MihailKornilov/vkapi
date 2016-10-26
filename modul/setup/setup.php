@@ -37,7 +37,8 @@ function _setup() {
 		'worker' => 'rule',
 		'rubric' => 'sub',
 		'expense' => 'sub',
-		'product' => 'sub'
+		'product' => 'sub',
+		'document_template' => 'info'
 	);
 
 	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
@@ -1478,4 +1479,130 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 	$send .= '</table>';
 	return $send;
 }
+
+
+
+
+
+
+
+
+
+
+
+function setup_document_template() {//шаблоны документов
+	return
+	'<div id="setup_document_template">'.
+		'<div class="headName">Шаблоны документов для печати</div>'.
+		'<div class="_info">Настройка формирования документов из шаблонов в формате XLS.</div>'.
+		'<div id="spisok" class="mt20">'.setup_document_template_spisok().'</div>'.
+	'</div>';
+}
+function setup_document_template_spisok() {
+	$but = '<button class="vk small fr" onclick="setupTemplateEdit()">Создать новый шаблон</button>';
+
+	$sql = "SELECT *
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return '<div>Шаблонов нет.'.$but.'</div>';
+
+	$count = count($spisok);
+	$send =
+		'<div>'.
+			'Доступ'._end($count, 'ен', 'но').' '.$count.' шаблон'._end($count, '', 'а', 'ов').':'.
+			$but.
+		'</div>';
+	$n = 1;
+	foreach($spisok as $r)
+		$send .=
+			'<div class="unit mt'.($n == 1 ? 10 : 5).'">'.($n++).'. '.
+				'<a href="'.URL.'&p=setup&d=document_template&id='.$r['id'].'">'.$r['name'].'</a>'.
+			'</div>';
+
+	return $send;
+}
+function setup_document_template_info() {
+	$send =
+	'<div id="setup_document_template_info">'.
+		'<a href="'.URL.'&p=setup&d=document_template"><< назад к списку шаблонов</a>';
+
+	if(!$id = _num(@$_GET['id']))
+		return $send._err('Некорректный идентификатор шаблона.').'</div>';
+
+	$sql = "SELECT *
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".$id;
+	if(!$r = query_assoc($sql))
+		return $send._err('Шаблона не существует.').'</div>';
+
+	$send .=
+		_attachJs(array('id'=>$r['attach_id'])).
+		'<script>var TEMPLATE_ID='.$id.';</script>'.
+		'<div class="headName">Шаблон "'.$r['name'].'"</div>'.
+		'<table class="bs10 mb20">'.
+			'<tr><td class="label r">Файл шаблона:'.
+				'<td><input type="hidden" id="attach_id" value="'.$r['attach_id'].'" />'.
+			'<tr><td class="label r">Текст ссылки:'.
+				'<td><input type="text" id="name_link" class="w250" value="'.$r['name_link'].'" />'.
+			'<tr><td class="label r">Имя файла документа:'.
+				'<td><input type="text" id="name_file" class="w250" value="'.$r['name_file'].'" />'.
+			'<tr><td>'.
+				'<td><button class="vk save">Сохранить</button>'.
+		'</table>'.
+
+		'<div class="headName">Переменные для шаблона</div>'.
+		'<div class="_info">'.
+			'<p><b>Переменные</b> используются для вставки в <b>документ XLS</b>, который затем загружается в приложение.'.
+			'<p>Переменные подменяются на данные, которые будут извлечены из базы данных при формировании документа.'.
+			'<p>Ниже представлены все возможные переменные, разделённые по группам.'.
+		'</div>'.
+		setup_document_template_group();
+
+	return $send;
+}
+function setup_document_template_group() {
+	$sql = "SELECT *
+			FROM `_template_var_group`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Переменных нет.';
+
+	foreach($spisok as $id => $r)
+		$spisok[$id]['var'] = array();
+
+	$sql = "SELECT *
+			FROM `_template_var`
+			ORDER BY `sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['group_id']]['var'][] = $r;
+
+	$send = '';
+	foreach($spisok as $r)
+		$send .=
+			'<div class="headBlue mt20">'.$r['name'].':</div>'.
+			setup_document_template_var($r['var']);
+
+	return $send;
+}
+function setup_document_template_var($spisok) {
+	if(empty($spisok))
+		return '';
+
+	$send = '<table class="bs5">';
+	foreach($spisok as $r)
+		$send .=
+		'<tr><td><input type="text" class="var" readonly value="'.$r['v'].'" />'.
+			'<td>'.$r['name'];
+
+	$send .= '</table>';
+
+	return $send;
+}
+
+
+
 

@@ -36,6 +36,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=sa&d=zayav">Заявки</a>'.
 		'<a href="'.URL.'&p=sa&d=tovar_measure">Товары: единицы измерения</a>'.
 		'<a href="'.URL.'&p=sa&d=color">Цвета</a>'.
+		'<a href="'.URL.'&p=sa&d=template">Шаблоны документов</a>'.
 		'<a href="'.URL.'&p=sa&d=count">Счётчики</a>'.
 		'<br />'.
 
@@ -904,6 +905,7 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 
 
 
+
 function sa_tovar_measure() {//единицы измерения товаров
 	return
 		sa_path('Товары: единицы измерения').
@@ -962,6 +964,7 @@ function sa_tovar_measure_spisok() {
 
 	return $send;
 }
+
 
 
 
@@ -1030,6 +1033,102 @@ function sa_color_spisok() {
 
 
 
+function sa_template() {//управление переменными шаблонов документов
+	return
+		sa_path('Шаблоны документов').
+		'<div id="sa-template">'.
+			'<div class="headName">'.
+				'Шаблоны по умолчанию'.
+				'<a class="add" onclick="saTemplateDefaultEdit()">добавить</a>'.
+			'</div>'.
+			'<div id="spisok-def">'.sa_template_default_spisok().'</div>'.
+
+			'<div class="headName">'.
+				'Переменные для шаблонов'.
+				'<button class="vk small red fr" onclick="saTemplateVarEdit()">+ переменная</button>'.
+				'<button class="vk small fr mr5" onclick="saTemplateGroupEdit()">Новая группа</button>'.
+			'</div>'.
+			'<div id="spisok">'.sa_template_spisok().'</div>'.
+		'</div>';
+}
+function sa_template_default_spisok() {
+	$sql = "SELECT *
+			FROM `_template_default`
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return 'Шаблонов нет.';
+
+	$spisok = _attachValToList($spisok);
+
+	$n = 1;
+	$send =
+		_attachJs(array('id'=>_idsGet($spisok, 'attach_id'))).
+		'<table class="_spisok">';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr><td class="w15 r grey">'.($n++).
+				'<td class="w150">'.
+					'<b class="name">'.$r['name'].'</b>'.
+					'<br />'.
+					$r['attach_link'].
+					'<input type="hidden" class="attach_id" value="'.$r['attach_id'].'" />'.
+				'<td><span class="grey">Имя ссылки:</span> '.
+					'<span class="name_link">'.$r['name_link'].'</span>'.
+					'<br />'.
+					'<span class="grey">Имя файла:</span> '.
+					'<span class="name_file">'.$r['name_file'].'</span>'.
+				'<td class="use w100 grey">'.$r['use'].
+				'<td class="ed">'._iconEdit($r);
+	}
+
+	$send .= '</table>';
+
+	return $send;
+}
+function sa_template_spisok() {
+	$sql = "SELECT *
+			FROM `_template_var_group`
+			ORDER BY `sort`";
+	if(!$spisok = query_arr($sql))
+		return 'Данные не вносились.';
+
+	foreach($spisok as $id => $r)
+		$spisok[$id]['var'] = array();
+
+	$sql = "SELECT *
+			FROM `_template_var`
+			ORDER BY `sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['group_id']]['var'][] = $r;
+
+	$send = '';
+	foreach($spisok as $r)
+		$send .=
+			'<div class="b mt20">'.$r['name'].':</div>'.
+			sa_template_var($r['var'], $r['table_name']);
+
+	return $send;
+}
+function sa_template_var($spisok, $table_name) {
+	if(empty($spisok))
+		return '';
+
+	$send = '<table class="_spisok mar8 w400">';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr><td class="w125 b">'.$r['v'].
+				'<td>'.$r['name'].
+				'<td class="w100">`'.$table_name.'`.`'.$r['col_name'].'`';
+	}
+
+	$send .= '</table>';
+
+	return $send;
+}
+
+
+
 
 function sa_count() {
 	return
@@ -1051,7 +1150,6 @@ function sa_count() {
 		'<button class="vk tovar-avai-check">Проверка корректности наличия товара</button>'.
 	'</div>';
 }
-
 
 
 

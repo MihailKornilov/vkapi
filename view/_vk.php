@@ -636,7 +636,7 @@ function _report() {
 					'<div class="findHead">Фильтр</div>'.
 					'<div id="find"></div>'.
 					_check('no_pay', 'Счёт не оплачен', 1).
-					'<div class="mt10">'._check('no_attach', 'Счёт не прикреплён').'</div>';
+					'<div class="mt10">'._check('no_attach', 'Файл не прикреплён').'</div>';
 			break;
 	}
 
@@ -1029,9 +1029,6 @@ function _kop($v) {//получение копеек из суммы
 	return $ost.' копе'._end($ost, 'йка', 'йки', 'ек');
 }
 function _maxSql($table, $pole='sort', $app=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
-	/*
-		$ws: учитывать приложение и организацию
-	*/
 	$sql = "SELECT IFNULL(MAX(`".$pole."`)+1,1)
 			FROM `".$table."`
 			WHERE `id`".
@@ -1790,7 +1787,82 @@ function _print_document() {//вывод на печать документов
 			require_once GLOBAL_DIR.'/view/xls/evrookna_report_month.php';
 			break;
 		case 'ob_word': _zayavObWord(); break;
+		case 'template': _template(); break;
 		default: die('Документ не найден.');
 	}
 	exit;
 }
+
+function _template() {//формирование шаблона XLS
+	if(!$template_id = _num($_GET['id']))
+		die('Некорректный id шаблона.');
+
+	//получение данных о шаблоне
+	$sql = "SELECT *
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".$template_id;
+	if(!$tmp = query_assoc($sql))
+		die('Шаблона id'.$template_id.' не существует.');
+
+	if(!$tmp['attach_id'])
+		die('Не загружен файл шаблона.');
+
+	//получение данных о файле шаблона
+	$sql = "SELECT *
+			FROM `_attach`
+			WHERE `id`=".$tmp['attach_id'];
+	if(!$attach = query_assoc($sql))
+		die('Файла шаблона id'.$tmp['attach_id'].' не существует.');
+
+	$sql = "SELECT
+				*,
+				'' `text`
+			FROM `_template_var`";
+	$varSpisok = query_arr($sql);
+
+	foreach($varSpisok as $id => $r) {
+		if($r['group_id'] != 1)
+			continue;
+		$varSpisok[$id]['text'] = _app($r['col_name']);
+	}
+
+	$var = array();
+	foreach($varSpisok as $r) {
+		if(!$r['text'])
+			continue;
+		$var[$r['v']] = $r['text'];
+	}
+
+//	print_r($var);
+
+//	die($sql.'пока всё ок');
+
+	$reader = PHPExcel_IOFactory::createReader('Excel5');
+//	$reader = PHPExcel_IOFactory::createReader('Excel2007');
+	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
+	 
+	$sheet = $book->getActiveSheet();
+
+	$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
+	$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
+
+    for($row = 0; $row < $rowMax; $row++)
+        for($col = 0; $col < $сolMax; $col++) {
+	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
+		        continue;
+
+	        foreach($var as $v => $i)
+	            $txt = str_replace($v, utf8($i), $txt);
+
+	        $sheet->setCellValueByColumnAndRow($col, $row + 1, $txt);
+        }
+
+	header('Content-type: application/vnd.ms-excel');
+	header('Content-Disposition: attachment; filename="файл_'.time().'.xls"');
+	$writer = PHPExcel_IOFactory::createWriter($book, 'Excel5');
+	$writer->save('php://output');
+}
+
+
+
