@@ -771,7 +771,7 @@ var saMenuEdit = function(o) {
 			}),
 			send = {
 				op:'sa_template_var_load',
-				id:id
+				id:_num(id)
 			};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
@@ -814,7 +814,7 @@ var saMenuEdit = function(o) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					$('#spisok').html(res.html);
+					$('#spisok-var').html(res.html);
 				} else
 					dialog.abort(res.text);
 			}, 'json');

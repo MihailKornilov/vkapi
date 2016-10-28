@@ -1175,15 +1175,28 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'sa_template_var_load':
+		$send['group_id'] = 0;
+		$send['name'] = '';
+		$send['v'] = '${}';
+		$send['col_name'] = '';
+
+		if($id = _num($_POST['id'])) {
+			$sql = "SELECT *
+					FROM `_template_var`
+					WHERE `id`=".$id;
+			if($r = query_assoc($sql)) {
+				$send['group_id'] = _num($r['group_id']);
+				$send['name'] = utf8($r['name']);
+				$send['v'] = $r['v'];
+				$send['col_name'] = $r['col_name'];
+			}
+		}
+
 		$sql = "SELECT `id`,`name`
 				FROM `_template_var_group`
 				ORDER BY `sort`";
 		$send['group_spisok'] = query_selArray($sql);
 		
-		$send['group_id'] = 0;
-		$send['name'] = '';
-		$send['v'] = '{}';
-		$send['col_name'] = '';
 		jsonSuccess($send);
 		break;
 	case 'sa_template_var_add'://Новая переменная для шаблонов
@@ -1223,6 +1236,49 @@ switch(@$_POST['op']) {
 					'".addslashes($col_name)."',
 					"._maxSql('_template_var')."
 				)";
+		query($sql);
+
+		$send['html'] = utf8(sa_template_spisok());
+		jsonSuccess($send);
+		break;
+	case 'sa_template_var_edit'://редактирование переменной для шаблонов
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$group_id = _num($_POST['group_id']))
+			jsonError('Не указана группа');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+		if(!$v = _txt($_POST['v']))
+			jsonError('Не указан код');
+		if(!$col_name = _txt($_POST['col_name']))
+			jsonError('Не указана колонка таблицы');
+
+		$sql = "SELECT *
+				FROM `_template_var`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Переменной id'.$id.' не существует');
+
+		$sql = "SELECT *
+				FROM `_template_var_group`
+				WHERE `id`=".$group_id;
+		if(!$group = query_assoc($sql))
+			jsonError('Группы id'.$group_id.' не существует');
+
+		$sql = "SHOW TABLES LIKE '".$group['table_name']."'";
+		if(!query_value($sql))
+			jsonError('Таблицы "'.$group['table_name'].'" не существует');
+
+		$sql = "DESCRIBE `".$group['table_name']."` `".$col_name."`";
+		if(!query_value($sql))
+			jsonError('Колонки `'.$group['table_name'].'`.`'.$col_name.'` не существует');
+
+		$sql = "UPDATE `_template_var`
+				SET `group_id`=".$group_id.",
+					`name`='".addslashes($name)."',
+					`v`='".addslashes($v)."',
+					`col_name`='".addslashes($col_name)."'
+				WHERE `id`=".$id;
 		query($sql);
 
 		$send['html'] = utf8(sa_template_spisok());

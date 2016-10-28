@@ -1048,7 +1048,7 @@ function sa_template() {//управление переменными шаблонов документов
 				'<button class="vk small red fr" onclick="saTemplateVarEdit()">+ переменная</button>'.
 				'<button class="vk small fr mr5" onclick="saTemplateGroupEdit()">Новая группа</button>'.
 			'</div>'.
-			'<div id="spisok">'.sa_template_spisok().'</div>'.
+			'<div id="spisok-var">'.sa_template_spisok().'</div>'.
 		'</div>';
 }
 function sa_template_default_spisok() {
@@ -1119,7 +1119,8 @@ function sa_template_var($spisok, $table_name) {
 		$send .=
 			'<tr><td class="w125 b">'.$r['v'].
 				'<td>'.$r['name'].
-				'<td class="w100">`'.$table_name.'`.`'.$r['col_name'].'`';
+				'<td class="w100">`'.$table_name.'`.`'.$r['col_name'].'`'.
+				'<td class="ed">'._iconEdit($r + array('onclick'=>'saTemplateVarEdit('.$r['id'].')'));
 	}
 
 	$send .= '</table>';
