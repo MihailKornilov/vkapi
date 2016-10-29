@@ -4,8 +4,7 @@
 */
 
 define('TIME', microtime(true));
-define('GLOBAL_DIR', dirname(dirname(__FILE__)));
-define('GLOBAL_DIR_AJAX', GLOBAL_DIR.'/ajax');
+define('GLOBAL_DIR', dirname(dirname(dirname(__FILE__))));
 
 setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
@@ -150,8 +149,8 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/js/vk'.MIN.'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/vk/vk'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Переменные _global для всех приложений
 		'<script src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
@@ -410,25 +409,37 @@ function _appType($i=false, $p=1) {//тип организации
 	$arr[1] = array(
 		1 => 'Сервисный центр',
 		2 => 'Мастерская',
-		3 => 'Магазин'
+		3 => 'Магазин',
+		4 => 'Редакция',
+		5 => 'Сварочный цех',
+		6 => 'Офис'
 	);
 
 	$arr[2] = array(
 		1 => 'Сервисного центра',
 		2 => 'Мастерской',
-		3 => 'Магазина'
+		3 => 'Магазина',
+		4 => 'Редакции',
+		5 => 'Сварочного цеха',
+		6 => 'Офиса'
 	);
 
 	$arr[4] = array(
 		1 => 'Сервисный центр',
 		2 => 'Мастерскую',
-		3 => 'Магазин'
+		3 => 'Магазин',
+		4 => 'Редакцию',
+		5 => 'Сварочный цех',
+		6 => 'Офис'
 	);
 
 	$arr[7] = array(
 		1 => 'в сервисном центре',
 		2 => 'в мастерской',
-		3 => 'в магазине'
+		3 => 'в магазине',
+		4 => 'в редакции',
+		5 => 'в сварочном цеху',
+		6 => 'в офисе'
 	);
 
 	if($i === false)
@@ -864,11 +875,12 @@ function _daNet($v) {//$v: 1 -> да, 0 -> нет
 }
 function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	$v = array(
-		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
-		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',       //id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : '',      //дополнительный класс
+		'onclick' => !empty($v['onclick']) ? ' onclick="'.$v['onclick'].'"' : '' //скрипт по нажатию
 	);
 
-	return '<div'.$v['id'].' class="img_edit'.$v['class']._tooltip('Изменить', -52, 'r').'</div>';
+	return '<div'.$v['id'].$v['onclick'].' class="img_edit'.$v['class']._tooltip('Изменить', -52, 'r').'</div>';
 }
 function _iconAdd($v=array()) {//иконка добавления записи
 	$v = array(
@@ -1757,8 +1769,8 @@ function _color($color_id, $color_dop=0) {
 
 function _print_document() {//вывод на печать документов
 	set_time_limit(300);
-	require_once GLOBAL_DIR.'/excel/PHPExcel.php';
-	require_once GLOBAL_DIR.'/word/clsMsDocGenerator.php';
+	require_once GLOBAL_DIR.'/inc/excel/vendor/autoload.php';
+	require_once GLOBAL_DIR.'/inc/clsMsDocGenerator.php';
 
 	switch(@$_GET['d']) {
 		case 'kvit_html':
@@ -1793,17 +1805,31 @@ function _print_document() {//вывод на печать документов
 	exit;
 }
 
-function _template() {//формирование шаблона XLS
-	if(!$template_id = _num($_GET['id']))
-		die('Некорректный id шаблона.');
 
-	//получение данных о шаблоне
-	$sql = "SELECT *
-			FROM `_template`
-			WHERE `app_id`=".APP_ID."
-			  AND `id`=".$template_id;
-	if(!$tmp = query_assoc($sql))
-		die('Шаблона id'.$template_id.' не существует.');
+
+
+
+function _template() {//формирование шаблона
+	if(empty($_GET['template_id']))
+		die('Отсутствует идентификатор шаблона.');
+
+	//получение данных о шаблоне по id
+	if($template_id = _num($_GET['template_id'])) {
+		$sql = "SELECT *
+				FROM `_template`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$template_id;
+		if(!$tmp = query_assoc($sql))
+			die('Шаблона id'.$template_id.' не существует.');
+	} else {
+		$use = $_GET['template_id'];
+		$sql = "SELECT *
+				FROM `_template`
+				WHERE `app_id`=".APP_ID."
+				  AND `use`='".addslashes($use)."'";
+		if(!$tmp = query_assoc($sql))
+			die('Неизвестный идентификатор шаблона: '.$use);
+	}
 
 	if(!$tmp['attach_id'])
 		die('Не загружен файл шаблона.');
@@ -1815,29 +1841,78 @@ function _template() {//формирование шаблона XLS
 	if(!$attach = query_assoc($sql))
 		die('Файла шаблона id'.$tmp['attach_id'].' не существует.');
 
+	//проверка расширения файла: xls, xlsx, docx
+	$ex = explode('.', $attach['link']);
+	$kLast = count($ex) - 1;
+	if(!$kLast)
+		die('Некорректное имя файла шаблона.');
+
+//	print_r(_templateVar()); exit;
+
+	switch($ex[$kLast]) {
+		case 'xls': break;
+		case 'xlsx': break;
+		case 'docx': _templateWord($tmp, $attach); exit;
+		default: die('Недопустимый файл шаблона.');
+	}
+}
+function _templateVar() {
 	$sql = "SELECT
-				*,
+				`var`.*,
+				`gr`.`table_name`,
 				'' `text`
-			FROM `_template_var`";
+			FROM
+				`_template_var` `var`,
+				`_template_var_group` `gr`
+			WHERE `var`.`group_id`=`gr`.`id`";
 	$varSpisok = query_arr($sql);
 
-	foreach($varSpisok as $id => $r) {
-		if($r['group_id'] != 1)
-			continue;
-		$varSpisok[$id]['text'] = _app($r['col_name']);
+	foreach($varSpisok as $id => $r)
+		if($r['table_name'] == '_app')
+			$varSpisok[$id]['text'] = _app($r['col_name']);
+
+	//платежи
+	if($income_id = _num($_GET['income_id'])) {
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$income_id;
+		if($income = query_assoc($sql))
+			foreach($varSpisok as $id => $r)
+				if($r['table_name'] == '_money_income') {
+					if($r['v'] == '{INCOME_SUM_PROPIS}') {
+						$varSpisok[$id]['text'] = _numToWord($income[$r['col_name']], 1).'рубл'._end($income[$r['col_name']], 'ь', 'я', 'ей');
+						continue;
+					}
+					if($r['v'] == '{INCOME_DATE_ADD}') {
+						$varSpisok[$id]['text'] = FullData($income[$r['col_name']]);
+						continue;
+					}
+					$varSpisok[$id]['text'] = $income[$r['col_name']];
+				}
 	}
 
 	$var = array();
-	foreach($varSpisok as $r) {
-		if(!$r['text'])
-			continue;
+	foreach($varSpisok as $r)
 		$var[$r['v']] = $r['text'];
-	}
 
-//	print_r($var);
+	return $var;
+}
+function _templateWord($tmp, $attach) {//формирование шаблона Word
+	require_once GLOBAL_DIR.'/inc/word/vendor/autoload.php';
 
-//	die($sql.'пока всё ок');
+	$phpWord = new \PhpOffice\PhpWord\PhpWord();
+	$document = $phpWord->loadTemplate(GLOBAL_PATH.'/..'.$attach['link']);
 
+	foreach(_templateVar() as $key => $name)
+		$document->setValue($key, utf8($name));
+
+	header('Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.docx"');
+	$document->saveAs('php://output');
+}
+function _templateXls($tmp, $attach) {//формирование шаблона Word
 	$reader = PHPExcel_IOFactory::createReader('Excel5');
 //	$reader = PHPExcel_IOFactory::createReader('Excel2007');
 	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);

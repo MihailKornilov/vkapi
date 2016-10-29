@@ -346,7 +346,7 @@ function salary_worker($v) {
 	'<div id="salary-worker">'.
 		'<div class="headName">'._viewer($filter['id'], 'viewer_name').': история з/п за <em>'.$filter['month'].'</em>.</div>'.
 		'<h2>Баланс: '.
-			'<a  val="5:'.$filter['id'].'" class="_balans-show'._tooltip('История операций', -40).salaryWorkerBalans($filter['id'], 1).'</a> руб.'.
+			'<a onclick="_balansShow(5,'.$filter['id'].')" class="balans'._tooltip('История операций', -40).salaryWorkerBalans($filter['id'], 1).'</a> руб.'.
 			'<input type="hidden" id="action" />'.
 		'<h2>'.
 		'<h1>Ставка: <em>'.salaryWorkerRate($filter['id']).'</em></h1>'.

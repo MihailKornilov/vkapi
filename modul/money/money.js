@@ -980,6 +980,49 @@ var _accrualAdd = function(o) {
 		return _invoiceExpenseInsert(def);
 	},
 
+	_balansShow = function(category_id, unit_id) {
+		var dialog = _dialog({
+				top:10,
+				width:600,
+				head:'Просмотр истории операций',
+				load:1,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			}),
+			send = {
+				op:'balans_show',
+				category_id:category_id,
+				unit_id:unit_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				$('#dopLinks .link').click(function() {
+					var t = $(this),
+						p = t.parent(),
+						v = t.attr('val');
+					p.find('.sel').removeClass('sel');
+					t.addClass('sel');
+					$('.tab').addClass('dn');
+					$('.tab' + v).removeClass('dn');
+				});
+			} else
+				dialog.loadError();
+		}, 'json');	},
+	_balansSpisok = function(v, id) {
+		_filterSpisok(BALANS, v, id);
+		$.post(AJAX_MAIN, BALANS, function(res) {
+			if(res.success) {
+				$('#balans-show .link').removeClass('sel');
+				$('#balans-show .link:first').addClass('sel');
+				$('.tab').addClass('dn');
+				$('.tab1')
+					.removeClass('dn')
+					.html(res.spisok);
+			}
+		}, 'json');
+	},
+
 	_salaryNoAccRecalcHint = function() {
 		$('#noacc-recalc').vkHint({
 			width:330,
@@ -1026,7 +1069,7 @@ var _accrualAdd = function(o) {
 				SALARY.year = send.year;
 				SALARY.mon = send.mon;
 				$('.headName em').html(MONTH_DEF[send.mon] + ' ' + send.year);
-				$('._balans-show').html(res.balans);
+				$('.balans').html(res.balans);
 				$('#spisok-list').html(res.list);
 				SALARY.list = res.list_array;
 				$('#spisok-acc').html(res.acc);
@@ -1068,7 +1111,7 @@ var _accrualAdd = function(o) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					$('._balans-show').html(res.balans);
+					$('.balans').html(res.balans);
 				} else
 					dialog.abort();
 			}, 'json');
@@ -2292,43 +2335,6 @@ $(document)
 				p.remove();
 			}
 		});
-	})
-
-	.on('click', '#_balans_next', function() {
-		var next = $(this);
-		if(next.hasClass('busy'))
-			return;
-		next.addClass('busy');
-		BALANS.op = 'balans_spisok';
-		BALANS.page = next.attr('val');
-		$.post(AJAX_MAIN, BALANS, function(res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
-	.on('click', '._balans-show', function() {//вывод окна истории изменения балансов
-		var dialog = _dialog({
-				top:10,
-				width:600,
-				head:'Просмотр истории операций',
-				load:1,
-				butSubmit:'',
-				butCancel:'Закрыть'
-			}),
-			v = $(this).attr('val').split(':')
-			send = {
-				op:'balans_show',
-				category_id:v[0],
-				unit_id:_num(v[1])
-			};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-			} else
-				dialog.loadError();
-		}, 'json');
 	})
 
 	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход

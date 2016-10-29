@@ -1,5 +1,5 @@
 <?php
-require_once 'view/_vk.php';
+require_once 'modul/vk/vk.php';
 
 //Включает работу куков в IE через фрейм
 header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');

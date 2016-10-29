@@ -696,7 +696,8 @@ var saMenuEdit = function(o) {
 		$('#attach_id')._attach({
 			type:'button',
 			title:'загрузить шаблон',
-			format:'xls,xlsx'
+			format:'docx,xls,xlsx',
+			noapp:1
 		});
 
 		function submit() {

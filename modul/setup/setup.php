@@ -1491,12 +1491,45 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 
 
 function setup_document_template() {//шаблоны документов
+	setup_document_template_default_test();
 	return
 	'<div id="setup_document_template">'.
 		'<div class="headName">Шаблоны документов для печати</div>'.
-		'<div class="_info">Настройка формирования документов из шаблонов в формате XLS.</div>'.
+		'<div class="_info">Настройка формирования документов из шаблонов в формате <b>Word</b> и <b>Excel</b>.</div>'.
 		'<div id="spisok" class="mt20">'.setup_document_template_spisok().'</div>'.
 	'</div>';
+}
+function setup_document_template_default_test() {//проверка на наличие шаблонов по умолчанию
+	$sql = "SELECT `use`,1
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND LENGTH(`use`)";
+	$tmp = query_ass($sql);
+
+	$sql = "SELECT *
+			FROM `_template_default`
+			ORDER BY `id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		if(isset($tmp[$r['use']]))
+			continue;
+		$sql = "INSERT INTO `_template` (
+					`app_id`,
+					`name`,
+					`attach_id`,
+					`name_link`,
+					`name_file`,
+					`use`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($r['name'])."',
+					".$r['attach_id'].",
+					'".addslashes($r['name_link'])."',
+					'".addslashes($r['name_file'])."',
+					'".addslashes($r['use'])."'
+				)";
+		query($sql);
+	}
 }
 function setup_document_template_spisok() {
 	$but = '<button class="vk small fr" onclick="setupTemplateEdit()">Создать новый шаблон</button>';
@@ -1511,7 +1544,7 @@ function setup_document_template_spisok() {
 	$count = count($spisok);
 	$send =
 		'<div>'.
-			'Доступ'._end($count, 'ен', 'но').' '.$count.' шаблон'._end($count, '', 'а', 'ов').':'.
+			'<u>Доступ'._end($count, 'ен', 'но').' '.$count.' шаблон'._end($count, '', 'а', 'ов').':</u>'.
 			$but.
 		'</div>';
 	$n = 1;
@@ -1543,6 +1576,8 @@ function setup_document_template_info() {
 		'<script>var TEMPLATE_ID='.$id.';</script>'.
 		'<div class="headName">Шаблон "'.$r['name'].'"</div>'.
 		'<table class="bs10 mb20">'.
+			'<tr><td class="label r">Название:'.
+				'<td><input type="text" id="name" class="w250" value="'.$r['name'].'" />'.
 			'<tr><td class="label r">Файл шаблона:'.
 				'<td><input type="hidden" id="attach_id" value="'.$r['attach_id'].'" />'.
 			'<tr><td class="label r">Текст ссылки:'.
@@ -1555,7 +1590,7 @@ function setup_document_template_info() {
 
 		'<div class="headName">Переменные для шаблона</div>'.
 		'<div class="_info">'.
-			'<p><b>Переменные</b> используются для вставки в <b>документ XLS</b>, который затем загружается в приложение.'.
+			'<p><b>Переменные</b> используются для вставки в <b>документ</b> (файл шаблона), который затем загружается в приложение.'.
 			'<p>Переменные подменяются на данные, которые будут извлечены из базы данных при формировании документа.'.
 			'<p>Ниже представлены все возможные переменные, разделённые по группам.'.
 		'</div>'.
@@ -1583,8 +1618,8 @@ function setup_document_template_group() {
 	$send = '';
 	foreach($spisok as $r)
 		$send .=
-			'<div class="headBlue mt20">'.$r['name'].':</div>'.
-			setup_document_template_var($r['var']);
+			'<div class="headBlue curP" onclick="$(this).next().slideToggle()">'.$r['name'].':</div>'.
+			'<div class="mb20 dn">'.setup_document_template_var($r['var']).'</div>';
 
 	return $send;
 }

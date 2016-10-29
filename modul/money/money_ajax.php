@@ -1875,7 +1875,7 @@ switch(@$_POST['op']) {
 		break;
 	case 'balans_spisok':
 		$data = balans_show_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
+		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 

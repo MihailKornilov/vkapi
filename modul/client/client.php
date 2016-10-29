@@ -964,8 +964,8 @@ function _clientInfo() {//вывод информации о клиенте
 function _clientInfoBalans($r) {//отображение текущего баланса клиента
 	return
 		'<a style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
-		  ' val="2:'.$r['id'].'"'.
-		  ' class="ci-balans _balans-show'._tooltip('Баланс', -19).
+		  ' onclick="_balansShow(2,'.$r['id'].')"'.
+		  ' class="ci-balans'._tooltip('Баланс', -19).
 			_sumSpace(_cena($r['balans'], 1)).
 		'</a>';
 }

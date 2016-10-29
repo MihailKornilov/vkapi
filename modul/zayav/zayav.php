@@ -2294,7 +2294,7 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 	return $send;
 }
 function _zayavDogovorPrint($v) {
-	require_once(GLOBAL_DIR.'/word/clsMsDocGenerator.php');
+	require_once(GLOBAL_DIR.'/inc/clsMsDocGenerator.php');
 
 	$income_id = 0;
 	if(!is_array($v)) {

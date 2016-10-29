@@ -1,5 +1,5 @@
 <?php
-require_once 'view/_vk.php';
+require_once 'modul/vk/vk.php';
 
 _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
@@ -15,8 +15,7 @@ if(empty($nopin[$_POST['op']]) && PIN_ENTER)
 
 $_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
 
-require_once GLOBAL_DIR_AJAX.'/vk.php';
-
+require_once GLOBAL_DIR.'/modul/vk/vk_ajax.php';
 require_once GLOBAL_DIR.'/modul/client/client_ajax.php';
 require_once GLOBAL_DIR.'/modul/zayav/zayav_ajax.php';
 require_once GLOBAL_DIR.'/modul/tovar/tovar_ajax.php';

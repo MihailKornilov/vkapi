@@ -1177,7 +1177,7 @@ switch(@$_POST['op']) {
 	case 'sa_template_var_load':
 		$send['group_id'] = 0;
 		$send['name'] = '';
-		$send['v'] = '${}';
+		$send['v'] = '{}';
 		$send['col_name'] = '';
 
 		if($id = _num($_POST['id'])) {

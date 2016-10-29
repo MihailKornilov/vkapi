@@ -15,7 +15,7 @@ function _attachValToList($arr, $key='attach_id') {//вставка ссылок на файлы в м
 
 	$sql = "SELECT *
 			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
+			WHERE `app_id` IN (".APP_ID.",0)
 			  AND `id` IN (".$attach_ids.")";
 	if(!$attach = query_arr($sql))
 		return $arr;
@@ -72,7 +72,7 @@ function _attachJs($v=array()) {//получение ссылок на файлы в javascript
 function _attachArr($id) {//получение данных о файле в формате json для ajax
 	$sql = "SELECT *
 			FROM `_attach`
-			WHERE `app_id`=".APP_ID."
+			WHERE `app_id` IN (".APP_ID.",0)
 			  AND `id`=".$id;
 	if($r = query_assoc($sql))
 		return array(

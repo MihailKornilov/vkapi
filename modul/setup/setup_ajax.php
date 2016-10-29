@@ -2073,13 +2073,16 @@ switch(@$_POST['op']) {
 	case 'setup_template_save':
 		if(!$id = _num($_POST['id']))
 			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название шаблона');
 		if(!$name_link = _txt($_POST['name_link']))
-			jsonError('Не указан тексе ссылки');
+			jsonError('Не указан текст ссылки');
 		if(!$name_file = _txt($_POST['name_file']))
 			jsonError('Не указано имя файла документа');
 
 		$sql = "UPDATE `_template`
-				SET `name_link`='".addslashes($name_link)."',
+				SET `name`='".addslashes($name)."',
+					`name_link`='".addslashes($name_link)."',
 					`name_file`='".addslashes($name_file)."'
 				WHERE `id`=".$id;
 		query($sql);

@@ -542,8 +542,7 @@ function _income_unit($r, $filter=array()) {
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'.
-				'<a href="'.URL.'&p=print&d=receipt&id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>'.
-//				'<a href="'.URL.'&p=print&d=template&id=1&income_id='.$r['id'].'" class="img_doc'._tooltip('Распечатать товарный чек', -153, 'r').'</a>'.
+				_incomePrint($r['id']).
 				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm));
 }
 function incomeAbout($r, $filter=array()) {
@@ -577,6 +576,19 @@ function incomeAbout($r, $filter=array()) {
 		($r['refund_id'] ? ' <span class="red">Платёж возвращён.</span>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
+}
+function _incomePrint($income_id) {//ссылка-иконка для печати товарного чека
+	if(APP_ID == 3978722)
+		return '<a href="'.URL.'&p=print&d=receipt&id='.$income_id.'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>';
+
+	return
+	'<a href="'.URL.
+				'&p=print'.
+				'&d=template'.
+				'&template_id=income-receipt'.
+				'&income_id='.$income_id.'"'.
+	  ' class="img_doc'._tooltip('Распечатать товарный чек', -153, 'r').
+	'</a>';
 }
 function _incomeReceipt($id) {//товарный чек для платежа
 	$sql = "SELECT *
@@ -1482,7 +1494,7 @@ function invoice_spisok() {
 					'<span class="'._tooltip('Использовать по умолчанию', -162, 'r')._check('def'.$r['id'], '', $def == $r['id'] ? 1 : 0).'</span>'.
 					'<div val="'.$r['id'].'" class="img_setup'._tooltip('Выполнить операцию над счётом', -195, 'r').'</div>'.
 (RULE_INVOICE_HISTORY ?
-					'<div val="1:'.$r['id'].'" class="_balans-show img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'
+					'<div onclick="_balansShow(1,'.$r['id'].')" class="img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'
 : '').
 
 (RULE_SETUP_INVOICE ?
@@ -1677,114 +1689,6 @@ function invoice_inout_spisok($v=array()) {
 	return $send;
 }
 
-function invoice_info_balans_day($v) {//отображение баланса счёта за каждый день
-	$v = array(
-		'invoice_id' => _num($v['invoice_id']),
-		'year' => !_num(@$v['year']) ? strftime('%Y') : $v['year'],
-		'mon' => !_num(@$v['mon']) ? strftime('%m') : ($v['mon'] < 10 ? 0 : '').$v['mon']
-	);
-
-//	define('MONTH', $v['year'].'-'.$v['mon']);
-	define('MONTH', '2015-10');
-
-	$ass = array();
-
-	// остаток на конец дня
-	$sql = "SELECT
-				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
-				`balans`
-			FROM `_balans`
-			WHERE `id` IN (
-				SELECT
-					MAX(`id`)
-				FROM `_balans`
-				WHERE `app_id`=".APP_ID."
-				  AND `category_id`=1
-				  AND `unit_id`=".$v['invoice_id']."
-				  AND `dtime_add` LIKE '".MONTH."%'
-				GROUP BY DATE_FORMAT(`dtime_add`,'%d')
-				ORDER BY `id`
-			)";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ass[intval($r['day'])]['balans'] = round($r['balans'], 2);
-
-	// суммы приходов
-	$sql = "SELECT
-				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
-				SUM(`sum`) AS `sum`
-			FROM `_balans`
-			WHERE `app_id`=".APP_ID."
-			  AND `category_id`=1
-			  AND `unit_id`=".$v['invoice_id']."
-			  AND `sum`>0
-			  AND `dtime_add` LIKE '".MONTH."%'
-			GROUP BY DATE_FORMAT(`dtime_add`,'%d')
-			ORDER BY `id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ass[intval($r['day'])]['inc'] = round($r['sum'], 2);
-
-	// суммы расходов
-	$sql = "SELECT
-				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
-				SUM(`sum`) AS `sum`
-			FROM `_balans`
-			WHERE `app_id`=".APP_ID."
-			  AND `category_id`=1
-			  AND `unit_id`=".$v['invoice_id']."
-			  AND `sum`<0
-			  AND `dtime_add` LIKE '".MONTH."%'
-			GROUP BY DATE_FORMAT(`dtime_add`,'%d')
-			ORDER BY `id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ass[intval($r['day'])]['dec'] = round($r['sum'], 2);
-
-	$unix = strtotime(MONTH.'-01');
-	$prev_month = strftime('%Y-%m', $unix - 86400);
-
-	// баланс за последний день
-	$sql = "SELECT `balans`
-			FROM `_balans`
-			WHERE `app_id`=".APP_ID."
-			  AND `category_id`=1
-			  AND `unit_id`=".$v['invoice_id']."
-			  AND `dtime_add` LIKE '".$prev_month."%'
-			ORDER BY `id` DESC
-			LIMIT 1";
-	$balans = query_value($sql);
-
-	$send = '<table class="_spisok l" id="balans-day">'.
-			'<tr><th>День'.
-				'<th>Начало дня'.
-				'<th>Приход'.
-				'<th>Расход'.
-				'<th>Разница'.
-				'<th>Остаток';
-
-//	$balans = $balans ? $balans : 0;
-	for($d = 1; $d <= date('t', $unix); $d++) {
-		if(strtotime(MONTH.'-'.$d) > TODAY_UNIXTIME)
-			break;
-		$day = FullData(MONTH.'-'.$d, 1, 1, 1);
-		$balans = isset($ass[$d]) ? $ass[$d]['balans'] : $balans;
-		$inc = isset($ass[$d]['inc']) ? $ass[$d]['inc'] : 0;
-		$dec = isset($ass[$d]['dec']) ? $ass[$d]['dec'] : 0;
-		$diff = $inc + $dec;
-		$start = $balans - $inc - $dec;
-		$send .= '<tr'.(isset($ass[$d]) ? '' : ' class="emp"').'>'.
-				'<td class="day">'.(isset($ass[$d]) ? '<a class="to-day" val="'.MONTH.'-'.($d < 10 ? 0 : '').$d.'">'.$day.'</a>' : $day).
-				'<td class="start">'._sumSpace($start).
-				'<td class="inc">'.($inc ? _sumSpace($inc) : '').
-				'<td class="dec">'.($dec ? _sumSpace($dec) : '').
-				'<td class="diff '.($diff > 0 ? 'inc' : 'dec').'">'.($diff ? _sumSpace($diff) : '').
-				'<td class="ost">'._sumSpace($balans);
-	}
-	$send .= '</table>';
-	return $send;
-}
-
 function _balans($v) {//внесение записи о балансе
 	$app_id = _num(@$v['app_id']) ? _num($v['app_id']) : APP_ID;
 	$category_id = _balansAction($v['action_id'], 'category_id');
@@ -1891,7 +1795,10 @@ function balansFilter($v) {
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'category_id' => _num(@$v['category_id']),
-		'unit_id' => _num(@$v['unit_id'])
+		'unit_id' => _num(@$v['unit_id']),
+		'podrobno_day' => @$v['podrobno_day'],
+		'everyday_year' => _num(@$v['everyday_year']) ? $v['everyday_year'] : strftime('%Y'),
+		'everyday_mon' => _num(@$v['everyday_mon']) ? $v['everyday_mon'] : strftime('%m')
 	);
 }
 function balans_show($v) {//вывод таблицы с балансами конкретного счёта
@@ -1911,26 +1818,12 @@ function balans_show($v) {//вывод таблицы с балансами конкретного счёта
 
 			'<div id="dopLinks">' .
 				'<span>История операций:</span>'.
-				'<a class="link sel">Подробно</a>' .
-				'<a class="link">Ежедневно</a>' .
+				'<a class="link sel" val="1">Подробно</a>' .
+				'<a class="link" val="2">Ежедневно</a>' .
 			'</div>'.
-			'<div id="ih-spisok" class="ih-cont">'.$data['spisok'].'</div>'.
-			'<div id="ih-day" class="ih-cont dn">'.
-				'<div id="ih-data">'.
-					'<input type="hidden" id="ih-year" value="'.strftime('%Y').'" />'.
-					'<input type="hidden" id="ih-mon" value="'.intval(strftime('%m')).'" />'.
-				'</div>'.
-//				invoice_info_balans_day(array('invoice_id'=>$invoice_id)).
-			'</div>'.
-		'</div>'.
-
-		'<script>'.
-			'var BALANS={'.
-				'limit:'.$filter['limit'].','.
-				'category_id:'.$filter['category_id'].','.
-				'unit_id:'.$filter['unit_id'].
-			'};'.
-		'</script>';
+			'<div class="tab tab1">'.$data['spisok'].'</div>'.
+			'<div class="tab tab2 dn">'.balans_everyday($filter).'</div>'.
+		'</div>';
 }
 function balans_show_category($v) {
 	switch($v['category_id']) {
@@ -1982,15 +1875,19 @@ function balans_show_category($v) {
 	);
 }
 function balans_show_spisok($filter) {
+	$filter = _filterJs('BALANS', $filter);
 	define('PAGE1', $filter['page'] == 1);
 
 	$cond = "`app_id`=".APP_ID."
 		 AND `category_id`=".$filter['category_id']."
 		 AND `unit_id`=".$filter['unit_id'];
 
+	if($filter['podrobno_day'])
+		$cond .= " AND `dtime_add` LIKE '".$filter['podrobno_day']."%'";
+
 	$send = array(
 		'all' => 0,
-		'spisok' => '<div class="_empty">Истории нет.</div>',
+		'spisok' => $filter['js'].'<div class="_empty">Истории нет.</div>',
 		'filter' => $filter
 	);
 
@@ -2035,10 +1932,11 @@ function balans_show_spisok($filter) {
 	}
 
 	$send['spisok'] = !PAGE1 ? '' :
+		$filter['js'].
 		'<table class="_spisok" id="balans-tab">'.
 			'<tr><th>Действие'.
 				'<th>Сумма'.
-				'<th>Баланс'.
+				'<th>Остаток'.
 				'<th>Описание'.
 				'<th>Дата';
 
@@ -2094,12 +1992,115 @@ function balans_show_spisok($filter) {
 				'<td class="dtime">'._dtimeAdd($r);
 	}
 
-	$send['spisok'] .= _next($filter + array(
+	$send['spisok'] .=
+		_next($filter + array(
 			'all' => $all,
-			'tr' => 1,
-			'id' => '_balans_next'
+			'tr' => 1
 		));
 
+	return $send;
+}
+function balans_everyday($v) {//отображение баланса за каждый день
+	define('MONTH', $v['everyday_year'].'-'.$v['everyday_mon']);
+
+	$ass = array();
+
+	// остаток на конец дня
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
+				`balans`
+			FROM `_balans`
+			WHERE `id` IN (
+				SELECT
+					MAX(`id`)
+				FROM `_balans`
+				WHERE `app_id`=".APP_ID."
+				  AND `category_id`=".$v['category_id']."
+				  AND `unit_id`=".$v['unit_id']."
+				  AND `dtime_add` LIKE '".MONTH."%'
+				GROUP BY DATE_FORMAT(`dtime_add`,'%d')
+				ORDER BY `id`
+			)";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ass[intval($r['day'])]['balans'] = round($r['balans'], 2);
+
+	// суммы приходов
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
+				SUM(`sum`) AS `sum`
+			FROM `_balans`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".$v['category_id']."
+			  AND `unit_id`=".$v['unit_id']."
+			  AND `sum`>0
+			  AND `dtime_add` LIKE '".MONTH."%'
+			GROUP BY DATE_FORMAT(`dtime_add`,'%d')
+			ORDER BY `id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ass[intval($r['day'])]['inc'] = round($r['sum'], 2);
+
+	// суммы расходов
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%d') AS `day`,
+				SUM(`sum`) AS `sum`
+			FROM `_balans`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".$v['category_id']."
+			  AND `unit_id`=".$v['unit_id']."
+			  AND `sum`<0
+			  AND `dtime_add` LIKE '".MONTH."%'
+			GROUP BY DATE_FORMAT(`dtime_add`,'%d')
+			ORDER BY `id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ass[intval($r['day'])]['dec'] = round($r['sum'], 2);
+
+	$unix = strtotime(MONTH.'-01');
+	$prev_month = strftime('%Y-%m', $unix - 86400);
+
+	// баланс за последний день
+	$sql = "SELECT `balans`
+			FROM `_balans`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".$v['category_id']."
+			  AND `unit_id`=".$v['unit_id']."
+			  AND `dtime_add` LIKE '".$prev_month."%'
+			ORDER BY `id` DESC
+			LIMIT 1";
+	$balans = query_value($sql);
+
+	$send = '<table class="_spisok l" id="balans-day">'.
+			'<tr><th>День'.
+				'<th>Начало дня'.
+				'<th>Приход'.
+				'<th>Расход'.
+				'<th>Разница'.
+				'<th>Остаток';
+
+//	$balans = $balans ? $balans : 0;
+	for($d = 1; $d <= date('t', $unix); $d++) {
+		if(strtotime(MONTH.'-'.$d) > TODAY_UNIXTIME)
+			break;
+		$day = FullData(MONTH.'-'.$d, 1, 1, 1);
+		$balans = isset($ass[$d]) ? $ass[$d]['balans'] : $balans;
+		$inc = isset($ass[$d]['inc']) ? $ass[$d]['inc'] : 0;
+		$dec = isset($ass[$d]['dec']) ? $ass[$d]['dec'] : 0;
+		$diff = $inc + $dec;
+		$start = $balans - $inc - $dec;
+		$send .= '<tr'.(isset($ass[$d]) ? '' : ' class="emp"').'>'.
+				'<td class="day wsnw">'.
+					(isset($ass[$d]) ?
+						'<a onclick="_balansSpisok(\''.MONTH.'-'.($d < 10 ? 0 : '').$d.'\',\'podrobno_day\')">'.$day.'</a>'
+					: $day).
+				'<td class="start">'._sumSpace($start).
+				'<td class="inc">'.($inc ? _sumSpace($inc) : '').
+				'<td class="dec">'.($dec ? _sumSpace($dec) : '').
+				'<td class="diff '.($diff > 0 ? 'inc' : 'dec').'">'.($diff ? _sumSpace($diff) : '').
+				'<td class="ost">'._sumSpace($balans);
+	}
+	$send .= '</table>';
 	return $send;
 }
 

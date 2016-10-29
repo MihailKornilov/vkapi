@@ -1802,7 +1802,7 @@ $(document)
 			$('#attach_id')._attach({
 				type:'button',
 				title:'загрузить шаблон',
-				format:'xls,xlsx',
+				format:'xls,xlsx,docx',
 				table_name:'_template',
 				table_row:window.TEMPLATE_ID
 			});
@@ -1811,6 +1811,7 @@ $(document)
 					send = {
 						op:'setup_template_save',
 						id:TEMPLATE_ID,
+						name:$('#name').val(),
 						name_link:$('#name_link').val(),
 						name_file:$('#name_file').val()
 					};
