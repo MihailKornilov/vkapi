@@ -132,6 +132,7 @@ switch(@$_POST['op']) {
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
+		$dtime_add = $_POST['dtime_add'];//todo для Купца на удаление
 		$about = _txt($_POST['about']);
 
 		$zayav_id = _num($_POST['zayav_id']);
@@ -161,7 +162,8 @@ switch(@$_POST['op']) {
 				`client_id`,
 				`confirm`,
 				`prepay`,
-				`viewer_id_add`
+				`viewer_id_add`,
+				`dtime_add`
 			) VALUES (
 				".APP_ID.",
 				".$invoice_id.",
@@ -171,14 +173,15 @@ switch(@$_POST['op']) {
 				".$client_id.",
 				".$confirm.",
 				".$prepay.",
-				".VIEWER_ID."
+				".VIEWER_ID.",
+				'".$dtime_add.' '.strftime('%H:%M:%S')."'
 			)";
 		query($sql);
 
 		$insert_id = query_insert_id('_money_income');
 
 		//баланс для расчётного счёта
-		if(!$confirm)
+		if(!$confirm && $dtime_add == TODAY)
 			_balans(array(
 				'action_id' => 1,
 				'invoice_id' => $invoice_id,
@@ -191,7 +194,7 @@ switch(@$_POST['op']) {
 				 $about;
 
 		//баланс для клиента
-		if($client_id && !$confirm)
+		if($client_id && !$confirm && $dtime_add == TODAY)
 			_balans(array(
 				'action_id' => 27,
 				'client_id' => $client_id,

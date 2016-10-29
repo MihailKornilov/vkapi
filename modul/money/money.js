@@ -55,6 +55,7 @@ var _accrualAdd = function(o) {
 			html =
 			'<div id="_income-add">' +
 				'<table class="tab">' +
+					'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' +
 		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
 		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
 					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
@@ -94,6 +95,9 @@ var _accrualAdd = function(o) {
 				submit:submit
 			});
 
+		$('#dtime_add')._calendar({
+			lost:1
+		});
 		$('#invoice_id-add')._select({
 			width:218,
 			title0:'Не выбран',
@@ -172,6 +176,7 @@ var _accrualAdd = function(o) {
 				}
 			var send = {
 				op:'income_add',
+				dtime_add:$('#dtime_add').val(),
 				invoice_id:_num($('#invoice_id-add').val()),
 				confirm:_bool($('#confirm').val()),
 				sum:_cena($('#sum').val()),
