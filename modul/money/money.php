@@ -578,9 +578,6 @@ function incomeAbout($r, $filter=array()) {
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }
 function _incomePrint($income_id) {//ссылка-иконка для печати товарного чека
-	if(APP_ID == 3978722)
-		return '<a href="'.URL.'&p=print&d=receipt&id='.$income_id.'" class="img_doc'._tooltip('Распечатать товарный чек', -157, 'r').'</a>';
-
 	return
 	'<a href="'.URL.
 				'&p=print'.
