@@ -1785,6 +1785,10 @@ $(document)
 						adres_yur:$('#adres_yur').val(),
 						adres_ofice:$('#adres_ofice').val(),
 						time_work:$('#time_work').val(),
+
+						post_boss:$('#post_boss').val(),
+						post_accountant:$('#post_accountant').val(),
+
 						bank_name:$('#bank_name').val(),
 						bank_bik:$('#bank_bik').val(),
 						bank_account:$('#bank_account').val(),

@@ -591,6 +591,10 @@ switch(@$_POST['op']) {
 		$adres_yur = _txt($_POST['adres_yur']);
 		$adres_ofice = _txt($_POST['adres_ofice']);
 		$time_work = _txt($_POST['time_work']);
+
+		$post_boss = _txt($_POST['post_boss']);
+		$post_accountant = _txt($_POST['post_accountant']);
+
 		$bank_name = _txt($_POST['bank_name']);
 		$bank_bik = _txt($_POST['bank_bik']);
 		$bank_account = _txt($_POST['bank_account']);
@@ -614,6 +618,10 @@ switch(@$_POST['op']) {
 					`adres_yur`='".addslashes($adres_yur)."',
 					`adres_ofice`='".addslashes($adres_ofice)."',
 					`time_work`='".addslashes($time_work)."',
+
+					`post_boss`='".addslashes($post_boss)."',
+					`post_accountant`='".addslashes($post_accountant)."',
+
 					`bank_name`='".addslashes($bank_name)."',
 					`bank_bik`='".addslashes($bank_bik)."',
 					`bank_account`='".addslashes($bank_account)."',
@@ -623,7 +631,7 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'app');
 
-		$changes =
+		if($changes =
 			_historyChange('Вид организации', _appType($r['type_id']), _appType($type_id)).
 			_historyChange('Название организации', $r['name'], $name).
 			_historyChange('Наименование юридического лица', $r['name_yur'], $name_yur).
@@ -635,12 +643,14 @@ switch(@$_POST['op']) {
 			_historyChange('Юридический адрес', $r['adres_yur'], $adres_yur).
 			_historyChange('Адрес офиса', $r['adres_ofice'], $adres_ofice).
 			_historyChange('Режим работы', $r['time_work'], $time_work).
+
+			_historyChange('Руководитель', $r['post_boss'], $post_boss).
+			_historyChange('Главный бухгалтер', $r['post_accountant'], $post_accountant).
+
 			_historyChange('Наименование банка', $r['bank_name'], $bank_name).
 			_historyChange('БИК', $r['bank_bik'], $bank_bik).
 			_historyChange('Расчётный счёт', $r['bank_account'], $bank_account).
-			_historyChange('Корреспондентский счёт', $r['bank_account_corr'], $bank_account_corr);
-
-		if($changes)
+			_historyChange('Корреспондентский счёт', $r['bank_account_corr'], $bank_account_corr))
 			_history(array(
 				'type_id' => 1026,
 				'v1' => '<table>'.$changes.'</table>'

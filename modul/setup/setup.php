@@ -421,6 +421,13 @@ function setup_rekvisit() {
 			'<tr><td class="label topi">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
 			'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
 		'</table>'.
+
+		'<div class="headName">Должностные лица</div>'.
+		'<table class="t">'.
+			'<tr><td class="label">Руководитель:<td><input type="text" id="post_boss" value="'.$g['post_boss'].'" />'.
+			'<tr><td class="label">Главный бухгалтер:<td><input type="text" id="post_accountant" value="'.$g['post_accountant'].'" />'.
+		'</table>'.
+
 		'<div class="headName">Банк получателя</div>'.
 		'<table class="t">'.
 			'<tr><td class="label topi">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
