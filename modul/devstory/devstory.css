@@ -15,8 +15,10 @@
 #devstory{min-height:400px}
 #devstory #part-spisok{margin:10px}
 #devstory .part-u{border-spacing:2px}
+#devstory .part-u td{padding:10px 15px;background:#dfeeff}
 #devstory .part-u .name{font:bold 15px tahoma}
-#devstory .part-u td{padding:15px;background:#eff1ff}
+#devstory .part-u .keyword{margin:3px 0 0 20px}
+#devstory .part-u .keyword a{color:#555}
 #devstory .part-u .ed{width:20px;white-space:nowrap}
 
 #devstory .task-u{

@@ -182,6 +182,33 @@ function _devstory_part_spisok() {//список разделов
 	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
+	$sql = "SELECT * FROM `_devstory_keyword`";
+	$keyword = query_ass($sql);
+
+
+
+	foreach($spisok as $id => $r)
+		$spisok[$id]['keyword'] = array();
+
+	$sql = "SELECT * FROM `_devstory_keyword_use`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['part_id']]['keyword'][$r['keyword_id']] = 1;
+
+	foreach($spisok as $id => $r) {
+		$kw = array();
+		foreach($spisok[$id]['keyword'] as $k => $i)
+			$kw[] = $keyword[$k];
+
+		sort($kw);
+
+		foreach($kw as $k => $i)
+			$kw[$k] = '<a>'.$i.'</a>';
+
+		$spisok[$id]['keyword'] = implode('<br />', $kw);
+	}
+
+
 	$send = '<dl class="'.(SA ? '_sort' : '').'" val="_devstory_part">';
 	foreach($spisok as $r)
 		$send .=
@@ -189,6 +216,7 @@ function _devstory_part_spisok() {//список разделов
 				'<table class="part-u w100p">'.
 					'<tr><td class="'.(SA ? 'curM' : '').'">'.
 							'<a class="name">'.$r['name'].'</a>'.
+							'<div class="keyword">'.$r['keyword'].'</div>'.
 					(SA ?
 						'<td class="ed">'.
 							'<div onclick="devStoryTaskEdit('.$r['id'].')" class="img_add m30'._tooltip('Добавить задачу', -94, 'r').'</div>'.
