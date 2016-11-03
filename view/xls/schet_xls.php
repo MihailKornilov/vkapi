@@ -267,9 +267,9 @@ function xls_schet_tab($sheet, $line) {
 }
 function xls_schet_podpis($sheet, $line) {
 	$line += 3;
-	$sheet->getCell('A'.$line)->setValue('Руководитель предприятия_____________________ (Шерстянников С.Ю.)');
+	$sheet->getCell('A'.$line)->setValue('Руководитель предприятия_____________________ ('.utf8(_app('post_boss')).')');
 	$line += 3;
-	$sheet->getCell('A'.$line)->setValue('Главный бухгалтер____________________________ (Шерстянникова Я.В.)');
+	$sheet->getCell('A'.$line)->setValue('Главный бухгалтер____________________________ ('.utf8(_app('post_accountant')).')');
 }
 
 
