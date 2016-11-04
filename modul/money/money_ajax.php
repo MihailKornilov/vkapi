@@ -1676,11 +1676,15 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_money_invoice_transfer`
 				WHERE `app_id`=".APP_ID."
-				  AND !`deleted`
-				  AND `confirm`!=2
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Перевода не существует');
+
+		if($r['deleted'])
+			jsonError('Перевод уже был удалён');
+
+		if($r['confirm'] == 2)
+			jsonError('Нельзя удалить перевод, который был подтверждён');
 
 		$sql = "UPDATE `_money_invoice_transfer` SET `deleted`=1 WHERE `id`=".$id;
 
@@ -1714,9 +1718,9 @@ switch(@$_POST['op']) {
 		break;
 	case 'invoice_in_add'://внесение денег на расчётный счёт
 		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
+			jsonError('Не выбран счёт');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректно введена сумма');
 
 		$about = _txt($_POST['about']);
 
@@ -1791,11 +1795,11 @@ switch(@$_POST['op']) {
 		break;
 	case 'invoice_out_add'://вывод денег с расчётного счёта
 		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
+			jsonError('Не выбран счёт');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректно введена сумма');
 		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
+			jsonError('Не указан сотрудник-получатель');
 
 		$about = _txt($_POST['about']);
 

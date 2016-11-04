@@ -94,10 +94,10 @@
 
 
 /* Расчётные счета */
-#money-invoice .headName{margin:15px 10px}
-#money-invoice ._info{margin:10px 10px 20px}
-#invoice-spisok{margin:10px 10px 25px}
-#invoice-spisok ._spisok{margin:1px 0 0 20px;width:560px}
+#money-invoice{margin:0 10px 20px}
+#money-invoice ._info{margin:15px 0 0}
+#invoice-spisok{margin:10px 0 25px}
+#invoice-spisok ._spisok{margin:1px 0 0 0;width:560px}
 #invoice-spisok ._spisok:hover{background-color:#ffd}
 #invoice-spisok .name{vertical-align:top}
 #invoice-spisok .move{cursor:move}
@@ -130,14 +130,9 @@
 #invoice-spisok ._check{margin:0 3px -2px 2px}
 #invoice-spisok .img_note{margin-bottom:-2px}
 
-#transfer-spisok{margin:10px}
-#transfer-spisok ._spisok{margin-top:3px}
 #transfer-spisok .confirm{font-size:10px;color:#090}
 #transfer-spisok .confirm.no{color:red}
-#transfer-spisok .vk{float:right}
 
-#inout-spisok{margin:10px}
-#inout-spisok ._spisok{margin-top:3px}
 #inout-spisok .action{width:55px}
 #inout-spisok .in{background:#f4fff4}
 #inout-spisok .out{background:#fff4f4}

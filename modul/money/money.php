@@ -1433,29 +1433,39 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 
 function invoice() {//страница со списком счетов и переводами между счетами
 	return
-	'<script>var RULE_SETUP_INVOICE='.RULE_SETUP_INVOICE.';</script>'.
+	'<script>'.
+		'var RULE_SETUP_INVOICE='.RULE_SETUP_INVOICE.','.
+			'RULE_INVOICE_TRANSFER='.RULE_INVOICE_TRANSFER.';'.
+	'</script>'.
 	'<div id="money-invoice">'.
-		'<div class="headName">'.
-			'Расчётные счета'.
-(RULE_SETUP_INVOICE ? '<a class="add">Новый счёт</a>' : '').
-		'</div>'.
 
-(_invoiceTransferConfirmCount() ?
+	(_invoiceTransferConfirmCount() ?
 		'<div class="_info">'.
-			'Есть переводы, требующие подтверждения: <b>'._invoiceTransferConfirmCount().'</b>. '.
+			'Есть переводы между счетами, ожидающие подтверждения: <b>'._invoiceTransferConfirmCount().'</b>. '.
 		'</div>'
-: '').
+	: '').
 
-		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
+		'<input type="hidden" id="invoice_menu" value="1" />'.
 
-(RULE_INVOICE_TRANSFER ?
-		'<div class="dlink js">'.
-			'<a class="link sel">Переводы между счетами</a>'.
-			'<a class="link">Внесения и выводы</a>'.
+		'<div class="invoice_menu-1">'.
+		(RULE_SETUP_INVOICE ?
+			'<button class="vk" onclick="_invoiceEdit()">Создать новый счёт</button>'
+		: '').
+			'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
 		'</div>'.
-		'<div id="transfer-spisok" class="dlink-page">'.invoice_transfer_spisok().'</div>'.
-		'<div id="inout-spisok" class="dlink-page dn">'.invoice_inout_spisok().'</div>'
-: '').
+
+	(RULE_INVOICE_TRANSFER ?
+		'<div class="invoice_menu-2 dn">'.
+			'<button class="vk" onclick="_invoiceTransfer()">Выполнить перевод</button>'.
+			'<div id="transfer-spisok">'.invoice_transfer_spisok().'</div>'.
+		'</div>'.
+
+		'<div class="invoice_menu-3 dn">'.
+			'<button class="vk mr5" onclick="_invoiceIn()">Внести деньги на счёт</button>'.
+			'<button class="vk" onclick="_invoiceOut()">Вывести деньги со счёта</button>'.
+			'<div id="inout-spisok">'.invoice_inout_spisok().'</div>'.
+		'</div>'
+	: '').
 
 	'</div>';
 }
@@ -1548,8 +1558,8 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 	        LIMIT "._start($filter).",".$filter['limit'];
 	$q = query($sql);
 	$send = $filter['page'] != 1 ? '' :
-		'<div>Всего '.$all.' перевод'._end($all, '', 'а', 'ов').'.</div>'.
-		'<table class="_spisok">'.
+		'<div class="mt10">Всего '.$all.' перевод'._end($all, '', 'а', 'ов').'.</div>'.
+		'<table class="_spisok mt5">'.
 			'<tr>'.
 				'<th>Cумма'.
 				'<th>Со счёта'.
@@ -1573,7 +1583,7 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 								'#'.$r['invoice_id_to'].
 								'#'._sumSpace($r['sum']).
 								'#'.FullDataTime($r['dtime_add']).'" '.
-							'class="vk small'._tooltip('Подтвердить перевод', -35).
+							'class="vk small fr'._tooltip('Подтвердить перевод', -35).
 						'подтвердить'.
 					'</button>'
 				: '');
@@ -1604,6 +1614,9 @@ function invoice_transfer_spisok($v=array()) {//история переводов по счетам
 	return $send;
 }
 function invoice_inout_spisok($v=array()) {
+	if(RULE_INVOICE_TRANSFER < 2)
+		return '';
+
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'limit' => _num(@$v['limit']) ? $v['limit'] : 30
@@ -1651,8 +1664,8 @@ function invoice_inout_spisok($v=array()) {
 	$q = query($sql);
 
 	$send = $filter['page'] != 1 ? '' :
-		'<div>Всего '.$all.' запис'._end($all, 'ь', 'и', 'ей').'.</div>'.
-		'<table class="_spisok">'.
+		'<div class="mt10">Всего '.$all.' запис'._end($all, 'ь', 'и', 'ей').'.</div>'.
+		'<table class="_spisok mt5">'.
 			'<tr>'.
 				'<th>Действие'.
 				'<th>Cумма'.
@@ -1830,8 +1843,8 @@ function balans_show($v) {//вывод таблицы с балансами конкретного счёта
 
 			'<input type="hidden" id="menu_id" value="1" />'.
 
-			'<div class="tab tab1">'.$data['spisok'].'</div>'.
-			'<div class="tab tab2 dn">'.
+			'<div class="menu_id-1">'.$data['spisok'].'</div>'.
+			'<div class="menu_id-2 dn">'.
 				'<input type="hidden" id="menu_year" value="'.strftime('%Y').'" />'.
 				'<input type="hidden" id="menu_mon" value="'._num(strftime('%m')).'" />'.
 				'<div id="spisok2">'.balans_everyday($filter).'</div>'.

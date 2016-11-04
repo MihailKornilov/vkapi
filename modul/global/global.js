@@ -56,8 +56,16 @@ $.fn._menuDop = function(o) {//дополнительное меню
 		link.removeClass('sel');
 		t.addClass('sel');
 		tMain.val(v);
+		_pageCange(v);
 		o.func(v, attr_id);
 	}
+	function _pageCange(v) {
+		for(n = 0; n < o.spisok.length; n++) {
+			var sp = o.spisok[n];
+			$('.' + attr_id + '-' + sp.uid)[(v == sp.uid ? 'remove' : 'add') + 'Class']('dn');
+		}
+	}
+
 
 	tMain.value = function(v) {
 		link.removeClass('sel');
@@ -69,6 +77,7 @@ $.fn._menuDop = function(o) {//дополнительное меню
 			}
 		}
 		tMain.val(v);
+		_pageCange(v);
 		o.func(v, attr_id);
 	};
 

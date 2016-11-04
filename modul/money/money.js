@@ -615,7 +615,7 @@ var _accrualAdd = function(o) {
 			top:40,
 			width:500,
 			content:html,
-			head:(o.id ? 'Редактирование' : 'Внесение нового') + ' расчётного счёта',
+			head:(o.id ? 'Редактирование' : 'Создание нового') + ' расчётного счёта',
 			butSubmit:o.id ? 'Сохранить' : 'Внести',
 			submit:submit
 		});
@@ -751,29 +751,34 @@ var _accrualAdd = function(o) {
 	_invoiceIn = function(invoice_id, balans) {
 		var t = $(this),
 			html = '<table class="_dialog-tab">' +
-					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
-					'<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' +
+					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + _num(invoice_id) + '" />' +
+		  (balans ? '<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' : '') +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
 					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
 				'</table>',
 			dialog = _dialog({
+				top:30,
 				head:'Внесение денег на счёт',
 				content:html,
 				submit:submit
 			});
+
+		$('#invoice_id')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
 		$('#sum').focus();
 		function submit() {
 			var send = {
 				op:'invoice_in_add',
-				invoice_id:invoice_id,
+				invoice_id:$('#invoice_id').val(),
 				sum:_cena($('#sum').val()),
 				about:$('#about').val()
 			};
-			if(!send.sum) {
-				dialog.err('Некорректно введена сумма');
-				$('#sum').focus();
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -782,26 +787,35 @@ var _accrualAdd = function(o) {
 					dialog.close();
 					_msg();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
 	_invoiceOut = function(invoice_id, balans) {
 		var t = $(this),
 			html = '<table class="_dialog-tab">' +
-					'<tr><td class="label">Счёт:<td><b>' + INVOICE_ASS[invoice_id] + '</b>' +
-					'<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' +
+					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + _num(invoice_id) + '" />' +
+		  (balans ? '<tr><td class="label">Баланс:<td><b>' + balans + '</b> руб.' : '') +
 					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
 					'<tr><td class="label">Получатель:<td><input type="hidden" id="worker_id" />' +
 					'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
 				'</table>',
 			dialog = _dialog({
+				top:30,
 				head:'Вывод денег со счёта',
 				content:html,
 				butSubmit:'Вывести',
 				submit:submit
 			});
 
+		$('#invoice_id')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
 		$('#sum').focus();
 		$('#worker_id')._select({
 			width:218,
@@ -812,20 +826,11 @@ var _accrualAdd = function(o) {
 		function submit() {
 			var send = {
 				op:'invoice_out_add',
-				invoice_id:invoice_id,
+				invoice_id:$('#invoice_id').val(),
 				sum:_cena($('#sum').val()),
 				worker_id:_num($('#worker_id').val()),
 				about:$('#about').val()
 			};
-			if(!send.sum) {
-				dialog.err('Некорректно введена сумма');
-				$('#sum').focus();
-				return;
-			}
-			if(!send.worker_id) {
-				dialog.err('Не указан сотрудник-получатель');
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -834,7 +839,7 @@ var _accrualAdd = function(o) {
 					dialog.close();
 					_msg();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
@@ -1013,11 +1018,7 @@ var _accrualAdd = function(o) {
 				spisok:[
 					{uid:1, title:'Подробно'},
 					{uid:2, title:'Ежедневно'}
-				],
-				func:function(v) {
-					$('.tab').addClass('dn');
-					$('.tab' + v).removeClass('dn');
-				}
+				]
 			});
 			$('#menu_year')._menuDop({
 				type:2,
@@ -1062,7 +1063,7 @@ var _accrualAdd = function(o) {
 		_filterSpisok(BALANS, v, id);
 		$.post(AJAX_MAIN, BALANS, function(res) {
 			if(res.success) {
-				$('.tab1').html(res.spisok);
+				$('.menu_id-1').html(res.spisok);
 				$('#menu_id')._menuDop(1);
 			}
 		}, 'json');
@@ -2186,7 +2187,6 @@ $(document)
 		_schetInfo({id:$(this).attr('val')});
 	})
 
-	.on('click', '#money-invoice .add', _invoiceEdit)
 	.on('click', '#money-invoice .img_setup', function() {
 		var t = $(this),
 			p = _parent(t),
@@ -2482,6 +2482,16 @@ $(document)
 			$('#passpaid')._radio(_schetSpisok);
 			_schetAction();
 			_nextCallback = _schetAction;
+		}
+		if($('#money-invoice').length) {
+			var spisok = [{uid:1, title:'Расчётные счета'}];
+			if(RULE_INVOICE_TRANSFER)
+				spisok.push({uid:2, title:'Переводы между счетами'});
+			if(RULE_INVOICE_TRANSFER == 2)
+				spisok.push({uid:3, title:'Внесения и выводы'});
+			$('#invoice_menu')._menuDop({
+				spisok:spisok
+			});
 		}
 		if($('#salary-worker').length) {
 			var sp = [

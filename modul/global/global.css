@@ -7,8 +7,8 @@
 
 	display:inline-block;
 	color:#777;
-	padding:12px 6px;
-	margin:0 4px -1px;
+	padding:14px 6px 10px;
+	margin:0 8px -1px;
 }
 ._menuDop1 .sel{color:#000;border-bottom:#6387AC solid 2px}
 ._menuDop1 .link:hover{text-decoration:none}
