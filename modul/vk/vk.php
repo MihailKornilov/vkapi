@@ -152,6 +152,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/vk/vk'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
+		//стили Global
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/global/global'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/global/global'.MIN.'.js?'.VERSION.'"></script>'.
+
 		//Переменные _global для всех приложений
 		'<script src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
 
@@ -1841,6 +1845,9 @@ function _template() {//формирование шаблона
 	if(!$attach = query_assoc($sql))
 		die('Файла шаблона id'.$tmp['attach_id'].' не существует.');
 
+	if(!file_exists(GLOBAL_PATH.'/..'.$attach['link']))
+		die('Файл шаблона отсутствует на сервере.');
+
 	//проверка расширения файла: xls, xlsx, docx
 	$ex = explode('.', $attach['link']);
 	$kLast = count($ex) - 1;
@@ -1850,9 +1857,9 @@ function _template() {//формирование шаблона
 //	print_r(_templateVar()); exit;
 
 	switch($ex[$kLast]) {
-		case 'xls': break;
-		case 'xlsx': break;
-		case 'docx': _templateWord($tmp, $attach); exit;
+		case 'xls':
+		case 'xlsx': _templateXls($ex[$kLast], $tmp, $attach);
+		case 'docx': _templateWord($tmp, $attach);
 		default: die('Недопустимый файл шаблона.');
 	}
 }
@@ -1867,37 +1874,49 @@ function _templateVar() {
 			WHERE `var`.`group_id`=`gr`.`id`";
 	$varSpisok = query_arr($sql);
 
+	//реквизиты организации
 	foreach($varSpisok as $id => $r)
 		if($r['table_name'] == '_app')
 			$varSpisok[$id]['text'] = _app($r['col_name']);
 
-	//платежи
-	if($income_id = _num($_GET['income_id'])) {
-		$sql = "SELECT *
-				FROM `_money_income`
-				WHERE `app_id`=".APP_ID."
-				  AND !`deleted`
-				  AND `id`=".$income_id;
-		if($income = query_assoc($sql))
-			foreach($varSpisok as $id => $r)
-				if($r['table_name'] == '_money_income') {
-					if($r['v'] == '{INCOME_SUM_PROPIS}') {
-						$varSpisok[$id]['text'] = _numToWord($income[$r['col_name']], 1).'рубл'._end($income[$r['col_name']], 'ь', 'я', 'ей');
-						continue;
-					}
-					if($r['v'] == '{INCOME_DATE_ADD}') {
-						$varSpisok[$id]['text'] = FullData($income[$r['col_name']]);
-						continue;
-					}
-					$varSpisok[$id]['text'] = $income[$r['col_name']];
-				}
-	}
+	//платёж
+	$varSpisok = _templateIncome($varSpisok);
 
 	$var = array();
 	foreach($varSpisok as $r)
 		$var[$r['v']] = $r['text'];
 
 	return $var;
+}
+function _templateIncome($arr) {//подмена переменных одного платежа
+	if(!$income_id = _num(@$_GET['income_id']))
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".$income_id;
+	if(!$income = query_assoc($sql))
+		return $arr;
+
+	foreach($arr as $id => $r)
+		if($r['table_name'] == '_money_income') {
+			if($r['v'] == '{INCOME_SUM_PROPIS}') {
+				$arr[$id]['text'] =
+					_numToWord($income[$r['col_name']], 1).
+					' рубл'._end($income[$r['col_name']], 'ь', 'я', 'ей').
+					' '._kop($income[$r['col_name']]);
+				continue;
+			}
+			if($r['v'] == '{INCOME_DATE_ADD}') {
+				$arr[$id]['text'] = FullData($income[$r['col_name']]);
+				continue;
+			}
+			$arr[$id]['text'] = $income[$r['col_name']];
+		}
+
+	return $arr;
 }
 function _templateWord($tmp, $attach) {//формирование шаблона Word
 	require_once GLOBAL_DIR.'/inc/word/vendor/autoload.php';
@@ -1911,16 +1930,24 @@ function _templateWord($tmp, $attach) {//формирование шаблона Word
 	header('Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.docx"');
 	$document->saveAs('php://output');
+
+	exit;
 }
-function _templateXls($tmp, $attach) {//формирование шаблона Word
-	$reader = PHPExcel_IOFactory::createReader('Excel5');
-//	$reader = PHPExcel_IOFactory::createReader('Excel2007');
+function _templateXls($version, $tmp, $attach) {//формирование шаблона Excel
+	$type = array(
+		'xls' => 'Excel5',
+		'xlsx' => 'Excel2007'
+	);
+
+	$reader = PHPExcel_IOFactory::createReader($type[$version]);
 	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
 	 
 	$sheet = $book->getActiveSheet();
 
 	$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
 	$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
+
+	$var = _templateVar();
 
     for($row = 0; $row < $rowMax; $row++)
         for($col = 0; $col < $сolMax; $col++) {
@@ -1934,9 +1961,47 @@ function _templateXls($tmp, $attach) {//формирование шаблона Word
         }
 
 	header('Content-type: application/vnd.ms-excel');
-	header('Content-Disposition: attachment; filename="файл_'.time().'.xls"');
-	$writer = PHPExcel_IOFactory::createWriter($book, 'Excel5');
+	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.'.$version.'"');
+	$writer = PHPExcel_IOFactory::createWriter($book, $type[$version]);
 	$writer->save('php://output');
+
+	exit;
+}
+function _templateXlsSpisok($version, $tmp, $attach) {//формирование документа Excel в виде списка
+	$type = array(
+		'xls' => 'Excel5',
+		'xlsx' => 'Excel2007'
+	);
+
+	$reader = PHPExcel_IOFactory::createReader($type[$version]);
+	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
+
+	$sheet = $book->getActiveSheet();
+
+	$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
+	$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
+
+	$var = _templateVar();
+
+	$sheet->insertNewRowBefore(3, 1);//вставка новой строки
+/*
+    for($row = 0; $row < $rowMax; $row++)
+        for($col = 0; $col < $сolMax; $col++) {
+	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
+		        continue;
+
+	        foreach($var as $v => $i)
+	            $txt = str_replace($v, utf8($i), $txt);
+
+	        $sheet->setCellValueByColumnAndRow($col, $row + 1, $txt);
+        }
+*/
+	header('Content-type: application/vnd.ms-excel');
+	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.'.$version.'"');
+	$writer = PHPExcel_IOFactory::createWriter($book, $type[$version]);
+	$writer->save('php://output');
+
+	exit;
 }
 
 

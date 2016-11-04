@@ -162,16 +162,18 @@
 
 
 
-/* таблица с балансами конкретного счёта */
-#balans-show .headName{margin:3px 0 10px}
-#balans-show #dopLinks{margin:25px 0 10px}
-#balans-show #dopLinks span{margin-right:15px}
 
 #balans-tab .action{width:100px;background:#efe}
 #balans-tab .action.minus{background:#fee}
 #balans-tab .balans{width:70px;text-align:right}
 #balans-tab .diff{font-size:10px;color:#777}
 
+
+
+
+
+/* история операций */
+#balans-show .day-hd{padding-top:5px}
 
 /* история операций по дням */
 #balans-day td{text-align:right}

@@ -26,6 +26,10 @@
 #client .result em{color:#999;margin-left:10px;font-size:10px;cursor:default}
 #client .result em span,
 #client .result em b{margin-left:10px;font-size:10px}
+#client .result .img_xls{
+	position:absolute;
+	margin:-3px 0 0 20px;
+}
 #client #dolg-sum{color:#922;font-size:10px}
 #client ._radio{margin-bottom:30px}
 #client ._check{margin-bottom:10px}

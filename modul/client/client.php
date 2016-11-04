@@ -467,6 +467,7 @@ function _client_spisok($v=array()) {// список клиентов
 					  ($dolg ? '<em>(ќбща€ сумма долга = <b id="dolg-sum">'._sumSpace($dolg).'</b> руб.)</em>' : '').
 					  ($plus ? '<em>(—умма = '.$plus.' руб.)</em>' : '').
 					  ($newMonth ? '<em>'.$newToday.$newMonth.'</em>' : '').
+//					  '<a href="'.URL.'&p=print&d=template&template_id=client-spisok" class="img_xls'._tooltip('Ёкспорт в Excel', -12, 'l').'</a>'.
 					  $filter['clear'];
 	$send['filter'] = $filter;
 	$send['spisok'] = $filter['js'];

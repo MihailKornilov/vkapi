@@ -1,0 +1,72 @@
+/* Дополнительные меню */
+/* type 1 */
+._menuDop1{border-bottom:#E7E8EC solid 1px;margin:5px 0 10px}
+._menuDop1 .link{
+	font-family:-apple-system,BlinkMacSystemFont,Roboto,Open Sans,Helvetica Neue,sans-serif;
+	font-size:13px;
+
+	display:inline-block;
+	color:#777;
+	padding:12px 6px;
+	margin:0 4px -1px;
+}
+._menuDop1 .sel{color:#000;border-bottom:#6387AC solid 2px}
+._menuDop1 .link:hover{text-decoration:none}
+._menuDop1 .link:not(.sel):hover{border-bottom:#CAD2DB solid 2px}
+
+/* type 2 */
+._menuDop2{margin:5px 0 10px}
+._menuDop2 .link{
+	display:inline-block;
+	color:#45688e;
+	margin:0 4px;
+	font-weight:bold;
+	padding:3px 8px 0;
+	border-radius:2px;
+	height:17px;
+}
+._menuDop2 .sel{background-color:#597da3;color:#fff}
+._menuDop2 .link:hover{text-decoration:none}
+._menuDop2 .link:not(.sel):hover{background-color:#e9edf1}
+
+
+
+
+
+/* Заголовок 1 - на сером фоне*/
+.hd1{
+	font-size:14px;
+	color:#333;
+	background:#FAFBFC;
+	border-bottom:#E7E8EC solid 1px;
+	padding:14px 17px;
+}
+.hd1 b,.hd1 u{font-size:14px}
+
+
+
+
+
+/* Текст с информацией на жёлтом форе */
+._info{
+	font-family:-apple-system,BlinkMacSystemFont,Roboto,Open Sans,Helvetica Neue,sans-serif;
+	font-size:13px;
+
+	background:#ffffe6;
+	border:#eea 1px solid;
+	border-radius:3px;
+	padding:8px 12px;
+	text-align:justify;
+	margin-bottom:10px;
+	line-height:1.4;
+}
+._info b{font-size:13px}
+._info u{font-size:13px}
+._info a{font-size:13px}
+._info p{
+	font-size:13px;
+	margin:3px 0 7px;
+	line-height:1.4;
+}
+
+

@@ -989,6 +989,7 @@ var _accrualAdd = function(o) {
 		var dialog = _dialog({
 				top:10,
 				width:600,
+				padding:0,
 				head:'Просмотр истории операций',
 				load:1,
 				butSubmit:'',
@@ -1000,30 +1001,69 @@ var _accrualAdd = function(o) {
 				unit_id:unit_id
 			};
 		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-				$('#dopLinks .link').click(function() {
-					var t = $(this),
-						p = t.parent(),
-						v = t.attr('val');
-					p.find('.sel').removeClass('sel');
-					t.addClass('sel');
+			if(res.success)
+				loaded(res);
+			 else
+				dialog.loadError();
+		}, 'json');
+
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('#menu_id')._menuDop({
+				spisok:[
+					{uid:1, title:'Подробно'},
+					{uid:2, title:'Ежедневно'}
+				],
+				func:function(v) {
 					$('.tab').addClass('dn');
 					$('.tab' + v).removeClass('dn');
-				});
-			} else
-				dialog.loadError();
-		}, 'json');	},
+				}
+			});
+			$('#menu_year')._menuDop({
+				type:2,
+				spisok:YEAR_SPISOK,
+				func:function(v) {
+					BALANS.op = 'balans_everyday';
+					BALANS.everyday_year = v;
+					$.post(AJAX_MAIN, BALANS, function(res) {
+						if(res.success)
+							$('#spisok2').html(res.html);
+					}, 'json');
+				}
+			});
+			$('#menu_mon')._menuDop({
+				type:2,
+				spisok:[
+					{uid:1, title:'Янв'},
+					{uid:2, title:'Фев'},
+					{uid:3, title:'Мар'},
+					{uid:4, title:'Апр'},
+					{uid:5, title:'Май'},
+					{uid:6, title:'Июн'},
+					{uid:7, title:'Июл'},
+					{uid:8, title:'Авг'},
+					{uid:9, title:'Сен'},
+					{uid:10, title:'Окт'},
+					{uid:11, title:'Ноя'},
+					{uid:12, title:'Дек'}
+				],
+				func:function(v) {
+					BALANS.op = 'balans_everyday';
+					BALANS.everyday_mon = v;
+					$.post(AJAX_MAIN, BALANS, function(res) {
+						if(res.success)
+							$('#spisok2').html(res.html);
+					}, 'json');
+				}
+			});
+		}
+	},
 	_balansSpisok = function(v, id) {
 		_filterSpisok(BALANS, v, id);
 		$.post(AJAX_MAIN, BALANS, function(res) {
 			if(res.success) {
-				$('#balans-show .link').removeClass('sel');
-				$('#balans-show .link:first').addClass('sel');
-				$('.tab').addClass('dn');
-				$('.tab1')
-					.removeClass('dn')
-					.html(res.spisok);
+				$('.tab1').html(res.spisok);
+				$('#menu_id')._menuDop(1);
 			}
 		}, 'json');
 	},
@@ -2340,6 +2380,18 @@ $(document)
 				p.remove();
 			}
 		});
+	})
+
+	.on('click', '#balans-show .podrobno', function() {
+		var t = $(this),
+			v = t.attr('val');
+
+		BALANS.op = 'balans_spisok';
+		_balansSpisok(v, 'podrobno_day');
+	})
+	.on('click', '#balans-show .day-clear', function() {//очистка фильтра Выбранный день
+		BALANS.op = 'balans_spisok';
+		_balansSpisok('', 'podrobno_day');
 	})
 
 	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход

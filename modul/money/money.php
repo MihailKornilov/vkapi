@@ -1795,7 +1795,7 @@ function balansFilter($v) {
 		'unit_id' => _num(@$v['unit_id']),
 		'podrobno_day' => @$v['podrobno_day'],
 		'everyday_year' => _num(@$v['everyday_year']) ? $v['everyday_year'] : strftime('%Y'),
-		'everyday_mon' => _num(@$v['everyday_mon']) ? $v['everyday_mon'] : strftime('%m')
+		'everyday_mon' => _num(@$v['everyday_mon']) ? (_num($v['everyday_mon']) < 10 ? '0' : '')._num($v['everyday_mon']) : strftime('%m')
 	);
 }
 function balans_show($v) {//вывод таблицы с балансами конкретного счёта
@@ -1807,20 +1807,37 @@ function balans_show($v) {//вывод таблицы с балансами конкретного счёта
 
 	$data = balans_show_spisok($filter);
 
-	return
-		'<div id="balans-show">'.
-			'<div class="headName">'.$r['head'].'</div>'.
-			(@$r['about'] ? '<div class="_info">'.$r['about'].'</div>' : '').
-			'<div>Текущий баланс: <b>'.$r['balans'].'</b> руб.</div>'.
+	//список активных годов
+	$sql = "SELECT
+				DISTINCT DATE_FORMAT(`dtime_add`,'%Y'),
+				DATE_FORMAT(`dtime_add`,'%Y')
+			FROM `_balans`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".$filter['category_id']."
+			  AND `unit_id`=".$filter['unit_id']."
+			ORDER BY `dtime_add`";
+	$yearSpisok = query_selJson($sql);
 
-			'<div id="dopLinks">' .
-				'<span>История операций:</span>'.
-				'<a class="link sel" val="1">Подробно</a>' .
-				'<a class="link" val="2">Ежедневно</a>' .
-			'</div>'.
+	return
+	'<script>var YEAR_SPISOK='.$yearSpisok.';</script>'.
+	'<div id="balans-show">'.
+		'<div class="hd1">'.
+			$r['type'].' <u>'.$r['head'].'</u>'.
+			'<div class="fr curD'._tooltip('Текущий баланс', -53).'<b>'.$r['balans'].'</b> руб.</div>'.
+		'</div>'.
+		'<div class="mar8">'.
+			(@$r['about'] ? '<div class="_info">'.$r['about'].'</div>' : '').
+
+			'<input type="hidden" id="menu_id" value="1" />'.
+
 			'<div class="tab tab1">'.$data['spisok'].'</div>'.
-			'<div class="tab tab2 dn">'.balans_everyday($filter).'</div>'.
-		'</div>';
+			'<div class="tab tab2 dn">'.
+				'<input type="hidden" id="menu_year" value="'.strftime('%Y').'" />'.
+				'<input type="hidden" id="menu_mon" value="'._num(strftime('%m')).'" />'.
+				'<div id="spisok2">'.balans_everyday($filter).'</div>'.
+			'</div>'.
+		'</div>'.
+	'</div>';
 }
 function balans_show_category($v) {
 	switch($v['category_id']) {
@@ -1835,7 +1852,8 @@ function balans_show_category($v) {
 					'about' => _err('Счёта id:<b>'.$v['unit_id'].'</b> не существует.')
 				);
 			return array(
-				'head' => 'Счёт '.$r['name'],
+				'type' => 'Счёт',
+				'head' => $r['name'],
 				'about' => $r['about'],
 				'balans' => _sumSpace(_invoiceBalans($v['unit_id']))
 			);
@@ -1848,7 +1866,8 @@ function balans_show_category($v) {
 				);
 			$r = _clientVal($v['unit_id']);
 			return array(
-				'head' => 'Клиент '.$r['name'],
+				'type' => 'Клиент',
+				'head' => $r['name'],
 				'balans' => _sumSpace($r['balans'])
 			);
 			break;
@@ -1859,7 +1878,8 @@ function balans_show_category($v) {
 					'about' => _err('Сотрудника id:<b>'.$v['unit_id'].'</b> не существует.')
 				);
 			return array(
-				'head' => 'Сотрудник '._viewer($v['unit_id'], 'viewer_name'),
+				'type' => 'Сотрудник',
+				'head' => _viewer($v['unit_id'], 'viewer_name'),
 				'balans' => salaryWorkerBalans($v['unit_id'], 1)
 			);
 			break;
@@ -1879,8 +1899,54 @@ function balans_show_spisok($filter) {
 		 AND `category_id`=".$filter['category_id']."
 		 AND `unit_id`=".$filter['unit_id'];
 
-	if($filter['podrobno_day'])
+	$dayInfo = '';
+	if($filter['podrobno_day']) {
 		$cond .= " AND `dtime_add` LIKE '".$filter['podrobno_day']."%'";
+
+		//остаток на конец дня
+		$sql = "SELECT `balans`
+				FROM `_balans`
+				WHERE ".$cond."
+				ORDER BY `id` DESC
+				LIMIT 1";
+		$sumEnd = query_value($sql);
+
+		//остаток на начало дня
+		$sql = "SELECT SUM(`sum`)
+				FROM `_balans`
+				WHERE ".$cond;
+		$sumStart = $sumEnd - query_value($sql);
+
+		//список действий
+		$action = '';
+		$sql = "SELECT
+					DISTINCT `action_id`,
+					COUNT(`id`) `count`,
+					SUM(`sum`) `sum`
+				FROM `_balans`
+				WHERE ".$cond."
+				GROUP BY `action_id`";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			$action .=
+				'<tr><td>'._balansAction($r['action_id']).':'.
+					'<td class="w50 center">'.$r['count'].
+					'<td class="w70 r">'._sumSpace($r['sum']);
+
+		$dayInfo =
+		'<table class="bs10">'.
+			'<tr><td class="day-hd topi b r">'.
+					FullData($filter['podrobno_day'], 0, 0, 1).':'.
+				'<td>'.
+					'<table class="_spisok">'.
+						'<tr class="grey"><td colspan="2">Начало дня:<td class="r">'._sumSpace($sumStart).
+						$action.
+						'<tr class="grey"><td colspan="2">Конец дня:<td class="r">'._sumSpace($sumEnd).
+					'</table>'.
+				'<td class="top">'.
+					'<button class="vk small red day-clear">отменить выбор</button>'.
+		'</table>';
+	}
 
 	$send = array(
 		'all' => 0,
@@ -1930,6 +1996,7 @@ function balans_show_spisok($filter) {
 
 	$send['spisok'] = !PAGE1 ? '' :
 		$filter['js'].
+		$dayInfo.
 		'<table class="_spisok" id="balans-tab">'.
 			'<tr><th>Действие'.
 				'<th>Сумма'.
@@ -1998,6 +2065,8 @@ function balans_show_spisok($filter) {
 	return $send;
 }
 function balans_everyday($v) {//отображение баланса за каждый день
+	$v = balansFilter($v);
+
 	define('MONTH', $v['everyday_year'].'-'.$v['everyday_mon']);
 
 	$ass = array();
@@ -2089,7 +2158,7 @@ function balans_everyday($v) {//отображение баланса за каждый день
 		$send .= '<tr'.(isset($ass[$d]) ? '' : ' class="emp"').'>'.
 				'<td class="day wsnw">'.
 					(isset($ass[$d]) ?
-						'<a onclick="_balansSpisok(\''.MONTH.'-'.($d < 10 ? 0 : '').$d.'\',\'podrobno_day\')">'.$day.'</a>'
+						'<a class="podrobno" val="'.MONTH.'-'.($d < 10 ? 0 : '').$d.'">'.$day.'</a>'
 					: $day).
 				'<td class="start">'._sumSpace($start).
 				'<td class="inc">'.($inc ? _sumSpace($inc) : '').
@@ -2097,6 +2166,7 @@ function balans_everyday($v) {//отображение баланса за каждый день
 				'<td class="diff '.($diff > 0 ? 'inc' : 'dec').'">'.($diff ? _sumSpace($diff) : '').
 				'<td class="ost">'._sumSpace($balans);
 	}
+
 	$send .= '</table>';
 	return $send;
 }

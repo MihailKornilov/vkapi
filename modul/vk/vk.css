@@ -156,15 +156,8 @@ a.add:hover{text-decoration:underline;color:#357}
 .f-label{color:#555;font-weight:bold;margin-bottom:5px}
 .findHead{color:#555;font-weight:bold;margin:20px 0 4px 0}
 
-._info{
-	background:#ffe;
-	border:#ddb 1px solid;
-	padding:4px 10px;
-	text-align:justify;
-	margin-bottom:15px;
-	line-height:1.4;
-}
-._info p{margin:3px 0 7px;line-height:1.4}
+
+
 
 ._next{
 	text-align:center;

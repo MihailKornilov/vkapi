@@ -1310,6 +1310,7 @@ function _zayavObWord() {//Печать объявлений в формате Word
 				LEFT JOIN `_setup_gazeta_ob_dop` AS `dop` ON `pub`.`dop`=`dop`.`id`
 			WHERE `pub`.`app_id`=".APP_ID."
 			  AND `pub`.`gazeta_nomer_id`=".$gn."
+			  AND !`z`.`deleted`
 			  AND `z`.`service_id`=".$service_id."
 			  AND `z`.`onpay_checked` NOT IN (2,3)
 			ORDER BY

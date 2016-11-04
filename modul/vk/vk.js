@@ -786,8 +786,8 @@ $.fn._check = function(o) {
 	function _click(func) {
 		if(!$('#' + id + '_check').hasClass('disabled'))
 			$(document).on('click', '#' + id + '_check', function() {
-			func(parseInt(t.val()), id);
-		});
+				func(parseInt(t.val()), id);
+			});
 	}
 	return t;
 };
