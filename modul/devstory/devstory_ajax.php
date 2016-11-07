@@ -117,7 +117,8 @@ switch(@$_POST['op']) {
 
 		_devstoryTaskKeywordUpdate($task_id, $part_id);
 
-		jsonSuccess();
+		$send['task_id'] = $task_id;
+		jsonSuccess($send);
 		break;
 	case 'devstory_task_edit'://редактирование задачи
 		if(!SA)
@@ -146,7 +147,8 @@ switch(@$_POST['op']) {
 
 		_devstoryTaskKeywordUpdate($task_id, $r['part_id']);
 
-		jsonSuccess();
+		$send['task_id'] = $task_id;
+		jsonSuccess($send);
 		break;
 	case 'devstory_task_start'://запуск задачи в работу
 		if(!SA)
@@ -173,12 +175,12 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		$sql = "UPDATE `_devstory_task`
-				SET `status_id`=1
+				SET `status_id`=1,
+					`dtime_start`=CURRENT_TIMESTAMP
 				WHERE `id`=".$task_id;
 		query($sql);
 
-		$send['html'] = utf8(_devstory_task_spisok());
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'devstory_task_pause'://постановка задачи на паузу
 		if(!SA)
@@ -218,8 +220,7 @@ switch(@$_POST['op']) {
 
 		_devstoryTaskSpentUpdate($task_id);
 
-		$send['html'] = utf8(_devstory_task_spisok());
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'devstory_task_ready'://задача выполнена
 		if(!SA)
@@ -255,14 +256,14 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `_devstory_task`
-				SET `status_id`=3
+				SET `status_id`=3,
+					`dtime_end`=CURRENT_TIMESTAMP
 				WHERE `id`=".$task_id;
 		query($sql);
 
 		_devstoryTaskSpentUpdate($task_id);
 
-		$send['html'] = utf8(_devstory_task_spisok());
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'devstory_task_cancel'://задача отменена
 		if(!SA)
@@ -295,14 +296,14 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `_devstory_task`
-				SET `status_id`=4
+				SET `status_id`=4,
+					`dtime_end`=CURRENT_TIMESTAMP
 				WHERE `id`=".$task_id;
 		query($sql);
 
 		_devstoryTaskSpentUpdate($task_id);
 
-		$send['html'] = utf8(_devstory_task_spisok());
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 }
 

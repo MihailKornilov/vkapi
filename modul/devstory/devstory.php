@@ -111,30 +111,40 @@ function _devstoryKeyword($id=false, $i='name') {
 
 	return $arr[$id][$i];
 }
-function _devstoryStatus($id) {//названия статусов
-	$arr = array(
+function _devstoryStatus($id, $type='name') {//названия статусов
+	$name = array(
 		0 => 'ожидание',
 		1 => 'в процессе',
 		2 => 'на паузе',
 		3 => 'выполнено',
 		4 => 'отменено'
 	);
-	return $arr[$id];
+
+	$bg = array(
+		0 => 'eee',
+		1 => 'ccf',
+		2 => 'f2f2aa',
+		3 => 'beb',
+		4 => 'd9d9d9'
+	);
+
+	if($type == 'bg')
+		return $bg[$id];
+
+	return $name[$id];
 }
 
 function _devstory() {//основная страница
 	switch(@$_GET['d']) {
 		default:
 		case 'main': $content = _devstory_part(); break;
-		case 'task': $content = _devstory_task(); break;
+		case 'task': $content = _devstory_process(); break;
 		case 'offer': $content = _devstory_offer(); break;
 		case 'about': $content = _devstory_about(); break;
 	}
 	return
 	_devstoryMenu().
-	'<div id="devstory">'.
-		$content.
-	'</div>'.
+	$content.
 	'<script>'.
 		'var DEVSTORY_PART_SPISOK='._devstoryPart('js').','.
 			'DTIME="'.strftime('%Y-%m-%d %H:%M:00').'";'.
@@ -142,10 +152,10 @@ function _devstory() {//основная страница
 }
 function _devstoryMenu() {//разделы основного меню
 	$menu = array(
-		'main' => 'Разработка - главная',
-		'task' => 'Задачи',
+		'main' => 'Разделы',
+		'task' => 'Список задач',
 		'offer' => 'Предложения',
-		'about' => 'О разделе'
+		'about' => 'О разработке'
 	);
 
 	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
@@ -168,12 +178,17 @@ function _devstoryMenu() {//разделы основного меню
 }
 
 function _devstory_part() {
+	if($id = _num(@$_GET['id']))
+		return _devstory_part_info($id);
+
 	return
+	'<div id="devstory-part">'.
 		'<div class="headName m1">'.
 			'Основные разделы'.
 			(SA ? '<a class="add" onclick="devStoryPartEdit()">Новый раздел</a>' : '').
 		'</div>'.
-		'<div id="part-spisok">'._devstory_part_spisok().'</div>';
+		'<div id="part-spisok">'._devstory_part_spisok().'</div>'.
+	'</div>';
 }
 function _devstory_part_spisok() {//список разделов
 	$sql = "SELECT *
@@ -215,7 +230,7 @@ function _devstory_part_spisok() {//список разделов
 			'<dd val="'.$r['id'].'">'.
 				'<table class="part-u w100p">'.
 					'<tr><td class="'.(SA ? 'curM' : '').'">'.
-							'<a class="name">'.$r['name'].'</a>'.
+							'<a href="'.URL.'&p=devstory&d=main&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
 							'<div class="keyword">'.$r['keyword'].'</div>'.
 					(SA ?
 						'<td class="ed">'.
@@ -226,15 +241,26 @@ function _devstory_part_spisok() {//список разделов
 	$send .= '</dl>';
 	return $send;
 }
+function _devstory_part_info($part_id) {
+	$sql = "SELECT *
+			FROM `_devstory_part`
+			WHERE `id`=".$part_id;
+	if(!$part = query_assoc($sql)) {
+		$_GET['id'] = 0;
+		return _devstory_part();
+	}
 
-
-
-function _devstory_task() {
 	return
-		'<div class="headName m1">Список задач</div>'.
-		'<div id="spisok">'._devstory_task_spisok().'</div>';
+	'<div id="devstory-part-info">'.
+		'<div class="part-name">'.$part['name'].'</div>'.
+		'<div class="mar8 mb20">'._devstory_process_process($part_id).'</div>'.
+		'<div class="mar8 mb20">'._devstory_process_pause($part_id).'</div>'.
+		'<div id="task-spisok" class="mar8">'._devstory_process_ready($part_id).'</div>'.
+	'</div>';
 }
-function _devstory_task_spisok() {
+
+
+function _devstory_task_info($task_id) {
 	$sql = "SELECT
 				*,
 				0 `keyword`,
@@ -242,18 +268,18 @@ function _devstory_task_spisok() {
 				'' `period`
 			FROM `_devstory_task`
 			WHERE !`deleted`
-			ORDER BY `dtime_add` DESC";
-	if(!$spisok = query_arr($sql))
-		return 'Задач не найдено.';
+			  AND `id`=".$task_id;
+	if(!$task = query_assoc($sql))
+		return 'Задачи не существует.';
 
 	//id ключевых слов
 	$sql = "SELECT *
 			FROM `_devstory_keyword_use`
-			WHERE `task_id` IN ("._idsGet($spisok).")
+			WHERE `task_id`=".$task_id."
 			ORDER BY `id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['task_id']]['keyword'] .= ','.$r['keyword_id'];
+		$task['keyword'] .= ','.$r['keyword_id'];
 
 	//есть ли выполняющаяся задача. Если есть, то невозможно запускать другие задачи на выполнение
 	$sql = "SELECT COUNT(*)
@@ -269,24 +295,24 @@ function _devstory_task_spisok() {
 				SELECT
 					`task_id`
 				FROM `_devstory_time`
-				WHERE `task_id` IN ("._idsGet($spisok).")
+				WHERE `task_id`=".$task_id."
 				GROUP BY `task_id`,SUBSTRING(`time_start`,1,10)
 			) `dt`
 			GROUP BY `task_id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['task_id']]['day'] = $r['day'];
+		$task['day'] = $r['day'];
 
 	//список периодов выполнения по дням (для графического представления)
 	$sql = "SELECT *
 			FROM `_devstory_time`
-			WHERE `task_id` IN ("._idsGet($spisok).")
+			WHERE `task_id`=".$task_id."
 			ORDER BY `id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$start = explode(' ', $r['time_start']);
-		if(empty($spisok[$r['task_id']]['period'][$start[0]]))
-			$spisok[$r['task_id']]['period'][$start[0]] = array();
+		if(empty($task['period'][$start[0]]))
+			$task['period'][$start[0]] = array();
 
 		$end = explode(' ', $r['time_end']);
 
@@ -298,61 +324,59 @@ function _devstory_task_spisok() {
 
 
 		if($start[0] != $end[0]) {
-			$spisok[$r['task_id']]['period'][$start[0]][] = array(
+			$task['period'][$start[0]][] = array(
 				'start' => $start[1],
 				'end' => '23:59:59',
 				'msg' => $msg
 			);
-			$spisok[$r['task_id']]['period'][$end[0]][] = array(
+			$task['period'][$end[0]][] = array(
 				'start' => '00:00:00',
 				'end' => $end[1],
 				'msg' => $msg
 			);
 		} else
-			$spisok[$r['task_id']]['period'][$start[0]][] = array(
+			$task['period'][$start[0]][] = array(
 				'start' => $start[1],
 				'end' => $end[1],
 				'msg' => $msg
 			);
 	}
 
-	$send = '';
-	foreach($spisok as $r) {
-		$send .=
-			'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
-				'<div class="pp">'.
-			  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').
-					'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-					'<b class="part_name">'._devstoryPart($r['part_id']).'</b>'.
-					_devstoryKeyword('task', $r['keyword']).
-				'</div>'.
-				'<table class="w100p">'.
-					'<tr><td class="top">'.
-							'<div class="name">'.$r['name'].'</div>'.
-							'<div class="about">'._br($r['about']).'</div>'.
-						'<td class="td-status top w150">'.
-							'<div class="st center">'._devstoryStatus($r['status_id']).'</div>'.
+	$r = $task;
+	return
+	'<div id="devstory-task-info">'.
+		'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
+			'<div class="pp">'.
+		  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').
+				'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
+				'<b class="part_name">'._devstoryPart($r['part_id']).'</b>'.
+				_devstoryKeyword('task', $r['keyword']).
+			'</div>'.
+			'<table class="w100p">'.
+				'<tr><td class="top">'.
+						'<div class="name">'.$r['name'].'</div>'.
+						'<div class="about">'._br($r['about']).'</div>'.
+					'<td class="td-status top w150">'.
+						'<div class="st center">'._devstoryStatus($r['status_id']).'</div>'.
 
-							_devstory_task_spent($r).
+						_devstory_task_spent($r).
 
-	(SA && $r['status_id'] == 0 && !$started ?
-								'<a class="st-action start">начать выполнение</a>'
-	: '').
+(SA && $r['status_id'] == 0 && !$started ?
+							'<a class="st-action start">начать выполнение</a>'
+: '').
 
-	(SA && $r['status_id'] == 1 ? '<a class="st-action pause">приостановить</a>' : '').
-	(SA && $r['status_id'] == 1 ? '<a class="st-action ready"><b>выполнено</b></a>' : '').
+(SA && $r['status_id'] == 1 ? '<a class="st-action pause">приостановить</a>' : '').
+(SA && $r['status_id'] == 1 ? '<a class="st-action ready"><b>выполнено</b></a>' : '').
 
-	(SA && $r['status_id'] == 2 && !$started ? '<a class="st-action next">продолжить</a>' : '').
-	(SA && $r['status_id'] == 2 ? '<a class="st-action ready from-pause"><b>выполнено</b></a>' : '').
+(SA && $r['status_id'] == 2 && !$started ? '<a class="st-action next">продолжить</a>' : '').
+(SA && $r['status_id'] == 2 ? '<a class="st-action ready from-pause"><b>выполнено</b></a>' : '').
 
-	(SA && $r['status_id'] == 1 ? '<a class="st-action cancel red">отменить</a>' : '').
-	(SA && $r['status_id'] == 2 ? '<a class="st-action cancel red">отменить</a>' : '').
+(SA && $r['status_id'] == 1 ? '<a class="st-action cancel red">отменить</a>' : '').
+(SA && $r['status_id'] == 2 ? '<a class="st-action cancel red">отменить</a>' : '').
 
-				'</table>'.
-			'</div>';
-	}
-
-	return $send;
+			'</table>'.
+		'</div>'.
+	'</div>';
 }
 function _devstory_task_spent($r) {//отображение затраченного времени для каждой задачи
 	if(!$r['spent'])
@@ -433,6 +457,94 @@ function _devstory_task_spent($r) {//отображение затраченного времени для каждой
 		'</table>'.
 	'</div>';
 }
+
+
+
+
+function _devstory_process() {
+	if($task_id = _num(@$_GET['id']))
+		return _devstory_task_info($task_id);
+
+	return
+	'<div class="mar8">'.
+		'<div class="mb20">'._devstory_process_process().'</div>'.
+		'<div class="mb20">'._devstory_process_pause().'</div>'.
+		'<div class="mb20">'._devstory_process_ready().'</div>'.
+	'</div>';
+}
+function _devstory_process_ready($part_id=0) {//список выполненных задач
+	$send = '<div class="devstory-head-ready">Выполнено</div>';
+
+	$sql = "SELECT
+				*
+			FROM `_devstory_task`
+			WHERE `status_id`=3
+			  AND !`deleted`
+".($part_id ? "AND `part_id`=".$part_id : '')."  
+			ORDER BY `dtime_end` DESC";
+	if($task = query_arr($sql)) {
+		$curMon = '';
+		foreach($task as $r) {
+			$time = strtotime($r['dtime_end']);
+			$mon = strftime('%Y %m', $time);
+			if($curMon != $mon) {
+				$y = strftime('%Y', $time);
+				$m = _monthDef(strftime('%m', $time), 1);
+				$send .= '<div class="devstory-task-mon'.($curMon ? ' mt20' : '').'">'.$m.' '.$y.':</div>';
+				$curMon = $mon;
+			}
+			$send .= _devstory_task_unit($r, $part_id);
+		}
+	}
+
+	return $send;
+}
+function _devstory_process_pause($part_id=0) {//список задач на паузе
+	$sql = "SELECT
+				*
+			FROM `_devstory_task`
+			WHERE `status_id`=2
+			  AND !`deleted`
+".($part_id ? "AND `part_id`=".$part_id : '')."  
+			ORDER BY `dtime_add` DESC";
+	if(!$task = query_arr($sql))
+		return '';
+
+	$send = '<div class="devstory-head-pause">На паузе</div>';
+
+	foreach($task as $r)
+		$send .= _devstory_task_unit($r, $part_id);
+
+	return $send;
+}
+function _devstory_process_process($part_id=0) {//список задач в процессе
+	$sql = "SELECT
+				*
+			FROM `_devstory_task`
+			WHERE `status_id`=1
+			  AND !`deleted`
+".($part_id ? "AND `part_id`=".$part_id : '')."  
+			ORDER BY `dtime_add` DESC";
+	if(!$task = query_arr($sql))
+		return '';
+
+	$send = '<div class="devstory-head-process">В процессе</div>';
+
+	foreach($task as $r)
+		$send .= _devstory_task_unit($r, $part_id);
+
+	return $send;
+}
+function _devstory_task_unit($r, $part_id) {//единица списка задач
+	return
+	'<div class="devstory-task-unit">'.
+		'<div style="background:#'._devstoryStatus($r['status_id'], 'bg').'" class="stat'._tooltip('Статус: '._devstoryStatus($r['status_id']), -8, 'l').'</div>'.
+		($r['status_id'] == 3 ? '<span class="dtime-end grey">'.FullData($r['dtime_end'], 1, 1).':</span> ' : '').
+		'<a class="name" href="'.URL.'&p=devstory&d=task&id='.$r['id'].'">'.$r['name'].'</a>'.
+		(!$part_id ? '<span class="part-name">(<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a>)</span>' : '').
+	'</div>';
+}
+
 
 
 

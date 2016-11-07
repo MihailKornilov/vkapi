@@ -107,7 +107,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=devstory&d=task';
+					location.href = URL + '&p=devstory&d=task&id=' + res.task_id;
 				} else
 					dialog.abort();
 			}, 'json');
@@ -136,6 +136,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 						'<td><input type="text" id="time" class="w125" value="' + dtime + '" />' +
 				'</table>',
 			dialog = _dialog({
+				top:30,
 				width:420,
 				head:o.head,
 				content:html,
@@ -155,7 +156,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 				if(res.success) {
 					dialog.close();
 					_msg();
-					$('#spisok').html(res.html);
+					location.reload();
 				} else
 					dialog.abort();
 			}, 'json');
@@ -172,7 +173,7 @@ $(document)
 			name:p.find('.name').html()
 		});
 	})
-	.on('click', '#devstory .st-action.start', function() {
+	.on('click', '#devstory-task-info .st-action.start', function() {
 		var t = $(this),
 			p = _parent(t, '.task-u'),
 			o = {
@@ -182,7 +183,7 @@ $(document)
 			};
 			devStoryTaskAction(p, o);
 	})
-	.on('click', '#devstory .st-action.pause', function() {
+	.on('click', '#devstory-task-info .st-action.pause', function() {
 		var t = $(this),
 			p = _parent(t, '.task-u'),
 			o = {
@@ -192,7 +193,7 @@ $(document)
 			};
 			devStoryTaskAction(p, o);
 	})
-	.on('click', '#devstory .st-action.next', function() {
+	.on('click', '#devstory-task-info .st-action.next', function() {
 		var t = $(this),
 			p = _parent(t, '.task-u'),
 			o = {
@@ -202,7 +203,7 @@ $(document)
 			};
 			devStoryTaskAction(p, o);
 	})
-	.on('click', '#devstory .st-action.ready', function() {
+	.on('click', '#devstory-task-info .st-action.ready', function() {
 		var t = $(this),
 			p = _parent(t, '.task-u'),
 			o = {
@@ -213,7 +214,7 @@ $(document)
 			};
 		devStoryTaskAction(p, o);
 	})
-	.on('click', '#devstory .st-action.cancel', function() {
+	.on('click', '#devstory-task-info .st-action.cancel', function() {
 		var t = $(this),
 			p = _parent(t, '.task-u'),
 			o = {
