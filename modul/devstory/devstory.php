@@ -549,7 +549,7 @@ function _devstory_process_wait($part_id=0) {//список задач, ожидающих выполнени
 			WHERE !`status_id`
 			  AND !`deleted`
 ".($part_id ? "AND `part_id`=".$part_id : '')."  
-			ORDER BY `part_id`,`dtime_add` DESC";
+			ORDER BY `part_id`,`id`";
 	if(!$task = query_arr($sql))
 		return '';
 
