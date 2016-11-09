@@ -268,10 +268,12 @@ function _devstory_part_info($part_id) {
 	 (SA ? '<button class="vk small fr" onclick="devStoryTaskEdit('.$part_id.')">Новая задача</button>' : '').
 			$part['name'].
 		'</div>'.
-		'<div class="mar8 mb20">'._devstory_process_wait($part_id).'</div>'.
-		'<div class="mar8 mb20">'._devstory_process_process($part_id).'</div>'.
-		'<div class="mar8 mb20">'._devstory_process_pause($part_id).'</div>'.
-		'<div id="task-spisok" class="mar8">'._devstory_process_ready($part_id).'</div>'.
+		'<div class="mar8">'.
+			'<div class="mar8 mb20">'._devstory_process_wait($part_id).'</div>'.
+			'<div class="mar8 mb20">'._devstory_process_process($part_id).'</div>'.
+			'<div class="mar8 mb20">'._devstory_process_pause($part_id).'</div>'.
+			'<div class="mar8">'._devstory_process_ready($part_id).'</div>'.
+		'</div>'.
 	'</div>';
 }
 
@@ -361,6 +363,9 @@ function _devstory_task_info($task_id) {
 	$r = $task;
 	return
 	'<div id="devstory-task-info">'.
+		'<div class="part-name">'.
+			'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a> » Информация о задаче'.
+		'</div>'.
 		'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
 			'<div class="pp">'.
 		  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').

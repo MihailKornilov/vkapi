@@ -24,6 +24,13 @@
 
 
 #devstory-task-info{min-height:400px}
+#devstory-task-info .part-name{
+	font-size:17px;
+	padding:15px;
+	background:#FAFBFC;
+	border-bottom:#E7E8EC solid 1px;
+}
+#devstory-task-info .part-name a{font-size:17px;color:#555}
 #devstory-task-info .part_name{font-size:14px}
 #devstory-task-info .task-u{
 	border:#eee solid 1px;
@@ -126,7 +133,7 @@
 /* Информация о разделе */
 #devstory-part-info .part-name{
 	font-size:17px;
-	padding:15px 10px;
+	padding:15px;
 	background:#FAFBFC;
 	border-bottom:#E7E8EC solid 1px;
 }
