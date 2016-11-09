@@ -60,6 +60,9 @@ function _monthCut($n) {
 	);
 	return $mon[intval($n)];
 }
+function _monthLost($dtime) {//проверка, прошло ли 30 дней
+	return strtotime($dtime) - time() + 60 * 60 * 24 * 30 > 0 ? 0 : 1;
+}
 function _week($n) {
 	$week = array(
 		1 => 'пн',

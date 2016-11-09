@@ -366,6 +366,7 @@ var _accrualAdd = function(o) {
 			invoice_id:_invoiceExpenseInsert(1),
 			attach_id:0,
 			sum:'',
+			sum_edit:1,
 			about:''
 		}, o);
 
@@ -380,7 +381,7 @@ var _accrualAdd = function(o) {
 				'<tr><td class="label">‘айл:<td><input type="hidden" id="attach_id-add" value="' + o.attach_id + '" />' +
 				'<tr><td class="label">—о счЄта:<td><input type="hidden" id="invoice_id-add" value="' + o.invoice_id + '" />' +
 				'<tr><td class="label">—умма:' +
-					'<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
+					'<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.sum_edit ? '' : ' ') + ' /> руб.' +
 			'</table>';
 		dialog.content.html(html);
 		dialog.submit(submit);
@@ -441,7 +442,7 @@ var _accrualAdd = function(o) {
 					_msg();
 					_expenseSpisok();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},

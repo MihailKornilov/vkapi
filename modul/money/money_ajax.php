@@ -655,12 +655,16 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Расход был удалён');
+
+		if($r['sum'] != $sum && _monthLost($r['dtime_add']))
+			jsonError('Сумму расхода можно изменять в течение 30 дней');
 
 		$sql = "UPDATE `_money_expense`
 				SET `about`='".addslashes($about)."',
 					`category_id`=".$category_id.",
 					`category_sub_id`=".$category_sub_id.",
+					`sum`=".$sum.",
 					`worker_id`=".$worker_id.",
 					`attach_id`=".$attach_id.",
 					`salary_avans`=".$salary_avans.",
@@ -683,11 +687,21 @@ switch(@$_POST['op']) {
 			$list = query_ass($sql);
 		}
 
+		if($r['sum'] != $sum)
+			_balans(array(
+				'action_id' => 9,
+				'invoice_id' => $r['invoice_id'],
+				'sum' => $sum,
+				'sum_old' => $r['sum'],
+				'expense_id' => $id,
+				'about' => $r['about']
+			));
 
 		if($changes =
 			_historyChange('Категория',
 				$r['category_id'] ? _expense($r['category_id']).($r['category_sub_id'] ? ': '._expenseSub($r['category_sub_id']) : '') : '',
 				$category_id ? _expense($category_id).($category_sub_id ? ': '._expenseSub($category_sub_id) : '') : '').
+			_historyChange('Сумма', _sumSpace($r['sum']), _sumSpace($sum)).
 			_historyChange('Описание', $r['about'], $about).
 			_historyChange('Сотрудник', $r['worker_id'] ? _viewer($r['worker_id'], 'viewer_name') : '', $worker_id ? _viewer($worker_id, 'viewer_name') : '').
 			_historyChange('Аванс', _daNet($r['salary_avans']),  _daNet($salary_avans)).
@@ -710,19 +724,7 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT
-					`id`,
-					`category_id`,
-					`category_sub_id`,
-					`invoice_id`,
-					`worker_id`,
-					`salary_avans`,
-					`salary_list_id`,
-					`attach_id`,
-					`sum`,
-					`about`,
-					`year`,
-					`mon`
+		$sql = "SELECT *
 				FROM `_money_expense`
 				WHERE `app_id`=".APP_ID."
 				  AND !`deleted`
@@ -733,6 +735,8 @@ switch(@$_POST['op']) {
 		$r['sum'] = round($r['sum'], 2);
 		$r['about'] = utf8($r['about']);
 		$r['attach'] = _attachArr($r['attach_id']);
+		//возможность редактирования суммы расхода: в течение 30 дней
+		$r['sum_edit'] = !_monthLost($r['dtime_add']);
 		$send['arr'] = $r;
 
 		jsonSuccess($send);
