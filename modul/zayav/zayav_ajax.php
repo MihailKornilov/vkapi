@@ -1834,8 +1834,11 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 			  AND `gazeta_nomer_id`>="._gn('first');
 	query($sql);
 
-	if(empty($v['gn']))
+	if(empty($v['gn'])) {
+		_clientBalansUpdate($v['client_id']);
+		_zayavBalansUpdate($zayav_id);
 		return;
+	}
 
 	$insert = array();
 	foreach($v['gn'] as $r) {
