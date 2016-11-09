@@ -1840,11 +1840,14 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 		return;
 	}
 
+	$z = _zayavQuery($zayav_id);
+
 	$insert = array();
 	foreach($v['gn'] as $r) {
 		$skidka_sum = $r['skidka'] ? round($r['cena'] / (100 - $r['skidka']) * 100 - $r['cena'], 6) : 0;
 		$insert[] = '('.
 			APP_ID.','.
+			$z['client_id'].','.
 			$zayav_id.','.
 			$r['gn_id'].','.
 			$r['dop'].','.
@@ -1858,6 +1861,7 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 
 	$sql = "INSERT INTO `_zayav_gazeta_nomer` (
 				`app_id`,
+				`client_id`,
 				`zayav_id`,
 				`gazeta_nomer_id`,
 				`dop`,

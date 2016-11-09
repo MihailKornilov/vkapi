@@ -1155,18 +1155,11 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 	$refund = query_value($sql);
 
 	//Ќомера газет
-	$gn = 0;
-	$sql = "SELECT `id`
-			FROM `_zayav`
-			WHERE `client_id`=".$client_id."
-			  AND !`deleted`";
-	if($ids = query_ids($sql)) {
-		$sql = "SELECT IFNULL(SUM(`cena`),0)
-				FROM `_zayav_gazeta_nomer`
-				WHERE `app_id`=".APP_ID."
-				  AND `zayav_id` IN (".$ids.")";
-		$gn = query_value($sql);
-	}
+	$sql = "SELECT IFNULL(SUM(`cena`),0)
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `client_id`=".$client_id;
+	$gn = query_value($sql);
 
 	$balans = $income - $accrual - $refund - $gn;
 

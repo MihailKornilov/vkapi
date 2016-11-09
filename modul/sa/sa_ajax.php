@@ -1286,6 +1286,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'sa_count_client_load':
+		set_time_limit(40);
 		$sql = "UPDATE `_client` `c`
 				SET `balans_test`=(
 					SELECT IFNULL(SUM(`sum`),0)
@@ -1304,12 +1305,18 @@ switch(@$_POST['op']) {
 					FROM `_money_refund`
 					WHERE !`deleted`
 					  AND `client_id`=`c`.`id`
-				) WHERE `app_id`=".APP_ID;
+				) - (
+					SELECT IFNULL(SUM(`cena`),0)
+					FROM `_zayav_gazeta_nomer`
+					WHERE `client_id`=`c`.`id`
+				) WHERE `app_id`=".APP_ID."
+					AND !`deleted`";
 		query($sql);
 
 		$sql = "SELECT *
 				FROM `_client`
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND `balans`!=`balans_test`";
 		$client = query_arr($sql);
 
@@ -1382,6 +1389,7 @@ switch(@$_POST['op']) {
 					) = `sum_pay`,0,2
 				)
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND !`sum_test`";
 		query($sql);
 
@@ -1389,6 +1397,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 				SET `sum_test`=IF(`sum_dolg`=`sum_pay`-`sum_accrual`,0,3)
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND !`sum_test`";
 		query($sql);
 
@@ -1402,6 +1411,7 @@ switch(@$_POST['op']) {
 					) = `sum_expense`,0,4
 				)
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND !`sum_test`";
 		query($sql);
 
@@ -1409,6 +1419,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav`
 				SET `sum_test`=IF(`sum_profit`=`sum_accrual`-`sum_expense`,0,5)
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND !`sum_test`";
 		query($sql);
 
@@ -1420,12 +1431,14 @@ switch(@$_POST['op']) {
 		$sql = "SELECT COUNT(`id`)
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND `sum_test`";
 		$all = query_value($sql);
 
 		$sql = "SELECT *
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
 				  AND `sum_test`
 				LIMIT 1000";
 		$zayav = query_arr($sql);
