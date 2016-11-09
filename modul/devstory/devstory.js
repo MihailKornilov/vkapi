@@ -68,8 +68,11 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 		function loaded(o) {
 			dialog.content.html(
 				'<table class="bs10">' +
-					'<tr><td class="label r">Раздел:<td><b>' + o.part_name + '</b>' +
-					'<tr><td class="label r">Ключевые слова:' +
+					'<tr><td class="label r">Раздел:' +
+						'<td><input type="hidden" id="part_id" value="' + o.part_id + '" />' +
+							(o.part_id ? '<b>' + o.part_name + '</b>' : '') +
+					'<tr' + (o.part_id ? '' : ' class="dn"') + '>' +
+						'<td class="label r">Ключевые слова:' +
 						'<td><input type="hidden" id="keyword_ids" value="' + o.keyword_ids + '" />' +
 					'<tr><td class="label r">Задача:' +
 						'<td><input type="text" id="name" class="w400 b" value="' + o.name + '" />' +
@@ -78,6 +81,12 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 				'</table>'
 			);
 
+			if(!o.part_id)
+				$('#part_id')._select({
+					width:200,
+					title0:'не выбран',
+					spisok:o.part_spisok
+				});
 			$('#keyword_ids')._select({
 				width:350,
 				title0:'ключевые слова',
@@ -91,7 +100,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 			var send = {
 				op:'devstory_task_' + (task_id ? 'edit' : 'add'),
 				id:task_id,
-				part_id:part_id,
+				part_id:$('#part_id').val(),
 				keyword_ids:$('#keyword_ids').val(),
 				keyword:$('#keyword_ids')._select('inp'),
 				name:$('#name').val(),
@@ -109,7 +118,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 					_msg();
 					location.href = URL + '&p=devstory&d=task&id=' + res.task_id;
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},

@@ -80,7 +80,9 @@ switch(@$_POST['op']) {
 		$keyword_spisok = query_selArray($sql);
 
 		$send = array(
+			'part_id' => $part_id,
 			'part_name' => utf8(_devstoryPart($part_id)),
+			'part_spisok' => _devstoryPart('array'),
 			'keyword_ids' => $keyword_ids,
 			'keyword_spisok' => $keyword_spisok,
 			'name' => isset($r) ? utf8($r['name']) : '',
@@ -94,7 +96,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		if(!$part_id = _num($_POST['part_id']))
-			jsonError();
+			jsonError('Не выбран раздел');
 
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);

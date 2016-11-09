@@ -24,6 +24,7 @@
 
 
 #devstory-task-info{min-height:400px}
+#devstory-task-info .part_name{font-size:14px}
 #devstory-task-info .task-u{
 	border:#eee solid 1px;
 	border-radius:4px;
@@ -125,13 +126,19 @@
 /* Информация о разделе */
 #devstory-part-info .part-name{
 	font-size:17px;
-	padding:15px 10px 10px;
+	padding:15px 10px;
+	background:#FAFBFC;
+	border-bottom:#E7E8EC solid 1px;
 }
 
 
 
 .devstory-head-process{font-size:17px;text-decoration:underline;color:#33a}
 .devstory-head-pause{font-size:17px;text-decoration:underline;color:#996}
+.devstory-wait-head{font-size:17px;color:#999;display:inline-block}
+.devstory-wait-head u{font-size:17px}
+.devstory-wait-pname{display:inline-block;margin:15px 0 0 10px;color:#555}
+.devstory-wait-content{margin-bottom:50px}
 .devstory-head-ready{font-size:17px;text-decoration:underline;color:#696;margin-bottom:4px}
 
 

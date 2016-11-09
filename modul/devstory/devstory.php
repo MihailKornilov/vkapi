@@ -41,6 +41,9 @@ function _devstory_footer() {//текст в нижней части приложени€
 }
 
 function _devstoryPart($id=false, $i='name') {
+	if(!$id)
+		return '';
+
 	$key = CACHE_PREFIX.'devstory_part';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
@@ -60,6 +63,15 @@ function _devstoryPart($id=false, $i='name') {
 			$spisok[$r['id']] = $r['name'];
 
 		return _assJson($spisok);
+	}
+
+	//массив дл€ select через Ajax 
+	if($id == 'array') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = $r['name'];
+
+		return _selArray($spisok);
 	}
 
 	if(!isset($arr[$id]))
@@ -252,7 +264,11 @@ function _devstory_part_info($part_id) {
 
 	return
 	'<div id="devstory-part-info">'.
-		'<div class="part-name">'.$part['name'].'</div>'.
+		'<div class="part-name">'.
+	 (SA ? '<button class="vk small fr" onclick="devStoryTaskEdit('.$part_id.')">Ќова€ задача</button>' : '').
+			$part['name'].
+		'</div>'.
+		'<div class="mar8 mb20">'._devstory_process_wait($part_id).'</div>'.
 		'<div class="mar8 mb20">'._devstory_process_process($part_id).'</div>'.
 		'<div class="mar8 mb20">'._devstory_process_pause($part_id).'</div>'.
 		'<div id="task-spisok" class="mar8">'._devstory_process_ready($part_id).'</div>'.
@@ -349,7 +365,7 @@ function _devstory_task_info($task_id) {
 			'<div class="pp">'.
 		  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('–едактировать задачу', -125, 'r').'</div>' : '').
 				'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-				'<b class="part_name">'._devstoryPart($r['part_id']).'</b>'.
+				'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="part_name b">'._devstoryPart($r['part_id']).'</a>'.
 				_devstoryKeyword('task', $r['keyword']).
 			'</div>'.
 			'<table class="w100p">'.
@@ -467,13 +483,14 @@ function _devstory_process() {
 
 	return
 	'<div class="mar8">'.
+  (SA ? '<button class="vk fr" onclick="devStoryTaskEdit()">Ќова€ задача</button>' : '').
+		'<div class="mb20">'._devstory_process_wait().'</div>'.
 		'<div class="mb20">'._devstory_process_process().'</div>'.
 		'<div class="mb20">'._devstory_process_pause().'</div>'.
 		'<div class="mb20">'._devstory_process_ready().'</div>'.
 	'</div>';
 }
 function _devstory_process_ready($part_id=0) {//список выполненных задач
-	$send = '<div class="devstory-head-ready">¬ыполнено</div>';
 
 	$sql = "SELECT
 				*
@@ -482,19 +499,22 @@ function _devstory_process_ready($part_id=0) {//список выполненных задач
 			  AND !`deleted`
 ".($part_id ? "AND `part_id`=".$part_id : '')."  
 			ORDER BY `dtime_end` DESC";
-	if($task = query_arr($sql)) {
-		$curMon = '';
-		foreach($task as $r) {
-			$time = strtotime($r['dtime_end']);
-			$mon = strftime('%Y %m', $time);
-			if($curMon != $mon) {
-				$y = strftime('%Y', $time);
-				$m = _monthDef(strftime('%m', $time), 1);
-				$send .= '<div class="devstory-task-mon'.($curMon ? ' mt20' : '').'">'.$m.' '.$y.':</div>';
-				$curMon = $mon;
-			}
-			$send .= _devstory_task_unit($r, $part_id);
+	if(!$task = query_arr($sql))
+		return '';
+
+	$send = '<div class="devstory-head-ready">¬ыполнено</div>';
+
+	$curMon = '';
+	foreach($task as $r) {
+		$time = strtotime($r['dtime_end']);
+		$mon = strftime('%Y %m', $time);
+		if($curMon != $mon) {
+			$y = strftime('%Y', $time);
+			$m = _monthDef(strftime('%m', $time), 1);
+			$send .= '<div class="devstory-task-mon'.($curMon ? ' mt20' : '').'">'.$m.' '.$y.':</div>';
+			$curMon = $mon;
 		}
+		$send .= _devstory_task_unit($r, $part_id);
 	}
 
 	return $send;
@@ -514,6 +534,36 @@ function _devstory_process_pause($part_id=0) {//список задач на паузе
 
 	foreach($task as $r)
 		$send .= _devstory_task_unit($r, $part_id);
+
+	return $send;
+}
+function _devstory_process_wait($part_id=0) {//список задач, ожидающих выполнени€
+	$sql = "SELECT
+				*
+			FROM `_devstory_task`
+			WHERE !`status_id`
+			  AND !`deleted`
+".($part_id ? "AND `part_id`=".$part_id : '')."  
+			ORDER BY `part_id`,`dtime_add` DESC";
+	if(!$task = query_arr($sql))
+		return '';
+
+	$send =
+		'<div class="devstory-wait-head curP" onclick="$(this).next().slideToggle()">'.
+			'<u>ќжидающие выполнени€</u> '.
+			'('.count($task).')'.
+		'</div>';
+
+	$send .= '<div class="devstory-wait-content'.($part_id ? '' : ' dn').'">';
+	$part_id_cur = 0;
+	foreach($task as $r) {
+		if(!$part_id && $part_id_cur != $r['part_id']) {
+			$send .= '<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="devstory-wait-pname fs13">'._devstoryPart($r['part_id']).'</a>';
+			$part_id_cur = $r['part_id'];
+		}
+		$send .= _devstory_task_unit($r, $part_id);
+	}
+	$send .= '</div>';
 
 	return $send;
 }
@@ -541,7 +591,9 @@ function _devstory_task_unit($r, $part_id) {//единица списка задач
 		'<div style="background:#'._devstoryStatus($r['status_id'], 'bg').'" class="stat'._tooltip('—татус: '._devstoryStatus($r['status_id']), -8, 'l').'</div>'.
 		($r['status_id'] == 3 ? '<span class="dtime-end grey">'.FullData($r['dtime_end'], 1, 1).':</span> ' : '').
 		'<a class="name" href="'.URL.'&p=devstory&d=task&id='.$r['id'].'">'.$r['name'].'</a>'.
-		(!$part_id ? '<span class="part-name">(<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a>)</span>' : '').
+		(!$part_id && $r['status_id'] ?
+			'<span class="part-name">(<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a>)</span>'
+		: '').
 	'</div>';
 }
 

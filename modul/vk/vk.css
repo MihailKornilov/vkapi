@@ -1179,6 +1179,8 @@ button.vk.grey:hover{background-color:#999}
 .center{text-align:center}
 .fr{float:right}
 
+.fs13{font-size:13px}
+
 /* Курсоры */
 .curM{cursor:move}
 .curD{cursor:default}
