@@ -86,12 +86,13 @@ $(document)
 						'<div class="about">Отмена напоминания по какой-либо причине.</div>' +
 					'</div>' +
 					'<table id="ra-tab">' +
-						'<tr><td class="label">Новый день:<td><input type="hidden" id="remind_day" value="' + day + '" />' +
-						'<tr><td class="label">Причина:<td><input type="hidden" id="reason" />' +
+						'<tr><td class="label r">Новый день:<td><input type="hidden" id="remind_day" value="' + day + '" />' +
+						'<tr><td class="label">Причина переноса напоминания:<td><input type="hidden" id="reason" />' +
 					'</table>' +
 				'</div>',
 			dialog = _dialog({
 				top:30,
+				width:470,
 				head:'Изменение статуса напоминания',
 				content:html,
 				butSubmit:'',

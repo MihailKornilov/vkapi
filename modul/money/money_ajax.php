@@ -194,7 +194,7 @@ switch(@$_POST['op']) {
 				 $about;
 
 		//баланс для клиента
-		if($client_id && !$confirm && $dtime_add == TODAY)
+		if($client_id && !$confirm)
 			_balans(array(
 				'action_id' => 27,
 				'client_id' => $client_id,
