@@ -20,8 +20,9 @@ table{border:0;border-spacing:0}
 /* Основное окно фрейма */
 #frameBody{
 	position:relative;
-	background:#FFF;
-	width:625px;
+	margin:0 auto;
+	background:#fff;
+	max-width:795px;
 	border-bottom:#DAE1E8 solid 1px;
 	overflow:hidden;
 }
@@ -48,9 +49,9 @@ table{border:0;border-spacing:0}
 
 
 
-#pin-enter{margin:90px 0 90px 230px}
+#pin-enter{width:180px;margin:120px auto}
 #pin-enter input{width:70px;padding:5px 5px 6px}
-#pin-enter .red{margin-top:10px}
+#pin-enter .red{margin-top:10px;text-align:center}
 #pin-enter .vk{position:absolute;margin-left:5px}
 
 
@@ -442,28 +443,9 @@ a.add:hover{text-decoration:underline;color:#357}
 #_info-top .img_del{float:right}
 
 
-/* Главное меню */
-#_menu{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
-#_menu a.p{
-	display:inline-block;
-	margin-left:5px;
-	padding:5px 10px;
-	color:#31618C;
-	border-radius:4px 4px 0 0;
-}
-#_menu a.p:hover{text-decoration:none}
-#_menu a.p:not(.sel):hover{background-color:#DEE3EF}
-#_menu a.p.sel{color:#FFF;background-color:#31618C}
-#_menu a.main{
-	background-image:url(data:image/gif;base64,R0lGODlhCwAZAJEAAAAAAP///zFhjP///yH5BAEAAAMALAAAAAALABkAAAIclI8yy+0/koQUylSz3rz7DzbBSJZBKJomyqhmAQA7);
-	background-repeat:no-repeat;
-	background-position:6px 9px;
-}
-#_menu a.main.sel{background-position:6px -9px}
-#_menu a.back{float:right;position:relative;top:5px;right:10px}
-#_menu._busy{background-position:right 18px}
 
 
+/* Ссылки главной страницы */
 #_menu-main{padding:1px 15px 20px;background:#F0F2F5}
 #_menu-main .mu{
 	margin:15px 0;
@@ -651,7 +633,6 @@ a.add:hover{text-decoration:underline;color:#357}
 	padding:15px 20px;
 	position:absolute;
 	width:400px;
-	left:100px;
 	top:100px;
 	background-color:#333;
 	font:bold 12px Tahoma;

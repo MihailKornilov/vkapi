@@ -1,3 +1,45 @@
+/* Главное меню */
+#_menu{
+	border-bottom:#31618C solid 1px;
+	padding:15px 5px 0 5px;
+}
+#_menu a{
+	font-family: -apple-system, BlinkMacSystemFont, Roboto, Open Sans, Helvetica Neue, sans-serif;
+	font-size: 13px;
+}
+#_menu a.p{
+	display:inline-block;
+	margin-left:5px;
+	padding:9px 14px 7px;
+	color:#31618C;
+	border-radius:5px 5px 0 0;
+}
+#_menu a.p:hover{text-decoration:none}
+#_menu a.p:not(.sel):hover{background-color:#DEE3EF}
+#_menu a.p.sel{color:#FFF;background-color:#31618C}
+#_menu a b{font-size:13px}
+
+#_menu a.main{
+	padding-left:16px;
+	padding-right:16px;
+	background-image:url(data:image/gif;base64,R0lGODlhEgAoAJEAAAAAAP///zFhjP///yH5BAEAAAMALAAAAAASACgAAAItlI+py+MPo5y0VoYztrx7qoXiR5bmiabqyrbuCw/BTNf2jefxm/d+v3P9hsQCADs=);
+	background-repeat:no-repeat;
+	background-position:9px 11px;
+}
+#_menu a.main.sel{background-position:9px -17px}
+#_menu a.back{
+	float:right;
+	position:relative;
+	top:9px;
+	right:10px;
+}
+#_menu._busy{background-position:right center}
+
+
+
+
+
+
 /* Дополнительные меню */
 /* type 1 */
 ._menuDop1{border-bottom:#E7E8EC solid 1px;margin:5px 0 10px}

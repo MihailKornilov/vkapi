@@ -374,7 +374,7 @@ var VK_SCROLL = 0,
 		if(FB_HEIGHT == h)
 			return;
 		FB_HEIGHT = h;
-		VK.callMethod('resizeWindow', 625, h);
+		VK.callMethod('resizeWindow', 795, h); //todo переход на ширину 795. Тест на Avon
 	},
 	_backfon = function(add) {
 		if(add === undefined)
@@ -414,6 +414,7 @@ var VK_SCROLL = 0,
 		$('body').append('<div id="_msg">' + txt + '</div>');
 		$('#_msg')
 			.css('top', $(this).scrollTop() + 200 + VK_SCROLL)
+			.css('left', $(document).width() / 2 - 200)
 			.delay(1200)
 			.fadeOut(400, function() {
 				$(this).remove();
@@ -525,7 +526,7 @@ var VK_SCROLL = 0,
 		dialog.css({
 			width:o.width + 'px',
 			top:$(window).scrollTop() + VK_SCROLL + o.top + 'px',
-			left:313 - w2 + 'px',
+			left:$(document).width() / 2 - w2 + 'px',
 			'z-index':ZINDEX + 5
 		});
 

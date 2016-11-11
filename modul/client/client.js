@@ -643,15 +643,6 @@ $(document)
 	})
 
 	.ready(function() {
-		$('#client-dolg-sum').vkHint({
-			msg:'Текущая сумма долга клиентов',
-			ugol:'top',
-			width:190,
-			top:16,
-			left:404,
-			indent:'right'
-		});
-
 		if($('#client').length) {
 			$('#find')._search({
 				width:458,
