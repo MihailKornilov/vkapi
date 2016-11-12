@@ -10,7 +10,7 @@
 #_menu a.p{
 	display:inline-block;
 	margin-left:5px;
-	padding:9px 14px 7px;
+	padding:8px 14px 6px;
 	color:#31618C;
 	border-radius:5px 5px 0 0;
 }
@@ -24,9 +24,9 @@
 	padding-right:16px;
 	background-image:url(data:image/gif;base64,R0lGODlhEgAoAJEAAAAAAP///zFhjP///yH5BAEAAAMALAAAAAASACgAAAItlI+py+MPo5y0VoYztrx7qoXiR5bmiabqyrbuCw/BTNf2jefxm/d+v3P9hsQCADs=);
 	background-repeat:no-repeat;
-	background-position:9px 11px;
+	background-position:9px 10px;
 }
-#_menu a.main.sel{background-position:9px -17px}
+#_menu a.main.sel{background-position:9px -18px}
 #_menu a.back{
 	float:right;
 	position:relative;
