@@ -1,11 +1,50 @@
+*{	padding:0;
+	margin:0;
+	font:13px normal;
+	font-family: -apple-system, BlinkMacSystemFont, Roboto, Open Sans, Helvetica Neue, sans-serif;
+}
+body{background:#fff}
+a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
+a:hover{text-decoration:underline}
+b{font-weight:bold}
+i{font-style:italic}
+input,textarea{border:#ccc solid 1px;padding:3px 3px 4px 3px;outline:none}
+input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
+input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
+input.money{font:bold 14px Tahoma;width:100px}
+textarea{resize:none}
+img{border:none}
+table{border:0;border-spacing:0}
+
+
+
+
+
+/* Основное окно фрейма */
+#frameBody{
+	position:relative;
+	margin:0 auto;
+	background:#fff;
+	max-width:795px;
+	border-bottom:#DAE1E8 solid 1px;
+	overflow:hidden;
+}
+#frameHidden{
+	border:0;
+	width:100%;
+	height:100%;
+	position:absolute;
+	z-index:-1;
+}
+
+
+
+
+
 /* Главное меню */
 #_menu{
 	border-bottom:#31618C solid 1px;
 	padding:15px 5px 0 5px;
-}
-#_menu a{
-	font-family: -apple-system, BlinkMacSystemFont, Roboto, Open Sans, Helvetica Neue, sans-serif;
-	font-size: 13px;
 }
 #_menu a.p{
 	display:inline-block;
@@ -17,7 +56,6 @@
 #_menu a.p:hover{text-decoration:none}
 #_menu a.p:not(.sel):hover{background-color:#DEE3EF}
 #_menu a.p.sel{color:#FFF;background-color:#31618C}
-#_menu a b{font-size:13px}
 
 #_menu a.main{
 	padding-left:16px;
@@ -44,9 +82,6 @@
 /* type 1 */
 ._menuDop1{border-bottom:#E7E8EC solid 1px;margin:5px 0 10px}
 ._menuDop1 .link{
-	font-family:-apple-system,BlinkMacSystemFont,Roboto,Open Sans,Helvetica Neue,sans-serif;
-	font-size:13px;
-
 	display:inline-block;
 	color:#777;
 	padding:14px 6px 10px;
@@ -91,9 +126,6 @@
 
 /* Текст с информацией на жёлтом форе */
 ._info{
-	font-family:-apple-system,BlinkMacSystemFont,Roboto,Open Sans,Helvetica Neue,sans-serif;
-	font-size:13px;
-
 	background:#ffffe6;
 	border:#eea 1px solid;
 	border-radius:3px;
@@ -102,11 +134,7 @@
 	margin-bottom:10px;
 	line-height:1.4;
 }
-._info b{font-size:13px}
-._info u{font-size:13px}
-._info a{font-size:13px}
 ._info p{
-	font-size:13px;
 	margin:3px 0 7px;
 	line-height:1.4;
 }

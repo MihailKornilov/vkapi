@@ -571,7 +571,7 @@ function _devstory_process_wait($part_id=0) {//список задач, ожидающих выполнени
 	$part_id_cur = 0;
 	foreach($task as $r) {
 		if(!$part_id && $part_id_cur != $r['part_id']) {
-			$send .= '<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="devstory-wait-pname fs13">'._devstoryPart($r['part_id']).'</a>';
+			$send .= '<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="devstory-wait-pname">'._devstoryPart($r['part_id']).'</a>';
 			$part_id_cur = $r['part_id'];
 		}
 		$send .= _devstory_task_unit($r, $part_id);

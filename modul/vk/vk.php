@@ -148,13 +148,14 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
+		//стили Global
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/global/global'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/global/global'.MIN.'.js?'.VERSION.'"></script>'.
+
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/vk/vk'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>'.
 
-		//стили Global
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/global/global'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/modul/global/global'.MIN.'.js?'.VERSION.'"></script>'.
 
 		//Переменные _global для всех приложений
 		'<script src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.

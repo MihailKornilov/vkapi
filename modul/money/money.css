@@ -146,7 +146,7 @@
 	margin:8px 10px;
 	cursor:pointer;
 }
-#invoice-setup-tab h1{font-size:13px;font-weight:bold}
+#invoice-setup-tab h1{font-weight:bold}
 #invoice-setup-tab h2{color:#777;margin:3px 10px}
 #invoice-setup-tab .u:hover{background-color:#f4f6f7}
 

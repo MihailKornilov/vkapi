@@ -156,14 +156,8 @@
 	margin-bottom:-5px;
 	border-radius:10px;
 }
-.devstory-task-unit .name{font-size:13px}
-.devstory-task-unit .dtime-end{font-size:13px}
-.devstory-task-unit .part-name{
-	font-size:13px;
-	margin-left:10px;
-	color:#bbb;
-}
-.devstory-task-unit .part-name a{font-size:13px;color:#bbb}
+.devstory-task-unit .part-name{margin-left:10px;color:#bbb}
+.devstory-task-unit .part-name a{color:#bbb}
 .devstory-task-unit .part-name a:hover{color:#2B587A}
 
 

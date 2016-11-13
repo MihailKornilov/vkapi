@@ -177,7 +177,6 @@
 	color:#048;
 	background-color:#eef;
 }
-#_client-zayav-add-tab .u span{font:bold 13px Verdana}
 #_client-zayav-add-tab .u._busy span{visibility:hidden}
 
 
@@ -570,7 +569,6 @@
 #zayav-srok-calendar #fc-mon td{border:#ddd solid 1px}
 #zayav-srok-calendar #week-name td{
 	font-weight:bold;
-	font-size:13px;
 	background-color:#eee;
 	color:#555;
 	text-align:center;
@@ -582,7 +580,6 @@
 #zayav-srok-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
 #zayav-srok-calendar td.d b{
 	display:inline-block;
-	font-size:13px;
 	padding:1px 5px;
 	border:#cec solid 1px;
 	background-color:#dfd;
