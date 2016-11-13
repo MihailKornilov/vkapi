@@ -31,7 +31,7 @@
 	border-bottom:#E7E8EC solid 1px;
 }
 #devstory-task-info .part-name a{font-size:17px;color:#555}
-#devstory-task-info .part_name{font-size:14px}
+#devstory-task-info .part-name b{font-size:17px}
 #devstory-task-info .task-u{
 	border:#eee solid 1px;
 	border-radius:4px;
@@ -48,11 +48,6 @@
 #devstory-task-info .task-u .pp b{font-size:12px}
 #devstory-task-info .task-u .dtime{float:right;color:#888;font-size:10px}
 #devstory-task-info .task-u .img_edit{float:right;margin-left:10px}
-#devstory-task-info .task-u .name{
-	font-size:15px;
-	margin:8px;
-	font-weight:bold;
-}
 #devstory-task-info .task-u .about{margin:8px}
 #devstory-task-info .task-u .word{
 	display:inline-block;

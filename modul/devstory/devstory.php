@@ -364,18 +364,17 @@ function _devstory_task_info($task_id) {
 	return
 	'<div id="devstory-task-info">'.
 		'<div class="part-name">'.
-			'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a> » Информация о задаче'.
+			'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a> » '.$r['name'].
 		'</div>'.
 		'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
 			'<div class="pp">'.
 		  (SA ? '<div onclick="devStoryTaskEdit(0,'.$r['id'].')" class="img_edit'._tooltip('Редактировать задачу', -125, 'r').'</div>' : '').
 				'<div class="dtime">'.FullDataTime($r['dtime_add'], 1).'</div>'.
-				'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="part_name b">'._devstoryPart($r['part_id']).'</a>'.
-				_devstoryKeyword('task', $r['keyword']).
+				(_devstoryKeyword('task', $r['keyword']) ? 'Ключевые слова: '._devstoryKeyword('task', $r['keyword']) : '').
+				'&nbsp;'.
 			'</div>'.
 			'<table class="w100p">'.
 				'<tr><td class="top">'.
-						'<div class="name">'.$r['name'].'</div>'.
 						'<div class="about">'._br($r['about']).'</div>'.
 					'<td class="td-status top w150">'.
 						'<div class="st center">'._devstoryStatus($r['status_id']).'</div>'.
@@ -397,6 +396,15 @@ function _devstory_task_info($task_id) {
 
 			'</table>'.
 		'</div>'.
+
+		'<div class="mar10">'.
+			_note(array(
+				'p' => 'devstory_task',
+				'id' => $task_id,
+				'noapp' => 1
+			)).
+		'</div>'.
+
 	'</div>';
 }
 function _devstory_task_spent($r) {//отображение затраченного времени для каждой задачи
