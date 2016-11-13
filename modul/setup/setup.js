@@ -762,13 +762,13 @@ $(document)
 	.on('click', '#setup_worker .add', function() {
 		var html =
 			'<div id="worker-add">' +
-				'<h1>Укажите адрес страницы пользователя или его id ВКонтакте:</h1>' +
-				'<div class="_info">Формат адреса может быть следующих видов:<br />' +
-					'<u>http://vk.com/id12345</u>, <u>http://vk.com/durov</u>.<br />' +
-					'Либо используйте ID пользователя: <u>id12345</u>, <u>durov</u>, <u>12345</u>.' +
-				'</div>' +
-
 				'<table id="wa-find">' +
+					'<tr><td colspan="2">' +
+						'<h1>Укажите адрес страницы пользователя или его id ВКонтакте:</h1>' +
+						'<div class="_info">Формат адреса может быть следующих видов:<br />' +
+							'<u>http://vk.com/id12345</u>, <u>http://vk.com/durov</u>.<br />' +
+							'Либо используйте ID пользователя: <u>id12345</u>, <u>durov</u>, <u>12345</u>.' +
+						'</div>' +
 					'<tr><td><input type="text" id="viewer_id" />' +
 						'<td id="msg"><span>Пользователь не найден</span>' +
 					'<tr><td colspan="2" id="vkuser">' +
@@ -783,11 +783,10 @@ $(document)
 				'</table>' +
 			'</div>',
 			dialog = _dialog({
-				top:50,
 				width:440,
 				head:'Добавление нового сотрудника',
 				content:html,
-				butSubmit:'Добавить',
+				butSubmit:'Добавить сотрудника',
 				submit:submit
 			}),
 			viewer_id = 0;

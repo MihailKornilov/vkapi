@@ -981,6 +981,7 @@ button.vk.grey:hover{background-color:#999}
 ._tooltip .ttdiv.x2{top:-41px}
 ._tooltip:not(:hover) .ttdiv,._tooltip .ttdiv:hover{display:none}
 ._tooltip .ttmsg{
+	font-size:12px;
 	color:#fff;
 	padding:5px 10px;
 	font-weight:bold;
@@ -1093,6 +1094,7 @@ button.vk.grey:hover{background-color:#999}
 /* Короткие стили */
 .w15{width:15px}
 .w50{width:50px}
+.h50{height:50px}
 .w70{width:70px}
 .w100{width:100px}
 .w100p{width:100%}
@@ -1107,11 +1109,13 @@ button.vk.grey:hover{background-color:#999}
 .mar8{margin:8px}
 .mar10{margin:10px}
 .mar20{margin:20px}
+.pad15{padding:15px}
 .mt5{margin-top:5px}
 .mr5{margin-right:5px}
 .mt10{margin-top:10px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}
+.mb5{margin-bottom:5px}
 .mb10{margin-bottom:10px}
 .mb20{margin-bottom:20px}
 .bs5{border-spacing:5px}
@@ -1125,6 +1129,8 @@ button.vk.grey:hover{background-color:#999}
 .center{text-align:center}
 .fr{float:right}
 
+.fs11{font-size:11px}
+.fs12{font-size:12px}
 .fs14{font-size:14px}
 
 /* Курсоры */

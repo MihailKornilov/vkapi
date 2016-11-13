@@ -1,6 +1,5 @@
-#setup .left{padding:15px}
 #setup .headName{margin:0 0 15px}
-#setup .right{padding:0;width:180px;border-left:0}
+#setup .right{padding:0;width:200px;border-left:0}
 #setup .rightLink a.sel{border-color:#6B8EB5}
 #setup ._spisok{margin-bottom:1px}
 
@@ -13,15 +12,17 @@
 #setup_my #pinchange{margin:0 10px 0 80px}
 #setup_my #dop{margin-top:30px}
 
-#setup_worker .headName{margin-bottom:15px}
-#setup_worker .unit{border-spacing:10px;border:#DDE solid 1px;width:330px;margin:6px 0 6px 20px}
-#setup_worker .unit td{vertical-align:top}
-#setup_worker .photo{width:50px}
-#setup_worker .photo img{width:50px;height:50px}
-#setup_worker .name{font-weight:bold;font-size:12px;color:#45688e}
-#setup_worker .activity{margin-top:5px;color:#888;font-size:10px}
-#setup_worker .rules_set{display:block;margin-top:5px}
 
+/* Сотрудники */
+#setup_worker .unit{
+	border:#DDE solid 1px;
+	width:380px;
+	margin:6px 0 6px 20px;
+}
+
+
+
+/* Форма добавления нового сотрудника */
 #worker-add h1{margin:10px 0;font-weight:bold;color:#31618C}
 #worker-add #viewer_id{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
 #worker-add #manual{margin-top:15px}
@@ -34,16 +35,10 @@
 #worker-add #vkuser td{vertical-align:top;font-weight:bold;font-size:12px;color:#45688e}
 
 #setup_rule{padding-bottom:30px}
-#setup_rule .img_del{float:right}
-#setup_rule .utab td{padding-right:10px;vertical-align:top}
-#setup_rule .utab img{width:50px}
-#setup_rule .vklink{color:#777;display:block}
-#setup_rule .name{font-weight:bold;font-size:12px;color:#45688e;margin-bottom:10px}
 #setup_rule .headName{margin:20px 0 10px}
 #setup_rule #pin-clear{margin-left:116px}
 #setup_rule .rtab{border-spacing:8px 12px}
 #setup_rule .lab{width:100px;text-align:right}
-#setup_rule .rtab input{width:230px}
 #RULE_SALARY_BONUS_check{margin-bottom:-3px}
 #setup_rule #salary_bonus_sum{
 	width:30px;

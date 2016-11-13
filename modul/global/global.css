@@ -8,7 +8,12 @@ a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
 a:hover{text-decoration:underline}
 b{font-weight:bold}
 i{font-style:italic}
-input,textarea{border:#ccc solid 1px;padding:3px 3px 4px 3px;outline:none}
+input,textarea{
+	border:1px solid #d3d9de;
+	padding:6px 8px 6px;
+	border-radius:1px;
+	outline:none;
+}
 input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
@@ -119,6 +124,7 @@ table{border:0;border-spacing:0}
 	padding:14px 17px;
 }
 .hd1 b,.hd1 u{font-size:14px}
+.hd1 a.link{color:#777;font-size:14px}
 
 
 

@@ -59,7 +59,7 @@ function _setup() {
 	return
 		'<div id="setup">'.
 			'<table class="tabLR">'.
-				'<tr><td class="left">'.$left.
+				'<tr><td class="left'.($d != 'worker' ? ' pad15' : '').'">'.$left. //todo на удаление
 					'<td class="right"><div class="rightLink">'.$links.'</div>'.
 			'</table>'.
 		'</div>';
@@ -108,7 +108,10 @@ function setup_worker() {
 
 	return
 		'<div id="setup_worker">'.
-			'<div class="headName">Управление сотрудниками<a class="add">Новый сотрудник</a></div>'.
+			'<div class="hd1 mb10">'.
+				'Управление сотрудниками'.
+				'<a class="add">Новый сотрудник</a>'.
+			'</div>'.
 			'<div id="spisok">'.setup_worker_spisok().'</div>'.
 		'</div>';
 }
@@ -123,15 +126,28 @@ function setup_worker_spisok() {
 	$send = '';
 	while($r = mysql_fetch_assoc($q)) {
 		$send .=
-			'<table class="unit">'.
-				'<tr><td class="photo"><img src="'.$r['photo'].'">'.
-					'<td>'.
-						'<a class="name" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.$r['first_name'].' '.$r['last_name'].'</a>'.
+			'<table class="unit bs10">'.
+				'<tr><td class="photo w50 h50">'.
+						'<a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
+							'<img src="'.$r['photo'].'">'.
+						'</a>'.
+					'<td class="top">'.
+						'<a class="name b" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
+							$r['first_name'].' '.$r['last_name'].
+						'</a>'.
 						'<div>'.$r['post'].'</div>'.
-					  ($r['last_seen'] != '0000-00-00 00:00:00' ? '<div class="activity">Заходил'.($r['sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($r['last_seen']).'</div>' : '').
+						setup_worker_last_seen($r['viewer_id']).
 			'</table>';
 	}
 	return $send;
+}
+function setup_worker_last_seen($viewer_id) {//время последнего посещения сотрудником
+	$u = _viewer($viewer_id);
+
+	if($u['viewer_last_seen'] == '0000-00-00 00:00:00')
+		return '';
+
+	return '<div class="grey mt5 fs11">Заходил'.($u['viewer_sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($u['viewer_last_seen']).'</div>';
 }
 function setup_worker_rule($viewer_id) {
 	if(!_viewerMenuAccess(15))
@@ -156,24 +172,37 @@ function setup_worker_rule($viewer_id) {
 		'var RULE_VIEWER_ID='.$viewer_id.','.
 			'RULE_HISTORY_ALL='.$hist_worker_all.';'.
 	'</script>'.
-	'<div id="setup_rule">'.
-		(!$u['viewer_admin'] ? '<div class="img_del'._tooltip('Удалить сотрудника', -119, 'r').'</div>' : '').
-		'<table class="utab">'.
-			'<tr><td>'.$u['viewer_photo'].
-				'<td>'.
-					'<div class="name">'.$u['viewer_name'].'</div>'.
-					($viewer_id < VIEWER_MAX ? '<a href="http://vk.com/id'.$viewer_id.'" class="vklink" target="_blank">Перейти на страницу VK</a>' : '').
-					'<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="vklink">Страница з/п</a>'.
-		'</table>'.
+
+	'<div class="hd1">'.
+		'<a class="link" href="'.URL.'&p=setup&d=worker">Управление сотрудниками</a>'.
+		' » '.
+		$u['viewer_name'].
+	'</div>'.
+
+	'<table class="bs10 w100p">'.
+		'<tr><td class="w50">'.$u['viewer_photo'].
+			'<td class="top">'.
+				(!$u['viewer_admin'] ? '<div class="img_del fr'._tooltip('Удалить сотрудника', -116, 'r').'</div>' : '').
+				'<div class="b fs14 mb5">'.$u['viewer_name'].'</div>'.
+				($viewer_id < VIEWER_MAX ? '<a href="http://vk.com/id'.$viewer_id.'" class="grey fs12" target="_blank">Страница VK</a><br />' : '').
+				'<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="grey fs12">Страница з/п</a>'.
+		'<tr><td colspan="2">'.setup_worker_last_seen($viewer_id).
+	'</table>'.
+
+	'<div id="setup_rule" class="mar10">'.
 
 		setup_worker_rule_val($viewer_id).
 
 		'<div class="headName">Данные сотрудника</div>'.
 		'<table class="rtab">'.
-			'<tr><td class="lab">Фамилия:<td><input type="text" id="last_name" value="'.$u['viewer_last_name'].'" />'.
-			'<tr><td class="lab">Имя:<td><input type="text" id="first_name" value="'.$u['viewer_first_name'].'" />'.
-			'<tr><td class="lab">Отчество:<td><input type="text" id="middle_name" value="'.$u['viewer_middle_name'].'" />'.
-			'<tr><td class="lab">Должность:<td><input type="text" id="post" value="'.$u['viewer_post'].'" />'.
+			'<tr><td class="lab">Фамилия:'.
+				'<td><input type="text" id="last_name" class="w300" value="'.$u['viewer_last_name'].'" />'.
+			'<tr><td class="lab">Имя:'.
+				'<td><input type="text" id="first_name" class="w300" value="'.$u['viewer_first_name'].'" />'.
+			'<tr><td class="lab">Отчество:'.
+				'<td><input type="text" id="middle_name" class="w300" value="'.$u['viewer_middle_name'].'" />'.
+			'<tr><td class="lab">Должность:'.
+				'<td><input type="text" id="post" class="w300" value="'.$u['viewer_post'].'" />'.
 			'<tr><td><td><button class="vk" id="w-save">Сохранить</button>'.
 		'</table>'.
 

@@ -269,6 +269,8 @@ function _viewerFormat($u) {//формирование данных пользователя
 		'viewer_city_id' => $u['city_id'],
 		'viewer_city_name' => $u['city_title'],
 
+		'viewer_last_seen' => $u['last_seen'],
+
 		'pin' => $u['pin'],
 
 		'balans_start' => round($u['salary_balans_start'], 2),
