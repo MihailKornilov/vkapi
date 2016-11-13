@@ -2084,7 +2084,7 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 
 			'<td class="acc">'.
 				'<div class="grey">Начислено</div>'.
-				($z['sum_accrual'] ? _sumSpace($z['sum_accrual']) : '').
+				($z['sum_accrual'] ? '<b class="fs14">'._sumSpace($z['sum_accrual']).'</b>' : '').
 				($skidka_sum ?
 					'<div class="grey mt5">Скидка '.$z['skidka'].'%</div>'.
 					'<div class="grey"><b>'._sumSpace($skidka_sum).'</b> руб.</div>'
@@ -2092,7 +2092,7 @@ function _zayavInfoPay($z) {//блок информации о деньгах: стоимость, начисления, 
 
 			'<td class="pay">'.
 				'<div class="grey">Оплачено</div>'.
-				($z['sum_pay'] ? _sumSpace($z['sum_pay']) : '').
+				($z['sum_pay'] ? '<b class="fs14">'._sumSpace($z['sum_pay']).'</b>' : '').
 
 		(abs($z['sum_dolg']) ?
 			'<td>'.
