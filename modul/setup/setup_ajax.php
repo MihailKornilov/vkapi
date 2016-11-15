@@ -107,10 +107,9 @@ switch(@$_POST['op']) {
 					FROM `_vkuser`
 					WHERE `app_id`=".APP_ID."
 					  AND `viewer_id`=".$viewer_id;
-			if($r = query_assoc($sql)) {
+			if($r = query_assoc($sql))
 				if($r['worker'])
 					jsonError('Этот пользователь уже является сотрудником Вашей организации');
-			}
 
 			_viewer($viewer_id);
 			$sql = "UPDATE `_vkuser`
@@ -163,7 +162,7 @@ switch(@$_POST['op']) {
 		));
 
 
-		$send['html'] = utf8(setup_worker_spisok());
+		$send['id'] = $viewer_id;
 		jsonSuccess($send);
 		break;
 	case 'setup_worker_del':
@@ -239,6 +238,66 @@ switch(@$_POST['op']) {
 				'worker_id' => $viewer_id,
 				'v1' => '<table>'.$changes.'</table>'
 			));
+
+		jsonSuccess();
+		break;
+	case 'setup_worker_bind'://привязка сотрудника к учётной записи ВКонтакте
+//		if(!_viewerMenuAccess(15))
+			jsonError('Нет прав');
+
+		if(!$worker_id = _num($_POST['worker_id']))
+			jsonError('Некорректный id сотрудника');
+
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError('Некорректный id учётной записи ВКонтакте');
+
+		if($worker_id < VIEWER_MAX)
+			jsonError('Сотрудник является пользователем ВКонтакте');
+
+		$sql = "SELECT *
+				FROM `_vkuser`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$worker_id."
+				LIMIT 1";
+		if(!$w = query_assoc($sql))
+			jsonError('Сотрудника не существует');
+
+		if(!$w['worker'])
+			jsonError($w['first_name'].' '.$w['last_name'].' не является сотрудником');
+
+		$u = _viewer($viewer_id);
+		if($u['viewer_worker'])
+			jsonError($u['viewer_name'].' уже является сотрудником Вашей организации');
+
+		//применение данных на новую учётную запись
+		$sql = "UPDATE `_vkuser`
+				SET `worker`=1,
+					`admin`=".$w['admin'].",
+
+					`first_name`='".addslashes($w['first_name'])."',
+					`last_name`='".addslashes($w['last_name'])."',
+					`middle_name`='".addslashes($w['middle_name'])."',
+			        `post`='".addslashes($w['post'])."',
+
+			        `salary_balans_start`=".$w['salary_balans_start'].",
+			        `salary_rate_sum`=".$w['salary_rate_sum'].",
+			        `salary_rate_period`=".$w['salary_rate_period'].",
+			        `salary_rate_day`=".$w['salary_rate_day'].",
+			        `salary_bonus_sum`=".$w['salary_bonus_sum'].",
+
+					`dtime_add`='".$w['dtime_add']."'
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql);
+
+		//удаление старой учётной записи
+		$sql = "DELETE FROM `_vkuser`
+ 				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$worker_id;
+		query($sql);
+
+		_appJsValues();
+		_globalCacheClear();
 
 		jsonSuccess();
 		break;

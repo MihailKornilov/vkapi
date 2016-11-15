@@ -21,18 +21,18 @@
 }
 
 
+/* div поиска пользователя ВКонтакте */
+#setup-vk-find .headName{margin:10px 0 5px}
+#setup-vk-find #msg{padding:5px 0 0 7px;min-width:100px}
+#setup-vk-find #msg span{color:red}
+#setup-vk-find #msg._busy{background-position:center 15px}
+#setup-vk-find #vkuser td{
+	vertical-align:top;
+	font-weight:bold;
+	color:#45688e;
+}
 
-/* Форма добавления нового сотрудника */
-#worker-add h1{margin:10px 0;font-weight:bold;color:#31618C}
-#worker-add #viewer_id{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
-#worker-add #manual{margin-top:15px}
-#worker-add #manual-tab{display:none;margin-left:20px;border-spacing:10px}
-#worker-add #manual-tab input{width:220px}
-#worker-add #msg{padding:5px 0 0 7px;min-width:100px}
-#worker-add #msg span{color:red}
-#worker-add #msg._busy{background-position:center 15px}
-#worker-add #vkuser table{border-spacing:10px}
-#worker-add #vkuser td{vertical-align:top;font-weight:bold;font-size:12px;color:#45688e}
+
 
 #setup_rule{padding-bottom:30px}
 #setup_rule .icon-edit{margin-left:30px}

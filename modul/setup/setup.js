@@ -1,4 +1,129 @@
-var setupWorkerEdit = function() {//редактирование данных сотрудника
+var setupVkFind = function() {//редактирование данных сотрудника
+		$(document)
+			.off('keyup', '#setup-vk-find #viewer_link')
+			.on('keyup', '#setup-vk-find #viewer_link', user_find);
+
+		function user_find() {
+			if($('#msg').hasClass('_busy'))
+				return;
+
+			$('#viewer_id').val(0);
+			$('#vkuser').html('');
+
+			var send = {
+				user_ids:$.trim($('#viewer_link').val()),
+				fields:'photo_50',
+				v:5.2
+			};
+
+			if(!send.user_ids)
+				return;
+			if(/vk.com/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('vk.com/')[1];
+			if(/\?/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('?')[0];
+			if(/#/.test(send.user_ids))
+				send.user_ids = send.user_ids.split('#')[0];
+
+			$('#msg')
+				.addClass('_busy')
+				.find('span').hide();
+
+			VK.api('users.get', send, function(data) {
+				$('#msg').removeClass('_busy');
+				if(data.response) {
+					var u = data.response[0],
+						html =
+							'<table class="bs10">' +
+								'<tr><td><img src=' + u.photo_50 + '>' +
+									'<td>' + u.first_name + ' ' + u.last_name +
+							'</table>';
+					$('#vkuser').html(html);
+					$('#viewer_id').val(u.id);
+				} else
+					$('#msg span').show();
+			});
+		}
+
+		return '<table id="setup-vk-find" class="w100p">' +
+			'<tr><td colspan="2">' +
+				'<div class="headName">Укажите адрес страницы пользователя или его id ВКонтакте:</div>' +
+				'<div class="_info">Формат адреса может быть следующих видов:<br />' +
+					'<u>http://vk.com/id12345</u>, <u>http://vk.com/durov</u>.<br />' +
+					'Либо используйте ID пользователя: <u>id12345</u>, <u>durov</u>, <u>12345</u>.' +
+				'</div>' +
+			'<tr><td><input type="text" id="viewer_link" class="w230" />' +
+					'<input type="hidden" id="viewer_id" />' +
+				'<td id="msg"><span>Пользователь не найден</span>' +
+			'<tr><td colspan="2" id="vkuser">' +
+		'</table>';
+	},
+	setupWorkerAdd = function() {//добавление нового сотрудника
+		var html =
+			setupVkFind() +
+			'<div id="manual" class="mt20"><a>Или заполните данные вручную..</a></div>' +
+			'<table class="bs10 dn">' +
+				'<tr><td class="label r w100">Имя:<td><input type="text" id="first_name" class="w230" />' +
+				'<tr><td class="label r">Фамилия:<td><input type="text" id="last_name" class="w230" />' +
+				'<tr><td class="label r">Пол:<td><input type="hidden" id="sex" />' +
+				'<tr><td class="label r">Должность:<td><input type="text" id="post" class="w230" />' +
+			'</table>',
+			dialog = _dialog({
+				width:440,
+				head:'Добавление нового сотрудника',
+				content:html,
+				butSubmit:'Добавить сотрудника',
+				submit:submit
+			});
+
+		$('#manual').click(function() {
+			$(this)
+				.hide()
+				.next().show();
+			$('#setup-vk-find').remove();
+			$('#first_name').focus();
+		});
+		$('#sex')._radio({
+			light:1,
+			block:0,
+			spisok:[
+				{uid:2, title:'М'},
+				{uid:1, title:'Ж'}
+			],
+			func:function() {
+				$('#post').focus();
+			}
+		});
+
+		function submit() {
+			var send = {
+				op:'setup_worker_add',
+				viewer_id:_num($('#viewer_id').val()),
+				first_name:$('#first_name').val(),
+				last_name:$('#last_name').val(),
+				sex:_num($('#sex').val()),
+				post:$('#post').val()
+			};
+			if(!send.viewer_id && !send.first_name && !send.last_name) {
+				dialog.err('Произведите поиск пользователя или укажите данные вручную');
+				return;
+			}
+			if(!send.viewer_id && !send.sex) {
+				dialog.err('Не указан пол');
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.href = URL + '&p=setup&d=worker&id=' + res.id;
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	setupWorkerEdit = function() {//редактирование данных сотрудника
 		var html = '<table class="bs10">' +
 				'<tr><td class="label r">Фамилия:' +
 					'<td><input type="text" id="last_name" class="w300" value="' + U.last_name + '" />' +
@@ -39,6 +164,47 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 			}, 'json');
 		}
 	},
+	setupWorkerVkBind = function() {//связывание с учётной записью ВКонтакте
+		var html =
+			'<div class="_info">' +
+				'После привязки сотрудника к его странице ВКонтакте, он получит доступ к приложению.' +
+				'<br />' +
+				'<p>Пожалуйста, внимательно отнеситесь к выбору учётной записи ВКонтакте. ' +
+				'После применения привязки отменить данную операцию будет невозможно.' +
+				'' +
+				'' +
+			'</div>' +
+
+			setupVkFind() +
+
+			'<table class="bs10">' +
+			'</table>',
+			dialog = _dialog({
+				top:30,
+				width:440,
+				head:'Привязка сотрудника к учётной записи ВКонтакте',
+				content:html,
+				butSubmit:'Привязать',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+					op:'setup_worker_bind',
+					worker_id:RULE_VIEWER_ID,
+					viewer_id:_num($('#viewer_id').val())
+				};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.href = URL + '&p=setup&d=worker&id=' + send.viewer_id;
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 	setupRuleCheck = function(v, id) {
 	var send = {
 		op:id,
@@ -50,6 +216,7 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 			_msg('Сохранено');
 	}, 'json');
 },
+
 	setupExpenseEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -203,6 +370,7 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 			}, 'json');
 		}
 	},
+
 	setupRubricEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -458,6 +626,7 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 			}, 'json');
 		}
 	},
+
 	setupZayavExpense = function(o) {
 		o = $.extend({
 			id:0,
@@ -522,6 +691,7 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 			}
 		}
 	},
+
 	setupZayavStatus = function(o) {
 		o = $.extend({
 			id:0,
@@ -718,6 +888,7 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 				.attr('val', color);
 		});
 	},
+
 	setupTovarCategoryEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -800,131 +971,6 @@ var setupWorkerEdit = function() {//редактирование данных сотрудника
 	};
 
 $(document)
-	.on('click', '#setup_worker .add', function() {
-		var html =
-			'<div id="worker-add">' +
-				'<table id="wa-find">' +
-					'<tr><td colspan="2">' +
-						'<h1>Укажите адрес страницы пользователя или его id ВКонтакте:</h1>' +
-						'<div class="_info">Формат адреса может быть следующих видов:<br />' +
-							'<u>http://vk.com/id12345</u>, <u>http://vk.com/durov</u>.<br />' +
-							'Либо используйте ID пользователя: <u>id12345</u>, <u>durov</u>, <u>12345</u>.' +
-						'</div>' +
-					'<tr><td><input type="text" id="viewer_id" />' +
-						'<td id="msg"><span>Пользователь не найден</span>' +
-					'<tr><td colspan="2" id="vkuser">' +
-				'</table>' +
-
-				'<div id="manual"><a>Или заполните данные вручную..</a></div>' +
-				'<table id="manual-tab">' +
-					'<tr><td class="label r">Имя:<td><input type="text" id="first_name" />' +
-					'<tr><td class="label r">Фамилия:<td><input type="text" id="last_name" />' +
-					'<tr><td class="label r">Пол:<td><input type="hidden" id="sex" />' +
-					'<tr><td class="label r">Должность:<td><input type="text" id="post" />' +
-				'</table>' +
-			'</div>',
-			dialog = _dialog({
-				width:440,
-				head:'Добавление нового сотрудника',
-				content:html,
-				butSubmit:'Добавить сотрудника',
-				submit:submit
-			}),
-			viewer_id = 0;
-
-		$('#viewer_id')
-			.focus()
-			.keyEnter(user_find)
-			.keyup(user_find);
-		$('#manual').click(function() {
-			$(this)
-				.hide()
-				.next().show();
-			$('#wa-find').remove();
-			viewer_id = 0;
-			$('#viewer_id').val('');
-			$('#first_name').focus();
-		});
-		$('#sex')._radio({
-			light:1,
-			block:0,
-			spisok:[
-				{uid:2, title:'М'},
-				{uid:1, title:'Ж'}
-			],
-			func:function() {
-				$('#post').focus();
-			}
-		});
-
-		function user_find() {
-			if($('#msg').hasClass('_busy'))
-				return;
-
-			viewer_id = 0;
-			$('#vkuser').html('');
-
-			var send = {
-				user_ids:$.trim($('#viewer_id').val()),
-				fields:'photo_50',
-				v:5.2
-			};
-
-			if(!send.user_ids)
-				return;
-			if(/vk.com/.test(send.user_ids))
-				send.user_ids = send.user_ids.split('vk.com/')[1];
-			if(/\?/.test(send.user_ids))
-				send.user_ids = send.user_ids.split('?')[0];
-			if(/#/.test(send.user_ids))
-				send.user_ids = send.user_ids.split('#')[0];
-
-			$('#msg')
-				.addClass('_busy')
-				.find('span').hide();
-
-			VK.api('users.get', send, function(data) {
-				$('#msg').removeClass('_busy');
-				if(data.response) {
-					var u = data.response[0],
-						html =
-							'<table>' +
-								'<tr><td><img src=' + u.photo_50 + '>' +
-									'<td>' + u.first_name + ' ' + u.last_name +
-							'</table>';
-					$('#vkuser').html(html);
-					viewer_id = u.id;
-				} else
-					$('#msg span').show();
-			});
-		}
-		function submit() {
-			var send = {
-				op:'setup_worker_add',
-				viewer_id:viewer_id,
-				first_name:$('#first_name').val(),
-				last_name:$('#last_name').val(),
-				sex:$('#sex').val(),
-				post:$('#post').val()
-			};
-			if(!send.viewer_id && !send.first_name && !send.last_name) dialog.err('Произведите поиск пользователя или укажите данные вручную');
-			else if(send.first_name && send.last_name && send.sex == 0) dialog.err('Не указан пол');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новый сотрудник успешно добавлен.');
-						$('#spisok').html(res.html);
-					} else {
-						dialog.abort();
-						dialog.err(res.text);
-					}
-				}, 'json');
-			}
-		}
-	})
-
 	.on('click', '.history-view-worker-all', function() {//изменение прав истории действий сразу для всех сотрудников
 		var spisok = '';
 		for(var n = 0; n < WORKER_SPISOK.length; n++) {

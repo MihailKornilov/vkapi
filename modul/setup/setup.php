@@ -110,7 +110,7 @@ function setup_worker() {
 		'<div id="setup_worker">'.
 			'<div class="hd1 mb10">'.
 				'Управление сотрудниками'.
-				'<a class="add">Новый сотрудник</a>'.
+				'<a class="add" onclick="setupWorkerAdd()">Новый сотрудник</a>'.
 			'</div>'.
 			'<div id="spisok">'.setup_worker_spisok().'</div>'.
 		'</div>';
@@ -133,6 +133,8 @@ function setup_worker_spisok() {
 						'</a>'.
 					'<td class="top">'.
 						setup_worker_link_vk($r['viewer_id']).
+						setup_worker_link_zp($r['viewer_id']).
+						setup_worker_link_client($r['viewer_id']).
 						'<a class="name b" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
 							$r['first_name'].' '.$r['last_name'].
 						'</a>'.
@@ -143,6 +145,9 @@ function setup_worker_spisok() {
 	return $send;
 }
 function setup_worker_last_seen($viewer_id) {//время последнего посещения сотрудником
+	if($viewer_id >= VIEWER_MAX)
+		return '';
+
 	$u = _viewer($viewer_id);
 
 	if($u['viewer_last_seen'] == '0000-00-00 00:00:00')
@@ -226,7 +231,11 @@ function setup_worker_rule($viewer_id) {
 					setup_worker_link_client($viewer_id).
 					'<div class="b fs14 mb5">'.$u['viewer_name_full'].'</div>'.
 					'<div>'.$u['viewer_post'].'</div>'.
-			'<tr><td colspan="2">'.setup_worker_last_seen($viewer_id).
+			'<tr><td colspan="2">'.
+				setup_worker_last_seen($viewer_id).
+			($viewer_id >= VIEWER_MAX ?
+				'<a class="red" onclick="setupWorkerVkBind()">Привязать сотрудника к учётной записи ВКонтакте</a>'
+			: '').
 		'</table>'.
 
 		setup_worker_rule_val($viewer_id).
