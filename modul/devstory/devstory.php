@@ -376,7 +376,7 @@ function _devstory_task_info($task_id) {
 			'<table class="w100p">'.
 				'<tr><td class="top">'.
 						'<div class="about">'._br($r['about']).'</div>'.
-					'<td class="td-status top w150">'.
+					'<td class="td-status top w175">'.
 						'<div class="st center">'._devstoryStatus($r['status_id']).'</div>'.
 
 						_devstory_task_spent($r).
@@ -481,8 +481,8 @@ function _devstory_task_spent($r) {//отображение затраченного времени для каждой
 		'<table class="bs5 curP head">'.
 			'<tr><td class="label r">Затрачено'.
 				'<td>'.$hour.'<b>'.$min.'</b> мин.'.
-			'<tr><td class="label r">в течение'.
-				'<td><b>'.$r['day'].'</b> '._end($r['day'], 'дня', 'дней').'.'.
+			'<tr><td class="label r">за'.
+				'<td><b>'.$r['day'].'</b> '._end($r['day'], 'день', 'дня', 'дней').'.'.
 		'</table>'.
 	'</div>';
 }
