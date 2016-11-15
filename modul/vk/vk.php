@@ -148,14 +148,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 				'VALUES="'.VALUES.'";'.
 		'</script>'.
 
-		//стили Global
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/global/global'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/modul/global/global'.MIN.'.js?'.VERSION.'"></script>'.
-
-		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/vk/vk'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>'.
-
+		_global_script().
 
 		//Переменные _global для всех приложений
 		'<script src="'.API_HTML.'/js/values/global.js?'.GLOBAL_VALUES.'"></script>'.
@@ -188,6 +181,16 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 
 		_devstory_script() //История разработки
 );
+}
+function _global_script() {//скрипты и стили
+	return
+		//стили Global
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/global/global'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/global/global'.MIN.'.js?'.VERSION.'"></script>'.
+
+		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
+		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/vk/vk'.MIN.'.css?'.VERSION.'" />'.
+		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>';
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
 	if(!SA && APP_ID == 2881875 && @$_GET['p'] != 'kupezz')
@@ -369,13 +372,14 @@ function _appAuth() {//Проверка авторизации в приложении
 		_appError('Ошибка авторизации приложения.');
 }
 function _appError($msg='Приложение не было загружено.') {//вывод сообщения об ошибке приложения и выход
+	define('MIN', DEBUG ? '' : '.min');
+	define('VERSION', 1);
 	$html =
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
 			'<head>'.
 				'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
 				'<title>Error</title>'.
-
 
 				'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 				'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
@@ -387,8 +391,7 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 						'VALUES="'.VALUES.'";'.
 				'</script>'.
 
-				'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/vk.min.css" />'.
-				'<script src="'.API_HTML.'/js/vk.min.js"></script>'.
+				_global_script().
 
 			'</head>'.
 			'<body>'.
@@ -1379,59 +1382,62 @@ function _appJsValues() {//для конкретного приложения
 	xcache_unset(CACHE_PREFIX.'app');
 }
 
-function _globalCacheClear() {//очистка глобальных значений кеша
-	xcache_unset(CACHE_PREFIX.'app');  //данные приложения
-	xcache_unset(CACHE_PREFIX.'setup_global');  //список разделов меню
-	xcache_unset(CACHE_PREFIX.'menu');  //список разделов меню
-	xcache_unset(CACHE_PREFIX.'manual_part');//разделы мануала
-	xcache_unset(CACHE_PREFIX.'manual_part_sub');//подразделы мануала
-	xcache_unset(CACHE_PREFIX.'setup_color');//цвета
-	xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
-	xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
-	xcache_unset(CACHE_PREFIX.'balans_action');//действие при изменении баланса
-	xcache_unset(CACHE_PREFIX.'client_category');//категории клиентов
-	xcache_unset(CACHE_PREFIX.'service');//виды деятельности
-	xcache_unset(CACHE_PREFIX.'invoice');//расчётные счета
-	xcache_unset(CACHE_PREFIX.'expense');//категории расходов организации
-	xcache_unset(CACHE_PREFIX.'expense_sub');//подкатегории расходов организации
-	xcache_unset(CACHE_PREFIX.'client_from');//источники, откуда пришёл клиент
-	xcache_unset(CACHE_PREFIX.'zayav_expense');//категории расходов заявки
-	xcache_unset(CACHE_PREFIX.'zayav_status');//статусы заявки
-	xcache_unset(CACHE_PREFIX.'tovar_name');
-	xcache_unset(CACHE_PREFIX.'tovar_vendor');
-	xcache_unset(CACHE_PREFIX.'tovar_category');
-	xcache_unset(CACHE_PREFIX.'tovar_feature_name');
-	xcache_unset(CACHE_PREFIX.'tovar_equip');
-	xcache_unset(CACHE_PREFIX.'tovar_measure');
-	xcache_unset(CACHE_PREFIX.'cartridge');
-	xcache_unset(CACHE_PREFIX.'rubric');
-	xcache_unset(CACHE_PREFIX.'rubric_sub');
-	xcache_unset(CACHE_PREFIX.'gn');
-	xcache_unset(CACHE_PREFIX.'gazeta_obdop');
-	xcache_unset(CACHE_PREFIX.'gazeta_polosa');
-	xcache_unset(CACHE_PREFIX.'devstory_part');
-	xcache_unset(CACHE_PREFIX.'devstory_keyword');
+function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
+	$prefix = $app_id ? 'CACHE_'.$app_id.'_' : CACHE_PREFIX;
+	$app_id = $app_id ? $app_id : APP_ID;
+
+	xcache_unset($prefix.'app');  //данные приложения
+	xcache_unset($prefix.'setup_global');  //список разделов меню
+	xcache_unset($prefix.'menu');  //список разделов меню
+	xcache_unset($prefix.'manual_part');//разделы мануала
+	xcache_unset($prefix.'manual_part_sub');//подразделы мануала
+	xcache_unset($prefix.'setup_color');//цвета
+	xcache_unset($prefix.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
+	xcache_unset($prefix.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
+	xcache_unset($prefix.'balans_action');//действие при изменении баланса
+	xcache_unset($prefix.'client_category');//категории клиентов
+	xcache_unset($prefix.'service');//виды деятельности
+	xcache_unset($prefix.'invoice');//расчётные счета
+	xcache_unset($prefix.'expense');//категории расходов организации
+	xcache_unset($prefix.'expense_sub');//подкатегории расходов организации
+	xcache_unset($prefix.'client_from');//источники, откуда пришёл клиент
+	xcache_unset($prefix.'zayav_expense');//категории расходов заявки
+	xcache_unset($prefix.'zayav_status');//статусы заявки
+	xcache_unset($prefix.'tovar_name');
+	xcache_unset($prefix.'tovar_vendor');
+	xcache_unset($prefix.'tovar_category');
+	xcache_unset($prefix.'tovar_feature_name');
+	xcache_unset($prefix.'tovar_equip');
+	xcache_unset($prefix.'tovar_measure');
+	xcache_unset($prefix.'cartridge');
+	xcache_unset($prefix.'rubric');
+	xcache_unset($prefix.'rubric_sub');
+	xcache_unset($prefix.'gn');
+	xcache_unset($prefix.'gazeta_obdop');
+	xcache_unset($prefix.'gazeta_polosa');
+	xcache_unset($prefix.'devstory_part');
+	xcache_unset($prefix.'devstory_keyword');
 
 
 	//сброс времени действия введённого пинкода
 //		unset($_SESSION[PIN_TIME_KEY]);
 
 	//очистка кеша текущего пользователя
-	xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
-	xcache_unset(CACHE_PREFIX.'viewer_rule_'.VIEWER_ID);
-	xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.VIEWER_ID);
+	xcache_unset($prefix.'viewer_'.VIEWER_ID);
+	xcache_unset($prefix.'viewer_rule_'.VIEWER_ID);
+	xcache_unset($prefix.'viewer_menu_access_'.VIEWER_ID);
 
 	//очистка кеша сотрудников приложения
 	$sql = "SELECT `viewer_id`
 			FROM `_vkuser`
-			WHERE `app_id`=".APP_ID."
+			WHERE `app_id`=".$app_id."
 			  AND `worker`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
-		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$r['viewer_id']);
-		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$r['viewer_id']);
-		xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
+		xcache_unset($prefix.'viewer_'.$r['viewer_id']);
+		xcache_unset($prefix.'viewer_rule_'.$r['viewer_id']);
+		xcache_unset($prefix.'viewer_menu_access_'.$r['viewer_id']);
+		xcache_unset($prefix.'pin_enter_count'.$r['viewer_id']);
 	}
 }
 function _cacheErr($txt='Неизвестное значение', $i='') {//

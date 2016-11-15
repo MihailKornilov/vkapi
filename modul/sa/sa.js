@@ -886,6 +886,16 @@ var saMenuEdit = function(o) {
 				}
 			}, 'json');
 		}
+	},
+	saAppCacheClear = function(app_id) {
+		var send = {
+				op:'sa_app_cache_clear',
+				app_id:app_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg();
+		}, 'json');
 	};
 
 $(document)

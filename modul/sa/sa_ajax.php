@@ -1758,6 +1758,15 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_app_spisok());
 		jsonSuccess($send);
 		break;
+	case 'sa_app_cache_clear':
+		if(!$app_id = _num($_POST['app_id']))
+			jsonError();
+
+		_globalCacheClear($app_id);
+
+		jsonSuccess();
+		break;
+	
 
 	case 'sa_user_action':
 		if(!$viewer_id = _num($_POST['viewer_id']))

@@ -1179,6 +1179,7 @@ function sa_app_spisok() {
 			'<tr><th>app_id'.
 				'<th>Название'.
 				'<th>title'.
+				'<th class="w50">Кеш'.
 				'<th>Дата создания'.
 				'<th>';
 	foreach($spisok as $r) {
@@ -1191,6 +1192,8 @@ function sa_app_spisok() {
 					'<input type="hidden" class="secret" value="'.$r['secret'].'" />'.
 				'<td class="app_name">'.$name.
 				'<td class="title">'.$r['title'].
+				'<td class="center">'.
+					'<a onclick="saAppCacheClear('.$r['id'].')" class="'._tooltip('Очистить', -30).$r['js_values'].'</a>'.
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'._iconEdit($r);
 	}
