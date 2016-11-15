@@ -1,4 +1,45 @@
-var setupRuleCheck = function(v, id) {
+var setupWorkerEdit = function() {//редактирование данных сотрудника
+		var html = '<table class="bs10">' +
+				'<tr><td class="label r">Фамилия:' +
+					'<td><input type="text" id="last_name" class="w300" value="' + U.last_name + '" />' +
+				'<tr><td class="label r">Имя:' +
+					'<td><input type="text" id="first_name" class="w300" value="' + U.first_name + '" />' +
+				'<tr><td class="label r">Отчество:' +
+					'<td><input type="text" id="middle_name" class="w300" value="' + U.middle_name + '" />' +
+				'<tr><td class="label r">Должность:' +
+					'<td><input type="text" id="post" class="w300" value="' + U.post + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:440,
+				head:'Редактирование данных сотрудника',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+
+		$('#last_name').focus();
+
+		function submit() {
+			var send = {
+					op:'setup_worker_edit',
+					viewer_id:RULE_VIEWER_ID,
+					first_name:$('#first_name').val(),
+					last_name:$('#last_name').val(),
+					middle_name:$('#middle_name').val(),
+					post:$('#post').val()
+				};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	setupRuleCheck = function(v, id) {
 	var send = {
 		op:id,
 		viewer_id:window.RULE_VIEWER_ID || VIEWER_ID,
@@ -1603,7 +1644,7 @@ $(document)
 			});
 		}
 		if($('#setup_rule').length) {
-			$('.img_del').click(function() {
+			$('.icon-del').click(function() {
 				_dialogDel({
 					id:RULE_VIEWER_ID,
 					head:'сотрудника',
@@ -1612,43 +1653,6 @@ $(document)
 						location.href = URL + '&p=setup&d=worker';
 					}
 				});
-			});
-			$('#w-save').click(function() {
-				var send = {
-						op:'setup_worker_save',
-						viewer_id:RULE_VIEWER_ID,
-						first_name:$('#first_name').val(),
-						last_name:$('#last_name').val(),
-						middle_name:$('#middle_name').val(),
-						post:$('#post').val()
-					},
-					but = $(this);
-				if(!send.first_name) {
-					err('Не указано имя');
-					$('#first_name').focus();
-					return;
-				}
-				if(!send.last_name) {
-					err('Не указана фамилия');
-					$('#last_name').focus();
-					return;
-				}
-				but.addClass('_busy');
-				$.post(AJAX_MAIN, send, function(res) {
-					but.removeClass('_busy');
-					if(res.success)
-						_msg('Сохранено');
-				}, 'json');
-				function err(msg) {
-					but.vkHint({
-						msg:'<SPAN class="red">' + msg + '</SPAN>',
-						top:-57,
-						left:-6,
-						indent:40,
-						show:1,
-						remove:1
-					});
-				}
 			});
 			$('#RULE_SALARY_SHOW')._check(setupRuleCheck);
 			$('#RULE_EXECUTER')._check(setupRuleCheck);

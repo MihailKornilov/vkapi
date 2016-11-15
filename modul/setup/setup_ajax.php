@@ -201,7 +201,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'setup_worker_save':
+	case 'setup_worker_edit':
 		if(!_viewerMenuAccess(15))
 			jsonError();
 
@@ -216,7 +216,7 @@ switch(@$_POST['op']) {
 		$post = _txt($_POST['post']);
 
 		if(!$first_name || !$last_name)
-			jsonError();
+			jsonError('Не указаны Фамилия или Имя');
 
 		$sql = "UPDATE `_vkuser`
 				SET `first_name`='".addslashes($first_name)."',
@@ -229,14 +229,12 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 
-		$changes =
+		if($changes =
 			_historyChange('Имя', $u['viewer_first_name'], $first_name).
 			_historyChange('Фамилия', $u['viewer_last_name'], $last_name).
 			_historyChange('Отчество', $u['viewer_middle_name'], $middle_name).
-			_historyChange('Должность', $u['viewer_post'], $post);
-
-		if($changes)
-			_history(array(
+			_historyChange('Должность', $u['viewer_post'], $post)
+		)	_history(array(
 				'type_id' => 1001,
 				'worker_id' => $viewer_id,
 				'v1' => '<table>'.$changes.'</table>'

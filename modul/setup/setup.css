@@ -35,7 +35,8 @@
 #worker-add #vkuser td{vertical-align:top;font-weight:bold;font-size:12px;color:#45688e}
 
 #setup_rule{padding-bottom:30px}
-#setup_rule .headName{margin:20px 0 10px}
+#setup_rule .icon-edit{margin-left:30px}
+#setup_rule .headName{margin:20px 10px 10px}
 #setup_rule #pin-clear{margin-left:116px}
 #setup_rule .rtab{border-spacing:8px 12px}
 #setup_rule .lab{width:100px;text-align:right}

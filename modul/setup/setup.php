@@ -132,6 +132,7 @@ function setup_worker_spisok() {
 							'<img src="'.$r['photo'].'">'.
 						'</a>'.
 					'<td class="top">'.
+						setup_worker_link_vk($r['viewer_id']).
 						'<a class="name b" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
 							$r['first_name'].' '.$r['last_name'].
 						'</a>'.
@@ -148,6 +149,35 @@ function setup_worker_last_seen($viewer_id) {//время последнего посещения сотруд
 		return '';
 
 	return '<div class="grey mt5 fs11">Заходил'.($u['viewer_sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($u['viewer_last_seen']).'</div>';
+}
+function setup_worker_link_client($viewer_id) {//ссылка-иконка на страницу Клиента
+	$sql = "SELECT `id`
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `worker_id`=".$viewer_id."
+			  AND !`deleted`
+			LIMIT 1";
+	if(!$client_id = query_value($sql))
+		return '';
+
+	return '<a href="'.URL.'&p=client&d=info&&id='.$client_id.'" class="icon icon-client fr'._tooltip('Клиентская страница', -64).'</a>';
+}
+function setup_worker_link_vk($viewer_id) {//ссылка-иконка на страницу ВКонтакте
+	if($viewer_id >= VIEWER_MAX)
+		return '';
+
+	return '<a href="//vk.com/id'.$viewer_id.'" target="_blank" class="icon icon-vk fr'._tooltip('Страница ВКонтакте', -62).'</a>';
+}
+function setup_worker_link_zp($viewer_id) {//ссылка-иконка на страницу З/п
+	return '<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="icon icon-zp fr'._tooltip('Страница з/п', -40).'</a>';
+}
+function setup_worker_link_del($viewer_id) {//ссылка-иконка для удаления сотрудника
+	$u = _viewer($viewer_id);
+
+	if($u['viewer_admin'])
+		return '';
+
+	return '<a class="icon icon-del fr'._tooltip('Удалить сотрудника', -62).'</a>';
 }
 function setup_worker_rule($viewer_id) {
 	if(!_viewerMenuAccess(15))
@@ -170,7 +200,13 @@ function setup_worker_rule($viewer_id) {
 	return
 	'<script>'.
 		'var RULE_VIEWER_ID='.$viewer_id.','.
-			'RULE_HISTORY_ALL='.$hist_worker_all.';'.
+			'RULE_HISTORY_ALL='.$hist_worker_all.','.
+			'U={'.
+				'last_name:"'.addslashes($u['viewer_last_name']).'",'.
+				'first_name:"'.addslashes($u['viewer_first_name']).'",'.
+				'middle_name:"'.addslashes($u['viewer_middle_name']).'",'.
+				'post:"'.addslashes($u['viewer_post']).'"'.
+			'};'.
 	'</script>'.
 
 	'<div class="hd1">'.
@@ -179,32 +215,21 @@ function setup_worker_rule($viewer_id) {
 		$u['viewer_name'].
 	'</div>'.
 
-	'<table class="bs10 w100p">'.
-		'<tr><td class="w50">'.$u['viewer_photo'].
-			'<td class="top">'.
-				(!$u['viewer_admin'] ? '<div class="img_del fr'._tooltip('Удалить сотрудника', -116, 'r').'</div>' : '').
-				'<div class="b fs14 mb5">'.$u['viewer_name'].'</div>'.
-				($viewer_id < VIEWER_MAX ? '<a href="http://vk.com/id'.$viewer_id.'" class="grey fs12" target="_blank">Страница VK</a><br />' : '').
-				'<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="grey fs12">Страница з/п</a>'.
-		'<tr><td colspan="2">'.setup_worker_last_seen($viewer_id).
-	'</table>'.
-
-	'<div id="setup_rule" class="mar10">'.
+	'<div id="setup_rule">'.
+		'<table class="bs10 w100p">'.
+			'<tr><td class="w50 h50">'.$u['viewer_photo'].
+				'<td class="top">'.
+					setup_worker_link_del($viewer_id).
+					'<a onclick="setupWorkerEdit()" class="icon icon-edit fr'._tooltip('Редактировать данные', -67).'</a>'.
+					setup_worker_link_vk($viewer_id).
+					setup_worker_link_zp($viewer_id).
+					setup_worker_link_client($viewer_id).
+					'<div class="b fs14 mb5">'.$u['viewer_name_full'].'</div>'.
+					'<div>'.$u['viewer_post'].'</div>'.
+			'<tr><td colspan="2">'.setup_worker_last_seen($viewer_id).
+		'</table>'.
 
 		setup_worker_rule_val($viewer_id).
-
-		'<div class="headName">Данные сотрудника</div>'.
-		'<table class="rtab">'.
-			'<tr><td class="lab">Фамилия:'.
-				'<td><input type="text" id="last_name" class="w300" value="'.$u['viewer_last_name'].'" />'.
-			'<tr><td class="lab">Имя:'.
-				'<td><input type="text" id="first_name" class="w300" value="'.$u['viewer_first_name'].'" />'.
-			'<tr><td class="lab">Отчество:'.
-				'<td><input type="text" id="middle_name" class="w300" value="'.$u['viewer_middle_name'].'" />'.
-			'<tr><td class="lab">Должность:'.
-				'<td><input type="text" id="post" class="w300" value="'.$u['viewer_post'].'" />'.
-			'<tr><td><td><button class="vk" id="w-save">Сохранить</button>'.
-		'</table>'.
 
 	(RULE_SETUP_RULES ?
 		'<div class="headName">Дополнительные настройки</div>'.

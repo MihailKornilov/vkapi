@@ -46,6 +46,28 @@ table{border:0;border-spacing:0}
 
 
 
+/* Иконки */
+.icon{
+	background:url(../../img/icon_vk.png?3) no-repeat;
+	width:18px;
+	height:18px;
+	padding:0 1px;
+	display:inline-block;
+	cursor:pointer;
+}
+.icon-client{background-position:0 0}
+.icon-del{background-position:0 -20px}
+.icon-zp{background-position:0 -40px}
+.icon-vk{background-position:0 -60px}
+.icon-edit{background-position:0 -80px}
+
+
+
+
+
+
+
+
 /* Главное меню */
 #_menu{
 	border-bottom:#31618C solid 1px;
@@ -146,3 +168,44 @@ table{border:0;border-spacing:0}
 }
 
 
+
+
+
+
+/* Кнопка ВКонтакте */
+button.vk{
+	padding: 7px 16px 8px;
+	zoom: 1;
+	cursor: pointer;
+	white-space: nowrap;
+	outline: none;
+	overflow: visible;
+	line-height: 13px;
+	background-color:#6383a8;/* 6287AE - новый контакт */
+	color: #fff;
+	border:0;
+	vertical-align: top;
+	-webkit-border-radius: 2px;
+	-khtml-border-radius: 2px;
+	-moz-border-radius: 2px;
+	-ms-border-radius: 2px;
+	border-radius: 2px;
+	-webkit-transition: background-color 100ms ease-in-out;
+	-khtml-transition: background-color 100ms ease-in-out;
+	-moz-transition: background-color 100ms ease-in-out;
+	-ms-transition: background-color 100ms ease-in-out;
+	-o-transition: background-color 100ms ease-in-out;
+	transition: background-color 100ms ease-in-out;
+}
+button.vk:not(._busy):hover{background:#6d8cb0} /* 678EB4 */
+button.vk.fw{width:100%}
+button.vk:active{padding-top:8px;padding-bottom:7px}
+button.vk._busy{color:transparent}
+button.vk.small{padding:4px 10px 3px;font-size:12px}
+button.vk.small:active{padding-top:5px;padding-bottom:2px}
+button.vk.cancel{background:transparent;color:#33567F}
+button.vk.cancel:hover{background:#E5EBF1}
+button.vk.red{background:#b55}
+button.vk.red:hover{background-color:#c66}
+button.vk.grey{background-color: #888}
+button.vk.grey:hover{background-color:#999}
