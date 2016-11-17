@@ -111,7 +111,7 @@ function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из 
 		xcache_set($key, $u, 86400);
 
 		//проверка наличия у пользователя раздела "Мои настройки"
-		if(!_viewerMenuAccess(12, $viewer_id)) {
+		if($viewer_id < VIEWER_MAX && !_viewerMenuAccess(12, $viewer_id)) {
 			$sql = "INSERT INTO `_menu_viewer` (
 						`app_id`,
 						`viewer_id`,
@@ -474,6 +474,9 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 }
 
 function _viewerMenuAccess($menu_id, $viewer_id=VIEWER_ID) {//права доступа к разделам меню
+	if($viewer_id >= VIEWER_MAX)
+		return 0;
+	
 	if(_viewer($viewer_id, 'viewer_admin'))
 		return 1;
 

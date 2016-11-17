@@ -61,8 +61,8 @@
 .ob-unit.archive .last{color:#777}
 .ob-unit.deleted .edit{background-color:#733;color:#aaa}
 .ob-unit.deleted .last{color:#c55}
-.ob-unit:not(:hover) .icon{display:none}
-.ob-unit .icon{
+.ob-unit:not(:hover) .zz-icon{display:none}
+.ob-unit .zz-icon{
 	float:right;
 	display:inline-block;
 	background-color:#fff;

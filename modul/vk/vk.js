@@ -374,7 +374,7 @@ var VK_SCROLL = 0,
 		if(FB_HEIGHT == h)
 			return;
 		FB_HEIGHT = h;
-		VK.callMethod('resizeWindow', 795, h); //todo переход на ширину 795. Тест на Avon
+		VK.callMethod('resizeWindow', 795, h);
 	},
 	_backfon = function(add) {
 		if(add === undefined)

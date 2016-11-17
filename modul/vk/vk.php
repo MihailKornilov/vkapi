@@ -130,7 +130,10 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		//Стороние скрипты
 		'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 		'<script src="/.vkapp/.js/jquery-ui.min.js"></script>'.
-		'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+
+//		'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+		'<script src="https://vk.com/js/api/xd_connection.js?2"></script>'.
+		'<script>VK.init(function() {},function() {},"5.60");</script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script>var TIME=(new Date()).getTime();</script>' : '').
@@ -672,7 +675,7 @@ function _report() {
 
 function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
-		'v' => 5.21,
+		'v' => 5.60,
 		'lang' => 'ru',
 		'access_token' => isset($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
 	);

@@ -487,7 +487,7 @@ function kupezz_my_unit($r) {
 				).
 			'</span>'.
 		(!$r['deleted'] ?
-			'<div class="icon">'.
+			'<div class="zz-icon">'.
 				'<div val="'.$r['id'].'" class="img_edit ob-edit'._tooltip('Редактировать', -48).'</div>'.
 				(!SA || $r['viewer_id_add'] == VIEWER_ID ? '<div onclick="kupezzObMyDel('.$r['id'].')" class="img_del'._tooltip('Удалить', -27).'</div>' : '').
 			'</div>'
