@@ -48,12 +48,17 @@ table{border:0;border-spacing:0}
 
 /* »конки */
 .icon{
+	display:inline-block;
 	background:url(../../img/icon_vk.png?3) no-repeat;
 	width:18px;
 	height:18px;
 	padding:0 1px;
-	display:inline-block;
 	cursor:pointer;
+}
+.icon-empty{
+	display:inline-block;
+	width:20px;
+	height:18px;
 }
 .icon-client{background-position:0 0}
 .icon-del{background-position:0 -20px}

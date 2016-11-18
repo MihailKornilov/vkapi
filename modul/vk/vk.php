@@ -58,8 +58,6 @@ function _const() {
 
 	define('APP_NAME', _app('app_name'));
 
-	define('VIEWER_MAX', 2147000001);
-
 	define('TODAY', strftime('%Y-%m-%d'));
 	define('TODAY_UNIXTIME', strtotime(TODAY));
 

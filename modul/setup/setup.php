@@ -163,13 +163,13 @@ function setup_worker_link_client($viewer_id) {//ссылка-иконка на страницу Клиен
 			  AND !`deleted`
 			LIMIT 1";
 	if(!$client_id = query_value($sql))
-		return '';
+		return '<div class="icon-empty fr"></div>';
 
 	return '<a href="'.URL.'&p=client&d=info&&id='.$client_id.'" class="icon icon-client fr'._tooltip('Клиентская страница', -64).'</a>';
 }
 function setup_worker_link_vk($viewer_id) {//ссылка-иконка на страницу ВКонтакте
 	if($viewer_id >= VIEWER_MAX)
-		return '';
+		return '<div class="icon-empty fr"></div>';
 
 	return '<a href="//vk.com/id'.$viewer_id.'" target="_blank" class="icon icon-vk fr'._tooltip('Страница ВКонтакте', -62).'</a>';
 }
@@ -238,7 +238,7 @@ function setup_worker_rule($viewer_id) {
 			: '').
 		'</table>'.
 
-		setup_worker_rule_val($viewer_id).
+//		setup_worker_rule_val($viewer_id).
 
 	(RULE_SETUP_RULES ?
 		'<div class="headName">Дополнительные настройки</div>'.

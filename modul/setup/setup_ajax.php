@@ -242,7 +242,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'setup_worker_bind'://привязка сотрудника к учётной записи ВКонтакте
-//		if(!_viewerMenuAccess(15))
+		if(!_viewerMenuAccess(15))
 			jsonError('Нет прав');
 
 		if(!$worker_id = _num($_POST['worker_id']))
@@ -296,8 +296,104 @@ switch(@$_POST['op']) {
 				  AND `viewer_id`=".$worker_id;
 		query($sql);
 
+		//изменение в балансах
+		$sql = "UPDATE `_balans`
+				SET `unit_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+ 				  AND `category_id`=5
+				  AND `unit_id`=".$worker_id;
+		query($sql);
+
+		//привязка к клиенту
+		$sql = "UPDATE `_client`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//расходы: зарплата
+		$sql = "UPDATE `_money_expense`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//зарплата: начисления
+		$sql = "UPDATE `_salary_accrual`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//зарплата: бонусы
+		$sql = "UPDATE `_salary_bonus`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//зарплата: вычеты
+		$sql = "UPDATE `_salary_deduct`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//зарплата: листы выдачи
+		$sql = "UPDATE `_salary_list`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//права в приложении
+		$sql = "UPDATE `_vkuser_rule`
+				SET `viewer_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$worker_id;
+		query($sql);
+
+		//исполнители в заявках
+		$sql = "UPDATE `_zayav`
+				SET `executer_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `executer_id`=".$worker_id;
+		query($sql);
+
+		//расходы по заявкам
+		$sql = "UPDATE `_zayav_expense`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//статусы заявок
+		$sql = "UPDATE `_zayav_status_move`
+				SET `executer_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `executer_id`=".$worker_id;
+		query($sql);
+
+		//история действий: поле сотрудника
+		$sql = "UPDATE `_history`
+				SET `worker_id`=".$viewer_id."
+ 				WHERE `app_id`=".APP_ID."
+				  AND `worker_id`=".$worker_id;
+		query($sql);
+
+		//история действий: поле v1
+		$sql = "UPDATE `_history`
+				SET `v1`=REPLACE(`v1`,'".$worker_id."','".$viewer_id."')
+ 				WHERE `app_id`=".APP_ID;
+		query($sql);
+
 		_appJsValues();
 		_globalCacheClear();
+
+		_history(array(
+			'type_id' => 1063,
+			'worker_id' => $viewer_id
+		));
 
 		jsonSuccess();
 		break;
@@ -433,6 +529,9 @@ switch(@$_POST['op']) {
 		$v = _bool($_POST['v']);
 
 		if(_viewerMenuAccess($menu_id, $viewer_id) == $v)
+			jsonError();
+
+		if($viewer_id >= VIEWER_MAX)
 			jsonError();
 
 		if($v)
@@ -1790,6 +1889,7 @@ switch(@$_POST['op']) {
 					".APP_ID.",
 					'".addslashes($name)."',
 					".$dop.",
+					".$param.",
 					"._maxSql('_zayav_expense_category')."
 				)";
 		query($sql);

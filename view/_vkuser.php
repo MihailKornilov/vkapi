@@ -181,11 +181,11 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 				".$viewer_id.",
 				'".addslashes($u['first_name'])."',
 				'".addslashes($u['last_name'])."',
-				".$u['sex'].",
+				"._num($u['sex']).",
 				'".addslashes($u['photo'])."',
-				".$u['country_id'].",
+				"._num($u['country_id']).",
 				'".addslashes($u['country_title'])."',
-				".$u['city_id'].",
+				"._num($u['city_id']).",
 				'".addslashes($u['city_title'])."'
 			) ON DUPLICATE KEY UPDATE
 				`first_name`=VALUES(`first_name`),
