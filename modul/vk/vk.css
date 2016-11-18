@@ -548,6 +548,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	padding:6px;
 }
 ._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
+._spisok td.topi{padding-top:7px}
 ._spisok tr._next td{padding:0}
 ._spisok.l tr:hover{background-color:#ffc}/* подсветка строк при наведении */
 

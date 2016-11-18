@@ -220,13 +220,16 @@ var setupVkFind = function() {//редактирование данных сотрудника
 	setupExpenseEdit = function(o) {
 		o = $.extend({
 			id:0,
-			name:''
+			name:'',
+			about:''
 		}, o);
 
 		var t = $(this),
-			html = '<table id="setup-tab">' +
-					'<tr><td class="label r">Наименование:' +
-						'<td><input id="name" type="text" value="' + o.name + '" />' +
+			html = '<table class="bs10">' +
+					'<tr><td class="label r">Наименование*:' +
+						'<td><input type="text" id="name" class="w300" value="' + o.name + '" />' +
+					'<tr><td class="label r topi">Описание:' +
+						'<td><textarea id="about" class="w300">' + _br(o.about) + '</textarea>' +
 					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
 						'<td class="label r">Объединить:' +
 						'<td><input type="hidden" id="join" />' +
@@ -244,7 +247,7 @@ var setupVkFind = function() {//редактирование данных сотрудника
 							'<input type="hidden" id="category_sub_id-join" />' +
 				'</table>',
 			dialog = _dialog({
-				width:400,
+				width:470,
 				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода организации',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -253,6 +256,7 @@ var setupVkFind = function() {//редактирование данных сотрудника
 			catSpisok = _copySel(EXPENSE_SPISOK, o.id);
 
 		$('#name').focus();
+		$('#about').autosize();
 		$('#join')._check({
 			func:function(v) {
 				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
@@ -274,14 +278,10 @@ var setupVkFind = function() {//редактирование данных сотрудника
 				op:'expense_category_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
 				name:$('#name').val(),
+				about:$('#about').val(),
 				category_id:_num($('#category_id-join').val()),
 				category_sub_id:_num($('#category_sub_id-join').val())
 			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -290,7 +290,7 @@ var setupVkFind = function() {//редактирование данных сотрудника
 					_msg();
 					sortable();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
@@ -1088,7 +1088,8 @@ $(document)
 		var t = _parent($(this), 'DD');
 		setupExpenseEdit({
 			id:t.attr('val'),
-			name:t.find('.name').html().replace(/\"/g, '&quot;')
+			name:t.find('.name').html().replace(/\"/g, '&quot;'),
+			about:t.find('.about').html().replace(/\"/g, '&quot;')
 		});
 
 	})

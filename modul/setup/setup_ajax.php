@@ -887,18 +887,20 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'expense_category_add':
-		$name = _txt($_POST['name']);
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано наименование');
 
-		if(empty($name))
-			jsonError();
+		$about = _txt($_POST['about']);
 
 		$sql = "INSERT INTO `_money_expense_category` (
 					`app_id`,
 					`name`,
+					`about`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
 					'".addslashes($name)."',
+					'".addslashes($about)."',
 					"._maxSql('_money_expense_category')."
 				)";
 		query($sql);
@@ -916,31 +918,30 @@ switch(@$_POST['op']) {
 		break;
 	case 'expense_category_edit':
 		if(!$id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный идентификатор');
 
-		$name = _txt($_POST['name']);
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано наименование');
 
-
-		if(empty($name))
-			jsonError();
+		$about = _txt($_POST['about']);
 
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Расход не найден');
 
 		$sql = "UPDATE `_money_expense_category`
-				SET `name`='".addslashes($name)."'
+				SET `name`='".addslashes($name)."',
+					`about`='".addslashes($about)."'
 				WHERE `id`=".$id;
 		query($sql);
 
-		$changes =
-			_historyChange('Наименование', $r['name'], $name);
-
-		if($changes)
-			_history(array(
+		if($changes =
+			_historyChange('Наименование', $r['name'], $name).
+			_historyChange('Описание', _br($r['about']), _br($about))
+		)	_history(array(
 				'type_id' => 1021,
 				'v1' => $name,
 				'v2' => '<table>'.$changes.'</table>'

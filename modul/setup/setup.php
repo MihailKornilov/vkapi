@@ -590,8 +590,8 @@ function setup_expense_spisok() {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="sub">Кол-во<br />под-<br />категорий'.
-				'<th class="count">Кол-во<br />записей'.
+				'<th class="w70">Кол-во<br />под-<br />категорий'.
+		  (SA ? '<th class="w50">Кол-во<br />записей' : '').
 				'<th class="ed">'.
 		'</table>'.
 		'<dl class="_sort" val="_money_expense_category">';
@@ -603,11 +603,15 @@ function setup_expense_spisok() {
 						($id == 1 ? '<span class="name">'.$r['name'].'</span>' :
 									'<a class="name" href="'.URL.'&p=setup&d=expense&id='.$id.'">'.$r['name'].'</a>'
 						).
-					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
-					'<td class="count">'.
+						'<div class="about">'._br($r['about']).'</div>'.
+					'<td class="w70 center">'.($r['sub'] ? $r['sub'] : '').
+
+			(SA ?	'<td class="w50 center">'.
 						($r['count'] ? $r['count'] : '').
-						($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '').
-					'<td class="ed">'.
+						($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '')
+			: '').
+
+					'<td class="ed topi">'.
 						($id != 1 ? _iconEdit($r) : '').
 						($id != 1 && !$r['count'] && !$r['deleted'] ? _iconDel($r) : '').
 			'</table>';
