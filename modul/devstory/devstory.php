@@ -342,16 +342,24 @@ function _devstory_task_info($task_id) {
 
 
 		if($start[0] != $end[0]) {
-			$task['period'][$start[0]][] = array(
-				'start' => $start[1],
-				'end' => '23:59:59',
-				'msg' => $msg
-			);
-			$task['period'][$end[0]][] = array(
-				'start' => '00:00:00',
-				'end' => $end[1],
-				'msg' => $msg
-			);
+			if($end[0] == '0000-00-00')
+				$task['period'][strftime('%Y-%m-%d')][] = array(
+					'start' => $start[1],
+					'end' => strftime('%H:%M:%S'),
+					'msg' => 'Текущий<br />процесс'
+				);
+			else {
+				$task['period'][$start[0]][] = array(
+					'start' => $start[1],
+					'end' => '23:59:59',
+					'msg' => $msg
+				);
+				$task['period'][$end[0]][] = array(
+					'start' => '00:00:00',
+					'end' => $end[1],
+					'msg' => $msg
+				);
+			}
 		} else
 			$task['period'][$start[0]][] = array(
 				'start' => $start[1],
@@ -359,6 +367,8 @@ function _devstory_task_info($task_id) {
 				'msg' => $msg
 			);
 	}
+
+	_pre($task);
 
 	$r = $task;
 	return
