@@ -732,84 +732,199 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'setup_rekvisit':
-		if(!_viewerMenuAccess(13))
-			jsonError();
+	case 'setup_org_load':
+		if($org_id = _num($_POST['org_id'])) {
+			$sql = "SELECT *
+					FROM `_setup_org`
+					WHERE `app_id`=".APP_ID."
+					  AND `id`=".$org_id;
+			$g = query_assoc($sql);
+		}
 
-		$type_id = _num($_POST['type_id']);
-		$name = _txt($_POST['name']);
+		$send['html'] = utf8(
+			'<div class="hd2 mar020">Основная информация</div>'.
+			'<table class="bs10">'.
+				'<tr><td class="label r topi w175">Название организации*:<td><textarea id="name'.$org_id.'" class="w400">'.@$g['name'].'</textarea>'.
+				'<tr><td class="label r topi">Наименование юр. лица:<td><textarea id="name_yur'.$org_id.'" class="w400">'.@$g['name_yur'].'</textarea>'.
+				'<tr><td class="label r">Контактные телефоны:<td><input type="text" id="phone'.$org_id.'" class="w400" value="'.@$g['phone'].'" />'.
+				'<tr><td class="label r">Факс:<td><input type="text" id="fax'.$org_id.'" class="w400" value="'.@$g['fax'].'" />'.
+				'<tr><td class="label r topi">Юридический адрес:<td><textarea id="adres_yur'.$org_id.'" class="w400">'.@$g['adres_yur'].'</textarea>'.
+				'<tr><td class="label r topi">Адрес офиса:<td><textarea id="adres_ofice'.$org_id.'" class="w400">'.@$g['adres_ofice'].'</textarea>'.
+				'<tr><td class="label r">Режим работы:<td><input type="text" id="time_work'.$org_id.'" class="w400" value="'.@$g['time_work'].'" />'.
+			'</table>'.
+
+			'<div class="hd2 mt20 mar020">Реквизиты</div>'.
+			'<table class="bs10">'.
+				'<tr><td class="label r w175">ОГРН:<td><input type="text" id="ogrn'.$org_id.'" class="w400" value="'.@$g['ogrn'].'" />'.
+				'<tr><td class="label r">ИНН:<td><input type="text" id="inn'.$org_id.'" class="w400" value="'.@$g['inn'].'" />'.
+				'<tr><td class="label r">КПП:<td><input type="text" id="kpp'.$org_id.'" class="w400" value="'.@$g['kpp'].'" />'.
+				'<tr><td class="label r">ОКУД:<td><input type="text" id="okud'.$org_id.'" class="w400" value="'.@$g['okud'].'" />'.
+				'<tr><td class="label r">ОКПО:<td><input type="text" id="okpo'.$org_id.'" class="w400" value="'.@$g['okpo'].'" />'.
+				'<tr><td class="label r">ОКВЭД:<td><input type="text" id="okved'.$org_id.'" class="w400" value="'.@$g['okved'].'" />'.
+			'</table>'.
+	
+			'<div class="hd2 mt20 mar020">Должностные лица</div>'.
+			'<table class="bs10">'.
+				'<tr><td class="label r w175">Руководитель:<td><input type="text" id="post_boss'.$org_id.'" class="w400" value="'.@$g['post_boss'].'" />'.
+				'<tr><td class="label r">Главный бухгалтер:<td><input type="text" id="post_accountant'.$org_id.'" class="w400" value="'.@$g['post_accountant'].'" />'.
+			'</table>'
+		);
+
+		jsonSuccess($send);
+		break;
+	case 'setup_org_add'://Внесение новой организации
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
 		$name_yur = _txt($_POST['name_yur']);
-		$ogrn = _txt($_POST['ogrn']);
-		$inn = _txt($_POST['inn']);
-		$kpp = _txt($_POST['kpp']);
 		$phone = _txt($_POST['phone']);
 		$fax = _txt($_POST['fax']);
 		$adres_yur = _txt($_POST['adres_yur']);
 		$adres_ofice = _txt($_POST['adres_ofice']);
 		$time_work = _txt($_POST['time_work']);
 
+		$ogrn = _txt($_POST['ogrn']);
+		$inn = _txt($_POST['inn']);
+		$kpp = _txt($_POST['kpp']);
+		$okud = _txt($_POST['okud']);
+		$okpo = _txt($_POST['okpo']);
+		$okved = _txt($_POST['okved']);
+
 		$post_boss = _txt($_POST['post_boss']);
 		$post_accountant = _txt($_POST['post_accountant']);
 
-		$bank_name = _txt($_POST['bank_name']);
-		$bank_bik = _txt($_POST['bank_bik']);
-		$bank_account = _txt($_POST['bank_account']);
-		$bank_account_corr = _txt($_POST['bank_account_corr']);
+		$sql = "INSERT INTO `_setup_org` (
+					`app_id`,
+
+					`name`,
+					`name_yur`,
+					`phone`,
+					`fax`,
+					`adres_yur`,
+					`adres_ofice`,
+					`time_work`,
+
+					`ogrn`,
+					`inn`,
+					`kpp`,
+					`okud`,
+					`okpo`,
+					`okved`,
+
+					`post_boss`,
+					`post_accountant`
+				) VALUES (
+					".APP_ID.",
+
+					'".addslashes($name)."',
+					'".addslashes($name_yur)."',
+					'".addslashes($phone)."',
+					'".addslashes($fax)."',
+					'".addslashes($adres_yur)."',
+					'".addslashes($adres_ofice)."',
+					'".addslashes($time_work)."',
+
+					'".addslashes($ogrn)."',
+					'".addslashes($inn)."',
+					'".addslashes($kpp)."',
+					'".addslashes($okud)."',
+					'".addslashes($okpo)."',
+					'".addslashes($okved)."',
+
+					'".addslashes($post_boss)."',
+					'".addslashes($post_accountant)."'
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		_history(array(
+				'type_id' => 1064,
+				'v1' => $name
+			));
+		jsonSuccess();
+		break;
+	case 'setup_org_edit':
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Некорректный id');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
+		$name_yur = _txt($_POST['name_yur']);
+		$phone = _txt($_POST['phone']);
+		$fax = _txt($_POST['fax']);
+		$adres_yur = _txt($_POST['adres_yur']);
+		$adres_ofice = _txt($_POST['adres_ofice']);
+		$time_work = _txt($_POST['time_work']);
+
+		$ogrn = _txt($_POST['ogrn']);
+		$inn = _txt($_POST['inn']);
+		$kpp = _txt($_POST['kpp']);
+		$okud = _txt($_POST['okud']);
+		$okpo = _txt($_POST['okpo']);
+		$okved = _txt($_POST['okved']);
+
+		$post_boss = _txt($_POST['post_boss']);
+		$post_accountant = _txt($_POST['post_accountant']);
 
 		$sql = "SELECT *
-				FROM `_app`
-				WHERE `id`=".APP_ID;
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$org_id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Организации не существует');
 
-		$sql = "UPDATE `_app`
-				SET `type_id`=".$type_id.",
-					`name`='".addslashes($name)."',
+		$sql = "UPDATE `_setup_org`
+				SET `name`='".addslashes($name)."',
 					`name_yur`='".addslashes($name_yur)."',
-					`ogrn`='".addslashes($ogrn)."',
-					`inn`='".addslashes($inn)."',
-					`kpp`='".addslashes($kpp)."',
 					`phone`='".addslashes($phone)."',
 					`fax`='".addslashes($fax)."',
 					`adres_yur`='".addslashes($adres_yur)."',
 					`adres_ofice`='".addslashes($adres_ofice)."',
 					`time_work`='".addslashes($time_work)."',
 
-					`post_boss`='".addslashes($post_boss)."',
-					`post_accountant`='".addslashes($post_accountant)."',
+					`ogrn`='".addslashes($ogrn)."',
+					`inn`='".addslashes($inn)."',
+					`kpp`='".addslashes($kpp)."',
+					`okud`='".addslashes($okud)."',
+					`okpo`='".addslashes($okpo)."',
+					`okved`='".addslashes($okved)."',
 
-					`bank_name`='".addslashes($bank_name)."',
-					`bank_bik`='".addslashes($bank_bik)."',
-					`bank_account`='".addslashes($bank_account)."',
-					`bank_account_corr`='".addslashes($bank_account_corr)."'
-				WHERE `id`=".APP_ID;
+					`post_boss`='".addslashes($post_boss)."',
+					`post_accountant`='".addslashes($post_accountant)."'
+				WHERE `id`=".$org_id;
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'app');
 
 		if($changes =
-			_historyChange('Вид организации', _appType($r['type_id']), _appType($type_id)).
 			_historyChange('Название организации', $r['name'], $name).
 			_historyChange('Наименование юридического лица', $r['name_yur'], $name_yur).
-			_historyChange('ОГРН', $r['ogrn'], $ogrn).
-			_historyChange('ИНН', $r['inn'], $inn).
-			_historyChange('КПП', $r['kpp'], $kpp).
 			_historyChange('Контактные телефоны', $r['phone'], $phone).
 			_historyChange('Факс', $r['fax'], $fax).
 			_historyChange('Юридический адрес', $r['adres_yur'], $adres_yur).
 			_historyChange('Адрес офиса', $r['adres_ofice'], $adres_ofice).
 			_historyChange('Режим работы', $r['time_work'], $time_work).
 
-			_historyChange('Руководитель', $r['post_boss'], $post_boss).
-			_historyChange('Главный бухгалтер', $r['post_accountant'], $post_accountant).
+			_historyChange('ОГРН', $r['ogrn'], $ogrn).
+			_historyChange('ИНН', $r['inn'], $inn).
+			_historyChange('КПП', $r['kpp'], $kpp).
+			_historyChange('ОКУД', $r['okud'], $okud).
+			_historyChange('ОКПО', $r['okpo'], $okpo).
+			_historyChange('ОКВЕД', $r['okved'], $okved).
 
-			_historyChange('Наименование банка', $r['bank_name'], $bank_name).
-			_historyChange('БИК', $r['bank_bik'], $bank_bik).
-			_historyChange('Расчётный счёт', $r['bank_account'], $bank_account).
-			_historyChange('Корреспондентский счёт', $r['bank_account_corr'], $bank_account_corr))
-			_history(array(
+			_historyChange('Руководитель', $r['post_boss'], $post_boss).
+			_historyChange('Главный бухгалтер', $r['post_accountant'], $post_accountant)
+		)	_history(array(
 				'type_id' => 1026,
-				'v1' => '<table>'.$changes.'</table>'
+				'v1' => '<table>'.$changes.'</table>',
+				'v2' => $name
 			));
 
 		jsonSuccess();

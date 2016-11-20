@@ -337,6 +337,58 @@ function _app($i='all') {//ѕолучение данных о приложении
 				WHERE `id`=".APP_ID;
 		if(!$arr = query_assoc($sql))
 			_appError('Ќевозможно прочитать данные приложени€ дл€ кеша.');
+
+		$org = array(
+			'name' => '',
+			'name_yur' => '',
+			'phone' => '',
+			'fax' => '',
+			'adres_yur' => '',
+			'adres_ofice' => '',
+			'time_work' => '',
+			'ogrn' => '',
+			'inn' => '',
+			'kpp' => '',
+			'okud' => '',
+			'okpo' => '',
+			'okved' => '',
+			'post_boss' => '',
+			'post_accountant' => ''
+		);
+
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`
+				LIMIT 1";
+		if($org_assoc = query_assoc($sql)) {
+			unset($org_assoc['id']);
+			unset($org_assoc['app_id']);
+			$org = $org_assoc;
+		}
+
+		$bank = array(
+			'bank_bik' => '',
+			'bank_name' => '',
+			'bank_account' => '',
+			'bank_account_corr' => ''
+		);
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`
+				LIMIT 1";
+		if($bank_assoc = query_assoc($sql)) {
+			$bank = array(
+				'bank_bik' => $bank_assoc['bik'],
+				'bank_name' => $bank_assoc['name'],
+				'bank_account' => $bank_assoc['account'],
+				'bank_account_corr' => $bank_assoc['account_corr']
+			);
+		}
+
+		$arr += $org + $bank;
 		xcache_set($key, $arr, 86400);
 	}
 

@@ -582,15 +582,6 @@ a.add:hover{text-decoration:underline;color:#357}
 ._spisok tr.deleting,._spisok tr.deleted{background-color:#eee}
 
 
-/* Сообщение пустого запроса */
-._empty{
-	font:12px Tahoma;
-	color:#777;
-	background:#f7f7f7;
-	border:#ccc solid 1px;
-	text-align:center;
-	padding:130px 10px;
-}
 
 
 
@@ -1071,6 +1062,7 @@ a.add:hover{text-decoration:underline;color:#357}
 .mar8{margin:8px}
 .mar10{margin:10px}
 .mar20{margin:20px}
+.mar020{margin:0 20px}
 .pad15{padding:15px}
 .mt5{margin-top:5px}
 .mr5{margin-right:5px}

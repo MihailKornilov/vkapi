@@ -68,17 +68,17 @@ function xls_schet_width($sheet) {//установка ширины столбц
 	$sheet->getColumnDimension('E')->setWidth(14);
 	$sheet->getColumnDimension('F')->setWidth(14);
 }
-function xls_schet_top($sheet, $ws) {
-	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode($ws['name'])));
+function xls_schet_top($sheet) {
+	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode(_app('name'))));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
-	$sheet->setCellValue('A3', 'Адрес: '.utf8(htmlspecialchars_decode($ws['adres_yur'])));
+	$sheet->setCellValue('A3', 'Адрес: '.utf8(htmlspecialchars_decode(_app('adres_yur'))));
 	$sheet->getStyle('A3')->getFont()->setBold(true);
 
-	$sheet->setCellValue('A4', 'Телефон: '.utf8(htmlspecialchars_decode($ws['phone'])));
+	$sheet->setCellValue('A4', 'Телефон: '.utf8(htmlspecialchars_decode(_app('phone'))));
 	$sheet->getStyle('A4')->getFont()->setBold(true);
 }
-function xls_schet_rekvisit($sheet, $ws) {
+function xls_schet_rekvisit($sheet) {
 	$sheet->setCellValue('A6', 'Образец заполнения платежного поручения');
 	$sheet->getStyle('A6')->getFont()->setBold(true);
 	$sheet->mergeCells('A6:F6');
@@ -95,26 +95,26 @@ function xls_schet_rekvisit($sheet, $ws) {
 	);
 	$sheet->getStyle('A7:F11')->applyFromArray($ram); //общая рамка
 
-	$sheet->setCellValue('A7', 'ИНН '.utf8($ws['inn']).'                      КПП');
+	$sheet->setCellValue('A7', 'ИНН '.utf8(_app('inn')).'                      КПП');
 	$sheet->getStyle('A7:C7')->applyFromArray($ram);
 
 	$sheet->setCellValue('A8', 'Получатель');
-	$sheet->setCellValue('A9', utf8(htmlspecialchars_decode($ws['name'])));
+	$sheet->setCellValue('A9', utf8(htmlspecialchars_decode(_app('name'))));
 	$sheet->getStyle('A8:C9')->applyFromArray($ram);
 
 	$sheet->setCellValue('A10', 'Банк получателя');
-	$sheet->setCellValue('A11', utf8(htmlspecialchars_decode($ws['bank_name'])));
+	$sheet->setCellValue('A11', utf8(htmlspecialchars_decode(_app('bank_name'))));
 	$sheet->setCellValue('D9', 'Сч. №');
-	$sheet->setCellValue('E9', utf8($ws['bank_account']).' ');
+	$sheet->setCellValue('E9', utf8(_app('bank_account')).' ');
 	$sheet->getStyle('E7:F9')->applyFromArray($ram);
 
 	$sheet->setCellValue('D10', 'БИК');
 	$sheet->getStyle('D10:D10')->applyFromArray($ram);
 
-	$sheet->setCellValue('E10', utf8($ws['bank_bik']).' ');
+	$sheet->setCellValue('E10', utf8(_app('bank_bik')).' ');
 	$sheet->setCellValue('D11', 'Сч. №');
 	$sheet->getStyle('D11:D11')->applyFromArray($ram);
-	$sheet->setCellValue('E11', utf8($ws['bank_account_corr']).' ');
+	$sheet->setCellValue('E11', utf8(_app('bank_account_corr')).' ');
 
 	$sheet->getStyle('D9:D11')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 }
@@ -304,20 +304,20 @@ function xls_nakl_head($sheet, $s) {
 	);
 	$sheet->getStyle('A1:'.pageNum(31).'1')->applyFromArray($ram);
 }
-function xls_nakl_rekvisit($sheet, $ws, $s, $line=3) {
+function xls_nakl_rekvisit($sheet, $s, $line=3) {
 	$x = pageNum(5);
 
 	$sheet->setCellValue('A'.$line, 'Поставщик:');
-	$sheet->setCellValue($x.$line, utf8(htmlspecialchars_decode($ws['name'])));
+	$sheet->setCellValue($x.$line, utf8(htmlspecialchars_decode(_app('name'))));
 	$sheet->getStyle($x.$line)->getFont()->setBold(true);
-	if($ws['adres_yur']) {
+	if(_app('adres_yur')) {
 		$line++;
-		$sheet->setCellValue($x.$line, utf8(htmlspecialchars_decode($ws['adres_yur'])));
+		$sheet->setCellValue($x.$line, utf8(htmlspecialchars_decode(_app('adres_yur'))));
 		$sheet->getStyle($x.$line)->getFont()->setBold(true);
 	}
-	if($ws['phone']) {
+	if(_app('phone')) {
 		$line++;
-		$sheet->setCellValue($x.$line, 'Телефон: '.utf8(htmlspecialchars_decode($ws['phone'])));
+		$sheet->setCellValue($x.$line, 'Телефон: '.utf8(htmlspecialchars_decode(_app('phone'))));
 		$sheet->getStyle($x.$line)->getFont()->setBold(true);
 	}
 
@@ -542,11 +542,11 @@ function xls_act_width($sheet) {//установка ширины столбцо
 	$sheet->getColumnDimension('E')->setWidth(12);
 	$sheet->getColumnDimension('F')->setWidth(13);
 }
-function xls_act_top($sheet, $ws) {
-	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode($ws['name'])));
+function xls_act_top($sheet) {
+	$sheet->setCellValue('A1', utf8(htmlspecialchars_decode(_app('name'))));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
-	$sheet->setCellValue('A2', 'Адрес: '.utf8(htmlspecialchars_decode($ws['adres_yur'])));
+	$sheet->setCellValue('A2', 'Адрес: '.utf8(htmlspecialchars_decode(_app('adres_yur'))));
 	$sheet->getStyle('A2')->getFont()->setBold(true);
 }
 function xls_act_head($sheet, $s) {
@@ -696,11 +696,6 @@ if($s['zayav_id']) {
 		die(win1251('Заявки не существует.'));
 }
 
-$sql = "SELECT *
-		FROM `_app`
-		WHERE `id`=".APP_ID;
-$ws = query_assoc($sql);
-
 $page = 0;
 
 $book = new PHPExcel();
@@ -710,8 +705,8 @@ $sheet = $book->getActiveSheet();
 pageSetup($book, 'Счёт');
 
 xls_schet_width($sheet);
-xls_schet_top($sheet, $ws);
-xls_schet_rekvisit($sheet, $ws);
+xls_schet_top($sheet);
+xls_schet_rekvisit($sheet);
 $line = xls_schet_head($sheet, $s);
 xls_schet_tabHead($sheet, $line);
 $line = xls_schet_tab($sheet, $line);
@@ -724,7 +719,7 @@ if(NAKL) {
 	pageSetup($book, 'Накладная');
 	xls_nakl_razmer($sheet);
 	xls_nakl_head($sheet, $s);
-	$line = xls_nakl_rekvisit($sheet, $ws, $s);
+	$line = xls_nakl_rekvisit($sheet, $s);
 	$line = xls_nakl_table($sheet, $line);
 	$r = xls_nakl_tovar_spisok($sheet, $line);
 	$line = xls_nakl_itogo($sheet, $r);
@@ -737,7 +732,7 @@ if(ACT) {
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт выполненных работ 1');
 	xls_act_width($sheet);
-	xls_act_top($sheet, $ws);
+	xls_act_top($sheet);
 	xls_act_head($sheet, $s);
 	xls_act_tabHead($sheet);
 	$line = xls_act_tab($sheet);
@@ -748,7 +743,7 @@ if(ACT) {
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт выполненных работ 2');
 	xls_act_width($sheet);
-	xls_act_top($sheet, $ws);
+	xls_act_top($sheet);
 	xls_act_head($sheet, $s);
 	xls_act_tabHead($sheet);
 	$line = xls_act_tab($sheet);
@@ -759,7 +754,7 @@ if(ACT) {
 	$sheet = $book->getActiveSheet();
 	pageSetup($book, 'Акт 3 (для бухгалтерии)');
 	xls_act_width($sheet);
-	xls_act_top($sheet, $ws);
+	xls_act_top($sheet);
 	xls_act_head($sheet, $s);
 	xls_act_tabHead($sheet);
 	$line = xls_act_tab($sheet);

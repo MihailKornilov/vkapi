@@ -1,4 +1,67 @@
-var setupVkFind = function() {//редактирование данных сотрудника
+var setupOrgEdit = function(org_id) {
+		org_id = _num(org_id);
+		var dialog = _dialog({
+				top:20,
+				width:650,
+				head:(org_id ? 'Редактирование' : 'Добавление новой' ) + ' организации',
+				load:1,
+				butSubmit:org_id ? 'Сохранить' : 'Внести',
+				submit:submit
+			}),
+			send = {
+				op:'setup_org_load',
+				org_id:org_id
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				loaded(res);
+			else
+				dialog.abort(res.text);
+		}, 'json');
+
+
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('#name' + org_id).focus();
+			dialog.content.find('textarea').autosize();
+		}
+		function submit() {
+			var send = {
+				op:'setup_org_' + (org_id ? 'edit' : 'add'),
+				org_id:org_id,
+
+				name:       $('#name' + org_id).val(),
+				name_yur:   $('#name_yur' + org_id).val(),
+				phone:      $('#phone' + org_id).val(),
+				fax:        $('#fax' + org_id).val(),
+				adres_yur:  $('#adres_yur' + org_id).val(),
+				adres_ofice:$('#adres_ofice' + org_id).val(),
+				time_work:  $('#time_work' + org_id).val(),
+
+				ogrn:   $('#ogrn' + org_id).val(),
+				inn:    $('#inn' + org_id).val(),
+				kpp:    $('#kpp' + org_id).val(),
+				okud:   $('#okud' + org_id).val(),
+				okpo:   $('#okpo' + org_id).val(),
+				okved:  $('#okved' + org_id).val(),
+
+				post_boss:      $('#post_boss' + org_id).val(),
+				post_accountant:$('#post_accountant' + org_id).val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	
+	setupVkFind = function() {//редактирование данных сотрудника
 		$(document)
 			.off('keyup', '#setup-vk-find #viewer_link')
 			.on('keyup', '#setup-vk-find #viewer_link', user_find);
@@ -1690,6 +1753,11 @@ $(document)
 				func:setupRuleCheck
 			});
 		}
+		if($('#setup_org').length) {
+			$('#org-menu')._menuDop({
+				spisok:ORG_MENU
+			});
+		}
 		if($('#setup_rule').length) {
 			$('.icon-del').click(function() {
 				_dialogDel({
@@ -1814,41 +1882,6 @@ $(document)
 						but.prev().remove();
 						but.remove();
 					}
-				}, 'json');
-			});
-		}
-		if($('#setup_rekvisit').length) {
-			$('#type_id')._select({width:245,spisok:APP_TYPE});
-			$('textarea').autosize();
-			$('.vk').click(function() {
-				var t = $(this),
-					send = {
-						op:'setup_rekvisit',
-						type_id:$('#type_id').val(),
-						name:$('#name').val(),
-						name_yur:$('#name_yur').val(),
-						ogrn:$('#ogrn').val(),
-						inn:$('#inn').val(),
-						kpp:$('#kpp').val(),
-						phone:$('#phone').val(),
-						fax:$('#fax').val(),
-						adres_yur:$('#adres_yur').val(),
-						adres_ofice:$('#adres_ofice').val(),
-						time_work:$('#time_work').val(),
-
-						post_boss:$('#post_boss').val(),
-						post_accountant:$('#post_accountant').val(),
-
-						bank_name:$('#bank_name').val(),
-						bank_bik:$('#bank_bik').val(),
-						bank_account:$('#bank_account').val(),
-						bank_account_corr:$('#bank_account_corr').val()
-					};
-				t.addClass('_busy');
-				$.post(AJAX_MAIN, send, function(res) {
-					t.removeClass('_busy');
-					if(res.success)
-						_msg('Информация сохранена.');
 				}, 'json');
 			});
 		}

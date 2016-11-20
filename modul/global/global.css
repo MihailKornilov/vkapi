@@ -142,7 +142,7 @@ table{border:0;border-spacing:0}
 
 
 
-/* Заголовок 1 - на сером фоне*/
+/* Заголовок 1 - на сером фоне */
 .hd1{
 	font-size:14px;
 	color:#333;
@@ -152,6 +152,17 @@ table{border:0;border-spacing:0}
 }
 .hd1 b,.hd1 u{font-size:14px}
 .hd1 a.link{color:#777;font-size:14px}
+
+
+/* Заголовок 2 - подчёркнутая линия */
+.hd2{
+	color:#31618C;
+	font-size:14px;
+	border-bottom:#DEE3EF solid 1px;
+	padding:2px 0;
+	margin:5px 0;
+}
+.hd2 .vk.small.fr{margin-top:-4px}
 
 
 
@@ -173,6 +184,18 @@ table{border:0;border-spacing:0}
 }
 
 
+
+
+/* Сообщение пустого запроса */
+._empty{
+	font-size:14px;
+	color:#777;
+	background:#f9f9f9;
+	border:#ddd solid 1px;
+	border-radius:2px;
+	text-align:center;
+	padding:70px 20px;
+}
 
 
 

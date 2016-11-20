@@ -123,7 +123,7 @@ function _cronAppParse() {//прохождение по всем приложениям
 	$send = '';
 	foreach($spisok as $r) {
 		if($content = file_get_contents('http://'.DOMAIN.API_HTML.'/cron.php?cron_key='.CRON_KEY.'&api_id='.$r['id']))
-			$send .= $r['id'].' - '.$r['name'].BR.$content;
+			$send .= $r['id'].' - '.$r['title'].BR.$content;
 	}
 
 	_dbDump();
