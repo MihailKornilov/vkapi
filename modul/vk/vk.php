@@ -399,6 +399,14 @@ function _app($i='all') {//Получение данных о приложении
 
 	if($i == 'all')
 		return $arr;
+	
+	if($i == 'org_menu_js') {//список пунктов меню в формате JS
+		$sql = "SELECT `id`,`name`
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`";
+		return query_selJson($sql);
+	}
 
 	if(!isset($arr[$i]))
 		return '_app: неизвестный ключ <b>'.$i.'</b>';

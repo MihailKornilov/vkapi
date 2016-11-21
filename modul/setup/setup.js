@@ -60,7 +60,98 @@ var setupOrgEdit = function(org_id) {
 			}, 'json');
 		}
 	},
-	
+	setupBankEdit = function(org_id, bank_id) {
+		bank_id = _num(bank_id);
+		var dialog = _dialog({
+				width:560,
+				head:(bank_id ? 'Редактирование данных' : 'Добавление нового' ) + ' банка',
+				load:1,
+				butSubmit:bank_id ? 'Сохранить' : 'Внести',
+				submit:submit
+			}),
+			send = {
+				op:'setup_bank_load',
+				bank_id:bank_id
+			};
+
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				loaded(res);
+			else
+				dialog.abort(res.text);
+		}, 'json');
+
+
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('#bik').focus();
+			$('#bik-load').click(bikLoad);
+		}
+		function bikLoad() {//получение данных банка по БИК с сайта bik-info.ru
+			var t = $(this),
+				bik = _num($('#bik').val());
+
+			if(!bik) {
+				bikLoadErr('Некорректно заполнено поле БИК');
+				return;
+			}
+
+			t.addClass('_busy');
+			$.post('http://www.bik-info.ru/api.html?type=json&bik=' + bik, {}, function(res) {
+				t.removeClass('_busy');
+				if(res.error) {
+					bikLoadErr('Ошибка получения данных: ' + res.error);
+					return;
+				}
+				$('#name').val(res.name);
+				$('#account_corr').val(res.ks);
+			}, 'json');
+		}
+		function bikLoadErr(msg) {//ошибка заполнения поля БИК
+			$('#bik-load').vkHint({
+				msg:'<div class="red">' + msg + '</div>',
+				top:-60,
+				left:-2,
+				indent:60,
+				show:1,
+				remove:1
+			});
+			$('#bik').focus();
+		}
+		function submit() {
+			var send = {
+				op:'setup_bank_' + (bank_id ? 'edit' : 'add'),
+				org_id:org_id,
+				bank_id:bank_id,
+
+				bik:$('#bik').val(),
+				name:$('#name').val(),
+				account_corr:$('#account_corr').val(),
+				account:$('#account').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+//					$('#bank-spisok').html(res.html);
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	setupBankDel = function(bank_id) {
+		_dialogDel({
+			id:bank_id,
+			head:'данных о банке',
+			op:'setup_bank_del',
+			func:function() {
+				location.reload();
+			}
+		});
+	},
+
 	setupVkFind = function() {//редактирование данных сотрудника
 		$(document)
 			.off('keyup', '#setup-vk-find #viewer_link')

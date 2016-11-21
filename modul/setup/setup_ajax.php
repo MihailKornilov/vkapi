@@ -929,6 +929,158 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_bank_load'://получение информации о банке
+		if($bank_id = _num($_POST['bank_id'])) {
+			$sql = "SELECT *
+					FROM `_setup_org_bank`
+					WHERE `app_id`=".APP_ID."
+					  AND `id`=".$bank_id;
+			$r = query_assoc($sql);
+		}
+
+		$send['html'] = utf8(
+			'<table class="bs10">'.
+				'<tr><td class="label r w175">БИК:<td><input type="text" id="bik" class="w300" value="'.@$r['bik'].'" />'.
+				'<tr><td class="label"><td><button class="vk" id="bik-load">Получить данные по БИК</button>'.
+				'<tr><td class="label r">Наименование банка:<td><input type="text" id="name" class="w300" value="'.@$r['name'].'" />'.
+				'<tr><td class="label r">Корреспондентский счёт:<td><input type="text" id="account_corr" class="w300" value="'.@$r['account_corr'].'" />'.
+				'<tr><td><td>'.
+				'<tr><td class="label r">Расчётный счёт:<td><input type="text" id="account" class="w300" value="'.@$r['account'].'" />'.
+			'</table>'
+		);
+
+		jsonSuccess($send);
+		break;
+	case 'setup_bank_add'://Внесение нового банка
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Некорректный id организации');
+		if(!$bik = _txt($_POST['bik']))
+			jsonError('Некорректно заполнен БИК');
+
+		$name = _txt($_POST['name']);
+		$account_corr = _txt($_POST['account_corr']);
+		$account = _txt($_POST['account']);
+
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$org_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Организации не существует');
+
+
+		$sql = "INSERT INTO `_setup_org_bank` (
+					`app_id`,
+					`org_id`,
+
+					`bik`,
+					`name`,
+					`account_corr`,
+					`account`
+				) VALUES (
+					".APP_ID.",
+					".$org_id.",
+
+					'".$bik."',
+					'".addslashes($name)."',
+					'".addslashes($account_corr)."',
+					'".addslashes($account)."'
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+/*
+		_history(array(
+				'type_id' => 1064,
+				'v1' => $name
+			));
+*/
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$org_id."
+				ORDER BY `id`";
+		$bank = query_arr($sql);
+
+		foreach($bank as $id => $r)
+			foreach($r as $k => $i)
+				$bank[$id][$k] = utf8($i);
+
+//		$send['html'] = setup_org_bank($org_id, $bank);
+		
+		jsonSuccess();
+		break;
+	case 'setup_bank_edit'://Редактирование данных банка
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$bank_id = _num($_POST['bank_id']))
+			jsonError('Некорректный id банка');
+		if(!$bik = _txt($_POST['bik']))
+			jsonError('Некорректно заполнен БИК');
+
+		$name = _txt($_POST['name']);
+		$account_corr = _txt($_POST['account_corr']);
+		$account = _txt($_POST['account']);
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$bank_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Банка не существует');
+
+
+		$sql = "UPDATE `_setup_org_bank`
+				SET `bik`='".$bik."',
+					`name`='".addslashes($name)."',
+					`account_corr`='".addslashes($account_corr)."',
+					`account`='".addslashes($account)."'
+				WHERE `id`=".$bank_id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+/*
+		_history(array(
+				'type_id' => 1064,
+				'v1' => $name
+			));
+*/
+
+		jsonSuccess();
+		break;
+	case 'setup_bank_del'://удаление банка
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$bank_id = _num($_POST['id']))
+			jsonError('Некорректный id банка');
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$bank_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Банка не существует');
+
+
+		$sql = "DELETE FROM `_setup_org_bank` WHERE `id`=".$bank_id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+/*
+		_history(array(
+				'type_id' => 1064,
+				'v1' => $name
+			));
+*/
+
+		jsonSuccess();
+		break;
 
 	case 'setup_service_toggle':
 		if(!VIEWER_ADMIN)

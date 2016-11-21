@@ -466,14 +466,19 @@ function setup_org() {
 			ORDER BY `id`";
 	$spisok = query_arr($sql);
 
-	$sql = "SELECT `id`,`name`
-			FROM `_setup_org`
+	foreach($spisok as $id => $g)
+		$spisok[$id]['bank'] = array();
+
+	$sql = "SELECT *
+			FROM `_setup_org_bank`
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `id`";
-	$org_menu = query_selJson($sql);
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['org_id']]['bank'][] = $r;
 
 	$send =
-	'<script>var ORG_MENU='.$org_menu.';</script>'.
+	'<script>var ORG_MENU='._app('org_menu_js').';</script>'.
 	'<div id="setup_org">'.
 		'<div class="hd1 mb10">'.
 			'Настройки организации'.
@@ -490,7 +495,7 @@ function setup_org() {
 			setup_org_main($g).
 			setup_org_rekvisit($g).
 			setup_org_post($g).
-			setup_org_bank($g).
+			setup_org_bank($id, $g['bank']).
 			setup_org_nalog($g).
 		'</div>';
 	}
@@ -529,13 +534,13 @@ function setup_org_main($g) {//Основная информация об организации
 	'</div>'.
 
 	'<table class="t">'.
-					 '<tr><td class="label r top w175">Название организации:<td>'.$g['name'].
-   ($g['name_yur'] ? '<tr><td class="label r top">Наименование юр. лица:<td>'.$g['name_yur'] : '').
-	  ($g['phone'] ? '<tr><td class="label r">Контактные телефоны:<td>'.$g['phone'] : '').
-		($g['fax'] ? '<tr><td class="label r">Факс:<td>'.$g['fax'] : '').
-  ($g['adres_yur'] ? '<tr><td class="label r top">Юридический адрес:<td>'._br($g['adres_yur']) : '').
-($g['adres_ofice'] ? '<tr><td class="label r top">Адрес офиса:<td>'._br($g['adres_ofice']) : '').
-  ($g['time_work'] ? '<tr><td class="label r">Режим работы:<td>'.$g['time_work'] : '').
+					 '<tr><td class="label top w175">Название организации:<td>'.$g['name'].
+   ($g['name_yur'] ? '<tr><td class="label top">Наименование юр. лица:<td>'.$g['name_yur'] : '').
+	  ($g['phone'] ? '<tr><td class="label">Контактные телефоны:<td>'.$g['phone'] : '').
+		($g['fax'] ? '<tr><td class="label">Факс:<td>'.$g['fax'] : '').
+  ($g['adres_yur'] ? '<tr><td class="label top">Юридический адрес:<td>'._br($g['adres_yur']) : '').
+($g['adres_ofice'] ? '<tr><td class="label top">Адрес офиса:<td>'._br($g['adres_ofice']) : '').
+  ($g['time_work'] ? '<tr><td class="label">Режим работы:<td>'.$g['time_work'] : '').
 	'</table>';
 }
 function setup_org_rekvisit($g) {//Реквизиты организации
@@ -553,12 +558,12 @@ function setup_org_rekvisit($g) {//Реквизиты организации
 	return
 			'<div class="hd2 mt20">Реквизиты</div>'.
 			'<table class="t">'.
-  ($g['ogrn'] ? '<tr><td class="label r w175">ОГРН:<td>'.$g['ogrn'] : '').
-   ($g['inn'] ? '<tr><td class="label r w175">ИНН:<td>'.$g['inn'] : '').
-   ($g['kpp'] ? '<tr><td class="label r w175">КПП:<td>'.$g['kpp'] : '').
-  ($g['okud'] ? '<tr><td class="label r w175">ОКУД:<td>'.$g['okud'] : '').
-  ($g['okpo'] ? '<tr><td class="label r w175">ОКПО:<td>'.$g['okpo'] : '').
- ($g['okved'] ? '<tr><td class="label r w175">ОКВЭД:<td>'.$g['okved'] : '').
+  ($g['ogrn'] ? '<tr><td class="label w175">ОГРН:<td>'.$g['ogrn'] : '').
+   ($g['inn'] ? '<tr><td class="label w175">ИНН:<td>'.$g['inn'] : '').
+   ($g['kpp'] ? '<tr><td class="label w175">КПП:<td>'.$g['kpp'] : '').
+  ($g['okud'] ? '<tr><td class="label w175">ОКУД:<td>'.$g['okud'] : '').
+  ($g['okpo'] ? '<tr><td class="label w175">ОКПО:<td>'.$g['okpo'] : '').
+ ($g['okved'] ? '<tr><td class="label w175">ОКВЭД:<td>'.$g['okved'] : '').
 			'</table>';
 }
 function setup_org_post($g) {//Должностные лица организации
@@ -571,28 +576,35 @@ function setup_org_post($g) {//Должностные лица организации
 	return
 		'<div class="hd2 mt20">Должностные лица</div>'.
 		'<table class="t">'.
-		  ($g['post_boss'] ? '<tr><td class="label r w175">Руководитель:<td>'.$g['post_boss'] : '').
-	($g['post_accountant'] ? '<tr><td class="label r w175">Главный бухгалтер:<td>'.$g['post_accountant'] : '').
+		  ($g['post_boss'] ? '<tr><td class="label w175">Руководитель:<td>'.$g['post_boss'] : '').
+	($g['post_accountant'] ? '<tr><td class="label w175">Главный бухгалтер:<td>'.$g['post_accountant'] : '').
 		'</table>';
 }
-function setup_org_bank($g) {//Банки организации
+function setup_org_bank($org_id, $bank) {//Банки организации
+	$spisok = 'Банки не определены.';
+
+	if(!empty($bank)) {
+		$spisok = '';
+		foreach($bank as $r) {
+			$spisok .=
+			'<table class="t bank w100p">'.
+				'<tr><td class="label w175">БИК:'.
+					'<td>'.$r['bik'].
+						'<div onclick="setupBankDel('.$r['id'].')" class="icon icon-del fr'._tooltip('Удалить банк', -40).'</div>'.
+						'<div onclick="setupBankEdit('.$org_id.','.$r['id'].')" class="icon icon-edit fr'._tooltip('Редактировать данные банка', -88).'</div>'.
+				'<tr><td class="label top">Наименование банка:<td>'.$r['name'].
+				'<tr><td class="label">Корреспондентский счёт:<td>'.$r['account_corr'].
+				'<tr><td class="label">Расчётный счёт:<td>'.$r['account'].
+			'</table>';
+		}
+	}
+
 	return
 	'<div class="hd2 mt20">'.
-		'Банк'.
-		'<button class="vk small fr">Добавить банк</button>'.
+		'Банки'.
+		'<button class="vk small fr" onclick="setupBankEdit('.$org_id.')">Добавить банк</button>'.
 	'</div>'.
-	'<div>Банки не определены.</div>';
-
-/*
-		'<div class="headName">Банк получателя</div>'.
-		'<table class="t">'.
-			'<tr><td class="label topi">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
-			'<tr><td class="label">БИК:<td><input type="text" id="bank_bik" value="'.$g['bank_bik'].'" />'.
-			'<tr><td class="label">Расчётный счёт:<td><input type="text" id="bank_account" value="'.$g['bank_account'].'" />'.
-			'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="bank_account_corr" value="'.$g['bank_account_corr'].'" />'.
-			'<tr><td><td><button class="vk">Сохранить</button>'.
-		'</table>'.
-*/
+	'<div id="bank-spisok">'.$spisok.'</div>';
 
 }
 function setup_org_nalog($g) {//Налоговый учёт организации
