@@ -930,6 +930,24 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_bik_load'://получение данных банка по БИК
+		$bik = _txt($_POST['bik']);
+
+		if(!preg_match(REGEXP_NUMERIC, $bik))
+			jsonError('Некорректно заполнено поле БИК');
+
+		$sql = "SELECT *
+				FROM `_setup_biks`
+				WHERE `bik`='".$bik."'
+				LIMIT 1";
+		if(!$send = query_assoc($sql))
+			jsonError('По данному БИК информации нет');
+
+		foreach($send as $i => $r)
+			$send[$i] = utf8($r);
+
+		jsonSuccess($send);
+		break;
 	case 'setup_bank_load'://получение информации о банке
 		if($bank_id = _num($_POST['bank_id'])) {
 			$sql = "SELECT *
@@ -943,7 +961,7 @@ switch(@$_POST['op']) {
 			'<table class="bs10">'.
 				'<tr><td class="label r w175">БИК:<td><input type="text" id="bik" class="w300" value="'.@$r['bik'].'" />'.
 				'<tr><td class="label"><td><button class="vk" id="bik-load">Получить данные по БИК</button>'.
-				'<tr><td class="label r">Наименование банка:<td><input type="text" id="name" class="w300" value="'.@$r['name'].'" />'.
+				'<tr><td class="label r topi">Наименование банка:<td><textarea id="name" class="w300">'.@$r['name'].'</textarea>'.
 				'<tr><td class="label r">Корреспондентский счёт:<td><input type="text" id="account_corr" class="w300" value="'.@$r['account_corr'].'" />'.
 				'<tr><td><td>'.
 				'<tr><td class="label r">Расчётный счёт:<td><input type="text" id="account" class="w300" value="'.@$r['account'].'" />'.

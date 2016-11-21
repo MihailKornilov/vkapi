@@ -456,6 +456,45 @@ function _ruleInvoiceTransfer($id=false) {
 	return $arr[$id];
 }
 
+function setup_bik_insert() {//обновление базы банков по БИК
+	$xml = simplexml_load_file(API_PATH.'/!/base.xml');
+	$insert = array();
+	foreach($xml->bik as $r)
+		$insert[] = "(
+				'".addslashes(win1251($r['bik']))."',
+				'".addslashes(win1251($r['ks']))."',
+				'".addslashes(win1251($r['name']))."',
+				'".addslashes(win1251($r['namemini']))."',
+				'".addslashes(win1251($r['index']))."',
+				'".addslashes(win1251($r['city']))."',
+				'".addslashes(win1251($r['address']))."',
+				'".addslashes(win1251($r['phone']))."',
+				'".addslashes(win1251($r['okato']))."',
+				'".addslashes(win1251($r['okpo']))."',
+				'".addslashes(win1251($r['regnum']))."',
+				'".addslashes(win1251($r['srok']))."',
+				'".addslashes(win1251($r['dateadd']))."',
+				'".addslashes(win1251($r['datechange']))."'
+			)";
+
+	$sql = "INSERT INTO `_setup_biks` (
+				`bik`,
+				`ks`,
+				`name`,
+				`namemini`,
+				`index`,
+				`city`,
+				`address`,
+				`phone`,
+				`okato`,
+				`okpo`,
+				`regnum`,
+				`srok`,
+				`dateadd`,
+				`datechange`
+			) VALUES ".implode(',', $insert);
+	query($sql);
+}
 function setup_org() {
 	if(!_viewerMenuAccess(13))
 		return _err('Недостаточно прав: Реквизиты организации');
@@ -487,6 +526,7 @@ function setup_org() {
 		setup_org_empty($spisok).
 		setup_org_menu($spisok);
 
+	reset($spisok);
 	$first = key($spisok);
 	foreach($spisok as $id => $g) {
 		$dn = $first == $id ? '' : ' dn';
@@ -519,7 +559,9 @@ function setup_org_empty($arr) {//Не создано ни одной организации
 function setup_org_menu($spisok) {//Меню оргаризаций, если больше двух
 	if(count($spisok) < 2)
 		return '';
-	
+
+	reset($spisok);
+
 	return
 	'<input type="hidden" id="org-menu" value="'.key($spisok).'" />';
 }
@@ -530,7 +572,7 @@ function setup_org_main($g) {//Основная информация об организации
 	return
 	'<div class="hd2">'.
 		'Основная информация'.
-		'<div onclick="setupOrgEdit('.$g['id'].')" class="icon icon-edit fr'._tooltip('Редактировать', -43).'</div>'.
+		'<div onclick="setupOrgEdit('.$g['id'].')" class="icon icon-edit fr'._tooltip('Редактировать<br />данные организации', -60, '', 1).'</div>'.
 	'</div>'.
 
 	'<table class="t">'.
@@ -618,8 +660,14 @@ function setup_org_bank($org_id, $bank) {//Банки организации
 }
 function setup_org_nalog($g) {//Налоговый учёт организации
 	return
-	'<div class="hd2 mt20">Налоговый учёт</div>'.
-	'<div>Размещение информации о системе налогообложения.</div>';
+	'<div class="hd2 mt20">'.
+		'Налоговый учёт'.
+		'<div class="icon icon-edit fr'._tooltip('Настроить налоговый учёт', -80).'</div>'.
+	'</div>'.
+	'<table class="t">'.
+		 '<tr><td class="label w175">Система налогообложения:<td>-'.
+		 '<tr><td class="label ">НДС:<td>-'.
+	'</table>';
 }
 
 function setup_service() {

@@ -89,22 +89,24 @@ var setupOrgEdit = function(org_id) {
 		}
 		function bikLoad() {//получение данных банка по БИК с сайта bik-info.ru
 			var t = $(this),
-				bik = _num($('#bik').val());
+				send = {
+					op:'setup_bik_load',
+					bik:$.trim($('#bik').val())
+				};
 
-			if(!bik) {
+			if(!REGEXP_NUMERIC.test(send.bik)) {
 				bikLoadErr('Некорректно заполнено поле БИК');
 				return;
 			}
 
 			t.addClass('_busy');
-			$.get('http://www.bik-info.ru/api.html?type=json&bik=' + bik, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				t.removeClass('_busy');
-				if(res.error) {
-					bikLoadErr('Ошибка получения данных: ' + res.error);
-					return;
-				}
-				$('#name').val(res.name);
-				$('#account_corr').val(res.ks);
+				if(res.success) {
+					$('#name').val(res.name);
+					$('#account_corr').val(res.ks);
+				} else
+					bikLoadErr(res.text);
 			}, 'json');
 		}
 		function bikLoadErr(msg) {//ошибка заполнения поля БИК
