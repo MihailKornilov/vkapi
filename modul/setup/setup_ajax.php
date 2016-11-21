@@ -760,7 +760,8 @@ switch(@$_POST['op']) {
 				'<tr><td class="label r">КПП:<td><input type="text" id="kpp'.$org_id.'" class="w400" value="'.@$g['kpp'].'" />'.
 				'<tr><td class="label r">ОКУД:<td><input type="text" id="okud'.$org_id.'" class="w400" value="'.@$g['okud'].'" />'.
 				'<tr><td class="label r">ОКПО:<td><input type="text" id="okpo'.$org_id.'" class="w400" value="'.@$g['okpo'].'" />'.
-				'<tr><td class="label r">ОКВЭД:<td><input type="text" id="okved'.$org_id.'" class="w400" value="'.@$g['okved'].'" />'.
+				'<tr><td class="label r topi">Вид деятельности<br />по ОКВЭД:'.
+					'<td><textarea id="okved'.$org_id.'" class="w400">'.@$g['okved'].'</textarea>'.
 			'</table>'.
 	
 			'<div class="hd2 mt20 mar020">Должностные лица</div>'.
@@ -917,7 +918,7 @@ switch(@$_POST['op']) {
 			_historyChange('КПП', $r['kpp'], $kpp).
 			_historyChange('ОКУД', $r['okud'], $okud).
 			_historyChange('ОКПО', $r['okpo'], $okpo).
-			_historyChange('ОКВЕД', $r['okved'], $okved).
+			_historyChange('Вид деятельности по ОКВЭД', $r['okved'], $okved).
 
 			_historyChange('Руководитель', $r['post_boss'], $post_boss).
 			_historyChange('Главный бухгалтер', $r['post_accountant'], $post_accountant)

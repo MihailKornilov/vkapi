@@ -84,3 +84,21 @@ $.fn._menuDop = function(o) {//дополнительное меню
 	window[win] = tMain;
 	return tMain;
 };
+
+$(document)
+	.on('mouseover', '.icon-hint', function() {//подсказка по icon-hint
+		var t = $(this),
+			v = _num(t.attr('val'));
+
+		if(!v)
+			return;
+
+		t.vkHint({
+			msg:'Подсказка про ОГРН',
+			top:-76,
+			left:-17,
+			indent:60,
+			show:1,
+			remove:1
+		});
+	});

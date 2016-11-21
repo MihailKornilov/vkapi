@@ -97,7 +97,7 @@ var setupOrgEdit = function(org_id) {
 			}
 
 			t.addClass('_busy');
-			$.post('http://www.bik-info.ru/api.html?type=json&bik=' + bik, {}, function(res) {
+			$.get('http://www.bik-info.ru/api.html?type=json&bik=' + bik, function(res) {
 				t.removeClass('_busy');
 				if(res.error) {
 					bikLoadErr('Ошибка получения данных: ' + res.error);

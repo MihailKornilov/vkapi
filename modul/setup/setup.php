@@ -558,12 +558,21 @@ function setup_org_rekvisit($g) {//Реквизиты организации
 	return
 			'<div class="hd2 mt20">Реквизиты</div>'.
 			'<table class="t">'.
-  ($g['ogrn'] ? '<tr><td class="label w175">ОГРН:<td>'.$g['ogrn'] : '').
+
+			($g['ogrn'] ?
+	            '<tr><td class="label w175">'.
+	                    'ОГРН:'.
+	                    ' <div class="icon icon-hint" val="1"></div>'.
+	                '<td>'.$g['ogrn']
+			: '').
+
    ($g['inn'] ? '<tr><td class="label w175">ИНН:<td>'.$g['inn'] : '').
    ($g['kpp'] ? '<tr><td class="label w175">КПП:<td>'.$g['kpp'] : '').
   ($g['okud'] ? '<tr><td class="label w175">ОКУД:<td>'.$g['okud'] : '').
   ($g['okpo'] ? '<tr><td class="label w175">ОКПО:<td>'.$g['okpo'] : '').
- ($g['okved'] ? '<tr><td class="label w175">ОКВЭД:<td>'.$g['okved'] : '').
+ ($g['okved'] ? '<tr><td class="label w175 top">Вид деятельности<br />по ОКВЭД:'.
+	                '<td class="top">'.$g['okved']
+ : '').
 			'</table>';
 }
 function setup_org_post($g) {//Должностные лица организации
