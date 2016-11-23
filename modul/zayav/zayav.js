@@ -557,7 +557,7 @@ var _zayavSpisok = function(v, id) {
 				$('.tr-remind')[v ? 'show' : 'hide']();
 			}
 		});
-		$('#remind-day')._calendar();
+		$('#remind-day')._calendar({tomorrow:1});
 		$('.st').click(function() {
 			var t = $(this),
 				v = t.attr('val');
