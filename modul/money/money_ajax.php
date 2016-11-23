@@ -548,8 +548,6 @@ switch(@$_POST['op']) {
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
-		$dtime_add = $_POST['dtime_add'];//todo дл€  упца на удаление
-
 		//об€зательно должна быть указана категори€, либо описание расхода
 		$category_id = _num($_POST['category_id']);
 		$about = _txt($_POST['about']);
@@ -579,8 +577,7 @@ switch(@$_POST['op']) {
 					`attach_id`,
 					`year`,
 					`mon`,
-					`viewer_id_add`,
-					`dtime_add`
+					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
 					".$sum.",
@@ -594,21 +591,23 @@ switch(@$_POST['op']) {
 					".$attach_id.",
 					".$year.",
 					".$mon.",
-					".VIEWER_ID.",
-					'".$dtime_add.' '.strftime('%H:%M:%S')."'
+					".VIEWER_ID."
 				)";
 		query($sql);
 
 		$insert_id = query_insert_id('_money_expense');
+		
+		
 
 		//истори€ баланса дл€ расчЄтного счЄта
-		_balans(array(
-			'action_id' => 6,
-			'invoice_id' => $invoice_id,
-			'sum' => $sum,
-			'expense_id' => $insert_id,
-			'about' => $about
-		));
+		if(!expense_dtime_old_update_for_kupez($invoice_id, $insert_id, $sum))//todo баланс обновл€етс€, если сегодн€шн€€ дата
+			_balans(array(
+				'action_id' => 6,
+				'invoice_id' => $invoice_id,
+				'sum' => $sum,
+				'expense_id' => $insert_id,
+				'about' => $about
+			));
 
 		//истори€ баланса дл€ сотрудника
 		if($worker_id)
@@ -636,8 +635,6 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
-
-		$dtime_add = $_POST['dtime_add'];//todo дл€  упца на удаление
 
 		//об€зательно должна быть указана категори€, либо описание расхода
 		$category_id = _num($_POST['category_id']);
@@ -679,14 +676,6 @@ switch(@$_POST['op']) {
 					`mon`=".$mon."
 				WHERE `id`=".$id;
 		query($sql);
-
-		if(APP_ID == 3495523) {//todo дл€ удалени€
-			$sql = "UPDATE `_money_expense`
-					SET `dtime_add`='".$dtime_add.' '.strftime('%H:%M:%S')."'
-					WHERE `id`=".$id;
-			query($sql);
-		}
-
 
 		$mon_old = $r['mon'] ? _monthDef($r['mon']).' '.$r['year'] : '';
 		$mon_new = $mon ? _monthDef($mon).' '.$year : '';
@@ -2468,4 +2457,33 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+}
+
+
+function expense_dtime_old_update_for_kupez($invoice_id, $expense_id, $sum) {//todo дл€  упца дл€ удалени€
+	if(APP_ID != 3495523)
+		return false;
+
+	$dtime_add = @$_POST['dtime_add'];
+
+	if(!preg_match(REGEXP_DATE, $dtime_add))
+		return false;
+	
+	if($dtime_add == TODAY)
+		return false;
+	
+	$sql = "UPDATE `_money_expense`
+			SET `dtime_add`='".$dtime_add.' '.strftime('%H:%M:%S')."'
+			WHERE `id`=".$expense_id;
+	query($sql);
+
+	//корректировка баланса счЄта: должен остатьс€ неизменным
+	$sql = "UPDATE `_money_invoice`
+			SET `start`=`start`-".$sum."
+			WHERE `id`=".$invoice_id;
+	query($sql);
+
+	xcache_unset(CACHE_PREFIX.'invoice');
+
+	return true;
 }

@@ -375,7 +375,7 @@ var _accrualAdd = function(o) {
 
 		var html =
 			'<table class="bs10">' +
-				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
+				'<tr' + (APP_ID == 3495523 && !o.id ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
 				'<tr><td class="label r topi w100">Категория:' +
 					'<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
 						'<input type="hidden" id="category_sub_id-add" value="' + o.category_sub_id + '" />' +
@@ -1401,6 +1401,7 @@ var _accrualAdd = function(o) {
 	_salaryWorkerZpAdd = function(o) {//внесение/редактировыние зп сотрудника
 		o = $.extend({
 			id:0,
+			dtime_add:'',
 			invoice_id:_invoiceExpenseInsert(1),
 			sum:'',
 			about:'',
@@ -1410,6 +1411,7 @@ var _accrualAdd = function(o) {
 
 		var html =
 				'<table class="_dialog-tab">' +
+					'<tr' + (APP_ID == 3495523 && !o.id ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
 					'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
 					'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
 					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + o.invoice_id + '" />' +
@@ -1429,6 +1431,9 @@ var _accrualAdd = function(o) {
 				butSubmit:o.id ? 'Сохранить' : 'Выдать'
 			});
 
+		$('#dtime_add')._calendar({
+			lost:1
+		});
 		$('#sum').focus();
 		$('#invoice_id')._select({
 			width:218,
@@ -1450,6 +1455,7 @@ var _accrualAdd = function(o) {
 			var send = {
 				op:'expense_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
+				dtime_add:$('#dtime_add').val(),
 				category_id:1,
 				worker_id:SALARY.worker_id,
 				invoice_id:_num($('#invoice_id').val()),
