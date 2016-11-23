@@ -55,7 +55,7 @@ var _accrualAdd = function(o) {
 			html =
 			'<div id="_income-add">' +
 				'<table class="tab">' +
-					'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' +
+					'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
 		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
 		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
 					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
@@ -361,6 +361,7 @@ var _accrualAdd = function(o) {
 	_expenseTab = function(dialog, o) {//таблица для внесения или редактирования расхода
 		o = $.extend({
 			id:0,
+			dtime_add:'',
 			category_id:0,
 			category_sub_id:0,
 			invoice_id:_invoiceExpenseInsert(1),
@@ -373,21 +374,25 @@ var _accrualAdd = function(o) {
 		ATTACH[o.attach_id] = o.attach;
 
 		var html =
-			'<table id="expense-add-tab">' +
-				'<tr><td class="label topi">Категория:' +
+			'<table class="bs10" id="expense-add-tab">' +
+				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
+				'<tr><td class="label r topi w100">Категория:' +
 					'<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
 						'<input type="hidden" id="category_sub_id-add" value="' + o.category_sub_id + '" />' +
-				'<tr><td class="label">Описание:<td><input type="text" id="about" value="' + o.about + '" />' +
-				'<tr><td class="label">Файл:<td><input type="hidden" id="attach_id-add" value="' + o.attach_id + '" />' +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + o.invoice_id + '" />' +
-				'<tr><td class="label">Сумма:' +
+				'<tr><td class="label r">Описание:<td><input type="text" id="about" class="w300" value="' + o.about + '" />' +
+				'<tr><td class="label r">Файл:<td><input type="hidden" id="attach_id-add" value="' + o.attach_id + '" />' +
+				'<tr><td class="label r">Со счёта:<td><input type="hidden" id="invoice_id-add" value="' + o.invoice_id + '" />' +
+				'<tr><td class="label r">Сумма:' +
 					'<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.sum_edit ? '' : ' ') + ' /> руб.' +
 			'</table>';
 		dialog.content.html(html);
 		dialog.submit(submit);
 
+		$('#dtime_add')._calendar({
+			lost:1
+		});
 		$('#category_id-add')._select({
-			width:258,
+			width:270,
 			bottom:5,
 			title0:'Не указана',
 			spisok:_copySel(EXPENSE_SPISOK, 1),
@@ -398,7 +403,7 @@ var _accrualAdd = function(o) {
 		_expenseSub(o.category_id, o.category_sub_id, '-add');
 		$('#about').focus();
 		$('#invoice_id-add')._select({
-			width:200,
+			width:270,
 			title0:'Не выбран',
 			spisok:o.id ? INVOICE_SPISOK : _invoiceExpenseInsert(),
 			func:function() {
@@ -414,6 +419,7 @@ var _accrualAdd = function(o) {
 			var send = {
 				id:o.id,
 				op:o.id ? 'expense_edit' : 'expense_add',
+				dtime_add:$('#dtime_add').val(),
 				category_id:_num($('#category_id-add').val()),
 				category_sub_id:_num($('#category_sub_id-add').val()),
 				attach_id:$('#attach_id-add').val(),
@@ -449,7 +455,7 @@ var _accrualAdd = function(o) {
 	_expenseLoad = function() {
 		$('.add').click(function() {
 			var dialog = _dialog({
-				width:380,
+				width:480,
 				head:'Внесение расхода'
 			});
 			_expenseTab(dialog);
@@ -560,7 +566,7 @@ var _accrualAdd = function(o) {
 		EXPENSE[id] = v;
 		$.post(AJAX_MAIN, EXPENSE, function(res) {
 			if(res.success) {
-				$('#spisok').html(res.html);
+				$('#spisok').html(res.spisok);
 				$('#mon')._radio(res.mon);
 				if(id != 'category_id') {
 					GRAF = res.graf;
@@ -2141,23 +2147,9 @@ $(document)
 		});
 	})
 
-	.on('click', '#money-expense ._next', function() {
-		var next = $(this);
-		if(next.hasClass('busy'))
-			return;
-		next.addClass('busy');
-		EXPENSE.op = 'expense_spisok';
-		EXPENSE.page = next.attr('val');
-		$.post(AJAX_MAIN, EXPENSE, function(res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '#money-expense .img_edit', function() {
 		var dialog = _dialog({
-				width:380,
+				width:480,
 				head:'Редактирование расхода',
 				load:1,
 				butSubmit:'Сохранить'

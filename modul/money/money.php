@@ -930,6 +930,7 @@ function expense_graf($filter, $i='json') {//список сумм расходов по категориям
 }
 function expense_spisok($v=array()) {
 	$filter = expenseFilter($v);
+	$filter = _filterJs('EXPENSE', $filter);
 
 	define('PAGE1', $filter['page'] == 1);
 
@@ -954,20 +955,8 @@ function expense_spisok($v=array()) {
 	$filter['cond'] = $cond;
 	$send['filter'] = $filter;
 
-	$js = !PAGE1 ? '' :
-		'<script>'.
-			'var EXPENSE={'.
-				'limit:'.$filter['limit'].','.
-				'invoice_id:'.$filter['invoice_id'].','.
-				'category_id:'.$filter['category_id'].','.
-				'category_sub_id:'.$filter['category_sub_id'].','.
-				'year:'.$filter['year'].','.
-				'mon:'.$filter['mon'].
-			'};'.
-		'</script>';
-
 	if(!$send['all'])
-		return $send + array('spisok' => $js.'<div class="_empty">Записей нет</div>');
+		return $send + array('spisok' => $filter['js'].'<div class="_empty">Записей нет</div>');
 
 	$all = $send['all'];
 
@@ -985,7 +974,7 @@ function expense_spisok($v=array()) {
 	$expense = _attachValToList($expense);
 
 	$send['spisok'] = !PAGE1 ? '' :
-		$js.
+		$filter['js'].
 		'<div id="summa">'.
 			'Показан'._end($all, 'а', 'о').' <b>'.$all.'</b> запис'._end($all, 'ь', 'и', 'ей').
 			' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.

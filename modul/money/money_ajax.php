@@ -534,7 +534,7 @@ switch(@$_POST['op']) {
 
 	case 'expense_spisok':
 		$data = expense_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
+		$send['spisok'] = utf8($data['spisok']);
 		if($data['filter']['page'] == 1) {
 			$send['mon'] = _sel(expenseMonthSum($_POST));
 //			if(VIEWER_ADMIN)
@@ -547,6 +547,8 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
+
+		$dtime_add = $_POST['dtime_add'];//todo дл€  упца на удаление
 
 		//об€зательно должна быть указана категори€, либо описание расхода
 		$category_id = _num($_POST['category_id']);
@@ -577,7 +579,8 @@ switch(@$_POST['op']) {
 					`attach_id`,
 					`year`,
 					`mon`,
-					`viewer_id_add`
+					`viewer_id_add`,
+					`dtime_add`
 				) VALUES (
 					".APP_ID.",
 					".$sum.",
@@ -591,7 +594,8 @@ switch(@$_POST['op']) {
 					".$attach_id.",
 					".$year.",
 					".$mon.",
-					".VIEWER_ID."
+					".VIEWER_ID.",
+					'".$dtime_add.' '.strftime('%H:%M:%S')."'
 				)";
 		query($sql);
 
@@ -633,6 +637,8 @@ switch(@$_POST['op']) {
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
+		$dtime_add = $_POST['dtime_add'];//todo дл€  упца на удаление
+
 		//об€зательно должна быть указана категори€, либо описание расхода
 		$category_id = _num($_POST['category_id']);
 		$about = _txt($_POST['about']);
@@ -673,6 +679,14 @@ switch(@$_POST['op']) {
 					`mon`=".$mon."
 				WHERE `id`=".$id;
 		query($sql);
+
+		if(APP_ID == 3495523) {//todo дл€ удалени€
+			$sql = "UPDATE `_money_expense`
+					SET `dtime_add`='".$dtime_add.' '.strftime('%H:%M:%S')."'
+					WHERE `id`=".$id;
+			query($sql);
+		}
+
 
 		$mon_old = $r['mon'] ? _monthDef($r['mon']).' '.$r['year'] : '';
 		$mon_new = $mon ? _monthDef($mon).' '.$year : '';
@@ -732,6 +746,8 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError();
 
+		$ex = explode(' ', $r['dtime_add']);
+		$r['dtime_add'] = $ex[0];
 		$r['sum'] = round($r['sum'], 2);
 		$r['about'] = utf8($r['about']);
 		$r['attach'] = _attachArr($r['attach_id']);
