@@ -153,6 +153,48 @@ var setupOrgEdit = function(org_id) {
 			}
 		});
 	},
+	setupNalogEdit = function(org_id) {
+		var html = '<table class="bs10">' +
+					'<tr><td class="label r">Система налогообложения:' +
+						'<td><input type="hidden" id="nalog_system" value="' + $('#nalog_system' + org_id).val() + '" />' +
+					'<tr><td class="label r">НДС:' +
+						'<td><input type="hidden" id="nds" value="' + $('#nds' + org_id).val() + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:470,
+				head:'Настройка налогового учёта',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+
+		$('#nalog_system')._select({
+			width:240,
+			spisok:NALOG_SYSTEM
+		});
+		$('#nds')._select({
+			width:120,
+			spisok:NDS
+		});
+
+		function submit() {
+			var send = {
+				op:'setup_org_nalog_edit',
+				org_id:org_id,
+				nalog_system:$('#nalog_system').val(),
+				nds:$('#nds').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 
 	setupVkFind = function() {//редактирование данных сотрудника
 		$(document)

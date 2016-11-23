@@ -658,15 +658,63 @@ function setup_org_bank($org_id, $bank) {//Банки организации
 	'<div id="bank-spisok">'.$spisok.'</div>';
 
 }
+function setupNalogSystem($i='all') {//системы налогообложения
+	$arr = array(
+		0 => 'не указана',
+		1 => 'ОСН',
+		2 => 'УСН доходы (6%)',
+		3 => 'УСН доходы-расходы (15%)',
+		4 => 'ЕНВД',
+		5 => 'Патент'
+	);
+
+	if($i == 'all')
+		return $arr;
+
+	if($i == 'js')
+		return _selJson($arr);
+
+	if(!isset($arr[$i]))
+		return _cacheErr('неизвестный ключ системы налогообложения', $i);
+
+	return $arr[$i];
+}
+function setupNds($i='all') {//НДС
+	$arr = array(
+		0 => 'не выбран',
+		1 => 'без НДС',
+		2 => '10%',
+		3 => '18%'
+	);
+
+	if($i == 'all')
+		return $arr;
+
+	if($i == 'js')
+		return _selJson($arr);
+
+	if(!isset($arr[$i]))
+		return _cacheErr('неизвестный ключ НДС', $i);
+
+	return $arr[$i];
+}
 function setup_org_nalog($g) {//Налоговый учёт организации
 	return
+	'<script>'.
+		'var NALOG_SYSTEM='.setupNalogSystem('js').','.
+			'NDS='.setupNds('js').';'.
+	'</script>'.
 	'<div class="hd2 mt20">'.
 		'Налоговый учёт'.
-		'<div class="icon icon-edit fr'._tooltip('Настроить налоговый учёт', -80).'</div>'.
+		'<div onclick="setupNalogEdit('.$g['id'].')" class="icon icon-edit fr'._tooltip('Настроить налоговый учёт', -80).'</div>'.
 	'</div>'.
 	'<table class="t">'.
-		 '<tr><td class="label w175">Система налогообложения:<td>-'.
-		 '<tr><td class="label ">НДС:<td>-'.
+		'<tr><td class="label w175">Система налогообложения:'.
+			'<td>'.setupNalogSystem($g['nalog_system']).
+				'<input type="hidden" id="nalog_system'.$g['id'].'" value="'.$g['nalog_system'].'" />'.
+		'<tr><td class="label ">НДС:'.
+			'<td>'.setupNds($g['nds']).
+				'<input type="hidden" id="nds'.$g['id'].'" value="'.$g['nds'].'" />'.
 	'</table>';
 }
 

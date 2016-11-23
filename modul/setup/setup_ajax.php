@@ -1100,6 +1100,43 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_org_nalog_edit'://настройка налогового учёта
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Некорректный id');
+
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$org_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Организации не существует');
+
+		$nalog_system = _num($_POST['nalog_system']);
+		$nds = _num($_POST['nds']);
+
+		$sql = "UPDATE `_setup_org`
+				SET `nalog_system`=".$nalog_system.",
+					`nds`=".$nds."
+				WHERE `id`=".$org_id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		if($changes =
+			_historyChange('Система налогообложеня', setupNalogSystem($r['nalog_system']), setupNalogSystem($nalog_system)).
+			_historyChange('НДС', setupNds($r['nds']), setupNds($nds))
+		)	_history(array(
+				'type_id' => 1065,
+				'v1' => $r['name'],
+				'v2' => '<table>'.$changes.'</table>',
+			));
+
+
+		jsonSuccess();
+		break;
 
 	case 'setup_service_toggle':
 		if(!VIEWER_ADMIN)
