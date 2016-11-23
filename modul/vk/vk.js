@@ -991,7 +991,8 @@ $.fn._calendar = function(o) {
 		day:d.getDate(),		// то же с днём
 		lost:0,                 // если не 0, то можно выбрать прошедшие дни
 		func:function () {},    // исполняемая функция при выборе дня
-		place:'right'           // расположение календаря относительно выбора
+		place:'right',          // расположение календаря относительно выбора
+		tomorrow:0              // ссылка "завтра" для быстрой установки завтрашней даты
 	}, o);
 
 	// если input hidden содежит дату, применение её
@@ -1003,8 +1004,20 @@ $.fn._calendar = function(o) {
 	}
 
 	t.wrap('<div class="_calendar" id="' + id + '_calendar">');
-	t.after('<div class="calinp">' + o.day + ' ' + MONTH_DAT[o.mon] + ' ' + o.year + '</div>' +
-		'<div class="calabs"></div>');
+	t.after(
+		'<div class="calinp">' + o.day + ' ' + MONTH_DAT[o.mon] + ' ' + o.year + '</div>' +
+		'<div class="calabs"></div>'
+	);
+	if(o.tomorrow) {
+		$('#' + id + '_calendar')
+			.after('&nbsp;&nbsp;&nbsp;<a>завтра</a>')
+			.next().click(function() {
+				var tmr = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+				o.year = tmr.getFullYear();
+				o.mon = tmr.getMonth() + 1;
+				daySel(tmr.getDate());
+			});
+	}
 
 	var	curYear = o.year,//дата,
 		curMon = o.mon,  //установленная
@@ -1095,12 +1108,14 @@ $.fn._calendar = function(o) {
 		}
 		caldays
 			.html(html)
-			.find('.sel').click(daySel)
+			.find('.sel').click(function() {
+				daySel($(this).attr('val'));
+			})
 	}
-	function daySel() {
+	function daySel(v) {
 		curYear = o.year;
 		curMon = o.mon;
-		curDay = $(this).attr('val');
+		curDay = v;
 		inp.html(curDay + ' ' + MONTH_DAT[curMon] + ' ' + curYear);
 		t.val(dataForm());
 		o.func(dataForm());

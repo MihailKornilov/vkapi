@@ -1,9 +1,5 @@
 /* Напомниания */
 #_remind-spisok{margin:8px}
-._remind-add-tab{border-spacing:10px}
-._remind-add-tab .label{width:100px;text-align:right}
-._remind-add-tab #txt{width:300px;font-weight:bold}
-._remind-add-tab #about{width:300px;height:40px}
 #_remind-head{margin:3px 0 10px;color:#555}
 ._remind-unit{margin-bottom:10px;border-bottom:#f1f1f1 solid 1px}
 ._remind-unit .head{padding:5px 8px}

@@ -1,17 +1,17 @@
 var _remindAdd = function() {
 		var html =
-				'<table class="_remind-add-tab">' +
-					 (window.ZI ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					(window.CI ? '<tr><td class="label">Клиент:<td>' + CI.name : '') +
-					'<tr><td class="label">Задача:<td><input type="text" id="txt" />' +
-					'<tr><td class="label top">Подробно:<td><textarea id="about"></textarea>' +
-					'<tr><td class="label">День выполнения:<td><input type="hidden" id="day" />' +
+				'<table class="bs10">' +
+					 (window.ZI ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
+					(window.CI ? '<tr><td class="label r">Клиент:<td>' + CI.name : '') +
+					'<tr><td class="label r w125">Задача:<td><input type="text" id="txt" class="w300" />' +
+					'<tr><td class="label r top">Подробно:<td><textarea id="about" class="w300"></textarea>' +
+					'<tr><td class="label r">День выполнения:<td><input type="hidden" id="day" />' +
 				'</table>' +
 				'<input type="hidden" id="client_id" value="' + (window.CI ? CI.id : 0) + '">' +
 				'<input type="hidden" id="zayav_id" value="' + (window.ZI ? ZI.id : 0) + '">',
 			dialog = _dialog({
 				top:40,
-				width:480,
+				width:500,
 				head:'Внесение нового напоминания',
 				content:html,
 				submit:submit
@@ -19,7 +19,9 @@ var _remindAdd = function() {
 
 		$('#txt').focus();
 		$('#about').autosize();
-		$('#day')._calendar();
+		$('#day')._calendar({
+			tomorrow:1
+		});
 
 		function submit() {
 			var send = {
@@ -87,12 +89,12 @@ $(document)
 					'</div>' +
 					'<table id="ra-tab">' +
 						'<tr><td class="label r">Новый день:<td><input type="hidden" id="remind_day" value="' + day + '" />' +
-						'<tr><td class="label">Причина переноса напоминания:<td><input type="hidden" id="reason" />' +
+						'<tr><td class="label r">Причина переноса напоминания:<td><input type="hidden" id="reason" />' +
 					'</table>' +
 				'</div>',
 			dialog = _dialog({
 				top:30,
-				width:470,
+				width:550,
 				head:'Изменение статуса напоминания',
 				content:html,
 				butSubmit:'',
@@ -103,7 +105,7 @@ $(document)
 			});
 		$('#remind_day')._calendar();
 		$('#reason')._select({
-			width:225,
+			width:280,
 			spisok:[],
 			write:1,
 			write_save:1

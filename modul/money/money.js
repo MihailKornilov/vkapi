@@ -374,7 +374,7 @@ var _accrualAdd = function(o) {
 		ATTACH[o.attach_id] = o.attach;
 
 		var html =
-			'<table class="bs10" id="expense-add-tab">' +
+			'<table class="bs10">' +
 				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
 				'<tr><td class="label r topi w100">Категория:' +
 					'<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
