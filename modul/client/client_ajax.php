@@ -639,6 +639,13 @@ function _clientValuesCheck($category_id) {//проверка корректности полей при вне
 	if($u = @$cp[11])
 		$upd[] = "`worker_id`=".$val;
 
+	$val = _txt(@$_POST['ogrn']);
+	if($u = @$cp[13]) {
+		if($u['require'] && !$val)
+			jsonError('Ќе заполнено поле '.$u['name']);
+		$upd[] = "`ogrn`='".addslashes($val)."'";
+	}
+
 
 
 	$val = _clientFromGet();
@@ -665,7 +672,8 @@ function _clientFindUpdate($client_id) {//обновление быстрого поиска клиента
 			    IFNULL(CONCAT(`fax`, ' '), ''),
 			    IFNULL(CONCAT(`email`, ' '), ''),
 			    IFNULL(CONCAT(`inn`, ' '), ''),
-			    IFNULL(CONCAT(`kpp`, ' '), '')
+			    IFNULL(CONCAT(`kpp`, ' '), ''),
+			    IFNULL(CONCAT(`ogrn`, ' '), '')
 			) WHERE `id`=".$client_id;
 	query($sql);
 }

@@ -190,6 +190,11 @@ function _clientPoleEdit($id, $v=array()) {//ассоциативный массив HTML используе
 			return
 			'<tr><td class="label r">{label}'.
 				'<td><input type="hidden" id="ce-worker_id" value="'.@$v['worker_id'].'" />';
+
+		case 13:
+			return
+			'<tr><td class="label r">{label}'.
+				 '<td><input type="text" id="ce-ogrn'.$category_id.'" class="w250" value="'.@$v['ogrn'].'" />';
 	}
 	return '';
 }
@@ -251,6 +256,11 @@ function _clientPoleInfo($id, $v=array()) {//ассоциативный массив HTML используе
 			if(!$v['worker_id'])
 				return '';
 			return '<tr><td class="label">{label}:<td>'._clientVal($v['id'], 'worker');
+
+		case 13://ОГРН
+			if(empty($v['ogrn']))
+				return '';
+			return '<tr><td class="label">{label}:<td>'.$v['ogrn'];
 	}
 
 	return '';
@@ -490,6 +500,7 @@ function _client_spisok($v=array()) {// список клиентов
 			$r['email'] = _findRegular($filter['find'], $r['email'], 1);
 			$r['inn'] = _findRegular($filter['find'], $r['inn'], 1);
 			$r['kpp'] = _findRegular($filter['find'], $r['kpp'], 1);
+			$r['ogrn'] = _findRegular($filter['find'], $r['ogrn'], 1);
 		}
 		$spisok[$r['id']] = $r;
 	}
@@ -511,6 +522,7 @@ function _client_spisok($v=array()) {// список клиентов
 	   (FIND && $r['email'] ? '<tr><td class="label">'.$cp[7]['name'].':<td>'.$r['email'] : '').
 		 (FIND && $r['inn'] ? '<tr><td class="label">'.$cp[8]['name'].':<td>'.$r['inn'] : '').
 		 (FIND && $r['kpp'] ? '<tr><td class="label">'.$cp[9]['name'].':<td>'.$r['kpp'] : '').
+		 (FIND && $r['ogrn'] ? '<tr><td class="label">'.$cp[13]['name'].':<td>'.$r['ogrn'] : '').
 			'</table>';
 
 

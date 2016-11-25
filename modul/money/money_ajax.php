@@ -690,6 +690,8 @@ switch(@$_POST['op']) {
 			$list = query_ass($sql);
 		}
 
+		expense_dtime_old_update_for_kupez($r['invoice_id'], $id, $sum);
+
 		if($r['sum'] != $sum)
 			_balans(array(
 				'action_id' => 9,

@@ -1,4 +1,6 @@
-var clientPeopleTab = function(v, p) {// таблица: частное лицо
+var 
+/*	
+	clientPeopleTab = function(v, p) {// таблица: частное лицо
 		// отображать ли паспортные данные
 		var pasp = v.pasp_seria || v.pasp_nomer || v.pasp_adres || v.pasp_ovd || v.pasp_data ? '' : ' class="dn"',
 			prefix = p ? 'person-' : '',
@@ -203,7 +205,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 			}, 'json');
 		}
 	},
-
+*/
 	_clientEdit = function(category_id) {
 		var CI = window.CI || {},
 			client_id = _num(CI.id),
@@ -298,6 +300,7 @@ var clientPeopleTab = function(v, p) {// таблица: частное лицо
 					email:$('#ce-email' + cid).val(),
 					inn:$('#ce-inn' + cid).val(),
 					kpp:$('#ce-kpp' + cid).val(),
+					ogrn:$('#ce-ogrn' + cid).val(),
 
 					skidka:$('#ce-skidka' + cid).val(),
 
