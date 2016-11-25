@@ -761,7 +761,8 @@ switch(@$_POST['op']) {
 			jsonError('Расхода не существует');
 
 		if(TODAY != substr($r['dtime_add'], 0, 10))
-			jsonError('Время для удаления расхода истекло');
+			if(APP_ID != 3495523)   //todo временно для Купца
+				jsonError('Время для удаления расхода истекло');
 
 		$sql = "UPDATE `_money_expense`
 				SET `deleted`=1,

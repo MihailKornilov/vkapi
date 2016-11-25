@@ -994,7 +994,7 @@ function expense_spisok($v=array()) {
 				'<td class="ed">'.
 					($r['category_id'] != 1 ?
 						_iconEdit($r).
-						_iconDel($r)
+						_iconDel($r + array('del' => APP_ID == 3495523 ? 1 : 0)) //todo удаление расхода для Купца временно
 					: '');
 	}
 
