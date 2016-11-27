@@ -3,21 +3,11 @@
 #setup .rightLink a.sel{border-color:#6B8EB5}
 #setup ._spisok{margin-bottom:1px}
 
-#setup-tab{border-spacing:10px}
-#setup-tab .label{text-align:right}
-#setup-tab #name{width:210px}
-#setup-tab textarea{width:210px;height:50px}
-
-#setup_my #pinset{margin-left:150px}
-#setup_my #pinchange{margin:0 10px 0 80px}
-#setup_my #dop{margin-top:30px}
-
-
 /* Сотрудники */
 #setup_worker .unit{
 	border:#DDE solid 1px;
 	width:380px;
-	margin:6px 0 6px 20px;
+	margin:6px 0 6px 10px;
 }
 
 
@@ -96,7 +86,6 @@
 
 /* Категории расходов */
 #setup_expense{min-height:600px}
-#setup_expense .td-name{cursor:move}
 #setup_expense .about{
 	margin:3px 0 0 20px;
 	color:#777;
@@ -108,11 +97,8 @@
 	margin-left:4px;
 	cursor:default;
 }
-#setup_expense .ed{width:35px}
 
 #setup_expense_sub{min-height:600px}
-#setup_expense_sub .headName{margin-top:10px}
-#setup_expense_sub #cat-name{font:bold 14px Tahoma}
 #setup_expense_sub #spisok{margin-top:10px}
 #setup_expense_sub .count{width:65px;text-align:center}
 #setup_expense_sub em{
@@ -126,12 +112,10 @@
 /* Статусы заявок */
 #setup_zayav_status #status-spisok{margin-bottom:30px}
 #setup_zayav_status ._spisok{margin-top:2px}
-#setup_zayav_status td.name{cursor:move}
-#setup_zayav_status .name span{font-size:12px}
 #setup_zayav_status .b span{font-weight:bold}
 #setup_zayav_status .about{
 	color:#777;
-	font-size:10px;
+	font-size:11px;
 	margin:3px 0 5px 15px;
 	white-space:pre-line;
 }
@@ -143,9 +127,6 @@
 }
 #setup_zayav_status .ed{width:35px}
 
-.setup-status-tab .label{width:150px;text-align:right}
-.setup-status-tab #name{width:250px}
-.setup-status-tab #about{width:250px}
 .setup-status-tab #color{
 	display:inline-block;
 	width:255px;
@@ -167,7 +148,6 @@
 
 /* Расходы по заявкам */
 #setup_zayav_expense .name{width:130px}
-#setup_zayav_expense td.name{cursor:move}
 #setup_zayav_expense .dop{width:150px}
 #setup_zayav_expense .param-info{font-size:10px;color:#2a2}
 #setup_zayav_expense .use{width:55px;text-align:center}
@@ -208,18 +188,6 @@
 
 
 
-/* Рубрики объявлений */
-#setup_rubric .name{width:150px}
-#setup_rubric td.name{cursor:move}
-#setup_rubric .sub{width:75px;text-align:center}
-#setup_rubric .zayav{width:75px;text-align:center}
-#setup_rubric .ed{width:35px}
-
-#setup_rubric_sub .headName{margin-top:10px}
-#setup_rubric_sub td.name{cursor:move}
-#setup_rubric_sub .zayav{width:75px;text-align:center}
-#setup_rubric_sub .ed{width:35px}
-
 
 
 
@@ -244,7 +212,6 @@
 
 
 /* Номера газет */
-#setup_gn .headName{margin-bottom:0}
 #setup_gn #dopLinks{margin-bottom:10px}
 #setup_gn .vk{margin:20px 0 0 150px}
 #setup_gn ._spisok{width:100%}
@@ -275,8 +242,3 @@
 
 
 /* Шаблоны документов */
-#setup_document_template .vk.small{margin-top:-3px}
-#setup_document_template .unit{margin-left:10px}
-
-#setup_document_template_info .headName{margin:10px 0 5px}
-#setup_document_template_info .var{font-weight:bold;width:150px}

@@ -59,7 +59,7 @@ function _setup() {
 	return
 		'<div id="setup">'.
 			'<table class="tabLR">'.
-				'<tr><td class="left'.($d != 'worker' &&$d != 'org' ? ' pad15' : '').'">'.$left. //todo на удаление
+				'<tr><td class="left">'.$left.
 					'<td class="right"><div class="rightLink">'.$links.'</div>'.
 			'</table>'.
 		'</div>';
@@ -73,10 +73,38 @@ function _setup_script() {//скрипты и стили
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/setup/setup'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/setup/setup'.MIN.'.js?'.VERSION.'"></script>';
 }
+function setupPath($v) {//Верхняя строка: путь настроек
+	$v = array(
+		'name' => $v['name'],           // название настройки
+		'link_name' => @$v['link_name'],// название ссылки на предыдущцю страницу
+		'link_d' => @$v['link_d'],      // d предыдущей страницы
+		'add_name' => @$v['add_name'],  // название ссылки добавления
+		'add_func' => @$v['add_func']   // функция, по которой происходит добавление
+	);
+
+	if($v['add_func'])
+		$v['add_func'] = ' onclick="'.$v['add_func'].'"';
+
+	if($v['link_name'])
+		$v['link_name'] = '<a class="link" href="'.URL.'&p=setup&d='.$v['link_d'].'">'.$v['link_name'].'</a> » ';
+
+	if($v['add_name'])
+		$v['add_name'] = '<a class="add"'.$v['add_func'].'>'.$v['add_name'].'</a>';
+
+	return
+	'<div class="hd1">'.
+		$v['link_name'].
+		$v['name'].
+		$v['add_name'].
+	'</div>';
+}
 
 function setup_my() {
 	return
-	'<div id="setup_my">'.
+	setupPath(array(
+		'name' => 'Мои настройки'
+	)).
+	'<div id="setup_my" class="mar20">'.
 		'<div class="headName">Пин-код</div>'.
 		'<div class="_info">'.
 			'<p><b>Пин-код</b> необходим для дополнительного подтверждения вашей личности, '.
@@ -87,18 +115,20 @@ function setup_my() {
 			'<br />'.
 			'<p>Если вы забыли пин-код, обратитесь к руководителю, чтобы сбросить его.'.
 		'</div>'.
-	(PIN ?
-		'<button class="vk" id="pinchange">Изменить пин-код</button>'.
-		'<button class="vk" id="pindel">Удалить пин-код</button>'
-	:
-		'<button class="vk" id="pinset">Установить пин-код</button>'
-	).
 
-		'<div class="headName" id="dop" >Дополнительно</div>'.
+		'<div class="center mb20">'.
+		(PIN ?
+			'<button class="vk" id="pinchange">Изменить пин-код</button> '.
+			'<button class="vk" id="pindel">Удалить пин-код</button>'
+		:
+			'<button class="vk" id="pinset">Установить пин-код</button>'
+		).
+		'</div>'.
+
+		'<div class="headName">Дополнительно</div>'.
 		'<table class="bs10">'.
 			'<tr><td class="label">Показывать платежи:<td><input type="hidden" id="RULE_MY_PAY_SHOW_PERIOD" value="'._num(@RULE_MY_PAY_SHOW_PERIOD).'" />'.
 		'</table>'.
-
 	'</div>';
 }
 
@@ -107,13 +137,14 @@ function setup_worker() {
 		return _err('Недостаточно прав: управление сотрудниками');
 
 	return
-		'<div id="setup_worker">'.
-			'<div class="hd1 mb10">'.
-				'Управление сотрудниками'.
-				'<a class="add" onclick="setupWorkerAdd()">Новый сотрудник</a>'.
-			'</div>'.
-			'<div id="spisok">'.setup_worker_spisok().'</div>'.
-		'</div>';
+	'<div id="setup_worker">'.
+		setupPath(array(
+			'name' => 'Управление сотрудниками',
+			'add_name' => 'Новый сотрудник',
+			'add_func' => 'setupWorkerAdd()'
+		)).
+		'<div id="spisok" class="mar20">'.setup_worker_spisok().'</div>'.
+	'</div>';
 }
 function setup_worker_spisok() {
 	$sql = "SELECT *
@@ -214,11 +245,11 @@ function setup_worker_rule($viewer_id) {
 			'};'.
 	'</script>'.
 
-	'<div class="hd1">'.
-		'<a class="link" href="'.URL.'&p=setup&d=worker">Управление сотрудниками</a>'.
-		' » '.
-		$u['viewer_name'].
-	'</div>'.
+	setupPath(array(
+		'name' => $u['viewer_name'],
+		'link_name' => 'Управление сотрудниками',
+		'link_d' => 'worker'
+	)).
 
 	'<div id="setup_rule">'.
 		'<table class="bs10 w100p">'.
@@ -519,10 +550,11 @@ function setup_org() {
 	$send =
 	'<script>var ORG_MENU='._app('org_menu_js').';</script>'.
 	'<div id="setup_org">'.
-		'<div class="hd1 mb10">'.
-			'Настройки организации'.
-			'<a class="add" onclick="setupOrgEdit()">Добавить организацию</a>'.
-		'</div>'.
+		setupPath(array(
+			'name' => 'Настройки организации',
+			'add_name' => 'Добавить организацию',
+			'add_func' => 'setupOrgEdit()'
+		)).
 		setup_org_empty($spisok).
 		setup_org_menu($spisok);
 
@@ -751,10 +783,14 @@ function setup_expense() {
 		return _err('Недостаточно прав: категории расходов.');
 
 	return
-		'<div id="setup_expense">'.
-			'<div class="headName">Категории расходов организации<a class="add">Новая категория</a></div>'.
-			'<div id="spisok">'.setup_expense_spisok().'</div>'.
-		'</div>';
+	'<div id="setup_expense">'.
+		setupPath(array(
+			'name' => 'Категории расходов организации',
+			'add_name' => 'Новая категория',
+			'add_func' => 'setupExpenseEdit()'
+		)).
+		'<div id="spisok" class="mar10">'.setup_expense_spisok().'</div>'.
+	'</div>';
 }
 function setup_expense_spisok() {
 	$sql = "SELECT
@@ -808,14 +844,14 @@ function setup_expense_spisok() {
 			'<tr><th class="name">Наименование'.
 				'<th class="w70">Кол-во<br />под-<br />категорий'.
 		  (SA ? '<th class="w50">Кол-во<br />записей' : '').
-				'<th class="ed">'.
+				'<th class="w35">'.
 		'</table>'.
 		'<dl class="_sort" val="_money_expense_category">';
 
 	foreach($spisok as $id => $r)
 		$send .= '<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="td-name">'.
+				'<tr><td class="curM">'.
 						($id == 1 ? '<span class="name">'.$r['name'].'</span>' :
 									'<a class="name" href="'.URL.'&p=setup&d=expense&id='.$id.'">'.$r['name'].'</a>'
 						).
@@ -827,7 +863,7 @@ function setup_expense_spisok() {
 						($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '')
 			: '').
 
-					'<td class="ed topi">'.
+					'<td class="w35 topi">'.
 						($id != 1 ? _iconEdit($r) : '').
 						($id != 1 && !$r['count'] && !$r['deleted'] ? _iconDel($r) : '').
 			'</table>';
@@ -847,12 +883,19 @@ function setup_expense_sub($id) {
 		return 'Категории id = '.$id.' не существует.';
 
 	return
-	'<script>var CAT_ID='.$id.';</script>'.
+	'<script>'.
+		'var CAT_ID='.$id.','.
+			'CAT_NAME="'.$cat['name'].'";'.
+	'</script>'.
 	'<div id="setup_expense_sub">'.
-		'<a href="'.URL.'&p=setup&d=expense"><< назад к категориям расходов</a>'.
-		'<div class="headName">Список подкатегорий расходов<a class="add">Добавить</a></div>'.
-		'<div id="cat-name">'.$cat['name'].'</div>'.
-		'<div id="spisok">'.setup_expense_sub_spisok($id).'</div>'.
+		setupPath(array(
+			'name' => $cat['name'],
+			'link_name' => 'Категории расходов',
+			'link_d' => 'expense',
+			'add_name' => 'Добавить подкатегорию',
+			'add_func' => 'setupExpenseSubEdit()',
+		)).
+		'<div id="spisok" class="mar10">'.setup_expense_sub_spisok($id).'</div>'.
 	'</div>';
 }
 function setup_expense_sub_spisok($id) {
@@ -917,10 +960,14 @@ function setup_zayav_status() {
 		return _err('Недостаточно прав: статусы заявок.');
 
 	return
-		'<div id="setup_zayav_status">'.
-			'<div class="headName">Статусы заявок<a class="add status-add">Новый статус</a></div>'.
-			'<div id="status-spisok">'.setup_zayav_status_spisok().'</div>'.
-		'</div>';
+	'<div id="setup_zayav_status">'.
+		setupPath(array(
+			'name' => 'Статусы заявок',
+			'add_name' => 'Новый статус',
+			'add_func' => 'setupZayavStatus()'
+		)).
+		'<div id="status-spisok" class="mar10">'.setup_zayav_status_spisok().'</div>'.
+	'</div>';
 }
 function setup_zayav_status_spisok() {
 	$sql = "SELECT
@@ -945,7 +992,7 @@ function setup_zayav_status_spisok() {
 	foreach($spisok as $r)
 		$send .= '<dd val="'.$r['id'].'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name'.($r['default'] ? ' b' : '').'" style="background-color:#'.$r['color'].'" val="'.$r['color'].'">'.
+				'<tr><td class="name curM'.($r['default'] ? ' b' : '').'" style="background-color:#'.$r['color'].'" val="'.$r['color'].'">'.
 						'<span>'.$r['name'].'</span>'.
 						'<div class="about">'.$r['about'].'</div>'.
 		 ($r['nouse'] ? '<div class="dop">Не использовать повторно</div>' : '').
@@ -1098,8 +1145,12 @@ function setup_zayav_expense() {//категории расходов по заявке
 
 	return
 	'<div id="setup_zayav_expense">'.
-		'<div class="headName">Настройка категорий расходов по заявке<a class="add">Добавить</a></div>'.
-		'<div id="spisok">'.setup_zayav_expense_spisok().'</div>'.
+		setupPath(array(
+			'name' => 'Настройка категорий расходов по заявке',
+			'add_name' => 'Добавить',
+			'add_func' => 'setupZayavExpense()'
+		)).
+		'<div id="spisok" class="mar10">'.setup_zayav_expense_spisok().'</div>'.
 	'</div>';
 }
 function setup_zayav_expense_spisok() {
@@ -1138,7 +1189,7 @@ function setup_zayav_expense_spisok() {
 		$send .=
 		'<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
+				'<tr><td class="name curM">'.$r['name'].
 					'<td class="dop">'.
 						($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
 						'<div class="param-info">'.$param.'</div>'.
@@ -1160,11 +1211,11 @@ function setup_salary_list() {
 		return _err('Недостаточно прав: '.LIST_VYDACI.'.');
 
 	return
-	'<div id="setup_salary_list">'.
-		'<div class="headName">'.LIST_VYDACI.': настройка</div>'.
-		'<div class="spisok">'.setup_salary_list_spisok().'</div>'.
-		'<div class="center mt20"><button class="vk">Сохранить</button></div>'.
-	'</div>';
+	setupPath(array(
+		'name' => LIST_VYDACI.': настройка'
+	)).
+	'<div class="spisok mar10">'.setup_salary_list_spisok().'</div>'.
+	'<div class="center mt20"><button class="vk" onclick="setupSalaryListSave()">Сохранить</button></div>';
 }
 function setup_salary_list_spisok() {
 	$spisok = salary_list_head();
@@ -1222,8 +1273,12 @@ function setup_rubric() {
 
 	return
 	'<div id="setup_rubric">'.
-		'<div class="headName">Рубрики объявлений<a class="add" onclick="setupRubricEdit()">Новая рубрика</a></div>'.
-		'<div id="spisok">'.setup_rubric_spisok().'</div>'.
+		setupPath(array(
+			'name' => 'Рубрики объявлений',
+			'add_name' => 'Новая рубрика',
+			'add_func' => 'setupRubricEdit()'
+		)).
+		'<div id="spisok" class="mar10">'.setup_rubric_spisok().'</div>'.
 	'</div>';
 }
 function setup_rubric_spisok() {
@@ -1266,19 +1321,19 @@ function setup_rubric_spisok() {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="sub">Подрубрики'.
-				'<th class="zayav">Кол-во<br />объявлений'.
-				'<th class="ed">'.
+				'<th class="w100">Подрубрики'.
+				'<th class="w100">Кол-во<br />объявлений'.
+				'<th class="w35">'.
 		'</table>'.
 		'<dl class="_sort" val="_setup_rubric">';
 	foreach($spisok as $id => $r) {
 		$nodel = $r['sub'] || $r['zayav'];
 		$send .='<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name"><a href="'.URL.'&p=setup&d=rubric&id='.$id.'">'.$r['name'].'</a>'.
-					'<td class="sub">'.($r['sub'] ? $r['sub'] : '').
-					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
-					'<td class="ed">'.
+				'<tr><td class="name curM"><a href="'.URL.'&p=setup&d=rubric&id='.$id.'">'.$r['name'].'</a>'.
+					'<td class="w100 center">'.($r['sub'] ? $r['sub'] : '').
+					'<td class="w100 center">'.($r['zayav'] ? $r['zayav'] : '').
+					'<td class="w35">'.
 						_iconEdit($r).
 						_iconDel(array('nodel' => $nodel) + $r).
 			'</table>';
@@ -1301,12 +1356,15 @@ function setup_rubric_sub($id) {
 
 	return
 	'<script>var RUBRIC_ID='.$id.';</script>'.
-	'<a href="'.URL.'&p=setup&d=rubric"><< назад к списку рубрик</a>'.
+		setupPath(array(
+			'link_name' => 'Рубрики объявлений',
+			'link_d' => 'rubric',
+			'name' => $rub['name'],
+			'add_name' => 'Новая подрубрика',
+			'add_func' => 'setupRubricSubEdit()'
+		)).
 	'<div id="setup_rubric_sub">'.
-		'<div class="headName">Список подрубрик для "'.$rub['name'].'"'.
-			'<a class="add" onclick="setupRubricSubEdit()">Новая подрубрика</a>'.
-		'</div>'.
-		'<div id="spisok">'.setup_rubric_sub_spisok($id).'</div>'.
+		'<div id="spisok" class="mar10">'.setup_rubric_sub_spisok($id).'</div>'.
 	'</div>';
 }
 function setup_rubric_sub_spisok($rubric_id) {
@@ -1336,16 +1394,16 @@ function setup_rubric_sub_spisok($rubric_id) {
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="zayav">Кол-во<br />объявлений'.
-				'<th class="ed">'.
+				'<th class="zayav w100">Кол-во<br />объявлений'.
+				'<th class="w35">'.
 		'</table>'.
 		'<dl class="_sort" val="_setup_rubric_sub">';
 	foreach($spisok as $id => $r)
 		$send .='<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
-					'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
-					'<td class="ed">'.
+				'<tr><td class="name curM">'.$r['name'].
+					'<td class="w100 center">'.($r['zayav'] ? $r['zayav'] : '').
+					'<td class="w35">'.
 						_iconEdit($r).
 						_iconDel(array('nodel' => $r['zayav']) + $r).
 			'</table>';
@@ -1364,10 +1422,14 @@ function setup_cartridge() {
 		return _err('Недостаточно прав: картриджи.');
 
 	return
-		'<div id="setup-cartridge">'.
-			'<div class="headName">Управление заправкой картриджей<a class="add" onclick="cartridgeNew()">Внести новый картридж</a></div>'.
-			'<div id="spisok">'.setup_cartridge_spisok().'</div>'.
-		'</div>';
+	'<div id="setup-cartridge">'.
+		setupPath(array(
+			'name' => 'Управление заправкой картриджей',
+			'add_name' => 'Внести новый картридж',
+			'add_func' => 'cartridgeNew()'
+		)).
+		'<div id="spisok" class="mar10">'.setup_cartridge_spisok().'</div>'.
+	'</div>';
 }
 function setup_cartridge_spisok($edit_id=0) {
 	$send = '';
@@ -1457,17 +1519,21 @@ function setup_tovar_category() {
 	//При подключении существующих категорий все товары становятся доступными для текущего приложения
 	return
 	'<div id="setup_tovar_category">'.
-		'<div class="headName">Категории товаров</div>'.
-		'<div class="_info">'.
-			'<u>Категории</u> предназначены для разделения товаров по похожим свойствам или характеристикам. '.
-			'<br />'.
-			'Возможно создавать собственные категории товаров, либо подключать готовые категории из каталога.'.
+		setupPath(array(
+			'name' => 'Категории товаров'
+		)).
+		'<div class="mar10">'.
+			'<div class="_info">'.
+				'<u>Категории</u> предназначены для разделения товаров по похожим свойствам или характеристикам. '.
+				'<br />'.
+				'Возможно создавать собственные категории товаров, либо подключать готовые категории из каталога.'.
+			'</div>'.
+			'<table id="but">'.
+				'<tr><td><button class="vk" onclick="setupTovarCategoryEdit()">Создать новую категорию</button>'.
+					'<td><button class="vk" id="join">Подключить категории из каталога</button>'.
+			'</table>'.
+			'<div id="spisok">'.setup_tovar_category_spisok().'</div>'.
 		'</div>'.
-		'<table id="but">'.
-			'<tr><td><button class="vk" id="add">Создать новую категорию</button>'.
-				'<td><button class="vk" id="join">Подключить категории из каталога</button>'.
-		'</table>'.
-		'<div id="spisok">'.setup_tovar_category_spisok().'</div>'.
 	'</div>';
 }
 function setup_tovar_category_spisok() {//категории товаров
@@ -1612,11 +1678,12 @@ function setup_tovar_vendor_spisok() {
 function setup_polosa() {//Купец: стоимость см2 для каждой полосы
 	return
 	'<div id="setup_polosa">'.
-		'<div class="headName">'.
-			'Стоимость см&sup2; рекламы для каждой полосы'.
-			'<a class="add" onclick="setupPolosaCostEdit()">Новая полоса</a>'.
-		'</div>'.
-		'<div id="spisok">'.setup_polosa_spisok().'</div>'.
+		setupPath(array(
+			'name' => 'Стоимость см&sup2; рекламы для каждой полосы',
+			'add_name' => 'Новая полоса',
+			'add_func' => 'setupPolosaCostEdit()'
+		)).
+		'<div id="spisok" class="mar10">'.setup_polosa_spisok().'</div>'.
 	'</div>';
 }
 function setup_polosa_spisok() {
@@ -1653,8 +1720,10 @@ function setup_polosa_spisok() {
 function setup_obdop() {//Купец: дополнительные параметры объявлений
 	return
 	'<div id="setup_obdop">'.
-		'<div class="headName">Дополнительные параметры объявлений</div>'.
-		'<div id="spisok">'.setup_obdop_spisok().'</div>'.
+		setupPath(array(
+			'name' => 'Дополнительные параметры объявлений'
+		)).
+		'<div id="spisok" class="mar10">'.setup_obdop_spisok().'</div>'.
 	'</div>';
 }
 function setup_obdop_spisok() {
@@ -1684,7 +1753,9 @@ function setup_obdop_spisok() {
 function setup_oblen() {//Купец: стоимость длины объявления
 	return
 	'<div id="setup_oblen">'.
-		'<div class="headName">Настройка стоимости длины объявления</div>'.
+		setupPath(array(
+			'name' => 'Настройка стоимости длины объявления'
+		)).
 		'<table>'.
             '<tr><td>Первые'.
 				'<td><input type="text" value="'.TXT_LEN_FIRST.'" id="txt_len_first" />'.
@@ -1708,12 +1779,15 @@ function setup_gn() {
 	return
 	'<script>var GN_MAX="'._gn('gn_max').'";</script>'.
 	'<div id="setup_gn">'.
-		'<div class="headName">'.
-			'Номера выпусков газеты'.
-			'<a class="add" onclick="setupGnEdit()">Новый номер</a>'.
+		setupPath(array(
+			'name' => 'Номера выпусков газеты',
+			'add_name' => 'Новый номер',
+			'add_func' => 'setupGnEdit()'
+		)).
+		'<div class="mar10">'.
+			'<div id="dopLinks">'.setup_gn_year().'</div>'.
+			'<div id="spisok">'.setup_gn_spisok().'</div>'.
 		'</div>'.
-		'<div id="dopLinks">'.setup_gn_year().'</div>'.
-		'<div id="spisok">'.setup_gn_spisok().'</div>'.
 	'</div>';
 }
 function setup_gn_year($y=CURRENT_YEAR) {
@@ -1778,13 +1852,28 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 
 
 
+function setup_schet_pay() {//счёт на оплату
+	return
+	setupPath(array(
+		'name' => 'Настройки счёта на оплату'
+	));
+}
+
+
+
+
+
+
+
 
 
 function setup_document_template() {//шаблоны документов
 	setup_document_template_default_test();
 	return
-	'<div id="setup_document_template">'.
-		'<div class="headName">Шаблоны документов для печати</div>'.
+	setupPath(array(
+		'name' => 'Шаблоны документов для печати'
+	)).
+	'<div class="mar10">'.
 		'<div class="_info">Настройка формирования документов из шаблонов в формате <b>Word</b> и <b>Excel</b>.</div>'.
 		'<div id="spisok" class="mt20">'.setup_document_template_spisok().'</div>'.
 	'</div>';
@@ -1840,16 +1929,14 @@ function setup_document_template_spisok() {
 	$n = 1;
 	foreach($spisok as $r)
 		$send .=
-			'<div class="unit mt'.($n == 1 ? 10 : 5).'">'.($n++).'. '.
+			'<div class="mt'.($n == 1 ? 10 : 5).'">'.($n++).'. '.
 				'<a href="'.URL.'&p=setup&d=document_template&id='.$r['id'].'">'.$r['name'].'</a>'.
 			'</div>';
 
 	return $send;
 }
 function setup_document_template_info() {
-	$send =
-	'<div id="setup_document_template_info">'.
-		'<a href="'.URL.'&p=setup&d=document_template"><< назад к списку шаблонов</a>';
+	$send = '<div id="setup_document_template_info">';
 
 	if(!$id = _num(@$_GET['id']))
 		return $send._err('Некорректный идентификатор шаблона.').'</div>';
@@ -1862,9 +1949,14 @@ function setup_document_template_info() {
 		return $send._err('Шаблона не существует.').'</div>';
 
 	$send .=
-		_attachJs(array('id'=>$r['attach_id'])).
-		'<script>var TEMPLATE_ID='.$id.';</script>'.
-		'<div class="headName">Шаблон "'.$r['name'].'"</div>'.
+	_attachJs(array('id'=>$r['attach_id'])).
+	'<script>var TEMPLATE_ID='.$id.';</script>'.
+	setupPath(array(
+		'name' => $r['name'],
+		'link_name' => 'Шаблоны документов',
+		'link_d' => 'document_template'
+	)).
+	'<div class="mar10">'.
 		'<table class="bs10 mb20">'.
 			'<tr><td class="label r">Название:'.
 				'<td><input type="text" id="name" class="w250" value="'.$r['name'].'" />'.
@@ -1884,7 +1976,8 @@ function setup_document_template_info() {
 		//	'<p>Переменные подменяются на данные, которые будут извлечены из базы данных при формировании документа.'.
 			'<p>Ниже представлены все возможные данные, разделённые по группам.'.
 		'</div>'.
-		setup_document_template_group();
+		setup_document_template_group().
+	'</div>';
 
 	return $send;
 }
@@ -1920,7 +2013,7 @@ function setup_document_template_var($spisok) {
 	$send = '<table class="bs5">';
 	foreach($spisok as $r)
 		$send .=
-		'<tr><td><input type="text" class="var" readonly value="'.$r['v'].'" />'.
+		'<tr><td><input type="text" class="b w200" readonly onclick="$(this).select()" value="'.$r['v'].'" />'.
 			'<td>'.$r['name'];
 
 	$send .= '</table>';

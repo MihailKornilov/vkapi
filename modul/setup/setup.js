@@ -499,9 +499,9 @@ var setupOrgEdit = function(org_id) {
 		}, o);
 
 		var t = $(this),
-			html = '<table id="setup-tab">' +
-					'<tr><td class="label r">Категория:<td><b>' + $('#cat-name').html() + '</b>' +
-					'<tr><td class="label r">Подкатегория:<td><input id="name" type="text" value="' + o.name + '" />' +
+			html = '<table class="bs10">' +
+					'<tr><td class="label r">Категория:<td><b>' + CAT_NAME + '</b>' +
+					'<tr><td class="label r">Подкатегория:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
 					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
 						'<td class="label r">Объединить:' +
 						'<td><input type="hidden" id="join" />' +
@@ -519,7 +519,7 @@ var setupOrgEdit = function(org_id) {
 							'<input type="hidden" id="category_sub_id-join" />' +
 				'</table>',
 			dialog = _dialog({
-				width:400,
+				width:430,
 				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' подкатегории расхода организации',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -668,13 +668,13 @@ var setupOrgEdit = function(org_id) {
 		}, o);
 
 		var html = '<table class="bs10">' +
-				'<tr><td class="label">Наименование:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
-				'<tr><td class="label">Цена за см&sup2;:<td><input type="text" id="cena" class="money" value="' + o.cena + '" /> руб.' +
-				'<tr><td class="label">Указывать<br />номер полосы:<td><input type="hidden" id="polosa" value="' + o.polosa + '" />' +
+				'<tr><td class="label r w175">Наименование:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+				'<tr><td class="label r">Цена за см&sup2;:<td><input type="text" id="cena" class="money" value="' + o.cena + '" /> руб.' +
+				'<tr><td class="label r">Указывать номер полосы:<td><input type="hidden" id="polosa" value="' + o.polosa + '" />' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
-				width:390,
+				width:500,
 				head:o.id ? 'Редактирование данных полосы' : 'Внесение новой полосы',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -834,11 +834,11 @@ var setupOrgEdit = function(org_id) {
 		}, o);
 
 		var html =
-				'<table id="setup-tab">' +
-					'<tr><td class="label">Наименование:' +
-						'<td><input id="name" type="text" value="' + o.name + '" />' +
-					'<tr><td class="label topi">Дополнительное поле:' +
-						'<td><input id="dop" type="hidden" value="' + o.dop + '" />' +
+				'<table class="bs10">' +
+					'<tr><td class="label r">Наименование:' +
+						'<td><input type="text" id="name" value="' + o.name + '" />' +
+					'<tr><td class="label r topi">Дополнительное поле:' +
+						'<td><input type="hidden" id="dop" value="' + o.dop + '" />' +
 					'<tr class="tr-param' + (o.dop == 4 ? '' : ' dn') + '">' +
 						'<td>' +
 						'<td><input id="param" type="hidden" value="' + o.param + '" />' +
@@ -910,14 +910,14 @@ var setupOrgEdit = function(org_id) {
 
 		var html =
 				'<table class="setup-status-tab bs10">' +
-					'<tr><td class="label">Название:<td><input id="name" type="text" value="' + o.name + '" />' +
-					'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr><td class="label topi">Цвет:<td><div id="color" val="' + o.color + '" style="background-color:#' + o.color + '"></div>' +
-					'<tr><td class="label">По умолчанию:<td><input type="hidden" id="default" value="' + o.default + '" />' +
+					'<tr><td class="label r w175">Название:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+					'<tr><td class="label r topi">Описание:<td><textarea id="about" class="w250">' + o.about + '</textarea>' +
+					'<tr><td class="label r topi">Цвет:<td><div id="color" val="' + o.color + '" style="background-color:#' + o.color + '"></div>' +
+					'<tr><td class="label r">По умолчанию:<td><input type="hidden" id="default" value="' + o.default + '" />' +
 					'<tr class="tr-nouse' + (o.default ? '' : ' dn') + '">' +
-						'<td class="label">Не использовать повторно:' +
+						'<td class="label r">Не использовать повторно:' +
 						'<td><input type="hidden" id="nouse" value="' + o.nouse + '" />' +
-					'<tr><td class="label topi">Следующие статусы:<td><input type="hidden" id="next" value="' + o.next + '" />' +
+					'<tr><td class="label r topi">Следующие статусы:<td><input type="hidden" id="next" value="' + o.next + '" />' +
 					'<tr class="tr-next-ids' + (o.next ? '' : ' dn') + '"><td class="label topi"><td><input type="hidden" id="next_ids" value="' + o.next_ids + '" />' +
 					'<tr><td><td><input type="hidden" id="hide" value="' + o.hide + '" />' +
 					'<tr><td><td>' +
@@ -931,7 +931,7 @@ var setupOrgEdit = function(org_id) {
 				'</table>',
 			dialog = _dialog({
 				top:30,
-				width:480,
+				width:520,
 				head:(o.id ? 'Редактирование' : 'Добавление нового' ) + ' статуса заявки',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -1087,6 +1087,23 @@ var setupOrgEdit = function(org_id) {
 		});
 	},
 
+	setupSalaryListSave = function() {//сохранение настройки листа выдачи
+		var t = $(this);
+		if(t.hasClass('_busy'))
+			return;
+
+		var send = {
+			op:'setup_salary_list',
+			ids:_checkAll()
+		};
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success)
+				_msg();
+		}, 'json');
+	},
+	
 	setupTovarCategoryEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -1094,7 +1111,7 @@ var setupOrgEdit = function(org_id) {
 		}, o);
 
 		var t = $(this),
-			html = '<table id="setup-tab">' +
+			html = '<table class="bs10">' +
 					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
 				'</table>',
 			dialog = _dialog({
@@ -1139,7 +1156,7 @@ var setupOrgEdit = function(org_id) {
 		var t = $(this),
 			html = '<table class="bs10">' +
 					'<tr><td class="label r">Название:' +
-						'<td><input type="text" id="name" class="w200" value="' + o.name + '" />' +
+						'<td><input type="text" id="name" class="w230" value="' + o.name + '" />' +
 				'</table>',
 			dialog = _dialog({
 				head:(o.id ? 'Редактирование' : 'Создание нового' ) + ' шаблона',
@@ -1180,16 +1197,14 @@ $(document)
 		}
 		var html =
 				'<center><b>Видимость истории действий:</b></center>' +
-				'<table id="setup-tab">' +
-					spisok +
-				'</table>',
+				'<table class="bs10">' + spisok + '</table>',
 			dialog = _dialog({
 				head:'Права истории действий',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
 			}),
-			inp = $('#setup-tab').find('input');
+			inp = dialog.content.find('input');
 
 		for(n = 0; n < inp.length; n++)
 			inp.eq(n)._dropdown({
@@ -1281,7 +1296,6 @@ $(document)
 		}
 	})
 
-	.on('click', '#setup_expense .add', setupExpenseEdit)
 	.on('click', '#setup_expense .img_edit', function() {
 		var t = _parent($(this), 'DD');
 		setupExpenseEdit({
@@ -1303,7 +1317,6 @@ $(document)
 		});
 	})
 
-	.on('click', '#setup_expense_sub .add', setupExpenseSubEdit)
 	.on('click', '#setup_expense_sub .img_edit', function() {
 		var t = _parent($(this));
 		setupExpenseSubEdit({
@@ -1554,7 +1567,6 @@ $(document)
 		});
 	})
 
-	.on('click', '#setup_zayav_expense .add', setupZayavExpense)
 	.on('click', '#setup_zayav_expense .img_edit', function() {
 		var t = _parent($(this), 'DD');
 		setupZayavExpense({
@@ -1576,7 +1588,6 @@ $(document)
 		});
 	})
 
-	.on('click', '#setup_zayav_status .status-add', setupZayavStatus)
 	.on('click', '#setup_zayav_status .status-edit', function() {
 		var t = _parent($(this), 'DD');
 		setupZayavStatus({
@@ -1617,19 +1628,19 @@ $(document)
 			filling = p.find('.filling').val(),
 			restore = p.find('.restore').val(),
 			chip = p.find('.chip').val(),
-			html = '<table id="setup-tab">' +
-				'<tr><td class="label">Вид:<td><input type="hidden" id="type_id" value="' + type_id + '" />' +
-				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" value="' + name + '" />' +
-				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +
-				'<tr><td class="label">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" value="' + restore + '" /> руб.' +
-				'<tr><td class="label">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" value="' + chip + '" /> руб.' +
+			html = '<table class="bs10">' +
+				'<tr><td class="label r">Вид:<td><input type="hidden" id="type_id" value="' + type_id + '" />' +
+				'<tr><td class="label r"><b>Модель картриджа:</b><td><input type="text" id="name" class="w200" value="' + name + '" />' +
+				'<tr><td class="label r">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +
+				'<tr><td class="label r">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" value="' + restore + '" /> руб.' +
+				'<tr><td class="label r">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" value="' + chip + '" /> руб.' +
 				'<tr><td><td>' +
-				'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
-				'<tr class="tr-join dn"><td class="label">С картриджем:<td><input type="hidden" id="join_id" />' +
+				'<tr><td class="label r">Объединить:<td><input type="hidden" id="join" />' +
+				'<tr class="tr-join dn"><td class="label r">С картриджем:<td><input type="hidden" id="join_id" />' +
 				'</table>',
 			dialog = _dialog({
 				top:40,
-				width:400,
+				width:410,
 				head:'Редактирование данных картриджа',
 				content:html,
 				butSubmit:'Сохранить',
@@ -1694,7 +1705,6 @@ $(document)
 		$(this).css('background-color', '#fff');
 	})
 
-	.on('click', '#setup_tovar_category #add', setupTovarCategoryEdit)
 	.on('click', '#setup_tovar_category .img_edit', function() {
 		var t = _parent($(this));
 		setupTovarCategoryEdit({
@@ -1749,32 +1759,15 @@ $(document)
 		}
 	})
 
-	.on('click', '#setup_salary_list .vk', function() {//сохранение настройки листа выдачи
-		var t = $(this);
-		if(t.hasClass('_busy'))
-			return;
-
-		var send = {
-			op:'setup_salary_list',
-			ids:_checkAll()
-		};
-		t.addClass('_busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('_busy');
-			if(res.success)
-				_msg();
-		}, 'json');
-	})
-
 	.ready(function() {
 		if($('#setup_my').length) {
 			$('#pinset').click(function() {
 				var html =
-						'<table id="setup-tab">' +
-							'<tr><td class="label">Новый пин-код:<td><input id="pin" type="password" maxlength="10" />' +
+						'<table class="bs10">' +
+							'<tr><td class="label">Новый пин-код:<td><input id="pin" type="password" />' +
 						'</table>',
 					dialog = _dialog({
-						width:300,
+						width:350,
 						head:'Установка нового пин-кода',
 						content:html,
 						butSubmit:'Установить',
@@ -1806,12 +1799,12 @@ $(document)
 				}
 			});
 			$('#pinchange').click(function() {
-				var html = '<table id="setup-tab">' +
-						'<tr><td class="label">Текущий пин-код:<td><input id="oldpin" type="password" maxlength="10" />' +
-						'<tr><td class="label">Новый пин-код:<td><input id="pin" type="password" maxlength="10" />' +
+				var html = '<table class="bs10">' +
+						'<tr><td class="label r">Текущий пин-код:<td><input id="oldpin" type="password" maxlength="10" />' +
+						'<tr><td class="label r">Новый пин-код:<td><input id="pin" type="password" maxlength="10" />' +
 						'</table>',
 					dialog = _dialog({
-						width:300,
+						width:350,
 						head:'Изменение пин-кода',
 						content:html,
 						butSubmit:'Изменить',
@@ -1845,11 +1838,11 @@ $(document)
 			});
 			$('#pindel').click(function() {
 				var html =
-						'<table id="setup-tab">' +
-							'<tr><td class="label">Текущий пин-код:<td><input id="oldpin" type="password" maxlength="10" />' +
+						'<table class="bs10">' +
+							'<tr><td class="label">Текущий пин-код:<td><input id="oldpin" type="password" />' +
 						'</table>',
 					dialog = _dialog({
-						width:300,
+						width:350,
 						head:'Удаление пин-кода',
 						content:html,
 						butSubmit:'Применить',
@@ -1869,12 +1862,10 @@ $(document)
 						$.post(AJAX_MAIN, send, function(res) {
 							if(res.success) {
 								dialog.close();
-								_msg('Пин-код удалён');
-								document.location.reload();
-							} else {
-								dialog.abort();
-								dialog.err(res.text);
-							}
+								_msg();
+								location.reload();
+							} else
+								dialog.abort(res.text);
 						}, 'json');
 					}
 				}
@@ -2052,9 +2043,6 @@ $(document)
 							remove:1
 						});
 				}, 'json');
-			});
-			$('.var').click(function() {
-				$(this).select();
 			});
 		}
 	});

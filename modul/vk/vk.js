@@ -210,7 +210,7 @@ var VK_SCROLL = 0,
 			return false;
 
 		var html =
-				'<table id="setup-tab">' +
+				'<table class="bs10">' +
 					'<tr><td colspan="2"><div class="_info">»стекло врем€ действи€ пин-кода. “ребуетс€ подтверждение.</div>' +
 					'<tr><td class="label">ѕин-код:<td><input id="tpin" type="password" maxlength="10" />' +
 				'</table>',
@@ -464,8 +464,8 @@ var VK_SCROLL = 0,
 		var t = $(this),
 			id = t.attr('id');
 		o = $.extend({
-			width:360,
 			top:100,
+			width:380,
 			mb:0,      //margin-bottom: отступ снизу от диалога (дл€ календар€ или выпадающих списков)
 			padding:10,//отступ дл€ content
 			head:'head: Ќазвание заголовка',
@@ -2872,18 +2872,6 @@ $(document)
 			if(res.success)
 				cu.removeClass('deleted');
 		}, 'json');
-	})
-
-	.on('click', '.dlink.js .link', function() {//переключение дополнительного списка ссылок
-		var t = $(this),
-			p = t.parent();
-
-		p.find('.sel').removeClass('sel');
-		var i = t.addClass('sel').index(),
-			dlp = $('.dlink-page');
-
-		dlp.addClass('dn');
-		dlp.eq(i).removeClass('dn');
 	})
 
 	.on('click', '._check:not(.disabled)', function() {

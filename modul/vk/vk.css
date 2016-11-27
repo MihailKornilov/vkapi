@@ -461,24 +461,6 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-.dlink{margin:10px}
-.dlink .link{
-	text-decoration:none;
-	display:inline-block;
-	cursor:pointer;
-	color:#45688e;
-	margin-right:10px;
-	font-weight:bold;
-	padding:3px 8px 0;
-	border-radius:2px;
-	height:17px;
-}
-.dlink .link:not(.sel):hover{background-color:#e1e7ed}
-.dlink .sel{background-color:#597da3;color:#FFF}
-
-
-
-
 
 
 
@@ -1046,6 +1028,7 @@ a.add:hover{text-decoration:underline;color:#357}
 
 /* Короткие стили */
 .w15{width:15px}
+.w35{width:35px}
 .w50{width:50px}
 .h50{height:50px}
 .w70{width:70px}
