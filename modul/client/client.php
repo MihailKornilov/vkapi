@@ -943,6 +943,7 @@ function _clientInfo() {//вывод информации о клиенте
 							'<a onclick="_zayavAddMenu()"><b>Новая заявка</b></a>'.
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
+	   (_app('schet_pay') ? '<a class="b" onclick="schetPayEdit()">Новый счёт на оплату</a>' : '').
 							'<a onclick="_clientEdit('.$c['category_id'].')">Редактировать</a>'.
 							(_clientDelAccess($client_id) ? '<a id="client-del">Удалить клиента</a>' : '').
 						'</div>'.

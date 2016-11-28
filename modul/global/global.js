@@ -93,6 +93,9 @@ $(document)
 		if(!v)
 			return;
 
+		if(v != 1)
+			return;
+
 		t.vkHint({
 			msg:'Подсказка про ОГРН',
 			top:-76,

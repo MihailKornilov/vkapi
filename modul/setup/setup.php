@@ -1853,12 +1853,45 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 
 
 function setup_schet_pay() {//счёт на оплату
+	$v = setup_schet_pay_check();
 	return
 	setupPath(array(
 		'name' => 'Настройки счёта на оплату'
-	));
-}
+	)).
+	'<div class="mar10">'.
+		'<table class="bs10 mt20">'.
+			'<tr><td class="w175"><td>'._check('schet-pay-use', 'включение счетов на оплату', $v['use']).
+		'</table>'.
+		'<table id="schet-pay-tab" class="bs10'._dn($v['use']).'">'.
+			'<tr><td class="label w175">Порядковый номер:<td><input type="text" id="nomer_start" class="w50" value="'.$v['nomer_start'].'" />'.
+			'<tr><td class="label">Префикс: <div class="icon icon-hint" val="2"></div><td><input type="text" id="prefix" class="w50" value="'.$v['prefix'].'" />'.
+			'<tr><td class="label topi">Сообщение для клиента:<td><textarea id="msg_client" class="w300 h50">'.$v['msg_client'].'</textarea>'.
+			'<tr><td><td><button class="vk">Сохранить</button>'.
+		'</table>'.
+	'</div>'.
 
+	'<script>setupSchetPay()</script>';
+}
+function setup_schet_pay_check() {//проверка наличия настроек счёта
+	$sql = "SELECT *
+			FROM `_schet_pay_setup`
+			WHERE `app_id`=".APP_ID."
+			LIMIT 1";
+	if(!$r = query_assoc($sql)) {
+		$sql = "INSERT INTO `_schet_pay_setup` (
+					`app_id`,
+					`msg_client`
+				) VALUES (
+					".APP_ID.",
+					'Внимание! Оплата данного счета означает согласие с условиями поставки товара. Уведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом, при наличии доверенности и паспорта.'
+				)";
+		query($sql);
+
+		return setup_schet_pay_check();
+	}
+	
+	return $r;
+}
 
 
 

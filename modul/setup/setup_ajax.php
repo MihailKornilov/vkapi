@@ -2538,6 +2538,51 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_schet_pay_use'://включение использования счетов на оплату
+		$use = _bool($_POST['use']);
+
+		$sql = "SELECT *
+				FROM `_schet_pay_setup`
+				WHERE `app_id`=".APP_ID."
+				LIMIT 1";
+		if(!$r = query_assoc($sql))
+			jsonError('Запись настроек счетов на оплату отсутствует');
+
+		$sql = "UPDATE `_schet_pay_setup`
+				SET `use`=".$use."
+				WHERE `id`=".$r['id'];
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		jsonSuccess();
+		break;
+	case 'setup_schet_pay_save':
+		if(!$nomer_start = _num($_POST['nomer_start']))
+			jsonError('Некорректно указан порядковый номер');
+
+		$prefix = _txt($_POST['prefix']);
+		$msg_client = _txt($_POST['msg_client']);
+
+		$sql = "SELECT *
+				FROM `_schet_pay_setup`
+				WHERE `app_id`=".APP_ID."
+				LIMIT 1";
+		if(!$r = query_assoc($sql))
+			jsonError('Запись настроек счетов на оплату отсутствует');
+
+		$sql = "UPDATE `_schet_pay_setup`
+				SET `nomer_start`=".$nomer_start.",
+					`prefix`='".addslashes($prefix)."',
+					`msg_client`='".addslashes($msg_client)."'
+				WHERE `id`=".$r['id'];
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
+
+		jsonSuccess();
+		break;
+
 	case 'setup_template_add':
 		if(!$name = _txt($_POST['name']))
 			jsonError('Не указано название');

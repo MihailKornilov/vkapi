@@ -338,6 +338,7 @@ function _app($i='all') {//ѕолучение данных о приложении
 		if(!$arr = query_assoc($sql))
 			_appError('Ќевозможно прочитать данные приложени€ дл€ кеша.');
 
+		//организации
 		$org = array(
 			'name' => '',
 			'name_yur' => '',
@@ -367,6 +368,8 @@ function _app($i='all') {//ѕолучение данных о приложении
 			$org = $org_assoc;
 		}
 
+		
+		//банки организаций
 		$bank = array(
 			'bank_bik' => '',
 			'bank_name' => '',
@@ -388,7 +391,23 @@ function _app($i='all') {//ѕолучение данных о приложении
 			);
 		}
 
-		$arr += $org + $bank;
+		
+		//настройки счЄта на оплату
+		$schet_pay = array(
+			'schet_pay' => 0
+		);
+
+		$sql = "SELECT *
+				FROM `_schet_pay_setup`
+				WHERE `app_id`=".APP_ID."
+				LIMIT 1";
+		if($r = query_assoc($sql)) {
+			$schet_pay = array(
+				'schet_pay' => _bool($r['use'])
+			);
+		}
+		
+		$arr += $org + $bank + $schet_pay;
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -970,6 +989,12 @@ function _iconDel($v=array()) {//иконка удалени€ записи в таблице
 	);
 
 	return '<div '.$v['id'].'class="img_del'.$v['class']._tooltip('”далить', -46, 'r').'</div>';
+}
+
+function _dn($v) {//показ/скрытие блока на основании услови€
+	if(empty($v))
+		return ' dn';
+	return '';
 }
 
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через зап€тую

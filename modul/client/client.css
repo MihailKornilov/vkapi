@@ -119,7 +119,7 @@
 }
 #client-info .added u{font-size:10px}
 
-#client-info .right{width:140px;height:auto}
+#client-info .right{height:auto}
 #client-info #dopLinks{border-top:#dae1e8 solid 1px}
 #client-info #dopLinks a{font-weight:normal}
 #client-info #dopLinks._busy{background-position:585px center}

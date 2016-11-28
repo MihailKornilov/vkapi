@@ -2024,6 +2024,18 @@ var _accrualAdd = function(o) {
 				}, 'json');
 			}
 		}
+	},
+
+	schetPayEdit = function() {
+		var html = '<div class="center">Окно создания счёта на оплату</div>',
+			dialog = _dialog({
+				width:450,
+				padding:30,
+				head:'Новый счёт на оплату',
+				content:html,
+				butSubmit:''
+			});
+
 	};
 
 $(document)

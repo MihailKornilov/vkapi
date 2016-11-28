@@ -1989,7 +1989,7 @@ $.fn._select = function(o) {
 	}
 
 	o = $.extend({
-		width:150,			// ширина
+		width:180,			// ширина
 		disabled:0,
 		block:false,       	// расположение селекта
 		bottom:0,           // отступ снизу

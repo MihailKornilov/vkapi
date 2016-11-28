@@ -8,14 +8,12 @@ var _history = function(v, id) {
 	},
 	_historyRight = function() {
 		$('#viewer_id_add')._select({
-			width:140,
 			title0:'Все сотрудники',
 			spisok:HIST_WORKER,
 			func:_history
 		});
 		if(HIST_CAT.length)
 			$('#category_id')._select({
-				width:140,
 				title0:'Любая категория',
 				spisok:HIST_CAT,
 				func:_history

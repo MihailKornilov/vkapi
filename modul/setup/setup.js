@@ -1147,6 +1147,36 @@ var setupOrgEdit = function(org_id) {
 		}
 	},
 
+	setupSchetPay = function() {
+		$('#schet-pay-use')._check(function(v) {
+			$('#schet-pay-tab').toggle();
+			var send = {
+				op:'setup_schet_pay_use',
+				use:v
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success)
+					_msg();
+			}, 'json');
+		});
+		$('#msg_client').autosize();
+		$('.vk').click(function() {
+			var t = $(this),
+				send = {
+					op:'setup_schet_pay_save',
+					nomer_start:$('#nomer_start').val(),
+					prefix:$('#prefix').val(),
+					msg_client:$('#msg_client').val()
+				};
+			t.addClass('_busy');
+			$.post(AJAX_MAIN, send, function(res) {
+				t.removeClass('_busy');
+				if(res.success)
+					_msg();
+			}, 'json');
+		});
+	},
+
 	setupTemplateEdit = function(o) {//создание/редактирование шаблона документов
 		o = $.extend({
 			id:0,
