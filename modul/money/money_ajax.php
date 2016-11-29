@@ -1294,6 +1294,36 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'schet_pay_load':
+		$client_id = _num($_POST['client_id']);
+
+		$send['html'] = utf8(
+			'<table class="bs10">'.
+				'<tr><td class="label r">Cчёт номер:'.
+					'<td><input type="text" class="w35 r grey" value="1" readonly />'.
+						'<span class="ml20">от</span> '.
+						'<input type="hidden" id="date-create" />'.
+				'<tr><td class="label r">Плательщик:'.
+					'<td><input type="hidden" id="client_id" value="'.$client_id.'" />'.
+			'</table>'.
+
+			'<div class="mr20">'.
+				'<table class="_spisokTab mt20">'.
+					'<tr><th class="w15">№'.
+						'<th>Наименование товара'.
+						'<th class="w70">Кол-во'.
+						'<th class="w50">Ед.изм.'.
+						'<th class="w70">Цена'.
+						'<th class="w70">Сумма'.
+				'</table>'.
+
+				'<input type="hidden" id="content" />'.
+			'</div>'
+		);
+
+		jsonSuccess($send);
+		break;
+
 	case 'invoice_add':
 		if(!RULE_SETUP_INVOICE)
 			jsonError();

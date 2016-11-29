@@ -17,7 +17,8 @@ input,textarea{
 input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
-textarea{resize:none}
+textarea{resize:none;height:30px}
+textarea.min{height:15px}
 img{border:none}
 table{border:0;border-spacing:0}
 
@@ -41,6 +42,19 @@ table{border:0;border-spacing:0}
 	position:absolute;
 	z-index:-1;
 }
+
+
+
+/* Ссылка добавления или продолжения списка, при наведении полностью окрашивается */
+.bg-link{
+	display:block;
+	color:#2B587A;
+	cursor:pointer;
+	padding:10px;
+	text-align:center;
+}
+.bg-link:hover{text-decoration:none;background:#F0F2F5}
+
 
 
 
@@ -242,3 +256,43 @@ button.vk.red{background:#b55}
 button.vk.red:hover{background-color:#c66}
 button.vk.grey{background-color: #888}
 button.vk.grey:hover{background-color:#999}
+
+
+
+
+
+
+
+
+
+
+
+
+/* Список в таблице */
+._spisokTab{
+	border-collapse:collapse;
+	border:#D3DBE1 solid 1px;
+	background:#fff;
+	width:100%;
+}
+._spisokTab th{
+	background:#E3E9EE;
+	border:#D3DBE1 solid 1px;
+	color:rgb(81, 103, 122);
+	padding:8px;
+	font-size:14px;
+}
+._spisokTab td{
+	border:#EFF2F5 solid 1px;
+	padding:6px 8px;
+}
+._spisokTab td.topi{padding-top:13px}
+._spisokTab .icon-del.out{
+	position:absolute;
+	right:-25px;
+}
+
+
+
+
+

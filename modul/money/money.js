@@ -2027,16 +2027,148 @@ var _accrualAdd = function(o) {
 	},
 
 	schetPayEdit = function() {
-		var html = '<div class="center">Окно создания счёта на оплату</div>',
-			dialog = _dialog({
-				width:450,
-				padding:30,
+		var dialog = _dialog({
+				top:20,
+				width:770,
 				head:'Новый счёт на оплату',
-				content:html,
+				load:1,
 				butSubmit:''
+			}),
+			send = {
+				op:'schet_pay_load',
+				client_id:CI ? CI.id : 0
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if (res.success)
+				loaded(res);
+			else
+				dialog.loadError();
+		}, 'json');
+		
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('#date-create')._calendar({lost:1});
+			$('#client_id').clientSel({
+				width:300
 			});
-
+			$('#content').schetPayContent();
+		}
 	};
+
+$.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
+	var t = $(this),
+		attr_id = t.attr('id');
+
+	if(!attr_id)
+		return;
+
+	o = $.extend({
+		func:function() {}
+	}, o);
+
+	var html =
+		'<div class="sp-content">' +
+			'<dl></dl>' +
+			'<a class="bg-link mt5">Добавить позицию</a>' +
+			'<div class="itog b mt20"></div>' +
+		'</div>';
+
+	t.after(html);
+	var CONT = t.next(),
+		SORT = CONT.find('dl'),
+		BGL = CONT.find('.bg-link'), //кнопка Добавить позицию
+		ITOG = CONT.find('.itog');   //строка подитога
+
+	SORT.sortable({
+		axis:'y',
+		update:numSet
+	});
+	BGL.click(poleAdd);
+	poleAdd();
+
+	function poleAdd() {//добавление нового поля
+		var html = '<dd>' +
+			'<table class="_spisokTab mt1">' +
+				'<tr><td class="w15 r grey topi curM">' +
+					'<td class="top"><textarea class="min w300"></textarea>' +
+					'<td class="w70 center top"><input type="text" class="sp-count w35 center" />' +
+					'<td class="w50 center topi">шт.' +
+					'<td class="w70 top"><input type="text" class="sp-sum w50 r" />' +
+					'<td class="w70 topi prel">' +
+						'<div class="icon icon-del out' + _tooltip('Удалить позицию', -95, 'r') + '</div>' +
+						'<div class="sp-summa r b"></div>' +
+			'</table>';
+		SORT.append(html);
+		numSet();
+
+		var last = SORT.find('._spisokTab:last'),
+			spCount = last.find('.sp-count'),
+			spSum = last.find('.sp-sum'),
+			spSumma = last.find('.sp-summa');
+
+		//установка фокуса на первое поле
+		last.find('textarea.min')
+			.autosize()
+			.focus()
+			.keyup(itogPrint);
+
+		//удаление поля
+		last.find('.icon-del').click(function() {
+			last.remove();
+			numSet();
+			itogPrint();
+		});
+
+		//подсчёт суммы поля
+		last.find('.sp-count,.sp-sum').keyup(function() {
+			var summa = _num(spCount.val()) * _cena(spSum.val());
+			spSumma.html(summa ? Math.round(summa * 100) / 100 : '');
+		});
+
+
+	}
+	function numSet() {//расстановка порядковых номеров
+		var tab = SORT.find('._spisokTab'),
+			len = tab.length;
+
+		if(!len)
+			return;
+
+		for(var n = 0; n < len; n++)
+			tab.eq(n).find('.curM').html(n + 1);
+	}
+	function itogPrint() {
+		var tab = SORT.find('._spisokTab'),
+			len = tab.length,
+			posCount = 0;
+
+		if(!len) {
+			ITOG.html('');
+			return;
+		}
+
+		for(var n = 0; n < len; n++) {
+			var sp = tab.eq(n),
+				area = sp.find('textarea'),
+				count = sp.find('.sp-count'),
+				sum = sp.find('.sp-sum');
+
+			if(!$.trim(area.val()))
+				continue;
+
+			posCount++;
+		}
+
+		if(!posCount) {
+			ITOG.html('Не все поля заполнены корректно.');
+			return;
+		}
+
+		ITOG.html('Всего наименований ' + posCount + ', на сумму 0 руб.');
+	}
+
+	return t;
+};
 
 $(document)
 	.on('click', '._accrual-add', _accrualAdd)

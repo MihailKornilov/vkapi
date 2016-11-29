@@ -85,7 +85,6 @@ td.label{color:#777}
 td.label em{font-size:10px;color:#aaa;display:block}
 td.top,td.topi{vertical-align:top}
 td.topi{padding-top:3px}
-td.r{text-align:right}
 
 
 ._sort dd{background:#fff}
@@ -1042,28 +1041,41 @@ a.add:hover{text-decoration:underline;color:#357}
 .w250{width:250px}
 .w300{width:300px}
 .w400{width:400px}
+
+.pad15{padding:15px}
+
 .mar8{margin:8px}
 .mar10{margin:10px}
 .mar20{margin:20px}
 .mar020{margin:0 20px}
-.pad15{padding:15px}
+.mt1{margin-top:1px}
 .mt5{margin-top:5px}
 .mr5{margin-right:5px}
+.mr20{margin-right:20px}
+.ml20{margin-left:20px}
 .mt10{margin-top:10px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}
 .mb5{margin-bottom:5px}
 .mb10{margin-bottom:10px}
 .mb20{margin-bottom:20px}
+
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
+
 .b{font-weight:bold}
+
 .red{color:#E22}
 .grey{color:#888}
+
 .db{display:block}
 .dn{display:none}
 .vh{visibility:hidden}
+.wsnw{white-space:nowrap}
+.prel{position:relative}
+
 .center{text-align:center}
+.r{text-align:right}
 .fr{float:right}
 
 .fs11{font-size:11px}
@@ -1075,4 +1087,3 @@ a.add:hover{text-decoration:underline;color:#357}
 .curD{cursor:default}
 .curP{cursor:pointer}
 
-.wsnw{white-space:nowrap}
