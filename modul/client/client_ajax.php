@@ -648,11 +648,13 @@ function _clientValuesCheck($category_id) {//проверка корректности полей при вне
 
 
 
-	$val = _clientFromGet();
-	if(_app('client_from_use')) {
-		if(_app('client_from_require') && !$val)
-			jsonError('Не указан источник, откуда пришёл клиент');
-		$upd[] = "`from_id`=".$val;
+	if($_POST['op'] != 'client_person_add') {//если добавляется не доверенное лицо
+		$val = _clientFromGet();
+		if(_app('client_from_use')) {
+			if(_app('client_from_require') && !$val)
+				jsonError('Не указан источник, откуда пришёл клиент');
+			$upd[] = "`from_id`=".$val;
+		}
 	}
 
 	if(empty($upd))
