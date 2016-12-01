@@ -670,7 +670,7 @@ function salary_worker_zp($v) {
 					'.</div>'
 				: '').
 			'<td class="dtime">'.FullDataTime($r['dtime_add']).
-			'<td class="ed">'._iconEdit($r)._iconDel($r);
+			'<td class="ed">'._iconEdit($r)._iconDel($r + array('del'=>1)); //todo можно удалять з/п за прошлые числа в Купце
 	}
 	$send =
 		'<h3>'.
