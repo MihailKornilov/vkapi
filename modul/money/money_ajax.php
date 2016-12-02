@@ -1297,28 +1297,244 @@ switch(@$_POST['op']) {
 	case 'schet_pay_load':
 		$client_id = _num($_POST['client_id']);
 
-		$send['html'] = utf8(
-			'<table class="bs10">'.
-				'<tr><td class="label r">Cчёт номер:'.
-					'<td><input type="text" class="w35 r grey" value="1" readonly />'.
-						'<span class="ml20">от</span> '.
-						'<input type="hidden" id="date-create" />'.
-				'<tr><td class="label r">Плательщик:'.
-					'<td><input type="hidden" id="client_id" value="'.$client_id.'" />'.
-			'</table>'.
+		$nomer = 1;
+		$date_create = '';
+		$send['content'] = array();
 
-			'<div class="mr20">'.
-				'<table class="_spisokTab mt20">'.
-					'<tr><th class="w15">№'.
-						'<th>Наименование товара'.
-						'<th class="w70">Кол-во'.
-						'<th class="w50">Ед.изм.'.
-						'<th class="w70">Цена'.
-						'<th class="w70">Сумма'.
+		if($schet_id = _num($_POST['schet_id'])) {
+			if(!$schet = _schetPayQuery($schet_id))
+				jsonError('Счёта не существует');
+
+			$client_id = $schet['client_id'];
+			$nomer = $schet['nomer'];
+			$date_create = $schet['date_create'];
+			foreach($schet['content'] as $i => $r) {
+				$r['name'] = utf8($r['name']);
+				$r['cena'] = _cena($r['cena']);
+				$r['summa'] = _cena($r['count'] * $r['cena']);
+				$send['content'][] = $r;
+				unset($send['content'][$i]['app_id']);
+			}
+		}
+
+		$send['html'] = utf8(
+			_schetPayTypeSelect($schet_id).
+			'<div id="schet-pay-content"'.($schet_id ? '' : ' class="dn"').'>'.
+				'<table class="bs10">'.
+					'<tr><td class="label r">Cчёт номер:'.
+						'<td><input type="text" class="w35 r grey" value="'.$nomer.'" readonly />'.
+							'<span class="ml20">от</span> '.
+							'<input type="hidden" id="date-create" value="'.$date_create.'" />'.
+					'<tr><td class="label r">Плательщик:'.
+						'<td><input type="hidden" id="client_id" value="'.$client_id.'" />'.
 				'</table>'.
 
-				'<input type="hidden" id="content" />'.
+				'<div class="mr20">'.
+					'<div id="schet-pay-head" class="center b mt20 fs14"></div>'.
+					'<table class="_spisokTab mt10">'.
+						'<tr><th class="w15">№'.
+							'<th>Наименование товара'.
+							'<th class="w70">Кол-во'.
+							'<th class="w50">Ед.изм.'.
+							'<th class="w70">Цена'.
+							'<th class="w70">Сумма'.
+					'</table>'.
+
+					'<input type="hidden" id="content" />'.
+				'</div>'.
 			'</div>'
+		);
+
+//		print_r($send['content']);
+
+		jsonSuccess($send);
+		break;
+	case 'schet_pay_add'://создание счёта на оплату
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError('Некорректный вид счёта');
+		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
+			jsonError('Некорректная дата создания');
+
+		$date_create = $_POST['date_create'];
+		$client_id = _num($_POST['client_id']);
+		$zayav_id = _num(@$_POST['zayav_id']); //todo @
+
+		if($zayav_id) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError('Заявка не найдена');
+			$client_id = $z['client_id'];
+		}
+
+		if(!$client_id)
+			jsonError('Не указан клиент');
+
+		if(!_clientQuery($client_id))
+			jsonError('Клиент не найден');
+
+
+		if(!$content = schet_pay_content_get())
+			jsonError('Некорректно заполнены поля');
+
+		$sql = "INSERT INTO `_schet_pay` (
+					`app_id`,
+					`type_id`,
+					`nomer`,
+					`client_id`,
+					`zayav_id`,
+					`date_create`,
+					`sum`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$type_id.",
+					".(_maxSql('_schet_pay', 'nomer', 1)).",
+					".$client_id.",
+					".$zayav_id.",
+					'".$date_create."',
+					".schet_pay_content_get(1).",
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		$insert_id = query_insert_id('_schet_pay');
+
+		//внесение содержания
+		$sql = "INSERT INTO `_schet_pay_content` (
+					`app_id`,
+					`name`,
+					`count`,
+					`cena`
+				) VALUES ".implode(',', $content);
+		query($sql);
+		$sql = "UPDATE `_schet_pay_content`
+				SET `schet_id`=".$insert_id."
+				WHERE `app_id`=".APP_ID."
+				  AND !`schet_id`";
+		query($sql);
+
+		$send['schet_id'] = $insert_id;
+		jsonSuccess($send);
+		break;
+	case 'schet_pay_edit'://редактирование счёта на оплату
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError('Некорректный id счёта');
+		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
+			jsonError('Некорректная дата создания');
+
+		$date_create = $_POST['date_create'];
+		$client_id = _num($_POST['client_id']);
+		$zayav_id = _num(@$_POST['zayav_id']); //todo @
+
+		if(!$schet = _schetPayQuery($schet_id))
+			jsonError('Счёта не существует');
+
+		if($zayav_id) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError('Заявка не найдена');
+			$client_id = $z['client_id'];
+		}
+
+		if(!$client_id)
+			jsonError('Не указан клиент');
+
+		if(!_clientQuery($client_id))
+			jsonError('Клиент не найден');
+
+		$content = schet_pay_content_get();
+
+		$sql = "UPDATE `_schet_pay`
+				SET `client_id`=".$client_id.",
+					`zayav_id`=".$zayav_id.",
+					`date_create`='".$date_create."',
+					`sum`=".schet_pay_content_get(1)."
+				WHERE `id`=".$schet_id;
+		query($sql);
+
+		//обновление содержания
+		$sql = "DELETE FROM `_schet_pay_content` WHERE `schet_id`=".$schet_id;
+		query($sql);
+		$sql = "INSERT INTO `_schet_pay_content` (
+					`app_id`,
+					`name`,
+					`count`,
+					`cena`
+				) VALUES ".implode(',', $content);
+		query($sql);
+		$sql = "UPDATE `_schet_pay_content`
+				SET `schet_id`=".$schet_id."
+				WHERE `app_id`=".APP_ID."
+				  AND !`schet_id`";
+		query($sql);
+
+		$send['schet_id'] = $schet_id;
+		jsonSuccess($send);
+		break;
+	case 'schet_pay_show':
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError('Неверный id счёта');
+
+		if(!$schet = _schetPayQuery($schet_id))
+			jsonError('Счёта не существует');
+
+		$content = '';
+		$num = 1;
+		foreach($schet['content'] as $r) {
+			$content .=
+				'<tr><td class="grey r">'.($num++).
+					'<td>'._br($r['name']).
+					'<td class="center">'.$r['count'].
+					'<td class="center">шт.'.
+					'<td class="r">'._sumSpace($r['cena'], 1).
+					'<td class="r">'._sumSpace(_cena($r['count'] * $r['cena']), 1);
+		}
+
+		define('PREVIEW', $schet['type_id'] == 2);
+
+		$send['html'] = utf8(
+			(PREVIEW ?
+				'<div class="_info center">'.
+					'<b>Предварительный счёт.</b>'.
+					'<div class="mt5">Может использоваться только для ознакомления.</div>'.
+					'Функции передачи счёта клиенту и его оплаты недоступны.'.
+					'<br />'.
+					'<button class="vk mt10">Изменить на "Счёт на оплату"</button>'.
+				'</div>'
+			: '').
+			'<table class="bs10">'.
+				'<tr><td class="label r">Плательщик:'.
+					'<td>'._clientVal($schet['client_id'], 'link').
+			'</table>'.
+
+			'<div class="center b mt20 fs14">'.
+				'Счёт на оплату № '.$schet['nomer'].
+				' от '.FullData($schet['date_create']).' г.'.
+			'</div>'.
+
+			'<table class="_spisokTab mt10">'.
+				'<tr><th class="w15">№'.
+					'<th>Наименование товара'.
+					'<th class="w50">Кол-во'.
+					'<th class="w50">Ед.изм.'.
+					'<th class="w70">Цена'.
+					'<th class="w70">Сумма'.
+				$content.
+			'</table>'.
+
+			'<div class="mt10">Всего наименований <b>'.count($schet['content']).'</b>, на сумму <b>'._sumSpace($schet['sum'], 1).'</b> руб.</div>'.
+
+			'<table class="bs10 w100p">'.
+				'<tr><td>'.
+					'<td class="w175">'.
+						'<div class="_menuDop3">'.
+							'<a class="link"><div class="icon icon-edit"></div>Редактировать счёт</a>'.
+							'<a class="link"><div class="icon icon-print"></div>Распечатать</a>'.
+				(!PREVIEW ? '<a class="link"><div class="icon icon-out"></div>Передать клиенту</a>' : '').
+				(!PREVIEW ? '<a class="link b"><div class="icon icon-rub"></div>Оплатить</a>' : '').
+							'<a class="link red"><div class="icon icon-del-red"></div>Удалить</a>'.
+						'</div>'.
+			'</table>'.
+
+			'<div class="bg-link">Показать историю действий со счётом</div>'
 		);
 
 		jsonSuccess($send);
@@ -2519,4 +2735,37 @@ function expense_dtime_old_update_for_kupez($invoice_id, $expense_id, $sum) {//t
 	xcache_unset(CACHE_PREFIX.'invoice');
 
 	return true;
+}
+function schet_pay_content_get($return_sum=0) {//получение содержания счёта на оплату при создании или редактировании
+	if(empty($_POST['content']))
+		jsonError('Отсутствует содержание счёта');
+
+	$content = array();
+	$sum = 0;
+	foreach(explode('###', $_POST['content']) as $r) {
+		$sp = explode('&&&', $r);
+		if(!$name = _txt($sp[0]))
+			continue;
+		if(!$count = _num(@$sp[1]))
+			continue;
+
+		$cena = _cena(@$sp[2]);
+
+		$content[] = "(".
+			APP_ID.",".
+			"'".addslashes($name)."',".
+			$count.",".
+			$cena.
+		")";
+
+		$sum += _num($count) * $cena;
+	}
+
+	if(empty($content))
+		jsonError('Некорректно заполнены поля содержания');
+
+	if($return_sum)
+		return $sum;
+
+	return $content;
 }

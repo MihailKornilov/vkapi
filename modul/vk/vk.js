@@ -580,8 +580,10 @@ var VK_SCROLL = 0,
 				return content;
 			})(),
 			err:dialogErr,
-			loadError:function() {
+			loadError:function(msg) {
 				dialog.find('.load').removeClass('_busy');
+				if(msg)
+					dialog.find('.ms').append('<br /><br /><b>' + msg + '</b>');
 			},
 			butSubmit:function(name) {
 				butSubmit[(name ? 'remove' : 'add') + 'Class']('dn');

@@ -2182,7 +2182,7 @@ function balans_everyday($v) {//отображение баланса за каждый день
 
 /* --- Счета на оплату --- */
 
-function _schetQuery($id, $withDeleted=0) {//запрос данных об одном клиенте
+function _schetQuery($id, $withDeleted=0) {//запрос данных об одном счёте
 	$sql = "SELECT *
 			FROM `_schet`
 			WHERE `app_id`=".APP_ID.
@@ -2410,7 +2410,53 @@ function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка зая
 }
 
 
+function _schetPayQuery($id, $withDel=0) {//запрос данных о счёте на оплату
+	$sql = "SELECT *
+			FROM `_schet_pay`
+			WHERE `app_id`=".APP_ID.
+			  ($withDel ? '' : ' AND !`deleted`')."
+			  AND `id`=".$id;
+	if(!$schet = query_assoc($sql))
+		return false;
+	
+	$sql = "SELECT *
+			FROM `_schet_pay_content`
+			WHERE `schet_id`=".$id."
+			ORDER BY `id`";
+	$schet['content'] = query_arr($sql);
+	
+	return $schet;
+}
+function _schetPayTypeSelect($schet_id) {//вывод выбора вида счёта (для нового счёта)
+	if($schet_id)
+		return '';
 
+	$type = array(
+		1 => '<b>Счёт на оплату</b>'.
+			 '<div class="grey ml20 fs12 mt5 mb20">'.
+				'Будет создан новый счёт на оплату, также произведено начисление клиенту.'.
+			'</div>',
+
+		2 => '<b>Предварительный счёт</b>'.
+			 '<div class="grey ml20 fs12 mt5">'.
+				'Счёт будет создан и сохранён как документ для ознакомления.'.
+				'<br />'.
+				'Начисление клиенту производиться <b>не будет</b>.'.
+				'<br />'.
+				'По данному счёту невозможно будет производить платежи.'.
+				'<br />'.
+				'В дальнейшем этот счёт можно будет перевести "на оплату".'.
+			'</div>'
+	);
+
+	return
+		'<div id="schet-pay-type-select">'.
+			'<div class="hd2">Укажите вид создаваемого счёта:</div>'.
+			'<div class="mar20">'.
+				_radio('schet-pay-type', $type).
+			'</div>'.
+		'</div>';
+}
 
 
 

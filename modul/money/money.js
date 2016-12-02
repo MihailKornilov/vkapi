@@ -2026,23 +2026,27 @@ var _accrualAdd = function(o) {
 		}
 	},
 
-	schetPayEdit = function() {
+	schetPayEdit = function(schet_id) {
+		schet_id = _num(schet_id);
 		var dialog = _dialog({
 				top:20,
-				width:770,
-				head:'Новый счёт на оплату',
+				width:740,
+				head:(schet_id ? 'Редактирование' : 'Создание') + ' счёта на оплату',
 				load:1,
-				butSubmit:''
+				butSubmit:schet_id ? 'Сохранить' : '',
+				submit:submit,
+				cancel:cancel
 			}),
 			send = {
 				op:'schet_pay_load',
+				schet_id:schet_id,
 				client_id:CI ? CI.id : 0
 			};
 		$.post(AJAX_MAIN, send, function(res) {
-			if (res.success)
+			if(res.success)
 				loaded(res);
 			else
-				dialog.loadError();
+				dialog.loadError(res.text);
 		}, 'json');
 		
 		function loaded(res) {
@@ -2051,7 +2055,67 @@ var _accrualAdd = function(o) {
 			$('#client_id').clientSel({
 				width:300
 			});
-			$('#content').schetPayContent();
+			$('#content').schetPayContent({
+				spisok:res.content
+			});
+
+			$('#schet-pay-type')._radio(function(v) {
+				$('#schet-pay-type-select').hide();
+				$('#schet-pay-content').show();
+				$('#schet-pay-head').html(v == 1 ? 'НОВЫЙ СЧЁТ НА ОПЛАТУ' : 'ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ');
+				dialog.butSubmit(v == 1 ? 'Сформировать счёт на оплату' : 'Сохранить предварительный счёт');
+			});
+		}
+		function submit() {
+			var send = {
+				op:'schet_pay_' + (schet_id ? 'edit' : 'add'),
+				schet_id:schet_id,
+				type_id:$('#schet-pay-type').val(),
+				date_create:$('#date-create').val(),
+				client_id:$('#client_id').val(),
+				content:$('#content').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if (res.success) {
+					dialog.close();
+					schetPayShow(res.schet_id);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+		function cancel() {
+			if(!schet_id)
+				return;
+			schetPayShow(schet_id);
+		}
+	},
+	schetPayShow = function(schet_id) {//просмотр счёта на оплату
+		var dialog = _dialog({
+				top:20,
+				width:740,
+				head:'Просмотр счёта на оплату',
+				load:1,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			}),
+			send = {
+				op:'schet_pay_show',
+				schet_id:schet_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				loaded(res);
+			else
+				dialog.loadError(res.text);
+		}, 'json');
+
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('.icon-edit').parent().click(function() {
+				dialog.close();
+				schetPayEdit(schet_id);
+			});
 		}
 	};
 
@@ -2063,47 +2127,66 @@ $.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
 		return;
 
 	o = $.extend({
+		spisok:[],
 		func:function() {}
 	}, o);
 
 	var html =
 		'<div class="sp-content">' +
 			'<dl></dl>' +
-			'<a class="bg-link mt5">Добавить позицию</a>' +
-			'<div class="itog b mt20"></div>' +
+			'<a class="bg-link mt5 mb20">Добавить позицию</a>' +
+			'<div class="no-correct red fr dn">Не все поля заполнены корректно.</div>' +
+			'<div class="itog b mt5"></div>' +
 		'</div>';
 
 	t.after(html);
+
 	var CONT = t.next(),
 		SORT = CONT.find('dl'),
 		BGL = CONT.find('.bg-link'), //кнопка Добавить позицию
-		ITOG = CONT.find('.itog');   //строка подитога
+		NO_CORRECT = CONT.find('.no-correct'),  //строка вывода сообщения об ошибке красным цветом
+		ITOG = CONT.find('.itog');              //строка подитога
 
 	SORT.sortable({
 		axis:'y',
-		update:numSet
+		update:function() {
+			numSet();
+			itogPrint();
+		}
 	});
 	BGL.click(poleAdd);
-	poleAdd();
 
-	function poleAdd() {//добавление нового поля
+	if(o.spisok.length)
+		for(var n = 0; n < o.spisok.length; n++)
+			poleAdd(o.spisok[n]);
+	else
+		poleAdd();
+
+	function poleAdd(sp) {//добавление нового поля
+		sp = $.extend({
+			name:'',
+			count:1,
+			cena:'',
+			summa:'',
+		}, sp);
+
 		var html = '<dd>' +
 			'<table class="_spisokTab mt1">' +
 				'<tr><td class="w15 r grey topi curM">' +
-					'<td class="top"><textarea class="min w300"></textarea>' +
-					'<td class="w70 center top"><input type="text" class="sp-count w35 center" />' +
+					'<td class="top"><textarea class="min w300">' + sp.name + '</textarea>' +
+					'<td class="w70 center top"><input type="text" class="sp-count w35 center" value="' + sp.count + '" />' +
 					'<td class="w50 center topi">шт.' +
-					'<td class="w70 top"><input type="text" class="sp-sum w50 r" />' +
+					'<td class="w70 top"><input type="text" class="sp-cena w50 r" value="' + sp.cena + '" />' +
 					'<td class="w70 topi prel">' +
 						'<div class="icon icon-del out' + _tooltip('Удалить позицию', -95, 'r') + '</div>' +
-						'<div class="sp-summa r b"></div>' +
+						'<div class="sp-summa r b">' + sp.summa + '</div>' +
 			'</table>';
 		SORT.append(html);
 		numSet();
 
 		var last = SORT.find('._spisokTab:last'),
 			spCount = last.find('.sp-count'),
-			spSum = last.find('.sp-sum'),
+			spCena = last.find('.sp-cena'),
 			spSumma = last.find('.sp-summa');
 
 		//установка фокуса на первое поле
@@ -2120,12 +2203,13 @@ $.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
 		});
 
 		//подсчёт суммы поля
-		last.find('.sp-count,.sp-sum').keyup(function() {
-			var summa = _num(spCount.val()) * _cena(spSum.val());
-			spSumma.html(summa ? Math.round(summa * 100) / 100 : '');
+		last.find('.sp-count,.sp-cena').keyup(function() {
+			var summa = _num(spCount.val()) * _cena(spCena.val());
+			spSumma.html(Math.round(summa * 100) / 100);
+			itogPrint();
 		});
 
-
+		itogPrint();
 	}
 	function numSet() {//расстановка порядковых номеров
 		var tab = SORT.find('._spisokTab'),
@@ -2140,31 +2224,46 @@ $.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
 	function itogPrint() {
 		var tab = SORT.find('._spisokTab'),
 			len = tab.length,
-			posCount = 0;
+			posCount = 0,
+			summa = 0, //общая сумма;
+			correct = true,
+			val = []; //переменная для отправки
 
 		if(!len) {
 			ITOG.html('');
+			t.val('');
 			return;
 		}
 
 		for(var n = 0; n < len; n++) {
 			var sp = tab.eq(n),
-				area = sp.find('textarea'),
-				count = sp.find('.sp-count'),
-				sum = sp.find('.sp-sum');
+				spArea = sp.find('textarea'),
+				spCount = sp.find('.sp-count'),
+				spCena = sp.find('.sp-cena'),
 
-			if(!$.trim(area.val()))
+				area = $.trim(spArea.val()),          //проверка правильности заполнения Наименования
+				count = _num(spCount.val()),             //проверка правильности заполнения Количества
+				cena_test = REGEXP_CENA.test(spCena.val()),//проверка правильности заполнения Суммы
+				cena = _cena(spCena.val());
+
+			spArea[(area ? 'remove' : 'add') + 'Class']('err');
+			spCount[(count ? 'remove' : 'add') + 'Class']('err');
+			spCena[(cena_test ? 'remove' : 'add') + 'Class']('err');
+
+			if(!area || !count || !cena_test) {
+				correct = false;
 				continue;
+			}
 
+			summa += _cena(sp.find('.sp-summa').html());
 			posCount++;
+
+			val.push(area + '&&&' + count + '&&&' + cena);
 		}
 
-		if(!posCount) {
-			ITOG.html('Не все поля заполнены корректно.');
-			return;
-		}
-
-		ITOG.html('Всего наименований ' + posCount + ', на сумму 0 руб.');
+		NO_CORRECT[(correct ? 'add' : 'remove') + 'Class']('dn');
+		ITOG.html('Всего наименований ' + posCount + ', на сумму ' + Math.round(summa * 100) / 100 + ' руб.');
+		t.val(val.join('###'));
 	}
 
 	return t;

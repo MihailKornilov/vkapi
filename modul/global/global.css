@@ -17,8 +17,10 @@ input,textarea{
 input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
+input.err{background:#fff2f2}
 textarea{resize:none;height:30px}
 textarea.min{height:15px}
+textarea.err{background:#fff2f2}
 img{border:none}
 table{border:0;border-spacing:0}
 
@@ -63,22 +65,22 @@ table{border:0;border-spacing:0}
 /* »конки */
 .icon{
 	display:inline-block;
-	background:url(../../img/icon_vk.png?3) no-repeat;
+	background:url(../../img/icon_vk.png?15) no-repeat;
 	width:18px;
 	height:18px;
 	padding:0 1px;
 	cursor:pointer;
 }
-.icon-empty{
-	display:inline-block;
-	width:20px;
-	height:18px;
-}
+.icon-empty{background-position:0 -5000px}
 .icon-client{background-position:0 0}
 .icon-del{background-position:0 -20px}
+.icon-del-red{background-position:0 -120px}
 .icon-zp{background-position:0 -40px}
 .icon-vk{background-position:0 -60px}
 .icon-edit{background-position:0 -80px}
+.icon-out{background-position:0 -100px}
+.icon-rub{background-position:0 -140px}
+.icon-print{background-position:0 -160px}
 .icon-hint{
 	background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAAAXNSR0IArs4c6QAAAitJREFUOBGdVDFoU1EUvfe9/5UPKRXBQRelglCczOAmDloqTSPo4NzZmq9JC652kkJIYmi1Y+cOijZFRQeLm2DAwerUUReVSgO1Sf+73vPTX76/RdA35L77zjn3P+47N0yZVa4tBeznrpLQRWIeEnJHmMwGiawT06r0Os/qlRtbaRmnk+mHrcsustN61hbpvTSH+eMmHf85QF8H3bacZfZHFcsbG1WrN8dfJ9q9IpX5lQmO+Hpk3d3G5PinhJCNd+ZbwzYys2LlcW2ysAjc4Ac3QAG305n4WwFwgYMHPnQ4434PBp44E5XTBcrN1gWF72lfzjPJF3FUr98uLECEhRsZZ+vS27xm4iZqD/4ogOayWdYiw0JSFaEtNvwofLB8qV+ifyPdt6E3eAVm9yIBEXt+cFJE3pO4SqNUmHHM93FuiM8hJgvNh97DM5IfrSUA4lyp+FlD/NVSc+mYFQk17xqWV8CThdeTLg8Z+ADPmADpeGv26QmPcu+E6LSL3GgtLH5I49BB78FI8IGC39IE7L3AXmGmU454rFEuvsni0Al5G9oTWYeRsoQ4j7afk5OZ7vfO24PwWKd67RWt7jpxH8/YYES7GR4aDM7sA/Ug1qneYBY0z+Pds0QR1xXhX8ZSlMV2+XnoY9vDebJjQjhRh+tHVpDN1aBHjZdbZM81MUOx7bHBLAA46EbpIrFTlQd+MoR7Awji1NzKiIiZ0m07NqDv1v5pipOv/c//yW90GxY+MmYg4gAAAABJRU5ErkJggg==") no-repeat 0 0;
 	margin-bottom:-5px;
@@ -156,6 +158,23 @@ table{border:0;border-spacing:0}
 ._menuDop2 .sel{background-color:#597da3;color:#fff}
 ._menuDop2 .link:hover{text-decoration:none}
 ._menuDop2 .link:not(.sel):hover{background-color:#e9edf1}
+
+/* type 3 */
+._menuDop3{margin:5px 0 10px}
+._menuDop3 .link{
+	display:block;
+	padding:10px;
+}
+._menuDop3 .link:hover{
+	text-decoration:none;
+	background-color:#e9edf1;
+}
+._menuDop3 .link .icon{float:left;margin:-1px 3px 0 0}
+
+
+
+
+
 
 
 
