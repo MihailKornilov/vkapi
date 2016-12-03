@@ -391,6 +391,17 @@ var
 		}
 	},
 
+	clientDel = function(client_id) {
+		_dialogDel({
+			id:client_id,
+			head:'клиента',
+			op:'client_del',
+			func:function() {
+				location.href = URL + '&p=client';
+			}
+		});
+	},
+	
 	_clientSpisok = function(v, id) {
 		_filterSpisok(CLIENT, v, id);
 		$('.filter')[CLIENT.find ? 'hide' : 'show']();
@@ -708,16 +719,6 @@ $(document)
 					edit:1,
 					client_id:CI.id,
 					client:CI.name
-				});
-			});
-			$('#client-del').click(function() {
-				_dialogDel({
-					id:CI.id,
-					head:'клиента',
-					op:'client_del',
-					func:function() {
-						location.href = URL + '&p=client';
-					}
 				});
 			});
 			$('#zayav-type-id')._radio({

@@ -248,13 +248,17 @@ switch(@$_POST['op']) {
 		break;
 	case 'client_del':
 		if(!$client_id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный id клиента');
 
 		if(!$r = _clientQuery($client_id))
-			jsonError();
+			jsonError('Клиента не существует');
 
-		if(!_clientDelAccess($client_id))
-			jsonError();
+		if($r['deleted'])
+			jsonError('Клиент уже был удалён');
+
+		$delAccess = _clientDelAccess($client_id);
+		if($delAccess !== true)
+			jsonError($delAccess);
 
 		$sql = "UPDATE `_client` SET `deleted`=1 WHERE `id`=".$client_id;
 		query($sql);

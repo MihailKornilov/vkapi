@@ -67,24 +67,21 @@
 
 /* Информация о клиенте */
 #client-info .left{padding-bottom:10px}
-#client-info #client-del{color:#e00}
-#client-info #ci-cat{color:#999;margin:10px 0 0 20px}
-#client-info #ci-name{
-	color:#31618C;
-	font-size:12px;
-	font-weight:bold;
-	margin:3px 5px 5px 20px;
-}
+#client-info #ci-name{color:#31618C}
+#client-info .ci-acc,
+#client-info .ci-pay,
+#client-info .ci-refund,
 #client-info .ci-balans{
-	float:right;
-	margin:22px 8px 0 0;
-	font-size:12px;
-	font-weight:bold;
-	background-color:#ffa;
-	border:#e8e8aa solid 1px;
-	padding:3px 8px;
+	border-left:#D3DBE1 solid 1px;
+	border-bottom:#D3DBE1 solid 1px;
+	border-right:#D3DBE1 solid 1px;
+	padding:6px 8px;
 }
-#client-info #ci-tab{border-spacing:6px 7px;margin:0 10px 0 26px}
+#client-info .ci-acc{color:#07a}
+#client-info .ci-pay{color:#090}
+#client-info .ci-refund{color:#800;background:#fee}
+#client-info .ci-balans{background-color:#ffc}
+#client-info .ci-balans:hover{background-color:#ff9}
 
 #client-info #pasp-tab{border-spacing:2px 0}
 #client-info #pasp-tab .label{width:85px}

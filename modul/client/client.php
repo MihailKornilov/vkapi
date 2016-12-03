@@ -252,11 +252,6 @@ function _clientPoleInfo($id, $v=array()) {//ассоциативный массив HTML используе
 				return '';
 			return '<tr><td class="label">{label}:<td><b>'.$v['skidka'].'</b>%';
 
-		case 11://Связь с сотрудником
-			if(!$v['worker_id'])
-				return '';
-			return '<tr><td class="label">{label}:<td>'._clientVal($v['id'], 'worker');
-
 		case 13://ОГРН
 			if(empty($v['ogrn']))
 				return '';
@@ -780,32 +775,32 @@ function _clientDelAccess($client_id) {//разрешение на удаление клиента
 	//Наличие заявок
 	$sql = "SELECT COUNT(*) FROM `_zayav` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'На клиента внесены заявки';
 
 	//Наличие начислений
 	$sql = "SELECT COUNT(*) FROM `_money_accrual` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'У клиента есть начисления';
 
 	//Наличие счетов на оплату
 	$sql = "SELECT COUNT(*) FROM `_schet` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'У клиента есть счета на оплату';
 
 	//Наличие платежей
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'У клиента производились платежи';
 
 	//Наличие возвратов
 	$sql = "SELECT COUNT(*) FROM `_money_refund` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'У клиента есть возвраты';
 
 	//Является доверенным лицом
 	$sql = "SELECT COUNT(*) FROM `_client_person` WHERE `client_id`=".$client_id;
 	if(query_value($sql))
-		return false;
+		return 'Клиент является доверенным лицом';
 
 	return true;
 }
@@ -927,10 +922,9 @@ function _clientInfo() {//вывод информации о клиенте
 		'<div id="client-info">'.
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
-						_clientInfoBalans($c).
-						'<div id="ci-cat">'._clientCategory($c['category_id']).'</div>'.
-						'<div id="ci-name">'.$c['name'].'</div>'.
-						'<table id="ci-tab">'._clientPole(array('i'=>'info') + $c).'</table>'.
+						_clientInfoTop($c).
+						'<div id="ci-name" class="mar10 b fs14">'.$c['name'].'</div>'.
+						'<table class="bs5 ml20">'._clientPole(array('i'=>'info') + $c).'</table>'.
 						_clientInfoToPerson($client_id).
 						'<div id="ci-person">'._clientInfoPerson($client_id).'</div>'.
 						'<div class="added">'.
@@ -938,8 +932,8 @@ function _clientInfo() {//вывод информации о клиенте
 		   ($c['from_id'] ? '<br />Источник: <u>'._clientFrom($c['from_id']).'</u>.' : '').
 						'</div>'.
 
-(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">Счёт на оплату 1</a><br />' : ''). //todo удалить
-(APP_ID == 4872135 ? '<a onclick="schetPayShow(3)">Счёт на оплату 3</a>' : ''). //todo удалить
+//(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">Счёт на оплату 1</a><br />' : ''). //todo удалить
+//(APP_ID == 4872135 ? '<a onclick="schetPayShow(3)">Счёт на оплату 3</a>' : ''). //todo удалить
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
@@ -947,8 +941,6 @@ function _clientInfo() {//вывод информации о клиенте
 							'<a class="_remind-add">Новое напоминание</a>'.
 							'<a id="client-schet-add">Счёт на оплату</a>'.
 	   (_app('schet_pay') ? '<a class="b" onclick="schetPayEdit()">Новый счёт на оплату</a>' : '').
-							'<a onclick="_clientEdit('.$c['category_id'].')">Редактировать</a>'.
-							(_clientDelAccess($client_id) ? '<a id="client-del">Удалить клиента</a>' : '').
 						'</div>'.
 			'</table>'.
 
@@ -978,13 +970,69 @@ function _clientInfo() {//вывод информации о клиенте
 
 		'</div>';
 }
-function _clientInfoBalans($r) {//отображение текущего баланса клиента
+function _clientInfoTop($r) {
+	/*  отображение название категории
+		текущего баланса клиента
+		суммы начислений
+		суммы оплат
+		иконка что клиент является сотрудником
+		иконка редактирования
+		иконка удаления
+	*/
+
+	//сумма начислений
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_accrual`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$r['id'];
+	$accrual = _cena(query_value($sql));
+
+	//сумма платежей без учёта проданных товаров
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_income`
+			WHERE `app_id`=".APP_ID."
+			  AND !`tovar_id`
+			  AND `confirm` NOT IN (1,3)
+			  AND !`deleted`
+			  AND `client_id`=".$r['id'];
+	$income = _cena(query_value($sql));
+
+	//сумма возвратов
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `client_id`=".$r['id'];
+	$refund = _cena(query_value($sql));
+
+	//сумма начислений по номерам газет
+	$sql = "SELECT IFNULL(SUM(`cena`),0)
+			FROM `_zayav_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `client_id`=".$r['id'];
+	$accrual += round(query_value($sql), 2);
+
+
 	return
-		'<a style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
-		  ' onclick="_balansShow(2,'.$r['id'].')"'.
-		  ' class="ci-balans'._tooltip('Баланс', -19).
-			_sumSpace(_cena($r['balans'], 1)).
-		'</a>';
+	'<table class="w100p collaps">'.
+		'<tr><td><div class="grey fs12 mt10 ml10">'.
+					_clientCategory($r['category_id']).
+				'</div>'.
+($accrual ? '<td class="ci-acc w50 center curD wsnw fs12'._tooltip('Общая сумма начислений', -55)._sumSpace($accrual) : '').
+ ($income || $accrual ? '<td class="ci-pay w50 center curD wsnw fs12'._tooltip('Общая сумма платежей', -50)._sumSpace($income) : '').
+ ($refund ? '<td class="ci-refund w50 center curD wsnw fs12'._tooltip('Общая сумма возвратов', -53)._sumSpace($refund) : '').
+			'<td onclick="_balansShow(2,'.$r['id'].')"'.
+			   ' style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
+			   ' class="ci-balans b w50 center curP wsnw fs14'._tooltip('Текущий баланс', -26).
+					_sumSpace(_cena($r['balans'], 1)).
+			'<td class="w100">'.
+				'<div class="mt5 mr5 r">'.
+					($r['worker_id'] ? '<a href="'.URL.'&p=report&d=salary&id='.$r['worker_id'].'" class="icon icon-worker center'._tooltip('Клиент является сотрудником<br />Перейти на страницу з/п сотрудника', -109, '', 1).'</a>' : '').
+					'<div onclick="_clientEdit('.$r['category_id'].')" class="icon icon-edit'._tooltip('Редактировать данные клиента', -94).'</div>'.
+					(_clientDelAccess($r['id']) === true ? '<div onclick="clientDel('.$r['id'].')" class="icon icon-del-red'._tooltip('Удалить клиента', -52).'</div>' : '').
+				'</div>'.
+	'</table>';
 }
 function _clientInfoToPerson($client_id) {//для кого этот клиент является доверенным лицом
 	$sql = "SELECT `client_id`

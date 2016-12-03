@@ -912,7 +912,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	opacity:.85;
 	z-index:10000;
 }
-._tooltip .ttdiv.x2{top:-41px}
+._tooltip .ttdiv.x2{top:-43px}
 ._tooltip:not(:hover) .ttdiv,._tooltip .ttdiv:hover{display:none}
 ._tooltip .ttmsg{
 	font-size:12px;
@@ -1052,6 +1052,7 @@ a.add:hover{text-decoration:underline;color:#357}
 .mt5{margin-top:5px}
 .mr5{margin-right:5px}
 .mr20{margin-right:20px}
+.ml10{margin-left:10px}
 .ml20{margin-left:20px}
 .mt10{margin-top:10px}
 .mt20{margin-top:20px}
@@ -1060,6 +1061,7 @@ a.add:hover{text-decoration:underline;color:#357}
 .mb10{margin-bottom:10px}
 .mb20{margin-bottom:20px}
 
+.collaps{border-collapse:collapse}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 
@@ -1067,6 +1069,8 @@ a.add:hover{text-decoration:underline;color:#357}
 
 .red{color:#E22}
 .grey{color:#888}
+
+.bge{background-color:#ffa}
 
 .db{display:block}
 .dn{display:none}

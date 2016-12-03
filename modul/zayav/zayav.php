@@ -713,6 +713,9 @@ function _zayavTooltip($z, $v) {
 		'</table>';
 }
 function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством заявок в список клиентов
+	if(APP_ID == 3495523)//todo не показывать в Купце - удалить
+		return $spisok;
+
 	//получение статусов заявок, которые есть у текущих клиентов
 	$sql = "SELECT DISTINCT `status_id` `id`
 			FROM `_zayav`
