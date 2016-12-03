@@ -2058,12 +2058,13 @@ var _accrualAdd = function(o) {
 			$('#content').schetPayContent({
 				spisok:res.content
 			});
-
 			$('#schet-pay-type')._radio(function(v) {
 				$('#schet-pay-type-select').hide();
 				$('#schet-pay-content').show();
-				$('#schet-pay-head').html(v == 1 ? 'НОВЫЙ СЧЁТ НА ОПЛАТУ' : 'ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ');
-				dialog.butSubmit(v == 1 ? 'Сформировать счёт на оплату' : 'Сохранить предварительный счёт');
+				$('#schet-pay-head').html(v == 1 ? 'НОВЫЙ СЧЁТ НА ОПЛАТУ' : 'ОЗНАКОМИТЕЛЬНЫЙ СЧЁТ');
+				dialog.butSubmit(v == 1 ? 'Сформировать счёт на оплату' : 'Сохранить ознакомительный счёт');
+				if(v == 2)
+					$('#nomer').val('-');
 			});
 		}
 		function submit() {
@@ -2116,10 +2117,55 @@ var _accrualAdd = function(o) {
 				dialog.close();
 				schetPayEdit(schet_id);
 			});
+			$('#schet-pay-to-pay').click(function() {
+				schetPayToPay(schet_id, dialog);
+			});
+			$('.icon-del-red').parent().click(function() {
+				_dialogDel({
+					id:schet_id,
+					head:'счёта на оплату',
+					op:'schet_pay_del',
+					func:function() {
+						dialog.close();
+						schetPayShow(schet_id);
+					}
+				});
+			});
+		}
+	},
+	schetPayToPay = function(schet_id, schet_dialog) {//перевод ознакомительного счёта на счёт на оплату
+		var html =
+				'<b>Будут выполнены следующие действия:</b>' +
+				'<div class="mt5 ml20">1. Счёту будет присвоен порядковый номер.</div>' +
+				'<div class="mt5 ml20">2. Клиенту будет произведено начисление на суммy, указанную в счёте.</div>' +
+				'<div class="mt5 ml20">3. Счёт можно будет передавать клиенту</div>' +
+				'<div class="mt5 ml20">4. По счёту можно будет производить платежи.</div>',
+			dialog = _dialog({
+				width:540,
+				padding:30,
+				head:'Изменение статуса счёта',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'schet_pay_to_pay',
+				schet_id:schet_id
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					schet_dialog.close();
+					schetPayShow(schet_id);
+				} else
+					dialog.err(res.text);
+			}, 'json');
 		}
 	};
 
-$.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
+$.fn.schetPayContent = function(o) {//составление списка содержания для расчётного счёта
 	var t = $(this),
 		attr_id = t.attr('id');
 
@@ -2167,7 +2213,7 @@ $.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
 			name:'',
 			count:1,
 			cena:'',
-			summa:'',
+			summa:''
 		}, sp);
 
 		var html = '<dd>' +
@@ -2241,9 +2287,9 @@ $.fn.schetPayContent = function(o) {//составление списка для расчётного счёта
 				spCount = sp.find('.sp-count'),
 				spCena = sp.find('.sp-cena'),
 
-				area = $.trim(spArea.val()),          //проверка правильности заполнения Наименования
-				count = _num(spCount.val()),             //проверка правильности заполнения Количества
-				cena_test = REGEXP_CENA.test(spCena.val()),//проверка правильности заполнения Суммы
+				area = $.trim(spArea.val()),                //проверка правильности заполнения Наименования
+				count = _num(spCount.val()),                //проверка правильности заполнения Количества
+				cena_test = REGEXP_CENA.test(spCena.val()), //проверка правильности заполнения Суммы
 				cena = _cena(spCena.val());
 
 			spArea[(area ? 'remove' : 'add') + 'Class']('err');

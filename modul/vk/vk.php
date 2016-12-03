@@ -403,7 +403,8 @@ function _app($i='all') {//Получение данных о приложении
 				LIMIT 1";
 		if($r = query_assoc($sql)) {
 			$schet_pay = array(
-				'schet_pay' => _bool($r['use'])
+				'schet_pay' => _bool($r['use']),
+				'schet_nomer_start' => _num($r['nomer_start'])
 			);
 		}
 		

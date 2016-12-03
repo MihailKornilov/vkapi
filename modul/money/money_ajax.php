@@ -1297,7 +1297,6 @@ switch(@$_POST['op']) {
 	case 'schet_pay_load':
 		$client_id = _num($_POST['client_id']);
 
-		$nomer = 1;
 		$date_create = '';
 		$send['content'] = array();
 
@@ -1322,7 +1321,7 @@ switch(@$_POST['op']) {
 			'<div id="schet-pay-content"'.($schet_id ? '' : ' class="dn"').'>'.
 				'<table class="bs10">'.
 					'<tr><td class="label r">Cчёт номер:'.
-						'<td><input type="text" class="w35 r grey" value="'.$nomer.'" readonly />'.
+						'<td><input type="text" class="w35 r grey" id="nomer" value="'.schet_pay_nomer_next().'" readonly />'.
 							'<span class="ml20">от</span> '.
 							'<input type="hidden" id="date-create" value="'.$date_create.'" />'.
 					'<tr><td class="label r">Плательщик:'.
@@ -1344,8 +1343,6 @@ switch(@$_POST['op']) {
 				'</div>'.
 			'</div>'
 		);
-
-//		print_r($send['content']);
 
 		jsonSuccess($send);
 		break;
@@ -1371,7 +1368,6 @@ switch(@$_POST['op']) {
 		if(!_clientQuery($client_id))
 			jsonError('Клиент не найден');
 
-
 		if(!$content = schet_pay_content_get())
 			jsonError('Некорректно заполнены поля');
 
@@ -1387,7 +1383,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".$type_id.",
-					".(_maxSql('_schet_pay', 'nomer', 1)).",
+					".($type_id == 2 ? '-' : '').schet_pay_nomer_next().",
 					".$client_id.",
 					".$zayav_id.",
 					'".$date_create."',
@@ -1473,7 +1469,7 @@ switch(@$_POST['op']) {
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError('Неверный id счёта');
 
-		if(!$schet = _schetPayQuery($schet_id))
+		if(!$schet = _schetPayQuery($schet_id, 1))
 			jsonError('Счёта не существует');
 
 		$content = '';
@@ -1493,11 +1489,11 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(
 			(PREVIEW ?
 				'<div class="_info center">'.
-					'<b>Предварительный счёт.</b>'.
+					'<b>Ознакомительный счёт.</b>'.
 					'<div class="mt5">Может использоваться только для ознакомления.</div>'.
 					'Функции передачи счёта клиенту и его оплаты недоступны.'.
 					'<br />'.
-					'<button class="vk mt10">Изменить на "Счёт на оплату"</button>'.
+					'<button class="vk mt10" id="schet-pay-to-pay">Изменить статус на "Счёт на оплату"</button>'.
 				'</div>'
 			: '').
 			'<table class="bs10">'.
@@ -1506,7 +1502,7 @@ switch(@$_POST['op']) {
 			'</table>'.
 
 			'<div class="center b mt20 fs14">'.
-				'Счёт на оплату № '.$schet['nomer'].
+				(PREVIEW ? 'Ознакомительный счёт' : 'Счёт на оплату № '.$schet['nomer']).
 				' от '.FullData($schet['date_create']).' г.'.
 			'</div>'.
 
@@ -1522,7 +1518,7 @@ switch(@$_POST['op']) {
 
 			'<div class="mt10">Всего наименований <b>'.count($schet['content']).'</b>, на сумму <b>'._sumSpace($schet['sum'], 1).'</b> руб.</div>'.
 
-			'<table class="bs10 w100p">'.
+			'<table class="bs10 w100p'.($schet['deleted'] ? ' dn' : '').'">'.
 				'<tr><td>'.
 					'<td class="w175">'.
 						'<div class="_menuDop3">'.
@@ -1534,10 +1530,58 @@ switch(@$_POST['op']) {
 						'</div>'.
 			'</table>'.
 
+			($schet['deleted'] ? '<div class="_info mt20 red center b fs14">Счёт удалён.</div>' : '').
+
 			'<div class="bg-link">Показать историю действий со счётом</div>'
 		);
 
 		jsonSuccess($send);
+		break;
+	case 'schet_pay_to_pay'://изменение статуса счёта на оплату
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError('Неверный id счёта');
+
+		if(!$schet = _schetPayQuery($schet_id))
+			jsonError('Счёта не существует');
+
+		if($schet['type_id'] != 2)
+			jsonError('Счёт не является ознакомительным');
+
+		$sql = "UPDATE `_schet_pay`
+				SET `type_id`=1,
+					`nomer`=".schet_pay_nomer_next()."
+				WHERE `id`=".$schet_id;
+		query($sql);
+
+		jsonSuccess();
+		break;
+	case 'schet_pay_del'://удаление счёта на оплату
+		if(!$schet_id = _num($_POST['id']))
+			jsonError('Неверный id счёта');
+
+		if(!$schet = _schetPayQuery($schet_id))
+			jsonError('Счёта не существует');
+
+		if($schet['deleted'])
+			jsonError('Счёт уже был удалён');
+
+		
+		
+//		jsonError('По этому счёту уже производились платежи');
+
+		//удаление начисления
+		//отвязка картриджей от счёта
+		//обновление наличия товара
+//		_zayavBalansUpdate($r['zayav_id']);
+//		_salaryZayavBonus($r['zayav_id']);
+		//внесение баланса для клиента
+
+		$sql = "UPDATE `_schet_pay`
+				SET `deleted`=1
+				WHERE `id`=".$schet_id;
+		query($sql);
+
+		jsonSuccess();
 		break;
 
 	case 'invoice_add':
@@ -2769,3 +2813,9 @@ function schet_pay_content_get($return_sum=0) {//получение содержания счёта на о
 
 	return $content;
 }
+function schet_pay_nomer_next() {//очередной порядковый номер счёта
+	$nomer = _app('schet_nomer_start');
+	$max = _maxSql('_schet_pay', 'nomer', 1);
+	return $nomer > $max ? $nomer : $max;
+}
+

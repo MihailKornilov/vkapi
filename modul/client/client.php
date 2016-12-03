@@ -938,7 +938,8 @@ function _clientInfo() {//вывод информации о клиенте
 		   ($c['from_id'] ? '<br />»сточник: <u>'._clientFrom($c['from_id']).'</u>.' : '').
 						'</div>'.
 
-(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">—чЄт на оплату 1</a>' : ''). //todo удалить
+(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">—чЄт на оплату 1</a><br />' : ''). //todo удалить
+(APP_ID == 4872135 ? '<a onclick="schetPayShow(3)">—чЄт на оплату 3</a>' : ''). //todo удалить
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
