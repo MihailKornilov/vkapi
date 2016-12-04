@@ -5,15 +5,20 @@ var _accrualAdd = function(o) {
 			about:''
 		}, o);
 
-		var html =
-			'<table id="_accrual-add">' +
-                '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum.split(' ').join('') + '" /> руб.' +
-				'<tr><td class="label">Примечание:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
+		var client = window.CI,
+			client_id = client ? CI.id : 0,
+			zayav = window.ZI,
+			zayav_id = zayav ? ZI.id : 0,
+			html =
+			'<table class="bs10">' +
+	  (client ? '<tr><td class="label r">Клиент:<td><b>' + CI.name + '</b>' : '') +
+	   (zayav ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
+				'<tr><td class="label r w70">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum.split(' ').join('') + '" /> руб.' +
+				'<tr><td class="label r">Описание:<td><input type="text" id="about" class="w300" value="' + o.about + '" />' +
 			'</table>';
 
 		var dialog = _dialog({
-			width:480,
+			width:450,
 			head:(o.id ? 'Редактироваие' : 'Внесение') + ' начисления',
 			content:html,
 			butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -26,69 +31,66 @@ var _accrualAdd = function(o) {
 			var send = {
 				op:'accrual_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
-				zayav_id:ZI.id,
-				sum:_cena($('#sum').val()),
+				client_id:client_id,
+				zayav_id:zayav_id,
+				sum:$('#sum').val(),
 				about:$('#about').val()
 			};
-			if(!send.sum) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
-				dialog.abort();
 				if(res.success) {
 					dialog.close();
 					_msg();
 					location.reload();
-				}
+				} else
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
 
 	_incomeAdd = function() {
-		var zayav = window.ZI,
+		var client = window.CI,
+			zayav = window.ZI,
+			client_id = client ? CI.id : zayav ? zayav.client_id : 0,
+			client_name = client ? '<b>' + CI.name + '</b>' : zayav && zayav.client_id ? ZI.client_link : '',
 			place = zayav && ZI.pole[12],
 			about = zayav ? 'Примечание' : 'Описание',
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
-			'<div id="_income-add">' +
-				'<table class="tab">' +
-					'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
-		   (zayav ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
-		   (zayav ? '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-					'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
-					'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-		   (zayav ? '<tr><td class="label">Предоплата:<td>' : '') +
-						'<input type="hidden" id="prepay" />' +
-					'<tr><td class="label">' + about + ':<td><input type="text" id="about"' + about_placeholder + ' />' +
-				'</table>' +
+			'<table class="bs10 w100p mt10 mb10">' +
+				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
+ (client_name ? '<tr><td class="label r">Клиент:<td>' + client_name : '') +
+	   (zayav ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
+				'<tr><td class="label r w175">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
+				'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
+				'<tr><td class="label r">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+	   (zayav ? '<tr><td class="label r">Предоплата:<td>' : '') +
+					'<input type="hidden" id="prepay" />' +
+				'<tr><td class="label r">' + about + ':<td><input type="text" id="about" class="w250"' + about_placeholder + ' />' +
+			'</table>' +
 
-		   (zayav ?
-				(place ?
-					'<div id="place-div">' +
-						'<table class="tab">' +
-							'<tr><td class="label r">Текущее местонахождение:<td><b>' + _toAss(ZAYAV_TOVAR_PLACE_SPISOK)[ZI.place_id] + '</b>' +
-							'<tr><td class="label topi">Новое местонахождение:<td><input type="hidden" id="tovar-place" />' +
-						'</table>' +
-					'</div>'
-				: '') +
+	   (zayav ?
+			(place ?
+				'<div class="income-add-place dn pt10 pb10">' +
+					'<table class="bs10 w100p">' +
+						'<tr><td class="label r w175">Текущее местонахождение:' +
+							'<td><a class="place-set b' + _tooltip('Нажмите для подтверждения', -55) + _toAss(ZAYAV_TOVAR_PLACE_SPISOK)[ZI.place_id] + '</a>' +
+						'<tr><td class="label r topi">Новое местонахождение:<td><input type="hidden" id="tovar-place" />' +
+					'</table>' +
+				'</div>'
+			: '') +
 
-				(ZAYAV_REMIND.active ?
-					'<div id="remind-div">' +
-						'<h1>Есть ' + ZAYAV_REMIND.active + ' активн' + _end(ZAYAV_REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(ZAYAV_REMIND.active, ['е', 'я', 'й']) + '.</h1>' +
-						'<h2>Поставье галочку напоминанию, если его нужно отметить выполненным.</h2>' +
-						incomeRemind() +
-					'</div>'
-		        : '')
-		   : '') +
-
-			'</div>';
-		var dialog = _dialog({
+			(ZAYAV_REMIND.active ?
+				'<div class="income-add-remind dn pad15">' +
+					'<div class="b">Есть ' + ZAYAV_REMIND.active + ' активн' + _end(ZAYAV_REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(ZAYAV_REMIND.active, ['е', 'я', 'й']) + '.</div>' +
+					'<div class="grey mt5">Поставье галочку напоминанию, если его нужно отметить выполненным.</div>' +
+					incomeRemind() +
+				'</div>'
+	        : '')
+	   : ''),
+			dialog = _dialog({
 				top:zayav ? 30 : 60,
-				width:490,
+				width:550,
 				head:'Внесение платежа',
 				padding:0,
 				content:html,
@@ -99,7 +101,7 @@ var _accrualAdd = function(o) {
 			lost:1
 		});
 		$('#invoice_id-add')._select({
-			width:218,
+			width:268,
 			title0:'Не выбран',
 			spisok:_invoiceIncomeInsert(),
 			func:function(id) {
@@ -130,18 +132,23 @@ var _accrualAdd = function(o) {
 				func:function() {
 					$('#about').focus();
 					if(place)
-						$('#place-div').slideDown(300);
+						$('.income-add-place').slideDown(300);
 					else
-						$('#remind-div').slideDown(300);
+						$('.income-add-remind').slideDown(300);
 				}
 			});
 
-			if(place)
+			if(place) {
 				$('#tovar-place').zayavTovarPlace({
 					func:function() {
-						$('#remind-div').slideDown(300);
+						$('.income-add-remind').slideDown(300);
 					}
 				});
+				$('.place-set').click(function() {
+					$('#tovar-place')._radio(ZI.place_id);
+					$('.income-add-remind').slideDown(300);
+				});
+			}
 			for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
 				var i = ZAYAV_REMIND.active_spisok[n];
 				$('#ui' + i.id)._check({
@@ -158,9 +165,9 @@ var _accrualAdd = function(o) {
 			for(var n = 0; n < ZAYAV_REMIND.active_spisok.length; n++) {
 				var i = ZAYAV_REMIND.active_spisok[n];
 				send +=
-					'<div class="remind-iu">' +
-						'<h3>' + i.txt + '</h3>' +
-						'<h4>' + i.about + '</h4>' +
+					'<div class="income-add-remind-iu">' +
+						'<div class="b fs14">' + i.txt + '</div>' +
+						'<div class="mb20 ml20 mt5 fs12">' + i.about + '</div>' +
 						'<input type="hidden" id="ui' + i.id + '" />' +
 					'</div>';
 			}
@@ -182,6 +189,7 @@ var _accrualAdd = function(o) {
 				sum:_cena($('#sum').val()),
 				prepay:_num($('#prepay').val()),
 				about:$('#about').val(),
+				client_id:client_id,
 				zayav_id:zayav ? ZI.id : 0,
 				place_id:$('#tovar-place').val(),
 				place_other:$('#tovar-place').attr('val'),
@@ -219,17 +227,18 @@ var _accrualAdd = function(o) {
 
 			if(send.prepay == 2)
 				send.prepay = 0;
+
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
-				dialog.abort();
 				if(res.success) {
 					dialog.close();
-					_msg('Новый платёж внесён.');
-					if(zayav)
+					_msg();
+					if(client || zayav)
 						location.reload();
 					else
 						incomeSpisok();
-				}
+				} else
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},
@@ -269,28 +278,33 @@ var _accrualAdd = function(o) {
 	},
 
 	_refundAdd = function() {//внесение возврата
-		var html =
+		var zayav = window.ZI,
+			zayav_id = zayav ? ZI.id : 0,
+			client = window.CI,
+			client_id = client ? CI.id : 0,
+			client_name = client ? '<b>' + CI.name + '</b>' : zayav && zayav.client_id ? ZI.client_link : '',
+			html =
 			'<div class="_info">' +
 				'После внесения возврата не забудьте удалить начисление, чтобы выровнять баланс клиента.' +
 			'</div>' +
-			'<table id="_refund-add-tab">' +
-(ZI.client_id ? '<tr><td class="label">Клиент:<td>' + ZI.client_link : '') +
-                '<tr><td class="label">Заявка:<td><b>' + ZI.name + '</b>' +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + _invoiceIncomeInsert(1) + '" />' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
-				'<tr><td class="label">Причина:<td><input type="text" id="about" />' +
+			'<table class="bs10">' +
+                '<tr><td class="label r">Клиент:<td>' + client_name +
+	   (zayav ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
+				'<tr><td class="label r w100">Со счёта:<td><input type="hidden" id="invoice_id" value="' + _invoiceIncomeInsert(1) + '" />' +
+				'<tr><td class="label r">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
+				'<tr><td class="label r">Причина:<td><input type="text" id="about" class="w300" />' +
 			'</table>',
 			dialog = _dialog({
-				width:400,
-				head:'Возврат',
+				top:30,
+				width:480,
+				head:'Возврат денежных средств',
 				content:html,
 				submit:submit
 			});
 
 		$('#sum').focus();
-		$('#sum,#prim').keyEnter(submit);
 		$('#invoice_id')._select({
-			width:200,
+			width:250,
 			title0:'Не выбран',
 			spisok:_invoiceIncomeInsert(),
 			func:function(v) {
@@ -301,30 +315,21 @@ var _accrualAdd = function(o) {
 		function submit() {
 			var send = {
 				op:'refund_add',
-				zayav_id:ZI.id,
-				invoice_id:_num($('#invoice_id').val()),
-				sum:_cena($('#sum').val()),
-				about:$.trim($('#about').val())
+				client_id:client_id,
+				zayav_id:zayav_id,
+				invoice_id:$('#invoice_id').val(),
+				sum:$('#sum').val(),
+				about:$('#about').val()
 			};
-			if(!send.invoice_id)
-				dialog.err('Не указан счёт');
-			else if(!send.sum) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-			} else if(!send.about) {
-				dialog.err('Укажите причину возврата');
-				$('#about').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Возврат успешно произведён');
-						location.reload();
-					}
-				}, 'json');
-			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
 		}
 	},
 	_refundLoad = function() {
@@ -1000,7 +1005,7 @@ var _accrualAdd = function(o) {
 	_balansShow = function(category_id, unit_id) {
 		var dialog = _dialog({
 				top:10,
-				width:600,
+				width:650,
 				padding:0,
 				head:'Просмотр истории операций',
 				load:1,
@@ -2316,7 +2321,6 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 };
 
 $(document)
-	.on('click', '._accrual-add', _accrualAdd)
 	.on('click', '._accrual-edit', function() {
 		var t = $(this),
 			p = _parent(t);
@@ -2334,12 +2338,12 @@ $(document)
 			head:'начисления',
 			op:'accrual_del',
 			func:function() {
-				_parent(t).remove();
+//				_parent(t).remove();
+				location.reload();
 			}
 		});
 	})
 
-	.on('click', '._income-add', _incomeAdd)
 	.on('click', '.income-del', function() {
 		var t = $(this);
 		_dialogDel({
@@ -2429,7 +2433,6 @@ $(document)
 		}
 	})
 
-	.on('click', '._refund-add', _refundAdd)
 	.on('click', '._refund-del', function() {
 		var t = $(this);
 		_dialogDel({

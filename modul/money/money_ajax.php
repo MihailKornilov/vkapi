@@ -1,20 +1,8 @@
 <?php
 switch(@$_POST['op']) {
 	case 'accrual_add':
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-
-		$about = _txt($_POST['about']);
-
-		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
-
-		_accrualAdd($z, $sum, $about);
-
-		_salaryZayavBonus($zayav_id);
-
+		_accrualAdd($_POST);
+//		_salaryZayavBonus($zayav_id);
 		jsonSuccess();
 		break;
 	case 'accrual_edit':
@@ -72,7 +60,7 @@ switch(@$_POST['op']) {
 		break;
 	case 'accrual_del':
 		if(!$id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный id начисления');
 
 		$sql = "SELECT *
 				FROM `_money_accrual`
@@ -80,7 +68,7 @@ switch(@$_POST['op']) {
 				  AND !`deleted`
 				  AND `id`=".$id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Начисления не существует');
 
 		if($r['schet_id'])
 			jsonError('Начисление привязано к счёту на оплату');
@@ -100,19 +88,20 @@ switch(@$_POST['op']) {
 		_salaryZayavBonus($r['zayav_id']);
 
 		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 26,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'sum' => $r['sum'],
-			'about' => $r['about']
-		));
+		if($r['client_id'])
+			_balans(array(
+				'action_id' => 26,
+				'client_id' => $r['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'sum' => $r['sum'],
+				'about' => $r['about']
+			));
 
 		_history(array(
-			'type_id' => 77,
+			'type_id' => $r['zayav_id'] ? 77 : 134,
 			'zayav_id' => $r['zayav_id'],
 			'client_id' => $r['client_id'],
-			'v1' => _cena($r['sum'], 2),
+			'v1' => _cena($r['sum']),
 			'v2' => $r['about']
 		));
 
@@ -128,28 +117,28 @@ switch(@$_POST['op']) {
 		break;
 	case 'income_add':
 		if(!$invoice_id = $_POST['invoice_id'])
-			jsonError();
+			jsonError('Не выбран расчётный счёт');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректно указана сумма');
 
 		$dtime_add = $_POST['dtime_add'];//todo для Купца на удаление
 		$about = _txt($_POST['about']);
 
+		$client_id = _num($_POST['client_id']);
 		$zayav_id = _num($_POST['zayav_id']);
-		$client_id = 0;
 		$confirm = _bool($_POST['confirm']);
 		$prepay = _bool($_POST['prepay']);
 		$place_id = _num(@$_POST['place_id']);
 		$place_other = !$place_id ? _txt(@$_POST['place_other']) : '';
 		$remind_ids = _ids($_POST['remind_ids']);
 
-		//в произвольном платеже обязательно указывается описание
+		//в произвольном платеже и в платеже для клиента обязательно указывается описание
 		if(!$zayav_id && !$about)
-			jsonError();
+			jsonError('Укажите описание');
 
 		if($zayav_id) {
 			if(!$r = _zayavQuery($zayav_id))
-				jsonError();
+				jsonError('Заявки не существует');
 			$client_id = $r['client_id'];
 		}
 
@@ -216,7 +205,7 @@ switch(@$_POST['op']) {
 		}
 
 		_history(array(
-			'type_id' => 78,
+			'type_id' => $zayav_id ? 135 : ($client_id ? 136 : 78),
 			'invoice_id' => $invoice_id,
 			'client_id' => $client_id,
 			'zayav_id' => $zayav_id,
@@ -406,30 +395,36 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'refund_add'://внесение возврата
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
 		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
+			jsonError('Не выбран счёт');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректно указана сумма');
 		if(!$about = _txt($_POST['about']))
-			jsonError();
+			jsonError('Укажите причину возврата');
 
-		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
+		$client_id = _num($_POST['client_id']);
+
+		if($zayav_id = _num($_POST['zayav_id'])) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError();
+			$client_id = $z['client_id'];
+		}
+
+		if(!$client_id && !$zayav_id)
+			jsonError('Не указан клиент либо заявка');
 
 		$sql = "INSERT INTO `_money_refund` (
 					`app_id`,
-					`zayav_id`,
 					`client_id`,
+					`zayav_id`,
 					`invoice_id`,
 					`sum`,
 					`about`,
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
+					".$client_id.",
 					".$zayav_id.",
-					".$z['client_id'].",
 					".$invoice_id.",
 					".$sum.",
 					'".addslashes($about)."',
@@ -440,8 +435,9 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_refund');
 
 		_zayavBalansUpdate($zayav_id);
-		_salaryZayavBonus($zayav_id);
+//		_salaryZayavBonus($zayav_id);
 
+		//баланс для расчётного счёта
 		_balans(array(
 			'action_id' => 13,
 			'invoice_id' => $invoice_id,
@@ -450,17 +446,18 @@ switch(@$_POST['op']) {
 		));
 
 		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 29,
-			'client_id' => $z['client_id'],
-			'sum' => $sum,
-			'about' => $about
-		));
+		if($client_id)
+			_balans(array(
+				'action_id' => 29,
+				'client_id' => $client_id,
+				'sum' => $sum,
+				'about' => $about
+			));
 
 		_history(array(
-			'type_id' => 75,
+			'type_id' => $zayav_id ? 75 : 137,
 			'zayav_id' => $zayav_id,
-			'client_id' => $z['client_id'],
+			'client_id' => $client_id,
 			'invoice_id' => $invoice_id,
 			'v1' => _cena($sum),
 			'v2' => $about

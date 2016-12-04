@@ -361,7 +361,11 @@ switch(@$_POST['op']) {
 //		if(ZAYAV_INFO_DEVICE)
 //			zayavPlaceCheck($zayav_id, $place_id, $place_other);
 
-		_accrualAdd($z, $_POST['accrual_sum']);
+		if($acc_sum = _cena($_POST['accrual_sum']))
+			_accrualAdd(array(
+				'zayav_id' => $z['id'],
+				'sum' => $acc_sum
+			));
 
 		_zayavStatusRemindAdd($zayav_id);
 

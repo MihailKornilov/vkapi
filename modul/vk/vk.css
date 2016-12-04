@@ -1043,6 +1043,8 @@ a.add:hover{text-decoration:underline;color:#357}
 .w400{width:400px}
 
 .pad15{padding:15px}
+.pt10{padding-top:10px}
+.pb10{padding-bottom:10px}
 
 .mar8{margin:8px}
 .mar10{margin:10px}
@@ -1067,8 +1069,13 @@ a.add:hover{text-decoration:underline;color:#357}
 
 .b{font-weight:bold}
 
+/* Цвета */
 .red{color:#E22}
 .grey{color:#888}
+.black{color:#000}
+.color-acc{color:#07a}/* начисление */
+.color-pay{color:#090}/* платёж */
+.color-ref{color:#800}/* возврат */
 
 .bge{background-color:#ffa}
 
@@ -1090,4 +1097,6 @@ a.add:hover{text-decoration:underline;color:#357}
 .curM{cursor:move}
 .curD{cursor:default}
 .curP{cursor:pointer}
+
+
 

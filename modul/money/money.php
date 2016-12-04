@@ -54,21 +54,43 @@ function _money_script() {//скрипты и стили
 		'<script src="'.API_HTML.'/modul/money/money'.MIN.'.js?'.VERSION.'"></script>';
 }
 
-function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
-	if(!_cena($sum))
-		return;
+function _accrualAdd($v) {//внесение нового начисления
+	$client_id = _num(@$v['client_id']);
+	$zayav_id = _num(@$v['zayav_id']);
+	$schet_id = _num(@$v['schet_id']);
+	$dogovor_id = _num(@$v['dogovor_id']);
+	$about = _txt(@$v['about']);
+
+	if(!$sum = _cena(@$v['sum']))
+		jsonError('Некорректно указана сумма');
+
+	if($client_id && !$zayav_id && !$about)
+		jsonError('Укажите описание');
+
+	if($zayav_id) {
+		if(!$z = _zayavQuery($zayav_id))
+			jsonError('Заявки не существует');
+		$client_id = $z['client_id'];
+	}
+
+	if(!$client_id && !$zayav_id)
+		jsonError('Не указан клиент либо заявка');
 
 	$sql = "INSERT INTO `_money_accrual` (
 				`app_id`,
-				`zayav_id`,
 				`client_id`,
+				`zayav_id`,
+				`schet_id`,
+				`dogovor_id`,
 				`sum`,
 				`about`,
 				`viewer_id_add`
 			) VALUES (
 				".APP_ID.",
-				".$z['id'].",
-				".$z['client_id'].",
+				".$client_id.",
+				".$zayav_id.",
+				".$schet_id.",
+				".$dogovor_id.",
 				".$sum.",
 				'".addslashes($about)."',
 				".VIEWER_ID."
@@ -76,20 +98,21 @@ function _accrualAdd($z, $sum, $about='') {//внесение нового начисления
 	query($sql);
 
 	//внесение баланса для клиента
-	_balans(array(
-		'action_id' => 25,
-		'client_id' => $z['client_id'],
-		'zayav_id' => $z['id'],
-		'sum' => $sum,
-		'about' => $about
-	));
+	if($client_id)
+		_balans(array(
+			'action_id' => 25,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
+			'sum' => $sum,
+			'about' => $about
+		));
 
-	_zayavBalansUpdate($z['id']);
+	_zayavBalansUpdate($zayav_id);
 
 	_history(array(
-		'type_id' => 74,
-		'client_id' => $z['client_id'],
-		'zayav_id' => $z['id'],
+		'type_id' => $zayav_id ? 74 : 133,
+		'client_id' => $client_id,
+		'zayav_id' => $zayav_id,
 		'v1' => $sum,
 		'v2' => $about
 	));
@@ -176,8 +199,8 @@ function _accrual_unit($r, $filter) {//строка начисления в таблице
 	$about .= $r['about'];
 
 	return
-	'<tr class="_accrual-unit'.($r['deleted'] ? ' deleted' : '').'">'.
-		'<td class="sum">'._sumSpace($r['sum']).
+	'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
+		'<td class="color-acc curD sum">'._sumSpace($r['sum']).
 		'<td class="about">'.trim($about).
 		'<td class="dtime">'._dtimeAdd($r).
 		'<td class="ed">'.
@@ -209,7 +232,7 @@ function _zayavInfoAccrual_spisok($zayav_id) {
 	return
 		'<div class="headBlue but">'.
 			'Начисления'.
-			'<button class="vk small _accrual-add">Внести начисление</button>'.
+			'<button class="vk small" onclick="_accrualAdd()">Внести начисление</button>'.
 		'</div>'.
 		'<table class="_spisok">'.$spisok.'</table>';
 }
@@ -391,7 +414,7 @@ function income_path($data) {//путь с датой
 		(MON ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.YEAR.'">'.YEAR.'</a> » ' : '<b>'.YEAR.'</b>').
 		(DAY ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
 		(DAY ? '<b>'.intval(DAY).$to.'</b>' : '').
-		'<button class="vk fr _income-add">Внести платёж</button>';
+		'<button class="vk fr" onclick="_incomeAdd()">Внести платёж</button>';
 }
 function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёту
 	$sql = "SELECT
@@ -2492,8 +2515,8 @@ function _zayavInfoMoney_spisok($zayav_id) {
 	return
 		'<div class="headBlue but">'.
 			'Платежи и возвраты'.
-			'<button class="vk small red _refund-add'._tooltip('Произвести возврат денежных средств', -210, 'r').'Возврат</button>'.
-			'<button class="vk small _income-add">Принять платёж</button>'.
+			'<button onclick="_refundAdd()" class="vk small red'._tooltip('Произвести возврат денежных средств', -210, 'r').'Возврат</button>'.
+			'<button class="vk small" onclick="_incomeAdd()">Принять платёж</button>'.
 		'</div>'.
 		'<table class="_spisok">'.$spisok.'</table>';
 }

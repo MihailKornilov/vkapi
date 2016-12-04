@@ -211,7 +211,7 @@ var
 			client_id = _num(CI.id),
 			category_id = _num(category_id),
 			dialog = _dialog({
-				width:480,
+				width:550,
 				top:30,
 				padding:0,
 				class:'client-edit',
@@ -704,11 +704,11 @@ $(document)
 			});
 		}
 		if($('#client-info').length) {
-			$('a.link:first').addClass('sel');
+			$('#dopLinks a.link:first').addClass('sel');
 			$('.ci-cont:first').show();
 			$('.ci-right:first').show();
-			$('.link').click(function() {
-				$('.link').removeClass('sel');
+			$('#dopLinks .link').click(function() {
+				$('#dopLinks .link').removeClass('sel');
 				var i = $(this).addClass('sel').index();
 				$('.ci-cont').hide().eq(i).show();
 				$('.ci-right').hide().eq(i).show();

@@ -1879,8 +1879,8 @@ function _zayavInfo() {
 		'<div id="dopLinks">'.
 			'<a class="link a-page sel">Информация</a>'.
 			'<a class="link" onclick="_zayavEdit('.$z['service_id'].')">Редактирование</a>'.
-			'<a class="link _accrual-add">Начислить</a>'.
-			'<a class="link _income-add">Принять платёж</a>'.
+			'<a class="link" onclick="_accrualAdd()">Начислить</a>'.
+			'<a class="link" onclick="_incomeAdd()">Принять платёж</a>'.
 			'<a class="link a-page">История</a>'.
 			'<div id="nz" class="'._tooltip('Номер заявки', -74, 'r').'#'.$z['nomer'].'</div>'.
 		'</div>'.

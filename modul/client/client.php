@@ -146,7 +146,7 @@ function _clientPoleEdit($id, $v=array()) {//ассоциативный массив HTML используе
  ($paspDn ? '<tr><td><td><a class="client-pasp-show" val="'.$category_id.'">Заполнить паспортные данные</a>' : '').
 			'<tr class="client-pasp'.$category_id.$paspDn.'"><td><td><b>Паспортные данные:</b>'.
 			'<tr class="client-pasp'.$category_id.$paspDn.'"><td class="label r">Серия:'.
-				'<td><input type="text" id="pasp-seria'.$category_id.'" class="w70" value="'.@$v['pasp_seria'].'" />'.
+				'<td><input type="text" id="pasp-seria'.$category_id.'" class="w50" value="'.@$v['pasp_seria'].'" />'.
 					'<span class="label r">Номер:</span>'.
 					'<input type="text" id="pasp-nomer'.$category_id.'" class="w100" value="'.@$v['pasp_nomer'].'" />'.
 			'<tr class="client-pasp'.$category_id.$paspDn.'">'.
@@ -932,8 +932,8 @@ function _clientInfo() {//вывод информации о клиенте
 		   ($c['from_id'] ? '<br />Источник: <u>'._clientFrom($c['from_id']).'</u>.' : '').
 						'</div>'.
 
-//(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">Счёт на оплату 1</a><br />' : ''). //todo удалить
-//(APP_ID == 4872135 ? '<a onclick="schetPayShow(3)">Счёт на оплату 3</a>' : ''). //todo удалить
+(APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">Счёт на оплату 1</a><br />' : ''). //todo удалить
+(APP_ID == 4872135 ? '<a onclick="schetPayShow(4)">Счёт на оплату 4</a>' : ''). //todo удалить
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
@@ -1022,10 +1022,11 @@ function _clientInfoTop($r) {
 ($accrual ? '<td class="ci-acc w50 center curD wsnw fs12'._tooltip('Общая сумма начислений', -55)._sumSpace($accrual) : '').
  ($income || $accrual ? '<td class="ci-pay w50 center curD wsnw fs12'._tooltip('Общая сумма платежей', -50)._sumSpace($income) : '').
  ($refund ? '<td class="ci-refund w50 center curD wsnw fs12'._tooltip('Общая сумма возвратов', -53)._sumSpace($refund) : '').
-			'<td onclick="_balansShow(2,'.$r['id'].')"'.
+			'<td'.
 			   ' style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'"'.
-			   ' class="ci-balans b w50 center curP wsnw fs14'._tooltip('Текущий баланс', -26).
-					_sumSpace(_cena($r['balans'], 1)).
+			   ' class="ci-balans w50 wsnw'._tooltip('Текущий баланс', -26).
+					_clientMoneyLink($r).
+					'<div class="center b curD fs14">'._sumSpace(_cena($r['balans'], 1)).'</div>'.
 			'<td class="w100">'.
 				'<div class="mt5 mr5 r">'.
 					($r['worker_id'] ? '<a href="'.URL.'&p=report&d=salary&id='.$r['worker_id'].'" class="icon icon-worker center'._tooltip('Клиент является сотрудником<br />Перейти на страницу з/п сотрудника', -109, '', 1).'</a>' : '').
@@ -1033,6 +1034,15 @@ function _clientInfoTop($r) {
 					(_clientDelAccess($r['id']) === true ? '<div onclick="clientDel('.$r['id'].')" class="icon icon-del-red'._tooltip('Удалить клиента', -52).'</div>' : '').
 				'</div>'.
 	'</table>';
+}
+function _clientMoneyLink($r) {//список действий связанных с деньгами
+	return
+	'<div class="_menuDop3">'.
+		'<a class="link black" onclick="_balansShow(2,'.$r['id'].')">Просмотр денежных операций</a>'.
+		'<a class="link color-acc" onclick="_accrualAdd()">Начислить</a>'.
+		'<a class="link color-pay" onclick="_incomeAdd()">Принять платёж</a>'.
+		'<a class="link color-ref" onclick="_refundAdd()">Сделать возврат</a>'.
+	'</div>';
 }
 function _clientInfoToPerson($client_id) {//для кого этот клиент является доверенным лицом
 	$sql = "SELECT `client_id`
