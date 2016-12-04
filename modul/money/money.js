@@ -58,7 +58,7 @@ var _accrualAdd = function(o) {
 			about_placeholder = zayav ? ' placeholder="не обязательно"' : '',
 			html =
 			'<table class="bs10 w100p mt10 mb10">' +
-				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
+				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
  (client_name ? '<tr><td class="label r">Клиент:<td>' + client_name : '') +
 	   (zayav ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
 				'<tr><td class="label r w175">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
