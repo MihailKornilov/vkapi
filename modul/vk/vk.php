@@ -2046,6 +2046,29 @@ function _templateSchetPay($arr) {//подмена переменных счЄта на оплату
 			$arr[$id]['text'] = _sumSpace($schet[$r['col_name']], 1);
 			continue;
 		}
+		if($r['v'] == '{SCHET_CONTENT}') {
+			$sql = "SELECT *
+					FROM `_schet_pay_content`
+					WHERE `schet_id`=".$schet_id."
+					ORDER BY `id`";
+			if(!$spisok = query_arr($sql))
+				continue;
+
+			$content = array();
+			$n = 1;
+			foreach($spisok as $i)
+				$content[] = array(
+					$n++,
+					$i['name'],
+					$i['count'],
+					'шт.',
+					_sumSpace($i['cena'], 1),
+					_sumSpace($i['count'] * $i['cena'], 1)
+				);
+
+			$arr[$id]['text'] = $content;
+			continue;
+		}
 		if($r['v'] == '{SCHET_CONTENT_COUNT}') {
 			$sql = "SELECT COUNT(*)
 					FROM `_schet_pay_content`
@@ -2084,7 +2107,7 @@ function _templateClient($arr) {//подмена переменных одного платежа
 		if($r['table_name'] != '_client')
 			continue;
 
-		$arr[$id]['text'] = $client[$r['col_name']];
+		$arr[$id]['text'] = htmlspecialchars_decode($client[$r['col_name']]);
 	}
 
 	return $arr;
@@ -2123,13 +2146,42 @@ function _templateXls($version, $tmp, $attach) {//формирование шаблона Excel
 
     for($row = 0; $row < $rowMax; $row++)
         for($col = 0; $col < $сolMax; $col++) {
+	        //получение значени€ €чейки. ≈сли пуста€, то пропуск
 	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
 		        continue;
 
-	        foreach($var as $v => $i)
-	            $txt = str_replace($v, utf8($i), $txt);
+	        foreach($var as $v => $i) {
+		        if(is_array($i))//если список, то пропуск
+			        continue;
+
+		        $txt = str_replace($v, utf8($i), $txt);
+	        }
 
 	        $sheet->setCellValueByColumnAndRow($col, $row + 1, $txt);
+        }
+
+	//вставка списков
+    for($row = 0; $row < $rowMax; $row++)
+        for($col = 0; $col < $сolMax; $col++) {
+	        //получение значени€ €чейки. ≈сли пуста€, то пропуск
+	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
+		        continue;
+
+	        foreach($var as $v => $i) {
+		        if(!is_array($i)) //если не список, то пропуск
+			        continue;
+
+		        if($v != $txt)//если в €чейке нет переменной, котора€ соответствует данному списку, то пропуск
+			        continue;
+
+		        if(count($i) > 1)//вставка количества строк согласно списку
+					$sheet->insertNewRowBefore($row + 2, count($i) - 1);
+
+		        foreach($i as $num => $stroka)
+		            foreach($stroka as $n => $sp) {
+		                $sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
+		        }
+	        }
         }
 
 	header('Content-type: application/vnd.ms-excel');

@@ -933,7 +933,7 @@ function _clientInfo() {//вывод информации о клиенте
 						'</div>'.
 
 (APP_ID == 4872135 ? '<a onclick="schetPayShow(1)">—чЄт на оплату 1</a><br />' : ''). //todo удалить
-(APP_ID == 4872135 ? '<a onclick="schetPayShow(4)">—чЄт на оплату 4</a>' : ''). //todo удалить
+(APP_ID == 4872135 ? '<a onclick="schetPayShow(2)">—чЄт на оплату 2</a>' : ''). //todo удалить
 
 					'<td class="right">'.
 						'<div class="rightLink">'.
