@@ -1098,5 +1098,7 @@ a.add:hover{text-decoration:underline;color:#357}
 .curD{cursor:default}
 .curP{cursor:pointer}
 
-
+/* Изменение цвета при наведении */
+.over1:hover{background-color:#F2F6F9}/* бледно-серо-синий */
+.over2:hover{background-color:#FFFFF0}/* бледно-жёлтый */
 

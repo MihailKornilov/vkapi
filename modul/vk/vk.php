@@ -1971,10 +1971,11 @@ function _templateVar() {
 	//реквизиты организации
 	foreach($varSpisok as $id => $r)
 		if($r['table_name'] == '_app')
-			$varSpisok[$id]['text'] = _app($r['col_name']);
+			$varSpisok[$id]['text'] = htmlspecialchars_decode(_app($r['col_name']));
 
-	//платёж
-	$varSpisok = _templateIncome($varSpisok);
+	$varSpisok = _templateIncome($varSpisok);   //платёж
+	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату
+	$varSpisok = _templateClient($varSpisok);   //клиент
 
 	$var = array();
 	foreach($varSpisok as $r)
@@ -2010,8 +2011,85 @@ function _templateIncome($arr) {//подмена переменных одного платежа
 			$arr[$id]['text'] = $income[$r['col_name']];
 		}
 
+	_templateClientIdDefine($income['client_id']);
+
 	return $arr;
 }
+function _templateSchetPay($arr) {//подмена переменных счёта на оплату
+	if(!$schet_id = _num(@$_GET['schet_id']))
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_schet_pay`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".$schet_id;
+	if(!$schet = query_assoc($sql))
+		return $arr;
+
+	foreach($arr as $id => $r) {
+		if($r['table_name'] != '_schet_pay')
+			continue;
+
+		if($r['v'] == '{SCHET_SUM_PROPIS}') {
+			$arr[$id]['text'] =
+				_numToWord($schet[$r['col_name']], 1).
+				' рубл'._end($schet[$r['col_name']], 'ь', 'я', 'ей').
+				' '._kop($schet[$r['col_name']]);
+			continue;
+		}
+		if($r['v'] == '{SCHET_DATE_CREATE}') {
+			$arr[$id]['text'] = FullData($schet[$r['col_name']]);
+			continue;
+		}
+		if($r['v'] == '{SCHET_SUM}') {
+			$arr[$id]['text'] = _sumSpace($schet[$r['col_name']], 1);
+			continue;
+		}
+		if($r['v'] == '{SCHET_CONTENT_COUNT}') {
+			$sql = "SELECT COUNT(*)
+					FROM `_schet_pay_content`
+					WHERE `schet_id`=".$schet_id;
+			$arr[$id]['text'] = query_value($sql);
+			continue;
+		}
+		$arr[$id]['text'] = $schet[$r['col_name']];
+	}
+
+	_templateClientIdDefine($schet['client_id']);
+
+	return $arr;
+}
+function _templateClientIdDefine($client_id) {//Получение id клиента, если не был получен
+	if(!$client_id)
+		return;
+
+	if(!defined('TEMPLATE_CLIENT_ID'))
+		define('TEMPLATE_CLIENT_ID', $client_id);
+}
+function _templateClient($arr) {//подмена переменных одного платежа
+
+	if(!defined('TEMPLATE_CLIENT_ID'))
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".TEMPLATE_CLIENT_ID;
+	if(!$client = query_assoc($sql))
+		return $arr;
+
+	foreach($arr as $id => $r) {
+		if($r['table_name'] != '_client')
+			continue;
+
+		$arr[$id]['text'] = $client[$r['col_name']];
+	}
+
+	return $arr;
+}
+
 function _templateWord($tmp, $attach) {//формирование шаблона Word
 	require_once GLOBAL_DIR.'/inc/word/vendor/autoload.php';
 

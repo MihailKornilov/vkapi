@@ -2156,15 +2156,16 @@ var _accrualAdd = function(o) {
 		}, 'json');
 
 		function loaded(res) {
-			dialog.content.html(res.html);
-			$('.icon-edit').parent().click(function() {
-				dialog.close();
-				schetPayEdit(schet_id);
-			});
+			dialog.content
+				.html(res.html)
+				.find('.icon-edit').parent().click(function() {
+					dialog.close();
+					schetPayEdit(schet_id);
+				});
 			$('#schet-pay-to-pay').click(function() {
 				schetPayToPay(schet_id, dialog);
 			});
-			$('.icon-del-red').parent().click(function() {
+			dialog.content.find('.icon-del-red').parent().click(function() {
 				_dialogDel({
 					id:schet_id,
 					head:'счёта на оплату',

@@ -2046,7 +2046,7 @@ function setup_document_template_var($spisok) {
 	$send = '<table class="bs5">';
 	foreach($spisok as $r)
 		$send .=
-		'<tr><td><input type="text" class="b w200" readonly onclick="$(this).select()" value="'.$r['v'].'" />'.
+		'<tr><td><input type="text" class="b w175 over1" readonly onclick="$(this).select()" value="'.$r['v'].'" />'.
 			'<td>'.$r['name'];
 
 	$send .= '</table>';

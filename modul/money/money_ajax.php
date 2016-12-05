@@ -472,7 +472,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-
 	case 'refund_add'://внесение возврата
 		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError('Не выбран счёт');
@@ -1565,7 +1564,7 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(
 			(PREVIEW ?
 				'<div class="_info center">'.
-					'<b>Ознакомительный счёт.</b>'.
+					'<b class="fs14">Ознакомительный счёт.</b>'.
 					'<div class="mt5">Может использоваться только для ознакомления.</div>'.
 					'Функции передачи счёта клиенту и его оплаты недоступны.'.
 					'<br />'.
@@ -1599,7 +1598,14 @@ switch(@$_POST['op']) {
 					'<td class="w175">'.
 						'<div class="_menuDop3">'.
 							'<a class="link"><div class="icon icon-edit"></div>Редактировать счёт</a>'.
-							'<a class="link"><div class="icon icon-print"></div>Распечатать</a>'.
+							'<a class="link" href="'.URL.
+								'&p=print'.
+								'&d=template'.
+								'&template_id=schet-pay'.
+								'&schet_id='.$schet_id.'">'.
+									'<div class="icon icon-print"></div>'.
+									'Распечатать'.
+							'</a>'.
 				(!PREVIEW ? '<a class="link"><div class="icon icon-out"></div>Передать клиенту</a>' : '').
 				(!PREVIEW ? '<a class="link b"><div class="icon icon-rub"></div>Оплатить</a>' : '').
 							'<a class="link red"><div class="icon icon-del-red"></div>Удалить</a>'.
