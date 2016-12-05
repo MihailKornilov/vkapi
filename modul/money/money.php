@@ -565,6 +565,7 @@ function _income_unit($r, $filter=array()) {
 			'<td>'.incomeAbout($r, $filter).
 			'<td class="dtime">'._dtimeAdd($r).
 			'<td class="ed">'.
+		  (SA ? '<div onclick="incomeUnbind('.$r['id'].')" class="img_cancel'._tooltip('Отвязать...', -59, 'r').'</div>' : '').
 				_incomePrint($r['id']).
 				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm));
 }

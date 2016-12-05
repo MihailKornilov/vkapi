@@ -276,6 +276,45 @@ var _accrualAdd = function(o) {
 			}
 		}, 'json');
 	},
+	incomeUnbind = function(income_id) {//отвязка платежа
+		var dialog = _dialog({
+				width:500,
+				head:'Отвязка платежа',
+				load:1,
+				butSubmit:'Применить',
+				submit:submit
+			}),
+			send = {
+				op:'income_unbind_load',
+				income_id:income_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				loaded(res);
+			else
+				dialog.loadError(res.text);
+		}, 'json');
+
+		function loaded(res) {
+			dialog.content.html(res.html);
+		}
+		function submit() {
+			var send = {
+				op:'income_unbind',
+				income_id:income_id,
+				schet_pay:_num($('#schet_pay_unbind').val())
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					incomeUnbind(income_id);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 
 	_refundAdd = function() {//внесение возврата
 		var zayav = window.ZI,

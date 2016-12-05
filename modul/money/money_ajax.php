@@ -393,6 +393,85 @@ switch(@$_POST['op']) {
 		$send['dtime'] = utf8(FullDataTime());
 		jsonSuccess($send);
 		break;
+	case 'income_unbind_load'://получение данных о платеже для отвязки
+		if(!SA)
+			jsonError('Нет прав');
+		if(!$income_id = _num($_POST['income_id']))
+			jsonError('Некорректный id платежа');
+
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$income_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Платежа не существует');
+
+		$send['html'] = utf8(
+			'<div class="_info">'.
+				'Платёж на сумму <b>'._sumSpace($r['sum']).'</b> руб.'.
+				'<br />'.
+				'Дата: '.FullDataTime($r['dtime_add']).
+			'</div>'.
+			'<table class="bs10">'.
+				'<tr><td class="label r w100 top">Клиент:<td>'.($r['client_id'] ? _clientVal($r['client_id'], 'link') : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Заявка:<td>'.($r['zayav_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Товар:<td>'.($r['tovar_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Договор:<td>'.($r['dogovor_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Счёт на оплату:<td>'.($r['schet_id'] ? _check('schet_pay_unbind', 'отвязать') : '<i class="grey">не привязан</i>').
+			'</table>'
+		);
+
+		jsonSuccess($send);
+		break;
+	case 'income_unbind'://отвязка платежа
+		if(!SA)
+			jsonError('Нет прав');
+		if(!$income_id = _num($_POST['income_id']))
+			jsonError('Некорректный id платежа');
+
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `id`=".$income_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Платежа не существует');
+
+		//отвязка от счёта на оплату
+		if(_num($_POST['schet_pay'])) {
+			if(!$r['schet_id'])
+				jsonError('Платёж не привязан к счёту на оплату');
+
+			$sql = "SELECT *
+					FROM `_schet`
+					WHERE `app_id`=".APP_ID."
+					  AND !`deleted`
+					  AND `id`=".$r['schet_id'];
+			if(!query_assoc($sql))
+				jsonError('Счёта на оплату не существует');
+
+			$sql = "UPDATE `_money_income`
+					SET `schet_id`=0,
+						`schet_paid_day`='0000-00-00'
+					WHERE `id`=".$income_id;
+			query($sql);
+
+			_schetPayCorrect($r['schet_id']);
+
+			_history(array(
+				'type_id' => 138,
+				'client_id' => $r['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'schet_id' => $r['schet_id'],
+				'v1' => _cena($r['sum']),
+				'v2' => FullDataTime($r['dtime_add'])
+			));
+		}
+
+		jsonSuccess();
+		break;
+
 
 	case 'refund_add'://внесение возврата
 		if(!$invoice_id = _num($_POST['invoice_id']))
