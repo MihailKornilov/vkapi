@@ -2138,53 +2138,14 @@ function _templateXls($version, $tmp, $attach) {//формирование шаблона Excel
 
 	$reader = PHPExcel_IOFactory::createReader($type[$version]);
 	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
-	 
-	$sheet = $book->getActiveSheet();
 
-	$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
-	$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
-
-	$var = _templateVar();
-
-    for($row = 0; $row < $rowMax; $row++)
-        for($col = 0; $col < $сolMax; $col++) {
-	        //получение значени€ €чейки. ≈сли пуста€, то пропуск
-	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
-		        continue;
-
-	        foreach($var as $v => $i) {
-		        if(is_array($i))//если список, то пропуск
-			        continue;
-
-		        $txt = str_replace($v, utf8($i), $txt);
-	        }
-
-	        $sheet->setCellValueByColumnAndRow($col, $row + 1, $txt);
-        }
-
-	//вставка списков
-    for($row = 0; $row < $rowMax; $row++)
-        for($col = 0; $col < $сolMax; $col++) {
-	        //получение значени€ €чейки. ≈сли пуста€, то пропуск
-	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
-		        continue;
-
-	        foreach($var as $v => $i) {
-		        if(!is_array($i)) //если не список, то пропуск
-			        continue;
-
-		        if($v != $txt)//если в €чейке нет переменной, котора€ соответствует данному списку, то пропуск
-			        continue;
-
-		        if(count($i) > 1)//вставка количества строк согласно списку
-					$sheet->insertNewRowBefore($row + 2, count($i) - 1);
-
-		        foreach($i as $num => $stroka)
-		            foreach($stroka as $n => $sp) {
-		                $sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
-		        }
-	        }
-        }
+	$sheetCount = $book->getSheetCount();//количество страниц в документе
+	while($sheetCount) {
+		$sheetCount--;
+		$book->setActiveSheetIndex($sheetCount);//установка текущей страницы
+		$sheet = $book->getActiveSheet();
+		_templateXlsProcess($sheet);
+	}
 
 	header('Content-type: application/vnd.ms-excel');
 	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.'.$version.'"');
@@ -2193,41 +2154,63 @@ function _templateXls($version, $tmp, $attach) {//формирование шаблона Excel
 
 	exit;
 }
-function _templateXlsSpisok($version, $tmp, $attach) {//формирование документа Excel в виде списка
-	$type = array(
-		'xls' => 'Excel5',
-		'xlsx' => 'Excel2007'
-	);
-
-	$reader = PHPExcel_IOFactory::createReader($type[$version]);
-	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
-
-	$sheet = $book->getActiveSheet();
-
+function _templateXlsProcess($sheet) {//подмена переменных в шаблоне
 	$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
 	$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
 
 	$var = _templateVar();
 
-	$sheet->insertNewRowBefore(3, 1);//вставка новой строки
-/*
+	$varSpisok = 0;//подсчЄт количества переменных со списком
+
+	//подмена переменных, не €вл€ющихс€ списками
     for($row = 0; $row < $rowMax; $row++)
         for($col = 0; $col < $сolMax; $col++) {
+	        //получение значени€ €чейки. ≈сли пуста€, то пропуск
 	        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
 		        continue;
 
-	        foreach($var as $v => $i)
-	            $txt = str_replace($v, utf8($i), $txt);
+	        foreach($var as $v => $i) {
+		        if(is_array($i)) {//если список, то пропуск
+					if($v == $txt)
+						$varSpisok++;
+			        continue;
+		        }
+
+		        $txt = str_replace($v, utf8($i), $txt);
+	        }
 
 	        $sheet->setCellValueByColumnAndRow($col, $row + 1, $txt);
         }
-*/
-	header('Content-type: application/vnd.ms-excel');
-	header('Content-Disposition: attachment; filename="'.$tmp['name_file'].'.'.$version.'"');
-	$writer = PHPExcel_IOFactory::createWriter($book, $type[$version]);
-	$writer->save('php://output');
 
-	exit;
+
+	//вставка списков
+    while($varSpisok) {
+		$rowMax = $sheet->getHighestRow(); //максимальное количество используемых строк в документе
+		$сolMax = PHPExcel_Cell::columnIndexFromString($sheet->getHighestColumn()); //максимальное количество используемых колонок в документе
+	    for($row = 0; $row < $rowMax; $row++)
+	        for($col = 0; $col < $сolMax; $col++) {
+		        //получение значени€ €чейки. ≈сли пуста€, то пропуск
+		        if(!$txt = $sheet->getCellByColumnAndRow($col, $row + 1)->getValue())
+			        continue;
+
+		        foreach($var as $v => $i) {
+			        if(!is_array($i)) //если не список, то пропуск
+				        continue;
+
+			        if($v != $txt)//если в €чейке нет переменной, котора€ соответствует данному списку, то пропуск
+				        continue;
+
+			        if(count($i) > 1)//вставка количества строк согласно списку
+						$sheet->insertNewRowBefore($row + 2, count($i) - 1);
+
+			        foreach($i as $num => $stroka)
+			            foreach($stroka as $n => $sp) {
+			                $sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
+			        }
+		        }
+	        }
+		$varSpisok--;
+    }
 }
 
 

@@ -226,10 +226,10 @@ switch(@$_POST['op']) {
 		break;
 	case 'devstory_task_ready'://задача выполнена
 		if(!SA)
-			jsonError();
+			jsonError('Нет прав');
 
 		if(!$task_id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный id задачи');
 
 		$time = _txt($_POST['time']);
 
@@ -238,7 +238,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$task_id."
 				  AND `status_id` IN(1,2)";
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Задачи не существует');
 
 		if($r['status_id'] == 1) {
 			$sql = "SELECT *
@@ -246,7 +246,7 @@ switch(@$_POST['op']) {
 					WHERE `task_id`=".$task_id."
 					  AND `time_end`='0000-00-00 00:00:00'";
 			if(!$tm = query_assoc($sql))
-				jsonError();
+				jsonError('Нет активного времени');
 
 			$spent = round((strtotime($time) - strtotime($tm['time_start'])) / 60);
 
@@ -257,9 +257,18 @@ switch(@$_POST['op']) {
 			query($sql);
 		}
 
+		$dtime_end = 'CURRENT_TIMESTAMP';
+		$sql = "SELECT *
+				FROM `_devstory_time`
+				WHERE `task_id`=".$task_id."
+				ORDER BY `id` DESC
+				LIMIT 1";
+		if($tm = query_assoc($sql))
+			$dtime_end = "'".$tm['time_end']."'";
+
 		$sql = "UPDATE `_devstory_task`
 				SET `status_id`=3,
-					`dtime_end`=CURRENT_TIMESTAMP
+					`dtime_end`=".$dtime_end."
 				WHERE `id`=".$task_id;
 		query($sql);
 
