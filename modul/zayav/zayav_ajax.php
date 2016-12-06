@@ -989,9 +989,9 @@ switch(@$_POST['op']) {
 
 	case 'zayav_expense_add'://внесение расхода по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
+			jsonError('Некорректный id заявки');
 		if(!$cat_id = _num($_POST['cat_id']))
-			jsonError();
+			jsonError('Неизвестная категория');
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError('Заявки id:'.$zayav_id.' не существует');

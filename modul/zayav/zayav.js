@@ -1144,12 +1144,6 @@ var _zayavSpisok = function(v, id) {
 				case 4: break;
 			}
 
-			if(!send.sum) {
-				dialog.err('Некорректная сумма');
-				sumFocus();
-				return;
-			}
-
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
