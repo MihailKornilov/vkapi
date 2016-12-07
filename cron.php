@@ -3,6 +3,8 @@ define('CRON_KEY', 'jern32n32Md93J83hs');
 if(@$_GET['cron_key'] != CRON_KEY)
 	exit;
 
+set_time_limit(300);
+
 error_reporting(E_ALL);
 ini_set('display_errors', true);
 ini_set('display_startup_errors', true);
