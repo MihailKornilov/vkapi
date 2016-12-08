@@ -683,7 +683,7 @@ switch(@$_POST['op']) {
 			_history(array(
 				'type_id' => 110,
 				'tovar_id' => $tovar['id'],
-				'v1' => $r['count'],
+				'v1' => _ms($r['count']),
 				'v2' => _cena($r['cena']),
 				'v3' => _cena($r['summa']),
 				'v4' => _tovarMeasure($tovar['measure_id'])
@@ -693,7 +693,7 @@ switch(@$_POST['op']) {
 			_history(array(
 				'type_id' => 111,
 				'tovar_id' => $tovar['id'],
-				'v1' => $r['count'],
+				'v1' => _ms($r['count']),
 				'v2' => _tovarMeasure($tovar['measure_id']),
 				'v3' => $r['about']
 			));

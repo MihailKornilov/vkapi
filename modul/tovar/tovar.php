@@ -1665,6 +1665,11 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		if($r['type_id'] == 6)
 			$class = 'off';
 
+
+		//TODO удаление движения для Веры Губинской
+		$delDop = array();
+		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
+			$delDop = array('del'=>1);
 		$send .= '<tr class="'.$class.'">'.
 				'<td class="w70">'.$type[$r['type_id']].
 				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
@@ -1675,7 +1680,7 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 					($r['schet_id'] ? 'счёт '.$r['schet_link_full'] : '').
 					$r['about'].
 				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'.(!$r['schet_id'] ? _iconDel($r) : '').
+				'<td class="ed">'.(!$r['schet_id'] ? _iconDel($r + $delDop) : '').
 		'</div>';
 	}
 
