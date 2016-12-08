@@ -4,23 +4,25 @@ var cityGet = function(val, city_id, city_name) {
 			return;
 		if(!val)
 			val = '';
-		if(city_id == undefined || city_id == '0')
-			city_id = 0;
+		city_id == _num(city_id);
 		$('#add-city_id')._select('process');
-		VK.api('places.getCities',{country:country_id, q:val}, function(data) {
-			var insert = 1; // Вставка города при редактировании, если отсутствует в списке
-			for(var n = 0; n < data.response.length; n++) {
-				var sp = data.response[n];
-				sp.uid = sp.cid;
+		VK.api('places.getCities',{country_id:country_id, q:val}, function(data) {
+			if(!data.response)
+				return;
+			var items = data.response.items,
+				insert = 1; // Вставка города при редактировании, если отсутствует в списке
+			for(var n = 0; n < items.length; n++) {
+				var sp = items[n];
+				sp.uid = sp.id;
 				sp.content = sp.title + (sp.area ? '<span>' + sp.area + '</span>' : '');
 				if(city_id == sp.uid)
 					insert = 0;
 			}
 			if(city_id && insert)
-				data.response.unshift({uid:city_id,title:city_name});
-			if(val.length == 0)
-				data.response[0].content = '<B>' + data.response[0].title + '</B>';
-			$('#add-city_id')._select(data.response);
+				items.unshift({uid:city_id,title:city_name});
+			if(!val.length)
+				items[0].content = '<B>' + items[0].title + '</B>';
+			$('#add-city_id')._select(items);
 			if(city_id)
 				$('#add-city_id')._select(city_id);
 		});
@@ -135,13 +137,14 @@ var cityGet = function(val, city_id, city_name) {
 			func:function(id) {
 				cityShow();
 				if(id) {
-					$('#city_id')._select(0)._select('process');
-					VK.api('places.getCities',{country:id}, function(data) {
-						var d = data.response;
+					$('#add-city_id')._select(0);
+					$('#add-city_id')._select('process');
+					VK.api('places.getCities',{country_id:id}, function(data) {
+						var d = data.response.items;
 						for(n = 0; n < d.length; n++)
-							d[n].uid = d[n].cid;
+							d[n].uid = d[n].id;
 						d[0].content = '<b>' + d[0].title + '</b>';
-						$('#city_id')._select(d);
+						$('#add-city_id')._select(d);
 					});
 				}
 				kupezzObEditPreview();
