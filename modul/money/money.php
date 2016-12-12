@@ -428,11 +428,11 @@ function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёт
 	if(!$arr = query_arr($sql))
 		return '';
 
-	$send = '<table class="_spisok l w400 mb10">';
+	$send = '<table class="_spisokTab w400 mb10">';
 	foreach($arr as $r) {
 		$send .=
-			'<tr>'.
-				'<td class="type">'._invoice($r['id']).
+			'<tr class="over1">'.
+				'<td class="color-sal">'._invoice($r['id']).
 				'<td class="w50 center">'.$r['count'].
 				'<td class="w100 r">'._sumSpace($r['sum'], 1);
 	}
