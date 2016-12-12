@@ -1963,6 +1963,7 @@ $.fn._select = function(o) {
 				case 'title': return s.title();
 				case 'inp': return s.inp();
 				case 'focus': s.focus(); break;
+				case 'first': s.first(); break;//установка первого элемента в списке
 				case 'remove':
 					$('#' + id + '_select').remove();
 					window[id + '_select'] = null;
@@ -2398,6 +2399,11 @@ $.fn._select = function(o) {
 	};
 	t.focus = function() {//установка фокуса на input
 		inp.focus();
+	};
+	t.first = function() {//установка первого элемента в списке
+		if(!o.spisok.length)
+			setVal(0);
+		setVal(o.spisok[0].uid);
 	};
 
 	window[id + '_select'] = t;

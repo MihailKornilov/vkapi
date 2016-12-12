@@ -1372,6 +1372,9 @@ switch(@$_POST['op']) {
 	case 'schet_pay_load':
 		$client_id = _num($_POST['client_id']);
 
+		$send['org_id'] = _app('org_default');
+		$send['bank_id'] = _app('bank_default');
+		$nomer = 0;
 		$date_create = '';
 		$send['content'] = array();
 
@@ -1391,12 +1394,46 @@ switch(@$_POST['op']) {
 			}
 		}
 
+		//список организаций для _select
+		$sql = "SELECT `id`,`name`
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`";
+		$send['org'] = query_selArray($sql);
+
+		//список банков для _select
+		$sql = "SELECT `id`,`name`,`org_id`
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`";
+		$send['bank'] = query_selMultiArray($sql);
+		$bankExist = isset($send['bank'][$send['org_id']]);
+		$bankCount = count(@$send['bank'][$send['org_id']]);
+
 		$send['html'] = utf8(
 			_schetPayTypeSelect($schet_id).
 			'<div id="schet-pay-content"'.($schet_id ? '' : ' class="dn"').'>'.
 				'<table class="bs10">'.
+
+					'<tr><td class="label r">Получатель:'.
+						//если нет организаций, то сообщение об отсутствии
+						'<td class="red b'.(!_app('org_count') ? '' : ' dn').'">Отсутствуют реквизиты организации. <a href="'.URL.'&p=setup&d=org">Настроить</a>.'.
+						//если одна организация, то показывается просто название
+						'<td class="b'.(_app('org_count') == 1 ? '' : ' dn').'">'._app('name').
+						//если более одной организации, то возможность выбора
+						'<td'.(_app('org_count') > 1 ? '' : ' class="dn"').'><input type="hidden" id="org_id" value="'.$send['org_id'].'" />'.
+
+					'<tr'.(!_app('org_count') ? ' class="dn"' : '').'>'.
+						'<td class="label r">Банк получателя:'.
+						//если нет банков, то сообщение об отсутствии
+						'<td class="bank-0 red b'.($bankExist ? ' dn' : '').'">Отсутствуют данные банка. <a href="'.URL.'&p=setup&d=org">Настроить</a>.'.
+						//если один банк, то показывается просто название
+						'<td class="bank-1 b'.($bankCount == 1 ? '' : ' dn').'">'.win1251(@$send['bank'][$send['org_id']][0]['title']).
+						//если более одного банка, то возможность выбора
+						'<td class="bank-2'.($bankCount > 1 ? '' : ' dn').'"><input type="hidden" id="bank_id" value="'.$send['bank_id'].'" />'.
+
 					'<tr><td class="label r">Cчёт номер:'.
-						'<td><input type="text" class="w35 r grey" id="nomer" value="'.schet_pay_nomer_next().'" readonly />'.
+						'<td><input type="text" class="w50 r grey" id="nomer" value="'._app('schet_prefix').schet_pay_nomer_next($nomer).'" readonly />'.
 							'<span class="ml20">от</span> '.
 							'<input type="hidden" id="date-create" value="'.$date_create.'" />'.
 					'<tr><td class="label r">Плательщик:'.
@@ -1424,6 +1461,10 @@ switch(@$_POST['op']) {
 	case 'schet_pay_add'://создание счёта на оплату
 		if(!$type_id = _num($_POST['type_id']))
 			jsonError('Некорректный вид счёта');
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Не указана организация');
+		if(!$bank_id = _num($_POST['bank_id']))
+			jsonError('Не указан банк получателя');
 		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
 			jsonError('Некорректная дата создания');
 
@@ -1439,30 +1480,85 @@ switch(@$_POST['op']) {
 
 		if(!$client_id)
 			jsonError('Не указан клиент');
-
-		if(!_clientQuery($client_id))
+		if(!$client = _clientQuery($client_id))
 			jsonError('Клиент не найден');
 
 		if(!$content = schet_pay_content_get())
 			jsonError('Некорректно заполнены поля');
 
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$org_id;
+		if(!$org = query_assoc($sql))
+			jsonError('Организации не существует');
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$bank_id;
+		if(!$bank = query_assoc($sql))
+			jsonError('Банка не существует');
+
+		$sum = schet_pay_content_get(1);
+
 		$sql = "INSERT INTO `_schet_pay` (
 					`app_id`,
 					`type_id`,
 					`nomer`,
-					`client_id`,
 					`zayav_id`,
 					`date_create`,
 					`sum`,
+
+					`org_id`,
+					`org_name_yur`,
+					`org_adres_yur`,
+					`org_inn`,
+					`org_kpp`,
+					`org_boss`,
+					`org_accountant`,
+					
+					`bank_id`,
+					`bank_name`,
+					`bank_bik`,
+					`bank_account`,
+					`bank_account_corr`,
+
+					`client_id`,
+					`client_name`,
+					`client_adres`,
+					`client_inn`,
+					`client_kpp`,
+
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
 					".$type_id.",
-					".($type_id == 2 ? '-' : '').schet_pay_nomer_next().",
-					".$client_id.",
+					".($type_id == 2 ? '-' : '').schet_pay_nomer_next(0).",
 					".$zayav_id.",
 					'".$date_create."',
-					".schet_pay_content_get(1).",
+					".$sum.",
+
+					".$org_id.",
+					'".addslashes($org['name_yur'])."',
+					'".addslashes($org['adres_yur'])."',
+					'".addslashes($org['inn'])."',
+					'".addslashes($org['kpp'])."',
+					'".addslashes($org['post_boss'])."',
+					'".addslashes($org['post_accountant'])."',
+
+					".$bank_id.",
+					'".addslashes($bank['name'])."',
+					'".addslashes($bank['bik'])."',
+					'".addslashes($bank['account'])."',
+					'".addslashes($bank['account_corr'])."',
+
+					".$client_id.",
+					'".addslashes(_clientVal($client_id, 'name'))."',
+					'".addslashes($client['adres'])."',
+					'".addslashes($client['inn'])."',
+					'".addslashes($client['kpp'])."',
+
 					".VIEWER_ID."
 				)";
 		query($sql);
@@ -1483,12 +1579,24 @@ switch(@$_POST['op']) {
 				  AND !`schet_id`";
 		query($sql);
 
+		_history(array(
+			'type_id' => 59,
+			'schet_id' => $insert_id,
+			'client_id' => $client_id,
+			'zayav_id' => $zayav_id,
+			'v1' => $sum
+		));
+
 		$send['schet_id'] = $insert_id;
 		jsonSuccess($send);
 		break;
 	case 'schet_pay_edit'://редактирование счёта на оплату
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError('Некорректный id счёта');
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Не указана организация');
+		if(!$bank_id = _num($_POST['bank_id']))
+			jsonError('Не указан банк получателя');
 		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
 			jsonError('Некорректная дата создания');
 
@@ -1514,7 +1622,9 @@ switch(@$_POST['op']) {
 		$content = schet_pay_content_get();
 
 		$sql = "UPDATE `_schet_pay`
-				SET `client_id`=".$client_id.",
+				SET `org_id`=".$org_id.",
+					`bank_id`=".$bank_id.",
+					`client_id`=".$client_id.",
 					`zayav_id`=".$zayav_id.",
 					`date_create`='".$date_create."',
 					`sum`=".schet_pay_content_get(1)."
@@ -1560,6 +1670,10 @@ switch(@$_POST['op']) {
 		}
 
 		define('PREVIEW', $schet['type_id'] == 2);
+
+		$hist = _history(array('schet_id'=>$schet_id));
+		$send['hist'] = _num($hist['all']);
+		$send['hist_spisok'] = utf8($hist['spisok']);
 
 		$send['html'] = utf8(
 			(PREVIEW ?
@@ -1614,7 +1728,8 @@ switch(@$_POST['op']) {
 
 			($schet['deleted'] ? '<div class="_info mt20 red center b fs14">Счёт удалён.</div>' : '').
 
-			'<div class="bg-link">Показать историю действий со счётом</div>'
+			'<div class="bg-link">Показать историю действий со счётом</div>'.
+			'<div class="dn">'.$hist['spisok'].'</div>'
 		);
 
 		jsonSuccess($send);
@@ -1631,7 +1746,7 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_schet_pay`
 				SET `type_id`=1,
-					`nomer`=".schet_pay_nomer_next()."
+					`nomer`=".schet_pay_nomer_next(0)."
 				WHERE `id`=".$schet_id;
 		query($sql);
 
@@ -2895,7 +3010,9 @@ function schet_pay_content_get($return_sum=0) {//получение содержания счёта на о
 
 	return $content;
 }
-function schet_pay_nomer_next() {//очередной порядковый номер счёта
+function schet_pay_nomer_next($nomer) {//очередной порядковый номер счёта
+	if($nomer)
+		return $nomer;
 	$nomer = _app('schet_nomer_start');
 	$max = _maxSql('_schet_pay', 'nomer', 1);
 	return $nomer > $max ? $nomer : $max;

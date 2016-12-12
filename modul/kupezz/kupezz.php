@@ -394,7 +394,10 @@ function kupezz_my() {
 	);
 	return
 	'<div id="kupezz-my">'.
-		'<div class="path"><a href="'.URL.'&p=kupezz">КупецЪ</a> » Мои объявления</div>'.
+		'<div class="hd1">'.
+			'<a class="link" href="'.URL.'&p=kupezz">КупецЪ</a>'.
+			' » Мои объявления'.
+		'</div>'.
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td class="left">'.$data['spisok'].

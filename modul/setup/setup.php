@@ -588,7 +588,7 @@ function setup_org_empty($arr) {//Не создано ни одной организации
 		'<button class="vk" onclick="setupOrgEdit()">Добавить организацию</button>'.
 	'</div>';
 }
-function setup_org_menu($spisok) {//Меню оргаризаций, если больше двух
+function setup_org_menu($spisok) {//Меню организаций, если больше двух
 	if(count($spisok) < 2)
 		return '';
 
@@ -607,8 +607,11 @@ function setup_org_main($g) {//Основная информация об организации
 		'<div onclick="setupOrgEdit('.$g['id'].')" class="icon icon-edit fr'._tooltip('Редактировать<br />данные организации', -60, '', 1).'</div>'.
 	'</div>'.
 
-	'<table class="t">'.
-					 '<tr><td class="label top w175">Название организации:<td>'.$g['name'].
+	'<table class="bs15">'.
+				(_app('org_count') > 1 ?
+					 '<tr><td class="label">Использовать по умолчанию:<td>'._check('org_default'.$g['id'], '', $g['default'])
+				: '').
+					 '<tr><td class="label top w200">Название организации:<td><b>'.$g['name'].'</b>'.
    ($g['name_yur'] ? '<tr><td class="label top">Наименование юр. лица:<td>'.$g['name_yur'] : '').
 	  ($g['phone'] ? '<tr><td class="label">Контактные телефоны:<td>'.$g['phone'] : '').
 		($g['fax'] ? '<tr><td class="label">Факс:<td>'.$g['fax'] : '').
@@ -631,20 +634,20 @@ function setup_org_rekvisit($g) {//Реквизиты организации
 
 	return
 			'<div class="hd2 mt20">Реквизиты</div>'.
-			'<table class="t">'.
+			'<table class="bs15">'.
 
 			($g['ogrn'] ?
-	            '<tr><td class="label w175">'.
+	            '<tr><td class="label w200">'.
 	                    'ОГРН:'.
 	                    ' <div class="icon icon-hint" val="1"></div>'.
 	                '<td>'.$g['ogrn']
 			: '').
 
-   ($g['inn'] ? '<tr><td class="label w175">ИНН:<td>'.$g['inn'] : '').
-   ($g['kpp'] ? '<tr><td class="label w175">КПП:<td>'.$g['kpp'] : '').
-  ($g['okud'] ? '<tr><td class="label w175">ОКУД:<td>'.$g['okud'] : '').
-  ($g['okpo'] ? '<tr><td class="label w175">ОКПО:<td>'.$g['okpo'] : '').
- ($g['okved'] ? '<tr><td class="label w175 top">Вид деятельности<br />по ОКВЭД:'.
+   ($g['inn'] ? '<tr><td class="label w200">ИНН:<td>'.$g['inn'] : '').
+   ($g['kpp'] ? '<tr><td class="label w200">КПП:<td>'.$g['kpp'] : '').
+  ($g['okud'] ? '<tr><td class="label w200">ОКУД:<td>'.$g['okud'] : '').
+  ($g['okpo'] ? '<tr><td class="label w200">ОКПО:<td>'.$g['okpo'] : '').
+ ($g['okved'] ? '<tr><td class="label w200 top">Вид деятельности по ОКВЭД:'.
 	                '<td class="top">'.$g['okved']
  : '').
 			'</table>';
@@ -658,9 +661,9 @@ function setup_org_post($g) {//Должностные лица организации
 
 	return
 		'<div class="hd2 mt20">Должностные лица</div>'.
-		'<table class="t">'.
-		  ($g['post_boss'] ? '<tr><td class="label w175">Руководитель:<td>'.$g['post_boss'] : '').
-	($g['post_accountant'] ? '<tr><td class="label w175">Главный бухгалтер:<td>'.$g['post_accountant'] : '').
+		'<table class="bs15">'.
+		  ($g['post_boss'] ? '<tr><td class="label w200">Руководитель:<td>'.$g['post_boss'] : '').
+	($g['post_accountant'] ? '<tr><td class="label w200">Главный бухгалтер:<td>'.$g['post_accountant'] : '').
 		'</table>';
 }
 function setup_org_bank($org_id, $bank) {//Банки организации
@@ -668,13 +671,17 @@ function setup_org_bank($org_id, $bank) {//Банки организации
 
 	if(!empty($bank)) {
 		$spisok = '';
+		$defShow = count($bank) > 1 ? '' : ' dn';
 		foreach($bank as $r) {
 			$spisok .=
-			'<table class="t bank w100p">'.
-				'<tr><td class="label w175">БИК:'.
+			'<table class="bank bs15 w100p mb10">'.
+				'<tr><td class="label w200">БИК:'.
 					'<td>'.$r['bik'].
 						'<div onclick="setupBankDel('.$r['id'].')" class="icon icon-del fr'._tooltip('Удалить банк', -40).'</div>'.
 						'<div onclick="setupBankEdit('.$org_id.','.$r['id'].')" class="icon icon-edit fr'._tooltip('Редактировать данные банка', -88).'</div>'.
+						'<div val="'.$r['id'].'" class="bank-default fr mr5 mt1'.$defShow._tooltip('Использовать по умолчанию', -89).
+							_check('bank_default'.$r['id'], '', $r['default']).
+						'</div>'.
 				'<tr><td class="label top">Наименование банка:<td>'.$r['name'].
 				'<tr><td class="label">Корреспондентский счёт:<td>'.$r['account_corr'].
 				'<tr><td class="label">Расчётный счёт:<td>'.$r['account'].
@@ -740,8 +747,8 @@ function setup_org_nalog($g) {//Налоговый учёт организации
 		'Налоговый учёт'.
 		'<div onclick="setupNalogEdit('.$g['id'].')" class="icon icon-edit fr'._tooltip('Настроить налоговый учёт', -80).'</div>'.
 	'</div>'.
-	'<table class="t">'.
-		'<tr><td class="label w175">Система налогообложения:'.
+	'<table class="bs15">'.
+		'<tr><td class="label w200">Система налогообложения:'.
 			'<td>'.setupNalogSystem($g['nalog_system']).
 				'<input type="hidden" id="nalog_system'.$g['id'].'" value="'.$g['nalog_system'].'" />'.
 		'<tr><td class="label ">НДС:'.
@@ -1863,7 +1870,7 @@ function setup_schet_pay() {//счёт на оплату
 			'<tr><td class="w175"><td>'._check('schet-pay-use', 'включение счетов на оплату', $v['use']).
 		'</table>'.
 		'<table id="schet-pay-tab" class="bs10'._dn($v['use']).'">'.
-			'<tr><td class="label w175">Порядковый номер:<td><input type="text" id="nomer_start" class="w50" value="'.$v['nomer_start'].'" />'.
+			'<tr><td class="label w175">Стартовый номер:<td><input type="text" id="nomer_start" class="w50" value="'.$v['nomer_start'].'" />'.
 			'<tr><td class="label">Префикс: <div class="icon icon-hint" val="2"></div><td><input type="text" id="prefix" class="w50" value="'.$v['prefix'].'" />'.
 			'<tr><td class="label topi">Сообщение для клиента:<td><textarea id="msg_client" class="w300 h50">'.$v['msg_client'].'</textarea>'.
 			'<tr><td><td><button class="vk">Сохранить</button>'.
@@ -1880,10 +1887,14 @@ function setup_schet_pay_check() {//проверка наличия настроек счёта
 	if(!$r = query_assoc($sql)) {
 		$sql = "INSERT INTO `_schet_pay_setup` (
 					`app_id`,
+					`prefix`,
 					`msg_client`
 				) VALUES (
 					".APP_ID.",
-					'Внимание! Оплата данного счета означает согласие с условиями поставки товара. Уведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом, при наличии доверенности и паспорта.'
+					'',
+					'Внимание! Оплата данного счета означает согласие с условиями поставки товара. ".
+					"Уведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. ".
+					"Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом, при наличии доверенности и паспорта.'
 				)";
 		query($sql);
 

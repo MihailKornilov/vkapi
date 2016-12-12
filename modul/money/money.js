@@ -2084,7 +2084,7 @@ var _accrualAdd = function(o) {
 			send = {
 				op:'schet_pay_load',
 				schet_id:schet_id,
-				client_id:CI ? CI.id : 0
+				client_id:window.CI ? CI.id : 0
 			};
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
@@ -2096,8 +2096,30 @@ var _accrualAdd = function(o) {
 		function loaded(res) {
 			dialog.content.html(res.html);
 			$('#date-create')._calendar({lost:1});
-			$('#client_id').clientSel({
-				width:300
+			$('#client_id').clientSel({width:300});
+			$('#org_id')._select({
+				width:300,
+				spisok:res.org,
+				func:function(v) {
+					if(res.bank[v]) {
+						var len = res.bank[v].length;
+						$('#bank_id')
+							._select(res.bank[v])
+							._select('first');
+						$('.bank-0').hide();
+						$('.bank-1')[len == 1 ? 'show' : 'hide']();
+						$('.bank-2')[len > 1 ? 'show' : 'hide']();
+					} else {
+						$('#bank_id')._select(0);
+						$('.bank-0').show();
+						$('.bank-1').hide();
+						$('.bank-2').hide();
+					}
+				}
+			});
+			$('#bank_id')._select({
+				width:300,
+				spisok:res.bank[res.org_id]
 			});
 			$('#content').schetPayContent({
 				spisok:res.content
@@ -2116,6 +2138,8 @@ var _accrualAdd = function(o) {
 				op:'schet_pay_' + (schet_id ? 'edit' : 'add'),
 				schet_id:schet_id,
 				type_id:$('#schet-pay-type').val(),
+				org_id:$('#org_id').val(),
+				bank_id:$('#bank_id').val(),
 				date_create:$('#date-create').val(),
 				client_id:$('#client_id').val(),
 				content:$('#content').val()
@@ -2162,6 +2186,11 @@ var _accrualAdd = function(o) {
 					dialog.close();
 					schetPayEdit(schet_id);
 				});
+			dialog.content.find('.bg-link').click(function() {
+				$(this)
+					.slideUp(200)
+					.next().slideDown(200);
+			});
 			$('#schet-pay-to-pay').click(function() {
 				schetPayToPay(schet_id, dialog);
 			});

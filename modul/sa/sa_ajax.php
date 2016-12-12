@@ -103,34 +103,42 @@ switch(@$_POST['op']) {
 
 	case 'sa_history_type_add':
 		if(!empty($_POST['type_id']) && !_num($_POST['type_id']))
-			jsonError();
+			jsonError('Некорректный type_id');
 
 		$type_id = _num($_POST['type_id']);
 		$txt = win1251(trim($_POST['txt']));
+		$txt_client = win1251(trim($_POST['txt_client']));
+		$txt_zayav = win1251(trim($_POST['txt_zayav']));
+		$txt_schet = win1251(trim($_POST['txt_schet']));
 		if(($ids = _ids($_POST['category_ids'], 1)) == false && $_POST['category_ids'] != 0)
-			jsonError();
+			jsonError('Некорректный список id категорий');
 
 		if($type_id) {
 			$sql = "SELECT COUNT(`id`) FROM `_history_type` WHERE `id`=".$type_id;
 			if(query_value($sql))
-				jsonError();
+				jsonError('type_id '.$type_id.' занят');
 		}
 
 		if(!$txt)
-			jsonError();
+			jsonError('Отсутствует текст константы');
 
 		$sql = "INSERT INTO `_history_type` (
 					`id`,
-					`txt`
+					`txt`,
+					`txt_client`,
+					`txt_zayav`,
+					`txt_schet`
 				) VALUES (
 					".$type_id.",
-					'".addslashes($txt)."'
+					'".addslashes($txt)."',
+					'".addslashes($txt_client)."',
+					'".addslashes($txt_zayav)."',
+					'".addslashes($txt_schet)."'
 				)";
 		query($sql);
 
 		if(!$type_id)
 			$type_id = query_insert_id('_history_type');
-
 
 		sa_history_ids_insert($type_id, $ids);
 
@@ -139,16 +147,19 @@ switch(@$_POST['op']) {
 		break;
 	case 'sa_history_type_edit':
 		if(!$type_id_current = _num($_POST['type_id_current']))
-			jsonError();
+			jsonError('Некорректный текущий type_id');
 		if(!$type_id = _num($_POST['type_id']))
-			jsonError();
+			jsonError('Некорректный type_id');
 		if(($ids = _ids($_POST['category_ids'], 1)) == false && $_POST['category_ids'] != 0)
-			jsonError();
+			jsonError('Некорректный список id категорий');
 
 		$txt = win1251(trim($_POST['txt']));
+		$txt_client = win1251(trim($_POST['txt_client']));
+		$txt_zayav = win1251(trim($_POST['txt_zayav']));
+		$txt_schet = win1251(trim($_POST['txt_schet']));
 
 		if(!$txt)
-			jsonError();
+			jsonError('Отсутствует текст константы');
 
 		if($type_id_current != $type_id) {
 			$sql = "SELECT COUNT(`id`) FROM `_history_type` WHERE `id`=".$type_id;
@@ -173,7 +184,10 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `_history_type`
-				SET `txt`='".addslashes($txt)."'
+				SET `txt`='".addslashes($txt)."',
+					`txt_client`='".addslashes($txt_client)."',
+					`txt_zayav`='".addslashes($txt_zayav)."',
+					`txt_schet`='".addslashes($txt_schet)."'
 				WHERE `id`=".$type_id;
 		query($sql);
 

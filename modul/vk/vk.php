@@ -368,6 +368,18 @@ function _app($i='all') {//ѕолучение данных о приложении
 			$org = $org_assoc;
 		}
 
+		//получение количества организаций
+		$sql = "SELECT COUNT(*)
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID;
+		$arr['org_count'] = _num(query_value($sql));
+		
+		//организаци€ по умолчанию
+		$sql = "SELECT `id`
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `default`";
+		$arr['org_default'] = _num(query_value($sql));
 		
 		//банки организаций
 		$bank = array(
@@ -391,10 +403,20 @@ function _app($i='all') {//ѕолучение данных о приложении
 			);
 		}
 
+		//банк по умолчанию в организации по умолчанию
+		$sql = "SELECT `id`
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$arr['org_default']."
+				  AND `default`";
+		$arr['bank_default'] = _num(query_value($sql));
+
 		
 		//настройки счЄта на оплату
 		$schet_pay = array(
-			'schet_pay' => 0
+			'schet_pay' => 0,
+			'schet_prefix' => '',
+			'schet_nomer_start' => 0
 		);
 
 		$sql = "SELECT *
@@ -404,6 +426,7 @@ function _app($i='all') {//ѕолучение данных о приложении
 		if($r = query_assoc($sql)) {
 			$schet_pay = array(
 				'schet_pay' => _bool($r['use']),
+				'schet_prefix' => $r['prefix'],
 				'schet_nomer_start' => _num($r['nomer_start'])
 			);
 		}
@@ -1131,9 +1154,9 @@ function _kop($v) {//получение копеек из суммы
 	if(!$ost = $v - floor($v))
 		return '00 копеек';
 
+	$ost = round($ost * 100);
 
-	$ost = floor($ost * 100);
-	return $ost.' копе'._end($ost, 'йка', 'йки', 'ек');
+	return ($ost < 10 ? 0 : '').$ost.' копе'._end($ost, 'йка', 'йки', 'ек');
 }
 function _maxSql($table, $pole='sort', $app=0, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	$sql = "SELECT IFNULL(MAX(`".$pole."`)+1,1)
@@ -1490,7 +1513,7 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	xcache_unset($prefix.'client_from');//источники, откуда пришЄл клиент
 	xcache_unset($prefix.'zayav_expense');//категории расходов за€вки
 	xcache_unset($prefix.'zayav_status');//статусы за€вки
-	xcache_unset($prefix.'tovar_name');
+	xcache_unset($prefix.'tovar_name'); //наименовани€ товаров
 	xcache_unset($prefix.'tovar_vendor');
 	xcache_unset($prefix.'tovar_category');
 	xcache_unset($prefix.'tovar_feature_name');

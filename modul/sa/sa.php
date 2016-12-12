@@ -21,11 +21,8 @@ function _sa_script() {
 }
 function sa_global_index() {//вывод ссылок суперадминистратора для всех приложений
 	return
-	'<div class="path">'.
-		'<div id="app-id" val="'._app('app_name').'">'.APP_ID.'</div>'.
-		sa_cookie_back().
-		'Администрирование'.
-	'</div>'.
+	saPath().
+
 	'<div id="sa-index">'.
 		'<h1>Global:</h1>'.
 		'<a href="'.URL.'&p=sa&d=menu">Разделы меню</a>'.
@@ -62,24 +59,32 @@ function sa_cookie_back() {//сохранение пути для возвращения на прежнюю страницу
 	$d = empty($_COOKIE['pre_d']) ? '' :'&d='.$_COOKIE['pre_d'];
 	$d1 = empty($_COOKIE['pre_d1']) ? '' :'&d1='.$_COOKIE['pre_d1'];
 	$id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
-	return '<a href="'.URL.'&p='.@$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
+	return '<a class="link" href="'.URL.'&p='.@$_COOKIE['pre_p'].$d.$d1.$id.'">'._app('app_name').'</a> » ';
 }
-function sa_path($v1, $v2='') {
+function saPath($v=array()) {//Верхняя строка: путь настроек
+	$v = array(
+		'name' => @$v['name'],          // название раздела
+		'name_d' => @$v['name_d'],      // название подраздела
+		'link_d' => @$v['link_d']       // ссылка на предыдущий раздел
+	);
+
+	if($v['name_d'])
+		$v['name_d'] = '<a class="link" href="'.URL.'&p=sa&d='.$v['link_d'].'">'.$v['name_d'].'</a> » ';
+
 	return
-		'<div class="path">'.
-			'<div id="app-id" val="'._app('app_name').'">'.APP_ID.'</div>'.
-			sa_cookie_back().
-			'<a href="'.URL.'&p=sa">Администрирование</a> » '.
-			$v1.($v2 ? ' » ' : '').
-			$v2.
-		'</div>';
+	'<div class="hd1">'.
+		sa_cookie_back().
+		($v['name'] ? '<a class="link" href="'.URL.'&p=sa">Администрирование</a> » ' : 'Администрирование').
+		$v['name_d'].
+		$v['name'].
+	'</div>';
 }
 
 
 
 function sa_menu() {//управление разделами меню
 	return
-		sa_path('Разделы меню').
+		saPath(array('name'=>'Разделы меню')).
 		'<div id="sa-menu">'.
 			'<div class="headName">Главное меню<a class="add" onclick="saMenuEdit()">Добавить</a></div>'.
 			'<div id="spisok">'.sa_menu_spisok().'</div>'.
@@ -203,15 +208,17 @@ function sa_history() {//управление историей действий
 			'var CAT='.$category.','.
 				'TYPE_ID_MAX='.$max.';'.
 		'</script>'.
-		sa_path('История действий').
+
+		saPath(array('name'=>'История действий')).
+
 		'<div id="sa-history">'.
 			'<div class="headName">'.
 				'Константы истории действий'.
-				'<a class="add const">Добавить константу</a>'.
+				'<a class="add" onclick="saHistoryEdit()">Добавить константу</a>'.
 				'<span> :: </span>'.
 				'<a class="add" href="'.URL.'&p=sa&d=historycat">Настроить категории</a>'.
 			'</div>'.
-			'<div id="spisok">'.sa_history_spisok().'</div>'.
+			'<div id="spisok" class="mar20">'.sa_history_spisok().'</div>'.
 		'</div>';
 }
 function sa_history_spisok() {
@@ -279,10 +286,11 @@ function sa_history_spisok() {
 	}
 
 	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="type_id">type_id'.
+		'<table class="_spisokTab">'.
+			'<tr><th class="w50">type_id'.
 				'<th class="txt">Наименование'.
-				'<th class="count">Кол-во'.
+				'<th class="w50">Кол-во'.
+				'<th class="w50">'.
 		'</table>';
 	foreach($category as $r)
 		$send .= sa_history_spisok_page($r['name'], $r['type']);
@@ -298,26 +306,37 @@ function sa_history_spisok_page($name, $spisok) {//вывод списка конкретной катег
 	ksort($spisok);
 
 	$send =
-		'<div class="cat-name">'.$name.'</div>'.
-		'<table class="_spisok">';
+		'<div class="curP b mt10 pad10 over1" onclick="$(this).next().slideToggle(200)">'.
+			$name.' '.
+			'<span class="grey">('.count($spisok).')</span>'.
+		'</div>'.
+		'<div class="dn">'.
+			'<table class="_spisokTab">';
 
 	foreach($spisok as $r)
 		$send .=
-			'<tr><td class="type_id">'.$r['id'].
-				'<td class="txt">'.
-					'<textarea readonly id="txt'.$r['id'].'">'.$r['txt'].'</textarea>'.
-					(!empty($r['cats']) ? '<div class="cats">'.implode('&nbsp;&nbsp;&nbsp;', $r['cats']).'</div>' : '').
-				'<td class="count">'.(empty($r['count']) ? '' : $r['count']).
-				'<td class="set">'.
-					'<div class="img_edit" val="'.$r['id'].'"></div>'.
-					//'<div class="img_del"></div>'.
-					'<input type="hidden" id="ids'.$r['id'].'" value="'.implode(',', $r['ids']).'" />';
-	$send .= '</table>';
+			'<tr class="over3">'.
+				'<td class="w50 r grey">'.$r['id'].
+				'<td><textarea class="txt w450 min curP" readonly>'.$r['txt'].'</textarea>'.
+($r['txt_client'] ? '<div class="color-pay b mt10 ml8">Клиент:</div><textarea class="txt_client w450 min grey curP" readonly>'.$r['txt_client'].'</textarea>' : '').
+($r['txt_zayav'] ? '<div class="color-pay b mt10 ml8">Заявка:</div><textarea class="txt_zayav w450 min grey curP" readonly>'.$r['txt_zayav'].'</textarea>' : '').
+($r['txt_schet'] ? '<div class="color-pay b mt10 ml8">Счёт на оплату:</div><textarea class="txt_schet w450 min grey curP" readonly>'.$r['txt_schet'].'</textarea>' : '').
+					(!empty($r['cats']) ? '<div class="fr fs11 color-vin">'.implode('&nbsp;&nbsp;&nbsp;', $r['cats']).'</div>' : '').
+				'<td class="w50 center">'.(empty($r['count']) ? '' : $r['count']).
+				'<td class="w50">'.
+					'<div class="icon icon-edit" val="'.$r['id'].'"></div>'.
+					'<input type="hidden" class="ids" value="'.implode(',', $r['ids']).'" />';
+	$send .= '</table>'.
+		'</div>';
 	return $send;
 }
 function sa_history_cat() {//настройка категорий истории действий
 	return
-		sa_path('<a href="'.URL.'&p=sa&d=history">История действий</a>', 'Настройка категорий').
+		saPath(array(
+			'name' => 'Категории истории действий',
+			'name_d' => 'История действий',
+			'link_d' => 'history'
+		)).
 		'<div id="sa-history-cat">'.
 			'<div class="headName">Категории истории действий<a class="add">Добавить</a></div>'.
 			'<div id="spisok">'.sa_history_cat_spisok().'</div>'.
@@ -355,7 +374,7 @@ function sa_history_cat_spisok() {
 
 function sa_rule() {//управление историей действий
 	return
-		sa_path('Права сотрудников').
+		saPath(array('name'=>'Права сотрудников')).
 		'<div id="sa-rule">'.
 			'<div class="headName">Права сотрудников<a class="add">Добавить</a></div>'.
 			'<div id="spisok">'.sa_rule_spisok().'</div>'.
@@ -395,7 +414,7 @@ function sa_rule_spisok() {
 
 function sa_balans() {//управление балансами
 	return
-		sa_path('Балансы').
+		saPath(array('name'=>'Балансы')).
 		'<div id="sa-balans">'.
 			'<div class="headName">'.
 				'Управление балансами'.
@@ -479,7 +498,7 @@ function sa_client() {//настройки клиентов
 	}
 
 	return
-		sa_path('Настройки клиентов').
+		saPath(array('name'=>'Настройки клиентов')).
 		'<div id="sa-client">'.
 			'<div class="headName">Настройки клиентов</div>'.
 			'<a href="'.URL.'&p=sa&d=client&d1=edit">Поля - внесение/редактирование клиента</a>'.
@@ -501,12 +520,16 @@ function sa_client_pole($type_id) {
 	return
 		'<script>'.
 			'var SA_CLIENT_POLE_TYPE_ID='.$type_id.','.
-				'SA_CLIENT_POLE_TYPE_NAME="'.sa_zayav_pole_type($type_id).'";'.
+				'SA_CLIENT_POLE_TYPE_NAME="'.sa_client_pole_type($type_id).'";'.
 		'</script>'.
-		sa_path('<a href="'.URL.'&p=sa&d=client">Настройки клиентов</a>', sa_zayav_pole_type($type_id)).
+		saPath(array(
+			'name' => sa_client_pole_type($type_id),
+			'name_d' => 'Настройки клиентов',
+			'link_d' => 'client'
+		)).
 		'<div id="sa-client-pole">'.
 			'<div class="headName">'.
-				'Настройки полей: '.sa_zayav_pole_type($type_id).
+				'Настройки полей: '.sa_client_pole_type($type_id).
 				'<a class="add" onclick="saClientPoleEdit()">Новое поле</a>'.
 			'</div>'.
 			'<div id="spisok">'.sa_client_pole_spisok($type_id).'</div>'.
@@ -558,7 +581,11 @@ function sa_client_pole_spisok($type_id, $sel=false) {//отображение списка всех 
 function sa_client_category() {
 	$link = sa_client_category_link();
 	return
-		sa_path('<a href="'.URL.'&p=sa&d=client">Настройки клиентов</a>', 'Категории и поля').
+		saPath(array(
+			'name' => 'Категории и поля',
+			'name_d' => 'Настройки клиентов',
+			'link_d' => 'client'
+		)).
 		'<div id="sa-client-category">'.
 			'<div class="headName">'.
 				'Категории клиентов и использование полей'.
@@ -687,7 +714,7 @@ function sa_zayav() {//настройки заявок
 	}
 
 	return
-		sa_path('Настройки заявок').
+		saPath(array('name'=>'Настройки заявок')).
 		'<div id="sa-zayav">'.
 			'<div class="headName">Настройки заявок</div>'.
 			'<a href="'.URL.'&p=sa&d=zayav&d1=edit">Поля - внесение/редактирование заявки</a>'.
@@ -721,7 +748,11 @@ function sa_zayav_pole($type_id) {
 			'var SAZP_TYPE_ID='.$type_id.','.
 				'SAZP_TYPE_NAME="'.sa_zayav_pole_type($type_id).'";'.
 		'</script>'.
-		sa_path('<a href="'.URL.'&p=sa&d=zayav">Настройки заявок</a>', sa_zayav_pole_type($type_id)).
+		saPath(array(
+			'name' => sa_zayav_pole_type($type_id),
+			'name_d' => 'Настройки заявок',
+			'link_d' => 'zayav'
+		)).
 		'<div id="sa-zayav-pole">'.
 			'<div class="headName">'.
 				'Настройки полей: '.sa_zayav_pole_type($type_id).
@@ -778,7 +809,11 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 function sa_zayav_service() {
 	$link = sa_zayav_service_link();
 	return
-		sa_path('<a href="'.URL.'&p=sa&d=zayav">Настройки заявок</a>', 'Виды деятельности').
+		saPath(array(
+			'name' => 'Виды деятельности',
+			'name_d' => 'Настройки заявок',
+			'link_d' => 'zayav'
+		)).
 		'<div id="sa-zayav-service">'.
 			'<div class="headName">'.
 				'Виды деятельности заявок и использование полей'.
@@ -908,7 +943,7 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 
 function sa_tovar_measure() {//единицы измерения товаров
 	return
-		sa_path('Товары: единицы измерения').
+		saPath(array('name'=>'Товары: единицы измерения')).
 		'<div id="sa-measure">'.
 			'<div class="headName">'.
 				'Товары: единицы измерения'.
@@ -970,7 +1005,7 @@ function sa_tovar_measure_spisok() {
 
 function sa_color() {
 	return
-		sa_path('Цвета').
+		saPath(array('name'=>'Цвета')).
 		'<div id="sa-color">'.
 			'<div class="headName">'.
 				'Цвета'.
@@ -1035,7 +1070,7 @@ function sa_color_spisok() {
 
 function sa_template() {//управление переменными шаблонов документов
 	return
-		sa_path('Шаблоны документов').
+		saPath(array('name'=>'Шаблоны документов')).
 		'<div id="sa-template">'.
 			'<div class="headName">'.
 				'Шаблоны по умолчанию'.
@@ -1133,7 +1168,7 @@ function sa_template_var($spisok, $table_name) {
 
 function sa_count() {
 	return
-	sa_path('Счётчики').
+	saPath(array('name'=>'Счётчики')).
 	'<div id="sa-count">'.
 		'<div class="headName">Счётчики</div>'.
 		'<button class="vk client">Клиенты</button>'.
@@ -1157,7 +1192,7 @@ function sa_count() {
 
 function sa_app() {
 	return
-		sa_path('Приложения').
+		saPath(array('name'=>'Приложения')).
 		'<div id="sa-app">'.
 			'<div class="headName">'.
 				'Приложения'.
@@ -1207,7 +1242,7 @@ function sa_app_spisok() {
 function sa_user() {
 	$data = sa_user_spisok();
 	return
-	sa_path('Пользователи').
+	saPath(array('name'=>'Пользователи')).
 	'<div id="sa-user">'.
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.

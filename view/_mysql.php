@@ -82,7 +82,28 @@ function query_selArray($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {//список для _
 	while($sp = mysql_fetch_row($q))
 		$send[] = array(
 			'uid' => $sp[0],
-			'title' => utf8(addslashes(htmlspecialchars_decode(trim($sp[1]))))
+			'title' => utf8(htmlspecialchars_decode(trim($sp[1])))
+		);
+	return $send;
+}
+function query_selMultiArray($sql) {//ассоциативный список для _select при отправке через ajax в виде подкатегорий
+	/*
+		Ассоциация списков по ключу.
+		Пример запроса:
+			SELECT `id`,`name`,`org_id`
+		Ключ должен быть всегда третьим
+
+		{
+			1:[{uid:1,title:'name111'},{uid:2,title:'name22'}],
+			2:[{uid:5,title:'name33'}]
+		}
+	*/
+	$send = array();
+	$q = query($sql);
+	while($r = mysql_fetch_row($q))
+		$send[$r[2]][] = array(
+			'uid' => $r[0],
+			'title' => utf8(htmlspecialchars_decode(trim($r[1])))
 		);
 	return $send;
 }

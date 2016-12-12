@@ -800,6 +800,8 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_setup_org` (
 					`app_id`,
 
+					`default`,
+
 					`name`,
 					`name_yur`,
 					`phone`,
@@ -819,6 +821,8 @@ switch(@$_POST['op']) {
 					`post_accountant`
 				) VALUES (
 					".APP_ID.",
+
+					".(_app('org_count') > 0 ? 0 : 1).",
 
 					'".addslashes($name)."',
 					'".addslashes($name_yur)."',
@@ -930,6 +934,37 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_org_default'://установка организации по умолчанию
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$org_id = _num($_POST['org_id']))
+			jsonError('Некорректный id');
+
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$org_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Организации не существует');
+
+		if($r['default'])
+			jsonError();
+
+		//сброс галочки по умолчанию у всех организаций
+		$sql = "UPDATE `_setup_org` SET `default`=0	WHERE `app_id`=".APP_ID;
+		query($sql);
+
+		$sql = "UPDATE `_setup_org` SET `default`=1	WHERE `id`=".$org_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 1066,
+			'v1' => $r['name']
+		));
+
+		jsonSuccess();
+		break;
 	case 'setup_bik_load'://получение данных банка по БИК
 		$bik = _txt($_POST['bik']);
 
@@ -990,10 +1025,18 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError('Организации не существует');
 
+		//получение количества банков для установки по умолчанию
+		$sql = "SELECT COUNT(*)
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$org_id;
+		$default = query_value($sql) > 0 ? 0 : 1;
 
 		$sql = "INSERT INTO `_setup_org_bank` (
 					`app_id`,
 					`org_id`,
+
+					`default`,
 
 					`bik`,
 					`name`,
@@ -1002,6 +1045,8 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".$org_id.",
+
+					".$default.",
 
 					'".$bik."',
 					'".addslashes($name)."',
@@ -1016,7 +1061,7 @@ switch(@$_POST['op']) {
 				'type_id' => 1064,
 				'v1' => $name
 			));
-*/
+
 
 		$sql = "SELECT *
 				FROM `_setup_org_bank`
@@ -1028,7 +1073,7 @@ switch(@$_POST['op']) {
 		foreach($bank as $id => $r)
 			foreach($r as $k => $i)
 				$bank[$id][$k] = utf8($i);
-
+*/
 //		$send['html'] = setup_org_bank($org_id, $bank);
 		
 		jsonSuccess();
@@ -1072,6 +1117,53 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'setup_bank_default'://установка организации по умолчанию
+		if(!_viewerMenuAccess(13))
+			jsonError('Нет прав');
+
+		if(!$bank_id = _num($_POST['bank_id']))
+			jsonError('Некорректный id банка');
+
+		$sql = "SELECT *
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$bank_id;
+		if(!$bank = query_assoc($sql))
+			jsonError('Банка не существует');
+
+		$sql = "SELECT *
+				FROM `_setup_org`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$bank['org_id'];
+		if(!$org = query_assoc($sql))
+			jsonError('Организации не существует');
+
+		$sql = "SELECT `id`
+				FROM `_setup_org_bank`
+				WHERE `org_id`=".$bank['org_id'];
+		$send['bank_ids'] = query_ids($sql);
+
+		if($bank['default'])
+			jsonError($send);
+
+		//сброс галочки по умолчанию у всех банков конкретной организации
+		$sql = "UPDATE `_setup_org_bank`
+				SET `default`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$bank['org_id'];
+		query($sql);
+
+		$sql = "UPDATE `_setup_org_bank` SET `default`=1 WHERE `id`=".$bank_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 1067,
+			'v1' => $org['name'],
+			'v2' => $bank['name']
+		));
+
+		jsonSuccess($send);
+		break;
 	case 'setup_bank_del'://удаление банка
 		if(!_viewerMenuAccess(13))
 			jsonError('Нет прав');
@@ -1083,12 +1175,21 @@ switch(@$_POST['op']) {
 				FROM `_setup_org_bank`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$bank_id;
-		if(!$r = query_assoc($sql))
+		if(!$bank = query_assoc($sql))
 			jsonError('Банка не существует');
-
 
 		$sql = "DELETE FROM `_setup_org_bank` WHERE `id`=".$bank_id;
 		query($sql);
+
+		//установка нового банка по умолчанию, если таковой был удалён
+		if($bank['default']) {
+			$sql = "UPDATE `_setup_org_bank`
+					SET `default`=1
+					WHERE `org_id`=".$bank['org_id']."
+					ORDER BY `id`
+					LIMIT 1";
+			query($sql);
+		}
 
 		xcache_unset(CACHE_PREFIX.'app');
 /*

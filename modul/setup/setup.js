@@ -1910,9 +1910,46 @@ $(document)
 			});
 		}
 		if($('#setup_org').length) {
-			$('#org-menu')._menuDop({
-				spisok:ORG_MENU
-			});
+			$('#org-menu')._menuDop({spisok:ORG_MENU});
+
+			for(var n = 0; n < ORG_MENU.length; n++) {
+				var sp = ORG_MENU[n];
+				$('#org_default' + sp.uid)._check(function(v, attr_id) {
+					var send = {
+						op:'setup_org_default',
+						org_id:_num(attr_id.split('org_default')[1])
+					};
+					for(var n = 0; n < ORG_MENU.length; n++) {
+						var sp = ORG_MENU[n];
+						if(sp.uid != send.org_id)
+							$('#org_default' + sp.uid)._check(0);
+					}
+					$.post(AJAX_MAIN, send, function(res) {
+						$('#org_default' + send.org_id)._check(1);
+						if(res.success)
+							_msg();
+					}, 'json');
+				});
+			}
+
+			var bank = $('.bank-default');
+			for(n = 0; n < bank.length; n++) {
+				var sp = bank.eq(n),
+					bank_id = _num(sp.attr('val'));
+				$('#bank_default' + bank_id)._check(function(v, attr_id) {
+					var send = {
+						op:'setup_bank_default',
+						bank_id:_num(attr_id.split('bank_default')[1])
+					};
+					$.post(AJAX_MAIN, send, function(res) {
+						var ids = res.bank_ids.split(',');
+						for(n = 0; n < ids.length; n++)
+							$('#bank_default' + ids[n])._check(ids[n] == send.bank_id ? 1 : 0);
+						if(res.success)
+							_msg();
+					}, 'json');
+				});
+			}
 		}
 		if($('#setup_rule').length) {
 			$('.icon-del').click(function() {

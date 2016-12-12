@@ -146,6 +146,69 @@ var saMenuEdit = function(o) {
 		}
 	},
 
+	saHistoryEdit = function(o) {//внесение/редактирование истории действий
+		o = $.extend({
+			id:0,
+			txt:'',
+			txt_client:'',
+			txt_zayav:'',
+			txt_schet:'',
+			ids:''
+		}, o);
+
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label r w125">type_id:<td><input type="text" class="w70" id="type_id" value="' + (o.id || TYPE_ID_MAX) + '" />' +
+			(o.id ? '<tr><td><td><div class="_info">Если изменяется <b>type_id</b>, все записи со предыдущим значением будут изменены на новое.</div>' : '') +
+					'<tr><td class="label r topi">Категория:<td><input type="hidden" id="category_ids" value="' + o.ids + '" />' +
+					'<tr><td><td>' +
+					'<tr><td class="label r topi b">Основной текст:<td><textarea class="w400 min" id="txt">' + o.txt + '</textarea>' +
+					'<tr><td class="label r topi">Текст для клиента:<td><textarea class="w400 min" id="txt_client">' + o.txt_client + '</textarea>' +
+					'<tr><td class="label r topi">Текст для заявки:<td><textarea class="w400 min" id="txt_zayav">' + o.txt_zayav + '</textarea>' +
+					'<tr><td class="label r topi">Текст для счёта:<td><textarea class="w400 min" id="txt_schet">' + o.txt_schet + '</textarea>' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:600,
+				head:(o.id ? 'Редактирование' : 'Внесение') + ' константы истории действий',
+				content:html,
+				butSubmit:o.id ? 'Изменить' : 'Внести',
+				submit:submit
+			});
+
+		$('#txt').focus();
+		dialog.content.find('textarea').autosize();
+		$('#category_ids')._select({
+			width:350,
+			title0:'Не указана',
+			spisok:CAT,
+			multiselect:1
+		});
+
+		function submit() {
+			var send = {
+				op:'sa_history_type_' + (o.id ? 'edit' : 'add'),
+				type_id_current:o.id,
+				type_id:$('#type_id').val(),
+				category_ids:$('#category_ids').val(),
+				txt:$('#txt').val(),
+				txt_client:$('#txt_client').val(),
+				txt_zayav:$('#txt_zayav').val(),
+				txt_schet:$('#txt_schet').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+					$('textarea').autosize();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
 	saClientPoleEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -939,59 +1002,18 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '#sa-history .img_edit', function() {
-		var id = _num($(this).attr('val')),
-			html =
-				'<table class="sa-tab" id="sa-history-tab">' +
-					'<tr><td class="label">type_id:<td><input type="text" id="type_id" value="' + id + '" />' +
-					'<tr><td><td>Если изменяется <b>type_id</b>, все записи со предыдущим значением будут изменены на новое.' +
-					'<tr><td class="label topi">Текст:<td><textarea id="txt">' + $('#txt' + id).val() + '</textarea>' +
-					'<tr><td class="label">Категория:<td><input type="hidden" id="category_ids" value="' + $('#ids' + id).val() + '" />' +
-				'</table>',
-			dialog = _dialog({
-				top:30,
-				width:520,
-				head:'Редактирование константы истории действий',
-				content:html,
-				butSubmit:'Изменить',
-				submit:submit
-			});
+	.on('click', '#sa-history .icon-edit', function() {
+		var t = $(this),
+			p = _parent(t);
+		saHistoryEdit({
+			id:_num(t.attr('val')),
+			txt:p.find('.txt').val(),
+			txt_client:p.find('.txt_client').val(),
+			txt_zayav:p.find('.txt_zayav').val(),
+			txt_schet:p.find('.txt_schet').val(),
+			ids:p.find('.ids').val()
 
-		$('#txt').focus().autosize();
-		$('#category_ids')._select({
-			width:250,
-			title0:'Не указана',
-			spisok:CAT,
-			multiselect:1
 		});
-
-		function submit() {
-			var send = {
-				op:'sa_history_type_edit',
-				type_id_current:id,
-				type_id:_num($('#type_id').val()),
-				txt:$('#txt').val(),
-				category_ids:$('#category_ids').val()
-			};
-			if(!send.type_id) {
-				dialog.err('Некорректно указан type_id');
-				$('#type_id').focus();
-			} else if(!send.txt) {
-				dialog.err('Не указан текст константы');
-				$('#txt').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Изменено');
-						$('#spisok').html(res.html);
-						$('textarea').autosize();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
 	})
 	.on('click', '#sa-history-cat .img_edit', function() {
 		var t = _parent($(this), 'DD'),
@@ -1463,65 +1485,12 @@ $(document)
 	})
 
 	.ready(function() {
-		$('#app-id').vkHint({
-			msg:$('#app-id').attr('val'),
-			ugol:'top',
-			width:120,
-			indent:'right',
-			top:32,
-			left:484
-		});
-
-		if($('#sa-history').length) {
-			$('textarea').autosize();
-			$('.add.const').click(function() {
-				var html =
-						'<table class="sa-tab" id="sa-history-tab">' +
-							'<tr><td class="label">type_id:<td><input type="text" id="type_id" value="' + TYPE_ID_MAX + '" />' +
-							'<tr><td class="label topi">Текст:<td><textarea id="txt"></textarea>' +
-							'<tr><td class="label">Категория:<td><input type="hidden" id="category_ids" />' +
-						'</table>',
-					dialog = _dialog({
-						top:30,
-						width:520,
-						head:'Внесение новой константы для истории действий',
-						content:html,
-						submit:submit
-					});
-
-				$('#txt').focus().autosize();
-				$('#category_ids')._select({
-					width:250,
-					title0:'Не указана',
-					spisok:CAT,
-					multiselect:1
+		if($('#sa-history').length)
+			$('textarea')
+				.autosize()
+				.click(function() {
+					$(this).select();
 				});
-
-				function submit() {
-					var send = {
-						op:'sa_history_type_add',
-						type_id:$('#type_id').val(),
-						txt:$('#txt').val(),
-						category_ids:$('#category_ids').val()
-					};
-					if(!send.txt) {
-						dialog.err('Не указан текст константы');
-						$('#txt').focus();
-					} else {
-						dialog.process();
-						$.post(AJAX_MAIN, send, function(res) {
-							if(res.success) {
-								dialog.close();
-								_msg('Внесено');
-								$('#spisok').html(res.html);
-								$('textarea').autosize();
-							} else
-								dialog.abort();
-						}, 'json');
-					}
-				}
-			});
-		}
 		if($('#sa-history-cat').length) {
 			$('.add').click(function() {
 				var html =

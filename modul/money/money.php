@@ -2483,6 +2483,43 @@ function _schetPayTypeSelect($schet_id) {//вывод выбора вида счёта (для нового с
 			'</div>'.
 		'</div>';
 }
+function _schetPayValToList($arr, $key='schet_id') {//вставка данных счетов на оплату в массив
+	if(empty($arr))
+		return array();
+
+	foreach($arr as $r)
+		$arr[$r['id']] += array(
+			'schet_pay_link' => ''
+		);
+
+	if(!$schet_ids = _idsGet($arr, $key))
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_schet_pay`
+			WHERE `app_id`=".APP_ID."
+			  AND `id` IN (".$schet_ids.")";
+	if(!$schet = query_arr($sql))
+		return $arr;
+
+
+	foreach($arr as $id => $r) {
+		if(!$schet_id = _num(@$r[$key]))
+			continue;
+
+		$c = $schet[$r[$key]];
+
+		$arr[$id] = array(
+			'schet_pay_link' => '<a onclick="schetPayShow('.$c['id'].')">'.
+									($c['type_id'] == 2 ? 'предварительный ' : '').
+									'счёт на оплату '.
+									($c['type_id'] == 2 ? '' : '№ <b>'.$c['prefix'].$c['nomer'].'</b> ').
+									'на сумму <b>'._cena($c['sum']).'</b> руб.'.
+								'</a>'
+		) + $arr[$id];
+	}
+	return $arr;
+}
 
 
 

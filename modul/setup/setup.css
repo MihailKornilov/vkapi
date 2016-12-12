@@ -51,11 +51,9 @@
 
 
 /* Данные организации */
-#setup_org table.t{border-spacing:15px}
 #setup_org table.bank{
 	border:#DDE4E9 solid 1px;
 	background:#F0F6FC;
-	margin-bottom:10px;
 }
 
 

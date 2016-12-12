@@ -151,7 +151,8 @@ function _history_spisok($v=array()) {
 	$history = _tovarValToList($history);
 	$history = _attachValToList($history);
 	$history = _schetValToList($history);
-	$history = _history_types($history);
+	$history = _schetPayValToList($history);
+	$history = _history_types($history, $filter);
 
 	$txt = '';
 	end($history);
@@ -188,15 +189,21 @@ function _history_spisok($v=array()) {
 	$send['spisok'] .= _next($filter + array('all'=>$all));
 	return $send;
 }
-function _history_types($history) {//перевод type_id в текст
-	$types = array();
-	foreach($history as $r)
-		$types[$r['type_id']] = $r['type_id'];
-
-	$sql = "SELECT * FROM `_history_type` WHERE `id` IN (".implode(',', $types).")";
+function _history_types($history, $filter) {//перевод type_id в текст
+	$txtType = array();
+	$sql = "SELECT *
+			FROM `_history_type`
+			WHERE `id` IN ("._idsGet($history, 'type_id').")";
 	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$types[$r['id']] = $r['txt'];
+	while($r = mysql_fetch_assoc($q)) {
+		$txtType[$r['id']] = $r['txt'];
+		if($filter['client_id'] && $r['txt_client'])
+			$txtType[$r['id']] = $r['txt_client'];
+		if($filter['zayav_id'] && $r['txt_zayav'])
+			$txtType[$r['id']] = $r['txt_zayav'];
+		if($filter['schet_id'] && $r['txt_schet'])
+			$txtType[$r['id']] = $r['txt_schet'];
+	}
 
 	$str = array(
 		'client_name',
@@ -210,6 +217,7 @@ function _history_types($history) {//перевод type_id в текст
 		'tovar_link',
 		'attach_link',
 		'schet_link_full',
+		'schet_pay_link',
 		'invoice_name',
 		'worker_name',
 		'worker_link',
@@ -221,7 +229,7 @@ function _history_types($history) {//перевод type_id в текст
 	);
 
 	foreach($history as $id => $r) {
-		$txt = $types[$r['type_id']];
+		$txt = $txtType[$r['type_id']];
 		foreach($str as $v) {
 			// проверка условия: ?{v1}, если v1 пустая, то не выводится строка, заключённая между пробелами с этой переменной.
 			// например: <em>?{v1}</em>
