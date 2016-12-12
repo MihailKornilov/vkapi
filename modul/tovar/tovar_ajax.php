@@ -767,8 +767,7 @@ switch(@$_POST['op']) {
 }
 
 function _tovar_name_insert() {//обновление наименования товара и получение его id
-	$name_name = _txt($_POST['name_name']);
-	if(empty($name_name))
+	if(!$name_name = _txt($_POST['name_name']))
 		return 0;
 
 	$sql = "SELECT `id`
@@ -777,15 +776,15 @@ function _tovar_name_insert() {//обновление наименования товара и получение его 
 			LIMIT 1";
 	if(!$name_id = query_value($sql)) {
 		$sql = "INSERT INTO `_tovar_name` (
-							`name`,
-							`viewer_id_add`
-						) VALUES (
-							'" . addslashes($name_name) . "',
-							" . VIEWER_ID . "
-						)";
+					`name`,
+					`viewer_id_add`
+				) VALUES (
+					'".addslashes($name_name)."',
+					".VIEWER_ID."
+				)";
 		query($sql);
 		$name_id = query_insert_id('_tovar_name');
-		xcache_unset(CACHE_PREFIX . 'tovar_name');
+		xcache_unset(CACHE_PREFIX.'tovar_name');
 	}
 
 	return $name_id;
