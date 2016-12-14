@@ -238,7 +238,7 @@ function _remind_spisok($v=array()) {
 	$sql = "SELECT *
 			FROM `_remind`
 			WHERE ".$cond."
-			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id` DESC' : '`day`')."
+			ORDER BY ".(CLIENT_OR_ZAYAV ? '`id`' : '`day`')." DESC
 			LIMIT "._startLimit($filter);
 	$remind = query_arr($sql);
 
