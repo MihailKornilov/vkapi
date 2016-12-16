@@ -514,8 +514,8 @@ var VK_SCROLL = 0,
 		});
 		bottom.find('.cancel').click(function(e) {
 			e.stopPropagation();
-			o.cancel();
 			dialogClose();
+			o.cancel();
 		});
 
 		//для всех input при нажатии enter применяется submit
@@ -1374,7 +1374,7 @@ $.fn._dropdown = function(o) {
 			list = dropdown.find('.ddlist'),
 			ddsel = list.find('.ddsel'),
 			ddu = list.find('.ddu');
-		aHead.click(function(e) {
+		aHead.mouseover(function(e) {
 			e.stopPropagation();
 			delayClear();
 			list.show();
@@ -2611,10 +2611,10 @@ $(document)
 		if(!request.responseText)
 			return;
 		var d = _dialog({
-			width:600,
+			width:770,
 			top:10,
 			head:'Ошибка AJAX-запроса',
-			content:'<textarea style="width:570px;background-color:#fdd">' + request.responseText + '</textarea>',
+			content:'<textarea style="width:730px;background-color:#fdd">' + request.responseText + '</textarea>',
 			butSubmit:'',
 			butCancel:'Закрыть'
 		});

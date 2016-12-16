@@ -329,7 +329,7 @@ function _footerGoogleAnalytics() {
 	"</script>";
 }
 
-function _app($i='all') {//ѕолучение данных о приложении
+function _app($i='all', $item_id=0, $k='') {//ѕолучение данных о приложении
 	$key = CACHE_PREFIX.'app';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT *
@@ -337,6 +337,9 @@ function _app($i='all') {//ѕолучение данных о приложении
 				WHERE `id`=".APP_ID;
 		if(!$arr = query_assoc($sql))
 			_appError('Ќевозможно прочитать данные приложени€ дл€ кеша.');
+
+		$arr = _app_org($arr);
+		$arr = _app_bank($arr);
 
 		//организации
 		$org = array(
@@ -360,58 +363,14 @@ function _app($i='all') {//ѕолучение данных о приложении
 		$sql = "SELECT *
 				FROM `_setup_org`
 				WHERE `app_id`=".APP_ID."
-				ORDER BY `id`
-				LIMIT 1";
+				  AND `id`=".$arr['org_default'];
 		if($org_assoc = query_assoc($sql)) {
 			unset($org_assoc['id']);
 			unset($org_assoc['app_id']);
+			unset($org_assoc['default']);
 			$org = $org_assoc;
 		}
 
-		//получение количества организаций
-		$sql = "SELECT COUNT(*)
-				FROM `_setup_org`
-				WHERE `app_id`=".APP_ID;
-		$arr['org_count'] = _num(query_value($sql));
-		
-		//организаци€ по умолчанию
-		$sql = "SELECT `id`
-				FROM `_setup_org`
-				WHERE `app_id`=".APP_ID."
-				  AND `default`";
-		$arr['org_default'] = _num(query_value($sql));
-		
-		//банки организаций
-		$bank = array(
-			'bank_bik' => '',
-			'bank_name' => '',
-			'bank_account' => '',
-			'bank_account_corr' => ''
-		);
-
-		$sql = "SELECT *
-				FROM `_setup_org_bank`
-				WHERE `app_id`=".APP_ID."
-				ORDER BY `id`
-				LIMIT 1";
-		if($bank_assoc = query_assoc($sql)) {
-			$bank = array(
-				'bank_bik' => $bank_assoc['bik'],
-				'bank_name' => $bank_assoc['name'],
-				'bank_account' => $bank_assoc['account'],
-				'bank_account_corr' => $bank_assoc['account_corr']
-			);
-		}
-
-		//банк по умолчанию в организации по умолчанию
-		$sql = "SELECT `id`
-				FROM `_setup_org_bank`
-				WHERE `app_id`=".APP_ID."
-				  AND `org_id`=".$arr['org_default']."
-				  AND `default`";
-		$arr['bank_default'] = _num(query_value($sql));
-
-		
 		//настройки счЄта на оплату
 		$schet_pay = array(
 			'schet_pay' => 0,
@@ -423,15 +382,14 @@ function _app($i='all') {//ѕолучение данных о приложении
 				FROM `_schet_pay_setup`
 				WHERE `app_id`=".APP_ID."
 				LIMIT 1";
-		if($r = query_assoc($sql)) {
+		if($r = query_assoc($sql))
 			$schet_pay = array(
 				'schet_pay' => _bool($r['use']),
 				'schet_prefix' => $r['prefix'],
 				'schet_nomer_start' => _num($r['nomer_start'])
 			);
-		}
-		
-		$arr += $org + $bank + $schet_pay;
+
+		$arr += $org + $schet_pay;
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -451,10 +409,149 @@ function _app($i='all') {//ѕолучение данных о приложении
 		return query_selJson($sql);
 	}
 
+	if($i == 'org') {//значение данных  организации
+		if(!$item_id)
+			return _cacheErr('_app: не указан id организации');
+
+		if(!$org = @$arr['org_spisok'][$item_id])
+			return _cacheErr('_app: id организации не существует', $item_id);
+		
+		if(empty($k))
+			return _cacheErr('_app: отсутствует ключ организации');
+		
+		if($k == 'all')
+			return $org;
+		
+		if(!isset($org[$k]))
+			return _cacheErr('_app: неизвестный ключ организации', $k);
+		
+		return $org[$k];
+	}
+
+	if($i == 'bank') {//значение данных  организации
+		if(!$item_id)
+			return _cacheErr('_app: не указан id банка');
+
+		if(!$bank = @$arr['bank_spisok'][$item_id])
+			return _cacheErr('_app: id банка не существует', $item_id);
+
+		if(empty($k))
+			return _cacheErr('_app: отсутствует ключ банка');
+
+		if($k == 'all')
+			return $bank;
+		
+		if(!isset($bank[$k]))
+			return _cacheErr('_app: неизвестный ключ банка', $k);
+
+		return $bank[$k];
+	}
+
 	if(!isset($arr[$i]))
-		return '_app: неизвестный ключ <b>'.$i.'</b>';
+		return _cacheErr('_app: неизвестный ключ', $i);
 
 	return $arr[$i];
+}
+function _app_org($arr) {//получение данных об организаци€х
+	$arr['org_default'] = 0;
+	$arr['org_spisok'] = array();
+
+	// 1. ѕолучение количества организаций
+	$sql = "SELECT COUNT(*)
+			FROM `_setup_org`
+			WHERE `app_id`=".APP_ID;
+	if(!$arr['org_count'] = _num(query_value($sql)))
+		return $arr;
+
+	// 2. ѕолучение списка организаций
+	$sql = "SELECT *
+			FROM `_setup_org`
+			WHERE `app_id`=".APP_ID;
+	$arr['org_spisok'] = query_arr($sql);
+
+	// 3. ѕолучение id организации по умолчанию
+	$sql = "SELECT `id`
+			FROM `_setup_org`
+			WHERE `app_id`=".APP_ID."
+			  AND `default`";
+	if($arr['org_default'] = _num(query_value($sql)))
+		return $arr;
+
+	$sql = "UPDATE `_setup_org`
+			SET `default`=1
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`
+			LIMIT 1";
+	query($sql);
+
+	$sql = "SELECT `id`
+			FROM `_setup_org`
+			WHERE `app_id`=".APP_ID."
+			  AND `default`";
+	$arr['org_default'] = _num(query_value($sql));
+
+	return $arr;
+}
+function _app_bank($arr) {//получение банка по умолчанию в организации по умолчанию. Eсли нет, то установка
+	$arr['bank_default'] = 0;
+	$arr['bank_spisok'] = array();
+	$arr['bank_bik'] = '';
+	$arr['bank_name'] = '';
+	$arr['bank_account'] = '';
+	$arr['bank_account_corr'] = '';
+
+	if(!$arr['org_count'])
+		return $arr;
+
+	if(!$arr['org_default'])
+		return $arr;
+
+	// 1. ѕолучение списка банков всех организаций
+	$sql = "SELECT *
+			FROM `_setup_org_bank`
+			WHERE `app_id`=".APP_ID;
+	$arr['bank_spisok'] = query_arr($sql);
+
+
+	//  оличество банков в организации по умолчанию
+	$sql = "SELECT COUNT(*)
+			FROM `_setup_org_bank`
+			WHERE `app_id`=".APP_ID."
+			  AND `org_id`=".$arr['org_default'];
+	if(!query_value($sql))
+		return $arr;
+
+
+	// 2. ѕолучение id банка по умолчанию организации по умолчанию
+	$sql = "SELECT `id`
+			FROM `_setup_org_bank`
+			WHERE `app_id`=".APP_ID."
+			  AND `org_id`=".$arr['org_default']."
+			  AND `default`";
+	if(!$arr['bank_default'] = _num(query_value($sql))) {
+		$sql = "UPDATE `_setup_org_bank`
+				SET `default`=1
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$arr['org_default']."
+				ORDER BY `id`
+				LIMIT 1";
+		query($sql);
+
+		$sql = "SELECT `id`
+				FROM `_setup_org_bank`
+				WHERE `app_id`=".APP_ID."
+				  AND `org_id`=".$arr['org_default']."
+				  AND `default`";
+		$arr['bank_default'] =  _num(query_value($sql));
+	}
+
+	$bank = $arr['bank_spisok'][$arr['bank_default']];
+	$arr['bank_bik'] = $bank['bik'];
+	$arr['bank_name'] = $bank['name'];
+	$arr['bank_account'] = $bank['account'];
+	$arr['bank_account_corr'] = $bank['account_corr'];
+
+	return $arr;
 }
 function _appAuth() {//ѕроверка авторизации в приложении
 	_app();

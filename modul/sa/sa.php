@@ -285,13 +285,7 @@ function sa_history_spisok() {
 		unset($spisok[$r['type_id']]);
 	}
 
-	$send =
-		'<table class="_spisokTab">'.
-			'<tr><th class="w50">type_id'.
-				'<th class="txt">Наименование'.
-				'<th class="w50">Кол-во'.
-				'<th class="w50">'.
-		'</table>';
+	$send = '';
 	foreach($category as $r)
 		$send .= sa_history_spisok_page($r['name'], $r['type']);
 
@@ -311,19 +305,23 @@ function sa_history_spisok_page($name, $spisok) {//вывод списка конкретной катег
 			'<span class="grey">('.count($spisok).')</span>'.
 		'</div>'.
 		'<div class="dn">'.
-			'<table class="_spisokTab">';
+			'<table class="_spisokTab">'.
+				'<tr><th class="w50">type_id'.
+					'<th class="txt">Наименование'.
+					'<th class="w50">Кол-во'.
+					'<th class="w50">';
 
 	foreach($spisok as $r)
 		$send .=
 			'<tr class="over3">'.
-				'<td class="w50 r grey">'.$r['id'].
+				'<td class="r grey">'.$r['id'].
 				'<td><textarea class="txt w450 min curP" readonly>'.$r['txt'].'</textarea>'.
 ($r['txt_client'] ? '<div class="color-pay b mt10 ml8">Клиент:</div><textarea class="txt_client w450 min grey curP" readonly>'.$r['txt_client'].'</textarea>' : '').
 ($r['txt_zayav'] ? '<div class="color-pay b mt10 ml8">Заявка:</div><textarea class="txt_zayav w450 min grey curP" readonly>'.$r['txt_zayav'].'</textarea>' : '').
 ($r['txt_schet'] ? '<div class="color-pay b mt10 ml8">Счёт на оплату:</div><textarea class="txt_schet w450 min grey curP" readonly>'.$r['txt_schet'].'</textarea>' : '').
 					(!empty($r['cats']) ? '<div class="fr fs11 color-vin">'.implode('&nbsp;&nbsp;&nbsp;', $r['cats']).'</div>' : '').
-				'<td class="w50 center">'.(empty($r['count']) ? '' : $r['count']).
-				'<td class="w50">'.
+				'<td class="center">'.(empty($r['count']) ? '' : $r['count']).
+				'<td>'.
 					'<div class="icon icon-edit" val="'.$r['id'].'"></div>'.
 					'<input type="hidden" class="ids" value="'.implode(',', $r['ids']).'" />';
 	$send .= '</table>'.

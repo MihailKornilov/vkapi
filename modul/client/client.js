@@ -663,8 +663,9 @@ $(document)
 				focus:1,
 				enter:1,
 				txt:'¬ведите текст и нажмите Enter',
+				v:CLIENT.find,
 				func:_clientSpisok
-			}).inp(CLIENT.find);
+			});
 			$('#category_id')._radio(_clientSpisok);
 			$('#dolg')._check(function(v, id) {
 				$('#opl')._check(0);

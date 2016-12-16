@@ -10,7 +10,7 @@ b{font-weight:bold}
 i{font-style:italic}
 input,textarea{
 	border:1px solid #d3d9de;
-	padding:6px 8px 6px;
+	padding:6px 8px;
 	border-radius:1px;
 	outline:none;
 }
@@ -352,13 +352,16 @@ button.vk.grey:hover{background-color:#999}
 .w230{width:230px}
 .w250{width:250px}
 .w300{width:300px}
+.w350{width:350px}
 .w400{width:400px}
 .w450{width:450px}
 
+.pad5{padding:5px}
 .pad10{padding:10px}
 .pad15{padding:15px}
 .pt10{padding-top:10px}
 .pb10{padding-bottom:10px}
+.pl20{padding-left:20px}
 
 .mar8{margin:8px}
 .mar10{margin:10px}
@@ -372,6 +375,7 @@ button.vk.grey:hover{background-color:#999}
 .ml10{margin-left:10px}
 .ml20{margin-left:20px}
 .mt10{margin-top:10px}
+.mt15{margin-top:15px}
 .mt20{margin-top:20px}
 .mb1{margin-bottom:1px}
 .mb5{margin-bottom:5px}
@@ -384,6 +388,7 @@ button.vk.grey:hover{background-color:#999}
 .bs15{border-spacing:15px}
 
 .b{font-weight:bold}
+.u{text-decoration:underline}
 
 /* ÷вета */
 .red{color:#E22}
@@ -396,6 +401,13 @@ button.vk.grey:hover{background-color:#999}
 .color-sal{color:#770}/* салатовый - расчЄтный счЄт */
 
 .bge{background-color:#ffa}
+.bg-fff{background-color:#fff}
+.bg-add{background-color:#e0ffe0}
+.bg-del{background-color:#fee}
+.bg-ffe{background-color:#ffe}
+.bg-ch{background-color:#ffc}   /* жЄлтый - данные изменены */
+.bg-dfd{background-color:#dfd}  /* зелЄный */
+.bg-ddf{background-color:#ddf}  /* синий */
 
 .db{display:block}
 .dn{display:none}

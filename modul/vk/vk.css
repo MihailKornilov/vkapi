@@ -131,7 +131,7 @@ a.add:hover{text-decoration:underline;color:#357}
 }
 ._next span{line-height:30px}
 ._next:hover{background-color:#e9edf1}
-._next._busy span{display:none}
+._next._busy span{visibility:hidden}
 
 
 /* Мини-картинки */
@@ -344,20 +344,19 @@ a.add:hover{text-decoration:underline;color:#357}
 /* Календарь */
 ._calendar{display:inline-block;position:relative}
 ._calendar .calinp{
-	width:114px;
-	line-height:20px;
-	border:#c0cad5 solid 1px;
-	background:#FFF no-repeat 101px 2px url("data:image/gif;base64,R0lGODlhDwAQALMAAAAAAP///3mWuNTd6IeiwZOrx6G51J+1zavA2M7Z5QAAAAAAAAAAAAAAAAAAAAAAACwAAAAADwAQAAAEPDBIIaSltpBDD/mc4GmGQZXoaXwlgqDtuxJwDbO2/Vl8H+w+HzDIGxIlxmOSuAw2hZ+odEoYJK7YLHYQAQA7");
+	width:125px;
+	border:#d3d9de solid 1px;
+	border-radius:1px;
+	padding:6px 8px;
+	background:#FFF no-repeat 118px 5px url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAABGdBTUEAALGPC/xhBQAAAJVJREFUKBVjYEACkxfv+Y/ExWCiy7NMXrK3nYHhf1FujAs7TDW6IpB4bqwLI1x+yZ6fQE4vE0gjw38GNpgEUTRQPdCJxUwwjdMW7/MGmQ6isRmAIQ80gBGbE7FpxiYGdDb5gAWmFTlAYGK4aJhrKbJ5VDOu4MUhzjgZmE5hqQyHGuzCjAy/mEAJnAHIwK4ChyhQPUgfALxfM4cHDm26AAAAAElFTkSuQmCC");
 	cursor:pointer;
-	padding-left:4px;
 }
-._calendar .calabs{}
 ._calendar .calcal{
 	background-color:#FFF;
 	border:#597da3 solid 1px;
 	width:182px;
 	position:absolute;
-	top:25px;
+	top:33px;
 	z-index:1;
 }
 ._calendar .calhead{
@@ -1012,3 +1011,6 @@ a.add:hover{text-decoration:underline;color:#357}
 	position:relative;
 	top:-6px;
 }
+
+
+.dn{display:none}

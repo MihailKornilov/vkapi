@@ -1993,11 +1993,6 @@ var _accrualAdd = function(o) {
 		}
 	},
 	_schetPassCancel = function(schet_id, nomer) {//отмена передачи счёта
-		var html =
-				'<table class="_dialog-tab">' +
-					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
-					'<tr><td class="label">Когда передан:<td><input type="hidden" id="pass-day" />' +
-				'</table>';
 		var dialog = _dialog({
 				width:320,
 				padding:50,
@@ -2166,7 +2161,11 @@ var _accrualAdd = function(o) {
 				head:'Просмотр счёта на оплату',
 				load:1,
 				butSubmit:'',
-				butCancel:'Закрыть'
+				butCancel:'Закрыть',
+				cancel:function() {
+					if($('#schet-pay-menu').length)
+						schetPaySpisok();
+				}
 			}),
 			send = {
 				op:'schet_pay_show',
@@ -2186,14 +2185,125 @@ var _accrualAdd = function(o) {
 					dialog.close();
 					schetPayEdit(schet_id);
 				});
-			dialog.content.find('.bg-link').click(function() {
+
+			dialog.content.find('.bg-link').click(function() {//раскрытие истории действий
 				$(this)
 					.slideUp(200)
 					.next().slideDown(200);
 			});
+
 			$('#schet-pay-to-pay').click(function() {
 				schetPayToPay(schet_id, dialog);
 			});
+
+			dialog.content.find('.icon-out').parent().click(function() {//передача счёта клиенту
+				var html =
+						'<table class="bs10">' +
+							'<tr><td class="label r w125">№ счёта:<td><b>' + res.nomer + '</b>' +
+							'<tr><td class="label r">Когда передан:<td><input type="hidden" id="pass-day" />' +
+						'</table>',
+					dPass = _dialog({
+						width:400,
+						padding:30,
+						head:'Передача счёта клиенту',
+						content:html,
+						butSubmit:'Применить',
+						submit:submit
+					});
+
+				$('#pass-day')._calendar({lost:1});
+				function submit() {
+					var send = {
+						op:'schet_pay_pass',
+						schet_id:schet_id,
+						day:$('#pass-day').val()
+					};
+					dPass.process();
+					$.post(AJAX_MAIN, send, function(res) {
+						if(res.success) {
+							dPass.close();
+							_msg();
+							dialog.close();
+							schetPayShow(schet_id);
+						} else
+							dPass.abort(res.text);
+					}, 'json');
+				}
+			});
+
+			dialog.content.find('.pass-cancel').click(function() {//отмена передачи счёта клиенту
+				var dPass = _dialog({
+					padding:50,
+					head:'Отмена передачи счёта клиенту',
+					content:'<div class="center">Подтвердите отмену передачи<br />счёта <b>' + res.nomer + '</b> клиенту.</div>',
+					butSubmit:'Подтвердить',
+					submit:function() {
+						var send = {
+							op:'schet_pay_pass_cancel',
+							schet_id:schet_id
+						};
+						dPass.process();
+						$.post(AJAX_MAIN, send, function(res) {
+							if(res.success) {
+								dPass.close();
+								_msg();
+								dialog.close();
+								schetPayShow(schet_id);
+							} else
+								dPass.abort(res.text);
+						}, 'json');
+					}
+				});
+			});
+
+			dialog.content.find('.icon-rub').parent().click(function() {//оплата счёта
+				var html =
+						'<table class="bs10">' +
+							'<tr><td class="label r w125">№ счёта:<td><b>' + res.nomer + '</b>' +
+							'<tr><td class="label r">Расчётный счёт:<td><input type="hidden" id="pay-invoice_id" value="7" />' +
+							'<tr><td class="label r">Сумма:<td><input type="text" class="money" id="sum" value="' + res.sum_to_pay +'" /> руб.' +
+							'<tr><td class="label r">День оплаты:<td><input type="hidden" id="pay-day" />' +
+						'</table>',
+					dPay = _dialog({
+						width:450,
+						head:'Оплата счёта',
+						content:html,
+						butSubmit:'Оплатить',
+						submit:submit
+					});
+
+				$('#pay-day')._calendar({lost:1});
+				$('#pay-invoice_id')._select({
+					width:250,
+					title0:'не указан',
+					spisok:INVOICE_SPISOK,
+					func:function() {
+						$('#sum').focus();
+					}
+				});
+				$('#sum').focus();
+				function submit() {
+					var send = {
+						op:'schet_pay_pay',
+						schet_id:schet_id,
+						invoice_id:$('#pay-invoice_id').val(),
+						sum:$('#sum').val(),
+						day:$('#pay-day').val()
+					};
+					dPay.process();
+					$.post(AJAX_MAIN, send, function(res) {
+						if(res.success) {
+							dPay.close();
+							_msg();
+							dialog.close();
+							schetPayShow(schet_id);
+						} else
+							dPay.abort(res.text);
+					}, 'json');
+				}
+
+			});
+
 			dialog.content.find('.icon-del-red').parent().click(function() {
 				_dialogDel({
 					id:schet_id,
@@ -2237,6 +2347,25 @@ var _accrualAdd = function(o) {
 					dialog.err(res.text);
 			}, 'json');
 		}
+	},
+	schetPaySpisok = function(v, id) {
+		_filterSpisok(SCHET_PAY, v, id);
+		SCHET_PAY.page = 1;
+		if(id)
+			SCHET_PAY[id] = v;
+
+		$('#td-group')[(SCHET_PAY.find ? 'add' : 'remove') + 'Class']('dn');
+		$.post(AJAX_MAIN, SCHET_PAY, function(res) {
+			if(res.success) {
+				$('#schet-pay-spisok').html(res.spisok);
+			}
+		}, 'json');
+	},
+	schetPayFilterClear = function() {//очистка фильтра поиска счетов на оплату
+		$('#find')._search('clear');    SCHET_PAY.find = '';
+		$('#group_id')._dropdown(0);    SCHET_PAY.group_id = 0;
+		SCHET_PAY.mon = '';
+		schetPaySpisok();
 	};
 
 $.fn.schetPayContent = function(o) {//составление списка содержания для расчётного счёта
@@ -2284,6 +2413,7 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 
 	function poleAdd(sp) {//добавление нового поля
 		sp = $.extend({
+			id:0,
 			name:'',
 			count:1,
 			cena:'',
@@ -2293,7 +2423,9 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 		var html = '<dd>' +
 			'<table class="_spisokTab mt1">' +
 				'<tr><td class="w15 r grey topi curM">' +
-					'<td class="top"><textarea class="min w300">' + sp.name + '</textarea>' +
+					'<td class="top">' +
+						'<input type="hidden" class="sp-id" value="' + sp.id + '" />' +
+						'<textarea class="min w300">' + sp.name + '</textarea>' +
 					'<td class="w70 center top"><input type="text" class="sp-count w35 center" value="' + sp.count + '" />' +
 					'<td class="w50 center topi">шт.' +
 					'<td class="w70 top"><input type="text" class="sp-cena w50 r" value="' + sp.cena + '" />' +
@@ -2378,7 +2510,12 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 			summa += _cena(sp.find('.sp-summa').html());
 			posCount++;
 
-			val.push(area + '&&&' + count + '&&&' + cena);
+			val.push(
+				area + '&&&' + 
+				count + '&&&' + 
+				cena + '&&&' + 
+				_num(sp.find('.sp-id').val())
+			);
 		}
 
 		NO_CORRECT[(correct ? 'add' : 'remove') + 'Class']('dn');
@@ -2843,6 +2980,44 @@ $(document)
 			_schetAction();
 			_nextCallback = _schetAction;
 		}
+		if($('#schet-pay-menu').length) {
+			$('#schet-pay-menu')._menuDop({
+				spisok:[
+					{uid:1,title:'Реестр счетов на оплату'},
+					{uid:2,title:'История действий'},
+					{uid:3,title:'Сводка по месяцам'}
+				]
+			});
+			$('#find')._search({
+				width:330,
+				focus:1,
+				txt:'поиск по номеру счёта, содержанию и сумме',
+				enter:1,
+				v:SCHET_PAY.find,
+				func:schetPaySpisok
+			});
+			$('#group_id')._dropdown({
+				title0:'Все счета',
+				spisok:[
+					//		{uid:1,title:'Все счета'},
+					{uid:2,title:'Ознакомительные'},
+					{uid:3,title:'Не переданы'},
+					{uid:4,title:'Не оплачены'},
+					{uid:5,title:'Переданы, не оплачены'},
+					{uid:6,title:'Оплачены'}
+				],
+				func:schetPaySpisok
+			});
+			$('.schet-stat-tr').click(function() {
+				var t = $(this),
+					mon = t.attr('val');
+				$('#find')._search('clear');    SCHET_PAY.find = '';
+				$('#group_id')._dropdown(0);    SCHET_PAY.group_id = 0;
+				schetPaySpisok(mon, 'mon');
+				$('#schet-pay-menu')._menuDop(1);
+			});
+		}
+
 		if($('#money-invoice').length) {
 			var spisok = [{uid:1, title:'Расчётные счета'}];
 			if(RULE_INVOICE_TRANSFER)

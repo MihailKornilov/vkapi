@@ -88,7 +88,7 @@ function _history_spisok($v=array()) {
 	$filter = _filterJs('HISTORY', $filter);
 
 	define('PAGE1', $filter['page'] == 1);
-	define('HIST_LOCAL', $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id']); //история конкретных объектов
+	define('HIST_LOCAL', $filter['category_id'] || $filter['client_id'] || $filter['zayav_id'] || $filter['schet_id']); //история конкретных объектов
 	$spisok = $filter['js'];
 
 	$cond = "`app_id`=".APP_ID;

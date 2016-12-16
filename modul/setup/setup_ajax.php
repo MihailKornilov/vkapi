@@ -958,6 +958,8 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_setup_org` SET `default`=1	WHERE `id`=".$org_id;
 		query($sql);
 
+		xcache_unset(CACHE_PREFIX.'app');
+
 		_history(array(
 			'type_id' => 1066,
 			'v1' => $r['name']
@@ -1155,6 +1157,8 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `_setup_org_bank` SET `default`=1 WHERE `id`=".$bank_id;
 		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'app');
 
 		_history(array(
 			'type_id' => 1067,
