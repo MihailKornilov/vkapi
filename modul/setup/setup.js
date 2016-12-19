@@ -1147,7 +1147,7 @@ var setupOrgEdit = function(org_id) {
 		}
 	},
 
-	setupSchetPay = function() {
+	setupSchetPay = function() {//настройка счетов на оплату
 		$('#schet-pay-use')._check(function(v) {
 			$('#schet-pay-tab').toggle();
 			var send = {
@@ -1159,14 +1159,18 @@ var setupOrgEdit = function(org_id) {
 					_msg();
 			}, 'json');
 		});
-		$('#msg_client').autosize();
+		$('#invoice_id_default')._select({
+			width:250,
+			title0:'не указан',
+			spisok:INVOICE_SPISOK
+		});
 		$('.vk').click(function() {
 			var t = $(this),
 				send = {
 					op:'setup_schet_pay_save',
 					nomer_start:$('#nomer_start').val(),
 					prefix:$('#prefix').val(),
-					msg_client:$('#msg_client').val()
+					invoice_id:$('#invoice_id_default').val()
 				};
 			t.addClass('_busy');
 			$.post(AJAX_MAIN, send, function(res) {

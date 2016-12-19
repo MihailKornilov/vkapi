@@ -1382,6 +1382,9 @@ switch(@$_POST['op']) {
 			if(!$schet = _schetPayQuery($schet_id))
 				jsonError('Счёта не существует');
 
+			if($schet['sum'] - $schet['sum_paid'] <= 0)
+				jsonError('Счёт оплачен, редактирование невозможно.');
+
 			$send['org_id'] = $schet['org_id'];
 			$send['bank_id'] = $schet['bank_id'];
 			$client_id = $schet['client_id'];
@@ -1596,6 +1599,9 @@ switch(@$_POST['op']) {
 		if(!$schet = _schetPayQuery($schet_id))
 			jsonError('Счёта не существует');
 
+		if($schet['sum'] - $schet['sum_paid'] <= 0)
+			jsonError('Счёт оплачен, редактирование невозможно.');
+
 		if($zayav_id) {
 			if(!$z = _zayavQuery($zayav_id))
 				jsonError('Заявка не найдена');
@@ -1755,7 +1761,9 @@ switch(@$_POST['op']) {
 		$send['hist'] = _num($hist['all']);
 		$send['hist_spisok'] = utf8($hist['spisok']);
 		$send['nomer'] = utf8($schet['prefix'].$schet['nomer']);
+		$send['invoice_id'] = _app('schet_invoice_id');
 		$send['sum_to_pay'] = _cena($schet['sum'] - $schet['sum_paid']);//сумма для оплаты
+		$paid = $send['sum_to_pay'] <= 0;
 
 		$send['html'] = utf8(
 			(PREVIEW ?
@@ -1804,7 +1812,7 @@ switch(@$_POST['op']) {
 						_schetPay_income($schet).
 					'<td class="w175 pl20">'.
 						'<div class="_menuDop3">'.
-							'<a class="link"><div class="icon icon-edit"></div>Редактировать счёт</a>'.
+				  (!$paid ? '<a class="link"><div class="icon icon-edit"></div>Редактировать счёт</a>' : '').
 							'<a class="link" href="'.URL.
 								'&p=print'.
 								'&d=template'.
@@ -1813,8 +1821,12 @@ switch(@$_POST['op']) {
 									'<div class="icon icon-print"></div>'.
 									'Распечатать'.
 							'</a>'.
-(!PREVIEW && !$schet['pass'] ? '<a class="link"><div class="icon icon-out"></div>Передать клиенту</a>' : '').
-(!PREVIEW && $send['sum_to_pay'] > 0 ? '<a class="link b"><div class="icon icon-rub"></div>Оплатить</a>' : '').
+
+						(!PREVIEW && !$schet['pass'] && !$paid ?
+							'<a class="link"><div class="icon icon-out"></div>Передать клиенту</a>'
+						: '').
+
+			(!PREVIEW && !$paid ? '<a class="link b"><div class="icon icon-rub"></div>Оплатить</a>' : '').
 (!_cena($schet['sum_paid']) ? '<a class="link red"><div class="icon icon-del-red"></div>Удалить</a>' : '').
 						'</div>'.
 			'</table>'.

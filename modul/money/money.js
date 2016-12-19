@@ -2091,7 +2091,10 @@ var _accrualAdd = function(o) {
 		function loaded(res) {
 			dialog.content.html(res.html);
 			$('#date-create')._calendar({lost:1});
-			$('#client_id').clientSel({width:300});
+			$('#client_id').clientSel({
+				width:300,
+				add:!$('#client-info').length
+			});
 			$('#org_id')._select({
 				width:300,
 				spisok:res.org,
@@ -2260,7 +2263,7 @@ var _accrualAdd = function(o) {
 				var html =
 						'<table class="bs10">' +
 							'<tr><td class="label r w125">№ счёта:<td><b>' + res.nomer + '</b>' +
-							'<tr><td class="label r">Расчётный счёт:<td><input type="hidden" id="pay-invoice_id" value="7" />' +
+							'<tr><td class="label r">Расчётный счёт:<td><input type="hidden" id="pay-invoice_id" value="' + res.invoice_id + '" />' +
 							'<tr><td class="label r">Сумма:<td><input type="text" class="money" id="sum" value="' + res.sum_to_pay +'" /> руб.' +
 							'<tr><td class="label r">День оплаты:<td><input type="hidden" id="pay-day" />' +
 						'</table>',

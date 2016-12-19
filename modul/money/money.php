@@ -2586,7 +2586,9 @@ function _schetPay($v) {//страница счетов на оплату
 				'<tr>'.
 					'<td class="w350"><div id="find"></div>'.
 					'<td id="td-group"><input type="hidden" id="group_id" value="'.$v['group_id'].'" />'.
-					'<td class="r"><button class="vk" onclick="schetPayEdit()">Создать счёт на оплату</button>'.
+					'<td class="r">'.
+						'<button class="vk" onclick="schetPayEdit()">Создать счёт на оплату</button>'.
+						'<a href="'.URL.'&p=setup&d=schet_pay" class="icon icon-setup-big mt5 ml10 mr5'._tooltip('Настроить счета на оплату', -154, 'r').'</a>'.
 			'</table>'.
 			'<div class="mt10" id="schet-pay-spisok">'.$data['spisok'].'</div>'.
 		'</div>'.

@@ -206,7 +206,7 @@ var
 		}
 	},
 */
-	_clientEdit = function(category_id) {
+	_clientEdit = function(category_id, callback) {
 		var CI = window.CI || {},
 			client_id = _num(CI.id),
 			category_id = _num(category_id),
@@ -318,6 +318,10 @@ var
 				if(res.success) {
 					dialog.close();
 					_msg();
+					if(callback) {
+						callback(res.id);
+						return;
+					}
 					location.href = URL + '&p=client&d=info&id=' + res.id;
 				} else
 					dialog.abort(res.text);
@@ -480,11 +484,9 @@ $.fn.clientSel = function(o) {
 
 	if(o.add)
 		o.add = function() {
-			_clientEdit({
-				callback:function(res) {
-					o.client_id = res.uid;
+			_clientEdit(0, function(client_id) {
+					o.client_id = client_id;
 					clientsGet();
-				}
 			});
 		};
 

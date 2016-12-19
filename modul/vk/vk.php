@@ -375,7 +375,8 @@ function _app($i='all', $item_id=0, $k='') {//Получение данных о приложении
 		$schet_pay = array(
 			'schet_pay' => 0,
 			'schet_prefix' => '',
-			'schet_nomer_start' => 0
+			'schet_nomer_start' => 0,
+			'schet_invoice_id' => 0
 		);
 
 		$sql = "SELECT *
@@ -386,7 +387,8 @@ function _app($i='all', $item_id=0, $k='') {//Получение данных о приложении
 			$schet_pay = array(
 				'schet_pay' => _bool($r['use']),
 				'schet_prefix' => $r['prefix'],
-				'schet_nomer_start' => _num($r['nomer_start'])
+				'schet_nomer_start' => _num($r['nomer_start']),
+				'schet_invoice_id' => _num($r['invoice_id_default'])
 			);
 
 		$arr += $org + $schet_pay;
@@ -2076,7 +2078,7 @@ function _template() {//формирование шаблона
 		case 'xls':
 		case 'xlsx': _templateXls($ex[$kLast], $tmp, $attach);
 		case 'docx': _templateWord($tmp, $attach);
-		default: die('Недопустимый файл шаблона.');
+		default: die('Недопустимый формат файла шаблона. Возможные форматы: xls, xlsx, docx.');
 	}
 }
 function _templateVar() {
@@ -2096,8 +2098,8 @@ function _templateVar() {
 			$varSpisok[$id]['text'] = htmlspecialchars_decode(_app($r['col_name']));
 
 	$varSpisok = _templateIncome($varSpisok);   //платёж
-	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату
 	$varSpisok = _templateClient($varSpisok);   //клиент
+	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
 
 	$var = array();
 	foreach($varSpisok as $r)
@@ -2150,6 +2152,30 @@ function _templateSchetPay($arr) {//подмена переменных счёта на оплату
 		return $arr;
 
 	foreach($arr as $id => $r) {
+		if( $r['v'] == '{ORG_NAME_YUR}' ||
+			$r['v'] == '{ORG_ADRES_YUR}' ||
+			$r['v'] == '{ORG_INN}' ||
+			$r['v'] == '{ORG_KPP}')
+			$arr[$id]['text'] = htmlspecialchars_decode($schet['org_'.$r['col_name']]);
+
+		if($r['v'] == '{ORG_BOSS}')
+			$arr[$id]['text'] = htmlspecialchars_decode($schet['org_boss']);
+
+		if($r['v'] == '{ORG_ACCOUNTANT}')
+			$arr[$id]['text'] = htmlspecialchars_decode($schet['org_accountant']);
+
+		if( $r['v'] == '{BANK_NAME}' ||
+			$r['v'] == '{BANK_BIK}' ||
+			$r['v'] == '{BANK_ACCOUNT}' ||
+			$r['v'] == '{BANK_ACCOUNT_CORR}')
+			$arr[$id]['text'] = htmlspecialchars_decode($schet[$r['col_name']]);
+
+		if( $r['v'] == '{CLIENT_NAME}' ||
+			$r['v'] == '{CLIENT_ADRES}' ||
+			$r['v'] == '{CLIENT_INN}' ||
+			$r['v'] == '{CLIENT_KPP}')
+			$arr[$id]['text'] = htmlspecialchars_decode($schet['client_'.$r['col_name']]);
+
 		if($r['table_name'] != '_schet_pay')
 			continue;
 

@@ -2667,7 +2667,7 @@ switch(@$_POST['op']) {
 			jsonError('Некорректно указан порядковый номер');
 
 		$prefix = _txt($_POST['prefix']);
-		$msg_client = _txt($_POST['msg_client']);
+		$invoice_id = _num($_POST['invoice_id']);
 
 		$sql = "SELECT *
 				FROM `_schet_pay_setup`
@@ -2679,7 +2679,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_schet_pay_setup`
 				SET `nomer_start`=".$nomer_start.",
 					`prefix`='".addslashes($prefix)."',
-					`msg_client`='".addslashes($msg_client)."'
+					`invoice_id_default`=".$invoice_id."
 				WHERE `id`=".$r['id'];
 		query($sql);
 
