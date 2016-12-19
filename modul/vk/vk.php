@@ -1108,10 +1108,11 @@ function _iconDel($v=array()) {//иконка удаления записи в таблице
 
 	$v = array(
 		'id' => _num(@$v['id']) ? 'val="'.$v['id'].'" ' : '',//id записи
-		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+		'class' => !empty($v['class']) ? ' '.$v['class'] : '',//дополнительный класс
+		'onclick' => !empty($v['onclick']) ? ' onclick="'.$v['onclick'].'"' : '' //скрипт по нажатию
 	);
 
-	return '<div '.$v['id'].'class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
+	return '<div '.$v['id'].$v['onclick'].' class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
 }
 
 function _dn($v) {//показ/скрытие блока на основании условия

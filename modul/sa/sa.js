@@ -825,7 +825,7 @@ var saMenuEdit = function(o) {
 			}, 'json');
 		}
 	},
-	saTemplateVarEdit = function(id) {//¬несение/редактирование группы шаблонов документов
+	saTemplateVarEdit = function(id) {//¬несение/редактирование переменной шаблонов документов
 		var dialog = _dialog({
 				width:400,
 				head:(id ? '»зменение' : 'ƒобавление новой') + ' переменной дл€ шаблонов',
@@ -883,6 +883,16 @@ var saMenuEdit = function(o) {
 					dialog.abort(res.text);
 			}, 'json');
 		}
+	},
+	saTemplateVarDel = function(id) {//удаление переменной шаблонов документов
+		_dialogDel({
+			id:id,
+			head:'переменной шаблона',
+			op:'sa_template_var_del',
+			func:function(res) {
+				$('#spisok-var').html(res.html);
+			}
+		});
 	},
 
 	saAppEdit = function(o) {

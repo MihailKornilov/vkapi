@@ -1298,6 +1298,22 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_template_spisok());
 		jsonSuccess($send);
 		break;
+	case 'sa_template_var_del'://удаление переменной для шаблонов
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id переменной');
+
+		$sql = "SELECT *
+				FROM `_template_var`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Переменной id'.$id.' не существует');
+
+		$sql = "DELETE FROM `_template_var` WHERE `id`=".$id;
+		query($sql);
+
+		$send['html'] = utf8(sa_template_spisok());
+		jsonSuccess($send);
+		break;
 
 	case 'sa_count_client_load':
 		set_time_limit(40);

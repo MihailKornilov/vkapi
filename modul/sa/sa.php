@@ -1147,13 +1147,15 @@ function sa_template_var($spisok, $table_name) {
 	if(empty($spisok))
 		return '';
 
-	$send = '<table class="_spisok mar8">';
+	$send = '<table class="_spisokTab mar8">';
 	foreach($spisok as $r) {
 		$send .=
-			'<tr><td class="w125 b">'.$r['v'].
+			'<tr><td class="w175 b">'.$r['v'].
 				'<td>'.$r['name'].
-				'<td class="w100">`'.$table_name.'`.`'.$r['col_name'].'`'.
-				'<td class="ed">'._iconEdit($r + array('onclick'=>'saTemplateVarEdit('.$r['id'].')'));
+				'<td class="w200">`'.$table_name.'`.`'.$r['col_name'].'`'.
+				'<td class="w35">'.
+					_iconEdit($r + array('onclick'=>'saTemplateVarEdit('.$r['id'].')')).
+					_iconDel($r + array('onclick'=>'saTemplateVarDel('.$r['id'].')'));
 	}
 
 	$send .= '</table>';
