@@ -2010,7 +2010,6 @@ function _print_document() {//вывод на печать документов
 		case 'zp_zakaz':
 			require_once GLOBAL_DIR.'/view/xls/zp_zakaz.php';
 			break;
-		case 'receipt': _incomeReceiptPrint(); break;
 		case 'salary_list':
 			require_once GLOBAL_DIR.'/view/xls/salary_list.php';
 			break;
@@ -2031,6 +2030,21 @@ function _print_document() {//вывод на печать документов
 
 
 
+function _templateVerify($use) {//проверка наличия шаблона по имени использования
+	if(empty($use))
+		return false;
+
+	//количество шаблонов
+	$sql = "SELECT COUNT(*)
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND `attach_id`
+			  AND `use`='".addslashes($use)."'";
+	if(!query_value($sql))
+		return false;
+	
+	return true;
+}
 function _template() {//формирование шаблона
 	if(!$template_id = _num(@$_GET['template_id']))
 		die('Некорректный идентификатор шаблона.');

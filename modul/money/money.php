@@ -602,13 +602,15 @@ function incomeAbout($r, $filter=array()) {
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
 }
 function _incomePrint($income_id) {//ссылка-иконка для печати товарного чека
+	if(!defined('INCOME_RECEIPT_EXISTS'))
+		define('INCOME_RECEIPT_EXISTS', _templateVerify('income-receipt'));
+
+	if(!INCOME_RECEIPT_EXISTS)
+		return '';
+
 	return
-	'<a href="'.URL.
-				'&p=print'.
-				'&d=template'.
-				'&template_id=income-receipt'.
-				'&income_id='.$income_id.'"'.
-	  ' class="img_doc'._tooltip('Распечатать товарный чек', -153, 'r').
+	'<a onclick="_templatePrint(\'income-receipt\',\'income_id\','.$income_id.')" '.
+	   'class="img_doc'._tooltip('Распечатать товарный чек', -155, 'r').
 	'</a>';
 }
 function _incomeReceipt($id) {//товарный чек для платежа
@@ -662,32 +664,6 @@ function _incomeReceipt($id) {//товарный чек для платежа
 		'<tr><td>Продавец ______________________<div class="prod-bot">(подпись)</div>'.
 			'<td><u>/'._viewer($money['viewer_id_add'], 'viewer_name_init').'/</u><div class="r-bot">(расшифровка подписи)</div>'.
 	'</table>';
-}
-function _incomeReceiptPrint() {//печать товарного чека для платежа
-	if(!$id = _num(@$_GET['id']))
-		die('Некорректный id.');
-
-	$sql = "SELECT *
-			FROM `_money_income`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`
-			  AND `id`=".$id;
-
-	if(!$r = query_assoc($sql))
-		die('Платежа id='.$id.' не существует.');
-
-	$doc = new clsMsDocGenerator(
-		$pageOrientation = 'PORTRAIT',
-		$pageType = 'A4',
-		$cssFile = GLOBAL_DIR.'/css/dogovor.css',
-		$topMargin = 1,
-		$rightMargin = 2,
-		$bottomMargin = 1,
-		$leftMargin = 1
-	);
-	$doc->addParagraph(_incomeReceipt($id));
-	$doc->output(time().'-income-receipt-'.$id.'.doc');
-	mysql_close();
 }
 function income_schet_spisok($schet) {//список платежей по конкретному счёту на оплату
 	$sql = "SELECT *

@@ -762,6 +762,8 @@ var VK_SCROLL = 0,
 					var v = $(this).attr('val');
 					location.href = URL + '&p=print&d=template&template_id=' + v + '&' + obj + '=' + id;
 				});
+				if(res.count == 1)
+					$('.template-print-unit:first').trigger('click');
 			} else
 				dialog.loadError(res.text);
 		}, 'json');

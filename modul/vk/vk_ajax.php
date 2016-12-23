@@ -701,7 +701,7 @@ switch(@$_POST['op']) {
 				'Шаблоны для печати не настроены.'.
 				'<br />'.
 				'<br />'.
-				'<button class="vk" onclick="location.href=\''.URL.'&p=setup&d=schet_pay\'">Настроить</button>'.
+				'<button class="vk" onclick="location.href=\''.URL.'&p=setup&d=document_template\'">Настроить</button>'.
 			'</div>'
 		);
 
@@ -722,6 +722,8 @@ switch(@$_POST['op']) {
 					'</div>';
 			$send['html'] = utf8($send['html']);
 		}
+
+		$send['count'] = count($template);
 
 		jsonSuccess($send);
 		break;
