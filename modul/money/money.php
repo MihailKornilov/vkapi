@@ -33,7 +33,6 @@ function _money() {
 			break;
 		case 'expense': $content = expense(); break;
 		case 'refund': $content = _refund(); break;
-		case 'schet': $content = _schet(); break;
 		case 'schet_pay': $content = _schetPay(_hashFilter('schet_pay')); break;
 		case 'invoice': $content = invoice(); break;
 	}
@@ -43,7 +42,6 @@ function _money() {
 			'<a class="link'.($d == 'income' ? ' sel' : '').'" href="'.URL.'&p=money&d=income">Платежи</a>'.
 			'<a class="link'.($d == 'expense' ? ' sel' : '').'" href="'.URL.'&p=money&d=expense">Расходы</a>'.
 			'<a class="link'.($d == 'refund' ? ' sel' : '').'" href="'.URL.'&p=money&d=refund">Возвраты</a>'.
-			(_schetCount() ? '<a class="link'.($d == 'schet' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet">Счета на оплату</a>' : '').
 			(_app('schet_pay') ? '<a class="link'.($d == 'schet_pay' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet_pay">Счета на оплату</a>' : '').
 			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета'._invoiceTransferConfirmCount(1).'</a>'.
 		'</div>'.
@@ -174,7 +172,7 @@ function _accrual_spisok($v=array()) {//список начислений
 			LIMIT "._start($filter).",".$filter['limit'];
 	$spisok = query_arr($sql);
 
-	$spisok = _schetValToList($spisok);
+	$spisok = _schetPayValToList($spisok);
 	$spisok = _zayavValToList($spisok);
 	$spisok = _dogovorValToList($spisok);
 
@@ -193,15 +191,15 @@ function _accrual_spisok($v=array()) {//список начислений
 function _accrual_unit($r, $filter) {//строка начисления в таблице
 	$about = '';
 	if($r['schet_id'])
-		$about = 'Счёт '.$r['schet_link_full'].'<br />';
+		$about = $r['schet_pay_acc'];
 	if(!$filter['zayav_id'] && $r['zayav_id'])
-		$about .= 'Заявка '.$r['zayav_link'].'. ';
+		$about .= ' Заявка '.$r['zayav_link'].'. ';
 	if($r['dogovor_id'])
 		$about .= 'Договор <u>'.$r['dogovor_nomer'].'</u> от '.$r['dogovor_data'];
 	$about .= $r['about'];
 
 	return
-	'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
+	'<tr class="over1'.($r['deleted'] ? ' deleted' : '').'">'.
 		'<td class="color-acc curD sum">'._sumSpace($r['sum']).
 		'<td class="about">'.trim($about).
 		'<td class="dtime">'._dtimeAdd($r).
@@ -528,7 +526,7 @@ function income_spisok($filter=array()) {
 	$money = _clientValToList($money);
 	if(function_exists('_zayavValToList'))
 		$money = _zayavValToList($money);
-	$money = _schetValToList($money);
+	$money = _schetPayValToList($money);
 	$money = _dogovorValToList($money);
 	$money = _tovarValToList($money);
 
@@ -579,7 +577,7 @@ function incomeAbout($r, $filter=array()) {
 	$about .= $r['tovar_sale'];
 
 	if($r['schet_id'])
-		$about .= '<div class="schet">'.$r['schet_link'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
+		$about .= '<div class="schet">'.$r['schet_pay_income'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 	if($r['dogovor_id'])
 		$about .= 'Авансовый платёж по договору <u>'.$r['dogovor_nomer'].'</u> от '.$r['dogovor_data'];
 	if($r['confirm'] == 1)
@@ -2002,7 +2000,7 @@ function balans_show_spisok($filter) {
 			LIMIT "._start($filter).",".$filter['limit'];
 	$spisok = query_arr($sql);
 
-	$spisok = _schetValToList($spisok);
+	$spisok = _schetPayValToList($spisok);
 	$spisok = _zayavValToList($spisok);
 	$spisok = _dogovorValToList($spisok);
 
@@ -2019,7 +2017,7 @@ function balans_show_spisok($filter) {
 		$income = _clientValToList($income);
 		$income = _zayavValToList($income);
 		$income = _dogovorValToList($income);
-		$income = _schetValToList($income);
+		$income = _schetPayValToList($income);
 		$income = _tovarValToList($income);
 	}
 
@@ -2217,234 +2215,6 @@ function balans_everyday($v) {//отображение баланса за каждый день
 
 /* --- Счета на оплату --- */
 
-function _schetQuery($id, $withDeleted=0) {//запрос данных об одном счёте
-	$sql = "SELECT *
-			FROM `_schet`
-			WHERE `app_id`=".APP_ID.
-			  ($withDeleted ? '' : ' AND !`deleted`')."
-			  AND `id`=".$id;
-	return query_assoc($sql);
-}
-function _schetCount() {//количество счетов в приложении (для показа ссылки на счета)
-	$sql = "SELECT COUNT(*)
-			FROM `_schet`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`";
-	return query_value($sql);
-}
-function _schetValToList($arr) {//данные о счёте, подставляемые в список
-	$ids = array();
-	$arrIds = array();
-	foreach($arr as $key => $r)
-		if(!empty($r['schet_id'])) {
-			$ids[$r['schet_id']] = 1;
-			$arrIds[$r['schet_id']][] = $key;
-		}
-
-	if(empty($ids))
-		return $arr;
-
-	$sql = "SELECT
-	            *
-			FROM `_schet`
-			WHERE `app_id`=".APP_ID."
-			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		foreach($arrIds[$r['id']] as $id)
-			$arr[$id] += _schetValForm($r);
-	return $arr;
-}
-function _schetValForm($r) {//формирование переменных счёта для подстановки
-	$prefix = 'СЦ';
-	$deleted = $r['deleted'] ? ' deleted' : '';
-	$classPaid = !$deleted && _cena($r['paid_sum']) && $r['paid_sum'] >= $r['sum'] ? ' paid' : '';
-	$classPass = !$deleted && !$classPaid && $r['pass'] ? ' pass' : '';
-	return array(
-		'schet_nomer' => $prefix.$r['nomer'],
-		'schet_date' => FullData($r['date_create']),
-		'schet_link' => '<span class="schet-link'.$deleted.$classPass.$classPaid.'" val="'.$r['id'].'">'.$prefix.$r['nomer'].'</span>',
-		'schet_link_full' => '<span class="schet-link'.$deleted.$classPass.$classPaid.'" val="'.$r['id'].'"><b>'.$prefix.$r['nomer'].'</b> от '.FullData($r['date_create'], 1).'</span>'
-	);
-}
-function _schetFilter($v) {
-	$send = array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
-		'find' => trim(@$v['find']),
-		'client_id' => _num(@$v['client_id']),
-		'zayav_id' => _num(@$v['zayav_id']),
-		'passpaid' => _num(@$v['passpaid'])
-	);
-	return $send;
-}
-function _schet() {
-	$data = _schet_spisok();
-	return
-	'<table class="tabLR" id="money-schet">'.
-		'<tr><td class="left">'.
-				'<div class="headName">Счета на оплату</div>'.
-				'<div id="spisok">'.$data['spisok'].'</div>'.
-			'<td class="right">'._schet_right().
-	'</table>';
-}
-function _schet_spisok($v=array()) {
-	$filter = _schetFilter($v);
-	$filter = _filterJs('SCHET', $filter);
-
-	$cond = "`app_id`=".APP_ID."
-		 AND !`deleted`";
-
-	if($filter['find'])
-		$cond .= " AND `nomer`="._num($filter['find']);
-	else {
-		if($filter['client_id'])
-			$cond .= " AND `client_id`=".$filter['client_id'];
-		switch ($filter['passpaid']) {
-			case 1:
-				$cond .= " AND !`pass` AND `paid_sum`<`sum`";
-				break;
-			case 2:
-				$cond .= " AND `pass` AND `paid_sum`<`sum`";
-				break;
-			case 3:
-				$cond .= " AND `paid_sum`>=`sum`";
-				break;
-		}
-	}
-	$sql = "SELECT
-				COUNT(`id`) AS `all`,
-				SUM(`sum`) AS `sum`
-			FROM `_schet`
-			WHERE ".$cond;
-	$send = query_assoc($sql);
-	$send['filter'] = $filter;
-	if(!$send['all'])
-		return $send + array('spisok' => $filter['js'].'<div class="_empty">Счетов нет.</div>');
-
-	$all = $send['all'];
-	$filter['all'] = $all;
-
-	$send['spisok'] =
-		($filter['page'] == 1 ?
-			$filter['js'].
-			'<div id="result">'.
-				'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
-				' на сумму <b>'._sumSpace($send['sum']).'</b> руб.'.
-			'</div>'.
-			'<table class="_spisok">'
-		: '');
-
-	$sql = "SELECT *
-			FROM `_schet`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT "._start($filter).",".$filter['limit'];
-	$q = query($sql);
-
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$r['paids'] = array();
-		$spisok[$r['id']] = $r;
-	}
-
-	$spisok = _zayavValToList($spisok);
-
-
-	//список платежей по счетам
-	$sql = "SELECT *
-			FROM `_money_income`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`
-			  AND `schet_id` IN (".implode(',', array_keys($spisok)).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['schet_id']]['paids'][] = array(
-			'sum' => $r['sum'],
-			'day' => $r['schet_paid_day']
-		);
-
-	foreach($spisok as $r)
-		$send['spisok'] .= _schet_unit($r);
-
-	$send['spisok'] .=
-		_next(array(
-				'tr' => 1,
-				'type' => 4
-			) + $filter);
-
-	return $send;
-}
-function _schet_unit($r, $zayav=1) {
-	$paid = _cena($r['paid_sum']) && $r['paid_sum'] >= $r['sum'];
-	$pass_info = $r['pass'] && !$paid ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
-
-	$paid_info = '';
-	if($r['paid_sum'] > 0)
-		foreach($r['paids'] as $i)
-			$paid_info .= '<div class="paid-info">Оплачено <b>'.round($i['sum'], 2) . '</b> руб. '.FullData($i['day'], 1).'.</div>';
-
-	$paid = $paid ? ' paid' : '';
-	$pass = $pass_info ? ' pass' : '';
-	return
-		'<tr class="schet-unit'.$pass.$paid.'" id="schet-unit'.$r['id'].'">'.
-			'<td class="td-content">'.
-	  (!$paid ? '<input type="hidden" class="schet-action" id="act'.$r['id'].'" />' : '').
-				'<a class="info" val="'.$r['id'].'">'.
-					'Счёт № <b class="pay-nomer">СЦ'.$r['nomer'].'</b>'.
-				'</a> '.
-				'от <u>'.FullData($r['date_create']).'</u> г. '.
-				'на сумму <b class="pay-sum">'._sumSpace($r['sum']).'</b> руб. '.
-				$pass_info.
-				$paid_info.
-			($zayav && $r['zayav_id'] ? '<div class="schet-zayav">Заявка '.$r['zayav_link'].'.</div>' : '');
-}
-function _schet_right() {
-	return
-		'<div id="find"></div>'.
-		'<div class="findHead">Показывать счета:</div>'.
-		_radio('passpaid',
-			array(
-				0 => 'ВСЕ',
-				1 => 'Не переданы',
-				2 => 'Переданы, не опл.',
-				3 => 'Оплачены'
-			), 0, 1);
-}
-function _schetPayCorrect($schet_id) {//поправка в счёте суммы платежей, которые были произведены при внесении или удалении платежа
-	if(empty($schet_id))
-		return;
-
-	$sql = "SELECT IFNULL(SUM(`sum`),0)
-			FROM `_money_income`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`
-			  AND `schet_id`=".$schet_id;
-	$sum = query_value($sql);
-	$sql = "UPDATE `_schet`
-			SET `paid_sum`=".$sum."
-			WHERE `id`=".$schet_id;
-	query($sql);
-}
-function _schetToZayav($zayav) {//подстановка списка счетов в элемент списка заявок
-	if(empty($zayav))
-		return array();
-
-	$sql = "SELECT *
-			FROM `_schet`
-			WHERE `app_id`=".APP_ID."
-			  AND !`deleted`
-			  AND `zayav_id` IN (".implode(',', array_keys($zayav)).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		$form = _schetValForm($r);
-		$zayav[$r['zayav_id']]['schet'] .= $form['schet_link'];
-	}
-
-	return $zayav;
-}
-
-
 function _schetPayQuery($id, $withDel=0) {//запрос данных о счёте на оплату
 	$sql = "SELECT *
 			FROM `_schet_pay`
@@ -2462,8 +2232,8 @@ function _schetPayQuery($id, $withDel=0) {//запрос данных о счёте на оплату
 	
 	return $schet;
 }
-function _schetPayTypeSelect($schet_id) {//вывод выбора вида счёта (для нового счёта)
-	if($schet_id)
+function _schetPayTypeSelect($show) {//вывод выбора вида счёта (для нового счёта)
+	if(!$show)
 		return '';
 
 	$type = array(
@@ -2500,7 +2270,9 @@ function _schetPayValToList($arr, $key='schet_id') {//вставка данных счетов на о
 
 	foreach($arr as $r)
 		$arr[$r['id']] += array(
-			'schet_pay_link' => ''
+			'schet_pay_nomer' => '',
+			'schet_pay_acc' => '',
+			'schet_pay_income' => ''
 		);
 
 	if(!$schet_ids = _idsGet($arr, $key))
@@ -2521,14 +2293,37 @@ function _schetPayValToList($arr, $key='schet_id') {//вставка данных счетов на о
 		$c = $schet[$r[$key]];
 
 		$arr[$id] = array(
-			'schet_pay_link' => '<a onclick="schetPayShow('.$c['id'].')"'.($c['deleted'] ? ' class="deleted"' : '').'>'.
-									'счёт на оплату '.
-									($c['type_id'] == 2 ? '' : '№ <b>'.$c['prefix'].$c['nomer'].'</b> ').
-//									'на сумму <b>'._cena($c['sum']).'</b> руб.'.
-								'</a>'
+			'schet_pay_nomer' => $c['prefix'].$c['nomer'],
+			//для начисления
+			'schet_pay_acc' => '<div class="schet-pay-acc '._schetPayStatusBg($c).'" onclick="schetPayShow('.$c['id'].')">'.
+									'Счёт на оплату '.
+									'№ <b>'.$c['prefix'].$c['nomer'].'</b> '.
+								'</div>',
+			//для платежей, заявок, истории действий
+			'schet_pay_income' => '<div class="schet-pay-income '._schetPayStatusBg($c).'" onclick="schetPayShow('.$c['id'].')">'.
+									$c['prefix'].$c['nomer'].
+								'</div>'
 		) + $arr[$id];
 	}
 	return $arr;
+}
+function _schetPayToZayav($zayav) {//подстановка списка счетов в элемент списка заявок
+	if(empty($zayav))
+		return array();
+
+	$sql = "SELECT *
+			FROM `_schet_pay`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `zayav_id` IN (".implode(',', array_keys($zayav)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zayav[$r['zayav_id']]['schet'] .=
+			'<div class="schet-pay-income '._schetPayStatusBg($r).'" onclick="schetPayShow('.$r['id'].',0,event)">'.
+				$r['prefix'].$r['nomer'].
+			'</div> ';
+
+	return $zayav;
 }
 function _schetPaySumCorrect($schet_id) {//поправка в счёте суммы платежей, которые были произведены при внесении или удалении платежа
 	if(empty($schet_id))
@@ -2549,7 +2344,7 @@ function _schetPaySumCorrect($schet_id) {//поправка в счёте суммы платежей, кото
 function _schetPayFilter($v) {
 	$default = array(
 		'page' => 1,
-		'limit' => 200,
+		'limit' => 100,
 		'find' => '',
 		'group_id' => 0,
 		'mon' => '',
@@ -2557,8 +2352,8 @@ function _schetPayFilter($v) {
 		'zayav_id' => 0
 	);
 	$filter = array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 200,
+		'page' => _num(@$v['page']) ? $v['page'] : $default['page'],
+		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
 		'group_id' => _num(@$v['group_id']),//группы счетов: переданы, не переданы, оплачены, не оплачены
 		'mon' => _txt(@$v['mon']),
@@ -2726,17 +2521,14 @@ function _schetPay_spisok($v=array()) {
 		: '');
 	foreach($schet as $r) {
 		$status = $r['pass'] ? '<div class="fs12'._tooltip(FullData($r['pass_day']), -15).'передан клиенту</div>' : '';
-		$statusBg = $r['pass'] ? 'bg-ch' : 'bg-ffe';
 
 		$paid = $r['sum_paid'] >= $r['sum'];
 		$status = $paid ? '<div class="color-pay">оплачено</div>' : $status;
-		$statusBg = $paid ? 'bg-dfd' : $statusBg;
 
 		$status = $r['type_id'] == 2 ? 'ознакомительный' : $status;
-		$statusBg = $r['type_id'] == 2 ? '' : $statusBg;
 
 		$send['spisok'] .=
-			'<tr class="over1 curP '.$statusBg.'" onclick="schetPayShow('.$r['id'].')">'.
+			'<tr class="over1 curP '._schetPayStatusBg($r).'" onclick="schetPayShow('.$r['id'].')">'.
 				'<td class="r top'.($r['nomer'] == FIND_NOMER ? ' b u' : '').'">'.($r['type_id'] == 2 ? '-' : $r['prefix'].$r['nomer']).
 				'<td class="r wsnw top">'.FullData($r['date_create']).
 				'<td>'.$r['client_name'].$r['content'].
@@ -2751,6 +2543,27 @@ function _schetPay_spisok($v=array()) {
 			) + $filter);
 
 	return $send;
+}
+function _schetPayStatusBg($r) {//получение цвета статуса счёта на оплату
+	//удалён
+	if($r['deleted'])
+		return 'bg-eee grey';
+
+	//ознакомительный
+	if($r['type_id'] == 2)
+		return '';
+
+	//оплачено
+	if($r['sum_paid'] >= $r['sum'])
+		return 'bg-dfd';
+
+	//передано клиенту
+	if($r['pass'])
+		return 'bg-ch';
+
+	//не передано
+	return 'bg-ffe';
+
 }
 function _schetPay_income($schet) {//список платежей по конкретному счёту на оплату
 	if($schet['type_id'] == 2)

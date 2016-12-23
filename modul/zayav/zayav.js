@@ -69,8 +69,8 @@ var _zayavSpisok = function(v, id) {
 		});
 	},
 	_zayavEdit = function(sid) {
-		var service_id = zayav_id ? ZI.service_id : sid || 0,
-			zayav_id = window.ZI ? ZI.id : 0,
+		var zayav_id = window.ZI ? ZI.id : 0,
+			service_id = zayav_id ? ZI.service_id : sid || 0,
 			zayav_param = ZAYAV_POLE_PARAM[service_id] || {},//подолнительные параметры полей заявки
 			client_adres = '', //адрес клиента для подстановки в строку Адрес
 			equip_js = [],     //список комплектации для select, которые были не выбраны для конкретного товара
@@ -710,6 +710,10 @@ var _zayavSpisok = function(v, id) {
 		}
 		window.RE = send;
 		return _zayavExecuter();
+	},
+	
+	_zayavGo = function(zayav_id) {//переход на заявку без href
+		location.href = URL + '&p=zayav&d=info&id=' + zayav_id;
 	},
 
 	_zayavOnpayPublic = function() {
@@ -1359,34 +1363,21 @@ var _zayavSpisok = function(v, id) {
 			}, 'json');
 		}
 	},
-	_zayavCartridgeSchet = function() {
-		if(!_checkAll())
+	_zayavCartridgeSchetPay = function(t) {
+		if(!_checkAll()) {
+			t.vkHint({
+				top:-80,
+				left:440,
+				msg:'<span class="red">Не выбраны картриджи</span>',
+				show:1,
+				remove:1
+			});
 			return false;
+		}
 
-		var	dialog = _dialog({
-				head:'Получение информации о картриджах',
-				load:1,
-				butSubmit:''
-			}),
-			send = {
-				op:'zayav_cartridge_ids',
-				ids:_checkAll()
-			};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.close();
-				_schetEdit({
-					edit:1,
-					client_id:ZI.client_id,
-					client:ZI.client_link,
-					zayav_id:ZI.id,
-					arr:res.arr,
-					func:_zayavCartridgeSchetSet
-				});
-			} else
-				dialog.loadError();
-		}, 'json');
-		return true;
+		window.CARTRIDGE_IDS = _checkAll();
+
+		schetPayEdit();
 	},
 	_zayavCartridgeSchetSet = function(schet_id) {
 		var send = {
@@ -2386,12 +2377,13 @@ $(document)
 			});
 			var name = [0], action = [0];
 
-			name.push('Редактировать данные заявки'); action.push(_zayavEdit);
-
 			if(SERVICE_ACTIVE_COUNT > 1) {
 				name.push('Изменить категорию заявки');
 				action.push(_zayavTypeChange);
 			}
+
+			name.push('Редактировать данные заявки'); action.push(_zayavEdit);
+
 			if(ZI.pole[23]) {
 				name.push('Добавить картриджи');
 				action.push(_zayavCartridgeAdd);
@@ -2421,19 +2413,9 @@ $(document)
 					action.push(_zayavDogovorTerminate);
 				}
 			}
-			if(ZI.pole[21]) {
+			if(SCHET_PAY_USE) {
 				name.push('Сформировать счёт на оплату');
-				action.push(function() {
-					if(ZI.pole[23] && _zayavCartridgeSchet())
-						return;
-
-					_schetEdit({
-						edit:1,
-						client_id:ZI.client_id,
-						client:ZI.client_link,
-						zayav_id:ZI.id
-					})
-				});
+				action.push(schetPayEdit);
 			}
 			if(ZI.pole[45]) {
 				name.push('Изменить статус заявки');
@@ -2571,7 +2553,7 @@ $(document)
 				})
 			});
 			$('#lost-count').click(function() {//отображение прошедших номеров газеты
-				$(this).parent().find('.lost').show()
+				$(this).parent().find('.lost').show();
 				$(this).remove();
 			});
 		}

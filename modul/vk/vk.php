@@ -1554,6 +1554,8 @@ function _appJsValues() {//дл€ конкретного приложени€
 
 		"\n".'LIST_VYDACI="'.LIST_VYDACI.'",'. //todo
 
+		"\n".'SCHET_PAY_USE='._app('schet_pay').','.
+
 		_setup_global('js').
 		"\n".'RUBRIC_SPISOK='._rubric('js').','.
 		"\n".'RUBRIC_ASS=_toAss(RUBRIC_SPISOK),'.
@@ -2008,9 +2010,6 @@ function _print_document() {//вывод на печать документов
 		case 'zp_zakaz':
 			require_once GLOBAL_DIR.'/view/xls/zp_zakaz.php';
 			break;
-		case 'schet':
-			require_once GLOBAL_DIR.'/view/xls/schet_xls.php';
-			break;
 		case 'receipt': _incomeReceiptPrint(); break;
 		case 'salary_list':
 			require_once GLOBAL_DIR.'/view/xls/salary_list.php';
@@ -2033,26 +2032,16 @@ function _print_document() {//вывод на печать документов
 
 
 function _template() {//формирование шаблона
-	if(empty($_GET['template_id']))
-		die('ќтсутствует идентификатор шаблона.');
+	if(!$template_id = _num(@$_GET['template_id']))
+		die('Ќекорректный идентификатор шаблона.');
 
-	//получение данных о шаблоне по id
-	if($template_id = _num($_GET['template_id'])) {
-		$sql = "SELECT *
-				FROM `_template`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$template_id;
-		if(!$tmp = query_assoc($sql))
-			die('Ўаблона id'.$template_id.' не существует.');
-	} else {
-		$use = $_GET['template_id'];
-		$sql = "SELECT *
-				FROM `_template`
-				WHERE `app_id`=".APP_ID."
-				  AND `use`='".addslashes($use)."'";
-		if(!$tmp = query_assoc($sql))
-			die('Ќеизвестный идентификатор шаблона: '.$use);
-	}
+	//получение данных о шаблоне
+	$sql = "SELECT *
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".$template_id;
+	if(!$tmp = query_assoc($sql))
+		die('Ўаблона id'.$template_id.' не существует.');
 
 	if(!$tmp['attach_id'])
 		die('Ќе загружен файл шаблона.');
@@ -2073,8 +2062,6 @@ function _template() {//формирование шаблона
 	if(!$kLast)
 		die('Ќекорректное им€ файла шаблона.');
 
-//	print_r(_templateVar()); exit;
-
 	switch($ex[$kLast]) {
 		case 'xls':
 		case 'xlsx': _templateXls($ex[$kLast], $tmp, $attach);
@@ -2082,7 +2069,7 @@ function _template() {//формирование шаблона
 		default: die('Ќедопустимый формат файла шаблона. ¬озможные форматы: xls, xlsx, docx.');
 	}
 }
-function _templateVar() {
+function _templateVar() {//формирование переменных шаблона
 	$sql = "SELECT
 				`var`.*,
 				`gr`.`table_name`,
@@ -2287,8 +2274,7 @@ function _templateXls($version, $tmp, $attach) {//формирование шаблона Excel
 	$book = $reader->load(GLOBAL_PATH.'/..'.$attach['link']);
 
 	$sheetCount = $book->getSheetCount();//количество страниц в документе
-	while($sheetCount) {
-		$sheetCount--;
+	while($sheetCount--) {
 		$book->setActiveSheetIndex($sheetCount);//установка текущей страницы
 		$sheet = $book->getActiveSheet();
 		_templateXlsProcess($sheet);
@@ -2350,9 +2336,9 @@ function _templateXlsProcess($sheet) {//подмена переменных в шаблоне
 			        if(count($i) > 1)//вставка количества строк согласно списку
 						$sheet->insertNewRowBefore($row + 2, count($i) - 1);
 
-			        foreach($i as $num => $stroka)
-			            foreach($stroka as $n => $sp) {
-			                $sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
+					foreach($i as $num => $stroka)
+						foreach($stroka as $n => $sp) {
+							$sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
 			        }
 		        }
 	        }

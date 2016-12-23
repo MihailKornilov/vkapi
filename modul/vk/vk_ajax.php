@@ -650,7 +650,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-
 	case 'scanner_word':
 		$word = _txt($_POST['word']);
 
@@ -692,5 +691,38 @@ switch(@$_POST['op']) {
 		_manual_answer_insert($manual_id, $val);
 
 		jsonSuccess();
+		break;
+
+	case 'template_print_load'://получение данных дл€ печати документа по шаблону
+		$use = _txt($_POST['use']);
+
+		$send['html'] = utf8(
+			'<div class="mar20 center b">'.
+				'Ўаблоны дл€ печати не настроены.'.
+				'<br />'.
+				'<br />'.
+				'<button class="vk" onclick="location.href=\''.URL.'&p=setup&d=schet_pay\'">Ќастроить</button>'.
+			'</div>'
+		);
+
+		$sql = "SELECT *
+				FROM `_template`
+				WHERE `app_id`=".APP_ID."
+				  AND `attach_id`
+				  AND `use`='".addslashes($use)."'";
+		if($template = query_arr($sql)) {
+			$send['html'] = '<div class="_info mb20">¬ыбор шаблона дл€ печати:</div>';
+			foreach($template as $r)
+				$send['html'] .=
+					'<div class="template-print-unit over1" val="'.$r['id'].'">'.
+						'<table class="bs10">'.
+							'<tr><td><img src="'.API_HTML.'/img/excel_xlsx.png">'.
+								'<td class="b fs15">'.$r['name'].
+						'</table>'.
+					'</div>';
+			$send['html'] = utf8($send['html']);
+		}
+
+		jsonSuccess($send);
 		break;
 }

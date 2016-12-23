@@ -222,8 +222,6 @@ switch(@$_POST['op']) {
 					  AND `zayav_id`=".$zayav_id;
 			query($sql);
 
-			_zayavBalansUpdate($zayav_id);
-
 			//внесение баланса для клиента
 			_balans(array(
 				'action_id' => 40,
@@ -232,6 +230,14 @@ switch(@$_POST['op']) {
 				'sum' => $accrual_sum
 			));
 		}
+
+		//удаление номеров газет
+		$sql = "DELETE FROM `_zayav_gazeta_nomer`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id`=".$zayav_id;
+		query($sql);
+
+		_zayavBalansUpdate($zayav_id);
 
 		kupezzZayavObUpdate($zayav_id);
 
@@ -1464,13 +1470,6 @@ switch(@$_POST['op']) {
 		));
 
 		jsonSuccess();
-		break;
-	case 'zayav_cartridge_ids':
-		if(!$ids = _ids($_POST['ids']))
-			jsonError();
-
-		$send['arr'] = _zayavInfoCartridgeForSchet($ids);
-		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_schet_set':
 		if(!$schet_id = _num($_POST['schet_id']))

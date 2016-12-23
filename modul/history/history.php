@@ -150,7 +150,6 @@ function _history_spisok($v=array()) {
 	$history = _dogovorValToList($history);
 	$history = _tovarValToList($history);
 	$history = _attachValToList($history);
-	$history = _schetValToList($history);
 	$history = _schetPayValToList($history);
 	$history = _history_types($history, $filter);
 
@@ -216,8 +215,7 @@ function _history_types($history, $filter) {//перевод type_id в текст
 		'dogovor_avans',
 		'tovar_link',
 		'attach_link',
-		'schet_link_full',
-		'schet_pay_link',
+		'schet_pay_income',
 		'invoice_name',
 		'worker_name',
 		'worker_link',

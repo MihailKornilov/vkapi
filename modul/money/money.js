@@ -1543,528 +1543,6 @@ var _accrualAdd = function(o) {
 		}, 'json');
 	},
 
-	_schetInfo = function(o) {
-		o = $.extend({
-			id:0,
-			edit:0
-		}, o);
-		var load = !o.html,
-			dialog = _dialog({
-				top:20,
-				width:580,
-				head:'Просмотр счёта',
-				load:load,
-				butSubmit:'',
-				butCancel:'Закрыть'
-			});
-
-		if(load) {
-			var send = {
-				op:'schet_load',
-				id:o.id
-			};
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					if(o.edit) {
-						dialog.close();
-						res.edit = 1;
-						_schetEdit(res);
-					} else
-						schetPrint(res);
-				} else
-					dialog.loadError();
-			}, 'json');
-		} else
-			schetPrint(o);
-
-		function schetPrint(res) {
-			var html =
-				'<div id="_schet-info">' +
-					'<table class="tab">' +
-						'<tr><td class="label r top">Плательщик:<td>' + res.client +
-		(res.zayav_id ? '<tr><td class="label r">Заявка:<td>' + res.zayav_link : '') +
-					'</table>' +
-					'<h1>СЧЁТ № ' + res.nomer + res.ot + '</h1>' +
-					res.html +
-					'<h2>' + res.itog + '</h2>' +
-					'<table id="dop">' +
-						'<tr><td id="dop-td">' +
-								(res.nakl ? '<div class="doc">&bull; Накладная</div>' : '') +
-								(res.act ? '<div class="doc">&bull; Акт выполненных работ</div>' : '') +
-								'<div id="income">' + res.income + '</div>' +
-								(res.del ? '<div id="deleted">Счёт был удалён</div>' : '') +
-							'<th>' +
-	   (!res.del && !res.paid ? '<a id="schet-edit">Редактировать счёт</a>' : '') +
-								'<a id="schet-print">Распечатать<div class="img_xls"></div></a>' +
-	   (!res.del && !res.paid ?
-					(res.pass ? '<a id="schet-pass-cancel">Отменить передачу</a>'
-							  : '<a id="schet-pass">Передать клиенту</a>'
-					) +
-				                '<a id="schet-pay"><b>Оплатить</b></a>' +
-				                '<a id="schet-del">Удалить</a>'
-		: '') +
-					(res.hist ? '<a id="schet-history">История действий</a>' : '') +
-					'</table>' +
-		(res.hist ? '<div id="hist">' + res.hist_spisok + '</div>' : '') +
-				'</div>';
-			dialog.content.html(html);
-			$('#schet-edit').click(function() {
-				dialog.close();
-				_schetEdit(res);
-			});
-			$('#schet-print').click(function() {
-				_schetPrintXls(res.schet_id);
-			});
-			$('#schet-pass').click(function() {
-				_schetPass(res.schet_id, res.nomer);
-			});
-			$('#schet-pass-cancel').click(function() {
-				_schetPassCancel(res.schet_id, res.nomer);
-			});
-			$('#schet-pay').click(function() {
-				_schetPay(res.schet_id, res.nomer);
-			});
-			$('#schet-del').click(function() {
-				_dialogDel({
-					id:o.id,
-					head:'счёта № ' + res.nomer,
-					op:'schet_del',
-					func:function() {
-						dialog.close();
-						if(window.SCHET)
-							_schetSpisok();
-						else
-							location.reload();
-					}
-				});
-			});
-			$('#schet-history').click(function() {
-				$('#hist').slideDown(300);
-			});
-		}
-	},
-	_schetEdit = function(o) {
-		window['tsg'] = false;
-		o = $.extend({
-			edit:0,         // 0 - возвращаться на просмотр счёта при отмене, 1 - просто закрыть окно
-			schet_id:0,
-			client_id:0,
-			zayav_id:0,
-			avai:2,         // варианты выбора товара (из tovar-select)
-			arr:[],         // контент счёта
-			zayav_spisok:[],// список заявок конкретного клиента для прикрепления счёта к другой заявке
-			client:'',
-			date_create:'', // дата создания счёта
-			nakl:0,         // на печать будет выводиться накладная
-			act:0,          // на мечать будет выводиться акт выполненных работ
-			noedit:0,
-			func:function() {
-				location.reload();
-			}
-		}, o);
-
-		var spisok = '';
-		for(var n = 0; n < o.arr.length; n++) {
-			var sp = o.arr[n];
-			sp.sum = sp.cost * sp.count;
-			spisok += pole(sp);
-		}
-		var html =
-				'<div id="_schet-info">' +
-		(o.noedit ? '<div class="_info">' +
-						'<b>Внимание!</b> Редактирование данного счёта ограничено.<br />' +
-						'Вы не можете изменить сумму счёта, удалить или добавить новые позиции.' +
-					'</div>'
-		: '') +
-					'<table class="tab">' +
-						'<tr><td class="label r top">Плательщик:<td>' + o.client +
-(o.zayav_spisok.length ?'<tr><td class="label r">Заявка:<td><input type="hidden" id="zayav_id" value="' + o.zayav_id + '" />' : '') +
-						'<tr><td class="label r">Дата:<td><input type="hidden" id="date_create" value="' + o.date_create + '" />' +
-						'<tr><td class="label r topi">Приложения:' +
-							'<td><input id="nakl" type="hidden" value="' + o.nakl + '" />' +
-								'<input id="act" type="hidden" value="' + o.act + '" />' +
-					'</table>' +
-					'<h1>' + (o.schet_id ? 'СЧЁТ № ' + o.nomer : 'НОВЫЙ СЧЁТ') + '</h1>' +
-					'<table class="_spisok">' +
-						'<tr><th>№' +
-							'<th>Наименование товара' +
-							'<th>Кол-во' +
-							'<th>Цена' +
-							'<th>Сумма' +
-							'<th>' +
-						spisok +
-		  (!o.noedit ? '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию' : '') +
-					'</table>' +
-					'<h3></h3>' +
-				'</div>',
-			dialog = _dialog({
-				top:20,
-				width:610,
-				head:o.schet_id ? 'Редактирование счёта на оплату' : 'Формирование нового счёта на оплату',
-				content:html,
-				butSubmit:o.schet_id ? 'Сохранить счёт' : 'Сформировать счёт',
-				submit:submit,
-				cancel:function() {
-					if(!o.edit)
-						_schetInfo(o);
-				}
-			}),
-			tovar_num = 0;// порядковый номер input товара
-
-		$('#_schet-info textarea').autosize();
-		poleNum();
-		itog();
-		if(o.zayav_spisok.length)
-			$('#zayav_id')._select({
-				title0:'Заявка не выбрана',
-				spisok:o.zayav_spisok
-			});
-		$('#date_create')._calendar({lost:1});
-		$('#nakl')._check({name:'Накладная',light:1});
-		$('#act')._check({name:'Акт выполненных работ',light:1});
-		$('#pole-add').click(function() {//добавление новой позиции счёта
-			$(this)
-				.parent()
-				.before(pole)
-				.parent()
-				.find('.name:last textarea').autosize().focus();
-			$('#tovar' + tovar_num).tovar({
-				title:'...',
-				tooltip:'Выбрать из товаров',
-				avai:o.avai,
-				avai_open:1,
-				funcSel:function(res, attr_id) {
-					var p = _parent($('#' + attr_id), '.pole'),
-						countInp = p.find('.count input'),
-						costInp = p.find('.cost input');
-
-					p.find('.name textarea')
-					 .after('<textarea>' + res.name + '</textarea>')
-					 .remove();
-
-					p.find('.name textarea')
-						.autosize()
-						.next().val(res.id);
-					p.find('.tovar-avai').val(res.avai_id);
-
-					countInp.val(res.count);
-					costInp
-					 .val(res.sum_sell)
-					 .trigger('keyup');
-
-					itog();
-
-					if(!p.next().hasClass('pole'))
-						$('#pole-add').trigger('click');
-
-					$('#' + attr_id).next().remove();
-
-					if(res.avai_id) {
-						countInp
-							.attr('readonly', 'readonly')
-							.css('font-weight', 'bold');
-						costInp.select();
-					} else
-						countInp.select();
-				}
-			});
-			poleNum();
-		});
-
-		if(!o.schet_id && !o.arr.length)//если новый счёт и нет контента, выводится одно пустое поле
-			$('#pole-add').trigger('click');
-
-		$(document)
-			.off('click', '.pole-del')
-			.on('click', '.pole-del', function() {
-				_parent($(this)).remove();
-				poleNum();
-				itog();
-			})
-			.off('keyup', '.pole input,.pole textarea')
-			.on('keyup', '.pole input,.pole textarea', function() {
-				var t = _parent($(this)),
-					count = t.find('.count input').val(),
-					cost = t.find('.cost input').val(),
-					sum = count * _cena(cost);
-				t.find('.sum').html(sum);
-				itog();
-			});
-
-		function pole(sp) {//добавление нового поля
-			sp = $.extend({
-				name:'',
-				tovar_id:0,
-				tovar_avai_id:0,
-				count:1,
-				cost:''
-			}, sp);
-			var sum = sp.count * _cena(sp.cost),
-				readonly = sp.readonly ? ' readonly="readonly"' : '';
-			return '<tr class="pole">' +
-				'<td class="n r top">' +
-				'<td class="name">' +
-					'<textarea>' + sp.name + '</textarea>' +
-					'<input type="hidden" id="tovar' + (++tovar_num) + '" value="' + sp.tovar_id + '" />' +
-					'<input type="hidden" class="tovar-avai" value="' + sp.tovar_avai_id + '" />' +
-				'<td class="count top"><input type="text"' + (sp.tovar_avai_id || readonly ? ' readonly="readonly"' : '') + ' value="' + sp.count + '" />' +
-				'<td class="cost top"><input type="text"' + readonly + ' value="' + sp.cost + '" />' +
-				'<td class="sum top">' + (sum ? sum : '') +
-				'<td class="ed top">' +
-					(!readonly ? '<div class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
-		}
-		function poleNum() {//порядковая нумерация позиций счёта
-			var num = $('#_schet-info .n');
-			for(var n = 0; n < num.length; n++)
-				num.eq(n).html(n + 1);
-		}
-		function itog() {//подведение итога и подсветка ошибочных полей
-			var pole = $('#_schet-info .pole'),
-				num = 0,    //количество наименований
-				sum = 0,    //общая сумма
-				arr = [];   //массив для возврата
-			for(var n = 0; n < pole.length; n++) {
-				var eq = pole.eq(n),
-					name_inp = eq.find('.name textarea'),
-					count_inp = eq.find('.count input'),
-					cost_inp = eq.find('.cost input'),
-					name = $.trim(name_inp.val()),
-					count = _num(count_inp.val()),
-					cost = $.trim(cost_inp.val()),
-					s = count * cost;
-				if(s)
-					num++;
-				name_inp[(!name ? 'add' : 'remove') + 'Class']('err');
-				count_inp[(!count ? 'add' : 'remove') + 'Class']('err');
-				cost_inp[(!_cena(cost) && cost != '0'  ? 'add' : 'remove') + 'Class']('err');
-				sum += s;
-				arr.push({
-					tovar_id:_num(name_inp.next().val()),
-					tovar_avai_id:_num(name_inp.next().next().val()),
-					name:name,
-					count:count,
-					cost:cost,
-					readonly:cost_inp.attr('readonly') == 'readonly'
-				});
-			}
-
-			if(!pole.length)
-				$('#_schet-info h3').html('');
-
-			if(!arr.length)
-				return {
-					error:1,
-					msg:'Не добавлено ни одной позиции'
-				};
-
-			for(n = 0; n < arr.length; n++) {
-				var sp = arr[n];
-				if(sp.name && !sp.count)
-					return {
-						error:1,
-						msg:'Некорректно указано количество',
-						place:$('input.err:first')
-					};
-				if(sp.name && !_cena(sp.cost) && sp.cost != '0')
-					return {
-						error:1,
-						msg:'Некорректно указана сумма',
-						place:$('input.err:first')
-					};
-				if(!sp.name && sp.count && sp.cost)
-					return {
-						error:1,
-						msg:'Не указано наименование',
-						place:$('input.err:first')
-					};
-			}
-
-			$('#_schet-info h3').html('Всего наименований <b>' + num + '</b>, на сумму <b>' + sum + '</b> руб.');
-			return arr;
-		}
-		function submit() {
-			var send = {
-				op:'schet_edit',
-				schet_id:o.schet_id,
-				client_id:o.client_id,
-				zayav_id:o.zayav_spisok.length ? $('#zayav_id').val() : o.zayav_id,
-				spisok:itog(),
-				date_create:$('#date_create').val(),
-				nakl:_bool($('#nakl').val()),
-				act:_bool($('#act').val())
-			};
-			if(send.spisok.error) {
-				dialog.err(send.spisok.msg);
-				if(send.spisok.place)
-					send.spisok.place.focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					o.func(res.schet_id);
-				} else
-					dialog.abort(res.text);
-			}, 'json');
-		}
-	},
-	_schetSpisok = function(v, id) {
-		SCHET.page = 1;
-		if(id)
-			SCHET[id] = v;
-		$.post(AJAX_MAIN, SCHET, function(res) {
-			if(res.success) {
-				$('#spisok').html(res.spisok);
-				_schetAction();
-			}
-		}, 'json');
-	},
-	_schetAction = function() {
-		var action = $('.schet-action');
-		if(action.length) {
-			for(var n = 0; n < action.length; n++) {
-				var eq = action.eq(n),
-					spisok = [
-						{uid:1,title:'Посмотреть содержание'},
-						{uid:2,title:'Редактировать'},
-						{uid:3,title:'Распечатать<div class="img_xls"></div>'},
-						{uid:4,title:'Передать клиенту'},
-						{uid:5,title:'Отменить передачу'},
-						{uid:6,title:'<b>Оплатить</b>'}
-					],
-					unit = eq.parent().parent(),
-					pass = unit.hasClass('pass');
-				spisok.splice(pass ? 3 : 4, 1);
-				$('#' + eq.attr('id'))._dropdown({
-					head:'действие',
-					nosel:1,
-					spisok:spisok,
-					func:function(v, id) {
-						var schet_id = id.split('act')[1],
-							nomer = $('#schet-unit' + schet_id + ' .pay-nomer').html();
-						switch(v) {
-							case 1: _schetInfo({id:schet_id}); break;
-							case 2: _schetInfo({id:schet_id,edit:1}); break;
-							case 3: _schetPrintXls(schet_id); break;
-							case 4: _schetPass(schet_id, nomer); break;
-							case 5: _schetPassCancel(schet_id, nomer); break;
-							case 6: _schetPay(schet_id, nomer); break;
-						}
-					}
-				});
-				eq.removeClass('schet-action');
-			}
-		}
-	},
-	_schetPrintXls = function(schet_id) {
-		location.href = URL + '&p=print&d=schet&schet_id=' + schet_id;
-	},
-	_schetPass = function(schet_id, nomer) {//передача счёта клиенту
-		var html =
-				'<table class="_dialog-tab">' +
-					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
-					'<tr><td class="label">Когда передан:<td><input type="hidden" id="pass-day" />' +
-				'</table>';
-		var dialog = _dialog({
-				width:320,
-				head:'Передача счёта клиенту',
-				content:html,
-				butSubmit:'Применить',
-				submit:submit
-			});
-
-		$('#pass-day')._calendar({lost:1});
-		function submit() {
-			var send = {
-				op:'schet_pass',
-				schet_id:schet_id,
-				day:$('#pass-day').val()
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Счёт № ' + nomer + ' передан клиенту');
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
-	_schetPassCancel = function(schet_id, nomer) {//отмена передачи счёта
-		var dialog = _dialog({
-				width:320,
-				padding:50,
-				head:'Отмена передачи счёта клиенту',
-				content:'<center>Подтвердите отмену передачи<br />счёта <b>' + nomer + '</b> клиенту.</center>',
-				butSubmit:'Подтвердить',
-				submit:submit
-			});
-
-		function submit() {
-			var send = {
-				op:'schet_pass_cancel',
-				schet_id:schet_id
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
-	_schetPay = function(schet_id, nomer) {
-		var html =
-				'<table class="_dialog-tab">' +
-					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
-					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" /> руб.' +
-					'<tr><td class="label">День оплаты:<td><input type="hidden" id="pay-day" />' +
-					'<tr><td class="label">Расчётный счёт:<td><input type="hidden" id="invoice_id-pay" value="4" />' +
-				'</table>';
-		var dialog = _dialog({
-				head:'Оплата счёта',
-				content:html,
-				butSubmit:'Оплатить',
-				submit:submit
-			});
-
-		$('#pay-day')._calendar({lost:1});
-		$('#invoice_id-pay')._select({
-			width:200,
-			spisok:INVOICE_SPISOK,
-			func:function() {
-				$('#sum').focus();
-			}
-		});
-		$('#sum').focus();
-		function submit() {
-			var send = {
-				op:'schet_pay',
-				schet_id:schet_id,
-				invoice_id:_num($('#invoice_id-pay').val()),
-				sum:_cena($('#sum').val()),
-				day:$('#pay-day').val()
-			};
-			if(!send.sum) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if (res.success) {
-						dialog.close();
-						_msg('Счёт ' + nomer + ' оплачен');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	},
-
 	schetPayEdit = function(schet_id) {
 		schet_id = _num(schet_id);
 		var dialog = _dialog({
@@ -2079,8 +1557,13 @@ var _accrualAdd = function(o) {
 			send = {
 				op:'schet_pay_load',
 				schet_id:schet_id,
-				client_id:window.CI ? CI.id : 0
+				client_id:window.CI ? CI.id : 0,
+				zayav_id:window.ZI ? ZI.id : 0,
+				cartridge_ids:window.CARTRIDGE_IDS//id картриджей
 			};
+
+		window.CARTRIDGE_IDS = 0;//очистка id картриджей, чтобы не подставлялись в другие счета
+
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				loaded(res);
@@ -2091,10 +1574,20 @@ var _accrualAdd = function(o) {
 		function loaded(res) {
 			dialog.content.html(res.html);
 			$('#date-create')._calendar({lost:1});
-			$('#client_id').clientSel({
-				width:300,
-				add:!$('#client-info').length
-			});
+
+			if(!res.client_id)
+				$('#client_id').clientSel({
+					width:300,
+					add:!$('#client-info').length
+				});
+			else
+				$('#zayav_id')._select({
+					width:300,
+					write:1,
+					title0:'Заявка не выбрана',
+					spisok:res.zayav_spisok
+				});
+
 			$('#org_id')._select({
 				width:300,
 				spisok:res.org,
@@ -2119,34 +1612,40 @@ var _accrualAdd = function(o) {
 				width:300,
 				spisok:res.bank[res.org_id]
 			});
-			$('#content').schetPayContent({
-				spisok:res.content
+			$('#schet-pay-content').schetPayContent({
+				spisok:res.content,
+				noedit:res.noedit
 			});
 			$('#schet-pay-type')._radio(function(v) {
 				$('#schet-pay-type-select').hide();
-				$('#schet-pay-content').show();
-				$('#schet-pay-head').html(v == 1 ? 'НОВЫЙ СЧЁТ НА ОПЛАТУ' : 'ОЗНАКОМИТЕЛЬНЫЙ СЧЁТ');
+				$('#schet-pay-edit').show();
+				if(v == 2)
+					$('#schet-pay-head').html('ОЗНАКОМИТЕЛЬНЫЙ СЧЁТ');
 				dialog.butSubmit(v == 1 ? 'Сформировать счёт на оплату' : 'Сохранить ознакомительный счёт');
 				if(v == 2)
 					$('#nomer').val('-');
 			});
+			if(!schet_id && !$('#schet-pay-type').length)
+				dialog.butSubmit('Сформировать счёт на оплату');
 		}
 		function submit() {
 			var send = {
 				op:'schet_pay_' + (schet_id ? 'edit' : 'add'),
 				schet_id:schet_id,
-				type_id:$('#schet-pay-type').val(),
+				type_id:$('#schet-pay-type').val() || 1,
 				org_id:$('#org_id').val(),
 				bank_id:$('#bank_id').val(),
 				date_create:$('#date-create').val(),
 				client_id:$('#client_id').val(),
-				content:$('#content').val()
+				zayav_id:$('#zayav_id').val(),
+				content:$('#schet-pay-content').val(),
+				cartridge_ids:$('#cartridge_ids').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if (res.success) {
 					dialog.close();
-					schetPayShow(res.schet_id);
+					schetPayShow(res.schet_id, 1);
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -2157,7 +1656,10 @@ var _accrualAdd = function(o) {
 			schetPayShow(schet_id);
 		}
 	},
-	schetPayShow = function(schet_id) {//просмотр счёта на оплату
+	schetPayShow = function(schet_id, edited, e) {//просмотр счёта на оплату
+		if(e)
+			e.stopPropagation();
+		edited = _num(edited);
 		var dialog = _dialog({
 				top:20,
 				width:740,
@@ -2166,8 +1668,12 @@ var _accrualAdd = function(o) {
 				butSubmit:'',
 				butCancel:'Закрыть',
 				cancel:function() {
+					if(!edited)
+						return;
 					if($('#schet-pay-menu').length)
 						schetPaySpisok();
+					if(window.ZI || window.CI)
+						location.reload();
 				}
 			}),
 			send = {
@@ -2227,7 +1733,7 @@ var _accrualAdd = function(o) {
 							dPass.close();
 							_msg();
 							dialog.close();
-							schetPayShow(schet_id);
+							schetPayShow(schet_id, 1);
 						} else
 							dPass.abort(res.text);
 					}, 'json');
@@ -2251,7 +1757,7 @@ var _accrualAdd = function(o) {
 								dPass.close();
 								_msg();
 								dialog.close();
-								schetPayShow(schet_id);
+								schetPayShow(schet_id, 1);
 							} else
 								dPass.abort(res.text);
 						}, 'json');
@@ -2299,7 +1805,7 @@ var _accrualAdd = function(o) {
 							dPay.close();
 							_msg();
 							dialog.close();
-							schetPayShow(schet_id);
+							schetPayShow(schet_id, 1);
 						} else
 							dPay.abort(res.text);
 					}, 'json');
@@ -2314,7 +1820,7 @@ var _accrualAdd = function(o) {
 					op:'schet_pay_del',
 					func:function() {
 						dialog.close();
-						schetPayShow(schet_id);
+						schetPayShow(schet_id, 1);
 					}
 				});
 			});
@@ -2345,7 +1851,7 @@ var _accrualAdd = function(o) {
 				if(res.success) {
 					dialog.close();
 					schet_dialog.close();
-					schetPayShow(schet_id);
+					schetPayShow(schet_id, 1);
 				} else
 					dialog.err(res.text);
 			}, 'json');
@@ -2380,13 +1886,14 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 
 	o = $.extend({
 		spisok:[],
+		noedit:0,//возможность добавлять поля
 		func:function() {}
 	}, o);
 
 	var html =
 		'<div class="sp-content">' +
 			'<dl></dl>' +
-			'<a class="bg-link mt5 mb20">Добавить позицию</a>' +
+			'<a class="bg-link mt5 mb20' + (o.noedit ? ' dn' : '') + '">Добавить позицию</a>' +
 			'<div class="no-correct red fr dn">Не все поля заполнены корректно.</div>' +
 			'<div class="itog b mt5"></div>' +
 		'</div>';
@@ -2420,7 +1927,8 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 			name:'',
 			count:1,
 			cena:'',
-			summa:''
+			summa:'',
+			readonly:0
 		}, sp);
 
 		var html = '<dd>' +
@@ -2429,11 +1937,11 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 					'<td class="top">' +
 						'<input type="hidden" class="sp-id" value="' + sp.id + '" />' +
 						'<textarea class="min w300">' + sp.name + '</textarea>' +
-					'<td class="w70 center top"><input type="text" class="sp-count w35 center" value="' + sp.count + '" />' +
+					'<td class="w70 center top"><input type="text" class="sp-count w35 center"' + (sp.readonly ? ' readonly="readonly"' : '') + ' value="' + sp.count + '" />' +
 					'<td class="w50 center topi">шт.' +
-					'<td class="w70 top"><input type="text" class="sp-cena w50 r" value="' + sp.cena + '" />' +
+					'<td class="w70 top"><input type="text" class="sp-cena w50 r"' + (sp.readonly ? ' readonly="readonly"' : '') + ' value="' + sp.cena + '" />' +
 					'<td class="w70 topi prel">' +
-						'<div class="icon icon-del out' + _tooltip('Удалить позицию', -95, 'r') + '</div>' +
+		(!sp.readonly ? '<div class="icon icon-del out' + _tooltip('Удалить позицию', -95, 'r') + '</div>' : '') +
 						'<div class="sp-summa r b">' + sp.summa + '</div>' +
 			'</table>';
 		SORT.append(html);
@@ -2517,7 +2025,8 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 				area + '&&&' + 
 				count + '&&&' + 
 				cena + '&&&' + 
-				_num(sp.find('.sp-id').val())
+				_num(sp.find('.sp-id').val()) + '&&&' +
+				(spCount.attr('readonly') ? 1 : 0)
 			);
 		}
 
@@ -2680,11 +2189,6 @@ $(document)
 			op:'expense_del',
 			func:_expenseSpisok
 		});
-	})
-
-	.on('click', '.schet-unit .info, .schet-link', function(e) {
-		e.stopPropagation();
-		_schetInfo({id:$(this).attr('val')});
 	})
 
 	.on('click', '#money-invoice .img_setup', function() {
@@ -2971,18 +2475,6 @@ $(document)
 	.on('click', '#noacc-recalc', _salaryWorkerNoAccRecalc)
 
 	.ready(function() {
-		if($('#money-schet').length) {
-			$('#find')._search({
-				width: 137,
-				focus: 1,
-				txt: 'номер счёта',
-				enter: 1,
-				func: _schetSpisok
-			});
-			$('#passpaid')._radio(_schetSpisok);
-			_schetAction();
-			_nextCallback = _schetAction;
-		}
 		if($('#schet-pay-menu').length) {
 			$('#schet-pay-menu')._menuDop({
 				spisok:[

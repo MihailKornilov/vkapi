@@ -92,7 +92,6 @@
 ._zayav-unit .diff .pay{color:#c33}
 ._zayav-unit .dog{color:#555}
 ._zayav-unit .note{display:none}
-._zayav-unit .schet-link{margin-bottom:-5px}
 ._zayav-unit.deleted{background-color:#ddd;opacity:.7}
 ._zayav-unit.deleted .name{color:#777}
 ._zayav-unit .zu-main{width:100%;min-height:80px}
@@ -712,16 +711,6 @@
 
 
 
-
-/* Информация о заявке с картриджами */
-#zayav-cartridge .n{text-align:right;color:#777}
-#zayav-cartridge .cost{text-align:right}/* стоимость заправки картриджа */
-#zayav-cartridge .cart-name{width:130px}
-#zayav-cartridge .cart-prim{font-size:10px;color:#444}
-#zayav-cartridge .cart-prim u{font-size:10px}
-#zayav-cartridge .ready{background-color:#dfd}
-#zayav-cartridge .nomer{margin:0 4px;color:#777}
-#zayav-cartridge .cart-add{float:right}
 
 
 

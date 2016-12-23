@@ -783,7 +783,7 @@ function _clientDelAccess($client_id) {//разрешение на удаление клиента
 		return 'У клиента есть начисления';
 
 	//Наличие счетов на оплату
-	$sql = "SELECT COUNT(*) FROM `_schet` WHERE !`deleted` AND `client_id`=".$client_id;
+	$sql = "SELECT COUNT(*) FROM `_schet_pay` WHERE !`deleted` AND `client_id`=".$client_id;
 	if(query_value($sql))
 		return 'У клиента есть счета на оплату';
 
@@ -935,9 +935,8 @@ function _clientInfo() {//вывод информации о клиенте
 					'<td class="right">'.
 						'<div class="rightLink">'.
 							'<a onclick="_zayavAddMenu()"><b>Новая заявка</b></a>'.
+	   (_app('schet_pay') ? '<a onclick="schetPayEdit()">Новый счёт на оплату</a>' : '').
 							'<a class="_remind-add">Новое напоминание</a>'.
-							'<a id="client-schet-add">Счёт на оплату</a>'.
-	   (_app('schet_pay') ? '<a class="b" onclick="schetPayEdit()">Новый счёт на оплату</a>' : '').
 						'</div>'.
 			'</table>'.
 

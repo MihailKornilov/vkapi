@@ -266,8 +266,8 @@ switch(@$_POST['op']) {
 				'about' => $about
 			));
 
-		//платёж быть произведён по счёту
-		_schetPayCorrect($r['schet_id']);
+		//платёж был произведён по счёту
+		_schetPaySumCorrect($r['schet_id']);
 
 		//была произведена продажа товара
 		_tovarAvaiUpdate($r['tovar_id']);
@@ -444,7 +444,7 @@ switch(@$_POST['op']) {
 				jsonError('Платёж не привязан к счёту на оплату');
 
 			$sql = "SELECT *
-					FROM `_schet`
+					FROM `_schet_pay`
 					WHERE `app_id`=".APP_ID."
 					  AND !`deleted`
 					  AND `id`=".$r['schet_id'];
@@ -457,7 +457,7 @@ switch(@$_POST['op']) {
 					WHERE `id`=".$income_id;
 			query($sql);
 
-			_schetPayCorrect($r['schet_id']);
+			_schetPaySumCorrect($r['schet_id']);
 
 			_history(array(
 				'type_id' => 138,
@@ -877,506 +877,23 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'schet_spisok':
-		$data = _schet_spisok($_POST);
-		$send['spisok'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'schet_load':
-		if(!$schet_id = _num($_POST['id']))
-			jsonError();
-
-		if(!$schet = _schetQuery($schet_id, 1))
-			jsonError();
-
-		//сегодня создан счёт или нет - для возможности редактирования
-		$noedit = TODAY == substr($schet['dtime_add'], 0, 10) ? 0 : 1;
-
-		$sql = "SELECT *
-				FROM `_schet_content`
-				WHERE `schet_id`=".$schet_id."
-				ORDER BY `id`";
-		$content = query_arr($sql);
-		$tovar = _tovarValToList($content);
-
-		$html = '<table class="_spisok">'.
-					'<tr><th>№'.
-						'<th>Наименование товара'.
-						'<th>Кол-во'.
-						'<th>Цена'.
-						'<th>Сумма';
-		$n = 0;
-		$sum = 0;
-		$arr = array();
-		$avai = 2; // варианты выбора товара (из tovar-select)
-		foreach($content as $id => $r) {
-			if($avai == 2 && $r['tovar_id'])
-				$avai = 0;
-			if(($avai == 2 || !$avai) && $r['tovar_avai_id'])
-				$avai = 1;
-			$html .=
-				'<tr><td class="n r">'.(++$n).
-					'<td class="name">'.($r['tovar_id'] ? '<a href="'.URL.'&p=tovar&d=info&id='.$r['tovar_id'].'">'.$r['name'].'</a>' : $r['name']).
-					'<td class="count">'.($r['tovar_avai_id'] ? '<b class="avai">'.$r['count'].' '.$tovar[$id]['tovar_measure_name'].'</b>' : $r['count']).
-					'<td class="cost">'._sumSpace($r['cost']).
-					'<td class="sum">'._sumSpace($r['count'] * $r['cost']);
-			$sum += $r['count'] * $r['cost'];
-
-			$r['name'] = utf8($r['name']);
-			$r['cost'] = _cena($r['cost']);
-			$r['readonly'] = _num($r['readonly']) + $noedit;
-			$arr[] = $r;
-		}
-		$html .= '</table>';
-
-		//данные о заявке, которая привязана к счёту
-		if($schet['zayav_id']) {
-			$zayav[1] = array(
-					'id' => 1,
-					'zayav_id' => $schet['zayav_id']
-			);
-			$zayav = _zayavValToList($zayav);
-			$send['zayav_link'] = utf8($zayav[1]['zayav_link']);
-		}
-
-		//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
-		$sql = "SELECT `id`,CONCAT('№',`nomer`)
-				FROM `_zayav`
-				WHERE `client_id`=".$schet['client_id']."
-				ORDER BY `id`";
-		$send['zayav_spisok'] = query_selArray($sql);
-
-		$send['schet_id'] = $schet_id;
-		$send['client_id'] = _num($schet['client_id']);
-		$send['zayav_id'] = _num($schet['zayav_id']);
-		$send['avai'] = $avai;
-		$send['date_create'] = $schet['date_create'];
-		$send['nakl'] = _bool($schet['nakl']);
-		$send['act'] = _bool($schet['act']);
-		$send['pass'] = _bool($schet['pass']);
-		$send['paid'] = _num(_cena($schet['paid_sum']) && $schet['paid_sum'] >= $schet['sum']);
-		$send['income'] = utf8(income_schet_spisok($schet));
-		$send['client'] = utf8(_clientVal($schet['client_id'], 'link'));
-		$send['nomer'] = utf8('СЦ'.$schet['nomer']);
-		$send['ot'] = utf8(' от '.FullData($schet['date_create']).' г.');
-		$send['html'] = utf8($html);
-		$send['itog'] = utf8('Всего наименований <b>'.$n.'</b>, на сумму <b>'._sumSpace($sum).'</b> руб.');
-		$send['arr'] = $arr;
-		$send['noedit'] = $noedit;
-		$send['del'] = _bool($schet['deleted']);
-		$hist = _history(array('schet_id'=>$schet_id));
-		$send['hist'] = _num($hist['all']);
-		$send['hist_spisok'] = utf8($hist['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'schet_edit'://создание или редактирование счёта
-		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
-			jsonError('Некорректная дата создания');
-
-		$schet_id = _num($_POST['schet_id']);
-		$client_id = _num($_POST['client_id']);
-		$zayav_id = _num($_POST['zayav_id']);
-		$date_create = $_POST['date_create'];
-		$nakl = _bool($_POST['nakl']);
-		$act = _bool($_POST['act']);
-
-		$schet = array();
-		if($schet_id) {
-			if(!$schet = _schetQuery($schet_id))
-				jsonError('Счёта не существует');
-			$client_id = $schet['client_id'];
-		}
-
-		if($zayav_id) {
-			if(!$z = _zayavQuery($zayav_id))
-				jsonError();
-			$client_id = $z['client_id'];
-		}
-
-		if(!$client_id || !_clientQuery($client_id))
-			jsonError();
-
-
-		if(empty($_POST['spisok']))
-			jsonError();
-
-		$spisok = array();
-		$sum = 0;
-		foreach($_POST['spisok'] as $r) {
-			$r['name'] = _txt($r['name']);
-			if(empty($r['name']))
-				continue;
-			$spisok[] = $r;
-			$sum += _num($r['count']) * _cena($r['cost']);
-		}
-
-		if(empty($spisok))
-			jsonError('Некорректно заполнены поля');
-
-		$sql = "INSERT INTO `_schet` (
-					`id`,
-					`app_id`,
-					`nomer`,
-					`client_id`,
-					`zayav_id`,
-					`date_create`,
-					`nakl`,
-					`act`,
-					`sum`,
-					`viewer_id_add`
-				) VALUES (
-					".$schet_id.",
-					".APP_ID.",
-					".(_maxSql('_schet', 'nomer', 1)).",
-					".$client_id.",
-					".$zayav_id.",
-					'".$date_create."',
-					".$nakl.",
-					".$act.",
-					".$sum.",
-					".VIEWER_ID."
-				) ON DUPLICATE KEY UPDATE
-					`date_create`=VALUES(`date_create`),
-					`zayav_id`=VALUES(`zayav_id`),
-					`nakl`=VALUES(`nakl`),
-					`act`=VALUES(`act`),
-					`sum`=VALUES(`sum`)";
-		query($sql);
-
-		$insert_id = 0;//изначально считается, что не вносится новый счёт, а редактируется существующий
-		if(!$schet_id) {
-			$insert_id = query_insert_id('_schet');
-			$schet_id = $insert_id;
-		}
-
-		$sql = "DELETE FROM `_schet_content` WHERE `schet_id`=".$schet_id;
-		query($sql);
-
-		//внесение списка наименований для счёта
-		$values = array();
-		foreach($spisok as $r) {
-			if(empty($r['name']))
-				continue;
-			$values[] = "(".
-				$schet_id.",".
-				$r['tovar_id'].",".
-				$r['tovar_avai_id'].",".
-				"'".addslashes($r['name'])."',".
-				$r['count'].",".
-				$r['cost'].",".
-				$r['readonly'].
-			")";
-		}
-
-		$sql = "INSERT INTO `_schet_content` (
-					`schet_id`,
-					`tovar_id`,
-					`tovar_avai_id`,
-					`name`,
-					`count`,
-					`cost`,
-					`readonly`
-				) VALUES ".implode(',', $values);
-		query($sql);
-
-		foreach($spisok as $r) {
-			if(empty($r['name']))
-				continue;
-			if(!$r['tovar_avai_id'])
-				continue;
-			_tovarAvaiUpdate($r['tovar_id']);
-		}
-
-		//начисление по счёту
-		if($insert_id) {
-			$sql = "INSERT INTO `_money_accrual` (
-						`app_id`,
-						`schet_id`,
-						`client_id`,
-						`zayav_id`,
-						`sum`,
-						`viewer_id_add`
-					) VALUES (
-						".APP_ID.",
-						".$schet_id.",
-						".$client_id.",
-						".$zayav_id.",
-						".$sum.",
-						".VIEWER_ID."
-					)";
-			query($sql);
-
-			//баланс для клиента
-			_balans(array(
-				'action_id' => 25,//новое начисление
-				'client_id' => $client_id,
-				'schet_id' => $schet_id,
-				'zayav_id' => $zayav_id,
-				'sum' => $sum
-			));
-		} else {
-			//изменение начисления
-			$sql = "SELECT *
-					FROM `_money_accrual`
-					WHERE `app_id`=".APP_ID."
-					  AND !`deleted`
-					  AND `schet_id`=".$schet_id."
-					LIMIT 1";
-			$r = query_assoc($sql);
-
-			$sql = "UPDATE `_money_accrual`
-					SET `sum`=".$sum.",
-						`zayav_id`=".$zayav_id."
-					WHERE `id`=".$r['id'];
-			query($sql);
-
-			//баланс для клиента
-			if($sum != $r['sum'])
-				_balans(array(
-					'action_id' => 37,//изменение начисления
-					'client_id' => $client_id,
-					'schet_id' => $schet_id,
-					'zayav_id' => $zayav_id,
-					'sum' => $sum,
-					'sum_old' => $r['sum']
-				));
-		}
-
-		_zayavBalansUpdate(_num(@$schet['zayav_id']));
-		_zayavBalansUpdate($zayav_id);
-		_salaryZayavBonus($zayav_id);
-
-		if($insert_id)
-			_history(array(
-				'type_id' => 59,
-				'schet_id' => $schet_id,
-				'client_id' => $client_id,
-				'zayav_id' => $zayav_id,
-				'v1' => $sum
-			));
-		else {
-			//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
-			$sql = "SELECT `id`,CONCAT('№',`nomer`)
-					FROM `_zayav`
-					WHERE `client_id`=".$schet['client_id']."
-					ORDER BY `id`";
-			$zayav = query_ass($sql) + array(0=>'');
-			if($changes =
-				_historyChange('Заявка', $zayav[$schet['zayav_id']], $zayav[$zayav_id]).
-				_historyChange('Дата', FullData($schet['date_create']), FullData($date_create)).
-				_historyChange('Накладная', _daNet($schet['nakl']), _daNet($nakl)).
-				_historyChange('Акт', _daNet($schet['act']), _daNet($act)).
-				_historyChange('Сумма', _cena($schet['sum']), _cena($sum)))
-				_history(array(
-					'type_id' => 61,
-					'schet_id' => $schet_id,
-					'client_id' => $client_id,
-					'zayav_id' => $zayav_id,
-					'v1' => '<table>'.$changes.'</table>'
-				));
-		}
-
-		$send['schet_id'] = $schet_id;
-		jsonSuccess($send);
-		break;
-	case 'schet_pass'://передача счёта клиенту
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-
-		$day = $_POST['day'];
-		if(!$r = _schetQuery($schet_id))
-			jsonError();
-
-		if($r['pass'])
-			jsonError();
-
-		$sql = "UPDATE `_schet`
-				SET `pass`=1,
-					`pass_day`='".$day."'
-					WHERE `id`=".$schet_id;
-		query($sql);
-
-		_history(array(
-			'type_id' => 63,
-			'schet_id' => $schet_id,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id']
-		));
-
-		jsonSuccess();
-		break;
-	case 'schet_pass_cancel'://отмена передачи счёта
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-
-		if(!$r = _schetQuery($schet_id))
-			jsonError();
-
-		if(!$r['pass'])
-			jsonError();
-
-		$sql = "UPDATE `_schet`
-				SET `pass`=0,
-					`pass_day`='0000-00-00'
-					WHERE `id`=".$schet_id;
-		query($sql);
-
-		_history(array(
-			'type_id' => 65,
-			'schet_id' => $schet_id,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id']
-		));
-
-		jsonSuccess();
-		break;
-	case 'schet_pay'://оплата счёта
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-
-		$day = $_POST['day'];
-
-		if(!$r = _schetQuery($schet_id))
-			jsonError();
-
-		$sql = "INSERT INTO `_money_income` (
-				`app_id`,
-				`schet_id`,
-				`schet_paid_day`,
-				`invoice_id`,
-				`sum`,
-				`client_id`,
-				`zayav_id`,
-				`viewer_id_add`
-			) VALUES (
-				".APP_ID.",
-				".$schet_id.",
-				'".$day."',
-				".$invoice_id.",
-				".$sum.",
-				".$r['client_id'].",
-				".$r['zayav_id'].",
-				".VIEWER_ID."
-			)";
-		query($sql);
-
-		$income_id = query_insert_id('_money_income');
-
-		_schetPayCorrect($schet_id);
-		_zayavBalansUpdate($r['zayav_id']);
-		_salaryZayavBonus($r['zayav_id']);
-
-		//баланс для расчётного счёта
-		_balans(array(
-			'action_id' => 1,
-			'invoice_id' => $invoice_id,
-			'schet_id' => $schet_id,
-			'income_id' => $income_id,
-			'sum' => $sum
-		));
-
-		//баланс для клиента
-		_balans(array(
-			'action_id' => 27,
-			'schet_id' => $schet_id,
-			'client_id' => $r['client_id'],
-			'sum' => $sum
-		));
-
-		_history(array(
-			'type_id' => 60,
-			'schet_id' => $schet_id,
-			'invoice_id' => $invoice_id,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'v1' => _cena($sum)
-		));
-
-		jsonSuccess();
-		break;
-	case 'schet_del'://удаление счёта
-		if(!$schet_id = _num($_POST['id']))
-			jsonError();
-
-		if(!$r = _schetQuery($schet_id))
-			jsonError('Счёта не существует');
-
-		$sql = "SELECT SUM(`sum`)
-				FROM `_money_income`
-				WHERE `app_id`=".APP_ID."
-				  AND !`deleted`
-				  AND `schet_id`=".$schet_id;
-		if(query_value($sql))
-			jsonError('По этому счёту уже производились платежи');
-
-		$sql = "UPDATE `_schet`
-				SET `deleted`=1
-				WHERE `id`=".$schet_id;
-		query($sql);
-
-		//удаление начисления
-		$sql = "UPDATE `_money_accrual`
-				SET `deleted`=1
-				WHERE `schet_id`=".$schet_id;
-		query($sql);
-
-		//отвязка картриджей от счёта
-		$sql = "UPDATE `_zayav_cartridge`
-				SET `schet_id`=0
-				WHERE `schet_id`=".$schet_id;
-		query($sql);
-
-		//обновление наличия товара
-		$sql = "SELECT *
-				FROM `_schet_content`
-				WHERE `schet_id`=".$schet_id;
-		$q = query($sql);
-		while($sc = mysql_fetch_assoc($q)) {
-			if(empty($sc['name']))
-				continue;
-			if(!$sc['tovar_avai_id'])
-				continue;
-			_tovarAvaiUpdate($sc['tovar_id']);
-		}
-
-		_zayavBalansUpdate($r['zayav_id']);
-		_salaryZayavBonus($r['zayav_id']);
-
-		//внесение баланса для клиента
-		_balans(array(
-			'action_id' => 26,//удаление начисления
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'schet_id' => $schet_id,
-			'sum' => $r['sum']
-		));
-
-		_history(array(
-			'type_id' => 66,
-			'schet_id' => $schet_id,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id']
-		));
-
-		jsonSuccess();
-		break;
-
-	case 'schet_pay_load':
-		$client_id = _num($_POST['client_id']);
-
+	case 'schet_pay_load'://загрузка данных для создания/редактирования счёта на оплату
 		$send['org_id'] = _app('org_default');
 		$send['bank_id'] = _app('bank_default');
 		$nomer = 0;
 		$date_create = '';
+		$head = 'НОВЫЙ СЧЁТ НА ОПЛАТУ';
+		$send['noedit'] = 0;
 		$send['content'] = array();
+		$cartridge_ids = _ids(@$_POST['cartridge_ids']);//список id картриджей, если выбирались
+
+		$client_id = _num($_POST['client_id']);
+
+		if($zayav_id = _num($_POST['zayav_id'])) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError('Заявки id'.$zayav_id.' не существует');
+			$client_id = $z['client_id'];
+		}
 
 		if($schet_id = _num($_POST['schet_id'])) {
 			if(!$schet = _schetPayQuery($schet_id))
@@ -1385,19 +902,31 @@ switch(@$_POST['op']) {
 			if($schet['sum'] - $schet['sum_paid'] <= 0)
 				jsonError('Счёт оплачен, редактирование невозможно.');
 
+			$head = '';
 			$send['org_id'] = $schet['org_id'];
 			$send['bank_id'] = $schet['bank_id'];
 			$client_id = $schet['client_id'];
-			$nomer = $schet['type_id'] == 2 ? '-' : _app('schet_prefix').$schet['nomer'];
+			$zayav_id = $schet['zayav_id'];
+			$nomer = $schet['type_id'] == 2 ? '-' : $schet['nomer'];
 			$date_create = $schet['date_create'];
+
+			//сегодня создан счёт или нет - для возможности редактирования
+			$send['noedit'] = $schet['type_id'] == 2 || TODAY == substr($schet['dtime_add'], 0, 10) ? 0 : 1;
+
 			foreach($schet['content'] as $i => $r) {
 				$r['name'] = utf8($r['name']);
 				$r['cena'] = _cena($r['cena']);
 				$r['summa'] = _cena($r['count'] * $r['cena']);
+				$r['readonly'] = _num($r['readonly']) + $send['noedit'];
 				$send['content'][] = $r;
 				unset($send['content'][$i]['app_id']);
 			}
+		} else {
+			//получение данных по картриджам для подстановки в контент
+			$send['content'] = _zayavInfoCartridgeForSchetPay($cartridge_ids);
 		}
+		
+		$send['client_id'] = $client_id;
 
 		//список организаций для _select
 		$sql = "SELECT `id`,`name`
@@ -1415,9 +944,31 @@ switch(@$_POST['op']) {
 		$bankExist = isset($send['bank'][$send['org_id']]);
 		$bankCount = count(@$send['bank'][$send['org_id']]);
 
+		
+		//список заявок клиента счёта (если нужно перепривязать счёт к другой заявке)
+		$sql = "SELECT `id`,CONCAT('№',`nomer`,': ', `name`)
+				FROM `_zayav`
+				WHERE `client_id`=".$client_id."
+				ORDER BY `id`";
+		$send['zayav_spisok'] = query_selArray($sql);
+
+		//показ/скрытие выбора типа счёта
+		$typeShow = !$schet_id && empty($send['content']);
+
 		$send['html'] = utf8(
-			_schetPayTypeSelect($schet_id).
-			'<div id="schet-pay-content"'.($schet_id ? '' : ' class="dn"').'>'.
+			_schetPayTypeSelect($typeShow).
+
+			($send['noedit'] ?
+				'<div class="_info">'.
+					'<b>Внимание!</b> Редактирование данного счёта ограничено.'.
+					'<br />'.
+					'Вы не можете изменить сумму счёта.'.
+					'<br />'.
+					'Вы не можете добавить или удалить позиции содержания.'.
+				'</div>'
+			: '').
+
+			'<div id="schet-pay-edit"'.($typeShow ? ' class="dn"' : '').'>'.
 				'<table class="bs10">'.
 
 					'<tr><td class="label r">Получатель:'.
@@ -1438,15 +989,21 @@ switch(@$_POST['op']) {
 						'<td class="bank-2'.($bankCount > 1 ? '' : ' dn').'"><input type="hidden" id="bank_id" value="'.$send['bank_id'].'" />'.
 
 					'<tr><td class="label r">Cчёт номер:'.
-						'<td><input type="text" class="w70 r grey" id="nomer" value="'.schet_pay_nomer_next($nomer).'" readonly />'.
+						'<td><input type="text" class="w70 r grey" id="nomer" value="'._app('schet_prefix').schet_pay_nomer_next($nomer).'" readonly />'.
 							'<span class="ml20">от</span> '.
 							'<input type="hidden" id="date-create" value="'.$date_create.'" />'.
 					'<tr><td class="label r">Плательщик:'.
-						'<td><input type="hidden" id="client_id" value="'.$client_id.'" />'.
+						'<td class="b">'.
+							'<input type="hidden" id="client_id" value="'.$client_id.'" />'.
+							($client_id ? _clientVal($client_id, 'name') : '').
+
+	  ($client_id ? '<tr><td class="label r">Заявка:<td class="b">' : '').
+					'<input type="hidden" id="zayav_id" value="'.$zayav_id.'" />'.
+
 				'</table>'.
 
 				'<div class="mr20">'.
-					'<div id="schet-pay-head" class="center b mt20 fs14"></div>'.
+					'<div id="schet-pay-head" class="center b mt20 fs14">'.$head.'</div>'.
 					'<table class="_spisokTab mt10">'.
 						'<tr><th class="w15">№'.
 							'<th>Наименование товара'.
@@ -1456,8 +1013,9 @@ switch(@$_POST['op']) {
 							'<th class="w70">Сумма'.
 					'</table>'.
 
-					'<input type="hidden" id="content" />'.
+					'<input type="hidden" id="schet-pay-content" />'.
 				'</div>'.
+				'<input type="hidden" id="cartridge_ids" value="'.$cartridge_ids.'" />'.
 			'</div>'
 		);
 
@@ -1475,9 +1033,8 @@ switch(@$_POST['op']) {
 
 		$date_create = $_POST['date_create'];
 		$client_id = _num($_POST['client_id']);
-		$zayav_id = _num(@$_POST['zayav_id']); //todo @
 
-		if($zayav_id) {
+		if($zayav_id = _num($_POST['zayav_id'])) {
 			if(!$z = _zayavQuery($zayav_id))
 				jsonError('Заявка не найдена');
 			$client_id = $z['client_id'];
@@ -1489,6 +1046,7 @@ switch(@$_POST['op']) {
 			jsonError('Плательщик не найден');
 
 		$content = schet_pay_content('new');
+		$cartridge_ids = _ids(@$_POST['cartridge_ids']);//ids картриджей для привязки
 
 		$sql = "SELECT *
 				FROM `_setup_org`
@@ -1509,6 +1067,7 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_schet_pay` (
 					`app_id`,
 					`type_id`,
+					`prefix`,
 					`nomer`,
 					`zayav_id`,
 					`date_create`,
@@ -1538,6 +1097,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".$type_id.",
+					'".($type_id == 2 ? '' : addslashes(_app('schet_prefix')))."',
 					".($type_id == 2 ? '-' : '').schet_pay_nomer_next(0).",
 					".$zayav_id.",
 					'".$date_create."',
@@ -1567,22 +1127,62 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		$insert_id = query_insert_id('_schet_pay');
-		schet_pay_content('insert', $insert_id);
+		$schet_id = query_insert_id('_schet_pay');
+		schet_pay_content('insert', $schet_id);
+
+		//начисление по счёту
+		if($type_id == 1) {
+			$sql = "INSERT INTO `_money_accrual` (
+						`app_id`,
+						`schet_id`,
+						`client_id`,
+						`zayav_id`,
+						`sum`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".$schet_id.",
+						".$client_id.",
+						".$zayav_id.",
+						".$sum.",
+						".VIEWER_ID."
+					)";
+			query($sql);
+
+			//баланс для клиента
+			_balans(array(
+				'action_id' => 25,//новое начисление
+				'client_id' => $client_id,
+				'schet_id' => $schet_id,
+				'zayav_id' => $zayav_id,
+				'sum' => $sum
+			));
+
+			_zayavBalansUpdate($zayav_id);
+		}
+
+		//привязка картриджей
+		if($cartridge_ids) {
+			$sql = "UPDATE `_zayav_cartridge`
+					SET `schet_id`=".$schet_id."
+					WHERE !`schet_id`
+					  AND `id` IN (".$cartridge_ids.")";
+			query($sql);
+		}
 
 		_history(array(
 			'type_id' => 59,
-			'schet_id' => $insert_id,
+			'schet_id' => $schet_id,
 			'client_id' => $client_id,
 			'zayav_id' => $zayav_id,
 			'v1' => $sum,
 			'v2' => $type_id == 2 ? 'ознакомительный' : ''
 		));
 
-		$send['schet_id'] = $insert_id;
+		$send['schet_id'] = $schet_id;
 		jsonSuccess($send);
 		break;
-	case 'schet_pay_edit'://редактирование счёта на оплату
+	case 'schet_pay_edit'://сохранение счёта на оплату после редактирования
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError('Некорректный id счёта');
 		if(!$org_id = _num($_POST['org_id']))
@@ -1593,68 +1193,109 @@ switch(@$_POST['op']) {
 			jsonError('Некорректная дата создания');
 
 		$date_create = $_POST['date_create'];
-		$client_id = _num($_POST['client_id']);
-		$zayav_id = _num(@$_POST['zayav_id']); //todo @
+		$zayav_id = _num($_POST['zayav_id']);
 
 		if(!$schet = _schetPayQuery($schet_id))
 			jsonError('Счёта не существует');
 
 		if($schet['sum'] - $schet['sum_paid'] <= 0)
-			jsonError('Счёт оплачен, редактирование невозможно.');
+			jsonError('Счёт оплачен, редактирование невозможно');
 
-		if($zayav_id) {
-			if(!$z = _zayavQuery($zayav_id))
-				jsonError('Заявка не найдена');
-			$client_id = $z['client_id'];
+		$client_id = $schet['client_id'];
+
+		//проверка данных старой заявки
+		if($schet['zayav_id']) {
+			if(!$zOld = _zayavQuery($schet['zayav_id']))
+				jsonError('Старой заявки не существует');
+			if($zOld['client_id'] != $schet['client_id'])
+				jsonError('Несовпадение клиента в счёте и старой заявке');
 		}
 
-		if(!$client_id)
-			jsonError('Не указан плательщик');
-
-		if(!_clientQuery($client_id))
-			jsonError('Плательщик не найден');
+		//проверка данных новой заявки
+		if($zayav_id && $schet['zayav_id'] != $zayav_id) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError('Заявка не найдена');
+			if($z['client_id'] != $schet['client_id'])
+				jsonError('Несовпадение клиента в счёте и новой заявке');
+		}
 
 		$content = schet_pay_content('old');
 		$sum = schet_pay_content('sum');
 
 		$sql = "UPDATE `_schet_pay`
-				SET `client_id`=".$client_id.",
-					`zayav_id`=".$zayav_id.",
+				SET `zayav_id`=".$zayav_id.",
 					`date_create`='".$date_create."',
 					`sum`=".$sum."
 				WHERE `id`=".$schet_id;
 		query($sql);
 
-		//обновление данных организации, если изменялись
-		if($schet['org_id'] != $org_id) {
-			$org = _app('org', $org_id, 'all');
-			$sql = "UPDATE `_schet_pay`
-					SET `org_id`=".$org_id.",
-						`org_name_yur`='".addslashes($org['name_yur'])."',
-						`org_adres_yur`='".addslashes($org['adres_yur'])."',
-						`org_inn`='".addslashes($org['inn'])."',
-						`org_kpp`='".addslashes($org['kpp'])."',
-						`org_boss`='".addslashes($org['post_boss'])."',
-						`org_accountant`='".addslashes($org['post_accountant'])."'
-					WHERE `id`=".$schet_id;
-			query($sql);
-		}
+		//обновление данных организации
+		$org = _app('org', $org_id, 'all');
+		$sql = "UPDATE `_schet_pay`
+				SET `org_id`=".$org_id.",
+					`org_name_yur`='".addslashes($org['name_yur'])."',
+					`org_adres_yur`='".addslashes($org['adres_yur'])."',
+					`org_inn`='".addslashes($org['inn'])."',
+					`org_kpp`='".addslashes($org['kpp'])."',
+					`org_boss`='".addslashes($org['post_boss'])."',
+					`org_accountant`='".addslashes($org['post_accountant'])."'
+				WHERE `id`=".$schet_id;
+		query($sql);
 
-		//обновление данных банка, если изменялся
-		if($schet['bank_id'] != $bank_id) {
-			$bank = _app('bank', $bank_id, 'all');
-			$sql = "UPDATE `_schet_pay`
-					SET `bank_id`=".$bank_id.",
-						`bank_name`='".addslashes($bank['name'])."',
-						`bank_bik`='".addslashes($bank['bik'])."',
-						`bank_account`='".addslashes($bank['account'])."',
-						`bank_account_corr`='".addslashes($bank['account_corr'])."'
-					WHERE `id`=".$schet_id;
-			query($sql);
-		}
+		//обновление данных банка
+		$bank = _app('bank', $bank_id, 'all');
+		$sql = "UPDATE `_schet_pay`
+				SET `bank_id`=".$bank_id.",
+					`bank_name`='".addslashes($bank['name'])."',
+					`bank_bik`='".addslashes($bank['bik'])."',
+					`bank_account`='".addslashes($bank['account'])."',
+					`bank_account_corr`='".addslashes($bank['account_corr'])."'
+				WHERE `id`=".$schet_id;
+		query($sql);
 
 		//обновление содержания
 		schet_pay_content('insert', $schet_id);
+
+
+		if($schet['type_id'] == 1) {
+			//изменение начисления
+			$sql = "SELECT *
+					FROM `_money_accrual`
+					WHERE `app_id`=".APP_ID."
+					  AND !`deleted`
+					  AND `schet_id`=".$schet_id."
+					LIMIT 1";
+			$r = query_assoc($sql);
+
+			$sql = "UPDATE `_money_accrual`
+					SET `zayav_id`=".$zayav_id.",
+						`sum`=".$sum."
+					WHERE `id`=".$r['id'];
+			query($sql);
+
+			if($schet['sum'] != $sum)
+				//баланс для клиента
+				_balans(array(
+					'action_id' => 37,//изменение начисления
+					'client_id' => $client_id,
+					'schet_id' => $schet_id,
+					'zayav_id' => $zayav_id,
+					'sum' => $sum,
+					'sum_old' => $schet['sum']
+				));
+
+			if($schet['zayav_id'] != $zayav_id) {
+				//перенос платежей
+				$sql = "UPDATE `_money_income`
+						SET `zayav_id`=".$zayav_id."
+						WHERE `app_id`=".APP_ID."
+						  AND `schet_id`=".$schet_id;
+				query($sql);
+				_zayavBalansUpdate($zayav_id);
+			}
+
+			_zayavBalansUpdate($schet['zayav_id']);
+		}
 
 		$content_changes = '';
 		//изменение содержания: новые позиции
@@ -1715,13 +1356,27 @@ switch(@$_POST['op']) {
 		if($pos)
 			$content_changes .= '<div class="mt5">Изменены позиции:</div>'.$pos;
 
+		//если изменилась заявка
+		$zayavOld = '';
+		$zayavNew = '';
+		if($schet['zayav_id'] != $zayav_id) {
+			if($schet['zayav_id']) {
+				$z = _zayavQuery($schet['zayav_id']);
+				$zayavOld = $z['go'];
+			}
+			if($zayav_id) {
+				$z = _zayavQuery($zayav_id);
+				$zayavNew = $z['go'];
+			}
+		}
+
 
 		if($changes =
 			_historyChange('Получатель', _app('org', $schet['org_id'], 'name'), _app('org', $org_id, 'name')).
 			_historyChange('Банк получателя', _app('bank', $schet['bank_id'], 'name'), _app('bank', $bank_id, 'name')).
-			_historyChange('Плательщик', _clientVal($schet['client_id'], 'go'), _clientVal($client_id, 'go')).
 			_historyChange('Дата', FullData($schet['date_create']), FullData($date_create)).
-			_historyChange('Сумма', _cena($schet['sum']), _cena($sum)))
+			_historyChange('Сумма', _cena($schet['sum']), _cena($sum)).
+			_historyChange('Заявка', $zayavOld, $zayavNew))
 			$changes = '<table>'.$changes.'</table>';
 
 		if($changes || $content_changes)
@@ -1742,6 +1397,9 @@ switch(@$_POST['op']) {
 
 		if(!$schet = _schetPayQuery($schet_id, 1))
 			jsonError('Счёта не существует');
+
+		if($schet['zayav_id'])
+			$z = _zayavQuery($schet['zayav_id']);
 
 		$content = '';
 		$num = 1;
@@ -1782,6 +1440,11 @@ switch(@$_POST['op']) {
 					'<td>'.$schet['bank_name'].
 				'<tr><td class="label r top">Плательщик:'.
 					'<td>'._clientVal($schet['client_id'], 'link').
+
+			($schet['zayav_id'] ?
+				'<tr><td class="label r">Заявка:<td class="b">'.$z['nomer_link']
+			: '').
+
 			'</table>'.
 
 			'<div class="center b mt20 fs14">'.
@@ -1813,13 +1476,10 @@ switch(@$_POST['op']) {
 					'<td class="w175 pl20">'.
 						'<div class="_menuDop3">'.
 				  (!$paid ? '<a class="link"><div class="icon icon-edit"></div>Редактировать счёт</a>' : '').
-							'<a class="link" href="'.URL.
-								'&p=print'.
-								'&d=template'.
-								'&template_id=schet-pay'.
-								'&schet_id='.$schet_id.'">'.
-									'<div class="icon icon-print"></div>'.
-									'Распечатать'.
+
+							'<a class="link" onclick="_templatePrint(\'schet-pay\',\'schet_id\','.$schet_id.')">'.
+								'<div class="icon icon-print"></div>'.
+								'Распечатать'.
 							'</a>'.
 
 						(!PREVIEW && !$schet['pass'] && !$paid ?
@@ -1848,6 +1508,33 @@ switch(@$_POST['op']) {
 
 		if($schet['type_id'] != 2)
 			jsonError('Счёт не является ознакомительным');
+
+		//внесение начисления
+		$sql = "INSERT INTO `_money_accrual` (
+					`app_id`,
+					`schet_id`,
+					`client_id`,
+					`zayav_id`,
+					`sum`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$schet_id.",
+					".$schet['client_id'].",
+					".$schet['zayav_id'].",
+					".$schet['sum'].",
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		//баланс для клиента
+		_balans(array(
+			'action_id' => 25,//новое начисление
+			'client_id' => $schet['client_id'],
+			'schet_id' => $schet_id,
+			'zayav_id' => $schet['zayav_id'],
+			'sum' => $schet['sum']
+		));
 
 		$nomer = schet_pay_nomer_next(0);
 		$sql = "UPDATE `_schet_pay`
@@ -1980,8 +1667,8 @@ switch(@$_POST['op']) {
 		_balans(array(
 			'action_id' => 1,
 			'invoice_id' => $invoice_id,
-			'schet_id' => $schet_id,
 			'income_id' => $income_id,
+			'schet_id' => $schet_id,
 			'sum' => $sum
 		));
 
@@ -2014,21 +1701,45 @@ switch(@$_POST['op']) {
 		if($schet['deleted'])
 			jsonError('Счёт уже был удалён');
 
-		
-		
-//		jsonError('По этому счёту уже производились платежи');
-
-		//удаление начисления
-		//отвязка картриджей от счёта
-		//обновление наличия товара
-//		_zayavBalansUpdate($r['zayav_id']);
-//		_salaryZayavBonus($r['zayav_id']);
-		//внесение баланса для клиента
+		$sql = "SELECT SUM(`sum`)
+				FROM `_money_income`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `schet_id`=".$schet_id;
+		if(query_value($sql))
+			jsonError('По этому счёту уже производились платежи');
 
 		$sql = "UPDATE `_schet_pay`
 				SET `deleted`=1
 				WHERE `id`=".$schet_id;
 		query($sql);
+
+		//удаление начисления
+		$sql = "UPDATE `_money_accrual`
+				SET `deleted`=1
+				WHERE `schet_id`=".$schet_id;
+		query($sql);
+
+
+		//отвязка картриджей от счёта
+		$sql = "UPDATE `_zayav_cartridge`
+				SET `schet_id`=0
+				WHERE `schet_id`=".$schet_id;
+		query($sql);
+
+
+		if($schet['type_id'] == 1) {
+			//внесение баланса для клиента
+			_balans(array(
+				'action_id' => 26,//удаление начисления
+				'client_id' => $schet['client_id'],
+				'zayav_id' => $schet['zayav_id'],
+				'schet_id' => $schet_id,
+				'sum' => $schet['sum']
+			));
+
+			_zayavBalansUpdate($schet['zayav_id']);
+		}
 
 		_history(array(
 			'type_id' => 66,
@@ -3270,7 +2981,8 @@ function schet_pay_content($action, $schet_id=0) {//получение содержания счёта н
 			$schet_id.",".
 			"'".addslashes($name)."',".
 			$count.",".
-			$cena.
+			$cena.",".
+			$sp[4]. //readonly
 		")";
 	}
 
@@ -3288,7 +3000,8 @@ function schet_pay_content($action, $schet_id=0) {//получение содержания счёта н
 					`schet_id`,
 					`name`,
 					`count`,
-					`cena`
+					`cena`,
+					`readonly`
 				) VALUES ".implode(',', $insert);
 		query($sql);
 		return true;

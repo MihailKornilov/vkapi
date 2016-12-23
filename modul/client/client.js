@@ -717,13 +717,6 @@ $(document)
 				$('.ci-right').hide().eq(i).show();
 			});
 
-			$('#client-schet-add').click(function() {
-				_schetEdit({
-					edit:1,
-					client_id:CI.id,
-					client:CI.name
-				});
-			});
 			$('#zayav-type-id')._radio({
 				light:1,
 				right:0,

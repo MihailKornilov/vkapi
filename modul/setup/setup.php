@@ -1858,31 +1858,49 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 
 
 
-
 function setup_schet_pay() {//счёт на оплату
-	$v = setup_schet_pay_check();
+	$v = setup_schet_pay_verify();
+
+	$sql = "SELECT `id`,`name`
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND (`use`='schet-pay' OR !LENGTH(`use`))
+			ORDER BY `id`";
+	$template = query_selJson($sql);
+
+	$sql = "SELECT `id`
+			FROM `_template`
+			WHERE `app_id`=".APP_ID."
+			  AND `use`='schet-pay'
+			ORDER BY `id`";
+	$ids = query_ids($sql);
 	return
+	'<script>SCHET_PAY_TEMPLATE='.$template.';</script>'.
 	setupPath(array(
 		'name' => 'Настройки счёта на оплату'
 	)).
 	'<div class="mar10">'.
 		'<table class="bs10 mt20">'.
-			'<tr><td class="w175"><td>'._check('schet-pay-use', 'включение счетов на оплату', $v['use']).
+			'<tr><td class="w200"><td>'._check('schet-pay-use', 'включение счетов на оплату', $v['use']).
 		'</table>'.
 		'<table id="schet-pay-tab" class="bs10'._dn($v['use']).'">'.
-			'<tr><td class="label w175">Префикс: <div class="icon icon-hint" val="2"></div>'.
+			'<tr><td class="label w200">Префикс: <div class="icon icon-hint" val="2"></div>'.
 				'<td><input type="text" id="prefix" class="w50" value="'.$v['prefix'].'" />'.
 			'<tr><td class="label">Стартовый номер:'.
 				'<td><input type="text" id="nomer_start" class="w50" value="'.$v['nomer_start'].'" />'.
-			'<tr><td class="label">Расчётный счёт<br />по умолчанию:'.
+			'<tr><td class="label">Расчётный счёт по умолчанию:'.
 				'<td><input type="hidden" id="invoice_id_default" value="'.$v['invoice_id_default'].'" />'.
-			'<tr><td><td><button class="vk">Сохранить</button>'.
+			'<tr><td><td>'.
+			'<tr><td><td>'.
+			'<tr><td class="label top">Шаблоны для печати:'.
+				'<td><input type="hidden" id="schet-pay" value="'.$ids.'" />'.
+			'<tr><td><td><button class="vk mt20 schet-pay-save">Сохранить настройки</button>'.
 		'</table>'.
 	'</div>'.
 
 	'<script>setupSchetPay()</script>';
 }
-function setup_schet_pay_check() {//проверка наличия настроек счёта
+function setup_schet_pay_verify() {//проверка наличия настроек счёта
 	$sql = "SELECT *
 			FROM `_schet_pay_setup`
 			WHERE `app_id`=".APP_ID."
@@ -1890,7 +1908,7 @@ function setup_schet_pay_check() {//проверка наличия настроек счёта
 	if(!$r = query_assoc($sql)) {
 		$sql = "INSERT INTO `_schet_pay_setup` (`app_id`) VALUES (".APP_ID.")";
 		query($sql);
-		return setup_schet_pay_check();
+		return setup_schet_pay_verify();
 	}
 	
 	return $r;
@@ -1910,7 +1928,7 @@ function setup_document_template() {//шаблоны документов
 		'name' => 'Шаблоны документов для печати'
 	)).
 	'<div class="mar10">'.
-		'<div class="_info">Настройка формирования документов из шаблонов в формате <b>Word</b> и <b>Excel</b>.</div>'.
+		'<div class="_info">Настройка формирования документов в формате <b>Word</b> и <b>Excel</b> из шаблонов.</div>'.
 		'<div id="spisok" class="mt20">'.setup_document_template_spisok().'</div>'.
 	'</div>';
 }

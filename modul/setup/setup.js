@@ -1164,19 +1164,30 @@ var setupOrgEdit = function(org_id) {
 			title0:'не указан',
 			spisok:INVOICE_SPISOK
 		});
-		$('.vk').click(function() {
+		$('#schet-pay')._templateSelect();
+		$('.schet-pay-save').click(function() {
 			var t = $(this),
 				send = {
 					op:'setup_schet_pay_save',
 					nomer_start:$('#nomer_start').val(),
 					prefix:$('#prefix').val(),
-					invoice_id:$('#invoice_id_default').val()
+					invoice_id:$('#invoice_id_default').val(),
+					template_ids:$('#schet-pay').val()
 				};
 			t.addClass('_busy');
 			$.post(AJAX_MAIN, send, function(res) {
 				t.removeClass('_busy');
 				if(res.success)
 					_msg();
+				else
+					t.vkHint({
+						top:-41,
+						left:-2,
+						indent:40,
+						show:1,
+						remove:1,
+						msg:'<span class="red">' + res.text + '</span>'
+					});
 			}, 'json');
 		});
 	},
@@ -1218,6 +1229,96 @@ var setupOrgEdit = function(org_id) {
 			}, 'json');
 		}
 	};
+
+$.fn._templateSelect = function() {//настройка дл€ выбора шаблона дл€ печати
+	var t = $(this),
+		attr_id = t.attr('id'),
+		num = 1;
+
+	if(!attr_id)
+		return;
+
+
+	var html =
+		'<div class="mt10">' +
+			'<button class="vk small grey">¬ыбрать существующий шаблон</button>' +
+			' или ' +
+			'<button class="vk small grey" onclick="setupTemplateEdit()">—оздать новый</button>' +
+		'</div>',
+		INP = $('#' + attr_id);
+
+	INP.after(html);
+
+	var DIV_BUT = INP.next(),//расположение кнопок добавлени€
+		BUT = DIV_BUT.find('.vk:first'),//кнопка добавлени€ нового пол€
+		values = INP.val().split(',');
+
+	if(values.length)
+		for(var n = 0; n < values.length; n++)
+			add(values[n]);
+	else
+		add();
+
+	BUT.click(add);
+
+	function add(template_id) {
+		template_id = _num(template_id);
+		var iconDn = template_id ? '' : ' dn',
+			html =
+			'<div class="mb5">' +
+				'<input type="hidden" class="template-sel" id="template-sel-' + num + '" value="' + template_id + '" /> ' +
+				'<div val="' + num + '" class="icon icon-setup ' + iconDn + 'icon' + num + _tooltip('Ќастроить шаблон', -57) + '</div>' +
+				'<div class="icon icon-del icon' + num + iconDn + _tooltip('ќтв€зать шаблон', -53) + '</div>' +
+			'</div>';
+
+		DIV_BUT.before(html);
+
+		$('.icon-setup.icon' + num).click(function() {
+			var n = $(this).attr('val'),
+				val = _num($('#template-sel-' + n).val());
+
+			if(!val)
+				return false;
+
+			location.href = URL + '&p=setup&d=document_template&id=' + val;
+		});
+		$('.icon-del.icon' + num).click(function() {
+			$(this).parent().remove();
+			valCreate();
+		});
+
+		var icon = $('.icon' + num);
+
+		$('#template-sel-' + num)._select({
+			width:210,
+			bottom:-2,
+			title0:'шаблон не выбран',
+			spisok:SCHET_PAY_TEMPLATE,
+			func:function(v) {
+				icon[(v ? 'remove' : 'add') + 'Class']('dn');
+				valCreate();
+			}
+		});
+
+		num++;
+	}
+	function valCreate() {//формирование значени€ дл€ отправки
+		var sel = INP.parent().find('.template-sel'),
+			val = [];
+
+		if(sel.length)
+			for(var n = 0; n < sel.length; n++) {
+				var sp = sel.eq(n),
+					v = _num(sp.val());
+				if(v)
+					val.push(v);
+			}
+
+		INP.val(val.join());
+	}
+
+	return t;
+};
 
 $(document)
 	.on('click', '.history-view-worker-all', function() {//изменение прав истории действий сразу дл€ всех сотрудников

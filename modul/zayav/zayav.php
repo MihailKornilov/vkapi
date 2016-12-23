@@ -1182,7 +1182,7 @@ function _zayav_spisok($v) {
 		$zayav = _clientValToList($zayav);
 
 	$zayav = _dogovorValToList($zayav);
-	$zayav = _schetToZayav($zayav);
+	$zayav = _schetPayToZayav($zayav);
 	$zayav = _gnToZayav($zayav, $filter['gn_nomer_id']);
 	$zayav = _zayavNote($zayav);
 	if(isset($zpu[42]))
@@ -1806,6 +1806,10 @@ function _zayavQuery($zayav_id, $withDel=0) {
 	if(!$z = query_assoc($sql))
 		return array();
 
+	$z['link'] = '<a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">'.$z['name'].'</a>';
+	$z['go'] = '<a onclick="_zayavGo(\''.$z['id'].'\')">№'.$z['nomer'].': '.$z['name'].'</a>';
+	$z['nomer_link'] = '<a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">№'.$z['nomer'].': '.$z['name'].'</a>';
+
 	return $z;
 }
 function _zayavInfo() {
@@ -2031,7 +2035,7 @@ function _zayavToDel($zayav_id) {//можно ли удалять заявку..
 
 	//проверка на наличие счетов на оплату
 	$sql = "SELECT COUNT(`id`)
-			FROM `_schet`
+			FROM `_schet_pay`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
 			  AND `zayav_id`=".$zayav_id;
@@ -2539,9 +2543,10 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 
 	//наличие счетов
 	$sql = "SELECT COUNT(`id`)
-			FROM `_schet`
+			FROM `_schet_pay`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
+			  AND `type_id`!=2
 			  AND `zayav_id`=".$zayav_id;
 	$schet_count = query_value($sql);
 
@@ -2923,6 +2928,7 @@ function _zayavInfoCartridge($z) {
 		'<div class="headBlue but">'.
 			'Список картриджей'.
 			'<button class="vk small" onclick="_zayavCartridgeAdd()">Добавить картриджи</button>'.
+			'<button class="vk small" onclick="_zayavCartridgeSchetPay($(this))">Сформировать счёт на оплату</button>'.
 		'</div>'.
 		'<div id="zc-spisok">'._zayavInfoCartridge_spisok($z['id']).'</div>'.
 	'</div>';
@@ -2934,17 +2940,17 @@ function _zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по за
  			ORDER BY `id`";
 	$spisok = query_arr($sql);
 
-	$spisok = _schetValToList($spisok);
+	$spisok = _schetPayValToList($spisok);
 
-	$send = '<table class="_spisok">'.
+	$send = '<table class="_spisokTab">'.
 		'<tr>'.
-			'<th>'.
-			'<th>Наименование'.
-			'<th>Стоимость'.
-			'<th>Дата<br />выполнения'.
+			'<th class="w15">'.
+			'<th class="w175">Наименование'.
+			'<th class="w50">Стоимость'.
+			'<th class="w100">Дата вып.'.
 			'<th>Информация'.
-			'<th>'.
-			'<th>'._check('check_all');
+			'<th class="w35">'.
+			'<th class="w15">'._check('check_all');
 
 	$n = 1;
 	foreach($spisok as $r) {
@@ -2961,15 +2967,15 @@ function _zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по за
 		$ready = $r['filling'] || $r['restore'] || $r['chip'];
 
 		$send .=
-			'<tr val="'.$r['id'].'"'.($ready ? ' class="ready"' : '').'>'.
-				'<td class="n">'.($n++).
-				'<td class="cart-name"><b>'._cartridgeName($r['cartridge_id']).'</b>'.
-				'<td class="cost">'.(_cena($r['cost']) || $ready ? _cena($r['cost']) : '').
-				'<td class="dtime">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
-				'<td class="cart-prim">'.$prim.
-				'<td class="ed">'.
+			'<tr val="'.$r['id'].'"'.($ready ? ' class="bg-dfd"' : '').'>'.
+				'<td class="r grey">'.($n++).
+				'<td class="b">'._cartridgeName($r['cartridge_id']).
+				'<td class="r">'.(_cena($r['cost']) || $ready ? _cena($r['cost']) : '').
+				'<td class="r fs11 grey">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
+				'<td>'.$prim.
+				'<td>'.
 					($r['schet_id'] ?
-						'<div class="nomer">'.$r['schet_nomer'].'</div>'
+						'<div class="grey fs12">'.$r['schet_pay_nomer'].'</div>'
 						:
 						'<div class="img_edit cart-edit'._tooltip('Изменить', -33).'</div>'.
 						'<div class="img_del cart-del'._tooltip('Удалить', -29).'</div>'.
@@ -2986,7 +2992,10 @@ function _zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по за
 
 	return $send;
 }
-function _zayavInfoCartridgeForSchet($ids) {//получение списка картриджей для вставления в счёт
+function _zayavInfoCartridgeForSchetPay($ids) {//получение списка картриджей для вставления в счёт
+	if(!$ids)
+		return array();
+
 	$sql = "SELECT *
 			FROM `_zayav_cartridge`
 			WHERE `id` IN (".$ids.")
@@ -3047,7 +3056,8 @@ function _zayavInfoCartridgeForSchet($ids) {//получение списка картриджей для вс
 		$spisok[] = array(
 			'name' => utf8($txt),
 			'count' => $r['count'],
-			'cost' => _cena($r['cost']),
+			'cena' => _cena($r['cost']),
+			'summa' => _cena($r['count'] * $r['cost']),
 			'readonly' => 1
 		);
 	}

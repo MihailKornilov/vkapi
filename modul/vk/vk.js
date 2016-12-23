@@ -13,7 +13,7 @@ var VK_SCROLL = 0,
 	REGEXP_CENA_MINUS =    /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_SIZE =          /^[\d]+(.[\d]{1})?(,[\d]{1})?$/,
 	REGEXP_MS =            /^[\d]+(.[\d]{1,3})?(,[\d]{1,3})?$/,
-	REGEXP_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
+	REGEXP_DATE =          /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
 	MONTH_DEF = {
 		1:'Январь',
 		2:'Февраль',
@@ -742,6 +742,29 @@ var VK_SCROLL = 0,
 		if(o == 'type')
 			return type.join();
 		return arr.join();
+	},
+	_templatePrint = function(use, obj, id) {//список шаблонов для печати. Eсли один, то сразу печать
+		var dialog = _dialog({
+				head:'Печать документа',
+				load:1,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			}),
+			send = {
+				op:'template_print_load',
+				use:use
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				dialog.content.html(res.html);
+				$('.template-print-unit').click(function() {
+					dialog.close();
+					var v = $(this).attr('val');
+					location.href = URL + '&p=print&d=template&template_id=' + v + '&' + obj + '=' + id;
+				});
+			} else
+				dialog.loadError(res.text);
+		}, 'json');
 	};
 
 $.fn._check = function(o) {

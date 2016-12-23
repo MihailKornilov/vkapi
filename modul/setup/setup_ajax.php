@@ -2668,6 +2668,10 @@ switch(@$_POST['op']) {
 
 		$prefix = _txt($_POST['prefix']);
 		$invoice_id = _num($_POST['invoice_id']);
+		$template_ids = _ids($_POST['template_ids']);
+
+		if($template_ids === false)
+			jsonError('Некорректные идентификаторы шаблонов');
 
 		$sql = "SELECT *
 				FROM `_schet_pay_setup`
@@ -2682,6 +2686,23 @@ switch(@$_POST['op']) {
 					`invoice_id_default`=".$invoice_id."
 				WHERE `id`=".$r['id'];
 		query($sql);
+
+		//сброс привязки шаблонов
+		$sql = "UPDATE `_template`
+				SET `use`=''
+				WHERE `app_id`=".APP_ID."
+				  AND (`use`='schet-pay' OR !LENGTH(`use`))";
+		query($sql);
+
+		//новая привязка
+		if($template_ids) {
+			$sql = "UPDATE `_template`
+					SET `use`='schet-pay'
+					WHERE `app_id`=".APP_ID."
+					  AND `id` IN (".$template_ids.")
+					  AND !LENGTH(`use`)";
+			query($sql);
+		}
 
 		xcache_unset(CACHE_PREFIX.'app');
 

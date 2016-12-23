@@ -560,9 +560,9 @@ function _tovarDelAccess($r) {//разрешение на удаление товара
 	if(query_value($sql))
 		return 'ѕроизводилась продажа товара';
 
-	$sql = "SELECT COUNT(*) FROM `_schet_content` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql))
-		return '“овар используетс€ в счЄтах на оплату';
+//	$sql = "SELECT COUNT(*) FROM `_schet_pay_content` WHERE `tovar_id`=".$tovar_id;
+//	if(query_value($sql))
+//		return '“овар используетс€ в счЄтах на оплату';
 
 	$sql = "SELECT COUNT(*) FROM `_tovar_avai` WHERE `tovar_id`=".$tovar_id;
 	if(query_value($sql))
@@ -1179,16 +1179,16 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличи€ товара пос
 				  AND `tovar_avai_id`=".$r['id'];
 		$count -= query_value($sql);
 
-		//счета на оплату
+/*		//счета на оплату
 		$sql = "SELECT IFNULL(SUM(`count`),0)
 				FROM
-					`_schet` `s`,
-					`_schet_content` `sc`
+					`_schet_pay` `s`,
+					`_schet_pay_content` `sc`
 				WHERE `s`.`id`=`sc`.`schet_id`
 				  AND !`deleted`
 				  AND `tovar_avai_id`=".$r['id'];
 		$count -= query_value($sql);
-
+*/
 		if($r['count'] == $count)
 			continue;
 
@@ -1560,7 +1560,7 @@ function _tovar_info_move($tovar_id) {
 			  AND !`deleted`";
 	$mi = query_arr($sql);
 	$mi = _clientValToList($mi);
-
+/*
 	//счЄт на оплату
 	$sql = "SELECT
 				'schet' `class`,
@@ -1586,12 +1586,12 @@ function _tovar_info_move($tovar_id) {
 			  AND `tovar_avai_id`
 			  AND !`s`.`deleted`";
 	$schet = query_arr($sql);
-	$schet = _schetValToList($schet);
-
+	$schet = _schetPayValToList($schet);
+*/
 	$spisok = _arrayTimeGroup($move);
 	$spisok += _arrayTimeGroup($ze, $spisok);
 	$spisok += _arrayTimeGroup($mi, $spisok);
-	$spisok += _arrayTimeGroup($schet, $spisok);
+//	$spisok += _arrayTimeGroup($schet, $spisok);
 	ksort($spisok);
 
 	if(empty($spisok))
@@ -1668,8 +1668,8 @@ function _tovar_info_move_year($year, $spisok) {//отображение движени€ товара за
 
 		//TODO удаление движени€ дл€ ¬еры √убинской
 		$delDop = array();
-		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
-			$delDop = array('del'=>1);
+//		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
+//			$delDop = array('del'=>1);
 		$send .= '<tr class="'.$class.'">'.
 				'<td class="w70">'.$type[$r['type_id']].
 				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
