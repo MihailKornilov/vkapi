@@ -169,7 +169,7 @@ switch(@$_POST['op']) {
 			query("UPDATE `_money_accrual` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_money_income` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_money_refund` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `_schet` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `_schet_pay` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_remind` SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `_note` SET `page_id`=".$client_id."  WHERE `page_name`='client' AND `page_id`=".$client2);
 			query("UPDATE `_zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
