@@ -2181,6 +2181,10 @@ function _templateSchetPay($arr) {//подмена переменных счёта на оплату
 		if($r['table_name'] != '_schet_pay')
 			continue;
 
+		if($r['v'] == '{SCHET_NOMER}') {
+			$arr[$id]['text'] = $schet['prefix'].$schet['nomer'];
+			continue;
+		}
 		if($r['v'] == '{SCHET_SUM_PROPIS}') {
 			$arr[$id]['text'] =
 				_numToWord($schet[$r['col_name']], 1).

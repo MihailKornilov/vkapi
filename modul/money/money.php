@@ -2408,6 +2408,7 @@ function _schetPay_spisok($v=array()) {
 
 	$sql = "SELECT
 				COUNT(`id`) `all`,
+				SUM(`sum_paid`) `paid`,
 				SUM(`sum`) `sum`
 			FROM `_schet_pay`
 			WHERE ".$cond;
@@ -2418,6 +2419,7 @@ function _schetPay_spisok($v=array()) {
 
 	$all = $send['all'];
 	$filter['all'] = $all;
+	$nopaid = $send['sum'] - $send['paid'];
 
 	$schet = array();
 
@@ -2486,6 +2488,12 @@ function _schetPay_spisok($v=array()) {
 				$filter['clear'].
 				'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
 				$yearMon.
+				' на сумму <b>'._sumSpace($send['sum']).'</b> руб. '.
+
+			($filter['group_id'] == 3 || $filter['group_id'] == 4 || $filter['group_id'] == 5 ?
+				'<span class="color-ref bg-del ml20 pad5">Не оплачено: <b>'._sumSpace($nopaid).'</b> руб.</span>'
+			: '').
+
 			'</div>'.
 			'<table class="_spisokTab">'.
 				'<tr>'.
