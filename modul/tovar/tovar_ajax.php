@@ -341,16 +341,14 @@ switch(@$_POST['op']) {
 
 	case 'tovar_cost_set'://Изменение закупочной стоимости и продажи
 		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
+			jsonError('Некорректный id товара');
 
 		$sum_buy = _cena($_POST['sum_buy']);
+		$sum_procent = _cena($_POST['sum_procent']);
 		$sum_sell = _cena($_POST['sum_sell']);
 
 		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
-
-		if($r['sum_buy'] == $sum_buy && $r['sum_sell'] == $sum_sell)
-			jsonError();
+			jsonError('Товара не существует');
 
 		$sql = "DELETE FROM `_tovar_cost` WHERE `tovar_id`=".$tovar_id;
 		query($sql);
@@ -359,17 +357,20 @@ switch(@$_POST['op']) {
 					`app_id`,
 					`tovar_id`,
 					`sum_buy`,
+					`sum_procent`,
 					`sum_sell`
 				) VALUES (
 					".APP_ID.",
 					".$tovar_id.",
 					".$sum_buy.",
+					".$sum_procent.",
 					".$sum_sell."
 				)";
 		query($sql);
 
 		if($changes =
 			_historyChange('Закупка', _cena($r['sum_buy']), $sum_buy).
+			_historyChange('Процент', _cena($r['sum_procent']), $sum_procent).
 			_historyChange('Продажа', _cena($r['sum_sell']), $sum_sell)
 		)   _history(array(
 				'type_id' => 106,

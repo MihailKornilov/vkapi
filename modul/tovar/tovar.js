@@ -355,12 +355,16 @@ var _tovarEditExtend = function(o) {
 
 	_tovarCostSet = function(v) {//Изменение закупочной стоимости и продажи
 		var html =  '<table class="bs10">' +
-						'<tr><td class="label r w100">Закупка:' +
+						'<tr><td class="label r w150">Закупочная стоимость:' +
 							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
+						'<tr><td class="label r">Процент от закупки:' +
+							'<td><input type="text" id="sum_procent" class="w50" maxlength="7" value="' + TI.sum_procent + '"> %' +
+								'<span id="sum_diff" class="grey ml10 fs12"></span>' +
 						'<tr><td class="label r">Продажа:' +
 							'<td><input type="text" id="sum_sell" class="money" value="' + TI.sum_sell + '"> руб.' +
 					'</table>',
 			dialog = _dialog({
+				width:440,
 				head:'Изменение закупочной стоимости и продажи',
 				content:html,
 				butSubmit:'Применить',
@@ -369,12 +373,40 @@ var _tovarEditExtend = function(o) {
 
 		$('#sum_' + v).select();
 
+		//подсчёт стоимости продажи на основании процента
+		$('#sum_buy,#sum_procent,#sum_sell').keyup(function() {
+			var t = $(this),
+				attr_id = t.attr('id').split('_')[1],
+				buy = _cena($('#sum_buy').val()),
+				procent = _cena($('#sum_procent').val()),
+				sell = _cena($('#sum_sell').val()),
+				diff = 0;
+
+			switch(attr_id) {
+				case 'buy':
+				case 'procent':
+					sell = _cena(buy + buy / 100 * procent);
+					$('#sum_sell').val(sell);
+					break;
+				case 'sell':
+					diff = _cena(sell - buy);
+					$('#sum_procent').val(diff <= 0 ? 0 : _cena(diff / buy * 100));
+					break;
+			}
+
+			//сумма, на которую увеличена стоимость
+			diff = _cena(sell - buy);
+			$('#sum_diff').html('+<b class="fs12">' + diff + '</b> руб.');
+		});
+		$('#sum_buy').trigger('keyup');
+
 		function submit() {
 			var send = {
 				op:'tovar_cost_set',
 				tovar_id:TI.id,
-				sum_buy:_cena($('#sum_buy').val()),
-				sum_sell:_cena($('#sum_sell').val())
+				sum_buy:$('#sum_buy').val(),
+				sum_procent:$('#sum_procent').val(),
+				sum_sell:$('#sum_sell').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -383,7 +415,7 @@ var _tovarEditExtend = function(o) {
 					_msg();
 					location.reload();
 				} else
-					dialog.abort();
+					dialog.abort(res.text);
 			}, 'json');
 		}
 	},

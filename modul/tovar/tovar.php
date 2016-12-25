@@ -1092,6 +1092,7 @@ function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
 			LIMIT 1";
 	$cost = query_assoc($sql);
 	$tovar['sum_buy'] = _cena(@$cost['sum_buy']);
+	$tovar['sum_procent'] = _cena(@$cost['sum_procent']);
 	$tovar['sum_sell'] = _cena(@$cost['sum_sell']);
 
 	return $tovar;
@@ -1288,6 +1289,7 @@ function _tovar_info() {//информация о товаре
 			'measure_length:'._ms($r['measure_length']).','.
 			'measure_width:'._ms($r['measure_width']).','.
 			'sum_buy:'.$r['sum_buy'].','.
+			'sum_procent:'.$r['sum_procent'].','.
 			'sum_sell:'.$r['sum_sell'].','.
 			'about:"'._br($r['about']).'",'.
 			'feature:'._tovar_info_feature_js($tovar_id).

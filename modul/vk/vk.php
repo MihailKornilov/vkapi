@@ -129,9 +129,12 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 		'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 		'<script src="/.vkapp/.js/jquery-ui.min.js"></script>'.
 
-//		'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
-		'<script src="https://vk.com/js/api/xd_connection.js?2"></script>'.
-		'<script>VK.init(function() {},function() {},"5.60");</script>'.
+		(LOCAL ?
+			'<script src="'.API_HTML.'/js/xd_connection.min.js?21"></script>'
+			: 
+			'<script src="https://vk.com/js/api/xd_connection.js?2"></script>'.
+			'<script>VK.init(function() {},function() {},"5.60");</script>'
+		).
 
 		//”становка начального значени€ таймера.
 		(SA ? '<script>var TIME=(new Date()).getTime();</script>' : '').

@@ -9,6 +9,7 @@ var VK_SCROLL = 0,
 	FOTO_HEIGHT = 0,
 	REGEXP_NUMERIC =       /^\d+$/,
 	REGEXP_NUMERIC_MINUS = /^-?\d+$/,
+	REGEXP_DROB =          /^[\d]+(.[\d]+)?(,[\d]+)?$/,
 	REGEXP_CENA =          /^[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_CENA_MINUS =    /^-?[\d]+(.[\d]{1,2})?(,[\d]{1,2})?$/,
 	REGEXP_SIZE =          /^[\d]+(.[\d]{1})?(,[\d]{1})?$/,
@@ -335,9 +336,9 @@ var VK_SCROLL = 0,
 			return 0;
 		if(minus && REGEXP_CENA_MINUS.test(v))
 			return v * 1;
-		if(!REGEXP_CENA.test(v))
+		if(!REGEXP_DROB.test(v))
 			return 0;
-		return v * 1;
+		return Math.round(v * 100) / 100;
 	},
 	_size = function(v) {//размер в виде: 100    16,3    (только десятичные дроби, не может быть отрицательным)
 		if(typeof v == 'string')
