@@ -165,9 +165,9 @@ function _devstory() {//основная страница
 function _devstoryMenu() {//разделы основного меню
 	$menu = array(
 		'main' => 'Разделы',
-		'task' => 'Список задач',
-		'offer' => 'Предложения',
-		'about' => 'О разработке'
+		'task' => 'Список задач'
+//		'offer' => 'Предложения',
+//		'about' => 'О разработке'
 	);
 
 	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
@@ -421,11 +421,6 @@ function _devstory_task_spent($r) {//отображение затраченного времени для каждой
 	if(!$r['spent'])
 		return '';
 
-	$hour = floor($r['spent'] / 60);
-	$min = $r['spent'] - $hour * 60;
-	$min = $min < 10 ? '0'.$min : $min;
-	$hour = $hour ? '<b>'.$hour.'</b> ч. ' : '';
-
 	$period = '';
 	if(!empty($r['period']) && $r['status_id'] != 4) {
 		$period = '<div class="period">'.
@@ -490,13 +485,20 @@ function _devstory_task_spent($r) {//отображение затраченного времени для каждой
 		$period.
 		'<table class="bs5 curP head">'.
 			'<tr><td class="label r">Затрачено'.
-				'<td>'.$hour.'<b>'.$min.'</b> мин.'.
+				'<td>'._secToTime($r['spent']).
 			'<tr><td class="label r">за'.
 				'<td><b>'.$r['day'].'</b> '._end($r['day'], 'день', 'дня', 'дней').'.'.
 		'</table>'.
 	'</div>';
 }
+function _secToTime($sec) {//перевод количества секунд в часы и минуты
+	$hour = floor($sec / 60);
+	$min = $sec - $hour * 60;
+	$min = $min < 10 ? '0'.$min : $min;
+	$hour = $hour ? '<b>'.$hour.'</b> ч. ' : '';
 
+	return $hour.'<b>'.$min.'</b> мин.';
+}
 
 
 
@@ -514,7 +516,6 @@ function _devstory_process() {
 	'</div>';
 }
 function _devstory_process_ready($part_id=0) {//список выполненных задач
-
 	$sql = "SELECT
 				*
 			FROM `_devstory_task`
@@ -525,20 +526,46 @@ function _devstory_process_ready($part_id=0) {//список выполненных задач
 	if(!$task = query_arr($sql))
 		return '';
 
+	//количество задач и затраченное время
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_end`,'%Y %m') `id`,
+				COUNT(*) `count`,
+				SUM(`spent`) `spent`
+			FROM `_devstory_task`
+			WHERE `status_id`=3
+			  AND !`deleted`
+".($part_id ? "AND `part_id`=".$part_id : '')."  
+			GROUP BY DATE_FORMAT(`dtime_end`,'%Y %m')
+			ORDER BY `dtime_end` DESC";
+	$monAss = query_arr($sql);
+
 	$send = '<div class="devstory-head-ready">Выполнено</div>';
 
 	$curMon = '';
+	$units = array();
+	$dn = !$part_id ? ' dn' : '';
+	$n = -1;
 	foreach($task as $r) {
 		$time = strtotime($r['dtime_end']);
 		$mon = strftime('%Y %m', $time);
 		if($curMon != $mon) {
 			$y = strftime('%Y', $time);
 			$m = _monthDef(strftime('%m', $time), 1);
-			$send .= '<div class="devstory-task-mon'.($curMon ? ' mt20' : '').'">'.$m.' '.$y.':</div>';
+			$taskCount = $monAss[$mon]['count'];
+			$send .=
+				($units ? '<div class="mb30'.($n ? $dn : '').'">'.implode('', $units).'</div>' : '').
+				'<div class="pad5 over1 curP" onclick="$(this).next().slideToggle(200)">'.
+					'<span class="dib w125 fs14">'.$m.' '.$y.':</span>'.
+					'<span class="dib w70 pad5 bg-dfd center">'.$taskCount.' задач'._end($taskCount, 'а', 'и', '').'</span>'.
+					'<span class="dib ml10 pad5 color-ref bg-del">'._secToTime($monAss[$mon]['spent']).'</span>'.
+				'</div>';
 			$curMon = $mon;
+			$units = array();
+			$n++;
 		}
-		$send .= _devstory_task_unit($r, $part_id);
+		$units[] = _devstory_task_unit($r, $part_id);
 	}
+	$send .= '<div class="mb40'.$dn.'">'.implode('', $units).'</div>';
 
 	return $send;
 }
