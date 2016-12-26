@@ -369,13 +369,6 @@
 
 
 
-/* Применение товара в расходы */
-.zayav-tovar-set_dialog .headName{margin:10px 0 4px}
-.zayav-tovar-set_dialog h1{font-size:18px;margin-top:20px}
-.zayav-tovar-set_dialog h1 b{font-size:18px}
-.zayav-tovar-set_dialog h2{color:#777}
-
-
 #_zayav-accrual{margin-top:10px}
 #_zayav-accrual ._spisok{margin-top:-1px}
 
@@ -394,26 +387,10 @@
 #zayav-tovar #info *{font-size:10px}
 #zayav-tovar #info th{width:70px;color:#777;text-align:left;font-size:10px}
 /* Список запчастей*/
-#zayav-tovar #zp-spisok *{font-size:10px}
-#zayav-tovar #zp-spisok{padding:3px 7px 60px;border-left:#e9edf1 solid 1px}
-#zayav-tovar .unit{
-	border-bottom:#DEE3EF solid 1px;
-	padding-bottom:4px;
-	margin-bottom:7px;
-}
-#zayav-tovar .act{margin-top:3px}
-#zayav-tovar .zakaz{color:#567f9e}
-#zayav-tovar .zakaz._busy{color:transparent}
-#zayav-tovar .unit:not(:hover) .zakaz:not(._busy){visibility:hidden}
-#zayav-tovar .unit:not(:hover) .set{visibility:hidden}
-#zayav-tovar .zakaz-ok{
-	display:inline-block;
-	color:#c22;
-	background:#fee;
-	padding:0 6px 1px;
-}
-#zayav-tovar .set{color:#567f9e;float:right}
-#zayav-tovar .avai{float:right;color:#393;margin-left:4px}
+#zayav-tovar-spisok{border-left:#e9edf1 solid 1px}
+#zayav-tovar-spisok .unit:not(:hover) .zakaz-add:not(._busy){display:none}
+#zayav-tovar-spisok .img_minidel{margin:2px 0 0 3px}
+
 
 
 

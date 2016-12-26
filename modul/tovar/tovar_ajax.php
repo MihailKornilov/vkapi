@@ -765,6 +765,39 @@ switch(@$_POST['op']) {
 		$send['equip_js'] = _tovarEquip('js', $tovar_id);
 		jsonSuccess($send);
 		break;
+
+	case 'tovar_zakaz_del'://удаление товара из заказа
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id заказа');
+
+		//id заявки для определения, из заявки удаляется или нет
+		$zayav_id = _num(@$_POST['zayav_id']);
+
+		$sql = "SELECT *
+				FROM `_tovar_zakaz`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Этой позиции в заказе не существует');
+
+		if(!$tovar = _tovarQuery($r['tovar_id']))
+			jsonError('Товара не существует');
+
+		$sql = "DELETE FROM `_tovar_zakaz` WHERE `id`=".$id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 167,
+			'tovar_id' => $tovar['id'],
+			'v1' => _ms($r['count']),
+			'v2' => _tovarMeasure($tovar['measure_id'])
+		));
+
+		$send['html'] = $zayav_id ? '' : utf8(_tovar_info_zakaz($r['tovar_id']));
+		
+		jsonSuccess($send);
+		break;
+
 }
 
 function _tovar_name_insert() {//обновление наименования товара и получение его id

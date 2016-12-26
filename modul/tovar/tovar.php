@@ -1102,6 +1102,7 @@ function _tovarAvaiArticul($tovar_id, $radio=0) {
 			FROM `_tovar_avai`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
+ ".($radio ? "AND `count`" : '')."
 			ORDER BY `count` DESC";
 	if(!$spisok = query_arr($sql))
 		return '';
@@ -1113,25 +1114,25 @@ function _tovarAvaiArticulTab($spisok, $radio) {//таблица наличия товара по конк
 	$avai_id = $count == 1 ? key($spisok) : 0;
 
 	$send =
-		'<table class="_spisok tovar-avai-articul _radio"'.($radio ? ' id="ta-articul_radio"' : '').'>'.
+		'<table class="_spisokTab tovar-avai-articul _radio"'.($radio ? ' id="ta-articul_radio"' : '').'>'.
   ($radio ? '<input type="hidden" id="ta-articul" value="'.$avai_id.'" />' : '').
 			'<tr>'.
-				'<th>Артикул'.
-				'<th>Кол-во'.
-				'<th>Закуп.<br />цена'.
+				'<th class="w70">Артикул'.
+				'<th class="w50">Кол-во'.
+				'<th class="w70">Закуп.<br />цена'.
 				'<th>Примечание';
 	foreach($spisok as $r) {
-		if($radio && !$r['count'])
+		if($radio && !_ms($r['count']))
 			continue;
 		$send .=
 			'<tr>'.
-				'<td class="articul r">'.
+				'<td class="grey r">'.
 		($radio ? '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s>'.$r['articul'].'</div>'
 					:
 					$r['articul']
 		).
-				'<td class="count center"><b>'._ms($r['count']).'</b>'.
-				'<td class="cena r">'._cena($r['sum_buy']).
+				'<td class="count center color-pay">'.(_ms($r['count']) ? '<b>'._ms($r['count']).'</b>' : '').
+				'<td class="cena r">'._sumSpace($r['sum_buy']).
 				'<td>'.$r['about'];
 	}
 	$send .= '</table>';
@@ -1319,7 +1320,7 @@ function _tovar_info() {//информация о товаре
 					_tovar_info_about($r['about']).
 					_tovar_info_feature($r).
 
-					_tovar_info_zakaz($tovar_id).
+					'<div class="tovar-info-zakaz mt20">'._tovar_info_zakaz($tovar_id).'</div>'.
 					_tovar_info_set_spisok($r).
 					_tovar_info_compat($r).
 					_tovar_info_zayav($tovar_id).
@@ -1485,13 +1486,33 @@ function _tovar_info_zayav($tovar_id) {//заявки по этому товару
 		'</div>';
 }
 function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
-	$sql = "SELECT COUNT(`id`)
+	$sql = "SELECT *
 			FROM `_tovar_zakaz`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id;
-	if(!$count = query_value($sql))
+			  AND `tovar_id`=".$tovar_id."
+			ORDER BY `id` DESC";
+	if(!$zakaz = query_arr($sql))
 		return '';
-	return '<div id="ti-zakaz">Заказ: '.$count.'</div>';
+
+	$zakaz = _zayavValToList($zakaz);
+
+	$send = '<div class="headBlue">Добавлено в заказ</div>'.
+			'<table class="_spisokTab">';
+
+
+	foreach($zakaz as $r) {
+		$send .=
+		'<tr>'.
+			'<td class="grey w70 r wsnw">'._dtimeAdd($r).
+			'<td>'.($r['zayav_id'] ? 'Заявка '.$r['zayav_nomer_name'] : '').
+			'<td class="w50 r">'.$r['count'].' '.MEASURE.
+			'<td class="w15">'.
+				'<div onclick="_tovarZakazDel('.$r['id'].')" class="icon icon-del'._tooltip('Удалить из заказа', -99, 'r').'</div>';
+	}
+
+	$send .= '</table>';
+
+	return $send;
 }
 function _tovar_info_move($tovar_id) {
 	$sql = "SELECT

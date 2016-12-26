@@ -460,6 +460,8 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
+		$send['id'] = query_insert_id('_tovar_zakaz');
+
 		_history(array(
 			'type_id' => 112,
 			'client_id' => $z['client_id'],
@@ -467,7 +469,7 @@ switch(@$_POST['op']) {
 			'tovar_id' => $tovar_id
 		));
 
-		jsonSuccess();
+		jsonSuccess($send);
 		break;
 	case 'zayav_tovar_set_load':
 		if(!$tovar_id = _num($_POST['tovar_id']))
@@ -477,14 +479,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$send['html'] = utf8(
-			'<div class="_info">'.
-				'<u>“овар</u> будет добавлен в расходы за€вки с указанием закупочной стоимости. '.
-//				'<u>Ќаличие</u> товара будет уменьшено на 1 '.
-			'</div>'.
-			'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
-			'<h2>дл€ '.$r['tovar_set_name'].'</h2>'.
-			'<div class="headName">¬ыбор по наличию</div>'.
-			_tovarAvaiArticul($tovar_id, 1)
+			'<div class="fs18"><b class="fs18">'._tovarName($r['name_id']).'</b> '.$r['name'].'</div>'.
+			'<div class="grey mb10">дл€ '.$r['tovar_set_name'].'</div>'.
+			_tovarAvaiArticul($tovar_id, 1).
+//			'<div class="_info">'.
+//				'<u>“овар</u> будет добавлен в расходы за€вки с указанием закупочной стоимости. '.
+//			'</div>'.
+			'<button class="vk mt10 zta-but">ѕрименить к за€вке</button>'
 		);
 
 		jsonSuccess($send);

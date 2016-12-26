@@ -711,7 +711,6 @@ a.add:hover{text-decoration:underline;color:#357}
 
 /* Подсказки */
 .hint{position:absolute;height:0;z-index:999}
-.hint td{border:0;padding:0}
 .hint .hint_table{visibility:hidden;position:relative}
 .hint .cont_table{border:#aebdcc solid 1px;background-color:#FFF;cursor:default}
 .hint .cont{padding:3px;color:#000;text-align:left}

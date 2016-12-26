@@ -1776,7 +1776,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 
 		var correct = o.correct == 1 ? "<div class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></div>" : '';
 
-		var html = "<TABLE class=cont_table>" +
+		var html = '<TABLE class=cont_table>' +
 			"<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<div class=ugt></div>" : '') +
 			"<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<div class=ugl></div>" : '') +
 			"<TD class=cont>" + correct + o.msg +

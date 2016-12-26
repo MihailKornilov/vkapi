@@ -508,6 +508,17 @@ var _tovarEditExtend = function(o) {
 		});
 	},
 
+	_tovarZakazDel = function(tovar_id) {//удаление товара из заказа
+		_dialogDel({
+			id:tovar_id,
+			head:'товара из заказа',
+			op:'tovar_zakaz_del',
+			func:function(res) {
+				$('.tovar-info-zakaz').html(res.html);
+			}
+		});
+	},
+
 	_tovarIcon = function(v) {//установка вида отображения товаров
 		var icon = $('#_tovar #icon'),
 			img = icon.find('.img');

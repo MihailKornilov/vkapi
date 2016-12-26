@@ -227,11 +227,6 @@
 	background:#def;
 	padding:7px;
 }
-#tovar-info #ti-zakaz{
-	margin-top:10px;
-	background:#fde;
-	padding:7px;
-}
 #tovar-info #ti-move{margin:8px}
 #tovar-info #ti-move ._spisok{margin-top:-1px}
 #tovar-info #ti-move .minus{background:#fff2f2}
@@ -297,25 +292,21 @@
 
 #avai-cost #avai-show{
 	display:none;
-	text-align:left;
 	position:absolute;
-	width:388px;
+	width:500px;
 	padding:6px;
 	background:#BCFFBC;
 	left:0;
 	top:62px;
 	box-shadow: 0 7px 12px rgba(0,0,0,0.3);
+	z-index:1000;
 }
 #avai-cost td.avai:not(.no):hover{box-shadow: 0 0 15px rgba(0,0,0,0.3)}
 #avai-cost td.avai:not(.no):hover #avai-show{display:block}
 
 
 /* Таблица наличия товара с артикулами */
-.tovar-avai-articul td{background:#fff}
 .tovar-avai-articul .rs{width:16px;padding-left:10px}
-.tovar-avai-articul .articul{color:#888;width:60px}
-.tovar-avai-articul .count{width:50px;color:#080}
-.tovar-avai-articul .cena{width:60px}
 
 
 

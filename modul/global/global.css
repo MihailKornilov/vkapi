@@ -362,6 +362,7 @@ button.vk.grey:hover{background-color:#999}
 .w35{width:35px}
 .w50{width:50px}
 .h50{height:50px}
+.mh150{min-height:150px}
 .w70{width:70px}
 .w100{width:100px}
 .w100p{width:100%}
@@ -377,6 +378,7 @@ button.vk.grey:hover{background-color:#999}
 .w450{width:450px}
 
 .pad5{padding:5px}
+.pad2-7{padding:2px 7px}
 .pad10{padding:10px}
 .pad15{padding:15px}
 .pt10{padding-top:10px}
@@ -386,6 +388,7 @@ button.vk.grey:hover{background-color:#999}
 .mar8{margin:8px}
 .mar10{margin:10px}
 .mar20{margin:20px}
+.mar0-5{margin:0 5px}
 .mar020{margin:0 20px}
 .mr5{margin-right:5px}
 .mr20{margin-right:20px}
@@ -447,6 +450,7 @@ button.vk.grey:hover{background-color:#999}
 .fs12{font-size:12px}
 .fs14{font-size:14px}
 .fs15{font-size:15px}
+.fs18{font-size:18px}
 
 /* Курсоры */
 .curM{cursor:move}
@@ -457,3 +461,6 @@ button.vk.grey:hover{background-color:#999}
 .over1:hover{background-color:#F2F6F9}/* бледно-серо-синий */
 .over2:hover{background-color:#FFFFF0}/* бледно-жёлтый */
 .over3:hover,.over3:hover textarea{background-color:#ffc} /* жёлтый */
+
+/* Линии */
+.line-b{border-bottom:#DEE3EF solid 1px}

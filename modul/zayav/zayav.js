@@ -1402,6 +1402,49 @@ var _zayavSpisok = function(v, id) {
 				$('#spisok').html(res.spisok);
 			}
 		}, 'json');
+	},
+
+	_zayavTovarZakazAdd = function(t, tovar_id) {//добавление товара в заказ в заявке
+		if(t.hasClass('_busy'))
+			return;
+
+		t.addClass('_busy');
+
+		var send = {
+			op:'zayav_tovar_zakaz',
+			zayav_id:ZI.id,
+			tovar_id:tovar_id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success)
+				t.addClass('dn')
+				 .prev().removeClass('dn')
+				 .attr('val', res.id);
+		}, 'json');
+	},
+	_zayavTovarZakazRemove = function(t) {//удаление товара из заказа в заявке
+		var p = t.parent();
+
+		if(t.hasClass('vh'))
+			return;
+
+		t.addClass('vh');
+		p.addClass('_busy');
+
+		var send = {
+			op:'tovar_zakaz_del',
+			id:p.attr('val'),
+			zayav_id:ZI.id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('vh');
+			p.removeClass('_busy');
+			if(res.success) {
+				p.addClass('dn');
+				p.next().removeClass('dn');
+			}
+		}, 'json');
 	};
 
 $.fn.zayavTovarPlace = function(o) {//местонахождение товара
@@ -2076,70 +2119,60 @@ $(document)
 			}, 'json');
 		}
 	})
-	.on('click', '#_zayav-info .zakaz', function() {
-		var t = $(this),
-			p = _parent(t, '.unit');
+	.on('mouseenter', '.zayav-tovar-avai', function() {//показ наличия товара при наведении
+		var t = $(this);
 
-		if(t.hasClass('_busy'))
-			return;
+		t.vkHint({
+			top:-170,
+			left:-421,
+			width:530,
+			ugol:'right',
+			indent:150,
+			msg:'<div class="zta-hint mh150 _busy">&nbsp;</div>',
+			show:1,
+			delayHide:500,
+			remove:1
+		});
 
-		t.addClass('_busy');
-
-		var send = {
-			op:'zayav_tovar_zakaz',
-			zayav_id:ZI.id,
-			tovar_id:p.attr('val')
-		};
-		$.post(AJAX_MAIN, send, function(res) {
-			t.removeClass('_busy');
-			if(res.success) {
-				t.removeClass('zakaz')
-				  .addClass('zakaz-ok')
-				  .html('Заказано');
-			}
-		}, 'json');
-	})
-	.on('click', '#_zayav-info .set', function() {//применение товара в расходы по заявке
 		var tovar_id = _parent($(this), '.unit').attr('val'),
-			dialog = _dialog({
-				top:100,
-				width:420,
-				head:'Применение товара в расходы',
-				class:'zayav-tovar-set',
-				load:1,
-				butSubmit:'',
-				submit:submit
-			}),
 			send = {
 				op:'zayav_tovar_set_load',
 				tovar_id:tovar_id
 			};
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
-					dialog.content.html(res.html);
-					$('#ta-articul')._radio(function() {
-						dialog.butSubmit('Применить');
-					});
-				} else
-					dialog.loadError();
+					$('.zta-hint')
+						.removeClass('_busy')
+						.html(res.html);
+					$('.zta-but').click(submit);
+				}
 			},'json');
 
 		function submit() {
-			var send = {
-				op:'zayav_tovar_set',
-				zayav_id:ZI.id,
-				avai_id:_num($('#ta-articul').val())
-			};
-			dialog.process();
+			var but = $(this),
+				send = {
+					op:'zayav_tovar_set',
+					zayav_id:ZI.id,
+					avai_id:_num($('#ta-articul').val())
+				};
+
+			if(but.hasClass('_busy'))
+				return;
+
+			if(but.hasClass('grey'))
+				return;
+
+			but.addClass('_busy');
 			$.post(AJAX_MAIN, send, function(res) {
+				but.removeClass('_busy');
 				if(res.success) {
-					dialog.close();
+					but.addClass('grey');
 					_msg();
 					location.reload();
-				} else
-					dialog.abort();
+				}
 			},'json');
 		}
+
 	})
 
 	.on('click', '#_zayav-expense .img_del', function() {
