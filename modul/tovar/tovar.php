@@ -1494,23 +1494,33 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 	if(!$zakaz = query_arr($sql))
 		return '';
 
+	$zakaz = _clientValToList($zakaz);
 	$zakaz = _zayavValToList($zakaz);
 
 	$send = '<div class="headBlue">Добавлено в заказ</div>'.
 			'<table class="_spisokTab">';
 
-
+	$count = 0;
 	foreach($zakaz as $r) {
 		$send .=
 		'<tr>'.
 			'<td class="grey w70 r wsnw">'._dtimeAdd($r).
-			'<td>'.($r['zayav_id'] ? 'Заявка '.$r['zayav_nomer_name'] : '').
+			'<td>'.
+				($r['zayav_id'] ? 'Заявка '.$r['zayav_nomer_name'] : '').
+				($r['client_id'] ? 'Клиент '.$r['client_link'] : '').
 			'<td class="w50 r">'.$r['count'].' '.MEASURE.
 			'<td class="w15">'.
 				'<div onclick="_tovarZakazDel('.$r['id'].')" class="icon icon-del'._tooltip('Удалить из заказа', -99, 'r').'</div>';
+		$count += _ms($r['count']);
 	}
 
-	$send .= '</table>';
+	$send .=
+		(count($zakaz) > 1 ?
+			'<tr><td colspan="2" class="r">Всего:'.
+				'<td class="r"><b>'.$count.'</b> '.MEASURE.
+				'<td>'
+		: '').
+		'</table>';
 
 	return $send;
 }
