@@ -938,6 +938,7 @@ function _zayav_spisok($v) {
 	define('FIND', !empty($filter['find']));
 
 	$nomer = 0;
+	$zpu = _zayavPole($filter['service_id']);
 
 
 	if(FIND) {
@@ -1038,7 +1039,7 @@ function _zayav_spisok($v) {
 			if($filter['tovar_place_id'])
 				$cond .= " AND `tovar_place_id`=".$filter['tovar_place_id'];
 
-			if($filter['gn_nomer_id'] && !$filter['client_id']) {
+			if(isset($zpu[51]) && $filter['gn_nomer_id'] && !$filter['client_id']) {
 				//дополнительное условие по номеру полосы
 				$polosaCond = '';
 				if($filter['gn_polosa'])
@@ -1140,8 +1141,6 @@ function _zayav_spisok($v) {
 			'spisok' => $filter['js'].'<div class="_empty">Заявок не найдено</div>',
 			'filter' => $filter
 		);
-
-	$zpu = _zayavPole($filter['service_id'], 4);
 
 	$send = array(
 		'all' => $all,
@@ -1711,7 +1710,7 @@ function _zayavUnit44($z, $zpu) {//единица списка заявки: текст
 		return '';
 	if(empty($z['about']))
 		return '';
-	return '<tr><td class="label topi">Текст:<td><div class="about">'.$z['about'].'</div>';
+	return '<tr><td class="label topi">'.$zpu[44]['label'].'<td><div class="about">'.$z['about'].'</div>';
 }
 function _zayavUnit46($z, $zpu) {//единица списка заявки: размер
 	if(!isset($zpu[46]))
