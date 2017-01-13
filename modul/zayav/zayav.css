@@ -183,7 +183,7 @@
 
 
 /* ¬несение/редактирование за€вки */
-.zayav-edit_dialog .label{width:170px;text-align:right}
+.zayav-edit_dialog .label{width:190px;text-align:right}
 .zayav-edit_dialog #ze-name{width:250px}
 .zayav-edit_dialog #ze-about{width:250px}
 .zayav-edit_dialog #ze-about-calc{
@@ -224,7 +224,7 @@
 
 
 /* —писок номеров газеты при внесении и редактировании за€вок */
-#gnGet{margin:-3px 0 30px 100px}
+#gnGet{margin:-27px 0 30px 188px}
 #gnGet #dopLinks{padding:0 0 5px 5px;border:none;background-color:transparent}
 #gnGet #dopLinks a{margin-right:5px}
 #gnGet ._dropdown{margin-right:5px}
@@ -235,25 +235,24 @@
 	text-align:center;
 	color:#AAA;
 	height:15px;
-	width:245px;
+	width:252px;
 	cursor:pointer;
 	padding:1px 0 3px;
 }
 #gnGet #darr:hover{background-color:#e1e7ed;color:#444}
 #gnGet .gns-week {
-	width:236px;
+	width:252px;
 	background-color:#FFF;
 	border:#DDD solid 1px;
 	margin-bottom:2px;
-	cursor:pointer;
 	height:19px;
 }
-#gnGet .gns-week:hover{border:#99A solid 1px}
+#gnGet .gns-week:not(.schet):hover{border:#99A solid 1px}
 #gnGet .td {padding:2px 3px;color:#333;font-size:10px}
 #gnGet .td b,#gnGet .td tt{font-size:10px}
 #gnGet .g{color:#888;margin-left:3px;font-size:10px}
 #gnGet .cena {
-	width:50px;
+	width:70px;
 	border:none;
 	padding:0 2px;
 	text-align:right;
@@ -268,6 +267,8 @@
 	background-color:#EFE;
 	color:#444;
 }
+#gnGet .schet,
+#gnGet .schet .cena{background-color:#eee}
 #gnGet .vdop{padding-left:8px}
 #gnGet #selCount{
 	width:127px;
@@ -352,15 +353,6 @@
 #_zayav-info #tsev td{border:#ddd solid 1px;padding:3px 8px}
 #_zayav-info #tsev .n{color:#999}
 #_zayav-info .kvit_defect{color:#777}
-/* “аблица номеров выпуска газеты */
-#_zayav-info .gn{margin-left:20px}
-#_zayav-info .gn tr{background-color:#DFD}
-#_zayav-info .gn em{margin-left:3px;color:#888}
-#_zayav-info .gn .dop{color:#444;font-size:10px}
-#_zayav-info tr#lost-count{text-align:center;background:#eee;cursor:pointer;color:#555}
-#_zayav-info tr#lost-count:hover{background:#F9F9F9}
-#_zayav-info .gn tr.lost{background:#F9F9F9;display:none}
-#_zayav-info .gn tr.lost td{color:#777}
 #_zayav-info .onpay{
 	margin:10px 120px;
 	text-align:center;

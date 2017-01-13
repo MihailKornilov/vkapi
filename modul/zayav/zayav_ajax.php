@@ -1835,6 +1835,7 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 
 	$sql = "DELETE FROM `_zayav_gazeta_nomer`
 			WHERE `zayav_id`=".$zayav_id."
+			  AND !`schet_id`
 			  AND `gazeta_nomer_id`>="._gn('first');
 	query($sql);
 

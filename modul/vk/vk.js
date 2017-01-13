@@ -133,6 +133,8 @@ var VK_SCROLL = 0,
 		90:'Z',
 		189:'-'
 	},
+	
+	CHECK_ALL_FUNC = function() {},//выполнение функции после нажатия на галочку для выделения всех галочек
 
 	_scroll = function(action, unit) {//сохранение и возврат скролла для конкретной страницы, если необходимо
 		var p = _cookie('p'),
@@ -2724,6 +2726,7 @@ $(document)
 		*/
 		var v = !_num($(this).find('input').val());
 		_checkAll('change', v);
+		CHECK_ALL_FUNC();
 	})
 
 	.on('click', '#_info-top .img_del', function() {//закрытие сообщения о нововведении

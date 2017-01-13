@@ -122,17 +122,20 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 				WHERE `app_id`=".APP_ID."
 				ORDER BY `general_nomer`";
 		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
+		while($r = mysql_fetch_assoc($q)) {
+			$pubex = explode('-', $r['day_public']);
 			$arr[$r['id']] = array(
 				'general_nomer' => $r['general_nomer'],
 				'week' => $r['week_nomer'],
 				'day_print' => $r['day_print'],
 				'day_public' => $r['day_public'],
+				'day_public_1' => $pubex[2].'.'.$pubex[1].'.'.$pubex[0],
 				'pub' => FullData($r['day_public'], 1, 1, 1),
 				'pc' => $r['polosa_count'],
 				'pub_count' => '',  //количество выпусков для конкретного вида деятельности
 				'lost' => strtotime($r['day_public']) < time() //прошедший номер
 			);
+		}
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -2130,7 +2133,8 @@ function _zayavInfoGazetaNomerJS($zayav_id) {
 					$r['polosa'].','.
 					$r['skidka'].','.
 					round($r['cena'], 6).','.
-					$r['id'].
+					$r['id'].','.
+					$r['schet_id'].
 				']';
 
 	return '{'.implode(',', $send).'}';
@@ -2150,36 +2154,102 @@ function _zayavInfoGazetaNomer($z, $zpu) {//номера выхода газеты
 	if(!$spisok = query_arr($sql))
 		return '';
 
+	$spisok = _schetPayValToList($spisok);
+
+	//проверка, выставлялся ли счёт на оплату (для отображения колонки с номерами счетов)
+	$schetOn = 0;
+	foreach($spisok as $r)
+		if($r['schet_id']) {
+			$schetOn = 1;
+			break;
+		}
+
+	//проверка, есть ли номера газет, по которым счёт на оплату не выславлялся (для отображения галочек)
+	$schetOff = 0;
+	foreach($spisok as $r)
+		if(!$r['schet_id']) {
+			$schetOff = 1;
+			break;
+		}
+
+	define('SCHET_PAY_ON', $z['client_id'] && $schetOff && _app('schet_pay'));
+
 	$send =
-		'<table class="_spisok gn">'.
-			'<tr><th>Номер'.
-				'<th>Выход'.
-				'<th>Цена'.
+		'<table class="_spisokTab ml20 w500">'.
+			'<tr><th class="w50">Номер'.
+				'<th class="w70">Выход'.
+				'<th class="w50">Цена'.
 				($zpu[48]['v1'] ? '<th>Дополнительно' : '').
-				($zpu[48]['v2'] ? '<th>Полоса' : '');
+				($zpu[48]['v2'] ? '<th>Полоса' : '').
+					  ($schetOn ? '<th class="w50">№ счёта' : '').
+				  (SCHET_PAY_ON ? '<th class="w15">'._check('check_all') : '');
 	$lost = 0;
 	foreach($spisok as $r)
 		if(_gn($r['gazeta_nomer_id'], 'lost'))
 			$lost++;
-	$send .= ($lost ? '<tr id="lost-count"><td colspan="4">Показать прошедшие выходы ('.$lost.')' : '');
+	$send .= ($lost ?
+		'<tr class="gn-lost center bg-eee over4 curP color-555" onclick="_zayavGNLostShow()">'.
+			'<td colspan="10">Показать прошедшие выходы ('.$lost.')' : '');
 
 	foreach($spisok as $r) {
 		$gn = _gn($r['gazeta_nomer_id']);
 		$send .=
-			'<tr'.($gn['lost'] ? ' class="lost"' : '').'>'.
-				'<td class="w50 r"><b>'.$gn['week'].'</b><em>('.$gn['general_nomer'].')</em>'.
-				'<td class="dtime">'.$gn['pub'].
-				'<td class="cena r">'.round($r['cena'], 2).
-				($zpu[48]['v1'] ? '<td class="dop">'._obDop($r['dop']) : '').
+			'<tr class="'.($gn['lost'] ? 'bg-gr1 dn grey' : 'bg-dfd').'">'.
+				'<td class="r"><b>'.$gn['week'].'</b> <em class="grey">('.$gn['general_nomer'].')</em>'.
+				'<td class="dtime r wsnw">'.$gn['pub'].
+				'<td class="r">'._sumSpace($r['cena']).
+				($zpu[48]['v1'] ? '<td class="color-555 fs12">'._obDop($r['dop']) : '').
 				($zpu[48]['v2'] ?
-					'<td class="dop">'.($r['dop'] ? _polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-я' : '') : '')
-				: '');
+					'<td class="color-555 fs12">'.($r['dop'] ? _polosa($r['dop']).($r['polosa'] ? ' '.$r['polosa'].'-я' : '') : '')
+				: '').
+		($schetOn ? '<td class="grey fs12 center">'.$r['schet_pay_nomer'] : '').
+	(SCHET_PAY_ON ?	'<td class="ch">'.(!$r['schet_id'] ? _check('ch'.$r['id']) : '') : '');
 	}
 	$send .= '</table>';
 
 	return
-		'<tr><td colspan="2" class="label">Номера выпуска:<td>'.
+		'<script>CHECK_ALL_FUNC=_zayavGNLostShow;</script>'.
+		'<tr><td colspan="2" class="label">'.
+			'Номера выпуска:'.
+			(SCHET_PAY_ON ? '<button class="vk small fr" onclick="_zayavSchetPayKupez($(this))">Сформировать счёт на оплату</button>' : '').
 		'<tr><td colspan="2">'.$send;
+}
+function _zayavInfoGazetaNomerForSchetPay($ids) {//получение списка картриджей для вставления в счёт
+	if(!$ids)
+		return array();
+
+	$sql = "SELECT *
+			FROM `_zayav_gazeta_nomer`
+			WHERE `id` IN (".$ids.")
+			  AND !`schet_id`
+			ORDER BY `id`";
+	if(!$zgn = query_arr($sql))
+		return array();
+
+
+	//получение площади рекламного модуля из заявки
+	$k = key($zgn);
+	$zayav_id = $zgn[$k]['zayav_id'];
+	$z = _zayavQuery($zayav_id);
+	if(!$kvsm = round($z['size_x'] * $z['size_y']))
+		$kvsm = 1;
+
+	$zpu = _zayavPole($z['service_id']);
+
+	$spisok = array();
+	foreach($zgn as $r) {
+		$gn = _gn($r['gazeta_nomer_id']);
+		$spisok[] = array(
+			'name' => utf8(_service('name', $z['service_id']).' в газете "Купец" номер '.$gn['week'].' ('.$gn['general_nomer'].') '.$gn['day_public_1']),
+			'count' => $kvsm,
+			'measure_id' => isset($zpu[31]) ? 6 : 1,
+			'cena' => round($r['cena'] / $kvsm, 2),
+			'summa' => round($r['cena'], 2),
+			'readonly' => 1
+		);
+	}
+
+	return $spisok;
 }
 function _zayavDogovor($z) {//отображение номера договора
 	$sql = "SELECT *
@@ -2522,6 +2592,7 @@ function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 	$sql = "SELECT IFNULL(SUM(`cena`),0)
 			FROM `_zayav_gazeta_nomer`
 			WHERE `app_id`=".APP_ID."
+			  AND !`schet_id`
 			  AND `zayav_id`=".$zayav_id;
 	$accrual += query_value($sql);
 
@@ -2990,7 +3061,7 @@ function _zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по за
 				'<td class="r grey">'.($n++).
 				'<td class="b">'._cartridgeName($r['cartridge_id']).
 				'<td class="r">'.(_cena($r['cost']) || $ready ? _cena($r['cost']) : '').
-				'<td class="r fs11 grey">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
+				'<td class="r fs11 grey">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready'], 1) : '').
 				'<td>'.$prim.
 				'<td>'.
 					($r['schet_id'] ?

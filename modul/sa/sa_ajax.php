@@ -1339,6 +1339,7 @@ switch(@$_POST['op']) {
 					SELECT IFNULL(SUM(`cena`),0)
 					FROM `_zayav_gazeta_nomer`
 					WHERE `client_id`=`c`.`id`
+					  AND !`schet_id`
 				) WHERE `app_id`=".APP_ID."
 					AND !`deleted`";
 		query($sql);
@@ -1397,6 +1398,7 @@ switch(@$_POST['op']) {
 						SELECT IFNULL(SUM(`cena`),0)
 						FROM `_zayav_gazeta_nomer`
 						WHERE `zayav_id`=`z`.`id`
+						  AND !`schet_id`
 					) = `sum_accrual`,0,1
 				)
 				WHERE `app_id`=".APP_ID;

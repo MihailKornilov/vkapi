@@ -1228,6 +1228,7 @@ function _clientBalansUpdate($client_id) {//обновление баланса клиента
 	$sql = "SELECT IFNULL(SUM(`cena`),0)
 			FROM `_zayav_gazeta_nomer`
 			WHERE `app_id`=".APP_ID."
+			  AND !`schet_id`
 			  AND `client_id`=".$client_id;
 	$gn = query_value($sql);
 

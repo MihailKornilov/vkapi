@@ -886,6 +886,7 @@ switch(@$_POST['op']) {
 		$send['noedit'] = 0;
 		$send['content'] = array();
 		$cartridge_ids = _ids(@$_POST['cartridge_ids']);//список id картриджей, если выбирались
+		$gn_ids = _ids(@$_POST['gn_ids']);//список id номеров газеты, если выбирались
 
 		$client_id = _num($_POST['client_id']);
 
@@ -922,8 +923,8 @@ switch(@$_POST['op']) {
 				unset($send['content'][$i]['app_id']);
 			}
 		} else {
-			//получение данных по картриджам для подстановки в контент
-			$send['content'] = _zayavInfoCartridgeForSchetPay($cartridge_ids);
+			$send['content'] = _zayavInfoCartridgeForSchetPay($cartridge_ids);  //получение данных по картриджам для подстановки в контент
+			$send['content'] = _zayavInfoGazetaNomerForSchetPay($gn_ids);       //получение данных по номерам газет для подстановки в контент
 		}
 		
 		$send['client_id'] = $client_id;
@@ -1016,6 +1017,7 @@ switch(@$_POST['op']) {
 					'<input type="hidden" id="schet-pay-content" />'.
 				'</div>'.
 				'<input type="hidden" id="cartridge_ids" value="'.$cartridge_ids.'" />'.
+				'<input type="hidden" id="gn_ids" value="'.$gn_ids.'" />'.
 			'</div>'
 		);
 
@@ -1047,6 +1049,7 @@ switch(@$_POST['op']) {
 
 		$content = schet_pay_content('new');
 		$cartridge_ids = _ids(@$_POST['cartridge_ids']);//ids картриджей для привязки
+		$gn_ids = _ids(@$_POST['gn_ids']);//ids номеров газет для привязки
 
 		$sql = "SELECT *
 				FROM `_setup_org`
@@ -1130,6 +1133,24 @@ switch(@$_POST['op']) {
 		$schet_id = query_insert_id('_schet_pay');
 		schet_pay_content('insert', $schet_id);
 
+		//привязка картриджей
+		if($cartridge_ids) {
+			$sql = "UPDATE `_zayav_cartridge`
+					SET `schet_id`=".$schet_id."
+					WHERE !`schet_id`
+					  AND `id` IN (".$cartridge_ids.")";
+			query($sql);
+		}
+
+		//привязка номеров газет
+		if($gn_ids) {
+			$sql = "UPDATE `_zayav_gazeta_nomer`
+					SET `schet_id`=".$schet_id."
+					WHERE !`schet_id`
+					  AND `id` IN (".$gn_ids.")";
+			query($sql);
+		}
+
 		//начисление по счёту
 		if($type_id == 1) {
 			$sql = "INSERT INTO `_money_accrual` (
@@ -1159,15 +1180,6 @@ switch(@$_POST['op']) {
 			));
 
 			_zayavBalansUpdate($zayav_id);
-		}
-
-		//привязка картриджей
-		if($cartridge_ids) {
-			$sql = "UPDATE `_zayav_cartridge`
-					SET `schet_id`=".$schet_id."
-					WHERE !`schet_id`
-					  AND `id` IN (".$cartridge_ids.")";
-			query($sql);
 		}
 
 		_history(array(
@@ -1408,7 +1420,7 @@ switch(@$_POST['op']) {
 				'<tr><td class="grey r">'.($num++).
 					'<td>'._br($r['name']).
 					'<td class="center">'.$r['count'].
-					'<td class="center">шт.'.
+					'<td class="center">'._tovarMeasure($r['measure_id']).
 					'<td class="r">'._sumSpace($r['cena'], 1).
 					'<td class="r">'._sumSpace(_cena($r['count'] * $r['cena']), 1);
 		}
@@ -1723,6 +1735,12 @@ switch(@$_POST['op']) {
 
 		//отвязка картриджей от счёта
 		$sql = "UPDATE `_zayav_cartridge`
+				SET `schet_id`=0
+				WHERE `schet_id`=".$schet_id;
+		query($sql);
+
+		//отвязка номеров газет от счёта
+		$sql = "UPDATE `_zayav_gazeta_nomer`
 				SET `schet_id`=0
 				WHERE `schet_id`=".$schet_id;
 		query($sql);
@@ -2968,10 +2986,11 @@ function schet_pay_content($action, $schet_id=0) {//получение содержания счёта н
 		if(!$count = _num(@$sp[1]))
 			continue;
 
-		$cena = _cena(@$sp[2]);
+		$measure_id = _num(@$sp[2]);
+		$cena = _cena(@$sp[3]);
 		$sum += _num($count) * $cena;
 
-		if($id = _num(@$sp[3]))
+		if($id = _num(@$sp[4]))
 			$old[$id] = array($name, $count, $cena);
 		else
 			$new[] = array($name, $count, $cena);
@@ -2981,8 +3000,9 @@ function schet_pay_content($action, $schet_id=0) {//получение содержания счёта н
 			$schet_id.",".
 			"'".addslashes($name)."',".
 			$count.",".
+			$measure_id.",".
 			$cena.",".
-			$sp[4]. //readonly
+			$sp[5]. //readonly
 		")";
 	}
 
@@ -3000,6 +3020,7 @@ function schet_pay_content($action, $schet_id=0) {//получение содержания счёта н
 					`schet_id`,
 					`name`,
 					`count`,
+					`measure_id`,
 					`cena`,
 					`readonly`
 				) VALUES ".implode(',', $insert);

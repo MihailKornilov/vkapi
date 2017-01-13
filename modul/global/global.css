@@ -376,6 +376,7 @@ button.vk.grey:hover{background-color:#999}
 .w350{width:350px}
 .w400{width:400px}
 .w450{width:450px}
+.w500{width:500px}
 
 .pad5{padding:5px}
 .pad2-7{padding:2px 7px}
@@ -418,6 +419,7 @@ button.vk.grey:hover{background-color:#999}
 .red{color:#E22}
 .grey{color:#888}
 .black{color:#000}
+.color-555{color:#555}/* тёмно-серый */
 .color-vin{color:#c88}/* бордовый */
 .color-acc{color:#07a}/* голубой - начисление */
 .color-pay{color:#090}/* зелёны - платёж */
@@ -427,6 +429,7 @@ button.vk.grey:hover{background-color:#999}
 .bge{background-color:#ffa}
 .bg-fff{background-color:#fff}
 .bg-eee{background-color:#eee}
+.bg-gr1{background-color:#F9F9F9}/* светло-серый */
 .bg-add{background-color:#e0ffe0}
 .bg-del{background-color:#fee}
 .bg-ffe{background-color:#ffe}
@@ -461,6 +464,7 @@ button.vk.grey:hover{background-color:#999}
 .over1:hover{background-color:#F2F6F9}/* бледно-серо-синий */
 .over2:hover{background-color:#FFFFF0}/* бледно-жёлтый */
 .over3:hover,.over3:hover textarea{background-color:#ffc} /* жёлтый */
+.over4:hover{background-color:#F9F9F9}/* светло-серый */
 
 /* Линии */
 .line-b{border-bottom:#DEE3EF solid 1px}

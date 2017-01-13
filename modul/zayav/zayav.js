@@ -76,7 +76,7 @@ var _zayavSpisok = function(v, id) {
 			equip_js = [],     //список комплектации для select, которые были не выбраны для конкретного товара
 			equip_tovar_id = 0,//id товара, по которому будет формироваться комплектация
 			dialog = _dialog({
-				width:560,
+				width:700,
 				top:20,
 				class:'zayav-edit',
 				head:zayav_id ? 'Редактирование заявки' : 'Внесение новой заявки' + (service_id ? ' - ' + SERVICE_ACTIVE_ASS[service_id] : ''),
@@ -1391,6 +1391,30 @@ var _zayavSpisok = function(v, id) {
 		}, 'json');
 	},
 
+	_zayavGNLostShow = function() {//показ вышедших номеров газеты
+		var t = $('tr.gn-lost');
+		if(!t.length)
+			return;
+		t.parent().find('.bg-gr1').show();
+		t.remove();
+	},
+	_zayavSchetPayKupez = function(t) {
+		if(!_checkAll()) {
+			t.vkHint({
+				top:-75,
+				left:323,
+				msg:'<span class="red">Не выбраны номера выпуска</span>',
+				show:1,
+				remove:1
+			});
+			return false;
+		}
+
+		window.GN_IDS = _checkAll();
+
+		schetPayEdit();
+	},
+
 	_zayavReportSpisok = function(v, id) {
 		ZAYAV_REPORT.page = 1;
 		if(v)
@@ -1724,6 +1748,10 @@ $.fn.gnGet = function(o, o1) {//номера газет
 			var th = $(this),
 				sel = !th.hasClass('gnsel'),
 				v = th.attr('val');
+
+			if(th.hasClass('schet'))
+				return;
+
 			th[(sel ? 'add': 'remove') + 'Class']('gnsel');
 			th.removeClass('prev');
 			th.find('.gnid').val(0);
@@ -1753,9 +1781,9 @@ $.fn.gnGet = function(o, o1) {//номера газет
 	gnsDopAll();
 	gnsValUpdate();
 
-	o.gns = {};
+//	o.gns = {};
 
-	dopMenuA.click(function() {// выбор номеров на месяц, 3 месяца, полгода и год начиная сначала
+	dopMenuA.click(function() {// выбор номеров на месяц, 3 месяца, полгода и год, начиная сначала
 		var t = $(this),
 			sel = !t.hasClass('sel'),
 			v = sel ? _num(t.attr('val')) : 0;
@@ -1782,13 +1810,17 @@ $.fn.gnGet = function(o, o1) {//номера газет
 			gns_begin = GN_FIRST;
 			gns_end = gns_begin + (count || 0) + o.show;
 		}
+
 		gnGet.find('#darr').remove();
-		var html = '';
+
+		var polosa = _toAss(GAZETA_POLOSA_SPISOK),
+			html = '';
 		for(var n = gns_begin; n < gns_end; n++) {
 			if(n > GN_LAST)
 				break;
 			var sp = GN_ASS[n],
-				prev = '',
+				prev = ' curP',
+				schet = 0,
 				dop = 0,
 				pn = 0,
 				skidka = o.skidka,
@@ -1797,7 +1829,8 @@ $.fn.gnGet = function(o, o1) {//номера газет
 			if(!sp) // если номер пропущен, тогда не выводится
 				continue;
 			if(o.gns[n]) {
-				prev = ' gnsel prev';
+				schet = o.gns[n][5];
+				prev = ' gnsel ' + (schet ? 'schet' : 'prev curP');
 				dop = o.gns[n][0];
 				pn = o.gns[n][1];
 				skidka = o.gns[n][2];
@@ -1817,6 +1850,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 								'<td class="cena" id="cena' + n + '">' + (Math.round(cena * 100) / 100) +
 						'</table>' +
 					'<td class="vdop">' +
+						(schet && polosa[dop] ? polosa[dop] : '') +
 						'<input type="hidden" id="vdop' + n + '" value="' + dop + '" /> ' +
 						'<input type="hidden" id="pn' + n + '" value="' + pn + '" />' +
 				'</table>';
@@ -1887,7 +1921,12 @@ $.fn.gnGet = function(o, o1) {//номера газет
 			var sp = week.eq(n),
 				sel = sp.hasClass('gnsel'),
 				prev = sp.hasClass('prev'),
+				schet = sp.hasClass('schet'),
 				v = _num(sp.attr('val'));
+
+			if(schet)
+				continue;
+
 			if(all || sel)
 				func(sp, v, prev);
 		}
@@ -2584,10 +2623,6 @@ $(document)
 					top:-82,
 					left:-24
 				})
-			});
-			$('#lost-count').click(function() {//отображение прошедших номеров газеты
-				$(this).parent().find('.lost').show();
-				$(this).remove();
 			});
 		}
 		if($('#zayav-report').length) {

@@ -1559,10 +1559,12 @@ var _accrualAdd = function(o) {
 				schet_id:schet_id,
 				client_id:window.CI ? CI.id : 0,
 				zayav_id:window.ZI ? ZI.id : 0,
-				cartridge_ids:window.CARTRIDGE_IDS//id картриджей
+				cartridge_ids:window.CARTRIDGE_IDS,//id картриджей
+				gn_ids:window.GN_IDS//id номеров газеты
 			};
 
 		window.CARTRIDGE_IDS = 0;//очистка id картриджей, чтобы не подставлялись в другие счета
+		window.GN_IDS = 0;//очистка id номеров картриджей, чтобы не подставлялись в другие счета
 
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
@@ -1639,7 +1641,8 @@ var _accrualAdd = function(o) {
 				client_id:$('#client_id').val(),
 				zayav_id:$('#zayav_id').val(),
 				content:$('#schet-pay-content').val(),
-				cartridge_ids:$('#cartridge_ids').val()
+				cartridge_ids:$('#cartridge_ids').val(),
+				gn_ids:$('#gn_ids').val()
 			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
@@ -1904,7 +1907,8 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 		SORT = CONT.find('dl'),
 		BGL = CONT.find('.bg-link'), //кнопка Добавить позицию
 		NO_CORRECT = CONT.find('.no-correct'),  //строка вывода сообщения об ошибке красным цветом
-		ITOG = CONT.find('.itog');              //строка подитога
+		ITOG = CONT.find('.itog'),              //строка подитога
+		MEASURE_ASS = _toAss(TOVAR_MEASURE_SPISOK);
 
 	SORT.sortable({
 		axis:'y',
@@ -1926,6 +1930,7 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 			id:0,
 			name:'',
 			count:1,
+			measure_id:1,
 			cena:'',
 			summa:'',
 			readonly:0
@@ -1938,7 +1943,9 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 						'<input type="hidden" class="sp-id" value="' + sp.id + '" />' +
 						'<textarea class="min w300">' + sp.name + '</textarea>' +
 					'<td class="w70 center top"><input type="text" class="sp-count w35 center"' + (sp.readonly ? ' readonly="readonly"' : '') + ' value="' + sp.count + '" />' +
-					'<td class="w50 center topi">шт.' +
+					'<td class="w50 center topi">' +
+						MEASURE_ASS[sp.measure_id] +
+						'<input type="hidden" class="sp-measure_id" value="' + sp.measure_id + '" />' +
 					'<td class="w70 top"><input type="text" class="sp-cena w50 r"' + (sp.readonly ? ' readonly="readonly"' : '') + ' value="' + sp.cena + '" />' +
 					'<td class="w70 topi prel">' +
 		(!sp.readonly ? '<div class="icon icon-del out' + _tooltip('Удалить позицию', -95, 'r') + '</div>' : '') +
@@ -2024,6 +2031,7 @@ $.fn.schetPayContent = function(o) {//составление списка содержания для расчётно
 			val.push(
 				area + '&&&' + 
 				count + '&&&' + 
+				_num(sp.find('.sp-measure_id').val()) + '&&&' +
 				cena + '&&&' + 
 				_num(sp.find('.sp-id').val()) + '&&&' +
 				(spCount.attr('readonly') ? 1 : 0)
