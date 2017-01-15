@@ -2216,9 +2216,9 @@ function _templateSchetPay($arr) {//подмена переменных счЄта на оплату
 			foreach($spisok as $i)
 				$content[] = array(
 					$n++,
-					$i['name'],
+					htmlspecialchars_decode($i['name']),
 					$i['count'],
-					'шт.',
+					_tovarMeasure($i['measure_id']),
 					_sumSpace($i['cena'], 1),
 					_sumSpace($i['count'] * $i['cena'], 1)
 				);
@@ -2231,6 +2231,33 @@ function _templateSchetPay($arr) {//подмена переменных счЄта на оплату
 					FROM `_schet_pay_content`
 					WHERE `schet_id`=".$schet_id;
 			$arr[$id]['text'] = query_value($sql);
+			continue;
+		}
+		if($r['v'] == '{SCHET_FAKTURA_CONTENT}') {
+			$sql = "SELECT *
+					FROM `_schet_pay_content`
+					WHERE `schet_id`=".$schet_id."
+					ORDER BY `id`";
+			if(!$spisok = query_arr($sql))
+				continue;
+
+			$content = array();
+			$n = 1;
+			foreach($spisok as $i)
+				$content[] = array(
+					htmlspecialchars_decode($i['name']),
+					false,
+					_tovarMeasure($i['measure_id']),
+					$i['count'],
+					_sumSpace($i['cena'], 1),
+					_sumSpace($i['count'] * $i['cena'], 1),
+					false,
+					false,
+					false,
+					_sumSpace($i['count'] * $i['cena'], 1)
+				);
+
+			$arr[$id]['text'] = $content;
 			continue;
 		}
 		$arr[$id]['text'] = $schet[$r['col_name']];
@@ -2359,6 +2386,12 @@ function _templateXlsProcess($sheet) {//подмена переменных в шаблоне
 
 					foreach($i as $num => $stroka)
 						foreach($stroka as $n => $sp) {
+							//вставка в €чейку значени€ по умолчанию в последующие строки (берЄтс€ из первой строки)
+							if($sp === false) {
+								$vv = $sheet->getCellByColumnAndRow($col + $n, $row + 1)->getValue();
+								$sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, $vv);
+								continue;
+							}
 							$sheet->setCellValueByColumnAndRow($col + $n, $row + $num + 1, utf8($sp));
 			        }
 		        }

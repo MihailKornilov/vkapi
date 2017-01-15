@@ -923,8 +923,8 @@ switch(@$_POST['op']) {
 				unset($send['content'][$i]['app_id']);
 			}
 		} else {
-			$send['content'] = _zayavInfoCartridgeForSchetPay($cartridge_ids);  //получение данных по картриджам для подстановки в контент
-			$send['content'] = _zayavInfoGazetaNomerForSchetPay($gn_ids);       //получение данных по номерам газет для подстановки в контент
+			if(!$send['content'] = _zayavInfoCartridgeForSchetPay($cartridge_ids))  //получение данных по картриджам для подстановки в контент
+				$send['content'] = _zayavInfoGazetaNomerForSchetPay($gn_ids);       //получение данных по номерам газет для подстановки в контент
 		}
 		
 		$send['client_id'] = $client_id;
