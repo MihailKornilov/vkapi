@@ -1181,21 +1181,11 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 				  AND `tovar_avai_id`=".$r['id'];
 		$count -= query_value($sql);
 
-/*		//счета на оплату
-		$sql = "SELECT IFNULL(SUM(`count`),0)
-				FROM
-					`_schet_pay` `s`,
-					`_schet_pay_content` `sc`
-				WHERE `s`.`id`=`sc`.`schet_id`
-				  AND !`deleted`
-				  AND `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql);
-*/
 		if($r['count'] == $count)
 			continue;
 
 		$sql = "UPDATE `_tovar_avai`
-				SET `count`=".$count."
+				SET `count`="._ms($count)."
 				WHERE `id`=".$r['id'];
 		query($sql);
 	}
@@ -1533,7 +1523,6 @@ function _tovar_info_move($tovar_id) {
 				`tovar_avai_id`,
 				`client_id`,
 				`zayav_id`,
-				0 `schet_id`,
 				`count`,
 				`cena`,
 				`summa`,
@@ -1556,7 +1545,6 @@ function _tovar_info_move($tovar_id) {
 				`tovar_avai_id`,
 				0 `client_id`,
 				`zayav_id`,
-				0 `schet_id`,
 				`tovar_count` `count`,
 				ROUND(`sum`/`tovar_count`) `cena`,
 				`sum` `summa`,
@@ -1579,7 +1567,6 @@ function _tovar_info_move($tovar_id) {
 				`tovar_avai_id`,
 				`client_id`,
 				0 `zayav_id`,
-				0 `schet_id`,
 				`tovar_count` `count`,
 				ROUND(`sum`/`tovar_count`) `cena`,
 				`sum` `summa`,
@@ -1593,38 +1580,10 @@ function _tovar_info_move($tovar_id) {
 			  AND !`deleted`";
 	$mi = query_arr($sql);
 	$mi = _clientValToList($mi);
-/*
-	//счёт на оплату
-	$sql = "SELECT
-				'schet' `class`,
-				`sc`.`id`,
-				8 `type_id`,
-				`tovar_id`,
-				`tovar_avai_id`,
-				0 `client_id`,
-				0 `zayav_id`,
-				`schet_id`,
-				`count`,
-				`cost` `cena`,
-				ROUND(`count`*`cost`) `summa`,
-				'' `about`,
-				`viewer_id_add`,
-				`dtime_add`
-			FROM
-				`_schet` `s`,
-				`_schet_content` `sc`
-			WHERE `s`.`app_id`=".APP_ID."
-			  AND `s`.`id`=`sc`.`schet_id`
-			  AND `tovar_id`=".$tovar_id."
-			  AND `tovar_avai_id`
-			  AND !`s`.`deleted`";
-	$schet = query_arr($sql);
-	$schet = _schetPayValToList($schet);
-*/
+
 	$spisok = _arrayTimeGroup($move);
 	$spisok += _arrayTimeGroup($ze, $spisok);
 	$spisok += _arrayTimeGroup($mi, $spisok);
-//	$spisok += _arrayTimeGroup($schet, $spisok);
 	ksort($spisok);
 
 	if(empty($spisok))
@@ -1636,6 +1595,10 @@ function _tovar_info_move($tovar_id) {
 	$yearCurrent = strftime('%Y');
 
 	krsort($spisok);
+
+	//отметка первого элемента списка
+	$k = key($spisok);
+	$spisok[$k]['first'] = 1;
 
 	$year = array();
 
@@ -1698,11 +1661,11 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		if($r['type_id'] == 6)
 			$class = 'off';
 
-
-		//TODO удаление движения для Веры Губинской
-		$delDop = array();
-//		if(APP_ID == 3978722 && VIEWER_ID == 172136415)
-//			$delDop = array('del'=>1);
+		//показ иконки для удаления последнего внесённого наличия
+		$toDel = array();
+		if(isset($r['first']) && $r['type_id'] == 1)
+			$toDel = array('del'=>1);
+		
 		$send .= '<tr class="'.$class.'">'.
 				'<td class="w70">'.$type[$r['type_id']].
 				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
@@ -1710,10 +1673,9 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 				'<td>'.
 					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').
 					($r['zayav_id'] ? 'заявка '.$r['zayav_link'].'. ' : '').
-					($r['schet_id'] ? 'счёт '.$r['schet_link_full'] : '').
 					$r['about'].
 				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'.(!$r['schet_id'] ? _iconDel($r + $delDop) : '').
+				'<td class="ed">'._iconDel($r + $toDel).
 		'</div>';
 	}
 
