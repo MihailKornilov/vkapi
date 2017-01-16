@@ -1449,25 +1449,29 @@ var _accrualAdd = function(o) {
 			invoice_id:_invoiceExpenseInsert(1),
 			sum:'',
 			about:'',
+			mon:SALARY.mon,
+			year:SALARY.year,
 			salary_avans:0,
 			salary_list_id:0
 		}, o);
 
 		var html =
-				'<table class="_dialog-tab">' +
-					'<tr' + (APP_ID == 3495523 && !o.id ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
-					'<tr><td class="label">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
-					'<tr><td class="label">Месяц:<td><b>' + MONTH_DEF[SALARY.mon] + ' ' + SALARY.year + '</b>' +
-					'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + o.invoice_id + '" />' +
-					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
-					'<tr><td class="label">Аванс:<td><input type="hidden" id="salary_avans" value="' + o.salary_avans + '" />' +
-					'<tr><td class="label">Комментарий:<td><input type="text" id="about" placeholder="не обязательно" value="' + o.about + '" />' +
+				'<table class="bs10">' +
+//					'<tr' + (APP_ID == 3495523 && !o.id ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" value="' + o.dtime_add + '" />' + //todo временно
+					'<tr><td class="label r w125">Сотрудник:<td><u>' + WORKER_ASS[SALARY.worker_id] + '</u>' +
+					'<tr><td class="label r">Месяц:' +
+						'<td><input type="hidden" id="salary_mon" value="' + o.mon + '" /> ' +
+							'<input type="hidden" id="salary_year" value="' + o.year + '" />' +
+					'<tr><td class="label r">Со счёта:<td><input type="hidden" id="invoice_id" value="' + o.invoice_id + '" />' +
+					'<tr><td class="label r">Сумма:<td><input type="text" id="sum" class="money" value="' + o.sum + '"' + (o.id ? ' disabled' : '') + ' /> руб.' +
+					'<tr><td class="label r">Аванс:<td><input type="hidden" id="salary_avans" value="' + o.salary_avans + '" />' +
+					'<tr><td class="label r">Комментарий:<td><input type="text" id="about" class="w200" placeholder="не обязательно" value="' + o.about + '" />' +
 					'<tr' + (SALARY.list.length ? '' : ' class="dn"') + '>' +
-						'<td class="label">' + LIST_VYDACI + ':' +
+						'<td class="label r">' + LIST_VYDACI + ':' +
 						'<td><input type="hidden" id="salary_list_id" value="' + o.salary_list_id + '" />' +
 				'</table>',
 			dialog = _dialog({
-				width:380,
+				width:450,
 				padding:20,
 				head:(o.id ? 'Редактирование' : 'Выдача') + ' зарплаты',
 				content:html,
@@ -1482,11 +1486,19 @@ var _accrualAdd = function(o) {
 		$('#invoice_id')._select({
 			width:218,
 			title0:'счёт не выбран',
-			spisok:_invoiceExpenseInsert(),
+			spisok:o.id ? INVOICE_SPISOK : _invoiceExpenseInsert(),
 			disabled:o.id,
 			func:function() {
 				$('#sum').focus();
 			}
+		});
+		$('#salary_mon')._select({
+			width:90,
+			spisok:_toSpisok(MONTH_DEF)
+		});
+		$('#salary_year')._select({
+			width:70,
+			spisok:_yearSpisok()
 		});
 		$('#salary_avans')._check();
 		$('#salary_list_id')._select({
@@ -1499,26 +1511,18 @@ var _accrualAdd = function(o) {
 			var send = {
 				op:'expense_' + (o.id ? 'edit' : 'add'),
 				id:o.id,
-				dtime_add:$('#dtime_add').val(),
+//				dtime_add:$('#dtime_add').val(),
 				category_id:1,
 				worker_id:SALARY.worker_id,
-				invoice_id:_num($('#invoice_id').val()),
-				sum:_cena($('#sum').val()),
+				invoice_id:$('#invoice_id').val(),
+				sum:$('#sum').val(),
 				about:$('#about').val(),
 				salary_avans:_bool($('#salary_avans').val()),
 				salary_list_id:_num($('#salary_list_id').val()),
-				mon:SALARY.mon,
-				year:SALARY.year
+				mon:$('#salary_mon').val(),
+				year:$('#salary_year').val()
 			};
-			if(!send.invoice_id) {
-				dialog.err('Укажите с какого счёта производится выдача');
-				return;
-			}
-			if(!send.sum) {
-				dialog.err('Некорректно указана сумма');
-				$('#sum').focus();
-				return;
-			}
+
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {

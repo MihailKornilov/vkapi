@@ -310,6 +310,22 @@ var VK_SCROLL = 0,
 			a[s[n].uid] = s[n].title;
 		return a
 	},
+	_yearSpisok = function(yearFirst) {//года для выпадающего списка
+		//установка начального года
+		yearFirst = _num(yearFirst);
+		if(!yearFirst)
+			yearFirst = 2010;
+		
+		//определение текущего года
+		var d = new Date(),
+			cur = d.getFullYear(),
+			arr = [];
+
+		for(var y = yearFirst; y <= cur; y++)
+			arr.push({uid:y,title:y + ''});
+
+		return arr
+	},
 	_end = function(count, arr) {
 		if(arr.length == 2)
 			arr.push(arr[1]);

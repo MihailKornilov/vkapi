@@ -619,9 +619,9 @@ switch(@$_POST['op']) {
 		break;
 	case 'expense_add':
 		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
+			jsonError('Не указан расчётный счёт');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректная сумма');
 
 		//обязательно должна быть указана категория, либо описание расхода
 		$category_id = _num($_POST['category_id']);
@@ -707,9 +707,9 @@ switch(@$_POST['op']) {
 		break;
 	case 'expense_edit':
 		if(!$id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный id расхода');
 		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+			jsonError('Некорректная сумма');
 
 		//обязательно должна быть указана категория, либо описание расхода
 		$category_id = _num($_POST['category_id']);
