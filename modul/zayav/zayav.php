@@ -2240,7 +2240,7 @@ function _zayavInfoGazetaNomerForSchetPay($ids) {//получение списка картриджей д
 	foreach($zgn as $r) {
 		$gn = _gn($r['gazeta_nomer_id']);
 		$spisok[] = array(
-			'name' => utf8(_service('name', $z['service_id']).' в газете "Купец" номер '.$gn['week'].' ('.$gn['general_nomer'].') '.$gn['day_public_1']),
+			'name' => utf8(_service('name', $z['service_id']).' в газете "КупецЪ" № '.$gn['week'].' ('.$gn['general_nomer'].') '.$gn['day_public_1']),
 			'count' => $kvsm,
 			'measure_id' => isset($zpu[31]) ? 6 : 1,
 			'cena' => round($r['cena'] / $kvsm, 2),
