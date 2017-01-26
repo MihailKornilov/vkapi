@@ -92,7 +92,7 @@ switch(@$_POST['op']) {
 		$v = _bool($_POST['v']);
 
 		$sql = "UPDATE `_menu`
-				SET `access_default`=".$v."
+				SET `viewer_access_default`=".$v."
 				WHERE `id`=".$id;
 		query($sql);
 

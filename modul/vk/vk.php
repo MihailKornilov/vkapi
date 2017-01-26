@@ -679,7 +679,7 @@ function _menuCache($type='main') {//получение списка разделов меню из кеша
 					`_menu_app` `ma`
 				WHERE `m`.`id`=`ma`.`menu_id`
 				  AND `ma`.`app_id`=".APP_ID."
-				ORDER BY `sort`";
+				ORDER BY `ma`.`sort`";
 		$menu = query_arr($sql);
 		xcache_set($key, $menu, 86400);
 	}

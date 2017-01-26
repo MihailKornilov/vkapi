@@ -493,7 +493,7 @@ function _viewerMenuAccess($menu_id, $viewer_id=VIEWER_ID) {//права доступа к ра
 	//установка доступа по умолчанию, если пусто
 	if(empty($arr)) {
 		$values = array();
-		$sql = "SELECT * FROM `_menu` WHERE `access_default`";
+		$sql = "SELECT * FROM `_menu` WHERE `viewer_access_default`";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$values[] = "(".

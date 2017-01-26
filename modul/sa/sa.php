@@ -147,7 +147,7 @@ function sa_menu_spisok_tr($r, $edited_id) {//элемент списка меню
 			'<div class="about">'.$r['about'].'</div>'.
 		'<td class="p">'.$r['p'].
 		'<td class="show">'._check('show'.$r['id'], '', $r['ma_id']).
-		'<td class="access">'.($r['id'] == 12 ? '' : _check('access'.$r['id'], '', $r['access_default'])).
+		'<td class="access">'.($r['id'] == 12 ? '' : _check('access'.$r['id'], '', $r['viewer_access_default'])).
 		'<td class="ed">'._iconEdit($r);
 }
 function sa_menu_setup_spisok($id=0) {
