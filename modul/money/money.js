@@ -1882,6 +1882,45 @@ var _accrualAdd = function(o) {
 		$('#group_id')._dropdown(0);    SCHET_PAY.group_id = 0;
 		SCHET_PAY.mon = '';
 		schetPaySpisok();
+	},
+	schetPayAllRemove = function(but) {
+		var html =
+				'<div class="_info">' +
+					'1. Все счета на оплату будут удалены.' +
+					'<br />' +
+					'2. Также будет удалена история действий по счетам на оплату.' +
+					'<br />' +
+					'3. Счётчик номеров будет сброшен согласно настройке.' +
+					'<br />' +
+					'4. Начисления по счетам будут удалены.' +
+					'<br />' +
+					'5. История балансов будет отвязана от счетов.' +
+					'<br />' +
+					'6. Платежи будут отвязаны от счетов.' +
+					'<br />' +
+					'7. Картриджи будут отвязаны от счетов.' +
+					'<br />' +
+					'8. Номера газет будут отвязаны от счетов.' +
+					'<br />' +
+					'<br />' +
+					'<div class="red b center">Операция необратима.</div>' +
+				'</div>' +
+				'<div class="mt20 mb10 center">Подтвердите данное действие.</div>',
+			dialog = _dialog({
+				width:450,
+				head:'Удаление всех счетов на оплату',
+				content:html,
+				submit:submit,
+				butSubmit:'Удалить все счета на оплату'
+			});
+		function submit() {
+			$.post(AJAX_MAIN, {op:'schet_pay_all_remove'}, function(res) {
+				if(res.success) {
+					_msg();
+					location.reload();
+				}
+			}, 'json');
+		}
 	};
 
 $.fn.schetPayContent = function(o) {//составление списка содержания для расчётного счёта

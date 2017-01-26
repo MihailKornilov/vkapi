@@ -1774,6 +1774,77 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
+	case 'schet_pay_all_remove':
+		if(!SA)
+			jsonError('Нет прав');
+
+		//удаление счетов
+		$sql = "DELETE FROM `_schet_pay` WHERE `app_id`=".APP_ID;
+		query($sql);
+
+		//удаление содержания счетов
+		$sql = "DELETE FROM `_schet_pay_content` WHERE `app_id`=".APP_ID;
+		query($sql);
+
+		//удаление истории действий по счетам
+		$sql = "SELECT `type_id`
+				FROM `_history_ids`
+				WHERE `category_id`=7";
+		if($ids = query_ids($sql)) {
+			$sql = "DELETE FROM `_history`
+					WHERE `app_id`=".APP_ID."
+					  AND `type_id` IN (".$ids.")";
+			query($sql);
+		}
+
+		$sql = "DELETE FROM `_history`
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+
+
+		//удаление начислений со счетами
+		$sql = "DELETE FROM `_money_accrual`
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+
+
+		//отвязка от счетов в истории балансов
+		$sql = "UPDATE `_balans`
+				SET `schet_id`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+
+
+		//отвязка платежей от счетов
+		$sql = "UPDATE `_money_income`
+				SET `schet_id`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+
+/*
+		//todo доделать: добавление app_id в _zayav_cartridge
+		//отвязка картриджей от счетов
+		$sql = "UPDATE `_zayav_cartridge`
+				SET `schet_id`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+*/
+
+		//отвязка номеров газеты от счетов
+		$sql = "UPDATE `_zayav_gazeta_nomer`
+				SET `schet_id`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `schet_id`";
+		query($sql);
+
+
+		jsonSuccess();
+		break;
 
 	case 'invoice_add':
 		if(!RULE_SETUP_INVOICE)

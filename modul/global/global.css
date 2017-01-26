@@ -275,7 +275,7 @@ button.vk.small{padding:4px 10px 3px;font-size:12px}
 button.vk.small:active{padding-top:5px;padding-bottom:2px}
 button.vk.cancel{background:transparent;color:#33567F}
 button.vk.cancel:hover{background:#E5EBF1}
-button.vk.red{background:#b55}
+button.vk.red{background-color:#b55}
 button.vk.red:hover{background-color:#c66}
 button.vk.grey{background-color: #888}
 button.vk.grey:hover{background-color:#999}
