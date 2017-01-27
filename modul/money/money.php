@@ -2355,7 +2355,7 @@ function _schetPay($v) {//страница счетов на оплату
 		'<div class="schet-pay-menu-1">'.
 			'<table class="w100p">'.
 				'<tr>'.
-					'<td class="w350"><div id="find"></div>'.
+					'<td class="w400"><div id="find"></div>'.
 					'<td id="td-group"><input type="hidden" id="group_id" value="'.$v['group_id'].'" />'.
 					'<td class="r">'.
 						'<button class="vk" onclick="schetPayEdit()">Создать счёт на оплату</button>'.
@@ -2396,6 +2396,7 @@ function _schetPay_spisok($v=array()) {
 		$cond .= " AND (`nomer`=".FIND_NOMER.
 						(FIND_SUM ? " OR `sum`=".FIND_SUM : '').
 						($contentIds ? " OR `id` IN (".$contentIds.")" : '').
+						" OR `client_name` LIKE '%".$filter['find']."%'".
 					  ")";
 	} else {
 		switch ($filter['group_id']) {
@@ -2516,6 +2517,14 @@ function _schetPay_spisok($v=array()) {
 		$status = $paid ? '<div class="color-pay">оплачено</div>' : $status;
 
 		$status = $r['type_id'] == 2 ? 'ознакомительный' : $status;
+
+		if($filter['find'] && !FIND_NOMER && !FIND_SUM) {
+			$reg = '/('.$filter['find'].')/iu';
+			$reg = utf8($reg);
+			$r['client_name'] = utf8($r['client_name']);
+			$r['client_name'] = preg_replace($reg, '<b class="u">\\1</b>', $r['client_name'], 1);
+			$r['client_name'] = win1251($r['client_name']);
+		}
 
 		$send['spisok'] .=
 			'<tr class="over1 curP '._schetPayStatusBg($r).'" onclick="schetPayShow('.$r['id'].')">'.

@@ -2535,9 +2535,9 @@ $(document)
 				]
 			});
 			$('#find')._search({
-				width:330,
+				width:380,
 				focus:1,
-				txt:'поиск по номеру счёта, содержанию и сумме',
+				txt:'поиск по номеру, плательщику, содержанию и сумме',
 				enter:1,
 				v:SCHET_PAY.find,
 				func:schetPaySpisok
