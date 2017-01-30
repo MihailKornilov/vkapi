@@ -2362,7 +2362,7 @@ function _schetPay($v) {//страница счетов на оплату
 						'<a href="'.URL.'&p=setup&d=schet_pay" class="icon icon-setup-big mt5 ml10 mr5'._tooltip('Настроить счета на оплату', -154, 'r').'</a>'.
 			'</table>'.
 
-	 (SA ? '<div class="mt10">'.
+   (DEBUG ? '<div class="mt10">'.
 				'<button class="vk red" onclick="schetPayAllRemove($(this))">SA: удалить все счета на оплату</button>'.
 			'</div>'
 	 : '').
