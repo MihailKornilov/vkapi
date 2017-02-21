@@ -75,13 +75,8 @@ function _const() {
 		  );
 	//'&access_token='.@$_GET['access_token'] todo временно отключен
 
-	if(!defined('SCRIPT_NAME'))
-		define('SCRIPT_NAME', 'index.php');
-	define('URL', API_HTML.'/'.SCRIPT_NAME.'?'.VALUES);
-
-	if(!defined('SCRIPT_AJAX'))
-		define('SCRIPT_AJAX', 'ajax.php');
-	define('AJAX_MAIN', API_HTML.'/'.SCRIPT_AJAX.'?'.VALUES);
+	define('URL', API_HTML.'/index.php?'.VALUES);
+	define('AJAX_MAIN', API_HTML.'/ajax.php?'.VALUES);
 
 	define('APP_URL', 'http://vk.com/app'.APP_ID);
 
@@ -103,6 +98,8 @@ function _const() {
 	define('PATH_DOGOVOR', ATTACH_PATH.'/dogovor');
 	define('LINK_DOGOVOR', ATTACH_HTML.'/dogovor');
 	define('LIST_VYDACI', APP_ID == 3978722 ? 'Акт выполненных работ' : 'Лист выдачи з/п');//todo удалить. Для Евроокон: Акт выполненных работ
+
+	_debugLoad('Константы установлены');
 }
 
 function _header() {
@@ -197,44 +194,95 @@ function _global_script() {//скрипты и стили
 		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>';
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
-	if(!SA && APP_ID == 2881875 && @$_GET['p'] != 'kupezz')
-		header('Location:'.URL.'&p=kupezz');
-
-	switch(@$_GET['p']) {
-		case 'main': return _menuMain();
-		case 'client': _menuAccess(1); return _clientCase();
-		case 'zayav':  _menuAccess(2); return _zayav();
-		case 'tovar':  _menuAccess(8); return _tovar();
-		case 'money':  _menuAccess(3); return _money();
-		case 'report': _menuAccess(6); return _report();
-		case 'setup':  _menuAccess(5); return _setup();
-		case 'manual': _menuAccess(10); return _manual();
-		case 'devstory': return _devstory();
-		case 'print':  _print_document(); exit;
-		case 'sa':
-			if(!SA) {
-				header('Location:'.URL.'&p=setup');
-				exit;
-			}
-			if(!empty($_GET['d'])) {
-				$f = 'sa_'.$_GET['d'];
-				if(function_exists($f))
-					return $f();
-			}
-			switch(@$_GET['d']) {
-				default:            return sa_global_index();
-				case 'historycat':  return sa_history_cat();
-			}
-
-		case 'kupezz':
-			if(APP_ID != 2881875) {
-				header('Location:'.URL.'&p=setup');
-				exit;
-			}
-			return kupezz_index();
+	if(!$menu_id = _num(@$_GET['p'])) {
+		$menu_id = _menuCache('app_def');
+		$_GET['p'] = $menu_id;
 	}
 
-	return '';
+	$sql = "SELECT *
+			FROM `_menu`
+			WHERE `id`=".$menu_id;
+	if(!$menu = query_assoc($sql))
+		return _err(!SA ? 'Страницы не существует.' : 'Страница не найдена в базе.');
+
+	if(empty($menu['func_page']))
+		return _err(!SA ? 'Страницы не существует.' : 'Пустая функция.');
+
+	if(!function_exists($menu['func_page']))
+		return _err(!SA ? 'Страницы не существует.' : 'Функции не существует.');
+
+	//условия для функции
+	$v = array();
+	if($menu_id == 60)
+		$v['spisok'] = 1;
+
+	$funcPage = $menu['func_page']($v);
+	$noRules = _err('<b>'.$menu['name'].'</b>: нет прав.');
+	if(_menuCache('l3', $menu_id)) {//раздел третьего уровня: если у родителя нет доступа, то нет доступа
+		$parent_id = _menuCache('parent_id', $menu_id);
+		if(!_viewerMenuAccess($parent_id))
+			$funcPage = $noRules;
+	} elseif($menu['parent_id']) {//раздел второго уровня
+		if(!_viewerMenuAccess($menu['parent_id']) || !_viewerMenuAccess($menu_id))
+			$funcPage = $noRules;
+	} elseif(!_viewerMenuAccess($menu_id))//первый уровень
+			$funcPage = $noRules;
+
+
+	//отображение дополнительного меню
+	if($dmt_id = $menu['dop_menu_type']) {
+		$dopMenu = '';
+
+		//если нахождение на странице 3-го уровня, то выводить меню второго уровня
+		if($menu['parent_id'])
+			if(_menuCache('parent_main', $menu['parent_id']))
+				$menu_id = $menu['parent_id'];
+
+		foreach(_menuCache('dop', $menu_id) as $r) {
+			if($r['id'] == 29 && !SA)//настройки - разделы
+				continue;
+			if($r['hidden'])
+				continue;
+			if(!$r['app_id'])
+				continue;
+			if(!_viewerMenuAccess($r['id']))
+				continue;
+
+			$dopMenu .=
+				'<a class="link'.($menu_id == $r['id'] ? ' sel' : '').'" href="'.URL.'&p='.$r['id'].'">'.
+					$r['name'].
+					($r['id'] == 61 ? _remindTodayCount(1).'<div class="img_add _remind-add"></div>' : '').
+				'</a>';
+		}
+		switch($dmt_id) {
+			case 1:
+			case 2:
+				//добавление условий в правую колонку снизу под меню
+				$filterRight = '';
+				if(_viewerMenuAccess($menu_id) && function_exists($menu['func_page'].'_right')) {
+					$filterRight = $menu['func_page'] . '_right';
+					$filterRight = $filterRight();
+				}
+
+				$funcPage =
+				'<table class="tabLR">'.
+					'<tr><td class="left">'.$funcPage.
+						'<td class="right'.($dmt_id == 1 ? ' setup' : '').'">'.
+							'<div class="rightLink">'.$dopMenu.'</div>'.
+							$filterRight.
+				'</table>';
+				break;
+			case 3:
+				$funcPage = '<div id="dopLinks">'.$dopMenu.'</div>'.$funcPage;
+				break;
+		}
+
+	}	
+	
+	return
+	//отображение основного меню
+	(!empty($menu['func_menu']) && function_exists($menu['func_menu']) ? $menu['func_menu']() : '').
+	$funcPage;
 }
 
 
@@ -378,6 +426,7 @@ function _app($i='all', $item_id=0, $k='') {//Получение данных о приложении
 		$schet_pay = array(
 			'schet_pay' => 0,
 			'schet_prefix' => '',
+			'schet_act_date_set' => 0,
 			'schet_nomer_start' => 0,
 			'schet_invoice_id' => 0
 		);
@@ -390,6 +439,7 @@ function _app($i='all', $item_id=0, $k='') {//Получение данных о приложении
 			$schet_pay = array(
 				'schet_pay' => _bool($r['use']),
 				'schet_prefix' => $r['prefix'],
+				'schet_act_date_set' => _bool($r['act_date_set']),
 				'schet_nomer_start' => _num($r['nomer_start']),
 				'schet_invoice_id' => _num($r['invoice_id_default'])
 			);
@@ -403,8 +453,10 @@ function _app($i='all', $item_id=0, $k='') {//Получение данных о приложении
 		define('APP_TYPE', $arr['type_id']);
 	}
 
-	if($i == 'all')
+	if($i == 'all') {
+		_debugLoad('Получены данные приложения');
 		return $arr;
+	}
 	
 	if($i == 'org_menu_js') {//список пунктов меню в формате JS
 		$sql = "SELECT `id`,`name`
@@ -560,7 +612,7 @@ function _app_bank($arr) {//получение банка по умолчанию в организации по умолча
 }
 function _appAuth() {//Проверка авторизации в приложении
 	_app();
-	_getVkUser(); //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода
+	_viewerAuth(); //получение данных о пользователе, внесение в базу, если нет, обновление даты прихода
 
 	if(!_app('enter'))
 		_appError('Вход в приложение закрыт.');
@@ -571,15 +623,19 @@ function _appAuth() {//Проверка авторизации в приложении
 	if(_app('enter') == 1 && !RULE_APP_ENTER)
 		_appError('Вход в приложение недоступен.');
 
-	if(LOCAL)
+	if(LOCAL) {
+		_debugLoad('Пройдена локальная авторизация приложения');
 		return;
+	}
 
 	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'._app('secret')))
 		_appError('Ошибка авторизации приложения.');
+
+	_debugLoad('Пройдена авторизация приложения');
 }
 function _appError($msg='Приложение не было загружено.') {//вывод сообщения об ошибке приложения и выход
-	define('MIN', DEBUG ? '' : '.min');
-	define('VERSION', 1);
+	define('MIN', defined('DEBUG') ? '' : '.min');
+	define('VERSION', 2);
 	$html =
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
@@ -589,13 +645,6 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 
 				'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
 				'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
-
-				'<script>'.
-					'var VIEWER_ID='.VIEWER_ID.','.
-						'APP_ID='.APP_ID.','.
-						'API_HTML="'.API_HTML.'",'.
-						'VALUES="'.VALUES.'";'.
-				'</script>'.
 
 				_global_script().
 
@@ -670,46 +719,245 @@ function _appType($i=false, $p=1) {//тип организации
 
 
 /* Разделы главного меню */
-function _menuCache($type='main') {//получение списка разделов меню из кеша
+function _menuCache($i='all', $v=0) {//получение списка разделов меню из кеша
 	$key = CACHE_PREFIX.'menu';
 	if(!$menu = xcache_get($key)) {
-		$sql = "SELECT `m`.*
-				FROM
-					`_menu` `m`,
-					`_menu_app` `ma`
-				WHERE `m`.`id`=`ma`.`menu_id`
-				  AND `ma`.`app_id`=".APP_ID."
-				ORDER BY `ma`.`sort`";
+		$sql = "SELECT
+					`m`.*,
+					IFNULL(`ma`.`app_id`,0) `app_id`,
+					IFNULL(`ma`.`def`,0) `def`
+				FROM `_menu` `m`
+				
+					LEFT JOIN `_menu_app` `ma`
+					ON `m`.`id`=`ma`.`menu_id`
+					AND `ma`.`app_id`=".APP_ID."
+
+				ORDER BY `m`.`sort`";
 		$menu = query_arr($sql);
 		xcache_set($key, $menu, 86400);
 	}
 
-	foreach($menu as $id => $r)
-		if($r['type'] != $type || !_viewerMenuAccess($id))
-			unset($menu[$id]);
+	//определение, является ли родитель корневым разделом
+	if($i == 'parent_main') {
+		if(!$v = _num($v))
+			return false;
+		if(!isset($menu[$v]))
+			return false;
+		//это корневой раздел
+		if(!$parent_id = _num($menu[$v]['parent_id']))
+			return false;
+		//это раздел 3-го уровня
+		if($menu[$parent_id]['parent_id'])
+			return false;
+		return true;
+	}
 
-	return $menu;
+	//определение, является ли разделом 3-го уровня
+	if($i == 'l3') {
+		if(!$v = _num($v))
+			return false;
+		if(!isset($menu[$v]))
+			return false;
+		//это корневой раздел
+		if(!$parent_id = _num($menu[$v]['parent_id']))
+			return false;
+		//это раздел 3-го уровня
+		if($menu[$parent_id]['parent_id'])
+			return true;
+		return false;
+	}
+
+	//определение id корневого раздела
+	if($i == 'parent_main_id') {
+		if(!$v = _num($v))
+			return 0;
+		if(!isset($menu[$v]))
+			return 0;
+		//это корневой раздел
+		if(!$parent_id = _num($menu[$v]['parent_id']))
+			return 0;
+		//это раздел 2-го уровня
+		if(!$pp_id = $menu[$parent_id]['parent_id'])
+			return $parent_id;
+
+		return $pp_id;
+	}
+
+	//получение списка меню конкретного раздела
+	if($i == 'parent') {
+		foreach($menu as $id => $r)
+			if(!$r['app_id'] ||
+			   $r['parent_id'] != $v ||
+			   !_viewerMenuAccess($id)
+			) unset($menu[$id]);
+		return $menu;
+	}
+
+	//список корневых разделов
+	if($i == 'main') {
+		$send = array();
+		foreach($menu as $id => $r)
+			if(!$r['parent_id'])
+				$send[$id] = $r;
+		return $send;
+	}
+
+	//список разделов родителя
+	if($i == 'dop') {
+		if(!$v = _num($v))
+			return array();
+		if(!isset($menu[$v]))
+			return false;
+
+		$parent_id = $menu[$v]['parent_id'] ? $menu[$v]['parent_id'] : $v;
+
+		$send = array();
+		foreach($menu as $id => $r)
+			if($parent_id == $r['parent_id'])
+				$send[$id] = $r;
+
+		return $send;
+	}
+
+	//список корневых разделов в формате JS для select
+	if($i == 'main_js') {
+		$send = array();
+		foreach($menu as $id => $r)
+			if(!$r['parent_id'])
+				$send[$id] = $r['name'];
+		return _selJson($send);
+	}
+
+	//список дополнительных (2-й уровень) разделов в формате JS для select
+	if($i == 'dop_js') {
+		$send = array();
+		foreach($menu as $id => $r) {
+			if(!$r['parent_id'])
+				continue;
+			if($menu[$r['parent_id']]['parent_id'])
+				continue;
+			if(!isset($send[$r['parent_id']]))
+				$send[$r['parent_id']] = array();
+			$send[$r['parent_id']][] = $r;
+		}
+		return _selJsonSub($send);
+	}
+
+	//использование раздела в конкретном приложении
+	if($i == 'app_use') {
+		if($menu[$v]['app_id'] == APP_ID)
+			return true;
+		return false;
+	}
+	
+	//возврат id раздела по умолчанию
+	if($i == 'app_def') {
+		foreach($menu as $id => $r)
+			if($r['def'])
+				return $id;
+
+		//установка страницы по умолчанию, если таковая не установлена
+		$sql = "SELECT `menu_id`
+				FROM `_menu_app`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id`
+				LIMIT 1";
+		if($id = query_value($sql)) {
+			$sql = "UPDATE `_menu_app`
+					SET `def`=0
+					WHERE `app_id`=".APP_ID;
+			query($sql);
+
+			$sql = "UPDATE `_menu_app`
+					SET `def`=1
+					WHERE `app_id`=".APP_ID."
+					  AND `menu_id`=".$id;
+			query($sql);
+
+			xcache_unset(CACHE_PREFIX.'menu');
+
+			return $id;
+		}
+		return 0;
+	}
+
+	//разделы приложения для настроек прав пользователей
+	if($i == 'app_setup') {
+		$send = array();
+		foreach($menu as $id => $r) {
+			if(!$r['app_id'])
+				continue;
+			if($r['parent_id'])
+				continue;
+			if($id == 10) //manual
+				continue;
+			if($id == 11) //main
+				continue;
+			$send[$id] = array(
+				'id' => $id,
+				'name' => $r['name'],
+				'sub' => array()
+			);
+		}
+		foreach($menu as $id => $r) {
+			if(!$r['app_id'])
+				continue;
+			if(!$r['parent_id'])
+				continue;
+			if(!isset($send[$r['parent_id']]))
+				continue;
+			if($id == 12) //мои настройки
+				continue;
+			$send[$r['parent_id']]['sub'][] = array(
+				'id' => $id,
+				'name' => $r['name']
+			);
+		}
+		return $send;
+	}
+
+	if($i == 'all')
+		return $menu;
+	
+	if(!_num($v))
+		return _cacheErr('некорректный id раздела', $v);
+
+	if(!isset($menu[$v]))
+		return _cacheErr('неизвестный id раздела', $v);
+
+	if(!isset($menu[$v][$i]))
+		return _cacheErr('неизвестный ключ раздела', $i);
+
+	return $menu[$v][$i];
 }
 function _menu() {//разделы основного меню
-	if(@$_GET['p'] == 'sa') return '';
-	if(@$_GET['p'] == 'manual') return '';
-	if(@$_GET['p'] == 'devstory') return '';
-	if(@$_GET['p'] == 'kupezz') return '';
+	//подсветка выбранного раздела, в том числе, если дочерняя страница
+	if($sel_id = _num($_GET['p']))
+		if($id = _menuCache('parent_main_id', $sel_id))
+			$sel_id = $id;
 
 	$link = '';
-	foreach(_menuCache() as $r) {
-		if($r['p'] == 'manual')
+	foreach(_menuCache() as $id => $r) {
+		if($r['parent_id'])
+			continue;
+		if($r['hidden'])
+			continue;
+		if($r['func_menu'] != '_menu')
+			continue;
+		if(!$r['app_id'])
+			continue;
+		if(!_viewerMenuAccess($r['id']))
 			continue;
 
-		$sel = $r['p'] == $_GET['p'] ? ' sel' : '';
-		$main = $r['p'] == 'main' ? ' main' : '';
-		if($r['p'] == 'report')
+		$sel = $id == $sel_id ? ' sel' : '';
+		$main = $id == 11 ? ' main' : '';
+		if($id == 6)//отчёты
 			$r['name'] .= _remindTodayCount(1);
-		if($r['p'] == 'money')
+		if($id == 3)//деньги
 			$r['name'] .= _invoiceTransferConfirmCount(1);
 		$link .=
-			'<a class="p'.$main.$sel.'" href="'.URL.'&p='.$r['p'].'">'.
-				($r['p'] == 'main' ? '&nbsp;' : $r['name']).
+			'<a class="p'.$main.$sel.'" href="'.URL.'&p='.$id.'">'.
+				($id == 11 ? '&nbsp;' : $r['name']).//main
 			'</a>';
 	}
 
@@ -730,18 +978,26 @@ function _menuMain() {//список ссылок главной страницы
 
 	$send = '';
 	foreach(_menuCache() as $r) {
-		if($r['p'] == 'main')
+		if($r['id'] == 11)//main
+			continue;
+		if($r['parent_id'])
+			continue;
+		if($r['hidden'])
+			continue;
+		if(!$r['app_id'])
+			continue;
+		if(!_viewerMenuAccess($r['id']))
 			continue;
 
-		if($r['p'] == 'client')
+		if($r['id'] == 1) //client
 			$r['about'] .=
-				($poaCount ? '<a href="'.URL.'&p=client&d=poa">Доверенности</a><br />' : '').
-				'<a href="'.URL.'&p=client&d=from">Откуда пришёл клиент</a>';
-		if($r['p'] == 'zayav')
+				(_viewerMenuAccess(43) && $poaCount ? '<a href="'.URL.'&p=43">Доверенности</a><br />' : '').
+				(_viewerMenuAccess(44) ? '<a href="'.URL.'&p=44">Откуда пришёл клиент</a>' : '');
+		if($r['id'] == 2) //zayav
 			$r['about'] .= _menuMainZayav();
 		$send .=
 		'<div class="mu">'.
-			'<a href="'.URL.'&p='.$r['p'].'" class="name">'.$r['name'].'</a>'.
+			'<a href="'.URL.'&p='.$r['id'].'" class="fs14 b">'.$r['name'].'</a>'.
 			'<div class="about">'.$r['about'].'</div>'.
 		'</div>';
 	}
@@ -779,99 +1035,18 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 }
 function _menuAccess($menu_id) {//проверка доступа к разделу меню. Если нет, то перенаправление на список разделов
 	if(!_viewerMenuAccess($menu_id)) {
-		header('Location:'.URL.'&p=main');
+		header('Location:'.URL.'&p=11');
 		exit;
 	}
 };
-
-/* Секция отчётов - report */
-function _report() {
-	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
-	$pages = array(
-		'history' => 'История действий',
-		'remind' => 'Напоминания'._remindTodayCount(1).'<div class="img_add _remind-add"></div>',
-		'salary' => 'З/п сотрудников',
-		'zayav' => 'Заявки',
-		'attach' => 'Файлы',
-		'attach_schet' => 'Приреплённые счета'
-	);
-
-
-	if(!RULE_HISTORY_VIEW) {
-		unset($pages['history']);
-		if($d == 'history')
-			$d = 'remind';
+function _menuParentGo() {//переход на первую доступную дочернюю страницу
+	if($p = _menuCache('parent', $_GET['p'])) {
+		$key = key($p);
+		header('Location:'.URL.'&p='.$p[$key]['id']);
+		exit;
 	}
 
-	if(!RULE_WORKER_SALARY_VIEW) {
-		unset($pages['salary']);
-		if($d == 'salary')
-			$d = 'remind';
-	}
-
-	if(!_zayavExpense('attach_schet')) {
-		unset($pages['attach_schet']);
-		if($d == 'attach_schet')
-			$d = 'remind';
-	}
-
-	$rightLink = '<div class="rightLink">';
-	if($pages)
-		foreach($pages as $p => $name)
-			$rightLink .= '<a href="'.URL.'&p=report&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
-	$rightLink .= '</div>';
-
-	$left = '';
-	$right = '';
-	switch($d) {
-		default:
-		case 'history':
-			if(!RULE_HISTORY_VIEW)
-				break;
-			$data = _history();
-			$left = $data['spisok'];
-			$right .= _history_right();
-			break;
-		case 'remind':
-			$left =
-				_remind_stat().
-				'<div id="_remind-spisok">'._remind('spisok').'</div>';
-			$right .= _remind('right');
-			break;
-		case 'salary':
-			if(!RULE_WORKER_SALARY_VIEW)
-				break;
-			$left = _salary();
-			if(defined('WORKER_OK')) {
-				$filter = salaryFilter($_GET);
-				if(RULE_WORKER_SALARY_VIEW == 1)
-					$filter['id'] = VIEWER_ID;
-				$right =
-					'<div id="salary-filter">'.
-						'<input type="hidden" id="year" value="'.$filter['year'].'" />'.
-						'<div id="month-list">'.salary_month_list($filter).''.
-					'</div>';
-			}
-			break;
-		case 'zayav': return _zayav_report();
-		case 'attach': $left = _attach_list(); break;
-		case 'attach_schet':
-			$left = _zayav_expense_attach_schet();
-			$right =
-					'<div class="findHead">Фильтр</div>'.
-					'<div id="find"></div>'.
-					_check('no_pay', 'Счёт не оплачен', 1).
-					'<div class="mt10">'._check('no_attach', 'Файл не прикреплён').'</div>';
-			break;
-	}
-
-	return
-		'<table class="tabLR" id="report">'.
-			'<tr><td class="left">'.$left.
-				'<td class="right">'.
-					$rightLink.
-					$right.
-		'</table>';
+	return _err('Подразделы отсутствуют.');
 }
 
 
@@ -996,7 +1171,10 @@ function _hashFilter($name) {//формирование элементов фильтра из cookie или адре
 }
 
 function _noauth($msg='Не удалось выполнить вход в приложение.') {
-	return '<div class="noauth"><div>'.$msg.'</div></div>';
+	return
+	'<div class="noauth pad30 bg-gr1">'.
+		'<div class="center grey bg-fff">'.$msg.'</div>'.
+	'</div>';
 }
 function _err($msg='Ошибка') {
 	return '<div class="_err">'.$msg.'</div>';
@@ -1316,6 +1494,31 @@ function _selJson($arr) {
 	}
 	return '['.implode(',',$send).']';
 }
+function _selJsonSub($arr, $uidName='id', $titleName='name') {//ассоциативный массив для _select 2-го уровня
+	/*
+		В виде:
+		{1:[{uid:3,title:'Название 3'},{uid:5,title:'Название 5'}],
+		 2:[{uid:3,title:'Название 3'},{uid:5,title:'Название 5'}]
+		}
+
+	*/
+	$send = array();
+	foreach($arr as $id => $sub) {
+		if(!isset($send[$id]))
+			$send[$id] = array();
+		foreach($sub as $r)
+			$send[$id][] = '{'.
+				'uid:'.$r[$uidName].','.
+				'title:"'.addslashes($r[$titleName]).'"'.
+			'}';
+	}
+
+	$json = array();
+	foreach($send as $id => $r)
+		$json[] = $id.':['.implode(',', $r).']';
+
+	return '{'.implode(',',$json).'}';
+}
 function _selArray($arr) {//список для _select при отправке через ajax
 	$send = array();
 	foreach($arr as $uid => $title) {
@@ -1601,24 +1804,23 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	$prefix = $app_id ? 'CACHE_'.$app_id.'_' : CACHE_PREFIX;
 	$app_id = $app_id ? $app_id : APP_ID;
 
-	xcache_unset($prefix.'app');  //данные приложения
-	xcache_unset($prefix.'setup_global');  //список разделов меню
-	xcache_unset($prefix.'menu');  //список разделов меню
-	xcache_unset($prefix.'manual_part');//разделы мануала
+	xcache_unset($prefix.'app');            //данные приложения
+	xcache_unset($prefix.'setup_global');   //настройки приложения
+	xcache_unset($prefix.'setup_color');    //цвета
+	xcache_unset($prefix.'menu');           //список разделов меню
+	xcache_unset($prefix.'manual_part');    //разделы мануала
 	xcache_unset($prefix.'manual_part_sub');//подразделы мануала
-	xcache_unset($prefix.'setup_color');//цвета
-	xcache_unset($prefix.'viewer_rule_default_admin');//настройки прав по умолчанию для руководителя
-	xcache_unset($prefix.'viewer_rule_default_worker');//настройки прав по умолчанию для сотрудников
-	xcache_unset($prefix.'balans_action');//действие при изменении баланса
+	xcache_unset($prefix.'rule_default');   //константы прав по умолчанию
+	xcache_unset($prefix.'balans_action');  //действие при изменении баланса
 	xcache_unset($prefix.'client_category');//категории клиентов
-	xcache_unset($prefix.'service');//виды деятельности
-	xcache_unset($prefix.'invoice');//расчётные счета
-	xcache_unset($prefix.'expense');//категории расходов организации
-	xcache_unset($prefix.'expense_sub');//подкатегории расходов организации
-	xcache_unset($prefix.'client_from');//источники, откуда пришёл клиент
-	xcache_unset($prefix.'zayav_expense');//категории расходов заявки
-	xcache_unset($prefix.'zayav_status');//статусы заявки
-	xcache_unset($prefix.'tovar_name'); //наименования товаров
+	xcache_unset($prefix.'service');        //виды деятельности
+	xcache_unset($prefix.'invoice');        //расчётные счета
+	xcache_unset($prefix.'expense');        //категории расходов организации
+	xcache_unset($prefix.'expense_sub');    //подкатегории расходов организации
+	xcache_unset($prefix.'client_from');    //источники, откуда пришёл клиент
+	xcache_unset($prefix.'zayav_expense');  //категории расходов заявки
+	xcache_unset($prefix.'zayav_status');   //статусы заявки
+	xcache_unset($prefix.'tovar_name');     //наименования товаров
 	xcache_unset($prefix.'tovar_vendor');
 	xcache_unset($prefix.'tovar_category');
 	xcache_unset($prefix.'tovar_feature_name');
@@ -1640,7 +1842,7 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	//очистка кеша текущего пользователя
 	xcache_unset($prefix.'viewer_'.VIEWER_ID);
 	xcache_unset($prefix.'viewer_rule_'.VIEWER_ID);
-	xcache_unset($prefix.'viewer_menu_access_'.VIEWER_ID);
+	xcache_unset($prefix.'viewer_menu_'.VIEWER_ID);
 
 	//очистка кеша сотрудников приложения
 	$sql = "SELECT `viewer_id`
@@ -1651,7 +1853,7 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	while($r = mysql_fetch_assoc($q)) {
 		xcache_unset($prefix.'viewer_'.$r['viewer_id']);
 		xcache_unset($prefix.'viewer_rule_'.$r['viewer_id']);
-		xcache_unset($prefix.'viewer_menu_access_'.$r['viewer_id']);
+		xcache_unset($prefix.'viewer_menu_'.$r['viewer_id']);
 		xcache_unset($prefix.'pin_enter_count'.$r['viewer_id']);
 	}
 }
@@ -2196,6 +2398,10 @@ function _templateSchetPay($arr) {//подмена переменных счёта на оплату
 			continue;
 		}
 		if($r['v'] == '{SCHET_DATE_CREATE}') {
+			$arr[$id]['text'] = FullData($schet[$r['col_name']]);
+			continue;
+		}
+		if($r['v'] == '{SCHET_ACT_DATE}') {
 			$arr[$id]['text'] = FullData($schet[$r['col_name']]);
 			continue;
 		}

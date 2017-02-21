@@ -1414,7 +1414,7 @@ var _accrualAdd = function(o) {
 					'<div class="_info">' +
 						'Все ранее выданные з/п в этом месяце, которые не были привязаны, попадут в <b>текущий документ</b> и будут отмечены как <b>авансы</b>.' +
 					'</div>' +
-					'<a href="' + URL + '&p=setup&d=salary_list" id="list-set">Настроить ' + LIST_VYDACI + '</a>' +
+					'<a href="' + URL + '&p=22" id="list-set">Настроить ' + LIST_VYDACI + '</a>' +
 				'</div>',
 			dialog = _dialog({
 				width:330,
@@ -1580,6 +1580,7 @@ var _accrualAdd = function(o) {
 		function loaded(res) {
 			dialog.content.html(res.html);
 			$('#date-create')._calendar({lost:1});
+			$('#act-date')._calendar({lost:1});
 
 			if(!res.client_id)
 				$('#client_id').clientSel({
@@ -1642,6 +1643,7 @@ var _accrualAdd = function(o) {
 				org_id:$('#org_id').val(),
 				bank_id:$('#bank_id').val(),
 				date_create:$('#date-create').val(),
+				act_date:$('#act-date').val(),
 				client_id:$('#client_id').val(),
 				zayav_id:$('#zayav_id').val(),
 				content:$('#schet-pay-content').val(),
@@ -2451,7 +2453,7 @@ $(document)
 
 	.on('click', '.go-report-salary', function() {//переход на страницу зп сотрудника и выделение записи, с которой был сделан переход
 		var v = $(this).attr('val').split(':');
-		location.href = URL + '&p=report&d=salary&id=' + v[0] + '&year=' + v[1] + '&mon=' + v[2] + '&acc_id=' + v[3];
+		location.href = URL + '&p=65&id=' + v[0] + '&year=' + v[1] + '&mon=' + v[2] + '&acc_id=' + v[3];
 	})
 	.on('mouseenter', '.salary .show', function() {
 		$(this).removeClass('show');
@@ -2512,7 +2514,7 @@ $(document)
 	})
 	.on('click', '#salary-worker #spisok-list .img_xls', function() {//открытие листа выдачи з/п
 		var v = $(this).attr('val');
-		location.href = URL + '&p=print&d=salary_list&id=' + v;
+		location.href = URL + '&p=75&d=salary_list&id=' + v;
 	})
 	.on('click', '.salary-list-del', function() {
 		var t = $(this);

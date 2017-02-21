@@ -110,7 +110,8 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'remind_spisok':
-		$send['spisok'] = utf8(_remind('spisok', $_POST));
+		$data = _remind_spisok($_POST);
+		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 }

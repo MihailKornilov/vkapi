@@ -116,7 +116,7 @@ var devStoryPartEdit = function(o) {//создание, редактирование основного раздела
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=devstory&d=task&id=' + res.task_id;
+					location.href = URL + '&p=55&id=' + res.task_id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');

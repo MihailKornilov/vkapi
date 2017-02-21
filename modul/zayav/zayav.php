@@ -1,10 +1,5 @@
 <?php
 function _zayav() {
-	if(function_exists('zayavCase'))
-		return zayavCase();
-	if(@$_GET['d'] == 'info')
-		return _zayavInfo();
-	
 	//вывести список заявок, в котором использовался конкретный товар (переход со страницы информации о товаре)
 	if($tovar_id = _num(@$_GET['from_tovar_id'])) {
 		foreach($_COOKIE as $key => $val)
@@ -671,20 +666,20 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 				'zayav_name' => $r['name'],
 				'zayav_n' => $r['nomer'],
 				'zayav_link' =>
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link">'.
+					'<a href="'.URL.'&p=45&id='.$r['id'].'" class="zayav_link">'.
 						'<span'.($r['deleted'] ? ' class="deleted"' : '').'>№'.$r['nomer'].'</span>'.
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
 				'zayav_link_name' =>
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">'.
+					'<a href="'.URL.'&p=45&id='.$r['id'].'">'.
 						'<b'.($r['deleted'] ? ' class="deleted"' : '').'>'.$r['name'].'</b>'.
 					'</a>',
 				'zayav_nomer_name' =>
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'"'.($r['deleted'] ? ' class="deleted"' : '').'>'.
+					'<a href="'.URL.'&p=45&id='.$r['id'].'"'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 						'№<b>'.$r['nomer'].'</b>: '.$r['name'].
 					'</a>',
 				'zayav_color' => //подсветка заявки на основании статуса
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link color"'._zayavStatus($r['status_id'], 'bg').'>'.
+					'<a href="'.URL.'&p=45&id='.$r['id'].'" class="zayav_link color"'._zayavStatus($r['status_id'], 'bg').'>'.
 						'№'.$r['nomer'].
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
@@ -748,7 +743,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
 			$link = $r['count'] == 1 ? ' link' : '';
-			$href = $r['count'] == 1 ? ' href="'.URL.'&p=zayav&d=info&id='.$r['id'].'"' : '';
+			$href = $r['count'] == 1 ? ' href="'.URL.'&p=45&id='.$r['id'].'"' : '';
 			$spisok[$r['client_id']]['zayav'] .=
 				'<a'.$href._zayavStatus($id, 'bg').' class="z-count'.$link._tooltip(_zayavStatus($id), -8, 'l').
 					$r['count'].
@@ -1598,7 +1593,7 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 			  '</div>'
 
 			: ''),
-		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=print&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('Номер не определён', 5).
+		54 => '<a id="obWordPrint" onclick="location.href=\''.URL.'&p=75&d=ob_word&gn=\'+ZAYAV.gn_nomer_id+\'&service_id=\'+ZAYAV.service_id" class="'._tooltip('Номер не определён', 5).
 				'<div class="img_word"></div>'.
 				'открыть в формате Word'.
 			  '</a>',
@@ -1812,9 +1807,9 @@ function _zayavQuery($zayav_id, $withDel=0) {
 	if(!$z = query_assoc($sql))
 		return array();
 
-	$z['link'] = '<a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">'.$z['name'].'</a>';
+	$z['link'] = '<a href="'.URL.'&p=45&id='.$z['id'].'">'.$z['name'].'</a>';
 	$z['go'] = '<a onclick="_zayavGo(\''.$z['id'].'\')">№'.$z['nomer'].': '.$z['name'].'</a>';
-	$z['nomer_link'] = '<a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">№'.$z['nomer'].': '.$z['name'].'</a>';
+	$z['nomer_link'] = '<a href="'.URL.'&p=45&id='.$z['id'].'">№'.$z['nomer'].': '.$z['name'].'</a>';
 
 	return $z;
 }
@@ -2705,7 +2700,7 @@ function _zayavInfoTovar($z) {//информация о товаре
 			'<div id="tovar-name">'.
 				_tovarName($tovar['name_id']).
 				'<br />'.
-				'<a href="'.URL.'&p=tovar&d=info&id='.$tovar['id'].'">'._tovarVendor($tovar['vendor_id']).$tovar['name'].'</a>'.
+				'<a href="'.URL.'&p=46&id='.$tovar['id'].'">'._tovarVendor($tovar['vendor_id']).$tovar['name'].'</a>'.
 			'</div>'.
 			'<table id="info">'.
 	($z['imei'] ? '<tr><th>imei:	<td>'.$z['imei'] : '').
@@ -3452,7 +3447,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			'<tr class="l'.$inserted.$list.'">'.
 				'<td class="name">'.$ze['name'].
 				'<td'.(!$r['tovar_avai_id'] ? ' colspan="2"' : '').'>'.$dop.
-					($ze['dop'] == 4 && $ze['param'] ? '<a class="grey fr" href="'.URL.'&p=report&d=attach_schet">к списку счетов</a>' : '').
+					($ze['dop'] == 4 && $ze['param'] ? '<a class="grey fr" href="'.URL.'&p=66">к списку счетов</a>' : '').
 		($r['tovar_avai_id'] ?
 				'<td class="count"><b>'._ms($r['tovar_count']).'</b> '.$r['tovar_measure_name']
 		: '').
@@ -3515,6 +3510,13 @@ function _zayav_expense_attach_schet() {
 	'<div id="ze-attach-schet" class="mar8">'.
 		$data['spisok'].
 	'</div>';
+}
+function _zayav_expense_attach_schet_right() {
+	return
+	'<div class="findHead">Фильтр</div>'.
+	'<div id="find"></div>'.
+	_check('no_pay', 'Счёт не оплачен', 1).
+	'<div class="mt10">'._check('no_attach', 'Файл не прикреплён').'</div>';
 }
 function _zayav_expense_attach_schetFilter($v) {
 	$filter = array(
@@ -3677,7 +3679,7 @@ function _serviceMenu($arr) {//меню для списка заявок
 	$link = '';
 	foreach($arr as $r) {
 		$sel = $r['id'] == $id ? ' sel' : '';
-		$link .= '<a href="'.URL.'&p=zayav&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
+		$link .= '<a href="'.URL.'&p=2&type_id='.$r['id'].'" class="link'.$sel.'">'.$r['name'].'</a>';
 	}
 
 	return '<div id="dopLinks">'.$link.'</div>';
@@ -3969,7 +3971,7 @@ function _zayav_report_spisok($v=array()) {
 		$send .= '<tr class="unit">'.
 			'<td'._zayavStatus($r['status_id'], 'bg').' class="dtime'._tooltip(_zayavStatus($r['status_id']), 10, 'l').FullData($r['dtime_add'], 1, 1);
 		if(isset($colsAss[2]))
-			$send .= '<td class="nomer r"><a href="'.URL.'&p=zayav&d=info&id='.$id.'">#'.$r['nomer'].'</a>';
+			$send .= '<td class="nomer r"><a href="'.URL.'&p=45&id='.$id.'">#'.$r['nomer'].'</a>';
 		if(isset($colsAss[3]))
 			$send .= '<td class="name">'.$r['name'];
 		if(isset($colsAss[4]))

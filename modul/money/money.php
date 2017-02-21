@@ -1,53 +1,4 @@
 <?php
-function _money() {
-	$d = empty($_GET['d']) ? 'income' : $_GET['d'];
-	switch($d) {
-		default:
-			$d = 'income';
-			switch(@$_GET['d1']) {
-				case 'income':
-				default:
-					switch(@RULE_MY_PAY_SHOW_PERIOD) {
-						case 1: $period = TODAY; break;             //1 - день
-						default: $period = _period(); break;        //2 - неделя
-						case 3: $period = substr(TODAY, 0,7); break;//3 - месяц
-					}
-					$content = income_day($period);
-					break;
-				case 'all': $left = income_all(); break;
-				case 'year':
-					if(empty($_GET['year']) || !preg_match(REGEXP_YEAR, $_GET['year'])) {
-						$left = 'Указан некорректный год.';
-						break;
-					}
-					$left = income_year(intval($_GET['year']));
-					break;
-				case 'month':
-					if(empty($_GET['mon']) || !preg_match(REGEXP_YEARMONTH, $_GET['mon'])) {
-						$left = 'Указан некорректный месяц.';
-						break;
-					}
-					$left = income_month($_GET['mon']);
-					break;
-			}
-			break;
-		case 'expense': $content = expense(); break;
-		case 'refund': $content = _refund(); break;
-		case 'schet_pay': $content = _schetPay(_hashFilter('schet_pay')); break;
-		case 'invoice': $content = invoice(); break;
-	}
-
-	return
-		'<div id="dopLinks">'.
-			'<a class="link'.($d == 'income' ? ' sel' : '').'" href="'.URL.'&p=money&d=income">Платежи</a>'.
-			'<a class="link'.($d == 'expense' ? ' sel' : '').'" href="'.URL.'&p=money&d=expense">Расходы</a>'.
-			'<a class="link'.($d == 'refund' ? ' sel' : '').'" href="'.URL.'&p=money&d=refund">Возвраты</a>'.
-			(_app('schet_pay') ? '<a class="link'.($d == 'schet_pay' ? ' sel' : '').'" href="'.URL.'&p=money&d=schet_pay">Счета на оплату</a>' : '').
-			'<a class="link'.($d == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=money&d=invoice">Расчётные счета'._invoiceTransferConfirmCount(1).'</a>'.
-		'</div>'.
-		$content;
-}
-
 function _money_script() {//скрипты и стили
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/money/money'.MIN.'.css?'.VERSION.'" />'.
@@ -410,10 +361,13 @@ function income_path($data) {//путь с датой
 			($d[0] != YEAR ? ' '.$d[0] : '');
 	}
 	return
-		'<a href="'.URL.'&p=report&d=money&d1=income&d2=all">Год</a> » '.(YEAR ? '' : '<b>За всё время</b>').
-		(MON ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.YEAR.'">'.YEAR.'</a> » ' : '<b>'.YEAR.'</b>').
-		(DAY ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
-		(DAY ? '<b>'.intval(DAY).$to.'</b>' : '').
+//		'<a href="'.URL.'&p=??">Год</a> » '.(YEAR ? '' : '<b>За всё время</b>').
+		'Год'.
+//		(MON ? '<a href="'.URL.'&p=??&year='.YEAR.'">'.YEAR.'</a> » ' : '<b>'.YEAR.'</b>').
+		' » '.YEAR.
+		(MON ? ' » '._monthDef(MON, 1) : '').
+//		(DAY ? '<a href="'.URL.'&p=??&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
+		(DAY ? ' » <b>'.intval(DAY).$to.'</b>' : '').
 		'<button class="vk fr" onclick="_incomeAdd()">Внести платёж</button>';
 }
 function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёту
@@ -444,12 +398,18 @@ function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёт
 
 	return $send;
 }
-function income_day($day) {
-	$data = income_spisok(array('period'=>$day));
+function income_day() {
+	switch(@RULE_MY_PAY_SHOW_PERIOD) {
+		case 1: $period = TODAY; break;             //1 - день
+		default: $period = _period(); break;        //2 - неделя
+		case 3: $period = substr(TODAY, 0,7); break;//3 - месяц
+	}
+
+	$data = income_spisok(array('period'=>$period));
 	return
 		'<div id="money-income">'.
-			income_top($day).
-			'<div id="path">'.income_path($day).'</div>'.
+			income_top($period).
+			'<div id="path">'.income_path($period).'</div>'.
 			'<div id="spisok">'.$data['spisok'].'</div>'.
 		'</div>';
 }
@@ -1048,7 +1008,7 @@ function income_all() {//Суммы платежей по годам
 	$spisok = array();
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['year']] = '<tr>'.
-			'<td><a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.$r['year'].'">'.$r['year'].'</a>'.
+			'<td><a href="'.URL.'&p=??&year='.$r['year'].'">'.$r['year'].'</a>'.
 			'<td class="r"><b>'._sumSpace($r['sum']).'</b>'.
 			'<td class="r">'.(isset($expense[$r['year']]) ? _sumSpace($expense[$r['year']]) : '').
 			'<td class="r">'.(isset($expense[$r['year']]) ? _sumSpace($r['sum'] - $expense[$r['year']]) : '');
@@ -1099,7 +1059,7 @@ function income_year($year) {//Суммы платежей по месяцам
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[intval($r['mon'])] =
-			'<tr><td class="r"><a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.$year.'-'.$r['mon'].'">'._monthDef($r['mon'], 1).'</a>'.
+			'<tr><td class="r"><a href="'.URL.'&p=??&mon='.$year.'-'.$r['mon'].'">'._monthDef($r['mon'], 1).'</a>'.
 			'<td class="r"><b>'._sumSpace($r['sum']).'</b>'.
 			'<td class="r">'.(isset($expense[$r['mon']]) ? _sumSpace($expense[$r['mon']]) : '').
 			'<td class="r">'.(isset($expense[$r['mon']]) ? _sumSpace($r['sum'] - $expense[$r['mon']]) : '');
@@ -1137,7 +1097,7 @@ function income_month($mon) {
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[intval($r['day'])] =
-			'<tr><td class="r"><a href="'.URL.'&p=report&d=money&d1=income&day='.$mon.'-'.$r['day'].'">'.intval($r['day']).'.'.MON.'.'.YEAR.'</a>'.
+			'<tr><td class="r"><a href="'.URL.'&p=??&day='.$mon.'-'.$r['day'].'">'.intval($r['day']).'.'.MON.'.'.YEAR.'</a>'.
 			'<td class="r"><b>'._sumSpace($r['sum']).'</b>';
 
 	return
@@ -2344,7 +2304,8 @@ function _schetPayFilter($v) {
 		}
 	return $filter;
 }
-function _schetPay($v) {//страница счетов на оплату
+function _schetPay() {//страница счетов на оплату
+	$v = _hashFilter('schet_pay');
 	$data = _schetPay_spisok($v);
 	$v = $data['filter'];
 	$hist = _history(array('category_id'=>7,'limit'=>20));
@@ -2359,7 +2320,7 @@ function _schetPay($v) {//страница счетов на оплату
 					'<td id="td-group"><input type="hidden" id="group_id" value="'.$v['group_id'].'" />'.
 					'<td class="r">'.
 						'<button class="vk" onclick="schetPayEdit()">Создать счёт на оплату</button>'.
-						'<a href="'.URL.'&p=setup&d=schet_pay" class="icon icon-setup-big mt5 ml10 mr5'._tooltip('Настроить счета на оплату', -154, 'r').'</a>'.
+						'<a href="'.URL.'&p=28" class="icon icon-setup-big mt5 ml10 mr5'._tooltip('Настроить счета на оплату', -154, 'r').'</a>'.
 			'</table>'.
 
    (DEBUG ? '<div class="mt10">'.

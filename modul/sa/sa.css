@@ -1,55 +1,19 @@
-.sa-tab{border-spacing:10px}
-.sa-tab .label{text-align:right}
-.sa-tab #name{width:250px}
-.sa-tab textarea{width:250px}
-.sa-tab ._info{white-space:pre-line}
-
 #sa-index{padding:15px 0 100px 20px}
 #sa-index h1{font-weight:bold}
 #sa-index a{display:block;margin-left:20px}
 
 
 
-/* –азделы меню */
-#sa-menu #spisok{margin:10px 20px 40px}
-#sa-menu #setup-spisok{margin:10px 20px 30px}
-#sa-menu ._spisok{margin-bottom:1px}
-#sa-menu ._spisok.nouse{background:#f5f5f5}
-#sa-menu .edited{background:#ffb}
-#sa-menu dl .name{cursor:move}
-#sa-menu .about{color:#888;font-size:10px}
-#sa-menu .p{width:110px}
-#sa-menu .access{width:50px;text-align:center}
-#sa-menu .show{width:50px;text-align:center}
-
 
 /* истори€ действий */
-#sa-history .headName span{float:right;margin:0 5px}
 #sa-history textarea{border:0}
 
-#sa-history-cat #spisok{margin:20px}
-#sa-history-cat ._spisok{margin-top:1px}
-#sa-history-cat .name{width:300px;cursor:move}
-#sa-history-cat .about{color:#777;margin-left:10px}
-#sa-history-cat .js{width:40px;text-align:center}
-#sa-history-cat .set{width:40px;text-align:center}
 
 
 
 /* права сотрудников */
-#sa-rule-tab #key{width:250px;font-weight:bold}
-#sa-rule-tab textarea{width:250px}
-#sa-rule #spisok{margin:20px}
-#sa-rule .key{width:320px}
-#sa-rule .about{color:#777;margin-left:10px;white-space:pre-line}
-#sa-rule .admin{text-align:center}
-#sa-rule .worker{text-align:center}
-#sa-rule input{
-	width:30px;
-	text-align:center;
-	font-weight:bold;
-	color:#090;
-}
+#sa-rule .key{color:#932EDA}
+#sa-rule .about{white-space:pre-line}
 #sa-rule ._busy input{visibility:hidden}
 
 

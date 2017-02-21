@@ -369,7 +369,7 @@ var _zayavSpisok = function(v, id) {
 					dialog.close();
 					_msg();
 					_scroll('set', 'u' + res.id);
-					location.href = URL + '&p=zayav&d=info&id=' + res.id;
+					location.href = URL + '&p=45&id=' + res.id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -713,7 +713,7 @@ var _zayavSpisok = function(v, id) {
 	},
 	
 	_zayavGo = function(zayav_id) {//переход на заявку без href
-		location.href = URL + '&p=zayav&d=info&id=' + zayav_id;
+		location.href = URL + '&p=45&id=' + zayav_id;
 	},
 
 	_zayavOnpayPublic = function() {
@@ -1274,7 +1274,7 @@ var _zayavSpisok = function(v, id) {
 			'height=500,' +
 			'left=20,' +
 			'top=20';
-		window.open(URL + '&p=print&d=kvit_html&id=' + id, 'kvit', params);
+		window.open(URL + '&p=75&d=kvit_html&id=' + id, 'kvit', params);
 	},
 
 	cartridgeNew = function(id, callback) {
@@ -2102,7 +2102,7 @@ $(document)
 	.on('click', '._zayav-unit', function() {
 		var id = $(this).attr('val');
 		_scroll('set', 'u' + id);
-		location.href = URL + '&p=zayav&d=info&id=' + id;
+		location.href = URL + '&p=45&id=' + id;
 	})
 	.on('mouseenter', '._zayav-unit', function() {
 		var t = $(this),
@@ -2465,9 +2465,9 @@ $(document)
 				action.push(function() {
 					if(APP_ID == 3798718) {
 						if(ZI.pole[23])
-							location.href = URL + '&p=print&d=kvit_cartridge&id=' + ZI.id;
+							location.href = URL + '&p=75&d=kvit_cartridge&id=' + ZI.id;
 						else
-							location.href = URL + '&p=print&d=kvit_comtex&id=' + ZI.id;
+							location.href = URL + '&p=75&d=kvit_comtex&id=' + ZI.id;
 					} else
 						_zayavKvit();
 				});
@@ -2637,12 +2637,12 @@ $(document)
 				_zayavReportSpisok(v, id);
 			};
 			$('.zayav-erm').click(function() {
-				location.href = URL + '&p=print&d=erm&mon=' + $(this).attr('val');
+				location.href = URL + '&p=75&d=erm&mon=' + $(this).attr('val');
 			});
 		}
 		if($('#ze-attach-schet').length) {
 			$('#find')._search({
-				width:138,
+				width:178,
 				focus:1,
 				txt:'Быстрый поиск...',
 				enter:1,

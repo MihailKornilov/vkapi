@@ -124,6 +124,8 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$insert_id;
 		$r = query_assoc($sql);
 
+		$r['image_small'] = '';
+
 		$send['ob'] = utf8(kupezz_ob_unit($r));
 		$send['my'] = utf8(kupezz_my_unit($r));
 		jsonSuccess($send);
@@ -207,6 +209,8 @@ switch(@$_POST['op']) {
 				FROM `kupezz_ob`
 				WHERE `id`=".$id;
 		$r = query_assoc($sql);
+
+		$r['image_small'] = '';
 
 		$send['ob'] = utf8(kupezz_ob_unit($r));
 		$send['my'] = utf8(kupezz_my_unit($r));

@@ -1,12 +1,9 @@
 <?php
-function _remind($i='spisok', $v=array()) {
-	switch($i) {
-		case 'spisok':
-			$data = _remind_spisok($v);
-			return $data['spisok'];
-		case 'right': return _remind_right();
-	}
-	return '';
+function _remind($v=array()) {
+	$data = _remind_spisok($v);
+	return
+	_remind_stat().
+	'<div id="_remind-spisok" class="mar8">'.$data['spisok'].'</div>';
 }
 function _remind_script() {//скрипты и стили
 	return
@@ -422,7 +419,7 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 	return
 		$send.
 		'<div class="headBlue but">'.
-			'<a href="'.URL.'&p=report&d=remind"><b>Напоминания</b></a>&nbsp;'.
+			'<a href="'.URL.'&p=61"><b>Напоминания</b></a>&nbsp;'.
 			'<button class="vk small _remind-add">Новое напоминание</button>'.
 			($data['hidden'] ? '<a id="_remind-show-all">Показать все: '.$data['hidden'].'</a>' : '').
 		'</div>'.

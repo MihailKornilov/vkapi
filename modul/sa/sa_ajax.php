@@ -3,24 +3,38 @@
 if(SA)
 switch(@$_POST['op']) {
 	case 'sa_menu_add':
-		$type = _txt($_POST['type']);
+		$parent_id = _num($_POST['parent_id']);
+		if($dop_id = _num($_POST['dop_id']))
+			$parent_id = $dop_id;
 		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
-		$p = _txt($_POST['p']);
+		$hidden = _bool($_POST['hidden']);
+		$norule = _bool($_POST['norule']);
+		$func_menu = _txt($_POST['func_menu']);
+		$func_page = _txt($_POST['func_page']);
+		$dop_menu_type = _num($_POST['dop_menu_type']);
 
 		if(!$name)
-			jsonError();
+			jsonError('Не указано название');
 
 		$sql = "INSERT INTO `_menu` (
-					`type`,
+					`parent_id`,
 					`name`,
 					`about`,
-					`p`
+					`hidden`,
+					`norule`,
+					`func_menu`,
+					`func_page`,
+					`dop_menu_type`
 				) VALUES (
-					'".addslashes($type)."',
+					".$parent_id.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
-					'".strtolower(addslashes($p))."'
+					".$hidden.",
+					".$norule.",
+					'".addslashes($func_menu)."',
+					'".addslashes($func_page)."',
+					".$dop_menu_type."
 				)";
 		query($sql);
 
@@ -30,19 +44,25 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'menu');
 
 		$send['main'] = utf8(sa_menu_spisok($id));
-		$send['setup'] = utf8(sa_menu_setup_spisok($id));
 		jsonSuccess($send);
 		break;
 	case 'sa_menu_edit'://редактирование раздела главного меню
 		if(!$id = _num($_POST['id']))
-			jsonError();
+			jsonError('Некорректный идентификатор');
 
+		$parent_id = _num($_POST['parent_id']);
+		if($dop_id = _num($_POST['dop_id']))
+			$parent_id = $dop_id;
 		$name = win1251(trim($_POST['name']));
 		$about = _txt($_POST['about']);
-		$p = _txt($_POST['p']);
+		$hidden = _bool($_POST['hidden']);
+		$norule = _bool($_POST['norule']);
+		$func_menu = _txt($_POST['func_menu']);
+		$func_page = _txt($_POST['func_page']);
+		$dop_menu_type = _num($_POST['dop_menu_type']);
 
-		if(!$name || !$p)
-			jsonError();
+		if(!$name)
+			jsonError('Не указано название');
 
 		$sql = "SELECT *
 				FROM `_menu`
@@ -51,16 +71,64 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `_menu`
-				SET `name`='".addslashes($name)."',
+				SET `parent_id`=".$parent_id.",
+					`name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
-					`p`='".addslashes($p)."'
+					`hidden`=".$hidden.",
+					`norule`=".$norule.",
+					`func_menu`='".addslashes($func_menu)."',
+					`func_page`='".addslashes($func_page)."',
+					`dop_menu_type`=".$dop_menu_type."
 				WHERE `id`=".$id;
 		query($sql);
+
+		//установка раздела по умолчанию
+		if(_num($_POST['def'])) {
+			$sql = "SELECT COUNT(*)
+					FROM `_menu_app`
+					WHERE `app_id`=".APP_ID."
+					  AND `menu_id`=".$id."
+					  AND !`def`";
+			if(query_value($sql)) {
+				$sql = "UPDATE `_menu_app`
+						SET `def`=0
+						WHERE `app_id`=".APP_ID;
+				query($sql);
+
+				$sql = "UPDATE `_menu_app`
+						SET `def`=1
+						WHERE `app_id`=".APP_ID."
+						  AND `menu_id`=".$id;
+				query($sql);
+			}
+		}
+
 
 		xcache_unset(CACHE_PREFIX.'menu');
 
 		$send['main'] = utf8(sa_menu_spisok($id));
-		$send['setup'] = utf8(sa_menu_setup_spisok($id));
+		jsonSuccess($send);
+		break;
+	case 'sa_menu_sort':
+		$parent_id = _num($_POST['parent_id']);
+
+		$html =
+			'<div class="fs15 b">'.
+				($parent_id ? _menuCache('name', $parent_id) : '---').
+			'</div>'.
+			'<dl class="_sort mt10" val="_menu">';
+
+		foreach(_menuCache($parent_id ? 'dop' : 'main', $parent_id) as $r) {
+			$html .=
+				'<dd val="'.$r['id'].'">'.
+					'<table class="_spisokTab mt1 curM">'.
+						'<tr><td class="w15 r grey">'.$r['id'].
+							'<td>'.$r['name'].
+					'</table>';
+		}
+		$html .= '</dl>';
+
+		$send['html'] = utf8($html);
 		jsonSuccess($send);
 		break;
 	case 'sa_menu_show':
@@ -82,7 +150,6 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'menu');
 
 		$send['main'] = utf8(sa_menu_spisok($id));
-		$send['setup'] = utf8(sa_menu_setup_spisok($id));
 		jsonSuccess($send);
 		break;
 	case 'sa_menu_access'://доступ для пользователей по умолчанию
@@ -250,42 +317,13 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'sa_rule_add':
-		$key = _txt($_POST['key']);
+	case 'sa_rule_edit'://внесение/редактирование константы прав сотрудников
+		$id = _num($_POST['id']);
+		if(!$key = _txt($_POST['key']))
+			jsonError('Не указана константа');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано имя');
 		$about = _txt($_POST['about']);
-
-		if(!$key)
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `_vkuser_rule_default` WHERE `key`='".$key."'";
-		if(query_value($sql))
-			jsonError('Константа уже внесена в базу');
-
-		$sql = "INSERT INTO `_vkuser_rule_default` (
-					`key`,
-					`about`
-				) VALUES (
-					'".strtoupper(addslashes($key))."',
-					'".addslashes($about)."'
-				)";
-		query($sql);
-
-
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');
-
-		$send['html'] = utf8(sa_rule_spisok());
-		jsonSuccess($send);
-		break;
-	case 'sa_rule_edit':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$key = _txt($_POST['key']);
-		$about = _txt($_POST['about']);
-
-		if(!$key)
-			jsonError();
 
 		$sql = "SELECT COUNT(`id`)
 				FROM `_vkuser_rule_default`
@@ -294,17 +332,43 @@ switch(@$_POST['op']) {
 		if(query_value($sql))
 			jsonError('Константа уже внесена в базу');
 
+		if(!$id) {
+			$sql = "INSERT INTO `_vkuser_rule_default` VALUES ()";
+			query($sql);
+			$id = query_insert_id('_vkuser_rule_default');
+		}
+
 		$sql = "UPDATE `_vkuser_rule_default`
 		        SET `key`='".strtoupper(addslashes($key))."',
+		            `name`='".addslashes($name)."',
 		            `about`='".addslashes($about)."'
 		        WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');
+		xcache_unset(CACHE_PREFIX.'rule_default');
 
 		$send['html'] = utf8(sa_rule_spisok());
 		jsonSuccess($send);
+		break;
+	case 'sa_rule_del'://удаление константы прав сотрудников
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id');
+
+		$sql = "SELECT *
+				FROM `_vkuser_rule_default`
+				WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Константы не существует');
+
+		$sql = "DELETE FROM `_vkuser_rule_default` WHERE `id`=".$id;
+		query($sql);
+
+		$sql = "DELETE FROM `_vkuser_rule` WHERE `key`='".$r['key']."'";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'rule_default');
+
+		jsonSuccess();
 		break;
 	case 'sa_rule_flag'://изменение параметра по умолчанию права сотрудника
 		if(!$id = _num($_POST['id']))
@@ -343,8 +407,7 @@ switch(@$_POST['op']) {
 			}
 		}
 
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_admin');
-		xcache_unset(CACHE_PREFIX.'viewer_rule_default_worker');
+		xcache_unset(CACHE_PREFIX.'rule_default');
 
 		$send['v'] = $v;
 		$send['html'] = utf8(sa_rule_spisok());
@@ -1353,7 +1416,7 @@ switch(@$_POST['op']) {
 
 		$spisok = '';
 		foreach($client as $r)
-			$spisok .= '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'"><b>'.$r['id'].'</b></a> '.
+			$spisok .= '<a href="'.URL.'&p=42&id='.$r['id'].'"><b>'.$r['id'].'</b></a> '.
 					   '<a class="client-balans-repair" val="'.$r['id'].'">исправить</a>'.
 					   '<br />';
 
@@ -1485,7 +1548,7 @@ switch(@$_POST['op']) {
 
 		$spisok = '';
 		foreach($zayav as $r)
-			$spisok .= '<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'">Заявка <b>#'.$r['id'].'</b></a> '.
+			$spisok .= '<a href="'.URL.'&p=45&id='.$r['id'].'">Заявка <b>#'.$r['id'].'</b></a> '.
 					   '&nbsp;&nbsp;<span class="grey">('.$sumErr[$r['sum_test']].')</span>&nbsp;&nbsp; '.
 					   '<a onclick="saZayavBalansRepair('.$r['id'].')" id="rep'.$r['id'].'">исправить</a>'.
 					   '<br />';

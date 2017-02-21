@@ -12,7 +12,7 @@ function _debug() {
 
 	$send =
 		'<div id="admin">'.
-			(@$_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa'.$pre.'">SA</a> :: ' : '').
+			(@$_GET['p'] != 9 ? '<a href="'.URL.'&p=9'.$pre.'">SA</a> :: ' : '').
 			'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">'.(DEBUG ? 'От' : 'В').'ключить Debug</a> :: '.
 			'<a id="cookie_clear">Очисить cookie</a> :: '.
 			'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
@@ -31,12 +31,14 @@ function _debug() {
 		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
 			'<h1>+</h1>'.
 			'<h2><div class="dmenu">'.
+					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'process' ? ' class="sel"' : '').' val="process">load process</a>'.
 					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'._debug_cookie_count().'</b></a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
 					(defined('ARRAY_PRE') ? '<a'.(@$_COOKIE['debug_pg'] == 'pre' ? ' class="sel"' : '').' val="pre">pre</a>' : '').
 				'</div>'.
+				'<div class="pg process'.($_COOKIE['debug_pg'] == 'process' ? '' : ' dn').'">'._debugLoad('show').'</div>'.
 				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
 				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.
 					'<a id="cookie_update">Обновить</a>'.
@@ -75,6 +77,18 @@ function _debug_cookie() {
 			if(strpos($key, 'debug') !== 0)
 				$cookie .= '<p><b>'.$key.'</b> '.$val;
 	return $cookie;
+}
+
+function _debugLoad($i='show') {//сохранение процесса загрузки приложения, затем вывод
+	if(!@DEBUG)
+		return '';
+
+	global $debugLoadNum, $debugLoadText;
+
+	if($i == 'show')
+		return '<div class="mar10">'.$debugLoadText.'</div>';
+	
+	$debugLoadText .= ++$debugLoadNum.'. '.$i.'.<br />';
 }
 
 function _pre($v) {// вывод в debug разобранного массива

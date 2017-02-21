@@ -196,7 +196,6 @@ var cityGet = function(val, city_id, city_name) {
 					dialog.abort(res.text);
 			}, 'json');
 		}
-
 	},
 	kupezzObEditVal = function() {
 		return {

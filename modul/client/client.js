@@ -199,7 +199,7 @@ var
 					if(o.callback)
 						o.callback(res);
 					else
-						document.location.href = URL + '&p=client&d=info&id=' + res.uid;
+						document.location.href = URL + '&p=42&id=' + res.uid;
 				} else
 					dialog.abort().err(res.text);
 			}, 'json');
@@ -322,7 +322,7 @@ var
 						callback(res.id);
 						return;
 					}
-					location.href = URL + '&p=client&d=info&id=' + res.id;
+					location.href = URL + '&p=42&id=' + res.id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -562,7 +562,7 @@ $(document)
 
 	.on('click', '.client-info-go', function(e) {
 		e.stopPropagation();
-		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
+		location.href = URL + '&p=42&id=' + $(this).attr('val');
 	})
 
 	.on('click', '#client-info .person-poa', function() {//внесение доверенности

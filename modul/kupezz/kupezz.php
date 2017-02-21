@@ -1,5 +1,8 @@
 <?php
-function kupezz_index() {
+function _kupezz_script() {
+	if(APP_ID != 2881875)
+		return '';
+
 	//получения списка стран для select
 	$sql = "SELECT
 				`country_id`,
@@ -36,7 +39,9 @@ function kupezz_index() {
 	foreach($sub as $n => $sp)
 		$city[] = $n.':['.implode(',', $sp).']';
 
-	$js =
+	define('COUNTRY_ID', count($country) == 1 ? key($country) : 0);
+
+	return
 	'<script>'.
 		'var VIEWER_LINK="'.addslashes(_viewer(VIEWER_ID, 'viewer_link')).'",'.
 			'CITY_ID='._viewer(VIEWER_ID, 'viewer_city_id').','.
@@ -47,22 +52,9 @@ function kupezz_index() {
 			'U={'.
 				'photo:"'.addslashes(_viewer(VIEWER_ID, 'viewer_photo')).'"'.
 			'};'.
-	'</script>';
-
-	define('COUNTRY_ID', count($country) == 1 ? key($country) : 0);
-
-	if(@$_GET['d'] == 'my')
-		return $js.kupezz_my();
-	return $js.kupezz_ob();
-}
-
-function _kupezz_script() {
-	if(APP_ID != 2881875)
-		return '';
-
-	return
-		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.css?'.VERSION.'" />'.
-		'<script src="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.js?'.VERSION.'"></script>';
+	'</script>'.
+	'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.css?'.VERSION.'" />'.
+	'<script src="'.API_HTML.'/modul/kupezz/kupezz'.MIN.'.js?'.VERSION.'"></script>';
 }
 function kupezzZayavObUpdate($zayav_id) {//внесение/обновление обявления, которое вносится из редакции
 	if(!$z = _zayavQuery($zayav_id, 1))
@@ -160,6 +152,11 @@ function kupezzZayavObUpdate($zayav_id) {//внесение/обновление обявления, которо
 }
 
 function kupezz_ob() {//Главная страница с объявлениями
+	if(APP_ID != 2881875) {
+		header('Location:'.URL.'&p=5');
+		exit;
+	}
+
 	$rubric = array(0 => 'Все объявления') + _rubric('ass');
 	//Количество объявлений для каждой рубрики
 	$sql = "SELECT
@@ -278,7 +275,7 @@ function kupezz_ob_spisok($v=array()) {
 	}
 */
 
-	$links = '<a href="'.URL.'&p=kupezz&d=my" class="my">Мои объявления</a>'.$filter['clear'];
+	$links = '<a href="'.URL.'&p=68" class="my">Мои объявления</a>'.$filter['clear'];
 	if(!$all)
 		return array(
 			'all' => 0,
@@ -369,6 +366,11 @@ function kupezz_ob_unit($r) {
 }
 
 function kupezz_my() {
+	if(APP_ID != 2881875) {
+		header('Location:'.URL.'&p=5');
+		exit;
+	}
+
 	$data = kupezz_my_spisok();
 
 	//активные объявления
@@ -395,7 +397,7 @@ function kupezz_my() {
 	return
 	'<div id="kupezz-my">'.
 		'<div class="hd1">'.
-			'<a class="link" href="'.URL.'&p=kupezz">КупецЪ</a>'.
+			'<a class="link" href="'.URL.'&p=67">КупецЪ</a>'.
 			' » Мои объявления'.
 		'</div>'.
 		'<div class="result">'.$data['result'].'</div>'.

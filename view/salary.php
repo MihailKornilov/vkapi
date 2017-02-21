@@ -1,10 +1,9 @@
 <?php
 function _salary() {
-	if(_num(@$_GET['id']))
-		return salary_worker($_GET);
-
-	if(RULE_WORKER_SALARY_VIEW == 1)
-		return salary_worker(array('id'=>VIEWER_ID));
+	if(RULE_WORKER_SALARY_VIEW == 1) {
+		header('Location:'.URL.'&p=65&id='.VIEWER_ID);
+		exit;
+	}
 
 	return
 		'<div id="salary">'.
@@ -140,7 +139,7 @@ function _salary_spisok() {
 			continue;
 		$balans = round($r['balans'] + $r['salary_balans_start'], 2);
 		$send .=
-			'<tr><td class="fio"><a href="'.URL.'&p=report&d=salary&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
+			'<tr><td class="fio"><a href="'.URL.'&p=65&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
 				'<td class="rate">'.($r['salary_rate_sum'] == 0 ? '' : '<b>'.round($r['salary_rate_sum'], 2).'</b>/'._salaryPeriod($r['salary_rate_period'])).
 				'<td class="balans" style="color:#'.($balans < 0 ? 'A00' : '090').'">'._sumSpace($balans).
 				'<td class="dolg">'.$r['dolg'];
@@ -319,15 +318,18 @@ function salaryWorkerRate($worker_id) {//получение ставки сотрудника
 			'нет';
 }
 function salary_worker($v) {
+	if(isset($_GET['id']))
+		$v = $_GET;
+
 	$filter = salaryFilter($v);
 
 	if(!$r = _viewerWorkerQuery($filter['id']))
 		return _err('Сотрудника не существует.');
 
-	if(RULE_WORKER_SALARY_VIEW == 1 && $filter['id'] != VIEWER_ID)
-		return _err('Нет прав для просмотра.');
-
-	define('WORKER_OK', true);//для вывода фильтра
+	if(RULE_WORKER_SALARY_VIEW == 1 && $filter['id'] != VIEWER_ID) {
+		header('Location:'.URL.'&p=65&id='.VIEWER_ID);
+		exit;
+	}
 
 	$acc_show = $filter['acc_show'] ? ' class="acc-show"' : '';
 
@@ -355,6 +357,17 @@ function salary_worker($v) {
 		'<div id="spisok-noacc">'.salary_worker_noacc($filter).'</div>'.
 		'<div id="spisok-list">'.salary_worker_list($filter).'</div>'.
 		'<div id="spisok-zp">'.salary_worker_zp($filter).'</div>'.
+	'</div>';
+}
+function salary_worker_right() {
+	$filter = salaryFilter($_GET);
+	if(RULE_WORKER_SALARY_VIEW == 1)
+		$filter['id'] = VIEWER_ID;
+
+	return
+	'<div id="salary-filter">'.
+		'<input type="hidden" id="year" value="'.$filter['year'].'" />'.
+		'<div id="month-list">'.salary_month_list($filter).''.
 	'</div>';
 }
 

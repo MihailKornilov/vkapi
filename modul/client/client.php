@@ -4,13 +4,8 @@ function _client_script() {//скрипты дл€ клиентов
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/client/client'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/client/client'.MIN.'.js?'.VERSION.'"></script>';
 }
-function _clientCase() {//вывод информации с клиентами дл€ приложени€
-	switch(@$_GET['d']) {
-		case 'info': return _clientInfo();
-		case 'poa': return _clientPoa();
-		case 'from': return _client_from();
-		default: return _client(_hashFilter('client'));
-	}
+function _clientCase() {// 1 вывод информации с клиентами дл€ приложени€
+	return _client(_hashFilter('client'));
 }
 
 
@@ -472,7 +467,7 @@ function _client_spisok($v=array()) {// список клиентов
 					  ($dolg ? '<em>(ќбща€ сумма долга = <b id="dolg-sum">'._sumSpace($dolg).'</b> руб.)</em>' : '').
 					  ($plus ? '<em>(—умма = '.$plus.' руб.)</em>' : '').
 					  ($newMonth ? '<em>'.$newToday.$newMonth.'</em>' : '').
-//					  '<a href="'.URL.'&p=print&d=template&template_id=client-spisok" class="img_xls'._tooltip('Ёкспорт в Excel', -12, 'l').'</a>'.
+//					  '<a href="'.URL.'&p=75&d=template&template_id=client-spisok" class="img_xls'._tooltip('Ёкспорт в Excel', -12, 'l').'</a>'.
 					  $filter['clear'];
 	$send['filter'] = $filter;
 	$send['spisok'] = $filter['js'];
@@ -510,7 +505,7 @@ function _client_spisok($v=array()) {// список клиентов
 		$left =
 			'<table class="l-tab">'.
 				'<tr><td class="label top">'.$cp[1]['name'].':'.
-					'<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['name'].'</a>'.
+					'<td><a href="'.URL.'&p=42&id='.$r['id'].'">'.$r['name'].'</a>'.
  ($r['phone'] ? '<tr><td class="label top">'.$cp[2]['name'].':<td>'.$r['phone'] : '').
 	   (FIND && $r['adres'] ? '<tr><td class="label top">'.$cp[3]['name'].':<td>'._br($r['adres']) : '').
 		 (FIND && $r['fax'] ? '<tr><td class="label">'.$cp[6]['name'].':<td>'.$r['fax'] : '').
@@ -648,11 +643,11 @@ function _clientVal($client_id, $i=0) {//получение данных из базы об одном клиен
 		define($prefix.'ADRES', $c['adres']);
 		define($prefix.'WORKER',
 			$c['worker_id'] ?
-				'<a href="'.URL.'&p=report&d=salary&id='.$c['worker_id'].'" class="'._tooltip('ѕерейти на страницу з/п сотрудника', -70).
+				'<a href="'.URL.'&p=65&id='.$c['worker_id'].'" class="'._tooltip('ѕерейти на страницу з/п сотрудника', -70).
 					_viewer($c['worker_id'], 'viewer_name').
 				'</a>'
 			: '');
-		define($prefix.'LINK', '<a href="'.URL.'&p=client&d=info&id='.$client_id.'">'.constant($prefix.'NAME').'</a>');
+		define($prefix.'LINK', '<a href="'.URL.'&p=42&id='.$client_id.'">'.constant($prefix.'NAME').'</a>');
 		define($prefix.'GO',
 			'<a val="'.$c['id'].'" class="client-info-go'.($c['deleted'] ? ' deleted' : '').
 				(constant($prefix.'PHONE') ? _tooltip(constant($prefix.'PHONE'), -1, 'l') : '">').
@@ -727,7 +722,7 @@ function _clientValToList($arr, $key='client_id') {//вставка данных клиентов в м
 			'client_adres' => $c['adres'],
 			'client_post' => $c['post'],
 			'client_balans' => round($c['balans'], 2),
-			'client_link' => '<a href="'.URL.'&p=client&d=info&id='.$c['id'].'"'.($c['deleted'] ? ' class="deleted"' : '').'>'.$c['name'].'</a>',
+			'client_link' => '<a href="'.URL.'&p=42&id='.$c['id'].'"'.($c['deleted'] ? ' class="deleted"' : '').'>'.$c['name'].'</a>',
 			'client_go' =>
 				'<a val="'.$c['id'].'" class="client-info-go'.($c['deleted'] ? ' deleted' : '').
 					($c['phone'] ? _tooltip($c['phone'], -1, 'l') : '">').
@@ -1025,7 +1020,7 @@ function _clientInfoTop($r) {
 					'<div class="center b curD fs14">'._sumSpace(_cena($r['balans'], 1)).'</div>'.
 			'<td class="w100">'.
 				'<div class="mt5 mr5 r">'.
-					($r['worker_id'] ? '<a href="'.URL.'&p=report&d=salary&id='.$r['worker_id'].'" class="icon icon-worker center'._tooltip(' лиент €вл€етс€ сотрудником<br />ѕерейти на страницу з/п сотрудника', -109, '', 1).'</a>' : '').
+					($r['worker_id'] ? '<a href="'.URL.'&p=65&id='.$r['worker_id'].'" class="icon icon-worker center'._tooltip(' лиент €вл€етс€ сотрудником<br />ѕерейти на страницу з/п сотрудника', -109, '', 1).'</a>' : '').
 					'<div onclick="_clientEdit('.$r['category_id'].')" class="icon icon-edit'._tooltip('–едактировать данные клиента', -94).'</div>'.
 					(_clientDelAccess($r['id']) === true ? '<div onclick="clientDel('.$r['id'].')" class="icon icon-del-red'._tooltip('”далить клиента', -52).'</div>' : '').
 				'</div>'.

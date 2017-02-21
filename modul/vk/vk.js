@@ -779,7 +779,7 @@ var VK_SCROLL = 0,
 				$('.template-print-unit').click(function() {
 					dialog.close();
 					var v = $(this).attr('val');
-					location.href = URL + '&p=print&d=template&template_id=' + v + '&' + obj + '=' + id;
+					location.href = URL + '&p=75&d=template&template_id=' + v + '&' + obj + '=' + id;
 				});
 				if(res.count == 1)
 					$('.template-print-unit:first').trigger('click');
@@ -2698,13 +2698,15 @@ $(document)
 							return;
 						}
 						if(res.zayav_id)
-							document.location.href = URL + '&p=zayav&d=info&id=' + res.zayav_id;
+							document.location.href = URL + '&p=45&id=' + res.zayav_id;
 						else {
+/*
 							var client_id = _cookie('p') == 'client' && _cookie('d') == 'info' ? _cookie('id') : 0;
 							document.location.href =
 								URL +
 								'&p=zayav&d=add&' + (res.imei ? 'imei' : 'serial') + '=' + send.word +
 								(client_id ? '&back=client&id=' + client_id : '');
+*/
 						}
 					} else
 						scannerDialog.abort();

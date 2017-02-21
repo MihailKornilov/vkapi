@@ -3,7 +3,11 @@ function _history($v=array()) {
 	if(isset($v['type_id']))
 		return _history_insert($v);
 
-	return _history_spisok($v);
+	$data = _history_spisok($v);
+	if(@$v['spisok'])
+		return $data['spisok'];
+
+	return $data;
 }
 
 function _history_script() {//скрипты и стили
@@ -79,6 +83,7 @@ function _historyFilter($v) {
 		'category_id' => _num(@$v['category_id']),
 		'client_id' => _num(@$v['client_id']),
 		'zayav_id' => _num(@$v['zayav_id']),
+		'worker_id' => _num(@$v['worker_id']),
 		'attach_id' => _num(@$v['attach_id']),
 		'schet_id' => _num(@$v['schet_id'])
 	);
@@ -105,6 +110,8 @@ function _history_spisok($v=array()) {
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['zayav_id'])
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
+	if($filter['worker_id'])
+		$cond .= " AND `worker_id`=".$filter['worker_id'];
 	if($filter['schet_id'])
 		$cond .= " AND `schet_id`=".$filter['schet_id'];
 	if(!HIST_LOCAL && RULE_HISTORY_VIEW == 1)

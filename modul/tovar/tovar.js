@@ -13,7 +13,7 @@ var _tovarEditExtend = function(o) {
 			about:'',
 			feature:[],
 			callback:function(res) {
-				location.href = URL + '&p=tovar&d=info&id=' + res.id;
+				location.href = URL + '&p=46&id=' + res.id;
 			}
 		}, o);
 	},
@@ -966,7 +966,7 @@ $(document)
 
 	.on('click', '.tovar-info-go', function(e) {
 		e.stopPropagation();
-		location.href = URL + '&p=tovar&d=info&id=' + $(this).attr('val');
+		location.href = URL + '&p=46&id=' + $(this).attr('val');
 	})
 
 	.on('click', '#tovar-add', function() {
@@ -1026,7 +1026,7 @@ $(document)
 	.on('click', '.tovar-info-go', function() {
 		var t = $(this),
 			old = t.hasClass('old') ? 1 : 0;
-		location.href = URL + '&p=tovar&d=info&id=' + t.attr('val') + '&old=' + old;
+		location.href = URL + '&p=46&id=' + t.attr('val') + '&old=' + old;
 	})
 
 	.on('click', '.tovar-avai-add', function() {

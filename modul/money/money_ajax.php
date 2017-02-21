@@ -882,6 +882,7 @@ switch(@$_POST['op']) {
 		$send['bank_id'] = _app('bank_default');
 		$nomer = 0;
 		$date_create = '';
+		$act_date = '';
 		$head = 'НОВЫЙ СЧЁТ НА ОПЛАТУ';
 		$send['noedit'] = 0;
 		$send['content'] = array();
@@ -910,6 +911,7 @@ switch(@$_POST['op']) {
 			$zayav_id = $schet['zayav_id'];
 			$nomer = $schet['type_id'] == 2 ? '-' : $schet['nomer'];
 			$date_create = $schet['date_create'];
+			$act_date = $schet['act_date'];
 
 			//сегодня создан счёт или нет - для возможности редактирования
 			$send['noedit'] = $schet['type_id'] == 2 || TODAY == substr($schet['dtime_add'], 0, 10) ? 0 : 1;
@@ -974,7 +976,7 @@ switch(@$_POST['op']) {
 
 					'<tr><td class="label r">Получатель:'.
 						//если нет организаций, то сообщение об отсутствии
-						'<td class="red b'.(!_app('org_count') ? '' : ' dn').'">Отсутствуют реквизиты организации. <a href="'.URL.'&p=setup&d=org">Настроить</a>.'.
+						'<td class="red b'.(!_app('org_count') ? '' : ' dn').'">Отсутствуют реквизиты организации. <a href="'.URL.'&p=13">Настроить</a>.'.
 						//если одна организация, то показывается просто название
 						'<td class="b'.(_app('org_count') == 1 ? '' : ' dn').'">'._app('name').
 						//если более одной организации, то возможность выбора
@@ -983,7 +985,7 @@ switch(@$_POST['op']) {
 					'<tr'.(!_app('org_count') ? ' class="dn"' : '').'>'.
 						'<td class="label r">Банк получателя:'.
 						//если нет банков, то сообщение об отсутствии
-						'<td class="bank-0 red b'.($bankExist ? ' dn' : '').'">Отсутствуют данные банка. <a href="'.URL.'&p=setup&d=org">Настроить</a>.'.
+						'<td class="bank-0 red b'.($bankExist ? ' dn' : '').'">Отсутствуют данные банка. <a href="'.URL.'&p=13">Настроить</a>.'.
 						//если один банк, то показывается просто название
 						'<td class="bank-1 b'.($bankCount == 1 ? '' : ' dn').'">'.win1251(@$send['bank'][$send['org_id']][0]['title']).
 						//если более одного банка, то возможность выбора
@@ -993,6 +995,13 @@ switch(@$_POST['op']) {
 						'<td><input type="text" class="w70 r grey" id="nomer" value="'._app('schet_prefix').schet_pay_nomer_next($nomer).'" readonly />'.
 							'<span class="ml20">от</span> '.
 							'<input type="hidden" id="date-create" value="'.$date_create.'" />'.
+
+					'<tr'.(!_app('schet_act_date_set') ? ' class="dn"' : '').'>'.
+						'<td class="label r">АКТ номер:'.
+						'<td><input type="text" class="w70 r grey" id="nomer" value="'._app('schet_prefix').schet_pay_nomer_next($nomer).'" readonly />'.
+							'<span class="ml20">от</span> '.
+							'<input type="hidden" id="act-date" value="'.$act_date.'" />'.
+
 					'<tr><td class="label r">Плательщик:'.
 						'<td class="b">'.
 							'<input type="hidden" id="client_id" value="'.$client_id.'" />'.
@@ -1034,6 +1043,7 @@ switch(@$_POST['op']) {
 			jsonError('Некорректная дата создания');
 
 		$date_create = $_POST['date_create'];
+		$act_date = $_POST['act_date'];
 		$client_id = _num($_POST['client_id']);
 
 		if($zayav_id = _num($_POST['zayav_id'])) {
@@ -1074,6 +1084,7 @@ switch(@$_POST['op']) {
 					`nomer`,
 					`zayav_id`,
 					`date_create`,
+					`act_date`,
 					`sum`,
 
 					`org_id`,
@@ -1104,6 +1115,7 @@ switch(@$_POST['op']) {
 					".($type_id == 2 ? '-' : '').schet_pay_nomer_next(0).",
 					".$zayav_id.",
 					'".$date_create."',
+					'".(_app('schet_act_date_set') ? $act_date : $date_create)."',
 					".$sum.",
 
 					".$org_id.",
@@ -1205,6 +1217,7 @@ switch(@$_POST['op']) {
 			jsonError('Некорректная дата создания');
 
 		$date_create = $_POST['date_create'];
+		$act_date = $_POST['act_date'];
 		$zayav_id = _num($_POST['zayav_id']);
 
 		if(!$schet = _schetPayQuery($schet_id))
@@ -1237,6 +1250,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_schet_pay`
 				SET `zayav_id`=".$zayav_id.",
 					`date_create`='".$date_create."',
+					`act_date`='".(_app('schet_act_date_set') ? $act_date : $date_create)."',
 					`sum`=".$sum."
 				WHERE `id`=".$schet_id;
 		query($sql);

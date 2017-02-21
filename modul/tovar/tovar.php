@@ -779,7 +779,7 @@ function _tovar_category_spisok($filter) {
 			'spisok' => $filter['js'].
 						'<div class="_empty">'.
 							'Категории товаров не настроены.'.
-							'<a href="'.URL.'&p=setup&d=tovar&d1=category">Настроить</a>'.
+							'<a href="'.URL.'&p=20">Настроить</a>'.
 						'</div>',
 			'filter' => $filter
 		);
@@ -921,7 +921,7 @@ function _tovar_category_spisok($filter) {
 			'</div>';
 	}
 
-	$send['spisok'] .= '<a id="tset" href="'.URL.'&p=setup&d=tovar&d1=category">Настроить категории товаров</a>';
+	$send['spisok'] .= '<a id="tset" href="'.URL.'&p=20">Настроить категории товаров</a>';
 	$send['spisok'] .= _next($filter + array('all'=>$all));
 
 	return $send;
@@ -1019,7 +1019,7 @@ function _tovar_spisok_image($spisok, $filter) {//список товаров с картинками
 				'<table>'.
 					'<tr><td class="img">'.$r['image_small'].
 						'<td class="inf">'.
-							'<a href="'.URL.'&p=tovar&d=info&id='.$id.'" class="name">'.$r['tovar_name'].'</a>'.
+							'<a href="'.URL.'&p=46&id='.$id.'" class="name">'.$r['tovar_name'].'</a>'.
 				'</table>'.
 			'</div>';
 
@@ -1043,7 +1043,7 @@ function _tovar_spisok_min($spisok, $filter) {//сокращённый список товаров
 	foreach($spisok as $id => $r)
 		$send .=
 			'<tr class="tovar-unit-min">'.
-				'<td><a href="'.URL.'&p=tovar&d=info&id='.$id.'">'.$r['tovar_name_min'].'</a>'.
+				'<td><a href="'.URL.'&p=46&id='.$id.'">'.$r['tovar_name_min'].'</a>'.
  (ZAKAZ_ADDED ? '<td class="zakaz">'._sumSpace($r['tovar_zakaz_count']).' <span>'.$r['tovar_measure_name'].'</span>' : '').
 				'<td class="avai">'.($r['tovar_avai_count'] ? _sumSpace($r['tovar_avai_count']).' <span>'.$r['tovar_measure_name'].'</span>' : '');
 
@@ -1326,7 +1326,7 @@ function _tovar_info_set($tovar) {//товар, для которого эта запчасть, деталь или
 	return
 	'<div id="set">'.
 		_tovarPosition($tovar['set_position_id']).' для '.
-		'<a href="'.URL.'&p=tovar&d=info&id='.$tovar['tovar_id_set'].'">'.
+		'<a href="'.URL.'&p=46&id='.$tovar['tovar_id_set'].'">'.
 			_tovarName($r['name_id']).
 			_tovarVendor($r['vendor_id']).
 			$r['name'].
@@ -1430,7 +1430,7 @@ function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
 		$send .=
 			'<div>'.
 				$n.'. '.
-				'<a href="'.URL.'&p=tovar&d=info&id='.$r['id'].'">'._tovarName($r['name_id']).'</a>'.
+				'<a href="'.URL.'&p=46&id='.$r['id'].'">'._tovarName($r['name_id']).'</a>'.
 			'</div>';
 
 		$n++;
@@ -1454,7 +1454,7 @@ function _tovar_info_compat($tovar) {//совместимости товара
 		$send .=
 			'<div>'.
 				$n.'. '.
-				'<a href="'.URL.'&p=tovar&d=info&id='.$r['id'].'">'.
+				'<a href="'.URL.'&p=46&id='.$r['id'].'">'.
 					$r['tovar_name'].
 				'</a>'.
 			'</div>';
@@ -1472,7 +1472,7 @@ function _tovar_info_zayav($tovar_id) {//заявки по этому товару
 		return '';
 	return
 		'<div id="ti-zayav">'.
-			'<a href="'.URL.'&p=zayav&from_tovar_id='.$tovar_id.'">Использование в заявках: '.$count.'</a>'.
+			'<a href="'.URL.'&p=2&from_tovar_id='.$tovar_id.'">Использование в заявках: '.$count.'</a>'.
 		'</div>';
 }
 function _tovar_info_zakaz($tovar_id) {//заказы по этому товару

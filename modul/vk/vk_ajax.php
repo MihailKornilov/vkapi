@@ -701,7 +701,7 @@ switch(@$_POST['op']) {
 				'Шаблоны для печати не настроены.'.
 				'<br />'.
 				'<br />'.
-				'<button class="vk" onclick="location.href=\''.URL.'&p=setup&d=document_template\'">Настроить</button>'.
+				'<button class="vk" onclick="location.href=\''.URL.'&p=27\'">Настроить</button>'.
 			'</div>'
 		);
 

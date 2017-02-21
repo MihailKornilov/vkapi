@@ -108,23 +108,12 @@ function _viewerCache($viewer_id=VIEWER_ID) {//получение данных пользователя из 
 				  AND `viewer_id`=".$viewer_id;
 		if(!$u = query_assoc($sql))
 			$u = _viewerUpdate($viewer_id);
+		else
+			_debugLoad('Загружены данные пользователя из Базы');
 		xcache_set($key, $u, 86400);
+	} else
+		_debugLoad('Получены данные пользователя из Кеша');
 
-		//проверка наличия у пользователя раздела "Мои настройки"
-		if($viewer_id < VIEWER_MAX && !_viewerMenuAccess(12, $viewer_id)) {
-			$sql = "INSERT INTO `_menu_viewer` (
-						`app_id`,
-						`viewer_id`,
-						`menu_id`
-					) VALUES (
-						".APP_ID.",
-						".$viewer_id.",
-						12
-					)";
-			query($sql);
-			xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
-		}
-	}
 	return $u;
 }
 function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Контакта
@@ -198,6 +187,8 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 				`city_title`=VALUES(`city_title`)";
 	query($sql);
 
+	_debugLoad($id ? 'Обновлены данные пользователя из Контакта' : 'Внесён новый пользователь');
+
 	return _viewerCache($viewer_id);
 }
 function _viewerValToList($arr) {//вставка данных о пользователях контакта в массив по viewer_id_add и worker_id
@@ -233,9 +224,9 @@ function _viewerValToList($arr) {//вставка данных о пользователях контакта в мас
 					$w = _viewerFormat($u);
 					$arr[$id] += array(
 						'worker_name' => $w['viewer_name'],
-						'worker_link' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
-						'worker_setup' => '<a href="'.URL.'&p=setup&d=worker&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
-						'worker_salary' => '<a href="'.URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>'
+						'worker_link' => '<a href="'.URL.'&p=74&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
+						'worker_setup' => '<a href="'.URL.'&p=74&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>',
+						'worker_salary' => '<a href="'.URL.'&p=65&id='.$u['viewer_id'].'">'.$w['viewer_name'].'</a>'
 					);
 				}
 		}
@@ -284,8 +275,8 @@ function _viewerFormat($u) {//формирование данных пользователя
 
 	$send['viewer_link'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_name'].'</a>';
 	$send['viewer_link_photo'] = '<a href="//vk.com/id'.$u['viewer_id'].'" target="_blank">'.$send['viewer_photo'].'</a>';
-	$send['viewer_link_zp'] = '<a href="'.@URL.'&p=report&d=salary&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
-	$send['viewer_link_my'] = '<a href="'.@URL.'&p=setup&d=my" class="setup-my'._tooltip('Мои настройки', -10).$send['viewer_name'].'</a>';//страница с моими настройками
+	$send['viewer_link_zp'] = '<a href="'.@URL.'&p=65&id='.$u['viewer_id'].'">'.$send['viewer_name'].'</a>';//страница с зарплатой
+	$send['viewer_link_my'] = '<a href="'.@URL.'&p=12" class="setup-my'._tooltip('Мои настройки', -10).$send['viewer_name'].'</a>';//страница с моими настройками
 
 	return $send;
 }
@@ -311,7 +302,7 @@ function _viewerDeleted($viewer_id) {//Вывод сотрудника, который вносил запись с
 
 
 
-function _getVkUser() {//Получение данных о пользователе при запуске приложения
+function _viewerAuth() {//Получение данных о пользователе при запуске приложения
 	$u = _viewer();
 
 	define('VIEWER_NAME', $u['viewer_name']);
@@ -329,6 +320,8 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 
 	_viewerRule();      //формирование констант прав
 
+	_debugLoad('Пользователь авторизирован и прописаны его константы');
+
 	if(APP_FIRST_LOAD) {
 		//обновление даты посещения приложения сотрудником
 		$sql = "UPDATE `_vkuser`
@@ -336,86 +329,42 @@ function _getVkUser() {//Получение данных о пользователе при запуске приложения
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".VIEWER_ID;
 		query($sql);
+		_debugLoad('Обновлено время посещения пользователя в Базе');
 	}
 }
 
 
-/*
-	$rules = array(
-		'RULES_NOSALARY' => array(	// Не отображать в начислениях з/п
-			'def' => 0
-		),
-		'RULES_ZPZAYAVAUTO' => array(	// Начислять бонус по заявке при отсутствии долга
-			'def' => 0
-		),
-		'RULES_APPENTER' => array(	// Разрешать вход в приложение
-			'def' => 0,
-			'admin' => 1,
-			'childs' => array(
-				'RULES_WORKER' => array(	// Сотрудники
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_RULES' => array(	    // Настройка прав сотрудников
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_REKVISIT' => array(	// Реквизиты организации
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_PRODUCT' => array(	// Виды изделий
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_ZAYAVRASHOD' => array(// Расходы по заявке
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_HISTORYSHOW' => array(// Видит историю действий
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_MONEY' => array(	    // Может видеть платежи: только свои, все платежи
-					'def' => 0,
-					'admin' => 1
-				)
-			)
-		)
-	);
-	$ass = array();
-	foreach($rules as $i => $r) {
-		$ass[$i] = $admin && isset($r['admin']) ? $r['admin'] : (isset($rls[$i]) ? $rls[$i] : $r['def']);
-		//$parent = $ass[$i];
-		if(isset($r['childs']))
-			foreach($r['childs'] as $ci => $cr)
-				$ass[$ci] = $admin && isset($cr['admin']) ? $cr['admin'] : (isset($rls[$ci]) ? $rls[$ci] : $cr['def']);
-	}
-	return $ass;
-*/
-function _viewerRuleDefault($viewer_id=VIEWER_ID) {
-	// получение всех возможных значений прав пользователя (по умолчанию),
-	// с учётом того, является пользователь админом или сотрудником
-
-	// получение значений прав для руководителя
-	$key = CACHE_PREFIX.'viewer_rule_default_admin';
-	$rule_admin = xcache_get($key);
-	if(empty($rule_admin)) {
-		$sql = "SELECT `key`,`value_admin` FROM `_vkuser_rule_default` ORDER BY `key`";
-		$rule_admin = query_ass($sql);
-		xcache_set($key, $rule_admin, 86400);
+function _ruleCache($i='all', $v='name') {//кеширование констант прав по умолчанию
+	$key = CACHE_PREFIX.'rule_default';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					`key` `id`,
+					`name`,
+					`value_admin`,
+					`value_worker`
+				FROM `_vkuser_rule_default`
+				ORDER BY `key`";
+		$arr = query_arr($sql);
+		foreach($arr as $k => $r)
+			unset($arr[$k]['id']);
+		xcache_set($key, $arr, 86400);
 	}
 
-	// получение значений прав для сотрудников
-	$key = CACHE_PREFIX.'viewer_rule_default_worker';
-	$rule_worker = xcache_get($key);
-	if(empty($rule_worker)) {
-		$sql = "SELECT `key`,`value_worker` FROM `_vkuser_rule_default` ORDER BY `key`";
-		$rule_worker = query_ass($sql);
-		xcache_set($key, $rule_worker, 86400);
-	}
+	if($i == 'all')
+		return $arr;
 
-	return _viewer($viewer_id, 'viewer_admin') ? $rule_admin : $rule_worker;
+	//список констант через пробел
+	if($i == 'const')
+		return implode(' ', array_keys($arr));
+
+	if(!isset($arr[$i]))
+		return _cacheErr('неизвестная константа права', $v);
+
+	if(!isset($arr[$i][$v]))
+		return _cacheErr('неизвестный ключ права', $i);
+
+	return $arr[$i][$v];
+	
 }
 function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	// 1. Проверка на правильность внесённых прав в базе для выбранного пользователя
@@ -423,50 +372,65 @@ function _viewerRule($viewer_id=VIEWER_ID, $i=false) {
 	// 3. Получение конкретной константы
 
 	$key = CACHE_PREFIX.'viewer_rule_'.$viewer_id;
-	$rule = xcache_get($key);
-	if(empty($rule)) {
+	if(!$rule = xcache_get($key)) {
 		$sql = "SELECT `key`,`value`
 				FROM `_vkuser_rule`
 				WHERE `app_id`=".APP_ID."
 				  AND `viewer_id`=".$viewer_id."
 				ORDER BY `key`";
 		$rule = query_ass($sql);
-		xcache_set($key, $rule, 86400);
-	}
 
-	$def = _viewerRuleDefault($viewer_id);
-	$defKey = implode(' ', array_keys($def));
-	$ruleKey = implode(' ', array_keys($rule));
-	if($defKey != $ruleKey) {
+		if($i === false)
+			_debugLoad('Загружены права пользователя из Базы');
+
+		xcache_set($key, $rule, 86400);
+	} elseif($i === false)
+		_debugLoad('Получены права пользоваеля из Кеша');
+
+	if(_ruleCache('const') != implode(' ', array_keys($rule))) {
 		$insert = array();
 		$defQ = array();//обведение ключей в кавычки
-		foreach($def as $k => $value) {
+		foreach(_ruleCache() as $k => $v) {
 			$defQ[] = "'".$k."'";
 			if(isset($rule[$k]))
 				continue;
-			$insert[] = "(".APP_ID.",".$viewer_id.",'".$k."','".$value."')";
+			$insert[] = "(
+				".APP_ID.",
+				".$viewer_id.",
+				'".$k."',
+				'".(_viewer($viewer_id, 'viewer_admin') ? $v['value_admin'] : $v['value_worker'])."'
+			)";
 		}
 		if(!empty($insert)) {
 			$sql = "INSERT INTO `_vkuser_rule` (
-						`app_id`,`viewer_id`,`key`,`value`
+						`app_id`,
+						`viewer_id`,
+						`key`,
+						`value`
 					) VALUES ".implode(',', $insert);
 			query($sql);
+			_debugLoad('Добавлены новые переменные прав пользователя в Базу');
 		}
 
 		if(!empty($defQ)) {
 			$sql = "DELETE FROM `_vkuser_rule`
-				WHERE `app_id`=".APP_ID."
-				  AND `viewer_id`=".$viewer_id."
-				  AND `key` NOT IN (".implode(',', $defQ).")";
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".$viewer_id."
+					  AND `key` NOT IN (".implode(',', $defQ).")";
 			query($sql);
+			_debugLoad('Удалены лишние переменные прав пользователя из Базы');
 		}
 		xcache_unset($key);
+
+		_debugLoad('Обновлены права пользователя');
+
 		return _viewerRule($viewer_id, $i);
 	}
 
 	if(!defined('RULE_DEFINED')) {
 		foreach($rule as $k => $v)
 			define($k, $v);
+		_debugLoad('Установлены константы прав пользователя');
 		define('RULE_DEFINED', true);
 	}
 
@@ -480,7 +444,10 @@ function _viewerMenuAccess($menu_id, $viewer_id=VIEWER_ID) {//права доступа к ра
 	if(_viewer($viewer_id, 'viewer_admin'))
 		return 1;
 
-	$key = CACHE_PREFIX.'viewer_menu_access_'.$viewer_id;
+	if(_menuCache('norule', $menu_id))
+		return 1;
+
+	$key = CACHE_PREFIX.'viewer_menu_'.$viewer_id;
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT `menu_id`,1
 				FROM `_menu_viewer`
@@ -510,7 +477,10 @@ function _viewerMenuAccess($menu_id, $viewer_id=VIEWER_ID) {//права доступа к ра
 				) VALUES ".implode(',', $values);
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
+		xcache_unset($key);
+
+		_debugLoad('Установлены права доступа в разделы по умолчанию');
+
 		return _viewerMenuAccess($menu_id, $viewer_id);
 	}
 	

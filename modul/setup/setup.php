@@ -7,12 +7,14 @@ function _setup_global($i='const') {//получение констант-параметров для всех при
 				FROM `_setup_global`
 				WHERE `app_id` IN (".APP_ID.",0)";
 		$arr = query_arr($sql);
+		_debugLoad('Константы настроек приложения загружены из Базы');
 		xcache_set($key, $arr, 86400);
 	}
-
+	
 	if($i == 'const') {
 		foreach($arr as $r)
 			define($r['key'], $r['value']);
+		_debugLoad('Константы настроек приложения установлены');
 		return true;
 	}
 
@@ -32,41 +34,9 @@ function _setup_global($i='const') {//получение констант-параметров для всех при
 
 
 // --- _setup --- раздел настроек приложения
-function _setup() {
-	$sub = array(
-		'worker' => 'rule',
-		'rubric' => 'sub',
-		'expense' => 'sub',
-		'product' => 'sub',
-		'document_template' => 'info'
-	);
-
-	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
-
-	$id = _num(@$_GET['id']);
-	$func = 'setup_'.$d.(isset($sub[$d]) && $id ? '_'.$sub[$d] : '');
-	$left = function_exists($func) ? $func($id) : setup_my();
-
-
-	$links = '';
-	foreach(_menuCache('setup') as $r) {
-		//если не определены виды деятельности
-		if($r['p'] == 'service' && (!SA || _service('count') < 2))
-			continue;
-		$links .= '<a href="'.URL.'&p=setup&d='.$r['p'].'"'.($d == $r['p'] ? ' class="sel"' : '').'>'.$r['name'].'</a>';
-	}
-
-	return
-		'<div id="setup">'.
-			'<table class="tabLR">'.
-				'<tr><td class="left">'.$left.
-					'<td class="right"><div class="rightLink">'.$links.'</div>'.
-			'</table>'.
-		'</div>';
-}
-
 function _setup_script() {//скрипты и стили
-	if(@$_GET['p'] != 'setup')
+	$id = _num(@$_GET['p']);
+	if($id != 5 && _menuCache('parent_main_id', $id) != 5)
 		return '';
 
 	return
@@ -77,7 +47,7 @@ function setupPath($v) {//Верхняя строка: путь настроек
 	$v = array(
 		'name' => $v['name'],           // название настройки
 		'link_name' => @$v['link_name'],// название ссылки на предыдущцю страницу
-		'link_d' => @$v['link_d'],      // d предыдущей страницы
+		'link_p' => _num(@$v['link_d']), // предыдущая страница
 		'add_name' => @$v['add_name'],  // название ссылки добавления
 		'add_func' => @$v['add_func']   // функция, по которой происходит добавление
 	);
@@ -86,10 +56,10 @@ function setupPath($v) {//Верхняя строка: путь настроек
 		$v['add_func'] = ' onclick="'.$v['add_func'].'"';
 
 	if($v['link_name'])
-		$v['link_name'] = '<a class="link" href="'.URL.'&p=setup&d='.$v['link_d'].'">'.$v['link_name'].'</a> » ';
+		$v['link_name'] = '<a class="link" href="'.URL.'&p='.$v['link_p'].'">'.$v['link_name'].'</a> » ';
 
 	if($v['add_name'])
-		$v['add_name'] = '<a class="add"'.$v['add_func'].'>'.$v['add_name'].'</a>';
+		$v['add_name'] = '<button class="vk small fr"'.$v['add_func'].'>'.$v['add_name'].'</button>';
 
 	return
 	'<div class="hd1">'.
@@ -99,13 +69,13 @@ function setupPath($v) {//Верхняя строка: путь настроек
 	'</div>';
 }
 
-function setup_my() {
+function setup_my() {//12
 	return
 	setupPath(array(
 		'name' => 'Мои настройки'
 	)).
 	'<div id="setup_my" class="mar20">'.
-		'<div class="headName">Пин-код</div>'.
+		'<div class="hd2">Пин-код</div>'.
 		'<div class="_info">'.
 			'<p><b>Пин-код</b> необходим для дополнительного подтверждения вашей личности, '.
 			'если другой пользователь получит доступ к вашей странице ВКонтакте.'.
@@ -125,17 +95,14 @@ function setup_my() {
 		).
 		'</div>'.
 
-		'<div class="headName">Дополнительно</div>'.
+		'<div class="hd2">Дополнительно</div>'.
 		'<table class="bs10">'.
 			'<tr><td class="label">Показывать платежи:<td><input type="hidden" id="RULE_MY_PAY_SHOW_PERIOD" value="'._num(@RULE_MY_PAY_SHOW_PERIOD).'" />'.
 		'</table>'.
 	'</div>';
 }
 
-function setup_worker() {
-	if(!_viewerMenuAccess(15))
-		return _err('Недостаточно прав: управление сотрудниками');
-
+function setup_worker() {//15 управление сотрудниками
 	return
 	'<div id="setup_worker">'.
 		setupPath(array(
@@ -159,14 +126,14 @@ function setup_worker_spisok() {
 		$send .=
 			'<table class="unit bs10">'.
 				'<tr><td class="photo w50 h50">'.
-						'<a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
+						'<a href="'.URL.'&p=74&id='.$r['viewer_id'].'">'.
 							'<img src="'.$r['photo'].'">'.
 						'</a>'.
 					'<td class="top">'.
 						setup_worker_link_vk($r['viewer_id']).
 						setup_worker_link_zp($r['viewer_id']).
 						setup_worker_link_client($r['viewer_id']).
-						'<a class="name b" href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'">'.
+						'<a class="name b" href="'.URL.'&p=74&id='.$r['viewer_id'].'">'.
 							$r['first_name'].' '.$r['last_name'].
 						'</a>'.
 						'<div>'.$r['post'].'</div>'.
@@ -194,18 +161,18 @@ function setup_worker_link_client($viewer_id) {//ссылка-иконка на страницу Клиен
 			  AND !`deleted`
 			LIMIT 1";
 	if(!$client_id = query_value($sql))
-		return '<div class="icon-empty fr"></div>';
+		return '<div class="icon icon-empty fr"></div>';
 
-	return '<a href="'.URL.'&p=client&d=info&&id='.$client_id.'" class="icon icon-client fr'._tooltip('Клиентская страница', -64).'</a>';
+	return '<a href="'.URL.'&p=42&id='.$client_id.'" class="icon icon-client fr'._tooltip('Клиентская страница', -64).'</a>';
 }
 function setup_worker_link_vk($viewer_id) {//ссылка-иконка на страницу ВКонтакте
 	if($viewer_id >= VIEWER_MAX)
-		return '<div class="icon-empty fr"></div>';
+		return '<div class="icon icon-empty fr"></div>';
 
 	return '<a href="//vk.com/id'.$viewer_id.'" target="_blank" class="icon icon-vk fr'._tooltip('Страница ВКонтакте', -62).'</a>';
 }
 function setup_worker_link_zp($viewer_id) {//ссылка-иконка на страницу З/п
-	return '<a href="'.URL.'&p=report&d=salary&id='.$viewer_id.'" class="icon icon-zp fr'._tooltip('Страница з/п', -40).'</a>';
+	return '<a href="'.URL.'&p=65&id='.$viewer_id.'" class="icon icon-zp fr'._tooltip('Страница з/п', -40).'</a>';
 }
 function setup_worker_link_del($viewer_id) {//ссылка-иконка для удаления сотрудника
 	$u = _viewer($viewer_id);
@@ -215,15 +182,14 @@ function setup_worker_link_del($viewer_id) {//ссылка-иконка для удаления сотрудн
 
 	return '<a class="icon icon-del fr'._tooltip('Удалить сотрудника', -62).'</a>';
 }
-function setup_worker_rule($viewer_id) {
-	if(!_viewerMenuAccess(15))
-		return _err('Недостаточно прав: управление сотрудниками.');
+
+function setup_worker_info() {// 74 информация о сотруднике
+	if(!$viewer_id = _num(@$_GET['id']))
+		return _err('Некорректный id сотрудника');
 
 	$u = _viewer($viewer_id);
 	if(!$u['viewer_worker'])
-		return _err('Пользователь <b>'.$u['viewer_name'].'</b><br />уже не является сотрудником.');
-
-	$rule = _viewerRule($viewer_id);
+		return _err('Пользователь <b>'.$u['viewer_name'].'</b><br />не является сотрудником.');
 
 	//видимость истории действий всех сотрудников
 	$sql = "SELECT `viewer_id`,`value`
@@ -232,6 +198,12 @@ function setup_worker_rule($viewer_id) {
 			  AND `key`='RULE_HISTORY_VIEW'
 			  AND `viewer_id`<".VIEWER_MAX;
 	$hist_worker_all = query_assJson($sql);
+
+	$hist = _history(array(
+		'category_id'=>5,
+		'worker_id'=>$viewer_id,
+		'limit'=>20
+	));
 
 	return
 	'<script>'.
@@ -248,15 +220,15 @@ function setup_worker_rule($viewer_id) {
 	setupPath(array(
 		'name' => $u['viewer_name'],
 		'link_name' => 'Управление сотрудниками',
-		'link_d' => 'worker'
+		'link_d' => 15
 	)).
 
-	'<div id="setup_rule">'.
+	'<div id="setup_rule" class="mb30">'.
 		'<table class="bs10 w100p">'.
 			'<tr><td class="w50 h50">'.$u['viewer_photo'].
 				'<td class="top">'.
 					setup_worker_link_del($viewer_id).
-					'<a onclick="setupWorkerEdit()" class="icon icon-edit fr'._tooltip('Редактировать данные', -67).'</a>'.
+					'<a onclick="setupWorkerEdit()" class="icon icon-edit fr ml30'._tooltip('Редактировать данные', -67).'</a>'.
 					setup_worker_link_vk($viewer_id).
 					setup_worker_link_zp($viewer_id).
 					setup_worker_link_client($viewer_id).
@@ -269,78 +241,198 @@ function setup_worker_rule($viewer_id) {
 			: '').
 		'</table>'.
 
-//		setup_worker_rule_val($viewer_id).
+		setup_worker_rule_val($viewer_id).
 
-	(RULE_SETUP_RULES ?
-		'<div class="headName">Дополнительные настройки</div>'.
-		'<table class="rtab">'.
-			'<tr><td class="lab"><td>'._check('RULE_SALARY_SHOW', 'Показывать в списке з/п сотрудников', $rule['RULE_SALARY_SHOW']).
-			'<tr><td class="lab"><td>'._check('RULE_EXECUTER', 'Может быть исполнителем заявок', $rule['RULE_EXECUTER']).
-			'<tr><td class="lab"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', 'Начислять з/п по заявке при отсутствии долга', $rule['RULE_SALARY_ZAYAV_ON_PAY']).
+		'<div class="mar10">'.
+			'<input type="hidden" id="rule-menu" value="1" />'.
+			'<div class="rule-menu-1 mt20">'.setup_worker_razdel_rule($viewer_id).'</div>'.
+			'<div class="rule-menu-2 dn">'.setup_worker_info_dop($viewer_id).'</div>'.
+			'<div class="rule-menu-3 dn">'.$hist['spisok'].'</div>'.
+		'</div>'.
+
+	'</div>';
+
+/*
+	($u['pin'] ?
+		'<div class="headName">Пин-код</div>'.
+		'<button class="vk" id="pin-clear">Сбросить пин-код</button>'
+	: '').
+*/
+//				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить для всех сотрудников', -20).'Видит историю действий</a>:'.
+
+}
+function setup_worker_razdel_rule($viewer_id) {//вывод разделов меню с галочками
+	if($viewer_id >= VIEWER_MAX)
+		return
+			'<div class="center">'.
+				'<div class="_info w350 dib center">'.
+					'Настраивать права в приложении возможно только после привязки сотрудника к ВКонтакте.'.
+					'<br />'.
+					'<br />'.
+					'<button class="vk small red" onclick="setupWorkerVkBind()">Привязать</div>'.
+				'</div>'.
+			'</div>';
+
+	$rule = _viewerRule($viewer_id);
+
+	if(_viewer($viewer_id, 'viewer_admin'))
+		return
+			'<div class="center">'.
+				'<div class="_info w350 dib center">'.
+					'Сотрудник является <b>администратором</b> приложения.'.
+					'<br />'.
+					'Доступны все права.'.
+				'</div>'.
+			'</div>';
+
+	if($viewer_id == VIEWER_ID)
+		return
+			'<div class="center">'.
+				'<div class="_info w350 dib center">'.
+					'Вы не можете настраивать свои права.'.
+				'</div>'.
+			'</div>';
+
+	if(!RULE_SETUP_RULES)
+		return
+			'<div class="center">'.
+				'<div class="_info w350 dib center">'.
+					'Вы не можете настраивать права сотрудников.'.
+				'</div>'.
+			'</div>';
+
+	$send =
+	'<div class="ml40" onclick="setupRuleMenuSub($(this))">'.
+		_check('RULE_APP_ENTER', '<b>'._ruleCache('RULE_APP_ENTER').'</b>', $rule['RULE_APP_ENTER'], 1).
+	'</div>'.
+
+	'<div'.($rule['RULE_APP_ENTER'] ? '' : ' class="dn"').'>'.
+		'<div class="hd2 mt30">Доступ к разделам приложения</div>'.
+		'<div class="ml40">';
+
+	foreach(_menuCache('app_setup') as $r) {
+		$sub = setup_worker_razdel_rule_sub($viewer_id, $r['sub'], $rule);
+
+		//заявки
+		if($r['id'] == 2) {
+			$sub .=
+			'<div class="mt5">'.
+				_check('RULE_ZAYAV_EXECUTER', _ruleCache('RULE_ZAYAV_EXECUTER'), $rule['RULE_ZAYAV_EXECUTER'], 1).
+			'</div>';
+		}
+
+		$mainAccess = _viewerMenuAccess($r['id'], $viewer_id);
+
+		$send .=
+		'<div class="mt15" onclick="setupRuleMenuSub($(this))">'.
+			_check('RULE_MENU_'.$r['id'], '<b class="fs14">'.$r['name'].'</b>', $mainAccess, 1).
+		'</div>'.
+		'<div class="ml30'.($mainAccess ? '' : ' dn').'">'.$sub.'</div>';
+	}
+	$send .=
+			'</div>'.
+		'</div>'.
+
+		'<div class="center mt30">'.
+			'<button class="vk" onclick="setupRuleSave()">Сохранить</button>'.
+		'</div>';
+
+	return $send;
+}
+function setup_worker_razdel_rule_sub($viewer_id, $arr, $rule) {//дочерние разделы меню
+	$send = '';
+	foreach($arr as $s) {
+		if($s['id'] == 29)//настройки - разделы
+			continue;
+
+		$sub2 = '';
+
+		//Отчёты - История действия
+		if($s['id'] == 60) {
+			$sub2 .=
+			'<div class="mt5">'.
+				_ruleCache('RULE_HISTORY_VIEW').': '.
+				'<input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
+			'</div>';
+		}
+
+		//Отчёты - З/п сотрудников
+		if($s['id'] == 62) {
+			$sub2 .=
+			'<div class="mt5">'.
+				_ruleCache('RULE_WORKER_SALARY_VIEW').': '.
+				'<input type="hidden" id="RULE_WORKER_SALARY_VIEW" value="'.$rule['RULE_WORKER_SALARY_VIEW'].'" />'.
+			'</div>';
+		}
+
+		//Деньги - Расчётные счета
+		if($s['id'] == 51) {
+			$sub2 .=
+			'<div class="mt5">'.
+				_check('RULE_SETUP_INVOICE', _ruleCache('RULE_SETUP_INVOICE'), $rule['RULE_SETUP_INVOICE'], 1).
+			'</div>'.
+
+			'<div class="mt5">'.
+				_check('RULE_INVOICE_HISTORY', _ruleCache('RULE_INVOICE_HISTORY'), $rule['RULE_INVOICE_HISTORY'], 1).
+			'</div>'.
+
+			'<div class="mt5">'.
+				_ruleCache('RULE_INVOICE_TRANSFER').': '.
+				'<input type="hidden" id="RULE_INVOICE_TRANSFER" value="'.$rule['RULE_INVOICE_TRANSFER'].'" />'.
+			'</div>';
+		}
+
+		//Настройки - права сотрудников
+		if($s['id'] == 15) {
+			$sub2 .=
+			'<div class="mt5">'.
+				_check('RULE_SETUP_RULES', _ruleCache('RULE_SETUP_RULES'), $rule['RULE_SETUP_RULES'], 1).
+			'</div>';
+		}
+
+		$subAccess = _viewerMenuAccess($s['id'], $viewer_id);
+
+		$send .=
+		'<div class="mt5" onclick="setupRuleMenuSub($(this))">'.
+			_check('RULE_MENU_'.$s['id'], $s['name'], _viewerMenuAccess($s['id'], $viewer_id), 1).
+		'</div>'.
+		'<div class="ml40 mb10'.($subAccess && $sub2 ? '' : ' dn').'">'.$sub2.'</div>';
+	}
+
+	return $send;
+}
+function setup_worker_info_dop($viewer_id) {//дополнительные настройки
+	$rule = _viewerRule($viewer_id);
+
+	return
+		'<table class="bs10 mt20">'.
+			'<tr><td class="label w70"><td>'._check('RULE_SALARY_SHOW', _ruleCache('RULE_SALARY_SHOW'), $rule['RULE_SALARY_SHOW']).
+			'<tr><td class="label"><td>'._check('RULE_EXECUTER', _ruleCache('RULE_EXECUTER'), $rule['RULE_EXECUTER']).
+			'<tr><td class="label"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', _ruleCache('RULE_SALARY_ZAYAV_ON_PAY'), $rule['RULE_SALARY_ZAYAV_ON_PAY']).
 /*
 			'<tr><td class="lab">Начислять бонусы:'.
 				'<td>'._check('RULE_SALARY_BONUS', '', $rule['RULE_SALARY_BONUS']).
 					'<span'.($rule['RULE_SALARY_BONUS'] ? '' : ' class="vh"').'>'.
 						'<input type="text" id="salary_bonus_sum" maxlength="5" value="'.$u['bonus_sum'].'" />%'.
 					'<span>'.
+
+				'<tr><td class="lab">Процент от платежей:<td><input type="text" id="rules_money_procent" value="'.$rule['RULES_MONEY_PROCENT'].'" maxlength="2" />'.
 */
+
 		'</table>'.
 
-	(!$u['viewer_admin'] && $viewer_id < VIEWER_MAX ?
-
-	($u['pin'] ?
-		'<div class="headName">Пин-код</div>'.
-		'<button class="vk" id="pin-clear">Сбросить пин-код</button>'
-	: '').
-
-/*		'<div class="headName">Дополнительно</div>'.
-			'<table class="rtab">'.
-				'<tr><td class="lab">Процент от платежей:<td><input type="text" id="rules_money_procent" value="'.$rule['RULES_MONEY_PROCENT'].'" maxlength="2" />'.
-				'<tr><td><td><div class="vkButton dop-save"><button>Сохранить</button></div>'.
-			'</table.
-*/
-
-		'<div class="headName">Права в приложении</div>'.
-			_check('RULE_APP_ENTER', 'Разрешать вход в приложение', $rule['RULE_APP_ENTER'], 1).
-			'<table class="rtab'.($rule['RULE_APP_ENTER'] ? '' : ' dn').'" id="div-app-enter">'.
-
-				'<tr><td class="label top"><b>Доступ к основным разделам меню:</b>'.
-					'<td id="td-rule-menu">'._setup_worker_rule_menu($viewer_id).
-
-				'<tr id="tr-rule-zayav"'.(_viewerMenuAccess(2, $viewer_id) ? '' : ' class="dn"').'>'.
-					'<td class="label top"><b>Права в заявках:</b>'.
-					'<td id="td-rule-zayav">'.
-						_check('RULE_ZAYAV_EXECUTER', 'Видит только те заявки,<br />в которых является исполнителем', $rule['RULE_ZAYAV_EXECUTER']).
-
-				'<tr id="tr-rule-setup"'.(_viewerMenuAccess(5, $viewer_id) ? '' : ' class="dn"').'>'.
-					'<td class="label top"><b>Доступ к настройкам:</b>'.
-					'<td id="td-rule-setup">'._setup_worker_rule_menu_setup($viewer_id, $rule).
-				'<tr><td class="label"><a class="history-view-worker-all'._tooltip('Изменить для всех сотрудников', -20).'Видит историю действий</a>:'.
-					'<td><input type="hidden" id="RULE_HISTORY_VIEW" value="'.$rule['RULE_HISTORY_VIEW'].'" />'.
-				'<tr><td class="label">Видит з/п:'.
-					'<td><input type="hidden" id="RULE_WORKER_SALARY_VIEW" value="'.$rule['RULE_WORKER_SALARY_VIEW'].'" />'.
-				'<tr><td><td>'.
-
-				'<tr><td><td><b>Деньги</b>'.
-				'<tr><td class="label">Управление расчётными счетами:'.
-					'<td>'._check('RULE_SETUP_INVOICE', '', $rule['RULE_SETUP_INVOICE']).
-				'<tr><td class="label">Видит историю операций<br />по расчётным счетам:'.
-					'<td>'._check('RULE_INVOICE_HISTORY', '', $rule['RULE_INVOICE_HISTORY']).
-				'<tr><td class="label">Видит переводы<br />по расчётным счетам:'.
-					'<td><input type="hidden" id="RULE_INVOICE_TRANSFER" value="'.$rule['RULE_INVOICE_TRANSFER'].'" />'.
-//				'<tr><td class="label">Может видеть платежи:<td>'._check('RULE_INCOME_VIEW', '', $rule['RULE_INCOME_VIEW']).
-			'</table>'.
-		'</div>'
-
-	: '')
-
-	: '').
-
-	'</div>';
-
+		'<div class="center mt30">'.
+			'<button class="vk" onclick="setupRuleSave()">Сохранить</button>'.
+		'</div>';
 }
-function setup_worker_rule_val($viewer_id) {//список всех возможных переменных прав сотрудника
-	if(!SA)
+
+
+
+
+
+
+function setup_worker_rule_val($viewer_id) {//SA: список всех возможных переменных прав сотрудника
+	if(!@DEBUG)
 		return '';
 
 	$sql = "SELECT *
@@ -348,48 +440,23 @@ function setup_worker_rule_val($viewer_id) {//список всех возможных переменных п
 			WHERE `app_id`=".APP_ID."
 			  AND `viewer_id`=".$viewer_id."
 			ORDER BY `key`";
-	$spisok = '<table class="_spisok dn l">';
+	$spisok = '<table class="_spisokTab w300 dn">';
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		$spisok .=
-			'<tr><td>'.$r['key'].
-				'<td class="w50 center">'.($r['value'] ? $r['value'] : '');
+			'<tr class="over1">'.
+				'<td>'.$r['key'].
+				'<td class="w50 center'.(!$r['value'] ? ' grey' : ' b').'">'.$r['value'];
 	}
 	$spisok .= '</table>';
 
 	return
 	'<div class="mt10">'.
-		'<a class="fr mb10" onclick="$(this).next().toggle()">SA: переменные прав</a>'.
+		'<button class="vk grey small mb10" onclick="$(this).next().next().toggle()">SA: переменные прав</button>'.
+		' '.
+		'<button class="vk red small" onclick="setupRuleClear()">SA: очистить права и доступ к разделам</button>'.
 		$spisok.
 	'</div>';
-}
-function _setup_worker_rule_menu($viewer_id) {//вывод разделов меню с галочками
-	$send = '';
-	foreach(_menuCache() as $r) {
-		if($r['p'] == 'main')
-			continue;
-		if($r['p'] == 'manual')
-			continue;
-		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($r['id'], $viewer_id));
-	}
-
-	return $send;
-}
-function _setup_worker_rule_menu_setup($viewer_id, $rule) {//вывод разделов меню настроек с галочками
-	$send = '';
-	foreach(_menuCache('setup') as $r) {
-		if($r['p'] == 'my')
-			continue;
-
-		$send .= _check('RULE_MENU_'.$r['id'], $r['name'], _viewerMenuAccess($r['id'], $viewer_id));
-		if($r['p'] == 'worker')
-			$send .=
-				'<div id="div-worker-rule"'.(_viewerMenuAccess(15, $viewer_id) ? '' : ' style="display:none"').'>'.
-					_check('RULE_SETUP_RULES', 'Права сотрудников', $rule['RULE_SETUP_RULES']).
-				'</div>';
-	}
-
-	return $send;
 }
 function setup_worker_rule_save($post) {//сохранение настройки права сотрудника
 	if(!RULE_SETUP_RULES)
@@ -456,10 +523,9 @@ function _workerRuleQuery($viewer_id, $key, $v) {//изменение значения права сотр
 	xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 	xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
 }
-function _ruleHistoryView($id=false) {
+function _ruleHistoryView($id=false) {//видит историю действий RULE_HISTORY_VIEW
 	$arr = array(
-		0 => 'нет',
-		1 => 'только свою',
+		1 => 'только свои действия',
 		2 => 'всю историю'
 	);
 
@@ -471,11 +537,10 @@ function _ruleHistoryView($id=false) {
 
 	return $arr[$id];
 }
-function _ruleInvoiceTransfer($id=false) {
+function _ruleInvoiceTransfer($id=false) {//видит переводы по расчётным счетам RULE_INVOICE_TRANSFER
 	$arr = array(
-		0 => 'нет',
-		1 => 'только свои',
-		2 => 'все'
+		1 => 'только свои переводы',
+		2 => 'все переводы'
 	);
 
 	if($id === false)
@@ -486,6 +551,28 @@ function _ruleInvoiceTransfer($id=false) {
 
 	return $arr[$id];
 }
+function _ruleSalaryView($id=false) {//видит з/п RULE_WORKER_SALARY_VIEW
+	$arr = array(
+		1 => 'только свою',
+		2 => 'всех сотрудников'
+	);
+
+	if($id === false)
+		return $arr;
+
+	if(!isset($arr[$id]))
+		return 'неизвестный id';
+
+	return $arr[$id];
+}
+
+
+
+
+
+
+
+
 
 function setup_bik_insert() {//обновление базы банков по БИК
 	$xml = simplexml_load_file(API_PATH.'/!/base.xml');
@@ -526,7 +613,7 @@ function setup_bik_insert() {//обновление базы банков по БИК
 			) VALUES ".implode(',', $insert);
 	query($sql);
 }
-function setup_org() {
+function setup_org() {//13 данные организации
 	if(!_viewerMenuAccess(13))
 		return _err('Недостаточно прав: Реквизиты организации');
 
@@ -757,38 +844,7 @@ function setup_org_nalog($g) {//Налоговый учёт организации
 	'</table>';
 }
 
-function setup_service() {
-	$sql = "SELECT
-				*,
-				0 `active`
-			FROM `_zayav_service`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `id`";
-	if(!$spisok = query_arr($sql))
-		return 'Виды деятельности не определены.';
-
-	$send = '';
-	foreach($spisok as $r) {
-		$send .=
-		'<div class="unit" val="'.$r['id'].'">'.
-			(SA ? _iconEdit() : '').
-			'<input type="hidden" class="name" value="'.$r['name'].'">'.
-			'<h1>'.$r['head'].'</h1>'.
-			'<h2>'.$r['about'].'</h2>'.
-		'</div>';
-	}
-
-	return
-	'<div id="setup-service">'.
-		'<div class="headName">Виды деятельности</div>'.
-		$send.
-	'</div>';
-}
-
-function setup_expense() {
-	if(!_viewerMenuAccess(19))
-		return _err('Недостаточно прав: категории расходов.');
-
+function setup_expense() {// 19 категории расходов
 	return
 	'<div id="setup_expense">'.
 		setupPath(array(
@@ -802,7 +858,7 @@ function setup_expense() {
 function setup_expense_spisok() {
 	$sql = "SELECT
 				*,
-				0 `sub`,
+				'' `sub`,
 				0 `count`,
 				0 `deleted`
 			FROM `_money_expense_category`
@@ -811,17 +867,16 @@ function setup_expense_spisok() {
 	if(!$spisok = query_arr($sql))
 		return 'Список пуст.';
 
-	//количество подкатегорий
-	$sql = "SELECT
-				DISTINCT `category_id`,
-				COUNT(`id`) `sub`
+	//подкатегории
+	$sql = "SELECT *
 			FROM `_money_expense_category_sub`
 			WHERE `app_id`=".APP_ID."
-			GROUP BY `category_id`";
+			ORDER BY `id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['category_id']]['sub'] = $r['sub'];
+		$spisok[$r['category_id']]['sub'] .= '<div class="ml20">'.$r['name'].'</div>';
 
+	//количество записей
 	$sql = "SELECT
 				DISTINCT `category_id`,
 				COUNT(`id`) `count`
@@ -834,6 +889,7 @@ function setup_expense_spisok() {
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['category_id']]['count'] = $r['count'];
 
+	//количество удалённых записей
 	$sql = "SELECT
 				DISTINCT `category_id`,
 				COUNT(`id`) `count`
@@ -847,32 +903,32 @@ function setup_expense_spisok() {
 		$spisok[$r['category_id']]['deleted'] = $r['count'];
 
 	$send =
-		'<table class="_spisok">'.
+		'<table class="_spisokTab">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="w70">Кол-во<br />под-<br />категорий'.
-		  (SA ? '<th class="w50">Кол-во<br />записей' : '').
-				'<th class="w35">'.
+		  (SA ? '<th class="w70">Кол-во<br />записей' : '').
+				'<th class="w70">'.
 		'</table>'.
 		'<dl class="_sort" val="_money_expense_category">';
 
 	foreach($spisok as $id => $r)
 		$send .= '<dd val="'.$id.'">'.
-			'<table class="_spisok">'.
+			'<table class="_spisokTab mt1">'.
 				'<tr><td class="curM">'.
-						($id == 1 ? '<span class="name">'.$r['name'].'</span>' :
-									'<a class="name" href="'.URL.'&p=setup&d=expense&id='.$id.'">'.$r['name'].'</a>'
-						).
-						'<div class="about">'._br($r['about']).'</div>'.
-					'<td class="w70 center">'.($r['sub'] ? $r['sub'] : '').
+						'<div class="name fs14 b">'.$r['name'].'</div>'.
+						'<div class="about fs12 grey mt1">'._br($r['about']).'</div>'.
+						'<div class="mt5">'.$r['sub'].'</div>'.
 
-			(SA ?	'<td class="w50 center">'.
+			(SA ?	'<td class="w70 center top">'.
 						($r['count'] ? $r['count'] : '').
 						($r['deleted'] ? '<em class="'._tooltip('удалено', -30).'('.$r['deleted'].')</em>' : '')
 			: '').
 
-					'<td class="w35 topi">'.
-						($id != 1 ? _iconEdit($r) : '').
-						($id != 1 && !$r['count'] && !$r['deleted'] ? _iconDel($r) : '').
+					'<td class="w70 top">'.
+						($id != 1 ?
+							'<div class="icon icon-edit'._tooltip('Изменить категорию', -60).'</div>'.
+							'<div class="icon icon-add'._tooltip('Добавить подкатегорию', -73).'</div>'.
+							(!$r['count'] && !$r['deleted'] ? '<div class="icon icon-del'._tooltip('Удалить', -26).'</div>' : '')
+						: '').
 			'</table>';
 	$send .= '</dl>';
 	return $send;
@@ -962,10 +1018,7 @@ function setup_expense_sub_spisok($id) {
 }
 
 
-function setup_zayav_status() {
-	if(!_viewerMenuAccess(16))
-		return _err('Недостаточно прав: статусы заявок.');
-
+function setup_zayav_status() {// 16 Статусы заявок
 	return
 	'<div id="setup_zayav_status">'.
 		setupPath(array(
@@ -1146,15 +1199,12 @@ function setupZayavStatusDefaultDrop($default) {//сброс статуса по умолчанию, ес
 }
 
 
-function setup_zayav_expense() {//категории расходов по заявке
-	if(!_viewerMenuAccess(17))
-		return _err('Недостаточно прав: расходы по заявке.');
-
+function setup_zayav_expense() {// 17 категории расходов по заявке
 	return
 	'<div id="setup_zayav_expense">'.
 		setupPath(array(
 			'name' => 'Настройка категорий расходов по заявке',
-			'add_name' => 'Добавить',
+			'add_name' => 'Добавить категорию',
 			'add_func' => 'setupZayavExpense()'
 		)).
 		'<div id="spisok" class="mar10">'.setup_zayav_expense_spisok().'</div>'.
@@ -1182,11 +1232,11 @@ function setup_zayav_expense_spisok() {
 		$spisok[$r['category_id']]['use'] = $r['use'];
 
 	$send =
-	'<table class="_spisok">'.
+	'<table class="_spisokTab">'.
 		'<tr><th class="name">Наименование'.
-			'<th class="dop">Дополнительное поле'.
-			'<th class="use">Кол-во<br />записей'.
-			'<th class="ed">'.
+			'<th class="w150">Дополнительное поле'.
+			'<th class="w70">Кол-во<br />записей'.
+			'<th class="w35">'.
 	'</table>'.
 	'<dl class="_sort" val="_zayav_expense_category">';
 	foreach($spisok as $id => $r) {
@@ -1195,15 +1245,15 @@ function setup_zayav_expense_spisok() {
 			$param = 'Ведение прикреплённых счетов';
 		$send .=
 		'<dd val="'.$id.'">'.
-			'<table class="_spisok">'.
+			'<table class="_spisokTab mt1">'.
 				'<tr><td class="name curM">'.$r['name'].
-					'<td class="dop">'.
+					'<td class="w150 dop">'.
 						($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
 						'<div class="param-info">'.$param.'</div>'.
 						'<input type="hidden" class="hdop" value="'.$r['dop'].'" />'.
 						'<input type="hidden" class="param" value="'.$r['param'].'" />'.
-					'<td class="use">'.($r['use'] ? $r['use'] : '').
-					'<td class="ed">'.
+					'<td class="w70 center use">'.($r['use'] ? $r['use'] : '').
+					'<td class="w35">'.
 						_iconEdit().
 						(!$r['use'] ? _iconDel() : '').
 			'</table>';
@@ -1213,7 +1263,7 @@ function setup_zayav_expense_spisok() {
 	return $send;
 }
 
-function setup_salary_list() {
+function setup_salary_list() {// 22 Листы выдачи з/п
 	if(!_viewerMenuAccess(22))
 		return _err('Недостаточно прав: '.LIST_VYDACI.'.');
 
@@ -1274,7 +1324,7 @@ function salary_list_head() {
 
 
 
-function setup_rubric() {
+function setup_rubric() {//18 рубрики объявлений
 	if(!_viewerMenuAccess(18))
 		return _err('Недостаточно прав: рубрики объявлений.');
 
@@ -1424,7 +1474,7 @@ function setup_rubric_sub_spisok($rubric_id) {
 
 
 
-function setup_cartridge() {
+function setup_cartridge() {// 21 Картриджи
 	if(!_viewerMenuAccess(21))
 		return _err('Недостаточно прав: картриджи.');
 
@@ -1490,6 +1540,81 @@ function setup_cartridge_spisok($edit_id=0) {
 
 
 
+function setup_razdel() {//29 разделы приложения
+	if(!SA)
+		return '';
+
+	return
+	'<div id="setup-razdel">'.
+		setupPath(array(
+			'name' => 'Разделы приложения'
+		)).
+
+	(DEBUG ?
+		'<div class="mar10">'.
+			'<a href="'.URL.'&p=30" class="grey">SA: разделы меню</a>'.
+		'</div>'
+	: '').
+
+		'<div id="spisok" class="mar10">'.setup_razdel_spisok().'</div>'.
+	'</div>';
+}
+function setup_razdel_spisok() {
+	$spisok = array();
+
+	$sql = "SELECT *
+			FROM `_menu`
+			WHERE !`parent_id`
+			ORDER BY `sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$r['sub'] = array();
+		$spisok[$r['id']] = $r;
+	}
+
+	if(empty($spisok))
+		return 'Список пуст.';
+
+	$sql = "SELECT *
+			FROM `_menu`
+			WHERE `parent_id`
+			ORDER BY `sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		if(_menuCache('parent_id', $r['parent_id']))
+			continue;
+		$spisok[$r['parent_id']]['sub'][] = $r;
+	}
+
+	if(empty($spisok))
+		return 'Список пуст.';
+
+	$send = '';
+	foreach($spisok as $id => $r) {
+		if(!_menuCache('app_use', $id))
+			continue;
+		if($r['hidden'])
+			continue;
+
+		$send .=
+			'<div class="b fs18 mt10">'.
+				$r['name'].
+			'</div>';
+
+		if(!empty($r['sub'])) {
+			foreach($r['sub'] as $sub) {
+				if(!_menuCache('app_use', $sub['id']))
+					continue;
+				if($sub['hidden'])
+					continue;
+				$send .=
+				'<div class="fs15 ml20">'.$sub['name'].'</div>';
+			}
+		}
+	}
+
+	return $send;
+}
 
 
 
@@ -1498,8 +1623,7 @@ function setup_cartridge_spisok($edit_id=0) {
 
 
 
-
-function setup_tovar() {
+function setup_tovar() {// 20 Товары
 	if(!_viewerMenuAccess(20))
 		return _err('Недостаточно прав: товары.');
 
@@ -1682,7 +1806,7 @@ function setup_tovar_vendor_spisok() {
 
 
 
-function setup_polosa() {//Купец: стоимость см2 для каждой полосы
+function setup_polosa() {// 23 Купец: стоимость см2 для каждой полосы
 	return
 	'<div id="setup_polosa">'.
 		setupPath(array(
@@ -1724,7 +1848,7 @@ function setup_polosa_spisok() {
 
 
 
-function setup_obdop() {//Купец: дополнительные параметры объявлений
+function setup_obdop() {// 24 Купец: дополнительные параметры объявлений
 	return
 	'<div id="setup_obdop">'.
 		setupPath(array(
@@ -1757,7 +1881,7 @@ function setup_obdop_spisok() {
 
 
 
-function setup_oblen() {//Купец: стоимость длины объявления
+function setup_oblen() {// 25 Купец: стоимость длины объявления
 	return
 	'<div id="setup_oblen">'.
 		setupPath(array(
@@ -1781,7 +1905,7 @@ function setup_oblen() {//Купец: стоимость длины объявления
 
 
 
-function setup_gn() {
+function setup_gn() {// 26 Номера выпусков газеты
 	define('CURRENT_YEAR', strftime('%Y', time()));
 	return
 	'<script>var GN_MAX="'._gn('gn_max').'";</script>'.
@@ -1825,10 +1949,10 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return
-			'Номера газет, которые будут выходить в '.$y.' году, не определены.'.
-			'<button class="vk">Создать список</button>';
+			'<div class="mar20 center">Номера газет, которые будут выходить в '.$y.' году, не определены.</div>'.
+			'<div class="mar20 center"><button class="vk" onclick="setupGnSpisokCreate()">Создать список</button></div>';
 	$send =
-		'<a id="gn-clear" val="'.$y.'">Очистить список за '.$y.' год</a>'.
+		'<button class="vk small red fr mt10 mb10" onclick="setupGnClear('.$y.')">Очистить список за '.$y.' год</button>'.
 		'<table class="_spisok">'.
 			'<tr><th>Номер<br />выпуска'.
 				'<th>День отправки<br />в печать'.
@@ -1858,7 +1982,7 @@ function setup_gn_spisok($y=CURRENT_YEAR, $gnedit=0) {
 
 
 
-function setup_schet_pay() {//счёт на оплату
+function setup_schet_pay() {// 28 счёт на оплату
 	$v = setup_schet_pay_verify();
 
 	$sql = "SELECT `id`,`name`
@@ -1888,6 +2012,8 @@ function setup_schet_pay() {//счёт на оплату
 				'<td><input type="text" id="prefix" class="w50" value="'.$v['prefix'].'" />'.
 			'<tr><td class="label">Стартовый номер:'.
 				'<td><input type="text" id="nomer_start" class="w50" value="'.$v['nomer_start'].'" />'.
+			'<tr><td class="label">Указывать дату для АКТА:'.
+				'<td>'._check('act_date_set', '', $v['act_date_set']).
 			'<tr><td class="label">Расчётный счёт по умолчанию:'.
 				'<td><input type="hidden" id="invoice_id_default" value="'.$v['invoice_id_default'].'" />'.
 			'<tr><td><td>'.
@@ -1921,7 +2047,7 @@ function setup_schet_pay_verify() {//проверка наличия настроек счёта
 
 
 
-function setup_document_template() {//шаблоны документов
+function setup_document_template() {// 27 шаблоны документов
 	setup_document_template_default_test();
 	return
 	setupPath(array(
@@ -1984,7 +2110,7 @@ function setup_document_template_spisok() {
 	foreach($spisok as $r)
 		$send .=
 			'<div class="mt'.($n == 1 ? 10 : 5).'">'.($n++).'. '.
-				'<a href="'.URL.'&p=setup&d=document_template&id='.$r['id'].'">'.$r['name'].'</a>'.
+				'<a href="'.URL.'&p=76&id='.$r['id'].'">'.$r['name'].'</a>'.
 			'</div>';
 
 	return $send;

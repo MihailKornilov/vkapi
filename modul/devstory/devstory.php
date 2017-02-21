@@ -35,7 +35,7 @@ function _devstory_footer() {//текст в нижней части приложения
 		'<span class="grey">'.$year.'</span>'.
 		_viewer(VIEWER_ID, 'viewer_link_my').
 	($_GET['p'] != 'devstory' ?
-		'<a href="'.URL.'&p=devstory" class="dev-page'._tooltip('Процесс разработки приложения', -158, 'r').'разработка</a>'
+		'<a href="'.URL.'&p=7" class="dev-page'._tooltip('Процесс разработки приложения', -158, 'r').'разработка</a>'
 	: '').
 	'</div>';
 }
@@ -147,52 +147,39 @@ function _devstoryStatus($id, $type='name') {//названия статусов
 }
 
 function _devstory() {//основная страница
-	switch(@$_GET['d']) {
-		default:
-		case 'main': $content = _devstory_part(); break;
-		case 'task': $content = _devstory_process(); break;
-		case 'offer': $content = _devstory_offer(); break;
-		case 'about': $content = _devstory_about(); break;
-	}
-	return
-	_devstoryMenu().
-	$content.
-	'<script>'.
-		'var DEVSTORY_PART_SPISOK='._devstoryPart('js').','.
-			'DTIME="'.strftime('%Y-%m-%d %H:%M:00').'";'.
-	'</script>';
+	header('Location:'.URL.'&p=53');
+	exit;
 }
 function _devstoryMenu() {//разделы основного меню
-	$menu = array(
-		'main' => 'Разделы',
-		'task' => 'Список задач'
-//		'offer' => 'Предложения',
-//		'about' => 'О разработке'
-	);
-
-	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
-		$_GET['d'] = 'main';
+	//подсветка выбранного раздела, в том числе, если дочерняя страница
+	$sel_id = _num($_GET['p']);
 
 	$link = '';
-	foreach($menu as $d => $name) {
-		$sel = $_GET['d'] == $d ? ' sel' : '';
-		$link .=
-			'<a class="p'.$sel.'" href="'.URL.'&p=devstory&d='.$d.'">'.
-				$name.
-			'</a>';
+	foreach(_menuCache() as $id => $r) {
+		if($sel_id != 54 && $sel_id != 55 && ($id == 54 || $id == 55))
+			continue;
+		if($sel_id == 54 && $id == 55)
+			continue;
+		if($sel_id == 55 && $id == 54)
+			continue;
+
+		if($r['func_menu'] != '_devstoryMenu')
+			continue;
+		if(!$r['parent_id'])
+			continue;
+
+		$sel = $id == $sel_id ? ' sel' : '';
+		$link .= '<a class="p'.$sel.'" href="'.URL.'&p='.$id.'">'.$r['name'].'</a>';
 	}
 
 	return
 	'<div id="_menu">'.
 		$link.
-		'<a class="back" href="'.URL.'">'._app('app_name').'</a>'.
+		'<a class="back" href="'.URL.'&p=2">'._app('app_name').'</a>'.
 	'</div>';
 }
 
 function _devstory_part() {
-	if($id = _num(@$_GET['id']))
-		return _devstory_part_info($id);
-
 	return
 	'<div id="devstory-part">'.
 		'<div class="headName m1">'.
@@ -242,7 +229,7 @@ function _devstory_part_spisok() {//список разделов
 			'<dd val="'.$r['id'].'">'.
 				'<table class="part-u w100p">'.
 					'<tr><td class="'.(SA ? 'curM' : '').'">'.
-							'<a href="'.URL.'&p=devstory&d=main&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
+							'<a href="'.URL.'&p=54&id='.$r['id'].'" class="name">'.$r['name'].'</a>'.
 							'<div class="keyword">'.$r['keyword'].'</div>'.
 					(SA ?
 						'<td class="ed">'.
@@ -253,7 +240,10 @@ function _devstory_part_spisok() {//список разделов
 	$send .= '</dl>';
 	return $send;
 }
-function _devstory_part_info($part_id) {
+function _devstory_part_info() {
+	if(!$part_id = _num(@$_GET['id']))
+		return _err();
+
 	$sql = "SELECT *
 			FROM `_devstory_part`
 			WHERE `id`=".$part_id;
@@ -278,7 +268,10 @@ function _devstory_part_info($part_id) {
 }
 
 
-function _devstory_task_info($task_id) {
+function _devstory_task_info() {
+	if(!$task_id = _num(@$_GET['id']))
+		return _err();
+
 	$sql = "SELECT
 				*,
 				0 `keyword`,
@@ -374,7 +367,7 @@ function _devstory_task_info($task_id) {
 	return
 	'<div id="devstory-task-info">'.
 		'<div class="part-name">'.
-			'<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a> » '.$r['name'].
+			'<a href="'.URL.'&p=54&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a> » '.$r['name'].
 		'</div>'.
 		'<div val="'.$r['id'].'" class="task-u status'.$r['status_id'].'">'.
 			'<div class="pp">'.
@@ -503,9 +496,6 @@ function _secToTime($sec) {//перевод количества секунд в часы и минуты
 
 
 function _devstory_process() {
-	if($task_id = _num(@$_GET['id']))
-		return _devstory_task_info($task_id);
-
 	return
 	'<div class="mar8">'.
   (SA ? '<button class="vk fr" onclick="devStoryTaskEdit()">Новая задача</button>' : '').
@@ -608,7 +598,7 @@ function _devstory_process_wait($part_id=0) {//список задач, ожидающих выполнени
 	$part_id_cur = 0;
 	foreach($task as $r) {
 		if(!$part_id && $part_id_cur != $r['part_id']) {
-			$send .= '<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'" class="devstory-wait-pname">'._devstoryPart($r['part_id']).'</a>';
+			$send .= '<a href="'.URL.'&p=54&id='.$r['part_id'].'" class="devstory-wait-pname">'._devstoryPart($r['part_id']).'</a>';
 			$part_id_cur = $r['part_id'];
 		}
 		$send .= _devstory_task_unit($r, $part_id);
@@ -640,26 +630,11 @@ function _devstory_task_unit($r, $part_id) {//единица списка задач
 	'<div class="devstory-task-unit">'.
 		'<div style="background:#'._devstoryStatus($r['status_id'], 'bg').'" class="stat'._tooltip('Статус: '._devstoryStatus($r['status_id']), -8, 'l').'</div>'.
 		($r['status_id'] == 3 ? '<span class="dtime-end grey">'.FullData($r['dtime_end'], 1, 1).':</span> ' : '').
-		'<a class="name" href="'.URL.'&p=devstory&d=task&id='.$r['id'].'">'.$r['name'].'</a>'.
+		'<a class="name" href="'.URL.'&p=55&id='.$r['id'].'">'.$r['name'].'</a>'.
 		(!$part_id && $r['status_id'] ?
-			'<span class="part-name">(<a href="'.URL.'&p=devstory&d=main&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a>)</span>'
+			'<span class="part-name">(<a href="'.URL.'&p=54&id='.$r['part_id'].'">'._devstoryPart($r['part_id']).'</a>)</span>'
 		: '').
 	'</div>';
 }
-
-
-
-
-function _devstory_offer() {//предложение о новых возможностях приложения
-	return
-		'Предложения';
-}
-
-
-function _devstory_about() {//описание модуля процесса разработки
-	return
-		'about';
-}
-
 
 

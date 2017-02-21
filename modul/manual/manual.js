@@ -147,7 +147,7 @@ var _manualPartEdit = function(o) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=manual&d=part&page_id=' + res.id;
+					location.href = URL + '&p=57&page_id=' + res.id;
 				} else
 					dialog.abort();
 			}, 'json');
@@ -220,7 +220,7 @@ $(document)
 			head:'раздела мануала',
 			op:'manual_part_del',
 			func:function(res) {
-				location.href = URL + '&p=manual';
+				location.href = URL + '&p=10';
 			}
 		});
 	})
@@ -245,7 +245,7 @@ $(document)
 			head:'страницы мануала',
 			op:'manual_page_del',
 			func:function(res) {
-				location.href = URL + '&p=manual&d=part&part_id=' + res.part_id;
+				location.href = URL + '&p=57&part_id=' + res.part_id;
 			}
 		});
 	})

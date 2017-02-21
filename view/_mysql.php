@@ -16,6 +16,8 @@ function _dbConnect($prefix='') {
 	mysql_query($sql, $conn) or die($sql.'<br />'.mysql_error());
 
 	define($prefix.'MYSQL_CONNECT', $conn);
+
+	_debugLoad('База данных подключена');
 }
 function query($sql, $resource_id=GLOBAL_MYSQL_CONNECT) {
 	global $sqlQuery, $sqlTime;

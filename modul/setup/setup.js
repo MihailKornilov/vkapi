@@ -315,7 +315,7 @@ var setupOrgEdit = function(org_id) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=setup&d=worker&id=' + res.id;
+					location.href = URL + '&p=74&id=' + res.id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -397,7 +397,7 @@ var setupOrgEdit = function(org_id) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=setup&d=worker&id=' + send.viewer_id;
+					location.href = URL + '&p=74&id=' + send.viewer_id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -414,6 +414,44 @@ var setupOrgEdit = function(org_id) {
 			_msg('Сохранено');
 	}, 'json');
 },
+	setupRuleMenuSub = function(t) {// открытие/закрытие дочерних разделов меню
+		var v = _num(t.find('input').val()),
+			next = t.next();
+		if(!next.html())
+			return;
+		next['slide' + (v ? 'Up' : 'Down')]();
+	},
+	setupRuleClear = function() {// SA: удаление переменных прав сотрудника
+		var send = {
+			op:'setup_worker_rule_clear',
+			viewer_id:RULE_VIEWER_ID
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				_msg();
+				location.reload();
+			}
+		}, 'json');
+	},
+	setupRuleSave = function() {
+		var inp = $('#setup_rule input'),
+			arr = {};
+		for(var n = 0; n < inp.length; n++) {
+			var sp = inp.eq(n);
+			arr[sp.attr('id')] = _num(sp.val());
+		}
+
+		console.log(arr);
+		var send = {
+			op:'setup_worker_rule_save',
+			viewer_id:RULE_VIEWER_ID,
+			arr:arr
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				_msg();
+		}, 'json');
+	},
 
 	setupExpenseEdit = function(o) {
 		o = $.extend({
@@ -759,6 +797,82 @@ var setupOrgEdit = function(org_id) {
 			});
 		}
 	},
+	setupGnSpisokCreate = function() {
+		var year = $('#dopLinks .sel').html(),
+			html =
+				'<div class="_info">' +
+					'Для создания списка номеров газет <b>' + year + '</b> года ' +
+					'укажите данные <b>первого номера</b>, который будет выходить в этом году.<br />' +
+					'Все поля обязательны для заполнения.' +
+				'</div>' +
+
+				'<table class="bs10">' +
+					'<tr><td class="label r w150">Первый номер выпуска:' +
+						'<td><input type="text" id="week_nomer" class="w15 r mr5" maxlength="2" value="1" />' +
+							'<input type="text" id="general_nomer" class="w35 r" maxlength="4" value="' + GN_MAX + '" />' +
+					'<tr><td class="label r">Дни отправки в печать:<td><input type="hidden" id="day_print" value="1" />' +
+					'<tr><td class="label r">Дни выхода:<td><input type="hidden" id="day_public" value="4" />' +
+					'<tr><td class="label r">Количество полос:<td><input type="hidden" id="polosa_count" value="8" />' +
+					'<tr><td class="label r">Первый день выхода:<td><input type="hidden" id="day_first" value="' + year + '-01-01" />' +
+				'</table>',
+			dialog = _dialog({
+				width:370,
+				head:'Создание списка номеров газеты',
+				content:html,
+				butSubmit:'Создать',
+				submit:submit
+			}),
+			weeks = [
+				{uid:0,title:'Понедельник'},
+				{uid:1,title:'Вторник'},
+				{uid:2,title:'Среда'},
+				{uid:3,title:'Четверг'},
+				{uid:4,title:'Пятница'},
+				{uid:5,title:'Суббота'},
+				{uid:6,title:'Воскресенье'}
+			];
+		$('#week_nomer').focus();
+		$('#week_nomer,#general_nomer').keyEnter(submit);
+		$('#day_print')._select({width:100, spisok:weeks});
+		$('#day_public')._select({width:100, spisok:weeks});
+		$('#polosa_count')._select({
+			width:50,
+			spisok:[{uid:4,title:"4"},{uid:6,title:"6"},{uid:8,title:"8"},{uid:10,title:"10"},{uid:12,title:"12"}]
+		});
+		$('#day_first')._calendar({lost:1});
+		function submit() {
+			var send = {
+				op:'setup_gn_spisok_create',
+				year:year,
+				week_nomer:_num($('#week_nomer').val()),
+				general_nomer:_num($('#general_nomer').val()),
+				day_print:$('#day_print').val(),
+				day_public:$('#day_public').val(),
+				polosa_count:$('#polosa_count').val(),
+				day_first:$('#day_first').val()
+			};
+			if(!send.week_nomer) {
+				dialog.err('Некорректно указан номер недели выпуска');
+				$('#week_nomer').focus();
+				return;
+			}
+			if(!send.general_nomer) {
+				dialog.err('Некорректно указан общий номер выпуска');
+				$('#general_nomer').focus();
+				return;
+			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#dopLinks').html(res.year);
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
 	setupGnEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -768,16 +882,16 @@ var setupOrgEdit = function(org_id) {
 			public:'',
 			pc:8
 		}, o);
-		var html = '<table class="setup-gn-tab bs10">' +
+		var html = '<table class="bs10">' +
 				'<tr><td class="label r">Номер выпуска:' +
-					'<td><input type="text" id="week_nomer" maxlength="2" value="' + o.week + '" />' +
-						'<input type="text" id="general_nomer" maxlength="4" value="' + o.general + '" />' +
+					'<td><input type="text" id="week_nomer" class="w15 r mr5" maxlength="2" value="' + o.week + '" />' +
+						'<input type="text" id="general_nomer" class="w35 r" maxlength="4" value="' + o.general + '" />' +
 				'<tr><td class="label r">День отправки в печать:<td><input type="hidden" id="day_print" value="' + o.print + '" />' +
 				'<tr><td class="label r">День выхода:<td><input type="hidden" id="day_public" value="' + o.public + '" />' +
 				'<tr><td class="label r">Количество полос:<td><input type="hidden" id="polosa_count" value="' + o.pc + '" />' +
 				'</table>',
 			dialog = _dialog({
-				width:320,
+				width:370,
 				head:(o.id ? 'Редактирование' : 'Добавление') + ' номера газеты',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -812,6 +926,32 @@ var setupOrgEdit = function(org_id) {
 				$('#general_nomer').focus();
 				return;
 			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#dopLinks').html(res.year);
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	setupGnClear = function(year) {
+		var dialog = _dialog({
+			top:90,
+			width:330,
+			head:'Очищение списка номеров газеты',
+			content:'<center>Подтвердите удаление списка номеров газеты<br />за ' + year + ' год.</center>',
+			butSubmit:'Очистить',
+			submit:submit
+		});
+		function submit() {
+			var send = {
+				op:'setup_gn_clear',
+				year:year
+			};
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
@@ -1146,6 +1286,7 @@ var setupOrgEdit = function(org_id) {
 			}, 'json');
 		}
 	},
+	
 
 	setupSchetPay = function() {//настройка счетов на оплату
 		$('#schet-pay-use')._check(function(v) {
@@ -1171,6 +1312,7 @@ var setupOrgEdit = function(org_id) {
 					op:'setup_schet_pay_save',
 					nomer_start:$('#nomer_start').val(),
 					prefix:$('#prefix').val(),
+					act_date_set:$('#act_date_set').val(),
 					invoice_id:$('#invoice_id_default').val(),
 					template_ids:$('#schet-pay').val()
 				};
@@ -1223,7 +1365,7 @@ var setupOrgEdit = function(org_id) {
 				if(res.success) {
 					dialog.close();
 					_msg();
-					location.href = URL + '&p=setup&d=document_template&id=' + res.id;
+					location.href = URL + '&p=76&id=' + res.id;
 				} else
 					dialog.abort(res.text);
 			}, 'json');
@@ -1280,7 +1422,7 @@ $.fn._templateSelect = function() {//настройка для выбора шаблона для печати
 			if(!val)
 				return false;
 
-			location.href = URL + '&p=setup&d=document_template&id=' + val;
+			location.href = URL + '&p=76&id=' + val;
 		});
 		$('.icon-del.icon' + num).click(function() {
 			$(this).parent().remove();
@@ -1374,64 +1516,7 @@ $(document)
 		}
 	})
 
-	.on('click', '.service-toggle', function() {
-		var t = $(this),
-			p = _parent(t, '.unit'),
-			h1 = p.find('h1'),
-			send = {
-				op:'setup_service_toggle',
-				id:p.attr('val')
-			};
-		if(h1.hasClass('_busy'))
-			return;
-		h1.addClass('_busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			h1.removeClass('_busy');
-			if(res.success) {
-				p[(res.on ? 'add' : 'remove') + 'Class']('on');
-				_msg();
-			}
-		}, 'json');
-	})
-	.on('click', '#setup-service .img_edit', function() {
-		var t = $(this),
-			p = _parent(t, '.unit'),
-			html = '<table id="setup-service-edit">' +
-				'<tr><td class="label r">Название:<td><input id="name" type="text" value="' + p.find('.name').val() + '" />' +
-				'<tr><td class="label r">Заголовок:<td><input id="head" type="text" value="' + p.find('h1').html() + '" />' +
-				'<tr><td class="label r topi">Описание:<td><textarea id="about">' + p.find('h2').html() + '</textarea>' +
-				'</table>',
-			dialog = _dialog({
-				top:20,
-				width:520,
-				head:'Редактирование вида деятельности',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#name').focus();
-		$('#about').autosize();
-		function submit() {
-			var send = {
-				op:'setup_service_edit',
-				id:p.attr('val'),
-				name:$('#name').val(),
-				head:$('#head').val(),
-				about:$('#about').val()
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	})
-
-	.on('click', '#setup_expense .img_edit', function() {
+	.on('click', '#setup_expense .icon-edit', function() {
 		var t = _parent($(this), 'DD');
 		setupExpenseEdit({
 			id:t.attr('val'),
@@ -1440,7 +1525,7 @@ $(document)
 		});
 
 	})
-	.on('click', '#setup_expense .img_del', function() {
+	.on('click', '#setup_expense .icon-del', function() {
 		_dialogDel({
 			id:_parent($(this), 'DD').attr('val'),
 			head:'категории расходов организации',
@@ -1573,110 +1658,6 @@ $(document)
 			if(res.success)
 				$('#spisok').html(res.html);
 		}, 'json');
-	})
-	.on('click', '#setup_gn .vk', function() {
-		var t = $(this),
-			year = $('#dopLinks .sel').html(),
-			html = '<table class="setup-gn-tab bs10">' +
-				'<tr><td colspan="2">' +
-					'<div class="gn-info">' +
-						'Для создания списка номеров газет <b>' + year + '</b> года ' +
-						'укажите данные <b>первого номера</b>, который будет выходить в этом году.<br />' +
-						'Все поля обязательны для заполнения.' +
-					'</div>' +
-				'<tr><td class="label r">Первый номер выпуска:' +
-					'<td><input type="text" id="week_nomer" maxlength="2" value="1" />' +
-						'<input type="text" id="general_nomer" maxlength="4" value="' + GN_MAX + '" />' +
-				'<tr><td class="label r">Дни отправки в печать:<td><input type="hidden" id="day_print" value="1" />' +
-				'<tr><td class="label r">Дни выхода:<td><input type="hidden" id="day_public" value="4" />' +
-				'<tr><td class="label r">Количество полос:<td><input type="hidden" id="polosa_count" value="8" />' +
-				'<tr><td class="label r">Первый день выхода:<td><input type="hidden" id="day_first" value="' + year + '-01-01" />' +
-				'</table>',
-			dialog = _dialog({
-				width:320,
-				head:'Создание списка номеров газеты',
-				content:html,
-				butSubmit:'Создать',
-				submit:submit
-			}),
-			weeks = [
-				{uid:0,title:'Понедельник'},
-				{uid:1,title:'Вторник'},
-				{uid:2,title:'Среда'},
-				{uid:3,title:'Четверг'},
-				{uid:4,title:'Пятница'},
-				{uid:5,title:'Суббота'},
-				{uid:6,title:'Воскресенье'}
-			];
-		$('#week_nomer').focus();
-		$('#week_nomer,#general_nomer').keyEnter(submit);
-		$('#day_print')._select({width:100, spisok:weeks});
-		$('#day_public')._select({width:100, spisok:weeks});
-		$('#polosa_count')._select({
-			width:50,
-			spisok:[{uid:4,title:"4"},{uid:6,title:"6"},{uid:8,title:"8"},{uid:10,title:"10"},{uid:12,title:"12"}]
-		});
-		$('#day_first')._calendar({lost:1});
-		function submit() {
-			var send = {
-				op:'setup_gn_spisok_create',
-				year:year,
-				week_nomer:_num($('#week_nomer').val()),
-				general_nomer:_num($('#general_nomer').val()),
-				day_print:$('#day_print').val(),
-				day_public:$('#day_public').val(),
-				polosa_count:$('#polosa_count').val(),
-				day_first:$('#day_first').val()
-			};
-			if(!send.week_nomer) {
-				dialog.err('Некорректно указан номер недели выпуска');
-				$('#week_nomer').focus();
-				return;
-			}
-			if(!send.general_nomer) {
-				dialog.err('Некорректно указан общий номер выпуска');
-				$('#general_nomer').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#dopLinks').html(res.year);
-					$('#spisok').html(res.html);
-					dialog.close();
-					_msg();
-				} else
-					dialog.abort(res.text);
-			}, 'json');
-		}
-	})
-	.on('click', '#setup_gn #gn-clear', function() {
-		var t = $(this),
-			year = t.attr('val'),
-			dialog = _dialog({
-				top:90,
-				width:300,
-				head:'Очищение списка номеров газеты',
-				content:'<center>Подтвердите удаление списка номеров газеты<br />за ' + year + ' год.</center>',
-				butSubmit:'Очистить',
-				submit:submit
-			});
-		function submit() {
-			var send = {
-				op:'setup_gn_clear',
-				year:year
-			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#dopLinks').html(res.year);
-					$('#spisok').html(res.html);
-					dialog.close();
-					_msg();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
 	})
 	.on('click', '#setup_gn .img_edit', function() {
 		var t = $(this),
@@ -2063,13 +2044,29 @@ $(document)
 					head:'сотрудника',
 					op:'setup_worker_del',
 					func:function() {
-						location.href = URL + '&p=setup&d=worker';
+						location.href = URL + '&p=15';//список сотрудников
 					}
 				});
 			});
-			$('#RULE_SALARY_SHOW')._check(setupRuleCheck);
-			$('#RULE_EXECUTER')._check(setupRuleCheck);
-			$('#RULE_SALARY_ZAYAV_ON_PAY')._check(setupRuleCheck);
+			$('#rule-menu')._menuDop({
+				spisok:[
+					{uid:1,title:'Права в приложении'},
+					{uid:2,title:'Дополнительно'},
+					{uid:3,title:'История действий с сотрудником'}
+				]
+			});
+			$('#RULE_HISTORY_VIEW')._dropdown({
+				spisok:RULE_HISTORY_SPISOK
+			});
+			$('#RULE_WORKER_SALARY_VIEW')._dropdown({
+				spisok:[{uid:1,title:"только свою"},{uid:2,title:"всех сотрудников"}]
+			});
+			$('#RULE_INVOICE_TRANSFER')._dropdown({
+				spisok:RULE_INVOICE_TRANSFER_SPISOK
+			});
+
+			
+/*
 			$('#RULE_SALARY_BONUS')._check(function(v, id) {
 				var t = $(this);
 				$('#' + id + '_check').next()[(v ? 'remove' : 'add') + 'Class']('vh');
@@ -2132,11 +2129,6 @@ $(document)
 						_msg('Сохранено');
 				}, 'json');
 			});
-			//показ-скрытие прав в заявках
-			$('#RULE_MENU_2')._check(function(v) {
-				$('#tr-rule-zayav')[(v ? 'remove' : 'add') + 'Class']('dn');
-			});
-			$('#RULE_ZAYAV_EXECUTER')._check(setupRuleCheck);
 
 			//показ-скрытие прав с подразделами настроек
 			$('#RULE_MENU_5')._check(function(v) {
@@ -2148,22 +2140,6 @@ $(document)
 				setupRuleCheck(v, id);
 				$('#RULE_SETUP_RULES')._check(0);
 			});
-			$('#RULE_SETUP_RULES')._check(setupRuleCheck);
-			$('#RULE_SETUP_INVOICE')._check(setupRuleCheck);
-			$('#RULE_HISTORY_VIEW')._dropdown({
-				spisok:RULE_HISTORY_SPISOK,
-				func:setupRuleCheck
-			});
-			$('#RULE_WORKER_SALARY_VIEW')._dropdown({
-				spisok:[{uid:0,title:"нет"},{uid:1,title:"только свою"},{uid:2,title:"всех сотрудников"}],
-				func:setupRuleCheck
-			});
-			$('#RULE_INVOICE_HISTORY')._check(setupRuleCheck);
-			$('#RULE_INVOICE_TRANSFER')._dropdown({
-				spisok:RULE_INVOICE_TRANSFER_SPISOK,
-				func:setupRuleCheck
-			});
-			$('#RULE_INCOME_VIEW')._check(setupRuleCheck);
 			$('#pin-clear').click(function() {
 				var send = {
 						op:'setup_worker_pin_clear',
@@ -2182,6 +2158,7 @@ $(document)
 					}
 				}, 'json');
 			});
+*/
 		}
 		if($('#setup_document_template_info').length) {
 			$('#attach_id')._attach({

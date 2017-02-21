@@ -1,5 +1,8 @@
 <?php
 function _manual() {
+	header('Location:'.URL.'&p=56');
+	exit;
+
 	switch(@$_GET['d']) {
 		case 'new': return _manual_new();
 		case 'part':
@@ -11,11 +14,11 @@ function _manual() {
 		case 'action': return _manual_action();
 	}
 
-	return _manual_main();
 }
 
 function _manual_script() {//скрипты и стили
-	if(@$_GET['p'] != 'manual')
+	$id = _num(@$_GET['p']);
+	if($id != 10 && _menuCache('parent_main_id', $id) != 10)
 		return '';
 
 	return
@@ -45,7 +48,7 @@ function _manualPart($id=false, $i='name') {
 			if(!SA && !$r['access'])
 				continue;
 			$sel = $id == $r['id'] ? ' class="sel"' : '';
-			$send .= '<a'.$sel.' href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.$r['name'].'</a>';
+			$send .= '<a'.$sel.' href="'.URL.'&p=57&part_id='.$r['id'].'">'.$r['name'].'</a>';
 		}
 		return '<div class="rightLink">'.$send.'</div>';
 	}
@@ -96,38 +99,31 @@ function _manualPartSub($id=false, $i='name') {
 }
 
 function _manualMenu() {//разделы основного меню
-	$menu = array(
-		'main' => 'Мануал',
-		'part' => 'Разделы',
-		'new' => _manualPart(1),
-		'action' => 'События'
-//		'dialog' => 'Обсуждения'
-	);
-
-	if(!SA)
-		unset($menu['action']);
-	
-	if(empty($_GET['d']) || !isset($menu[@$_GET['d']]))
-		$_GET['d'] = 'main';
+	//подсветка выбранного раздела, в том числе, если дочерняя страница
+	$sel_id = _num($_GET['p']);
 
 	$link = '';
-	foreach($menu as $d => $name) {
-		$sel = $_GET['d'] == $d ? ' sel' : '';
-		$link .=
-			'<a class="p'.$sel.'" href="'.URL.'&p=manual&d='.$d.'">'.
-				$name.
-			'</a>';
+	foreach(_menuCache() as $id => $r) {
+		if($r['func_menu'] != '_manualMenu')
+			continue;
+		if(!$r['parent_id'])
+			continue;
+		if(!SA && $r['hidden'])
+			continue;
+
+		$sel = $id == $sel_id ? ' sel' : '';
+		$link .= '<a class="p'.$sel.'" href="'.URL.'&p='.$id.'">'.$r['name'].'</a>';
 	}
 
 	return
 	'<div id="_menu">'.
 		$link.
-		'<a class="back" href="'.URL.'">'._app('app_name').'</a>'.
+		'<a class="back" href="'.URL.'&p=2">'._app('app_name').'</a>'.
 	'</div>';
+
 }
 function _manual_main() {//главная страница
 	return
-	_manualMenu().
 	'<div id="manual">'.
 		'<div class="_info">'.
 			'<b>Мануал</b> - это руководство по грамотной и эффективной работе в приложении.'.
@@ -154,7 +150,7 @@ function _manual_main_spisok() {//главная страница
 		$noaccess = $r['access'] ? '' : ' noaccess';
 		$send .=
 			'<div class="part'.$noaccess.'">'.
-				'<a class="part-head" href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.
+				'<a class="part-head" href="'.URL.'&p=57&part_id='.$r['id'].'">'.
 					'<span class="name">'.$r['name'].'</span>'.
 				'</a>'.
 				'<div class="part-sub">'.$r['sub'].'</div>'.
@@ -204,7 +200,6 @@ function _manual_part_js() {
 function _manual_part() {//разделы
 	return
 	_manual_part_js().
-	_manualMenu().
 	'<div id="manual-part">'.
 		'<table class="tabLR">'.
 			'<tr><td id="left">'._manual_content().
@@ -257,7 +252,7 @@ function _manual_page_spisok($part_id) {
 		$noaccess = $r['access'] ? '' : ' noaccess';
 		$send .=
 			'<div class="page-unit'.$noborder.$noaccess.'">'.
-				'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
+				'<a href="'.URL.'&p=57&page_id='.$r['id'].'">'.$r['name'].'</a>'.
 			'</div>';
 	}
 
@@ -308,7 +303,7 @@ function _manual_page_info($id) {//отображение страницы мануала
 	: '').
 
 	(!_manualPageCountInPart($r['part_id']) ?
-		'<a class="back" href="'.URL.'&p=manual&d=part&part_id='.$r['part_id'].'"><< назад к разделу <b>'._manualPart($r['part_id']).'</b></a>'
+		'<a class="back" href="'.URL.'&p=57&part_id='.$r['part_id'].'"><< назад к разделу <b>'._manualPart($r['part_id']).'</b></a>'
 	: '').
 
 	'<div id="head">'.
@@ -352,7 +347,7 @@ function _manual_page_link_part($content) {//вставка ссылок на разделы мануала {
 	while($r = mysql_fetch_assoc($q))
 		$content = str_replace(
 					'{part'.$r['id'].'}',
-					'<a href="'.URL.'&p=manual&d=part&part_id='.$r['id'].'">'.$r['name'].'</a>',
+					'<a href="'.URL.'&p=57&part_id='.$r['id'].'">'.$r['name'].'</a>',
 					$content);
 	return $content;
 }
@@ -362,7 +357,7 @@ function _manual_page_link_page($content) {//вставка ссылок на страницы мануала 
 	while($r = mysql_fetch_assoc($q))
 		$content = str_replace(
 					'{page'.$r['id'].'}',
-					'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>',
+					'<a href="'.URL.'&p=57&page_id='.$r['id'].'">'.$r['name'].'</a>',
 					$content);
 	return $content;
 }
@@ -425,7 +420,6 @@ function _manual_answer_insert($manual_id, $val=1) {
 
 function _manual_new() {
 	return
-	_manualMenu().
 	'<div id="manual-new">'.
 		'<div id="spisok">'._manual_new_spisok().'</div>'.
 	'</div>';
@@ -446,7 +440,7 @@ function _manual_new_spisok() {
 		$noaccess = $r['access'] ? '' : ' noaccess';
 		$send .=
 			'<div class="unit'.$noborder.$noaccess.'">'.
-				'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
+				'<a href="'.URL.'&p=57&page_id='.$r['id'].'">'.$r['name'].'</a>'.
 				'<div class="dtime">'.FullDataTime($r['dtime_add']).'</div>'.
 			'</div>';
 	}
@@ -478,7 +472,7 @@ function _menuInfoTop() {//информационное сообщение сверху страницы
 	return
 	'<div id="_info-top">'.
 		'<div class="img_del" val="'.$r['id'].'"></div>'.
-		'<a href="'.URL.'&p=manual&d=part&page_id='.$r['id'].'">'.$r['name'].'</a>'.
+		'<a href="'.URL.'&p=57&page_id='.$r['id'].'">'.$r['name'].'</a>'.
 	'</div>';
 }
 
@@ -508,7 +502,6 @@ function _manual_action() {//действия пользователей в отношении страниц
 	if(!SA)
 		return _manual_main();
 	return
-	_manualMenu().
 	'<div id="manual-action">'.
 		'<div id="spisok">'._manual_action_spisok().'</div>'.
 	'</div>';
@@ -548,7 +541,7 @@ function _manual_action_spisok($v=array()) {
 		$send .=
 				'<tr>'.
 			(!$filter['manual_id'] ?
-					'<td><a href="'.URL.'&p=manual&d=part&page_id='.$r['manual_id'].'">'.$page[$r['manual_id']].'</a>'
+					'<td><a href="'.URL.'&p=57&page_id='.$r['manual_id'].'">'.$page[$r['manual_id']].'</a>'
 			: '').
 					'<td class="user">'._viewer($r['viewer_id'], 'viewer_link').
 					'<td class="act"'._manualAction($r['val'], 'bg').'>'._manualAction($r['val']).

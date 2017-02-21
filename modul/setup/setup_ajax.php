@@ -177,7 +177,7 @@ switch(@$_POST['op']) {
 			jsonError('Сотрудник является руководителем');
 
 		if(!$u['viewer_worker'])
-			jsonError('Пользователь уже не является сотрудником');
+			jsonError('Пользователь не является сотрудником');
 
 		$sql = "UPDATE `_vkuser`
 				SET `worker`=0
@@ -422,61 +422,230 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
-	case 'RULE_SALARY_SHOW'://Показывать в списке з/п сотрудников
-		$_POST['h1'] = 1036;
-		$_POST['h0'] = 1035;
-
-		if(!setup_worker_rule_save($_POST))
+	case 'setup_worker_rule_clear':// SA: удаление переменных прав сотрудника
+		if(!SA)
 			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_EXECUTER'://может быть исполнителем
-		if(!RULE_SETUP_RULES)
-			jsonError();
-
 		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
 
-		$new = _num($_POST['v']);
+		$u = _viewer($viewer_id);
 
-		$old = _viewerRule($viewer_id, 'RULE_EXECUTER');
+		$sql = "DELETE FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql);
 
-		if($old == $new)
-			jsonError();
+		$sql = "DELETE FROM `_menu_viewer`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		query($sql);
 
-		_workerRuleQuery($viewer_id, 'RULE_EXECUTER', $new);
-		_appJsValues();
-
-		_history(array(
-			'type_id' => 1012,
-			'worker_id' => $viewer_id,
-			'v1' => '<table>'.
-						_historyChange('Может быть исполнителем заявок', _daNet($old), _daNet($new)).
-					'</table>'
-		));
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_menu_'.$viewer_id);
 
 		jsonSuccess();
 		break;
-	case 'RULE_SALARY_ZAYAV_ON_PAY'://Начислять з/п по заявке при отсутствии долга
-		$_POST['h1'] = 1046;
-		$_POST['h0'] = 1047;
+	case 'setup_worker_rule_save':// сохранение прав сотрудника
+		if(!_viewerMenuAccess(15))
+			jsonError('Нет прав');
+		if(!$viewer_id = _num($_POST['viewer_id']))
+			jsonError('Некорректный идентификатор сотрудника');
 
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
+		$arr = $_POST['arr'];
+		//сохранение из дополнительного меню
+		define('DOP', $arr['rule-menu'] == 2);
+		unset($arr['rule-menu']);
+
+		if(!RULE_SETUP_RULES && !DOP)
+			jsonError('Нет доступа');
+		if($viewer_id == VIEWER_ID && !DOP)
+			jsonError('Нельзя настроить свои права');
+		if(!is_array($_POST['arr']))
+			jsonError('Некорректные данные прав');
+
+
+		$u = _viewer($viewer_id);
+		if($u['viewer_admin'] && !DOP)
+			jsonError('Сотрудник является руководителем');
+
+		if(!$u['viewer_worker'])
+			jsonError('Пользователь не является сотрудником');
+
+		//исходный доступ к разделам (для истории действий)
+		$sql = "SELECT `menu_id`,1
+				FROM `_menu_viewer`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		$menuOld = query_ass($sql);
+
+		//исходные права к разделам (для истории действий)
+		$sql = "SELECT `key`,`value`
+				FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		$ruleOld = query_ass($sql);
+
+		//очистка доступа ко всем разделам
+		if(!DOP) {
+			$sql = "DELETE FROM `_menu_viewer`
+					WHERE `app_id`=".APP_ID."
+					  AND `viewer_id`=".$viewer_id;
+			query($sql);
+		}
+
+		//получение ассоциативного массива выбранных разделов
+		$menuSel = array();
+		foreach($arr as $key => $v) {
+			if(strpos($key, 'RULE_MENU_') !== false) {
+				if(!$v) {
+					unset($arr[$key]);
+					continue;
+				}
+
+				$ex = explode('RULE_MENU_', $key);
+				if(!$menu_id = _num(@$ex[1])) {
+					unset($arr[$key]);
+					continue;
+				}
+
+				$menuSel[$menu_id] = 1;
+			}
+		}
+
+		foreach($arr as $key => $v) {
+			//сохранение доступа к разделам меню
+			if(strpos($key, 'RULE_MENU_') !== false) {
+				$ex = explode('RULE_MENU_', $key);
+				$menu_id = _num($ex[1]);
+
+				//если не выбран родитель, то дочерние разделы не применяются
+				if($parent_id = _menuCache('parent_id', $menu_id))
+					if(!isset($menuSel[$parent_id]))
+						continue;
+
+				$sql = "INSERT INTO `_menu_viewer` (
+							`app_id`,
+							`viewer_id`,
+							`menu_id`
+						) VALUES (
+							".APP_ID.",
+							".$viewer_id.",
+							".$menu_id."
+						)";
+				query($sql);
+				continue;
+			}
+
+			if($ruleOld[$key] != $v) {
+				$sql = "UPDATE `_vkuser_rule`
+						SET `value`='".$v."'
+						WHERE `app_id`=".APP_ID."
+						  AND `viewer_id`=".$viewer_id."
+						  AND `key`='".$key."'";
+				query($sql);
+			}
+		}
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_rule_'.$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_menu_'.$viewer_id);
+
+		//новый доступ к разделам (для истории действий)
+		$sql = "SELECT `menu_id`,1
+				FROM `_menu_viewer`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		$menuNew = query_ass($sql);
+
+		//доступ к разделам закрыт
+		$changes = '';
+		foreach($menuOld as $menu_id => $r) {
+			if(isset($menuNew[$menu_id]))
+				continue;
+			if(_menuCache('norule', $menu_id))
+				continue;
+
+			$parent_id = _menuCache('parent_id', $menu_id);
+
+			$changes .=
+				'<tr class="bg-del">'.
+					'<td>'.
+						($parent_id ? _menuCache('name', $parent_id).' » ' : '').
+						_menuCache('name', $menu_id);
+		}
+
+		if($changes)
+			_history(array(
+				'type_id' => 1068,
+				'worker_id' => $viewer_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+
+		//доступ к разделам открыт
+		$changes = '';
+		foreach($menuNew as $menu_id => $r) {
+			if(isset($menuOld[$menu_id]))
+				continue;
+			if(_menuCache('norule', $menu_id))
+				continue;
+
+			$parent_id = _menuCache('parent_id', $menu_id);
+
+			$changes .=
+				'<tr class="bg-dfd">'.
+					'<td>'.
+						($parent_id ? _menuCache('name', $parent_id).' » ' : '').
+						_menuCache('name', $menu_id);
+		}
+
+		if($changes)
+			_history(array(
+				'type_id' => 1069,
+				'worker_id' => $viewer_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
+
+
+
+
+		//новые права к разделам (для истории действий)
+		$sql = "SELECT `key`,`value`
+				FROM `_vkuser_rule`
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".$viewer_id;
+		$ruleNew = query_ass($sql);
+
+		$changes = '';
+		foreach($ruleNew as $k => $v)
+			if($ruleOld[$k] != $v) {
+				if($k == 'RULE_INVOICE_TRANSFER') {//видит переводы по расчётным счетам
+					$changes .= _historyChange(_ruleCache($k), _ruleInvoiceTransfer($ruleOld[$k]), _ruleInvoiceTransfer($v));
+					continue;
+				}
+				if($k == 'RULE_HISTORY_VIEW') {//видит историю действий
+					$changes .= _historyChange(_ruleCache($k), _ruleHistoryView($ruleOld[$k]), _ruleHistoryView($v));
+					continue;
+				}
+				if($k == 'RULE_WORKER_SALARY_VIEW') {//видит з/п
+					$changes .= _historyChange(_ruleCache($k), _ruleSalaryView($ruleOld[$k]), _ruleSalaryView($v));
+					continue;
+				}
+
+				$changes .= _historyChange(_ruleCache($k), _daNet($ruleOld[$k]), _daNet($v));
+			}
+
+		if($changes)
+			_history(array(
+				'type_id' => 1012,
+				'worker_id' => $viewer_id,
+				'v1' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;
-	case 'RULE_SALARY_BONUS'://Начисления бонусов
-		$_POST['h1'] = 1043;
-		$_POST['h0'] = 1044;
 
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
 	case 'salary_bonus_sum'://установка баланса сотрудника
 		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
@@ -503,15 +672,6 @@ switch(@$_POST['op']) {
 			'worker_id' => $worker_id,
 			'v1' => $sum
 		));
-
-		jsonSuccess();
-		break;
-	case 'RULE_APP_ENTER'://разрешать сотруднику вход в приложение
-		$_POST['h1'] = 1002;
-		$_POST['h0'] = 1003;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
 
 		jsonSuccess();
 		break;
@@ -551,96 +711,11 @@ switch(@$_POST['op']) {
 					  AND `menu_id`=".$menu_id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'viewer_menu_access_'.$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_menu_'.$viewer_id);
 
 		jsonSuccess();
 		break;
 
-	case 'RULE_ZAYAV_EXECUTER'://Видит только те заявки, в которых является исполнителем
-//		$_POST['h1'] = 1004;
-//		$_POST['h0'] = 1005;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_SETUP_RULES'://разрешать сотруднику настраивать права других сотрудников
-		$_POST['h1'] = 1006;
-		$_POST['h0'] = 1007;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_SETUP_INVOICE'://разрешать сотруднику управлять расчётными счетами
-		$_POST['h1'] = 1010;
-		$_POST['h0'] = 1011;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_HISTORY_VIEW'://видит историю действий
-		if(!RULE_SETUP_RULES)
-			jsonError();
-
-		if(!$viewer_id = _num($_POST['viewer_id']))
-			jsonError();
-
-		$new = _num($_POST['v']);
-
-		$old = _viewerRule($viewer_id, 'RULE_HISTORY_VIEW');
-
-		if($old == $new)
-			jsonError();
-
-		_workerRuleQuery($viewer_id, 'RULE_HISTORY_VIEW', $new);
-
-		_history(array(
-			'type_id' => 1012,
-			'worker_id' => $viewer_id,
-			'v1' => '<table>'.
-						_historyChange('Видит историю действий', _ruleHistoryView($old), _ruleHistoryView($new)).
-					'</table>'
-		));
-
-		jsonSuccess();
-		break;
-	case 'RULE_WORKER_SALARY_VIEW'://видит з/п сотрудников
-		if(!RULE_SETUP_RULES)
-			jsonError();
-
-		if(!$viewer_id = _num($_POST['viewer_id']))
-			jsonError();
-
-		$new = _num($_POST['v']);
-
-		$old = _viewerRule($viewer_id, 'RULE_WORKER_SALARY_VIEW');
-
-		if($old == $new)
-			jsonError();
-
-		_workerRuleQuery($viewer_id, 'RULE_WORKER_SALARY_VIEW', $new);
-
-		$arr = array(
-			0 => 'нет',
-			1 => 'только свою',
-			2 => 'всех сотрудников'
-		);
-
-		_history(array(
-			'type_id' => 1012,
-			'worker_id' => $viewer_id,
-			'v1' => '<table>'.
-						_historyChange('Видит з/п', $arr[$old], $arr[$new]).
-					'</table>'
-		));
-
-		jsonSuccess();
-		break;
 	case 'setup_history_view_worker_all'://видимость истории действий для всех сотрудников
 		if(!RULE_SETUP_RULES)
 			jsonError();
@@ -675,50 +750,6 @@ switch(@$_POST['op']) {
 				'type_id' => 1013,
 				'v1' => '<table>'.$changes.'</table>'
 			));
-
-		jsonSuccess();
-		break;
-	case 'RULE_INVOICE_HISTORY'://разрешать сотруднику видеть историю расчётных счетов
-		$_POST['h1'] = 1014;
-		$_POST['h0'] = 1015;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
-
-		jsonSuccess();
-		break;
-	case 'RULE_INVOICE_TRANSFER'://разрешать сотруднику видеть историю переводов по расчётным счетам
-		if(!RULE_SETUP_RULES)
-			jsonError();
-
-		if(!$viewer_id = _num($_POST['viewer_id']))
-			jsonError();
-
-		$new = _num($_POST['v']);
-
-		$old = _viewerRule($viewer_id, 'RULE_INVOICE_TRANSFER');
-
-		if($old == $new)
-			jsonError();
-
-		_workerRuleQuery($viewer_id, 'RULE_INVOICE_TRANSFER', $new);
-
-		_history(array(
-			'type_id' => 1012,
-			'worker_id' => $viewer_id,
-			'v1' => '<table>'.
-						_historyChange('Видит переводы по расчётным счетам ', _ruleHistoryView($old), _ruleHistoryView($new)).
-					'</table>'
-		));
-
-		jsonSuccess();
-		break;
-	case 'RULE_INCOME_VIEW'://разрешать сотруднику видеть список платежей
-		$_POST['h1'] = 1016;
-		$_POST['h0'] = 1017;
-
-		if(!setup_worker_rule_save($_POST))
-			jsonError();
 
 		jsonSuccess();
 		break;
@@ -1239,77 +1270,6 @@ switch(@$_POST['op']) {
 				'v2' => '<table>'.$changes.'</table>',
 			));
 
-
-		jsonSuccess();
-		break;
-
-	case 'setup_service_toggle':
-		if(!VIEWER_ADMIN)
-			jsonError();
-
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `_zayav_service`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT COUNT(*)
-				FROM `_zayav_service_use`
-				WHERE `app_id`=".APP_ID."
-				  AND `service_id`=".$id;
-		if($active = !query_value($sql)) {
-			$sql = "INSERT INTO `_zayav_service_use` (
-						`app_id`,
-						`service_id`
-					) VALUES (
-						".APP_ID.",
-						".$id."
-					)";
-		} else {
-			$sql = "DELETE FROM `_zayav_service_use`
-					WHERE `app_id`=".APP_ID."
-					  AND `service_id`=".$id;
-		}
-
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'service');
-		_appJsValues();
-
-		$send['on'] = $active;
-		jsonSuccess($send);
-		break;
-	case 'setup_service_edit':
-		if(!SA)
-			jsonError();
-
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$name = _txt($_POST['name']);
-		$head = _txt($_POST['head']);
-		$about = win1251($_POST['about']);
-
-		$sql = "SELECT *
-				FROM `_zayav_service`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `_zayav_service`
-				SET `name`='".addslashes($name)."',
-					`head`='".addslashes($head)."',
-					`about`='".addslashes($about)."'
-				WHERE `id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'service');
-		_appJsValues();
 
 		jsonSuccess();
 		break;
@@ -2667,6 +2627,7 @@ switch(@$_POST['op']) {
 			jsonError('Некорректно указан порядковый номер');
 
 		$prefix = _txt($_POST['prefix']);
+		$act_date_set = _bool($_POST['act_date_set']);
 		$invoice_id = _num($_POST['invoice_id']);
 		$template_ids = _ids($_POST['template_ids']);
 
@@ -2683,6 +2644,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_schet_pay_setup`
 				SET `nomer_start`=".$nomer_start.",
 					`prefix`='".addslashes($prefix)."',
+					`act_date_set`=".$act_date_set.",
 					`invoice_id_default`=".$invoice_id."
 				WHERE `id`=".$r['id'];
 		query($sql);

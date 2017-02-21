@@ -229,8 +229,8 @@ function contentShow($sheet, $line) {
 			->setCellValueByColumnAndRow(13, $line, $r['zamer_worker']);
 
 		$sheet->getStyle('A'.$line.':A'.$line)->getFill()->getStartColor()->setRGB(_zayavStatus($r['status_id'], 'color'));
-		$sheet->getCellByColumnAndRow(0, $line)->getHyperlink()->setUrl((LOCAL ? 'http://nyandoma'.URL.'&p=zayav&d=info&&id=' : APP_URL.'#zayav_').$r['id']);         //Вставка ссылки для даты на заявку
-		$sheet->getCellByColumnAndRow(3, $line)->getHyperlink()->setUrl((LOCAL ? 'http://nyandoma'.URL.'&p=client&d=info&&id=' : APP_URL.'#client_').$r['client_id']);//Вставка ссылки для клиента
+		$sheet->getCellByColumnAndRow(0, $line)->getHyperlink()->setUrl((LOCAL ? 'http://nyandoma'.URL.'&p=45&id=' : APP_URL.'#zayav_').$r['id']);         //Вставка ссылки для даты на заявку
+		$sheet->getCellByColumnAndRow(3, $line)->getHyperlink()->setUrl((LOCAL ? 'http://nyandoma'.URL.'&p=42&id=' : APP_URL.'#client_').$r['client_id']);//Вставка ссылки для клиента
 
 		$line++;
 	}

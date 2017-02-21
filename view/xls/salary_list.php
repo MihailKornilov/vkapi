@@ -203,7 +203,7 @@ function zpPrint($sheet, $list) {
 			$sheet->setCellValue($buk[$n++].$line, utf8($txt[$id - 1]));
 
 //		$sheet->getStyle('C'.$line.':C'.$line)->getFill()->getStartColor()->setRGB('4444FF');
-//		$sheet->getCellByColumnAndRow(2, $line)->getHyperlink()->setUrl((LOCAL ? 'http://'.DOMAIN.URL.'&p=zayav&d=info&&id=' : APP_URL.'#zayav_').$r['zayav_id']); //Вставка ссылки на заявку
+//		$sheet->getCellByColumnAndRow(2, $line)->getHyperlink()->setUrl((LOCAL ? 'http://'.DOMAIN.URL.'&p=45&id=' : APP_URL.'#zayav_').$r['zayav_id']); //Вставка ссылки на заявку
 
 		$line++;
 		$sum += $r['sum'];

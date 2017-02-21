@@ -1,58 +1,128 @@
 var saMenuEdit = function(o) {
 		o = $.extend({
-			tp:'main',
 			id:0,
+			parent_id:0,
+			dop_id:0,
 			name:'',
 			about:'',
-			p:''
+			hidden:0,
+			norule:0,
+			func_menu:'',
+			func_page:'',
+			dop_menu_type:0,
+			def:0
 		}, o);
 
 		var html =
-				'<table class="sa-tab" id="sa-menu-tab">' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-					'<tr><td class="label topi">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr><td class="label">p:<td><input type="text" id="p" value="' + o.p + '" />' +
+				'<table class="bs10">' +
+					'<tr><td class="label r b">main:<td><input type="hidden" id="parent_id" value="' + o.parent_id + '" />' +
+					'<tr class="tr-dop dn">' +
+						'<td class="label r">dop:' +
+						'<td><input type="hidden" id="dop_id" value="' + o.dop_id + '" />' +
+					'<tr><td class="label r w150">Название:' +
+						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
+					'<tr><td class="label r topi">Описание:<td><textarea id="about" class="w250">' + o.about + '</textarea>' +
+					'<tr><td class="label r">Скрывать страницу:<td><input type="hidden" id="hidden" value="' + o.hidden + '" />' +
+					'<tr><td class="label r">Всегда доступна<br />(без настроек прав):' +
+						'<td><input type="hidden" id="norule" value="' + o.norule + '" />' +
+					'<tr><td class="label r">func menu:<td><input type="text" id="func_menu" value="' + o.func_menu + '" />' +
+					'<tr><td class="label r">func page:<td><input type="text" id="func_page" class="b" value="' + o.func_page + '" />' +
+					'<tr><td class="label r">dop menu type:<td><input type="hidden" id="dop_menu_type" value="' + o.dop_menu_type + '" />' +
+					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
+						'<td class="label r">APP:' +
+						'<td><input type="hidden" id="def" value="' + o.def + '" />' +
 				'</table>',
 			dialog = _dialog({
+				width:480,
 				head:(o.id ? 'Редактирование' : 'Внесение нового') + ' раздела меню',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
 				submit:submit
 			});
 
+		$('#parent_id')._select({
+			title0:'---',
+			spisok:MENU_MAIN,
+			func:parentSet
+		});
+		$('#dop_id')._select({
+			title0:'---',
+			spisok:[]
+		});
+		parentSet(o.parent_id);
 		$('#name').focus();
 		$('#about').autosize();
+		$('#hidden')._check();
+		$('#norule')._check();
+		$('#dop_menu_type')._select({
+			width:200,
+			title0:'Без меню',
+			spisok:[
+				{uid:1,title:'справа - setup'},
+				{uid:2,title:'справа - обычное'},
+				{uid:3,title:'горизонтальное - dopLinks'}
+			]
+		});
+		$('#def')._check({
+			name:'использовать по умолчанию'
+		});
 
+		function parentSet(parent_id) {
+			$('#dop_id')
+				._select(MENU_DOP[parent_id] ? MENU_DOP[parent_id] : [])
+				._select(o.dop_id);
+			$('.tr-dop')[(MENU_DOP[parent_id] ? 'remove' : 'add') + 'Class']('dn');
+			o.dop_id = 0
+		}
 		function submit() {
 			var send = {
 				op:'sa_menu_' + (o.id ? 'edit' : 'add'),
-				type:o.tp,
 				id:o.id,
+				parent_id:$('#parent_id').val(),
+				dop_id:$('#dop_id').val(),
 				name:$('#name').val(),
 				about:$('#about').val(),
-				p:$('#p').val()
+				hidden:$('#hidden').val(),
+				norule:$('#norule').val(),
+				func_menu:$('#func_menu').val(),
+				func_page:$('#func_page').val(),
+				dop_menu_type:$('#dop_menu_type').val(),
+				def:$('#def').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			if(!send.p) {
-				dialog.err('Не указан link');
-				$('#p').focus();
-				return;
-			}
 			dialog.process();
 			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
 					_msg();
 					$('#spisok').html(res.main);
-					$('#setup-spisok').html(res.setup);
-					sortable();
 				} else
 					dialog.abort();
 			}, 'json');
+		}
+	},
+	saMenuSort = function(parent_id) {
+		var dialog = _dialog({
+				width:420,
+				head:'Сортировнка разделов',
+				load:1,
+				butSubmit:'',
+				butCancel:'Закрыть',
+				cancel:cancel
+			}),
+			send = {
+				op:'sa_menu_sort',
+				parent_id:parent_id
+			};
+		$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.content.html(res.html);
+					sortable();
+				} else
+					dialog.loadError(res.text);
+			}, 'json');
+
+		function cancel() {
+			location.reload();
 		}
 	},
 	balansCategory = function(arr) {
@@ -62,7 +132,7 @@ var saMenuEdit = function(o) {
 			}, arr);
 
 			var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + arr.name + '" />' +
 				'</table>',
 			dialog = _dialog({
@@ -105,7 +175,7 @@ var saMenuEdit = function(o) {
 		}, arr);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label">Категория:<td><b>' + arr.category + '</b>' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + arr.name + '" />' +
 					'<tr><td class="label">Минус:<td><input type="hidden" id="minus" value="' + arr.minus + '" />' +
@@ -209,6 +279,50 @@ var saMenuEdit = function(o) {
 		}
 	},
 
+	saRuleEdit = function(o) {
+		o = $.extend({
+			id:0,
+			key:'',
+			name:'',
+			about:''
+		}, o);
+		
+		var html =
+				'<table class="bs10">' +
+					'<tr><td class="label r">Константа:<td><input type="text" id="key" class="w230" value="' + o.key + '" />' +
+					'<tr><td class="label r">Имя:<td><input type="text" id="name" class="w230" value="' + o.name + '" />' +
+					'<tr><td class="label r topi">Описание:<td><textarea id="about" class="w230">' + o.about + '</textarea>' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Внесение новой') + ' константы прав сотрудников',
+				content:html,
+				butSubmit:(o.id ? 'Изменить' : 'Внести'),
+				submit:submit
+			});
+
+		$('#key').focus();
+		$('#about').autosize();
+
+		function submit() {
+			var send = {
+				op:'sa_rule_edit',
+				id:o.id,
+				key:$('#key').val(),
+				name:$('#name').val(),
+				about:$('#about').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					$('#spisok').html(res.html);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+	
 	saClientPoleEdit = function(o) {
 		o = $.extend({
 			id:0,
@@ -434,7 +548,7 @@ var saMenuEdit = function(o) {
 		}, o);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label">Тип поля:<td><b>' + SAZP_TYPE_NAME + '</b>' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
@@ -523,7 +637,7 @@ var saMenuEdit = function(o) {
 		}, o);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label w150">Исходное название:<td><b>' + o.name + '</b>' +
 		 (o.about ? '<tr><td class="label topi">Описание:<td><div class="_info">' + o.about + '</div>' : '') +
 					'<tr><td class="label topi">Альтернативное название:' +
@@ -585,7 +699,7 @@ var saMenuEdit = function(o) {
 		}, o);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label">Короткое название:<td><input type="text" id="short" class="w50" value="' + o.short + '" />' +
 					'<tr><td class="label">Полное название:<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
@@ -681,7 +795,7 @@ var saMenuEdit = function(o) {
 		}, o);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label">Предлог:<td><input id="predlog" type="text" value="' + o.predlog + '" />' +
 					'<tr><td class="label">Цвет:<td><input id="name" type="text" value="' + o.name + '" />' +
 				'</table>',
@@ -904,7 +1018,7 @@ var saMenuEdit = function(o) {
 		}, o);
 
 		var html =
-				'<table class="sa-tab">' +
+				'<table class="bs10">' +
 					'<tr><td class="label"><b>app_id</b>:<td><input id="app_id" type="text" value="' + o.id + '"' + (o.id ? ' disabled' : '') + ' />' +
 					'<tr><td class="label">title:<td><input id="title" type="text" value="' + o.title + '" />' +
 					'<tr><td class="label">Название:<td><input type="text" id="app_name" class="w230" value="' + o.app_name + '" />' +
@@ -972,13 +1086,21 @@ var saMenuEdit = function(o) {
 	};
 
 $(document)
-	.on('click', '#sa-menu .img_edit', function() {
-		var t = _parent($(this), 'TR');
+	.on('click', '#sa-menu .icon-edit', function() {
+		var t = $(this),
+			p = _parent(t, 'TR');
 		saMenuEdit({
-			id:t.find('.name').attr('val'),
-			name:t.find('.name span').html(),
-			about:t.find('.about').html(),
-			p:t.find('.p').html()
+			id:t.attr('val'),
+			parent_id:p.find('.parent_id').val(),
+			dop_id:p.find('.dop_id').val(),
+			name:p.find('.name').html(),
+			about:p.find('.about').html(),
+			hidden:p.find('.hidden').val(),
+			norule:p.find('.norule').val(),
+			func_menu:p.find('.func_menu').html(),
+			func_page:p.find('.func_page').html(),
+			dop_menu_type:_num(p.find('.dop_menu_type').html()),
+			def:_bool(p.find('.def').val())
 		});
 	})
 	.on('click', '#sa-menu .show ._check', function() {//скрытие-показ разделов меню
@@ -993,7 +1115,6 @@ $(document)
 			if(res.success) {
 				_msg();
 				$('#spisok').html(res.main);
-				$('#setup-spisok').html(res.setup);
 				sortable();
 			}
 		}, 'json');
@@ -1025,13 +1146,15 @@ $(document)
 
 		});
 	})
-	.on('click', '#sa-history-cat .img_edit', function() {
+	.on('click', '#sa-history-cat .icon-edit', function() {
 		var t = _parent($(this), 'DD'),
 			html =
-				'<table class="sa-tab">' +
-					'<tr><td class="label">Name:<td><input type="text" id="name" value="' + t.find('.name b').html() + '" />' +
-					'<tr><td class="label topi">About:<td><textarea id="about">' + t.find('.about').html() + '</textarea>' +
-					'<tr><td class="label topi">js_use:<td><input type="hidden" id="js_use"  value="' + (t.find('.js').html() ? 1 : 0) + '" />' +
+				'<table class="bs10">' +
+					'<tr><td class="label r">Name:' +
+						'<td><input type="text" id="name" class="w230" value="' + t.find('.name b').html() + '" />' +
+					'<tr><td class="label r topi">About:' +
+						'<td><textarea id="about" class="w230">' + t.find('.about').html() + '</textarea>' +
+					'<tr><td class="label r topi">js_use:<td><input type="hidden" id="js_use"  value="' + (t.find('.js').html() ? 1 : 0) + '" />' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
@@ -1054,67 +1177,38 @@ $(document)
 				about:$('#about').val(),
 				js_use:$('#js_use').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Изменено');
-						$('#spisok').html(res.html);
-						sortable();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Изменено');
+					$('#spisok').html(res.html);
+					sortable();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
 		}
 	})
 
-	.on('click', '#sa-rule .img_edit', function() {
-		var t = _parent($(this)),
-			html =
-				'<table class="sa-tab" id="sa-rule-tab">' +
-					'<tr><td class="label">Константа:<td><input type="text" id="key" value="' + t.find('.key b').html() + '" />' +
-					'<tr><td class="label topi">Описание:<td><textarea id="about">' + t.find('.about').html() + '</textarea>' +
-				'</table>',
-			dialog = _dialog({
-				top:30,
-				width:380,
-				head:'Редактирование константы прав сотрудников',
-				content:html,
-				butSubmit:'Изменить',
-				submit:submit
-			});
-
-		$('#key').focus();
-		$('#about').autosize();
-
-		function submit() {
-			var send = {
-				op:'sa_rule_edit',
-				id: t.attr('val'),
-				key:$('#key').val(),
-				about:$('#about').val()
-			};
-			if(!send.key) {
-				dialog.err('Не указан текст константы');
-				$('#key').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Изменено');
-						$('#spisok').html(res.html);
-					} else {
-						dialog.abort();
-						dialog.err(res.text);
-					}
-				}, 'json');
+	.on('click', '#sa-rule .icon-edit', function() {
+		var t = _parent($(this));
+		saRuleEdit({
+			id:_num(t.attr('val')),
+			key:t.find('.key').html(),
+			name:t.find('.name').html(),
+			about:t.find('.about').html()
+		});
+	})
+	.on('click', '#sa-rule .icon-del', function() {
+		var p = _parent($(this));
+		_dialogDel({
+			id:p.attr('val'),
+			head:'констатны права',
+			op:'sa_rule_del',
+			func:function() {
+				p.remove();
 			}
-		}
+		});
 	})
 	.on('keyup', '#sa-rule input', function(e) {
 		if(e.keyCode != 13)
@@ -1504,7 +1598,7 @@ $(document)
 		if($('#sa-history-cat').length) {
 			$('.add').click(function() {
 				var html =
-						'<table class="sa-tab">' +
+						'<table class="bs10">' +
 							'<tr><td class="label">Name:<td><input type="text" id="name" />' +
 							'<tr><td class="label topi">About:<td><textarea id="about"></textarea>' +
 							'<tr><td class="label topi">js_use:<td><input type="hidden" id="js_use" />' +
@@ -1541,50 +1635,6 @@ $(document)
 								sortable();
 							} else
 								dialog.abort();
-						}, 'json');
-					}
-				}
-			});
-		}
-
-		if($('#sa-rule').length) {
-			$('.add').click(function() {
-				var html =
-						'<table class="sa-tab" id="sa-rule-tab">' +
-							'<tr><td class="label">Константа:<td><input type="text" id="key" />' +
-							'<tr><td class="label topi">Описание:<td><textarea id="about"></textarea>' +
-						'</table>',
-					dialog = _dialog({
-						top:30,
-						width:380,
-						head:'Внесение новой константы прав сотрудников',
-						content:html,
-						submit:submit
-					});
-
-				$('#key').focus();
-				$('#about').autosize();
-
-				function submit() {
-					var send = {
-						op:'sa_rule_add',
-						key:$('#key').val(),
-						about:$('#about').val()
-					};
-					if(!send.key) {
-						dialog.err('Не указан текст константы');
-						$('#key').focus();
-					} else {
-						dialog.process();
-						$.post(AJAX_MAIN, send, function(res) {
-							if(res.success) {
-								dialog.close();
-								_msg('Внесено');
-								$('#spisok').html(res.html);
-							} else {
-								dialog.abort();
-								dialog.err(res.text);
-							}
 						}, 'json');
 					}
 				}
