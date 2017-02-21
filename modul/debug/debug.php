@@ -38,7 +38,7 @@ function _debug() {
 					'<a'.(@$_COOKIE['debug_pg'] == 'ajax' ? ' class="sel"' : '').' val="ajax">ajax</a>'.
 					(defined('ARRAY_PRE') ? '<a'.(@$_COOKIE['debug_pg'] == 'pre' ? ' class="sel"' : '').' val="pre">pre</a>' : '').
 				'</div>'.
-				'<div class="pg process'.($_COOKIE['debug_pg'] == 'process' ? '' : ' dn').'">'._debugLoad('show').'</div>'.
+				'<div class="pg process'.(@$_COOKIE['debug_pg'] == 'process' ? '' : ' dn').'">'._debugLoad('show').'</div>'.
 				'<ul class="pg sql'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? '' : ' dn').'">'.implode('', $sqlQuery).'</ul>'.
 				'<div class="pg cookie'.(@$_COOKIE['debug_pg'] == 'cookie' ? '' : ' dn').'">'.
 					'<a id="cookie_update">Обновить</a>'.
