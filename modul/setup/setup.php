@@ -1264,9 +1264,6 @@ function setup_zayav_expense_spisok() {
 }
 
 function setup_salary_list() {// 22 Листы выдачи з/п
-	if(!_viewerMenuAccess(22))
-		return _err('Недостаточно прав: '.LIST_VYDACI.'.');
-
 	return
 	setupPath(array(
 		'name' => LIST_VYDACI.': настройка'
@@ -1387,7 +1384,7 @@ function setup_rubric_spisok() {
 		$nodel = $r['sub'] || $r['zayav'];
 		$send .='<dd val="'.$id.'">'.
 			'<table class="_spisok">'.
-				'<tr><td class="name curM"><a href="'.URL.'&p=setup&d=rubric&id='.$id.'">'.$r['name'].'</a>'.
+				'<tr><td class="name curM"><a href="'.URL.'&p=77&id='.$id.'">'.$r['name'].'</a>'.//todo
 					'<td class="w100 center">'.($r['sub'] ? $r['sub'] : '').
 					'<td class="w100 center">'.($r['zayav'] ? $r['zayav'] : '').
 					'<td class="w35">'.
@@ -1400,16 +1397,16 @@ function setup_rubric_spisok() {
 	return $send;
 }
 
-function setup_rubric_sub($id) {
-	if(!_viewerMenuAccess(18))
-		return _err('Недостаточно прав: рубрики объявлений.');
+function setup_rubric_sub() {
+	if(!$id = _num(@$_GET['id']))
+		return _err('Некорректный id рубрики');
 
 	$sql = "SELECT *
 			FROM `_setup_rubric`
 			WHERE `app_id`=".APP_ID."
 			  AND `id`=".$id;
 	if(!$rub = query_assoc($sql))
-		return 'Рубрики id = '.$id.' не существует. ';
+		return _err('Рубрики id = '.$id.' не существует');
 
 	return
 	'<script>var RUBRIC_ID='.$id.';</script>'.

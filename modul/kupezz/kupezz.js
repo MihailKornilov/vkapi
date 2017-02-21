@@ -326,7 +326,7 @@ var cityGet = function(val, city_id, city_name) {
 			(o.sa ?
 				'<div class="psa">' +
 					(o.sa_zayav_id ? ' упецЏ' : '') +
-					(o.sa_viewer_id ? '<a href="' + URL + '&p=admin&id=' + o.sa_viewer_id + '">' + o.sa_name + '</a>' : '') +
+//					(o.sa_viewer_id ? '<a href="' + URL + '&p=admin&id=' + o.sa_viewer_id + '">' + o.sa_name + '</a>' : '') + todo
 					'<div class="ed">' +
 						'<a class="to-arch">в архив</a>' +
 						'<div class="img_edit"></div>' +

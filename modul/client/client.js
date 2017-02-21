@@ -401,7 +401,7 @@ var
 			head:'клиента',
 			op:'client_del',
 			func:function() {
-				location.href = URL + '&p=client';
+				location.href = URL + '&p=1';
 			}
 		});
 	},
