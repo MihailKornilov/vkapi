@@ -105,7 +105,7 @@ switch(@$_POST['op']) {
 
 		_note(array(
 			'add' => 1,
-			'p' => 'zayav',
+			'p' => 45,
 			'id' => $send['id'],
 			'txt' => $v['note']
 		));
@@ -380,7 +380,7 @@ switch(@$_POST['op']) {
 		_note(array(
 			'add' => 1,
 			'comment' => 1,
-			'p' => 'zayav',
+			'p' => 45,
 			'id' => $zayav_id,
 			'txt' => $comm
 		));
@@ -519,7 +519,7 @@ switch(@$_POST['op']) {
 		_note(array(
 			'add' => 1,
 			'comment' => 1,
-			'p' => 'zayav',
+			'p' => 45,
 			'id' => $zayav_id,
 			'txt' => 'Установка запчасти: ' .
 				'<a class="zp-id" val="'.$zp_id.'">' .

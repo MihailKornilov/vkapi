@@ -400,13 +400,7 @@ function _devstory_task_info() {
 			'</table>'.
 		'</div>'.
 
-		'<div class="mar10">'.
-			_note(array(
-				'p' => 'devstory_task',
-				'id' => $task_id,
-				'noapp' => 1
-			)).
-		'</div>'.
+		'<div class="mar10">'._note(array('noapp'=>1)).'</div>'.
 
 	'</div>';
 }

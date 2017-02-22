@@ -2910,7 +2910,7 @@ function _zayavTovarPlaceUpdate($zayav_id, $place_id, $place_name) {// Обновлени
 				_note(array(
 					'add' => 1,
 					'comment' => 1,
-					'p' => 'zayav',
+					'p' => 45,
 					'id' => $zayav_id,
 					'txt' => 'Передано клиенту.'
 				));

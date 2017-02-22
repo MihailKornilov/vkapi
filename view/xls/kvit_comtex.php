@@ -268,7 +268,7 @@ define('Z_NOMER', $z['nomer']);
 
 $z['defect'] = _note(array(
 	'last' => 1,
-	'p' => 'zayav',
+	'p' => 45,
 	'id' => $id
 ));
 

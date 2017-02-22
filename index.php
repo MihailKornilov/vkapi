@@ -8,7 +8,7 @@ header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CN
 
 _const();               //установка основных констант
 
-if(!SA) _appError('Вход в приложение будет недоступен некоторое время');
+//if(!SA) _appError('Вход в приложение будет недоступен некоторое время');
 
 _appAuth();             //получение данных о приложении, проверка авторизации
 _setup_global();

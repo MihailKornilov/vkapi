@@ -256,7 +256,7 @@ switch(@$_POST['op']) {
 		if(!$page_id = _num($_POST['page_id']))
 			jsonError();
 
-		$page_name = _txt($_POST['page_name']);
+		$page_name = _num($_POST['page_name']);
 		$txt = _txt($_POST['txt']);
 		$key = _txt($_POST['key']);
 

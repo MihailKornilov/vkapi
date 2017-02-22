@@ -370,7 +370,6 @@ function _manual_page_bottom($id) {//отображение кнопок для ответа, либо заметок
 			'<button class="vk grey" val="'.$id.'#5">Не интересно</button>'.
 		'</div>'.
 		_note(array(
-			'p' => 'manual_page',
 			'id' => $id,
 			'noapp' => 1
 		)).

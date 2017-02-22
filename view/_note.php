@@ -8,7 +8,7 @@ function _noteQuery($note_id, $withDeleted=false) {//запрос данных по заметке
 }
 function _noteFilter($v) {
 	return array(
-		'p' => empty($v['p']) ? @$_GET['p'] : _txt($v['p']),
+		'p' => empty($v['p']) ? _num(@$_GET['p']) : _num($v['p']),
 		'id' => empty($v['id']) ? _num(@$_GET['id']) : _num($v['id']),
 		'noapp' => _bool(@$v['noapp']), //независимо от приложения - заметка будет показываться во всех приложениях
 		'last' => _bool(@$v['last']),
