@@ -48,7 +48,9 @@ function _const() {
 	if(!$viewer_id = _num(@$_GET['viewer_id']))
 		_appError();
 
+
 	define('VIEWER_ID', $viewer_id);
+	define('VIEWER_ID_ADMIN', _num(@$_GET['viewer_id_admin']));//администратор, зашедший от имени сотрудника
 	define('VIEWER_ONPAY', 2147000001);
 	define('APP_ID', $app_id);
 	define('CACHE_PREFIX', 'CACHE_'.APP_ID.'_');
@@ -71,6 +73,7 @@ function _const() {
 	define('VALUES', TIME.
 					 '&api_id='.APP_ID.
 					 '&viewer_id='.VIEWER_ID.
+  (VIEWER_ID_ADMIN ? '&viewer_id_admin='.VIEWER_ID_ADMIN : '').
 					 '&auth_key='.@$_GET['auth_key']
 		  );
 	//'&access_token='.@$_GET['access_token'] todo временно отключен
@@ -634,8 +637,10 @@ function _appAuth() {//ѕроверка авторизации в приложении
 	_debugLoad('ѕройдена авторизаци€ приложени€');
 }
 function _appError($msg='ѕриложение не было загружено.') {//вывод сообщени€ об ошибке приложени€ и выход
-	define('MIN', defined('DEBUG') ? '' : '.min');
-	define('VERSION', 2);
+	if(!defined('VERSION')) {
+		define('VERSION', 3);
+		define('MIN', defined('DEBUG') ? '' : '.min');
+	}
 	$html =
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
@@ -652,6 +657,7 @@ function _appError($msg='ѕриложение не было загружено.') {//вывод сообщени€ об о
 			'<body>'.
 				'<div id="frameBody">'.
 					'<iframe id="frameHidden" name="frameHidden"></iframe>'.
+					setup_workerEnterMsg(1).
 					_noauth($msg).
 				'</div>'.
 			'</body>'.
@@ -962,7 +968,8 @@ function _menu() {//разделы основного меню
 	}
 
 	return
-	_menuInfoTop().
+	setup_workerEnterMsg().
+	_manualMsg().
 	'<div id="_menu">'.
 		$link.
 		_clientDolgSum().

@@ -439,9 +439,10 @@ button.vk.grey:hover{background-color:#999}
 .bg-eee{background-color:#eee}
 .bg-gr1{background-color:#F9F9F9}/* светло-серый */
 .bg-add{background-color:#e0ffe0}
-.bg-del{background-color:#fee}
+.bg-fee,.bg-del{background-color:#fee}
 .bg-ffe{background-color:#ffe}
-.bg-ch{background-color:#ffc}   /* жёлтый - данные изменены */
+.bg-ffd{background-color:#ffd}
+.bg-ffc,.bg-ch{background-color:#ffc}   /* жёлтый - данные изменены */
 .bg-dfd{background-color:#dfd}  /* зелёный */
 .bg-ddf{background-color:#ddf}  /* синий */
 

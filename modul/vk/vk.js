@@ -786,6 +786,17 @@ var VK_SCROLL = 0,
 			} else
 				dialog.loadError(res.text);
 		}, 'json');
+	},
+	_manualMsgHide = function(t, manual_id) {//закрытие сообщения о нововведении
+		t.parent().slideUp();
+
+		var send = {
+			op:'manual_answer',
+			manual_id:manual_id,
+			val:2
+		};
+
+		$.post(AJAX_MAIN, send, function() {}, 'json');
 	};
 
 $.fn._check = function(o) {
@@ -2745,19 +2756,6 @@ $(document)
 		var v = !_num($(this).find('input').val());
 		_checkAll('change', v);
 		CHECK_ALL_FUNC();
-	})
-
-	.on('click', '#_info-top .img_del', function() {//закрытие сообщения о нововведении
-		$(this).parent().slideUp();
-
-		var send = {
-				op:'manual_answer',
-				manual_id:$(this).attr('val'),
-				val:2
-			};
-
-		$.post(AJAX_MAIN, send, function() {}, 'json');
-
 	})
 
 	.on('click focus', '._note-area', function(e) {//разворачивание поля текста и показ кнопки

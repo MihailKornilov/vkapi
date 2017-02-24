@@ -448,7 +448,7 @@ function _manual_new_spisok() {
 
 }
 
-function _menuInfoTop() {//информационное сообщение сверху страницы
+function _manualMsg() {//информационное сообщение сверху страницы
 	if(SA)
 		return '';
 
@@ -469,8 +469,8 @@ function _menuInfoTop() {//информационное сообщение сверху страницы
 		return '';
 
 	return
-	'<div id="_info-top">'.
-		'<div class="img_del" val="'.$r['id'].'"></div>'.
+	'<div class="bg-ffd pad15">'.
+		'<div class="icon icon-del fr" onclick="_manualMsgHide($(this),'.$r['id'].')"></div>'.
 		'<a href="'.URL.'&p=57&page_id='.$r['id'].'">'.$r['name'].'</a>'.
 	'</div>';
 }

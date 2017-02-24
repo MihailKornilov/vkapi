@@ -335,6 +335,12 @@ function setup_worker_razdel_rule($viewer_id) {//вывод разделов меню с галочками
 
 		'<div class="center mt30">'.
 			'<button class="vk" onclick="setupRuleSave()">Сохранить</button>'.
+		'</div>'.
+
+		'<div class="center mt10">'.
+			'<a class="bg-link dib" href="'.URL.'&viewer_id='.$viewer_id.'&viewer_id_admin='.VIEWER_ID.'">'.
+				'Посмотреть, как видит приложение '._viewer($viewer_id, 'viewer_name').
+			'</a>'.
 		'</div>';
 
 	return $send;
@@ -400,6 +406,25 @@ function setup_worker_razdel_rule_sub($viewer_id, $arr, $rule) {//дочерние разде
 	}
 
 	return $send;
+}
+function setup_workerEnterMsg($from_appError=0) {//отображение сообщения, когда администратор заходит от имени другого сотрудника
+	if(!VIEWER_ID_ADMIN)
+		return '';
+
+	//проверка, чтобы у администратора были права для просмотра от имени сотрудника
+	if(_viewer(VIEWER_ID_ADMIN, 'viewer_app_id') != APP_ID && !$from_appError)
+		_appError('Пользователь не является администратором приложения.');
+
+	$rule = _viewerRule(VIEWER_ID_ADMIN);
+	if(!$rule['RULE_SETUP_RULES'] && !$from_appError)
+		_appError('Нет прав для входа от имени сотрудника.');
+
+
+	return
+	'<div class="bg-fee pad15">'.
+		'Выполнен вход в приложение от имени <b>'._viewer(VIEWER_ID, 'viewer_name').'</b>.'.
+		'<button class="vk small red fr" onclick="location.href=\''.URL.'&viewer_id_admin=0=&viewer_id='.VIEWER_ID_ADMIN.'&p=74&id='.VIEWER_ID.'\'">Выйти</button>'.
+	'</div>';
 }
 function setup_worker_info_dop($viewer_id) {//дополнительные настройки
 	$rule = _viewerRule($viewer_id);

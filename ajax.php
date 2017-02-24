@@ -5,6 +5,9 @@ _const();               //установка основных констант
 _appAuth();             //получение данных о приложении, проверка авторизации
 _setup_global();
 
+if(VIEWER_ID_ADMIN)
+	jsonError();
+
 $nopin = array(
 	'pin_enter' => 1,
 	'cache_clear' => 1,

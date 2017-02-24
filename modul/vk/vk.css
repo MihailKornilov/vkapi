@@ -382,15 +382,6 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 
-/* Информация о нововведении в верхней части приложения */
-#_info-top{
-	padding:12px 15px;
-	background:#ffd;
-	border-bottom:#f8f8c8 solid 1px;
-}
-#_info-top a{font-size:12px}
-#_info-top .img_del{float:right}
-
 
 
 
