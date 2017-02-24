@@ -147,6 +147,7 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 				'VIEWER_INVOICE_ID='._viewer(VIEWER_ID, 'invoice_id_default').','.
 				'APP_ID='.APP_ID.','.
 				'APP_TYPE=['.APP_TYPE.'],'.
+				'COOKIE_PREFIX="'.APP_ID.'_'.VIEWER_ID.'_",'.
 				'URL="'.URL.'",'.
 				'AJAX_MAIN="'.AJAX_MAIN.'",'.
 				'VALUES="'.VALUES.'";'.
@@ -631,14 +632,14 @@ function _appAuth() {//Проверка авторизации в приложении
 		return;
 	}
 
-	if(@$_GET['auth_key'] != md5(APP_ID.'_'.VIEWER_ID.'_'._app('secret')))
+	if(@$_GET['auth_key'] != md5(APP_ID.'_'.(VIEWER_ID_ADMIN ? VIEWER_ID_ADMIN : VIEWER_ID).'_'._app('secret')))
 		_appError('Ошибка авторизации приложения.');
 
 	_debugLoad('Пройдена авторизация приложения');
 }
 function _appError($msg='Приложение не было загружено.') {//вывод сообщения об ошибке приложения и выход
 	if(!defined('VERSION')) {
-		define('VERSION', 3);
+		define('VERSION', 141);
 		define('MIN', defined('DEBUG') ? '' : '.min');
 	}
 	$html =
@@ -649,7 +650,8 @@ function _appError($msg='Приложение не было загружено.') {//вывод сообщения об о
 				'<title>Error</title>'.
 
 				'<script src="/.vkapp/.js/jquery-2.1.4.min.js"></script>'.
-				'<script src="'.API_HTML.'/js/xd_connection.min.js?20"></script>'.
+				'<script src="https://vk.com/js/api/xd_connection.js?2"></script>'.
+				'<script>VK.init(function() {},function() {},"5.60");</script>'.
 
 				_global_script().
 

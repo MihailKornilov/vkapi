@@ -1,5 +1,4 @@
 var VK_SCROLL = 0,
-	COOKIE_PREFIX = APP_ID + '_' + VIEWER_ID + '_',
 	ZINDEX = 0,
 	BC = 0,
 	FB, // frameBody
