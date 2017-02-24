@@ -407,7 +407,7 @@ function setup_worker_razdel_rule_sub($viewer_id, $arr, $rule) {//дочерние разде
 
 	return $send;
 }
-function setup_workerEnterMsg($from_appError=0) {//отображение сообщения, когда администратор заходит от имени другого сотрудника
+function setup_workerEnterMsg($from_appError=0) {//показ сообщения, когда администратор заходит от имени другого сотрудника
 	if(!VIEWER_ID_ADMIN)
 		return '';
 
