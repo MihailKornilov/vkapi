@@ -1469,6 +1469,48 @@ var _zayavSpisok = function(v, id) {
 				p.next().removeClass('dn');
 			}
 		}, 'json');
+	},
+	
+	mainMenuZayavChart = function() {
+		$('#zayav-chart-container')
+			.height(300)
+			.highcharts({
+				chart:{
+					type:'column'
+				},
+				title:{
+					text:'Новые заявки за последние 30 дней'
+				},
+				xAxis:{
+					categories:ZAYAV_CATEGORIES,
+					labels:{
+						style:{
+							color:'#333'
+						}
+					}
+				},
+				yAxis:{
+					title:{
+						text:'Количество'
+					},
+			        stackLabels:{
+				        enabled:true,
+				        style:{
+					        fontWeight:'bold',
+					        color:'black'
+				        }
+			        }
+				},
+				plotOptions:{
+					column:{
+						stacking:'normal',
+						dataLabels:{
+							enabled:false
+						}
+					}
+				},
+				series:ZAYAV_SERIES
+			});
 	};
 
 $.fn.zayavTovarPlace = function(o) {//местонахождение товара

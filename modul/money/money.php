@@ -782,6 +782,7 @@ function expense() {
 	$data = expense_spisok();
 	return
 		'<script src="/.vkapp/.js/highcharts.js"></script>'.
+//		'<script src="http://code.highcharts.com/highcharts.js"></script>'.
 		'<table class="tabLR" id="money-expense">'.
 			'<tr><td class="left">'.
 					'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.

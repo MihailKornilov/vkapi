@@ -31,7 +31,7 @@ function _debug() {
 		'<div id="_debug"'.(empty($_COOKIE['debug_show']) ? '' : ' class="show"').'>'.
 			'<h1>+</h1>'.
 			'<h2><div class="dmenu">'.
-					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'process' ? ' class="sel"' : '').' val="process">load process</a>'.
+					'<a'.(@$_COOKIE['debug_pg'] == 'process' ? ' class="sel"' : '').' val="process">load process</a>'.
 					'<a'.(empty($_COOKIE['debug_pg']) || $_COOKIE['debug_pg'] == 'sql' ? ' class="sel"' : '').' val="sql">sql <b>'.count($sqlQuery).'</b> ('.round($sqlTime, 3).')</a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'cookie' ? ' class="sel"' : '').' val="cookie">cookie <b>'._debug_cookie_count().'</b></a>'.
 					'<a'.(@$_COOKIE['debug_pg'] == 'get' ? ' class="sel"' : '').' val="get">$_GET</a>'.

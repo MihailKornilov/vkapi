@@ -760,3 +760,13 @@
 
 
 
+
+
+
+/* График заявок в главном меню */
+#zayav-chart-container .highcharts-xaxis-labels tspan{font-size:12px}
+
+
+
+
+

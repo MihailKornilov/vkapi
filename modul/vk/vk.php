@@ -1036,12 +1036,79 @@ function _menuMainZayav() {//отчёт по количество заявок за день и неделю
 	$mon = query_value($sql);
 
 	return
-	'<table class="menu-count">'.
+	'<script src="/.vkapp/.js/highcharts.js"></script>'.
+//	'<script src="http://code.highcharts.com/highcharts.js"></script>'.
+	'<table class="bs5">'.
 		'<tr><td class="label r">Сегодня:<td><b>'.($today ? $today : '-').'</b>'.
 		'<tr><td class="label r">Текущая неделя:<td><b>'.($week ? $week : '-').'</b>'.
 		'<tr><td class="label r">'._monthDef(strftime('%m'), true).':<td><b>'.($mon ? $mon : '-').'</b>'.
-	'</table>';
+	'</table>'.
+	_menuMainZayavGrafik();
 }
+function _menuMainZayavGrafik() {
+	$days = array();//30 последних дней месяца
+	$d30 = TODAY_UNIXTIME - 60*60*24*29;
+	$dayLast = 100; //последний пройденный день (для вставки месяца)
+	$w = date('w', $d30);//день недели
+	while($d30 <= TODAY_UNIXTIME) {
+		$day = _num(strftime('%d', $d30));
+		$mon = $day < $dayLast ? _monthCut(strftime('%m', $d30)).' ' : '';
+		$days[strftime('%Y-%m-%d', $d30)] = '"'.$mon.'<tspan'.(!$w || $w == 6 ? ' style=\"color:#d55\"' : '').'>'.$day.' '._week($w++).'</tspan>"';
+		$d30 += 60*60*24;
+		$dayLast = $day;
+		if($w > 6)
+			$w = 0;
+	}
+
+	$series = array();
+	foreach(_service() as $s) {
+		if(!$data = _menuMainZayavGrafikService($s['id'], $days))
+			continue;
+		$series[] = '{'.
+			'name:"'.($s['name'] ? $s['name'] : 'Все заявки').'",'.
+			'data:['.$data.']'.
+		'}';
+	}
+
+	return
+	'<div id="zayav-chart-container"></div>'.
+	'<script>var ZAYAV_CATEGORIES=['.implode(',', $days).'],'.
+				'ZAYAV_SERIES=['.implode(',', $series).'];'.
+	'</script>'.
+	'<script>mainMenuZayavChart()</script>';
+}
+function _menuMainZayavGrafikService($service_id, $days) {//данные для графика по отдельному виду деятельности
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`,
+				COUNT(`id`) `count`
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `service_id`=".$service_id."
+			  AND `dtime_add`>DATE_SUB(NOW(), INTERVAL 30 DAY)
+			GROUP BY `day`
+			ORDER BY `day`";
+	$q = query($sql);
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['day']] = $r['count'];
+
+	if(empty($spisok))
+		return false;
+
+	$send = array();
+	foreach($days as $day => $d) {
+		if(!isset($spisok[$day])) {
+			$send[$day] = '""';
+			continue;
+		}
+
+		$send[$day] = $spisok[$day];
+	}
+
+	return implode(',', $send);
+}
+
 function _menuAccess($menu_id) {//проверка доступа к разделу меню. Если нет, то перенаправление на список разделов
 	if(!_viewerMenuAccess($menu_id)) {
 		header('Location:'.URL.'&p=11');
@@ -1198,7 +1265,7 @@ function _pinCheck() {//вывод страницы с вводом пин-кода, если это требуется
 
 	unset($_SESSION[PIN_TIME_KEY]);
 
-	$html = _service().
+	$html =
 		_header().
 		'<div id="pin-enter">'.
 			'Пин: '.

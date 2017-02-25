@@ -3621,7 +3621,7 @@ function _zayav_expense_attach_schet_spisok($v=array()) {// список клиентов
 
 
 /* Виды деятельности */
-function _service($i=false, $id=0) {
+function _service($i='all', $id=0) {
 	$key = CACHE_PREFIX.'service';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
@@ -3668,7 +3668,7 @@ function _service($i=false, $id=0) {
 		return $arr[$id]['name'];
 	}
 
-	return false;
+	return $arr;
 }
 function _serviceMenu($arr) {//меню для списка заявок
 	if(count($arr) < 2)
