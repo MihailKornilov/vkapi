@@ -39,7 +39,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<br />'.
 
 		'<h1>App:</h1>'.
-		'<a href="'.URL.'&p=40">Приложения ('.sa_appCount().'): '._app('app_name').'</a>'.
+		'<a href="'.URL.'&p=40">Приложения ('.sa_appCount().'): <b>'._app('app_name').'</b></a>'.
 		'<a href="'.URL.'&p=41">Пользователи ('.sa_userCount().')</a>'.
 		'<br />'.
 
