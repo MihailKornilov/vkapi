@@ -2117,6 +2117,9 @@ $(document)
 		$('#deleted')._check(0);		ZAYAV.deleted = 0;
 		$('#deleted_only')._check(0);	ZAYAV.deleted_only = 0;
 
+		$('#f56')._check(0);		ZAYAV.f56 = 0;
+		$('#f57')._check(0);		ZAYAV.f57 = 0;
+
 		_zayavSpisok();
 	})
 
@@ -2424,6 +2427,8 @@ $(document)
 			$('#nofile')._check(_zayavSpisok);
 			$('#noattach')._check(_zayavSpisok);
 			$('#noattach1')._check(_zayavSpisok);
+			$('#f56')._check(_zayavSpisok);
+			$('#f57')._check(_zayavSpisok);
 			WORKER_SPISOK.push({uid: -1, title: 'Не назначен', content: '<b>Не назначен</b>'});
 			$('#executer_id')._select({
 				width: 155,

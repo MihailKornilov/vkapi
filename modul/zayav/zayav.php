@@ -819,7 +819,9 @@ function _zayavFilter($v) {
 		'gn_polosa' => 0,             //полоса (для рекламы)
 		'gn_polosa_color' => 0,       //цветность полосы
 		'deleted' => 0,
-		'deleted_only' => 0
+		'deleted_only' => 0,
+		'f56' => 0,//не оплачена
+		'f57' => 0//нет начисления
 	);
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -847,6 +849,8 @@ function _zayavFilter($v) {
 		'gn_polosa_color' => _num(@$v['gn_polosa_color']),
 		'deleted' => _bool(@$v['deleted']),
 		'deleted_only' => _bool(@$v['deleted_only']),
+		'f56' => _bool(@$v['f56']),
+		'f57' => _bool(@$v['f57']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -1064,6 +1068,12 @@ function _zayav_spisok($v) {
 
 			if(!SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
 				$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
+
+			if($filter['f56'])
+				$cond .= " AND `sum_accrual` AND `sum_accrual`>`sum_pay`";
+
+			if($filter['f57'])
+				$cond .= " AND !`sum_accrual`";
 		}
 	}
 
@@ -1598,7 +1608,9 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 				'открыть в формате Word'.
 			  '</a>',
 
-		55 => _zayavObOnpay($v)
+		55 => _zayavObOnpay($v),
+		56 => _check('f56', '{label}', $v['f56'], 1),
+		57 => _check('f57', '{label}', $v['f57'], 1)
 	);
 
 	$send = '';
