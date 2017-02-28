@@ -621,10 +621,10 @@ function _appAuth() {//Проверка авторизации в приложении
 	if(!_app('enter'))
 		_appError('Вход в приложение закрыт.');
 
-	if(_app('enter') == 1 && !VIEWER_WORKER)
+	if(!VIEWER_WORKER)
 		_appError('Невозможно выполнить вход в приложение.');
 
-	if(_app('enter') == 1 && !RULE_APP_ENTER)
+	if(!RULE_APP_ENTER)
 		_appError('Вход в приложение недоступен.');
 
 	if(LOCAL) {
