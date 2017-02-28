@@ -860,33 +860,47 @@ function _menuCache($i='all', $v=0) {//получение списка разделов меню из кеша
 	
 	//возврат id раздела по умолчанию
 	if($i == 'app_def') {
+		$menu_id = 0;
 		foreach($menu as $id => $r)
-			if($r['def'])
-				return $id;
+			if($r['def']) {
+				$menu_id = $id;
+				break;
+			}
 
 		//установка страницы по умолчанию, если таковая не установлена
-		$sql = "SELECT `menu_id`
-				FROM `_menu_app`
-				WHERE `app_id`=".APP_ID."
-				ORDER BY `id`
-				LIMIT 1";
-		if($id = query_value($sql)) {
-			$sql = "UPDATE `_menu_app`
-					SET `def`=0
-					WHERE `app_id`=".APP_ID;
-			query($sql);
-
-			$sql = "UPDATE `_menu_app`
-					SET `def`=1
+		if(!$menu_id) {
+			$sql = "SELECT `menu_id`
+					FROM `_menu_app`
 					WHERE `app_id`=".APP_ID."
-					  AND `menu_id`=".$id;
-			query($sql);
+					ORDER BY `id`
+					LIMIT 1";
+			if($id = query_value($sql)) {
+				$sql = "UPDATE `_menu_app`
+						SET `def`=0
+						WHERE `app_id`=".APP_ID;
+				query($sql);
 
-			xcache_unset(CACHE_PREFIX.'menu');
+				$sql = "UPDATE `_menu_app`
+						SET `def`=1
+						WHERE `app_id`=".APP_ID."
+						  AND `menu_id`=".$id;
+				query($sql);
 
-			return $id;
+				xcache_unset(CACHE_PREFIX.'menu');
+
+				$menu_id = $id;
+			}
 		}
-		return 0;
+
+		//если раздел по умолчанмю недоступен сотруднику, то выбор первого доступного раздела
+		if(!_viewerMenuAccess($menu_id))
+			foreach($menu as $id => $r)
+				if(_viewerMenuAccess($id)) {
+					$menu_id = $id;
+					break;
+				}
+
+		return $menu_id;
 	}
 
 	//разделы приложения для настроек прав пользователей
