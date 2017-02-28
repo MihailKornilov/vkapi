@@ -259,7 +259,7 @@ function _clientPoleInfo($id, $v=array()) {//ассоциативный массив HTML используе
 
 
 function _clientDolgSum() {//показ суммы долга всех клиентов в верхнем правом углу
-	if(APP_ID != 3978722)// только для Евроокон
+	if(!RULE_CLIENT_DOLG_SHOW)
 		return '';
 
 	$sql = "SELECT SUM(`balans`)

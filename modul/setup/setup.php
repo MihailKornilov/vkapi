@@ -434,6 +434,8 @@ function setup_worker_info_dop($viewer_id) {//дополнительные настройки
 			'<tr><td class="label w70"><td>'._check('RULE_SALARY_SHOW', _ruleCache('RULE_SALARY_SHOW'), $rule['RULE_SALARY_SHOW']).
 			'<tr><td class="label"><td>'._check('RULE_EXECUTER', _ruleCache('RULE_EXECUTER'), $rule['RULE_EXECUTER']).
 			'<tr><td class="label"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', _ruleCache('RULE_SALARY_ZAYAV_ON_PAY'), $rule['RULE_SALARY_ZAYAV_ON_PAY']).
+			'<tr><td class="label"><td>'._check('RULE_CLIENT_DOLG_SHOW', _ruleCache('RULE_CLIENT_DOLG_SHOW'), $rule['RULE_CLIENT_DOLG_SHOW'], 1).
+
 /*
 			'<tr><td class="lab">Начислять бонусы:'.
 				'<td>'._check('RULE_SALARY_BONUS', '', $rule['RULE_SALARY_BONUS']).
