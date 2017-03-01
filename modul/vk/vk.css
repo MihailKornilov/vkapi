@@ -245,14 +245,14 @@ a.add:hover{text-decoration:underline;color:#357}
 ._select{background:#fff;display:inline-block;position:relative}
 ._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
 ._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
-._select.disabled .seltab{border-color:#ccc;background:#f0f0f0}
+._select.disabled .seltab{border-color:#ccc;background-color:#f0f0f0}
 ._select .selsel{vertical-align:top;padding-bottom:2px}
 ._select .selinp{
 	position:relative;
 	border:none;
 	padding:1px 0 1px 3px;
 	margin:2px 2px 0;
-	background:transparent;
+	background-color:transparent;
 }
 ._select .selinp._busy{background-position:right center}
 ._select.disabled .selinp{color:#777}
@@ -400,7 +400,7 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 /* Меню справа */
-.rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
+.rightLink a{display:block;padding:6px 10px;border:transparent solid 1px;color:#29597B}
 .rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
 .rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
 .rightLink a.sel img{float:right;margin-top:3px}

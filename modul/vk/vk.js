@@ -525,11 +525,14 @@ var VK_SCROLL = 0,
 			content = dialog.find('.content'),
 			bottom = dialog.find('.bottom'),
 			butSubmit = bottom.find('.submit'),
+			submitFunc = function() {
+				if(butSubmit.hasClass('_busy'))
+					return;
+				o.submit();
+			},
 			w2 = Math.round(o.width / 2); // ширина/2. ƒл€ определени€ положени€ по центру
 		dialog.find('.head .img_del').click(dialogClose);
-		butSubmit.click(function() {
-			o.submit();
-		});
+		butSubmit.click(submitFunc);
 		bottom.find('.cancel').click(function(e) {
 			e.stopPropagation();
 			dialogClose();
@@ -537,7 +540,7 @@ var VK_SCROLL = 0,
 		});
 
 		//дл€ всех input при нажатии enter примен€етс€ submit
-		content.find('input').keyEnter(o.submit);
+		content.find('input').keyEnter(submitFunc);
 
 		_backfon();
 
@@ -2014,6 +2017,7 @@ $.fn._select = function(o) {
 			switch(o) {
 				case 'process': s.process(); break;
 				case 'cancel': s.cancel(); break;
+				case 'clear': s.clear(); break;//очищение inp, установка val=0
 				case 'title': return s.title();
 				case 'inp': return s.inp();
 				case 'focus': s.focus(); break;
@@ -2438,6 +2442,13 @@ $.fn._select = function(o) {
 	};
 	t.cancel = function() {//ќтмена ожидани€ загрузки в selinp
 		inp.removeClass('_busy');
+	};
+	t.clear = function() {//очищение inp, установка val=0
+		if(o.multiselect) {
+			sel.find('.multi').remove();
+			multiCorrect();
+		}
+		setVal(0);
 	};
 	t.spisok = function(v) {
 		o.spisok = v;

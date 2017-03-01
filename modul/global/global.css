@@ -15,7 +15,7 @@ input,textarea{
 	outline:none;
 }
 input[type="text"]:disabled{color:#777;background:#f0f0f0;border-color:#ccc}
-input[readonly]{color:#555;background:#f5f5f5}
+input[readonly]{color:#555;background-color:#f5f5f5}
 input.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
 input.money{font:bold 14px Tahoma;width:100px}
 input.err{background:#fff2f2}
@@ -396,6 +396,7 @@ button.vk.grey:hover{background-color:#999}
 .mar0-5{margin:0 5px}
 .mar020{margin:0 20px}
 .mr5{margin-right:5px}
+.mr10{margin-right:10px}
 .mr20{margin-right:20px}
 .ml8{margin-left:8px}
 .ml10{margin-left:10px}
@@ -477,3 +478,5 @@ button.vk.grey:hover{background-color:#999}
 
 /* Ћинии */
 .line-b{border-bottom:#DEE3EF solid 1px}
+.line-b1{border-bottom:#EFF2F5 solid 1px}/* светла€ нижн€€ лини€ */
+.line-r{border-right:#DEE3EF solid 1px}
