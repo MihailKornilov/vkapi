@@ -1222,7 +1222,7 @@ function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заяв
 				`page_id`,
 				`txt`
 			FROM `_note`
-			WHERE `page_name`='zayav'
+			WHERE `page_name`=45
 			  AND `page_id` IN (".$ids.")
 			  AND !`deleted`
 			ORDER BY `page_id`,`id` DESC";
