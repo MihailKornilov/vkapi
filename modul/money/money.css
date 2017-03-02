@@ -110,18 +110,6 @@
 #inout-spisok .out{background:#fff4f4}
 #inout-spisok .type{width:150px}
 
-#invoice-setup-tab table{border-spacing:10px}
-#invoice-setup-tab .u{
-	border:#e8e8e8 solid 1px;
-	background-color:#fafafa;
-	padding:10px;
-	margin:8px 10px;
-	cursor:pointer;
-}
-#invoice-setup-tab h1{font-weight:bold}
-#invoice-setup-tab h2{color:#777;margin:3px 10px}
-#invoice-setup-tab .u:hover{background-color:#f4f6f7}
-
 #invoice-edit-tab{border-spacing:12px}
 #invoice-edit-tab .label{width:220px;text-align:right}
 #invoice-edit-tab #name{width:210px}

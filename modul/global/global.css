@@ -282,6 +282,10 @@ button.vk.red{background-color:#b55}
 button.vk.red:hover{background-color:#c66}
 button.vk.grey{background-color: #888}
 button.vk.grey:hover{background-color:#999}
+button.vk.pink{background-color: #c6c}
+button.vk.pink:hover{background-color:#d7d}
+button.vk.green{background-color: #5b5}
+button.vk.green:hover{background-color:#6c6}
 
 
 
@@ -364,6 +368,7 @@ button.vk.grey:hover{background-color:#999}
 .w15{width:15px}
 .w35{width:35px}
 .w50{width:50px}
+.h25{height:25px}
 .h50{height:50px}
 .mh150{min-height:150px}
 .w70{width:70px}
@@ -420,6 +425,7 @@ button.vk.grey:hover{background-color:#999}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 .bs15{border-spacing:15px}
+.bor-e8{border:#e8e8e8 solid 1px}
 
 .b{font-weight:bold}
 .u{text-decoration:underline}
