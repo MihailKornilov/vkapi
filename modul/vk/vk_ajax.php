@@ -32,6 +32,40 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'pin_enter':
+		unset($_SESSION[PIN_TIME_KEY]);
+
+		$key = CACHE_PREFIX.'pin_enter_count'.VIEWER_ID;
+		if(!$count = xcache_get($key))
+			$count = 0;
+
+		if($count > 4) {
+			$send = array(
+				'max' => 1,
+				'text' => utf8('Превышено максимальное количество попыток ввода.<br />'.
+					'Продолжить ввод можно будет через 30 минут.<br /><br />'.
+					'Если вы забыли свой пин-код, обратитесь к руководителю для его сброса.')
+			);
+			jsonError($send);
+		}
+		xcache_set($key, ++$count, 1800);
+
+		$pin = _txt($_POST['pin']);
+
+		$sql = "SELECT COUNT(*)
+				FROM `_vkuser`
+				WHERE `app_id`=".APP_ID."
+				  AND `pin`='".$pin."'
+				  AND `viewer_id`=".VIEWER_ID;
+		if(!query_value($sql))
+			jsonError('Неверный пин-код');
+
+		xcache_unset($key);
+		$_SESSION[PIN_TIME_KEY] = time() + PIN_TIME_LEN;
+
+		jsonSuccess();
+		break;
+
 	case 'attach_upload':
 		/*
 			Прикрепление файлов

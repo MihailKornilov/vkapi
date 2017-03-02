@@ -207,53 +207,6 @@ var VK_SCROLL = 0,
 			}, 'json');
 		}
 	},
-	pinConfirm = function(req) {//подтверждение пин-кода при ajax-запросе
-		if(!req.pin)
-			return false;
-
-		var html =
-				'<table class="bs10">' +
-					'<tr><td colspan="2"><div class="_info">Истекло время действия пин-кода. Требуется подтверждение.</div>' +
-					'<tr><td class="label">Пин-код:<td><input id="tpin" type="password" maxlength="10" />' +
-				'</table>',
-			dialog = _dialog({
-				width:250,
-				head:'Подтверждение пин-кода',
-				content:html,
-				butSubmit:'Подтвердить',
-				butCancel:'',
-				submit:submitPinConfirm
-			});
-		$('#tpin').focus();
-		return true;
-
-		function submitPinConfirm() {
-			var send = {
-				op:'pin_enter',
-				pin:$.trim($('#tpin').val())
-			};
-			if(!send.pin) {
-				dialog.err('Не заполнено поле');
-				$('#tpin').focus();
-			} else if(send.pin.length < 3) {
-				dialog.err('Длина пин-кода от 3 до 10 символов');
-				$('#tpin').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success)
-						dialog.close();
-					else if(res.max)
-						location.reload();
-					else {
-						dialog.abort();
-						dialog.err(res.text);
-						$('#tpin').val('').focus();
-					}
-				}, 'json');
-			}
-		}
-	},
 	debugHeight = function(s) {
 		var h = $('#_debug').height();
 		FOTO_HEIGHT = s || h < FBH - 30 ? 0 : h + 30;
@@ -2608,8 +2561,10 @@ $(document)
 		_busy(0);
 		var req = request.responseJSON;
 
-		if(pinConfirm(req))
+		if(req.pin) {
+			location.reload();
 			return;
+		}
 
 		if(!$('#_debug').length)
 			return;
