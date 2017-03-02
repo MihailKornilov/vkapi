@@ -231,8 +231,9 @@ switch(@$_POST['op']) {
 		if($r['confirm'] == 2)
 			jsonError('Платёж был подтверждён');
 
-		if($r['confirm'] != 1 && TODAY != substr($r['dtime_add'], 0, 10))
-			jsonError('Время для удаления платежа истекло');
+		if(!DEBUG)
+			if($r['confirm'] != 1 && TODAY != substr($r['dtime_add'], 0, 10))
+				jsonError('Время для удаления платежа истекло');
 
 		$sql = "UPDATE `_money_income`
 				SET `deleted`=1,

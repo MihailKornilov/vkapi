@@ -527,7 +527,8 @@ function _income_unit($r, $filter=array()) {
 			'<td class="ed">'.
 		  (SA ? '<div onclick="incomeUnbind('.$r['id'].')" class="img_cancel'._tooltip('Отвязать...', -59, 'r').'</div>' : '').
 				_incomePrint($r['id']).
-				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm));
+				_iconDel($r + array('class'=>'income-del','nodel'=>($confirmed || $refund || $r['dogovor_id']),'del'=>$confirm)).
+	   (DEBUG ? _iconDel($r + array('class'=>'income-del','del'=>1)) : '');//todo удаление для SA
 }
 function incomeAbout($r, $filter=array()) {
 	$about = '';
