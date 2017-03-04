@@ -18,9 +18,6 @@ function _devstory_footer() {//текст в нижней части приложения
 	if(!SA)
 		return '';
 
-	if(APP_ID == 2881875 && !SA)
-		return '';
-
 	if(PIN_ENTER)
 		return '';
 
@@ -34,7 +31,7 @@ function _devstory_footer() {//текст в нижней части приложения
 		_app('app_name').
 		'<span class="grey">'.$year.'</span>'.
 		_viewer(VIEWER_ID, 'viewer_link_my').
-	($_GET['p'] != 'devstory' ?
+	($_GET['p'] != 7 ?
 		'<a href="'.URL.'&p=7" class="dev-page'._tooltip('Процесс разработки приложения', -158, 'r').'разработка</a>'
 	: '').
 	'</div>';
@@ -360,8 +357,6 @@ function _devstory_task_info() {
 				'msg' => $msg
 			);
 	}
-
-	_pre($task);
 
 	$r = $task;
 	return
