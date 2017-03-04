@@ -29,10 +29,10 @@ function _devstory_footer() {//текст в нижней части приложения
 	return
 	'<div id="devstory-footer">'.
 		_app('app_name').
-		'<span class="grey">'.$year.'</span>'.
+		'<span class="grey ml10">'.$year.'</span>'.
 		_viewer(VIEWER_ID, 'viewer_link_my').
-	($_GET['p'] != 7 ?
-		'<a href="'.URL.'&p=7" class="dev-page'._tooltip('Процесс разработки приложения', -158, 'r').'разработка</a>'
+	($_GET['p'] != 7 && _menuCache('parent_main_id', $_GET['p']) != 7 ?
+		'<a href="'.URL.'&p=7" class="fr grey'._tooltip('Процесс разработки приложения', -158, 'r').'разработка</a>'
 	: '').
 	'</div>';
 }
