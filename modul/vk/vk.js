@@ -432,13 +432,12 @@ var VK_SCROLL = 0,
 		return send;
 	},
 	_dialog = function(o) {
-		var t = $(this),
-			id = t.attr('id');
 		o = $.extend({
 			top:100,
 			width:380,
-			mb:0,      //margin-bottom: отступ снизу от диалога (дл€ календар€ или выпадающих списков)
-			padding:10,//отступ дл€ content
+			mb:0,       //margin-bottom: отступ снизу от диалога (дл€ календар€ или выпадающих списков)
+			padding:10, //отступ дл€ content
+			id:'',      //идентификатор диалога: дл€ определени€ открытого такого же, чтобы предварительно закрывать его
 			head:'head: Ќазвание заголовка',
 			load:0, // ѕоказ процесса ожидани€ загрузки в центре диалога
 			class:'',//дополнительный класс дл€ content
@@ -449,23 +448,37 @@ var VK_SCROLL = 0,
 			butCancel:'ќтмена'
 		}, o);
 
+		var frameNum = $('.dFrame').length;
+
+		//закрытие диалога с тем же идентификатором
+		if(o.id && $('#' + o.id + '_dialog').length) {
+			$('#' + o.id + '_dialog').remove();
+			_backfon(false);
+			if(frameNum == 0)
+				DIALOG_MAXHEIGHT = 0;
+			_fbhs();
+		}
+
 		if(o.load)
-			o.content = '<div class="load _busy"><div class="ms">¬ процессе загрузки произошла ошибка.</div></div>';
-		var frameNum = $('.dFrame').length,
-			html =
-			'<div class="_dialog">' +
+			o.content =
+				'<div class="load _busy">' +
+					'<div class="ms center red">¬ процессе загрузки произошла ошибка.</div>' +
+				'</div>';
+
+		var html =
+			'<div class="_dialog"' + (o.id ? ' id="' + o.id + '_dialog"' : '') + '>' +
 				'<div class="head">' +
-					'<a class="img_del"></a>' +
-					o.head +
+					'<div class="close fr curP"><a class="icon icon-del-white"></a></div>' +
+					'<div class="fs14 white">' + o.head + '</div>' +
 				'</div>' +
 				'<div class="dcntr">' +
 					'<iframe class="dFrame" name="dFrame' + frameNum + '"></iframe>' +
-					'<div class="content' + (o.class ? ' ' + o.class + '_dialog' : '') + '"' + (o.padding ? ' style="padding:' + o.padding + 'px"' : '') + '>' +
+					'<div class="content bg-fff' + (o.class ? ' ' + o.class + '_dialog' : '') + '"' + (o.padding ? ' style="padding:' + o.padding + 'px"' : '') + '>' +
 						o.content +
 					'</div>' +
 				'</div>' +
 				'<div class="bottom">' +
-					'<button class="vk submit' + (o.butSubmit ? '' : ' dn') + '">' + o.butSubmit + '</button>' +
+					'<button class="vk submit mr10' + (o.butSubmit ? '' : ' dn') + '">' + o.butSubmit + '</button>' +
 					(o.butCancel ? '<button class="vk cancel">' + o.butCancel + '</button>' : '') +
 				'</div>' +
 			'</div>';
@@ -484,7 +497,7 @@ var VK_SCROLL = 0,
 				o.submit();
 			},
 			w2 = Math.round(o.width / 2); // ширина/2. ƒл€ определени€ положени€ по центру
-		dialog.find('.head .img_del').click(dialogClose);
+		dialog.find('.close').click(dialogClose);
 		butSubmit.click(submitFunc);
 		bottom.find('.cancel').click(function(e) {
 			e.stopPropagation();
@@ -536,6 +549,11 @@ var VK_SCROLL = 0,
 				remove:1
 			});
 		}
+		function loadError(msg) {//ошибка загрузки данных дл€ диалога
+			dialog.find('.load').removeClass('_busy');
+			if(msg)
+				dialog.find('.ms').append('<br /><br /><b>' + msg + '</b>');
+		}
 
 		return {
 			close:dialogClose,
@@ -554,17 +572,39 @@ var VK_SCROLL = 0,
 				return content;
 			})(),
 			err:dialogErr,
-			loadError:function(msg) {
-				dialog.find('.load').removeClass('_busy');
-				if(msg)
-					dialog.find('.ms').append('<br /><br /><b>' + msg + '</b>');
-			},
+			loadError:loadError,
 			butSubmit:function(name) {
 				butSubmit[(name ? 'remove' : 'add') + 'Class']('dn');
 				butSubmit.html(name);
 			},
 			submit:function(func) {
 				o.submit = func;
+			},
+			load:function(send, func) {//загрузка контенка и вставка при получении в диалоговое окно. ≈сли ошибка - вывод сообщени€
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						content.html(res.html);
+						if(typeof func == 'function')
+							func(res);
+					} else
+						loadError(res.text);
+				}, 'json');
+			},
+			post:function(send, success) {//отправка формы
+				butSubmit.addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialogClose();
+						_msg();
+						if(success == 'reload')
+							location.reload();
+						if(typeof success == 'function')
+							success(res);
+					} else {
+						butSubmit.removeClass('_busy');
+						dialogErr(res.text);
+					}
+				}, 'json');
 			}
 		};
 	},
@@ -815,22 +855,24 @@ $.fn._radio = function(o, o1) {
 		case 'string':
 			if(o == 'spisokUpdate') {
 				window[win].spisokUpdate(o1);
-				return;
+				return t;
 			}
-			
-			var p = t.parent();
-			if(p.hasClass('_radio')) {
-				p.find('.on').removeClass('on').addClass('off');
-				var div = p.find('div');
-				for(n = 0; n < div.length; n++) {
-					var eq = div.eq(n);
-					if(o == eq.attr('val')) {
-						eq.addClass('on').removeClass('off');
-						break;
-					}
+			if(o == 'click') {//выполнение клика по выбранному пункту
+				$('#' + attr_id + '_radio .on').trigger('click');				
+				return t;
+			}
+
+			var p = _parent(t, '._radio');
+			p.find('.on').removeClass('on').addClass('off');
+			var off = p.find('.off');
+			for(n = 0; n < off.length; n++) {
+				var eq = off.eq(n);
+				if(o == eq.attr('val')) {
+					eq.addClass('on').removeClass('off');
+					break;
 				}
-				t.val(o);
 			}
+			t.val(o);
 			return t;
 		case 'function': _click(o);	return t;
 		case 'object':
@@ -908,6 +950,10 @@ $.fn._search = function(o, v) {
 				}
 				return window[id + '_search'].inp();
 			}
+			if(o == 'process')
+				window[id + '_search'].process();
+			if(o == 'cancel')
+				window[id + '_search'].cancel();
 			if(o == 'clear')
 				window[id + '_search'].clear();
 			return t;
@@ -923,12 +969,14 @@ $.fn._search = function(o, v) {
 	var html =
 			'<div class="_search" style="width:' + o.width + 'px">' +
 				'<div class="img_del dn"></div>' +
+				'<div class="_busy dib fr mr5 dn"></div>' +
 				'<div class="hold">' + o.txt + '</div>' +
-				'<input type="text" style="width:' + (o.width - 45) + 'px" />' +
+				'<input type="text" style="width:' + (o.width - 77) + 'px" />' +
 			'</div>';
 	t.html(html);
 	var _s = t.find('._search'),
 		inp = t.find('input'),
+		busy = t.find('._busy'),
 		hold = t.find('.hold'),
 		del = t.find('.img_del');
 
@@ -976,6 +1024,12 @@ $.fn._search = function(o, v) {
 		del.removeClass('dn');
 		hold.addClass('dn');
 		return $(this);
+	};
+	t.process = function() {//показ процесса ожидани€ с правой стороны
+		busy.removeClass('dn');
+	};
+	t.cancel = function() {//скрытие процесса ожидани€ с правой стороны
+		busy.addClass('dn');
 	};
 	t.clear = function() {
 		inp.val('');
@@ -1993,6 +2047,7 @@ $.fn._select = function(o) {
 			if(o.width || o.func)
 				break;
 
+			//вставка списка после загрузки
 			if('length' in o) {
 				s = window[id + '_select'];
 				s.spisok(o);
@@ -2038,7 +2093,7 @@ $.fn._select = function(o) {
 				(o.block ? ';display:block' : '') +
 				(o.bottom ? ';margin-bottom:' + o.bottom + 'px' : '') +
 		'">' +
-			'<div class="title0bg">' + o.title0 + '</div>' +
+			'<div class="title0bg" style="width:' + inpWidth + 'px">' + o.title0 + '</div>' +
 			'<table class="seltab">' +
 				'<tr><td class="selsel">' +
 						'<input type="text" ' +
@@ -2046,7 +2101,7 @@ $.fn._select = function(o) {
 							   'style="width:' + inpWidth + 'px' +
 									(o.write && !o.disabled? '' : ';cursor:default') + '"' +
 									(o.write && !o.disabled? '' : ' readonly') + ' />' +
-					(o.clear ? '<div' + (val ? '' : ' style="display:none"') + ' class="clear' + _tooltip('ќчистить', -49, 'r') + '</div>' : '') +
+					(o.clear ? '<div' + (val ? '' : ' style="display:none"') + ' class="clear' + _tooltip('ќчистить', -51, 'r') + '</div>' : '') +
 	   (o.funcAdd ? '<td class="seladd">' : '') +
 					'<td class="selug">' +
 			'</table>' +
@@ -2365,6 +2420,10 @@ $.fn._select = function(o) {
 	function hideOn() {
 		if(!select.hasClass('rs')) {
 			select.addClass('rs');
+
+			if(res.height() > 250)
+				res.addClass('h250');
+
 			unitSelShow();
 			$(document)
 				.on('click.' + id + '_select', hideOff)
@@ -2402,12 +2461,16 @@ $.fn._select = function(o) {
 			multiCorrect();
 		}
 		setVal(0);
+		inp.val('');
+		title0bg.show();
+		o.func(0, id);
 	};
 	t.spisok = function(v) {
+		t.cancel();
 		o.spisok = v;
 		assCreate();
 		spisokPrint();
-		t.cancel();
+		setVal(val);
 	};
 	t.title = function() {//ѕолучение содержимого установленного значени€
 		return ass[t.val()];

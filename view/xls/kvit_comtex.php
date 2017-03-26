@@ -138,7 +138,7 @@ function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
 	$sheet->setCellValue($colLabel.$row[3], 'Дата приёма в ремонт');
 	$sheet->setCellValue($colItem.$row[3], utf8(FullData($z['dtime_add'])));
 	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
-	$sheet->setCellValue($colItem.$row[4], utf8(trim($tovar_id ? _tovarName($tovar['name_id']) : '').($z['equip'] ? ', '._tovarEquip('spisok', $z['equip']) : '')));
+	$sheet->setCellValue($colItem.$row[4], utf8(trim($tovar_id ? _tovarName($tovar['name_id']) : '').($z['tovar_equip_ids'] ? ', '._tovarEquip('spisok', $z['tovar_equip_ids']) : '')));
 	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
 	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
 	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');

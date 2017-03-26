@@ -7,12 +7,17 @@ function _imageValToList($arr, $unit_name, $empty=0) {//вставка изображений в ма
 			  AND `unit_name`='".$unit_name."'
 			  AND `unit_id` IN ("._idsGet($arr).")";
 	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
 		$arr[$r['unit_id']]['image_small'] = '<img class="_iview" val="'.$r['id'].'" src="'.$r['path'].$r['small_name'].'">';
+		$arr[$r['unit_id']]['image_min'] = '<img class="w35" src="'.$r['path'].$r['small_name'].'">';
+	}
+		
 
 	foreach($arr as $id => $r)
-		if(!isset($r['image_small']))
+		if(!isset($r['image_small'])) {
 			$arr[$id]['image_small'] = $empty ? '' : '<img src="'.API_HTML.'/img/nofoto-s.gif">';
+			$arr[$id]['image_min'] = $empty ? '' : '<img class="w35" src="'.API_HTML.'/img/nofoto-s.gif">';
+		}
 
 	return $arr;
 }

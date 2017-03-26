@@ -32,4 +32,7 @@ require_once GLOBAL_DIR.'/modul/kupezz/kupezz_ajax.php';
 require_once GLOBAL_DIR.'/modul/sa/sa_ajax.php';
 require_once GLOBAL_DIR.'/modul/debug/debug_ajax.php';
 
+require_once GLOBAL_DIR.'/modul/test/test_ajax.php';//todo
+
+
 jsonError('Условие не найдено');

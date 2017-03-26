@@ -1244,48 +1244,6 @@ var setupOrgEdit = function(org_id) {
 		}, 'json');
 	},
 	
-	setupTovarCategoryEdit = function(o) {
-		o = $.extend({
-			id:0,
-			name:''
-		}, o);
-
-		var t = $(this),
-			html = '<table class="bs10">' +
-					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + o.name + '" />' +
-				'</table>',
-			dialog = _dialog({
-				head:(o.id ? 'Редактирование' : 'Создание новой' ) + ' категории товаров',
-				content:html,
-				butSubmit:o.id ? 'Сохранить' : 'Внести',
-				submit:submit
-			});
-
-		$('#name').focus();
-
-		function submit() {
-			var send = {
-				op:'setup_tovar_category_' + (o.id ? 'edit' : 'add'),
-				id:o.id,
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#spisok').html(res.html);
-					sortable();
-					dialog.close();
-					_msg();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
 	
 
 	setupSchetPay = function() {//настройка счетов на оплату
@@ -1821,24 +1779,6 @@ $(document)
 		$(this).css('background-color', '#fff');
 	})
 
-	.on('click', '#setup_tovar_category .img_edit', function() {
-		var t = _parent($(this));
-		setupTovarCategoryEdit({
-			id:t.attr('val'),
-			name:t.find('.name').html()
-		});
-	})
-	.on('click', '#setup_tovar_category .img_del', function() {
-		var p = _parent($(this));
-		_dialogDel({
-			id:p.attr('val'),
-			head:'категории товаров',
-			op:'setup_tovar_category_del',
-			func:function() {
-				p.remove();
-			}
-		});
-	})
 	.on('click', '#setup_tovar_category #join', function() {//подключение категории из готовых каталогов
 		var dialog = _dialog({
 			top:30,

@@ -322,7 +322,7 @@ function client_list($v) {// страница со списком клиентов
 		'<div id="client">'.
 			'<table id="find-tab"><tr>'.
 				'<td><div id="find"></div>'.
-				'<td><button class="vk" onclick="_clientEdit()">Новый клиент</button>'.
+				'<td><button class="vk green fr" onclick="_clientEdit()">Новый клиент</button>'.
 			'</table>'.
 			'<div class="result">'.$data['result'].'</div>'.
 			'<table class="tabLR">'.
@@ -1339,9 +1339,9 @@ function _clientFrom($id) {
 function _client_from() {//показ страницы Откуда пришёл клиент
 	return
 	'<div id="client-from">'.
-		'<div class="headName">'.
+		'<div class="hd2">'.
 			'Источники, из которых приходят клиенты'.
-			'<a class="add">Добавить новый источник</a>'.
+			'<button class="vk small fr add">Добавить новый источник</button>'.
 		'</div>'.
 		_client_from_setup().
 		'<div id="spisok">'._client_from_spisok().'</div>'.

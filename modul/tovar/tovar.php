@@ -1,196 +1,316 @@
 <?php
-function _tovar() {
-	switch(@$_GET['d']) {
-		case 'info': return _tovar_info();
-	}
-
-	$arr = array(
-		0 => 'Все товары',
-		1 => 'Есть в наличии',
-		2 => 'Добавлено в заказ'
-//		4 => 'В пути'
-	);
-
-	$data = _tovar_spisok_icon(_hashFilter('tovar'));
-	$v = $data['filter'];
-
-	return
-	'<div id="_tovar">'.
-//		'<div id="dopLinks">'.
-//			'<a class="link'.($d == 'catalog' ? ' sel' : '').'" href="'.URL.'&p=tovar&d=catalog">Каталог товаров</a>'.
-//			'<a class="link'.($d == 'provider' ? ' sel' : '').'" href="'.URL.'&p=tovar&d=provider">Поставщики</a>'.
-//		'</div>'.
-		'<div class="result">'.$data['result'].'</div>'.
-		'<div id="icon">'.
-			'<div val="5" class="img img_tovar_stat'.($v['icon_id'] == 5 ? ' sel' : '')._tooltip('Статистика', -33).'</div>'.
-//			'<div val="1" class="img img_tovar_group'._tooltip('Товары по группам', -57).'</div>'.
-			'<div val="2" class="img img_tovar_category'.($v['icon_id'] == 2 ? ' sel' : '')._tooltip('По категориям', -43).'</div>'.
-//			'<div val="3" class="img img_tovar_foto'._tooltip('Подробный список', -100, 'r').'</div>'.
-			'<div val="4" class="img img_tovar_spisok'.($v['icon_id'] == 4 ? ' sel' : '')._tooltip('Краткий список', -79, 'r').'</div>'.
-		'</div>'.
-		'<table class="tabLR">'.
-			'<tr><td class="left">'.
-					'<div id="spisok">'.$data['spisok'].'</div>'.
-				'<td class="right">'.
-					'<div class="div-but'.($v['icon_id'] == 5 ? ' dn' : '').'">'.
-						'<button class="vk fw" id="tovar-add">Внести новый товар<br />в каталог</button>'.
-						'<div id="find"></div>'.
-						'<br />'.
-						'<input type="hidden" id="icon_id" value="'.$v['icon_id'].'" />'.
-						_radio('group', $arr, $v['group'], 1).
-					'</div>'.
-
-					'<div class="div-cat'.($v['icon_id'] == 5 || $v['icon_id'] == 2 ? ' dn' : '').'">'.
-						'<div class="findHead">Категория</div>'.
-						'<input type="hidden" id="category_id" value="'.$v['category_id'].'" />'.
-
-						'<div class="findHead">Наименование</div>'.
-						'<input type="hidden" id="name_id" value="'.$v['name_id'].'" />'.
-
-						'<div class="findHead">Производитель</div>'.
-						'<input type="hidden" id="vendor_id" value="'.$v['vendor_id'].'" />'.
-					'</div>'.
-		'</table>'.
-	'</div>';
-}
-
 function _tovar_script() {//скрипты для товаров
 	return
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/tovar/tovar'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/tovar/tovar'.MIN.'.js?'.VERSION.'"></script>';
 }
 
+
 function _tovarCategory($id=false, $i='name') {
 	$key = CACHE_PREFIX.'tovar_category';
 	if(!$arr = xcache_get($key)) {
 		$sql = "SELECT
-					`id`,
-					`app_id`,
-					`name`,
-					0 `use`
+					*,
+					0 `count`
 				FROM `_tovar_category`
-				ORDER BY `id`";
-		if($arr = query_arr($sql)) {
-			$sql = "SELECT `category_id`
-					FROM `_tovar_category_use`
-					WHERE `app_id`=".APP_ID;
-			$q = query($sql);
-			while($r = mysql_fetch_assoc($q))
-				$arr[$r['category_id']]['use'] = 1;
-			xcache_set($key, $arr, 86400);
-		}
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `sort`";
+		$arr = query_arr($sql);
+		
+		//количество товаров для дочерних категорий
+		$sql = "SELECT
+					`category_id` `id`,
+					COUNT(*) `count`
+				FROM `_tovar_bind`
+				WHERE `app_id`=".APP_ID."
+				GROUP BY `category_id`";
+		foreach(query_arr($sql) as $r)
+			$arr[$r['id']]['count'] = $r['count'];
+
+		//количество товаров для корневых категорий
+		foreach($arr as $r)
+			if($r['parent_id'])
+				$arr[$r['parent_id']]['count'] += $r['count'];
+
+		xcache_set($key, $arr, 86400);
 	}
 
-	//список id общих категорий (app_id = 0)
-	if($id == 'noapp') {
-		$ids = array();
-		foreach($arr as $r) {
-			if($r['app_id'])
-				continue;
-			$ids[] = $r['id'];
-		}
-		return implode(',', $ids);
+	//первая категория, которая используется в приложении
+	if($id == 'first') {
+		if(empty($arr))
+			return 0;
+		return key($arr);
 	}
 
-	//список id категорий, которые используются в приложении
-	if($id == 'use') {
-		$ids = array(0);
-		foreach($arr as $r) {
-			if(!$r['use'])
-				continue;
-			$ids[] = $r['id'];
-		}
-		return implode(',', $ids);
+	//ассоциативный список корневых категорий
+	if($id == 'main_ass') {
+		$send = array();
+		foreach($arr as $r)
+			if(!$r['parent_id'])
+				$send[$r['id']] = $r['name'];
+		return $send;
 	}
+
+	//JS список корневых категорий
+	if($id == 'main_js') {
+		$send = array();
+		foreach($arr as $r)
+			if(!$r['parent_id'])
+				$send[$r['id']] = $r['name'];
+		return _selJson($send);
+	}
+
+	//дерево категорий
+	if($id == 'tree') {
+		$send = array();
+		foreach($arr as $id => $r) {
+			if(!$r['parent_id']) {
+				$send[$id] = array(
+					'name' => $r['name'],
+					'count' => $r['count'],
+					'child' => array()
+				);
+				continue;
+			}
+			$send[$r['parent_id']]['child'][$id] = array(
+				'name' => $r['name'],
+				'count' => $r['count'],
+				'child' => array()
+			);
+		}
+		return $send;
+	}
+
+
+
+
+
 
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id категории', $id);
 
-	if($i == 'name')
-		return $arr[$id]['name'].' ';
+	//ID корневой категории
+	if($i == 'main_id') {
+		if(!$parent_id = $arr[$id]['parent_id'])
+			return $id;
+		return $arr[$parent_id]['id'];
+	}
 
-	return _cacheErr('неизвестный ключ категории товара', $i);
+	//название корневой категории
+	if($i == 'main_name') {
+		if(!$parent_id = $arr[$id]['parent_id'])
+			return $arr[$id]['name'];
+		return $arr[$parent_id]['name'];
+	}
+
+	//список id категорий родителя
+	if($i == 'child_ids') {
+		$ids = array(0);
+		foreach($arr as $r)
+			if($r['parent_id'] == $id)
+				$ids[] = $r['id'];
+		return implode(',', $ids);
+	}
+
+	//массив категорий родителя
+	if($i == 'child_arr') {
+		$send = array();
+		foreach($arr as $r)
+			if($r['parent_id'] == $id)
+				$send[$r['id']] = $r;
+		return $send;
+	}
+
+	//ассоциативный массив категорий родителя: id => name
+	if($i == 'child_ass') {
+		$send = array();
+		foreach($arr as $r)
+			if($r['parent_id'] == $id)
+				$send[$r['id']] = $r['name'];
+		return $send;
+	}
+
+	//путь категории
+	if($i == 'path') {
+		$path = $arr[$id]['name'];
+		if(!$parent_id = $arr[$id]['parent_id'])
+			return $path;
+		return $arr[$parent_id]['name'].' » '.$path;
+	}
+
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ категории товара', $i);
+
+	return $arr[$id][$i];
 }
-function _tovarName($id=false, $i='name') {
-	$key = CACHE_PREFIX.'tovar_name';
+function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
+	$key = CACHE_PREFIX.'tovar_measure';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT
-					`id`,
-					`name`
-				FROM `_tovar_name`
-				ORDER BY `id`";
+		$sql = "SELECT *
+				FROM `_tovar_measure`
+				ORDER BY `sort`";
 		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
-	if(!isset($arr[$id]))
-		return _cacheErr('отсутствует id товара', $id);
-
-	if($i == 'name')
-		return $arr[$id]['name'].' ';
-
-	return _cacheErr('неизвестный ключ товара', $i);
-}
-function _tovarVendor($id=false, $i='name') {
-	$key = CACHE_PREFIX.'tovar_vendor';
-	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT
-					`id`,
-					`name`
-				FROM `_tovar_vendor`
-				ORDER BY `id`";
-		if($arr = query_arr($sql))
-			xcache_set($key, $arr, 86400);
-	}
-
-	if($id == 0)
-		return '';
-
-	if(!isset($arr[$id]))
-		return _cacheErr('неизвестный id производителя', $id);
-
-	if($i == 'name')
-		return $arr[$id]['name'].' ';
-
-	return _cacheErr('неизвестный ключ производителя', $i);
-}
-function _tovarCategoryJs() {//категории товаров JS
-	$sql = "SELECT
-				`c`.`id`,
-				`c`.`name`
-			FROM `_tovar_category` `c`,
-				 `_tovar_category_use` `u`
-			WHERE `u`.`app_id`=".APP_ID."
-			  AND `u`.`category_id`=`c`.`id`
-			ORDER BY `u`.`sort`";
-	return query_selJson($sql);
-}
-function _tovarVendorJs() {//производители товаров JS
-	$sql = "SELECT
-				`id`,
-				`name`
-			FROM `_tovar_vendor`
-			ORDER BY `name`";
-	return query_selJson($sql);
-}
-function _tovarPosition($id=false) {//виды применения к другому товару
-	$arr = array(
-		0 => '',
-		1 => 'запчасть',
-		2 => 'комплектующее',
-		3 => 'аксессуар',
-		4 => 'ингредиент'
-	);
-	
-	if($id === false) {
-		unset($arr[0]);
+	if($id == 'all')
 		return $arr;
-	}
-	
-	if(!isset($arr[$id]))
-		return _cacheErr('неизвестный id применения', $id);
 
-	return $arr[$id];
+	if($id == 'js') {
+		$spisok = array();
+		foreach($arr as $r)
+			$spisok[$r['id']] = array(
+				'title' => $r['short'],
+				'content' => '<b>'.$r['short'].'</b>'.($r['name'] ? ' - '.$r['name'] : '')
+			);
+		return _selJson($spisok);
+	}
+
+	//условие Дробь для JS
+	if($id == 'js_fraction') {
+		$spisok = array();
+		foreach($arr as $r)
+			if($r['fraction'])
+				$spisok[$r['id']] = 1;
+		return _assJson($spisok);
+	}
+
+	//условие Площадь для JS
+	if($id == 'js_area') {
+		$spisok = array();
+		foreach($arr as $r)
+			if($r['area'])
+				$spisok[$r['id']] = 1;
+		return _assJson($spisok);
+	}
+
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id единицы измерения', $id);
+
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ производителя', $i);
+
+	return $arr[$id][$i];
+}
+function _tovarEquip($id=0, $i='', $ids='') {//кеширование комплектации товаров
+	$key = CACHE_PREFIX.'tovar_equip';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT * FROM `_tovar_equip` ORDER BY `name`";
+		$arr = query_arr($sql);
+		xcache_set($key, $arr, 86400);
+	}
+
+	if(!$id)
+		return $arr;
+
+	//Получение списка комплектаций в виде чекбоксов
+	if($id == 'check') {
+		if(!$t = _tovarQuery($i))
+			return '';
+		if(empty($t['equip_ids']))
+			return '';
+
+		$send = '';
+
+		// $ids - список id комплектаций через запятую, которым были поставлены галочки
+		$sel = _idsAss($ids);
+		foreach(_ids($t['equip_ids'], 1) as $equip_id)
+			$send .=
+				'<div class="mt3 ml10">'.
+					_check('eq'.$equip_id, $arr[$equip_id]['name'], _bool(@$sel[$equip_id]), 1).
+				'</div>';
+
+		return $send;
+	}
+
+	//список комплектации для select, которые были ещё не выбраны
+	if($id == 'js') {
+		$sel = array();//уже были выбраны для конкретного товара
+		if(_num($i))
+			if($t = _tovarQuery($i))
+				$sel = _idsAss($t['equip_ids']);
+		$ass = array();
+		foreach($arr as $id => $r) {
+			if(!empty($sel[$id]))
+				continue;
+			$ass[$id] = $r['name'];
+		}
+		return _sel($ass);
+	}
+
+	if($id == 'spisok') {
+		if(empty($i))
+			return '';
+		$sel = _idsAss($i);
+		$send = array();
+		foreach($arr as $id => $r)
+			if(isset($sel[$id]))
+				$send[] = $r['name'];
+		return implode(', ', $send);
+
+	}
+
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id комплектации', $id);
+
+	return $arr[$id]['name'];
+}
+function _tovarEquipRemake() {//обновление комплектаций для заявок (разовая фукнция)
+	$sql = "
+			SELECT
+				`z`.`id`,
+				`zayav_id`,
+				`z`.`app_id`,
+				`zt`.`tovar_id`,
+				`tovar_equip_ids`,
+				`bind`.`category_id`
+			FROM `_zayav` `z`
+
+				RIGHT JOIN `_zayav_tovar` `zt`
+				ON `z`.`id`=`zt`.`zayav_id`
+
+				RIGHT JOIN `_tovar_bind` `bind`
+				ON `bind`.`tovar_id`=`zt`.`tovar_id`
+
+			WHERE `tovar_equip_ids`
+			GROUP BY
+				`zt`.`app_id`,
+				`zt`.`tovar_id`,
+				`tovar_equip_ids`
+	";
+	$spisok = query_arr($sql);
+
+	$cat = array();
+	foreach($spisok as $r) {
+		foreach(explode(',', $r['tovar_equip_ids']) as $equip_id)
+			$cat[$r['app_id']]
+				[$r['category_id']]
+				[$equip_id] = $equip_id;
+	}
+
+	$sql = "DELETE FROM `_tovar_equip_bind`";
+	query($sql);
+
+	$sql = "ALTER TABLE `_tovar_equip_bind` AUTO_INCREMENT=0";
+	query($sql);
+
+	foreach($cat as $app_id => $appArr)
+		foreach($appArr as $category_id => $catArr)
+			foreach($catArr as $equip_id) {
+				$sql = "INSERT INTO `_tovar_equip_bind` (
+							`app_id`,
+							`category_id`,
+							`equip_id`
+						) VALUES (
+							".$app_id.",
+							".$category_id.",
+							".$equip_id."
+						)";
+				query($sql);
+			}
+
+	$sql = "UPDATE `_tovar_equip_bind` SET `sort`=`id`";
+	query($sql);
 }
 function _tovarFeature($id=false, $i='name') {//названия характеристик товаров
 	$key = CACHE_PREFIX.'tovar_feature_name';
@@ -249,200 +369,84 @@ function _tovarFeatureJs() {//характеристики товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql);
 }
-function _tovarMeasure($id='all', $i='short') {//единицы изменения товаров
-	$key = CACHE_PREFIX.'tovar_measure';
+function _tovarVendor($id=false, $i='name') {
+	$key = CACHE_PREFIX.'tovar_vendor';
 	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT *
-				FROM `_tovar_measure`
-				ORDER BY `sort`";
+		$sql = "SELECT
+					`id`,
+					`name`
+				FROM `_tovar_vendor`
+				ORDER BY `id`";
 		if($arr = query_arr($sql))
 			xcache_set($key, $arr, 86400);
 	}
 
-	if($id == 'all')
-		return $arr;
-
-	if($id == 'js') {
-		$spisok = array();
-		foreach($arr as $r)
-			$spisok[$r['id']] = array(
-				'title' => $r['short'],
-				'content' => '<b>'.$r['short'].'</b>'.($r['name'] ? ' - '.$r['name'] : '')
-			);
-		return _selJson($spisok);
-	}
-
-	//условие Дробь для JS
-	if($id == 'js_fraction') {
-		$spisok = array();
-		foreach($arr as $r)
-			if($r['fraction'])
-				$spisok[$r['id']] = 1;
-		return _assJson($spisok);
-	}
-
-	//условие Площадь для JS
-	if($id == 'js_area') {
-		$spisok = array();
-		foreach($arr as $r)
-			if($r['area'])
-				$spisok[$r['id']] = 1;
-		return _assJson($spisok);
-	}
+	if($id == 0)
+		return '';
 
 	if(!isset($arr[$id]))
-		return _cacheErr('неизвестный id единицы измерения', $id);
+		return _cacheErr('неизвестный id производителя', $id);
 
-	if(!isset($arr[$id][$i]))
-		return _cacheErr('неизвестный ключ производителя', $i);
+	if($i == 'name')
+		return $arr[$id]['name'].' ';
 
-	return $arr[$id][$i];
+	return _cacheErr('неизвестный ключ производителя', $i);
+}
+function _tovarVendorJs() {//производители товаров JS
+	$sql = "SELECT
+				`id`,
+				`name`
+			FROM `_tovar_vendor`
+			ORDER BY `name`";
+	return query_selJson($sql);
 }
 
-
-function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с товарами в массив по tovar_id
+function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в массив по tovar_id
 	if(empty($arr))
 		return array();
-	
+
 	foreach($arr as $r)
 		$arr[$r['id']] += array(
-			'tovar_set' => '',
-			'tovar_set_name' => '',
-			'tovar_measure_name' => '',
-			'tovar_name' => '',
-			'tovar_link' => '',
-			'tovar_name_min' => '',
+			'tovar_name' => '',         //название товара
+			'tovar_about' => '',        //описание
+			'tovar_image_small' => '',  //картинка 50px
+			'tovar_image_min' => '',    //картинка 30px
+			'tovar_link' => '',         //ссылка на страницу информацмии о товаре
 
-			'tovar_zayav' => '',
-			'tovar_sale' => '',
+			'tovar_sale' => '',         //отображение проданного товара в списке
 
-			'tovar_buy' => 0,
-			'tovar_sell' => 0,
+			'tovar_category_id' => 0,   //id категории
+			'tovar_category_name' => 0, //имя категории
 
-			'tovar_avai_count' => 0,
-			'tovar_avai_b' => '',
-			'tovar_articul' => '',
-			'tovar_articul_full' => '',
-			'tovar_zakaz_count' => 0,
+			'tovar_measure_name' => '', //единица измерения
+			'tovar_avai' => 0,          //количество товара в наличии
 
-			'tovar_image_small' => ''
+
+
+
+
+			'_end' => 0//todo удалить
 		);
 
 	if(!$tovar_ids = _idsGet($arr, $key))
 		return $arr;
-	
+
 	$sql = "SELECT
-				*,
-				`id` `tovar_id`,
-				'' `set_name`,
-				'' `set_name_b`,
-				'' `set_noname`,
-				0 `buy`,
-				0 `sell`,
-				0 `avai_count`,
-				'' `articul`,
-				0 `articul_count`,
-				0 `articul_count_first`,
-				'' `articul_arr`,
-				0 `zakaz_count`
-			FROM `_tovar`
-			WHERE `id` IN (".$tovar_ids.")";
+				`t`.*,
+				`bind`.`category_id`,
+				`bind`.`avai`
+			FROM `_tovar` `t`
+
+				RIGHT JOIN `_tovar_bind` `bind`
+				ON `bind`.`app_id`=".APP_ID."
+			   AND `bind`.`tovar_id`=`t`.`id`
+				 
+			WHERE `t`.`id` IN (".$tovar_ids.")";
 	if(!$tovar = query_arr($sql))
 		return $arr;
 
-	//получение данных товаров, на которые устанавливается запчасть
-	if($ids = _idsGet($tovar, 'tovar_id_set')) {
-		$sql = "SELECT *
-				FROM `_tovar`
-				WHERE `id` IN (".$ids.")
-				  AND !`deleted`";
-		if($set = query_arr($sql))
-			foreach($tovar as $id => $r) {
-				if(!$r['tovar_id_set'])
-					continue;
-
-				$s = $set[$r['tovar_id_set']];
-				$name = _tovarName($s['name_id']);
-				$vendor = _tovarVendor($s['vendor_id']);
-
-				$tovar[$id] = array(
-					'set_name' => $name.$vendor.$s['name'],
-					'set_name_b' => $name.'<b>'.$vendor.$s['name'].'</b>',
-					'set_noname' => $vendor.$s['name']
-				) + $tovar[$id];
-			}
-	}
-
-
-	//закупка и продажа
-	$sql = "SELECT *
-			FROM `_tovar_cost`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".$tovar_ids.")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		$tovar[$r['tovar_id']]['buy'] = $r['sum_buy'];
-		$tovar[$r['tovar_id']]['sell'] = $r['sum_sell'];
-	}
-
-
-	//наличие товара
-	$sql = "SELECT
-				`tovar_id`,
-				SUM(`count`) `count`
-			FROM `_tovar_avai`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".$tovar_ids.")
-			GROUP BY `tovar_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$tovar[$r['tovar_id']]['avai_count'] = _ms($r['count']);
-
-	//артикулы
-	$articul = array();
-	$sql = "SELECT *
-			FROM `_tovar_avai`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".$tovar_ids.")
-			  AND `count`
-			ORDER BY `tovar_id`,`count` DESC";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$articul[$r['tovar_id']][$r['id']] = $r;
-
-	foreach($articul as $id => $r) {
-		$tovar[$id]['articul'] = _tovarAvaiArticulTab($r, 1);
-		$tovar[$id]['articul_count'] = count($r);
-		$tovar[$id]['articul_count_first'] = _ms($r[key($r)]['count']);
-
-		foreach($r as $k => $i) {
-			unset($r[$k]['id']);
-			unset($r[$k]['app_id']);
-			unset($r[$k]['articul']);
-			unset($r[$k]['tovar_id']);
-			unset($r[$k]['about']);
-			$r[$k]['count'] = _ms($i['count']);
-			$r[$k]['sum_buy'] = _cena($i['sum_buy']);
-		}
-		$tovar[$id]['articul_arr'] = $r;
-	}
-
-	//заказ товара
-	$sql = "SELECT
-				`tovar_id`,
-				SUM(`count`) `count`
-			FROM `_tovar_zakaz`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".$tovar_ids.")
-".($zayav_id ? " AND `zayav_id`=".$zayav_id : '')."
-			GROUP BY `tovar_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$tovar[$r['tovar_id']]['zakaz_count'] = $r['count'];
-
-
-	//прикрепление картинок
-	$tovar = _imageValToList($tovar, 'tovar_id');
+	//изображения
+	$tovar = _imageValToList($tovar, 'tovar');
 
 	foreach($arr as $id => $r) {
 		if(!$r[$key])
@@ -450,119 +454,48 @@ function _tovarValToList($arr, $key='tovar_id', $zayav_id=0) {//вставка данных с
 
 		$t = $tovar[$r[$key]];
 		$tovar_id = $t['id'];
-		$set = $t['tovar_id_set'];
 		$go = ' class="tovar-info-go'.($t['deleted'] ? ' deleted' : '').'" val="'.$tovar_id.'"';
-		$name = _tovarName($t['name_id']);
-		$nameB = $set ? '<b>'.$name.'</b>' : $name;
-		$vendor = _tovarVendor($t['vendor_id']);
 
 		$arr[$id] = array(
-			'tovar_set' =>
-				'<a'.$go.'>'.
-					$nameB.'<b>'.$vendor.'</b>'.
-					($set ? $t['name'] : '<b>'.$t['name'].'</b>').
-					($set ? '<br />для '.$t['set_name'] : '').
-				'</a>',
-
-			'tovar_set_name' => $t['set_name_b'],
-
-			'tovar_name' => trim($name.$vendor.$t['name'].' '.$t['set_name']),
-			'tovar_name_b' => $name.'<br /><b>'.$vendor.$t['name'].'</b>',
-
-			'tovar_name_min' =>
-				$name.'<b>'.$vendor.$t['name'].'</b>'.
-				($set ? '<div class="tovar-set">'.$t['set_name'].'</div>' : ''),
-
-
-			'tovar_measure_name' => _tovarMeasure($t['measure_id']),
-
-			'tovar_zayav' =>
-				'<a'.$go.'>'.
-					'<b>'.$name.'</b>'.$vendor.
-					($t['name'] ? $t['name'].'<br />' : '').
-					$t['set_noname'].
-				'</a>',
+			'tovar_name' => trim($t['name']),
+			'tovar_about' => trim($t['about']),
+			'tovar_image_small' => $t['image_small'],
+			'tovar_image_min' => $t['image_min'],
 
 			'tovar_sale' =>
-				'<div class="tovar-info-go tovar-sale" val="'.$tovar_id.'">'.
-					'<div class="cat">'._tovarCategory($t['category_id']).'</div>'.
-					$name.'<b>'.$vendor.$t['name'].'</b>:'.
-					'<b class="count">'._ms(@$r['tovar_count']).' '._tovarMeasure($t['measure_id']).'</b>'.
+				'<div class="tovar-info-go dib w300 bg-gr1 bor-f0 pad5 curP over1" val="'.$tovar_id.'">'.
+					'<div class="fl mr5">'.$t['image_min'].'</div>'.
+					'<div class="grey">'._tovarCategory($t['category_id']).'</div>'.
+					'<b>'.trim($t['name']).':</b> '.
+					'<span class="color-pay"><b>'._ms(@$r['tovar_count']).'</b> '._tovarMeasure($t['measure_id']).'</span>'.
 				'</div>',
 
-			'tovar_select' => $set ?
-								'<b>'.$name.'</b>'.$t['name'].'<br /><tt>'.$t['set_name_b'].'</tt>'
-								:
-								$name.'<b>'.$vendor.$t['name'].'</b>',
+			'tovar_category_id' => $t['category_id'],
+			'tovar_category_name' => _tovarCategory($t['category_id']),
 
-			'tovar_buy' => _cena($t['buy']),
-			'tovar_sell' => _cena($t['sell']),
-
-			'tovar_avai_count' => _ms($t['avai_count']),
-			'tovar_avai_b' => $t['avai_count'] ? '<b class="avai">'._ms($t['avai_count']).'</b>' : '',
-			'tovar_zakaz_count' => $t['zakaz_count'],
-
-			'tovar_image_small' => $t['image_small']
+			'tovar_measure_name' => _tovarMeasure($t['measure_id']),
+			'tovar_avai' => _ms($t['avai'])
 		) + $arr[$id];
 
 		$arr[$id]['tovar_link'] = '<a'.$go.'>'.$arr[$id]['tovar_name'].'</a>';
-		$arr[$id]['tovar_articul'] = $t['articul'];
-		$arr[$id]['tovar_articul_full'] =
-			'<div id="ts-articul">'.
-				'<div class="headName">Выбор из наличия:</div>'.
-				'<table class="tsa-tab bs5 w100p">'.
-					'<tr><td class="top w50">'.$t['image_small'].
-						'<td class="top name">'.$arr[$id]['tovar_select'].
-				'</table>'.
-				$t['articul'].
-				'<table class="tsa-bottom bs10 w100p'.($t['articul_count'] == 1 ? '' : ' dn').'">'.
-					'<tr><td><td>'.
-					'<tr><td class="label r w70">Количество:*'.
-						'<td><input type="text" class="w50" id="tsa-count" value="1" /> '.
-							$arr[$id]['tovar_measure_name'].
-							'<span>(max: <b class="max">'.$t['articul_count_first'].'</b>)</span>'.
-					'<tr><td>'.
-						'<td><button class="vk submit">Добавить</button>'.
-							'<button class="vk cancel">Выбрать другой товар</button>'.
-				'</table>'.
-			'</div>';
-		$arr[$id]['tovar_articul_arr'] = $t['articul_arr'];
 	}
 
 	return $arr;
 }
-function _tovarArticulCreate() {//формирование очередного артикула товара
-	$sql = "SELECT MAX(`articul`)
-			FROM `_tovar_avai`
-			WHERE `app_id`=".APP_ID;
-	$max = _num(query_value($sql));
-	
-	$max++;
+function _tovarDelAccess($tovar_id) {//разрешение на удаление товара
+	$sql = "SELECT * FROM `_tovar` WHERE `id`=".$tovar_id;
+	if(!$t = query_assoc($sql))
+		return 'Товара не существует';
 
-	$articul = $max;
-	for($i = 0; $i < 6 - strlen($max); $i++)
-		$articul = '0'.$articul;
-	
-	return $articul;
-}
+	if($t['deleted'])
+		return 'Товар уже был удалён';
 
-function _tovarDelAccess($r) {//разрешение на удаление товара
-	$tovar_id = $r['id'];
-
-	if(!$r['app_id'])
+	if($t['app_id'] != APP_ID)
 		return 'Товар был создан не в этом приложении';
-
-//	$sql = "SELECT COUNT(*) FROM `_tovar` WHERE `id`=".$r['tovar_id_set'];
-//	if(query_value($sql))
-//		return 'Этот товар применяется к другому товару';
 
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `tovar_id`=".$tovar_id;
 	if(query_value($sql))
 		return 'Производилась продажа товара';
-
-//	$sql = "SELECT COUNT(*) FROM `_schet_pay_content` WHERE `tovar_id`=".$tovar_id;
-//	if(query_value($sql))
-//		return 'Товар используется в счётах на оплату';
 
 	$sql = "SELECT COUNT(*) FROM `_tovar_avai` WHERE `tovar_id`=".$tovar_id;
 	if(query_value($sql))
@@ -584,28 +517,70 @@ function _tovarDelAccess($r) {//разрешение на удаление товара
 	return 0;
 }
 
+
+
+
+function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
+	$spisok = '';
+	foreach(_tovarCategory('main_ass') as $id => $r) {
+		$spisok .=
+			'<a'.($cat_id == $id ? ' class="sel"' : '').' val="'.$id.'">'.
+				'<em class="w35 r pale">'.($cc[$id] ? $cc[$id] : '').'</em>'.
+				$r.
+			'</a>';
+	}
+	return
+	'<div id="rightLinkMenu" class="rightLink mar8">'.$spisok.'</div>';
+}
+function _tovar() {//8 - главная страница товаров
+	$data = _tovar_spisok(_hashFilter('tovar'));
+	$v = $data['filter'];
+	return
+	'<div id="_tovar">'.
+		'<table class="bs10 w100p bg-gr1 line-b">'.
+			'<tr>'.
+				'<td class="w230"><div id="find"></div>'.
+				'<td class="w100">'._check('avai', 'Наличие', $v['avai'], 1).
+				'<td class="w100">'._check('zakaz', 'Заказано', $v['zakaz'], 1).
+//				'<td class="w70">'._check('f3', 'В пути', $v['path'], 1).
+				'<td class="r"><button class="vk green" onclick="_tovarEdit()">Внести новый товар</button>'.
+					'<a onclick="_tovarSetup()" class="icon icon-setup-big mt5 ml10'._tooltip('Быстрая настройка товаров', -160, 'r').'</a>'.
+		'</table>'.
+
+		'<div class="line-b">'.
+			'<div id="tovar-result" class="mar10">'.$data['result'].'</div>'.
+		'</div>'.
+
+		'<table class="w100p bg-gr1">'.
+			'<tr><td class="w200 top">'.
+					'<div class="f-label ml10 mt10">Категория</div>'.
+					_tovarCatMenu($v['category_id'], _tovarCategoryCount($v)).
+				'<td class="top">'.
+					'<div id="tovar-spisok" class="mt10 mr10 mb10">'.$data['spisok'].'</div>'.
+		'</table>'.
+	'</div>'.
+	'<script>'.
+		'var CATEGORY_ID_DEF='._tovarCategory('first').';'.
+	'</script>';
+}
+
 function _tovarFilter($v) {
 	$default = array(
 		'page' => 1,
-		'limit' => 50,
-		'icon_id' => 2,
+		'limit' => 500,
 		'find' => '',
-		'group' => 0,
-		'category_id' => 0,
-		'name_id' => 0,
-		'vendor_id' => 0
-
+		'category_id' => _tovarCategory('first'),
+		'avai' => 0,
+		'zakaz' => 0
 	);
 
 	$filter = array(
-		'page' => _num(@$v['page']) ? $v['page'] : 1,
-		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
-		'icon_id' => _num(@$v['icon_id']) ? $v['icon_id'] : 2,
+		'page' => _num(@$v['page']) ? $v['page'] : $default['page'],
+		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
-		'group' => _num(@$v['group']),
-		'category_id' => intval(@$v['category_id']),
-		'name_id' => intval(@$v['name_id']),
-		'vendor_id' => intval(@$v['vendor_id']),
+		'category_id' => isset($v['category_id']) ? _num($v['category_id']) : $default['category_id'],
+		'avai' => _num(@$v['avai']) ? $v['avai'] : $default['avai'],
+		'zakaz' => _num(@$v['zakaz']) ? $v['zakaz'] : $default['zakaz'],
 
 		'clear' => ''
 	);
@@ -615,581 +590,273 @@ function _tovarFilter($v) {
 			$filter['clear'] = '<button class="vk small red fr">Очистить фильтр</button>';
 			break;
 		}
+
+	_pre($filter);
 	return $filter;
 }
-function _tovar_spisok_icon($v=array()) {
+function _tovarCategoryCount($filter) {//получение количества товаров для корневых категорий с учётом фильтра
+	$main = _tovarCategory('main_ass');
+	foreach($main as $id => $r)
+		$main[$id] = 0;
+
+	$cond = "`cat`.`app_id`=".APP_ID."
+		 AND `t`.`id`=`bind`.`tovar_id`
+		 AND `cat`.`id`=`bind`.`category_id`";
+
+	if($filter['find'])
+		$cond .= " AND (`t`.`name` LIKE '%".$filter['find']."%'
+					 OR `about` LIKE '%".$filter['find']."%'
+					 OR `articul`='".$filter['find']."'
+					   )";
+
+	if($filter['avai'])
+		$cond .= " AND `bind`.`avai`";
+
+	if($filter['zakaz'])
+		$cond .= " AND `bind`.`zakaz`";
+
+	$sql = "SELECT
+				`cat`.`id`,
+				`cat`.`parent_id`,
+				COUNT(`bind`.`id`) `count`
+			FROM
+				`_tovar` `t`,
+				`_tovar_category` `cat`,
+				`_tovar_bind` `bind`
+			WHERE ".$cond."			  
+			GROUP BY `cat`.`id`";
+	if(!$spisok = query_arr($sql))
+		return $main;
+
+	foreach($spisok as $r) {
+		$main_id = _tovarCategory($r['id'], 'main_id');
+		$main[$main_id] += $r['count'];
+	}
+	
+	return $main;
+}
+function _tovar_spisok($v=array()) {
 	$filter = _tovarFilter($v);
 	$filter = _filterJs('TOVAR', $filter);
 
-	switch($filter['icon_id']) {
-		case 5: return _tovar_stat($filter);
-		case 2:
-		default: return _tovar_category_spisok($filter);
-		case 3: return _tovar_spisok($filter);
-		case 4: return _tovar_spisok($filter);
-	}
-}
+	$cond = "`bind`.`app_id`=".APP_ID."
+		 AND `t`.`id`=`bind`.`tovar_id`
+		 AND !`t`.`deleted`";
 
-function _tovar_category_name($category_id, $i='arr') {//список наименований по выбранной категории
-/*
-	$i - варианты возврата:
-		arr
-		json
-*/
-
-	if(empty($category_id)) {
-		if($i == 'json')
-			return '[]';
-		return _sel(array());
+	if($filter['find']) {
+		$cond .= " AND (`name` LIKE '%".$filter['find']."%'
+					 OR `about` LIKE '%".$filter['find']."%'
+					 OR `articul`='".$filter['find']."'
+					   )";
 	}
 
-	$sql = "SELECT DISTINCT(`name_id`)
-			FROM `_tovar`
-			WHERE `category_id`=".$category_id;
-	$ids = query_ids($sql);
+	if($filter['avai'])
+		$cond .= " AND `bind`.`avai`";
 
-	$nameIds = array();
-	foreach(_ids($ids, 1) as $r)
-		$nameIds[$r] = _tovarName($r);
-
-	asort($nameIds);
-
-
-	if($i == 'json')
-		return _selJson($nameIds);
-
-	return _sel($nameIds);
-}
-function _tovar_category_vendor($filter, $i='arr') {//список производителей по выбранной категории
-	if(!$filter['category_id']) {
-		if($i == 'json')
-			return '[]';
-		return _sel(array());
-	}
-
-	$sql = "SELECT DISTINCT(`vendor_id`)
-			FROM `_tovar`
-			WHERE `vendor_id`
-			  AND `category_id`=".$filter['category_id'].
-				($filter['name_id'] ? " AND `name_id`=".$filter['name_id'] : '');
-	$ids = query_ids($sql);
-
-	$vendorIds = array();
-	foreach(_ids($ids, 1) as $r)
-		$vendorIds[$r] = _tovarVendor($r);
-
-	asort($vendorIds);
-
-	if($i == 'json')
-		return _selJson($vendorIds);
-
-	return _sel($vendorIds);
-}
-
-function _tovar_stat($filter) {//статистика по товарам
-	$sql = "SELECT
-				`category_id` `id`,
-				0 `pos`,
-				0 `count`,
-				0 `sum`
-			FROM `_tovar_category_use`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `sort`";
-	$cat = query_arr($sql);
-
-	//суммы в рублях для каждой категории
-	$summa = 0;
-	$sql = "SELECT
-				`t`.`category_id` `id`,
-				SUM(`ta`.`count`*`ta`.`sum_buy`) `sum`,
-				SUM(`ta`.`count`) `count`
-			FROM `_tovar` `t`,
-				 `_tovar_avai` `ta`
-			WHERE `ta`.`app_id`=".APP_ID."
-			  AND `t`.`id`=`ta`.`tovar_id`
-			  AND `t`.`category_id` IN ("._idsGet($cat).")
-			GROUP BY `t`.`category_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		$cat[$r['id']]['sum'] = _cena($r['sum']);
-		$cat[$r['id']]['count'] = _cena($r['count']);
-		$summa += $r['sum'];
-	}
-
-	$sql = "SELECT
-				`id`,
-				COUNT(`tovar_id`) `count`
-			FROM (
-				SELECT
-					`category_id` `id`,
-					`t`.`id` `tovar_id`
-				FROM `_tovar` `t`
-					RIGHT JOIN `_tovar_avai` `ta`
-					ON `ta`.`app_id`=".APP_ID."
-					AND `ta`.`tovar_id`=`t`.`id`
-					AND `ta`.`count`
-				WHERE `t`.`category_id` IN ("._idsGet($cat).")
-				GROUP BY `t`.`id`
-			) `tt`
-			GROUP BY `tt`.`id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$cat[$r['id']]['pos'] = $r['count'];
-
-	$catSpisok = '';
-	foreach($cat as $r)
-		$catSpisok .=
-			'<tr><td>'.trim(_tovarCategory($r['id'])).
-				'<td class="center">'.
-					($r['pos'] ? '<span class="pos'._tooltip('Позиции', -31).$r['pos'].'</span>' : '').
-				'<td class="r">'.($r['sum'] ? _sumSpace($r['sum']).' руб.' : '');
-
-
-	$spisok =
-	$filter['js'].
-	'<div id="tovar-stat">'.
-		'<div class="headName">Текущий остаток</div>'.
-		'<table class="_spisok">'.
-			'<tr><th>Категория'.
-				'<th>Количество'.
-				'<th>Сумма'.
-			$catSpisok.
-			'<tr><td class="r"><b>Итого:</b>'.
-				'<td>'.
-				'<td class="r"><b>'.($summa ? _sumSpace($summa).'</b> руб.' : '').
-		'</table>'.
-	'</div>';
-
-	return array(
-		'result' => 'Статистика по товарам',
-		'spisok' => $spisok,
-		'filter' => $filter
-	);
-}
-function _tovar_category_spisok($filter) {
-	$sql = "SELECT
-				`category_id` `id`
-			FROM `_tovar_category_use`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql))
-		return array(
-			'all' => 0,
-			'result' => 'Категории не определены'.$filter['clear'],
-			'spisok' => $filter['js'].
-						'<div class="_empty">'.
-							'Категории товаров не настроены.'.
-							'<a href="'.URL.'&p=20">Настроить</a>'.
-						'</div>',
-			'filter' => $filter
-		);
-
-	foreach($spisok as $r) {
-		$spisok[$r['id']]['name'] = trim(_tovarCategory($r['id']));
-		$spisok[$r['id']]['sub'] = array();
-		$spisok[$r['id']]['sub_vendor'] = array();
-		$spisok[$r['id']]['count'] = 0;
-	}
-
-	$all = count($spisok);
-	$send = array(
-		'all' => $all,
-		'result' => 'Всего '.$all.' категори'._end($all, 'я', 'и', 'й').' товаров'.$filter['clear'],
-		'spisok' => $filter['js'],
-		'filter' => $filter
-	);
-
-	$cond = "!`deleted` AND `category_id` IN ("._idsGet($spisok).")";
-
-	if(!empty($filter['find'])) {
-//		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
-		$engRus = _engRusChar($filter['find']);
-		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
-			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
-	}
-
-	$JOIN = "LEFT JOIN `_tovar_avai` `ta`
-				 ON `ta`.`app_id`=".APP_ID."
-				 AND `ta`.`tovar_id`=`t`.`id`";
-
-	if($filter['group'] == 1)
-		$JOIN = "RIGHT JOIN `_tovar_avai` `ta`
-				     ON `ta`.`app_id`=".APP_ID."
-				     AND `ta`.`tovar_id`=`t`.`id`
-				     AND `ta`.`count`";
-
-	if($filter['group'] == 2)
-		$JOIN = "RIGHT JOIN `_tovar_zakaz` `ta`
-				     ON `ta`.`app_id`=".APP_ID."
-				     AND `ta`.`tovar_id`=`t`.`id`";
-
-	//количество товаров в каждой категории
-	$sql = "SELECT
-				`category_id`,
-				COUNT(`t`.`id`) `count`
-			FROM `_tovar` `t`
-			".$JOIN."
-			WHERE ".$cond."
-			GROUP BY `category_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['category_id']]['count'] = $r['count'];
-
-/*
-	$spisok[0]['name'] = 'Без категории';
-	$spisok[0]['category_id'] = 0;
-	$spisok[0]['sub'] = '';
-	$spisok[0]['id'] = 0;
-*/
-
-	//количество товаров и наличия по каждому наименованию
-	$sql = "SELECT
-				`category_id`,
-				`name_id`,
-				COUNT(`t`.`id`) `count`,
-				SUM(`ta`.`count`) `avai_zakaz`
-			FROM `_tovar` `t`
-			".$JOIN."
-			WHERE ".$cond."
-			GROUP BY `category_id`,`name_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		foreach($spisok as $sp)
-			if($r['category_id'] == $sp['id']) {
-				$spisok[$sp['id']]['sub'][$r['name_id']] = trim(_tovarName($r['name_id']));
-				$spisok[$sp['id']]['sub_count'][$r['name_id']] = $r['count'];
-				$spisok[$sp['id']][$filter['group'] == 2 ? 'zakaz' : 'avai'][$r['name_id']] = _ms($r['avai_zakaz']);
-			}
-
-	//количество товаров и наличия по каждому наименованию
-	$sql = "SELECT
-				`category_id`,
-				`name_id`,
-				`vendor_id`,
-				COUNT(`t`.`id`) `count`,
-				SUM(`ta`.`count`) `avai_zakaz`
-			FROM `_tovar` `t`
-			".$JOIN."
-			WHERE ".$cond."
-			GROUP BY `category_id`,`name_id`,`vendor_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		foreach($spisok as $sp)
-			if($r['category_id'] == $sp['id']) {
-				if(!$r['vendor_id'])
-					continue;
-				$spisok[$sp['id']]['sub_vendor'][$r['name_id']][$r['vendor_id']] = trim(_tovarVendor($r['vendor_id']));
-				$spisok[$sp['id']]['sub_vendor_count'][$r['name_id']][$r['vendor_id']] = $r['count'];
-				$spisok[$sp['id']]['sub_vendor_'.($filter['group'] == 2 ? 'zakaz' : 'avai')][$r['name_id']][$r['vendor_id']] = _ms($r['avai_zakaz']);
-			}
-
-	foreach($spisok as $id => $r) {
-		if(!$r['count'])
-			continue;
-		asort($r['sub']);
-
-
-		foreach($r['sub'] as $k => $i) {
-			$vendor = '';
-			if(isset($r['sub_vendor'][$k])) {
-				asort($r['sub_vendor'][$k]);
-				foreach($r['sub_vendor'][$k] as $kk => $ii)
-					$vendor .=
-						'<a class="sub-vendor" val="'.$id.':'.$k.':'.$kk.'">'.$ii.'</a>'.
-						'<span class="ven-count">'.$r['sub_vendor_count'][$k][$kk].'</span>'.
- (@$r['sub_vendor_avai'][$k][$kk] ? '<span class="ven-avai">'.$r['sub_vendor_avai'][$k][$kk].'</span>' : '').
-(@$r['sub_vendor_zakaz'][$k][$kk] ? '<span class="ven-zakaz">'.$r['sub_vendor_zakaz'][$k][$kk].'</span>' : '').
-						'<br />';
-				$vendor = '<div class="ven">'.$vendor.'</div>';
-			}
-			$r['sub'][$k] =
-				'<a class="sub-unit" val="'.$k.'">'.
-					($vendor ? '<div class="ven-plus'._tooltip('Показать производителей', -15, 'l').'+</div>' : '').
-					$i.
-					'<span class="sub-count">'.$r['sub_count'][$k].'</span>'. //количество товаров в наименовании
- (@$r['avai'][$k] ? '<span class="avai">'.$r['avai'][$k].'</span>' : '').
-(@$r['zakaz'][$k] ? '<span class="zakaz">'.$r['zakaz'][$k].'</span>' : '').
-				'</a>'.
-				$vendor;
-		}
-
-		$send['spisok'] .=
-			'<div class="tovar-category-unit" val="'.($r['id'] ? $r['id'] : -1).'">'.
-				'<a class="hd">'.$r['name'].'</a>'.
-				'<span class="hd-count">'.$r['count'].'</span>'.//количество товаров в категории
-				implode('', $r['sub']).
-			'</div>';
-	}
-
-	$send['spisok'] .= '<a id="tset" href="'.URL.'&p=20">Настроить категории товаров</a>';
-	$send['spisok'] .= _next($filter + array('all'=>$all));
-
-	return $send;
-}
-function _tovar_spisok($filter) {
-	$cond = "!`deleted` AND `category_id` IN ("._tovarCategory('use').")";
-
-	define('ZAKAZ_ADDED', $filter['group'] == 2);
-	define('PAGE1', $filter['page'] == 1);
-
-	if(!empty($filter['find'])) {
-//		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
-		$engRus = _engRusChar($filter['find']);
-		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
-			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
-	}
-
-	$JOIN = '';
-
-	if($filter['group'] == 1)
-		$JOIN = "RIGHT JOIN `_tovar_avai` `ta`
-				     ON `ta`.`app_id`=".APP_ID."
-				     AND `ta`.`tovar_id`=`t`.`id`
-				     AND `ta`.`count`";
-
-	if(ZAKAZ_ADDED)
-		$JOIN = "RIGHT JOIN `_tovar_zakaz` `ta`
-				     ON `ta`.`app_id`=".APP_ID."
-				     AND `ta`.`tovar_id`=`t`.`id`";
+	if($filter['zakaz'])
+		$cond .= " AND `bind`.`zakaz`";
 
 	if($filter['category_id'])
-		$cond .= " AND `category_id`=".$filter['category_id'];
-
-	if($filter['name_id'])
-		$cond .= " AND `name_id`=".$filter['name_id'];
-	$nameSpisokJs = '<script>var NAME_SPISOK='._tovar_category_name($filter['category_id'], 'json').';</script>';
+		$cond .= " AND `bind`.`category_id` IN (".$filter['category_id'].","._tovarCategory($filter['category_id'], 'child_ids').")";
 
 
-	if($filter['vendor_id'])
-		$cond .= " AND `vendor_id`=".$filter['vendor_id'];
-	$vendorSpisokJs = '<script>var VENDOR_SPISOK='._tovar_category_vendor($filter, 'json').';</script>';
-
-
-	$sql = "SELECT COUNT(*) AS `all` FROM `_tovar` `t` ".$JOIN." WHERE ".$cond;
+	$sql = "SELECT COUNT(*) AS `all`
+			FROM `_tovar` `t`,
+				 `_tovar_bind` `bind`
+			WHERE ".$cond;
 	if(!$all = query_value($sql))
 		return array(
 			'all' => 0,
-			'result' =>
-				'Товаров не найдено'.
-				$filter['clear'].
-				$nameSpisokJs.
-				$vendorSpisokJs,
+			'result' => 'Товаров не найдено'.$filter['clear'],
 			'spisok' => $filter['js'].'<div class="_empty">Товаров не найдено.</div>',
 			'filter' => $filter
 		);
 
-	$filter['all'] = $all;
-
-	$send = array(
-		'all' => $all,
-		'result' =>
-			'Показан'._end($all, ' ', 'о ').$all.' товар'._end($all, '', 'а', 'ов').
-			$filter['clear'].
-			$nameSpisokJs.
-			$vendorSpisokJs,
-		'spisok' =>	$filter['js'],
-		'filter' => $filter
-	);
-
-	$sql = "SELECT `t`.*
-			FROM `_tovar` `t`
-			".$JOIN."
+	$sql = "SELECT
+				`t`.*,
+				`bind`.`category_id`,
+				`bind`.`articul`,
+				`bind`.`avai`,
+				`bind`.`zakaz`,
+				`bind`.`sum_sell`
+			FROM `_tovar` `t`,
+				 `_tovar_bind` `bind`
 			WHERE ".$cond."
-			ORDER BY `name_id` ASC,`vendor_id` ASC,`name` ASC
 			LIMIT "._startLimit($filter);
 	$spisok = query_arr($sql);
-
-	$spisok = _tovarValToList($spisok, 'id');
-
-	$send['spisok'] .= _tovar_spisok_image($spisok, $filter);
-	$send['spisok'] .= _tovar_spisok_min($spisok, $filter);
-
-	return $send;
-}
-function _tovar_spisok_image($spisok, $filter) {//список товаров с картинками
-	if($filter['icon_id'] != 3)
-		return '';
-
-	$spisok = _imageValToList($spisok, 'tovar_id');
-
-	$send = '';
-	foreach($spisok as $id => $r)
-		$send .=
-			'<div class="tovar-unit-image">'.
-				'<table>'.
-					'<tr><td class="img">'.$r['image_small'].
-						'<td class="inf">'.
-							'<a href="'.URL.'&p=46&id='.$id.'" class="name">'.$r['tovar_name'].'</a>'.
-				'</table>'.
-			'</div>';
-
-	$send .= _next($filter + array('all'=>$filter['all']));
-
-	return $send;
-}
-function _tovar_spisok_min($spisok, $filter) {//сокращённый список товаров
-	if($filter['icon_id'] != 4)
-		return '';
+	$spisok = _imageValToList($spisok, 'tovar');
 
 
-	$send = $filter['page'] == 1 ?
-			'<table class="_spisok">'.
-				'<tr>'.
-					'<th>'.
-	 (ZAKAZ_ADDED ? '<th>Заказ' : '').
-					'<th>Нал.'
-			: '';
-
-	foreach($spisok as $id => $r)
-		$send .=
-			'<tr class="tovar-unit-min">'.
-				'<td><a href="'.URL.'&p=46&id='.$id.'">'.$r['tovar_name_min'].'</a>'.
- (ZAKAZ_ADDED ? '<td class="zakaz">'._sumSpace($r['tovar_zakaz_count']).' <span>'.$r['tovar_measure_name'].'</span>' : '').
-				'<td class="avai">'.($r['tovar_avai_count'] ? _sumSpace($r['tovar_avai_count']).' <span>'.$r['tovar_measure_name'].'</span>' : '');
-
-	$send .= _next($filter + array('tr'=>1,'all'=>$filter['all']));
-
-	return $send;
-}
-
-
-function _tovarQuery($tovar_id, $old=0) {//запрос данных об одном товаре
-	$sql = "SELECT
-				*,
-				'' `tovar_set_name`
-			FROM `_tovar`
-			WHERE `id".($old ? '_old' : '')."`=".$tovar_id;
-	if(!$tovar = query_assoc($sql))
-		return array();
-
-	if($tovar['tovar_id_set']) {
-		$sql = "SELECT *
-				FROM `_tovar`
-				WHERE `id`=".$tovar['tovar_id_set'];
-		$r = query_assoc($sql);
-		$tovar['tovar_set_name'] =
-			($r['tovar_id_set'] ? '<b>'._tovarName($r['name_id']).'</b>' : _tovarName($r['name_id'])).
-			'<b>'.
-				_tovarVendor($r['vendor_id']).
-				$r['name'].
-			'</b>';
-
+	$child = array();
+	foreach($spisok as $r) {
+		$r['avai'] = _ms($r['avai']) ? '<b>'._ms($r['avai']).'</b> '._tovarMeasure($r['measure_id']) : '';
+		$r['zakaz'] = _ms($r['zakaz']) ? 'Заказано <b>'._ms($r['zakaz']).'</b> '._tovarMeasure($r['measure_id']) : '';
+		$r['sum_sell'] = _cena($r['sum_sell']);
+		$child[$r['category_id']][] = $r;
 	}
 
-	//добавление ids комплектаций
-	$sql = "SELECT `equip_id`
-			FROM `_tovar_equip`
-			WHERE `category_id`=".$tovar['category_id']."
-			  AND `name_id`=".$tovar['name_id']."
-			ORDER BY `sort`";
-	$tovar['equip_ids'] = query_ids($sql);
-
-	//закупка и продажа
-	$sql = "SELECT *
-			FROM `_tovar_cost`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id."
-			LIMIT 1";
-	$cost = query_assoc($sql);
-	$tovar['sum_buy'] = _cena(@$cost['sum_buy']);
-	$tovar['sum_procent'] = _cena(@$cost['sum_procent']);
-	$tovar['sum_sell'] = _cena(@$cost['sum_sell']);
-
-	return $tovar;
-}
-function _tovarAvaiArticul($tovar_id, $radio=0) {
-	$sql = "SELECT *
-			FROM `_tovar_avai`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id."
- ".($radio ? "AND `count`" : '')."
-			ORDER BY `count` DESC";
-	if(!$spisok = query_arr($sql))
-		return '';
-
-	return _tovarAvaiArticulTab($spisok, $radio);
-}
-function _tovarAvaiArticulTab($spisok, $radio) {//таблица наличия товара по конкретным артикулам
-	$count = count($spisok);
-	$avai_id = $count == 1 ? key($spisok) : 0;
-
-	$send =
-		'<table class="_spisokTab tovar-avai-articul _radio"'.($radio ? ' id="ta-articul_radio"' : '').'>'.
-  ($radio ? '<input type="hidden" id="ta-articul" value="'.$avai_id.'" />' : '').
-			'<tr>'.
-				'<th class="w70">Артикул'.
-				'<th class="w50">Кол-во'.
-				'<th class="w70">Закуп.<br />цена'.
-				'<th>Примечание';
-	foreach($spisok as $r) {
-		if($radio && !_ms($r['count']))
-			continue;
+	$send = '';
+	foreach($child as $id => $r) {
 		$send .=
-			'<tr>'.
-				'<td class="grey r">'.
-		($radio ? '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s>'.$r['articul'].'</div>'
-					:
-					$r['articul']
-		).
-				'<td class="count center color-pay">'.(_ms($r['count']) ? '<b>'._ms($r['count']).'</b>' : '').
-				'<td class="cena r">'._sumSpace($r['sum_buy']).
-				'<td>'.$r['about'];
+			'<div class="fs15 color-555">'.
+				(!$filter['category_id'] ? '<b class="fs15">'._tovarCategory($id, 'main_name').'</b> » ' : '').
+				($id == $filter['category_id'] ? '<span class="fs15">Без категории</span>' : _tovarCategory($id)).
+				'<span class="pale ml10">'.($filter['find'] ? count($r) : _tovarCategory($id, 'count')).'</span>'.
+			'</div>'.
+			_tovar_unit($r, $filter);
+	}
+
+	return array(
+		'all' => $all,
+		'result' => 'Показано товаров: '.$all.$filter['clear'],
+		'spisok' => $filter['js'].'<button class="vk small pink fr dn" id="but-tovar-selected" onclick="_tovarSelectedAction()"></button>'.$send,
+		'filter' => $filter
+	);
+}
+function _tovar_unit($spisok, $filter=array()) {
+	$send = '<table class="collaps w100p bg-fff '.(!empty($filter) ? 'mt5 mb30' : 'mt1 mb10').'">';
+	foreach($spisok as $r) {
+		if(@$filter['find']) {
+			$reg = '/('.$filter['find'].')/iu';
+			$reg = utf8($reg);
+			$r['name'] = utf8($r['name']);
+			$r['name'] = preg_replace($reg, '<span class="fndd b">\\1</span>', $r['name'], 1);
+			$r['name'] = win1251($r['name']);
+
+			$r['about'] = utf8($r['about']);
+			$r['about'] = preg_replace($reg, '<span class="fndd fs12">\\1</span>', $r['about'], 1);
+			$r['about'] = win1251($r['about']);
+
+			if($filter['find'] == $r['articul'])
+				$r['articul'] = '<span class="fndd fs12">'.$r['articul'].'</span>';
+		}
+		$send .=
+			'<tr class="tovar-unit over1 curP" val="'.$r['id'].'">'.
+				'<td class="bor1">'.
+					'<table class="bs10 w100p">'.
+						'<tr>'.
+							'<td class="top w35 h25">'.$r['image_min'].
+							'<td class="top">'.
+								'<b class="fs14 color-555">'.$r['name'].'</b>'.
+				 ($r['about'] ? '<div class="fs12 grey mt1 w400">'._br($r['about']).'</div>' : '').
+							'<td class="top">'.
+					'</table>'.
+
+					'<div class="fs12 grey ml10 mb5 prel">'.
+						'Артикул '.
+						'<span class="fs12 black">'.$r['articul'].'</span>'.
+		  ($r['avai'] ? '<div class="tovar-unit-avai">'.$r['avai'].'</div>' : '').
+		  ($r['zakaz'] ? '<div class="tovar-unit-zakaz">'.$r['zakaz'].'</div>' : '').
+	  ($r['sum_sell'] ? '<div class="tovar-unit-sell">'._sumSpace($r['sum_sell']).' <span class="fs15">руб.</span></div>' : '').
+	                    '<div class="tovar-unit-check'._tooltip('Выбрать товар', -78, 'r').
+							_check('t'.$r['id'], '').
+						'</div>'.
+					'</div>';
 	}
 	$send .= '</table>';
 
 	return $send;
-
 }
 
-function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара после произведения каких-либо действий
-	if(empty($tovar_id))
-		return;
 
+
+function _tovar_setup_category_spisok() {//категории товаров для настройки
+	$send = '<table class="_spisokTab">'.
+				'<tr><th class="name">Название категории'.
+					'<th class="w70">Товары'.
+					'<th class="w50">'.
+			'</table>'.
+			'<dl class="_sort" val="_tovar_category">';
+	foreach(_tovarCategory('tree') as $id => $r) {
+		$child = '';
+		if(!empty($r['child'])) {
+			$child = '<table class="_spisokTab mt1">';
+			foreach($r['child'] as $key => $ch)
+				$child .= '<tr class="over2" val="'.$key.'">'.
+					'<td class="name">'.$ch['name'].
+					'<td class="w70 center grey">'.($ch['count'] ? $ch['count'] : '').
+					'<td class="w50">'.
+						_iconEditNew($ch).
+		(!$ch['count'] ? _iconDelNew($ch) : '');
+
+			$child .= '</table>';
+
+		}
+		$send .= '<dd val="'.$id.'">'.
+			'<table class="_spisokTab mt1 over1">'.
+				'<tr val="'.$id.'">'.
+					'<td class="curM">'.
+						($child ? '<a class="category-sub-open fr color-ccc fs11'._tooltip('Развернуть / свернуть', -30).'подкатегории: <b>'.count($r['child']).'</b></a>' : '').
+						'<div class="name fs15 b">'.$r['name'].'</div>'.
+					'<td class="w70 center b grey">'.($r['count'] ? $r['count'] : '').
+					'<td class="w50">'.
+						_iconEditNew($r).
+		(!$r['count'] ? _iconDelNew($r) : '').
+			'</table>'.
+			($child ? '<div class="category-sub ml40 mb20 dn">'.$child.'</div>' : '');
+
+	}
+	$send .= '</dl>';
+
+	return
+	'<div class="_info">'.
+		'1. Создавайте новые категории.<br />'.
+		'2. Измените название существующих категорий.<br />'.
+		'3. Удалите лишние категории, у которых нет товаров.<br />'.
+		'4. Измените порядок корневых категорий перетаскиванием.'.
+	'</div>'.
+	'<button class="vk" onclick="_tovarSetupCategoryEdit()">Создать новую категорию</button>'.
+//	'<button class="vk" id="join">Подключить категории из каталога</button>'.
+	'<div class="mt10">'.$send.'</div>';
+}
+
+
+
+
+// ---=== ИНФОРМАЦИЯ О ТОВАРЕ ===---
+function _tovarQuery($tovar_id) {//запрос данных об одном товаре
+	$sql = "SELECT * FROM `_tovar` WHERE `id`=".$tovar_id;
+	if(!$tovar = query_assoc($sql))
+		return array();
+
+	//привязка товара к приложению и ID категории
 	$sql = "SELECT *
-			FROM `_tovar_avai`
+			FROM `_tovar_bind`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
-			ORDER BY `count` DESC";
-	if(!$spisok = query_arr($sql))
-		return;
+			LIMIT 1";
+	if(!$bind = query_assoc($sql))
+		return array();
 
-	foreach($spisok as $r) {
-		//поступлениe
-		$sql = "SELECT IFNULL(SUM(`count`),0)
-				FROM `_tovar_move`
-				WHERE `tovar_avai_id`=".$r['id']."
-				  AND `type_id`=1";
-		$count = query_value($sql);
+	//ids комплектаций
+	$sql = "SELECT `equip_id`
+			FROM `_tovar_equip_bind`
+			WHERE `app_id`=".APP_ID."
+			  AND `category_id`=".$bind['category_id']."
+			ORDER BY `sort`";
+	$tovar['equip_ids'] = query_ids($sql);
 
-		//расход: движение товара
-		$sql = "SELECT IFNULL(SUM(`count`),0)
-				FROM `_tovar_move`
-				WHERE `tovar_avai_id`=".$r['id']."
-				  AND `type_id`!=1";
-		$count -= query_value($sql);
-
-		//применение в расходах по заявкам
-		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
-				FROM `_zayav_expense`
-				WHERE `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql);
-
-		//продажа товара - платежи
-		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
-				FROM `_money_income`
-				WHERE !`deleted`
-				  AND `tovar_avai_id`=".$r['id'];
-		$count -= query_value($sql);
-
-		if($r['count'] == $count)
-			continue;
-
-		$sql = "UPDATE `_tovar_avai`
-				SET `count`="._ms($count)."
-				WHERE `id`=".$r['id'];
-		query($sql);
+	//категория и подкатегория
+	$tovar['category_id'] = $bind['category_id'];
+	$tovar['sub_id'] = 0;
+	$main_id = _tovarCategory($bind['category_id'], 'main_id');
+	if($bind['category_id'] != $main_id) {
+		$tovar['category_id'] = $main_id;
+		$tovar['sub_id'] = $bind['category_id'];
 	}
+
+	$tovar['bind_id'] = $bind['id'];
+	$tovar['articul'] = $bind['articul'];
+	$tovar['avai'] = _ms($bind['avai']);
+	$tovar['measure'] = _tovarMeasure($tovar['measure_id']);
+
+	//закупка и продажа
+	$tovar['sum_buy'] = _cena($bind['sum_buy']);
+	$tovar['sum_sell'] = _cena($bind['sum_sell']);
+
+	return $tovar;
 }
+
 function _tovarMoveInsert($v) {//внесение движения товара
 	$v = array(
 		'type_id' => _num(@$v['type_id']) ? _num($v['type_id']) : 1,
@@ -1249,142 +916,288 @@ function _tovarMoveInsert($v) {//внесение движения товара
 	
 	return $insert_id;
 }
+
+function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
+/*
+	$v: radio - возможность выбора наличия из таблицы
+		arr - возврат массива
+*/
+	$sql = "SELECT *
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id."
+			  AND `count`
+			ORDER BY `count` DESC";
+	if(!$spisok = query_arr($sql))
+		return $v == 'arr' ? array() : '';
+
+	if($v == 'arr') {
+		$send = array();
+		foreach($spisok as $id => $r)
+			$send[$id] = array(
+				'id' => _num($r['id']),
+				'count' => _ms($r['count']),
+				'sum_buy' => _cena($r['sum_buy'])
+			);
+		return $send;
+	}
+
+	$spisok = _tovarValToList($spisok);
+
+	$count = count($spisok);
+	$avai_id = $count == 1 ? key($spisok) : 0;
+
+	$send =
+		'<table class="_spisokTab _radio" id="tovar-avai-id_radio">'.
+($v == 'radio' ? '<input type="hidden" id="tovar-avai-id" value="'.$avai_id.'" />' : '').
+			'<tr>'.
+($v == 'radio' ? '<th>' : '').
+				'<th class="w50">Кол-во'.
+				'<th class="w100">Закуп. цена'.
+				'<th>Примечание';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr>'.
+($v == 'radio' ? '<td class="w35 center">'.
+		            '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s></div>'
+: '').
+				'<td class="count center color-pay b">'.(_ms($r['count']) ? _ms($r['count']) : '').
+				'<td class="cena r">'._sumSpace($r['sum_buy']).
+				'<td>'.$r['about'];
+	}
+	$send .= '</table>';
+
+	return $send;
+}
+function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара после произведения каких-либо действий
+	if(empty($tovar_id))
+		return;
+
+	$sql = "SELECT *
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id."
+			ORDER BY `count` DESC";
+	if(!$spisok = query_arr($sql))
+		return;
+
+	foreach($spisok as $r) {
+		//поступлениe
+		$sql = "SELECT IFNULL(SUM(`count`),0)
+				FROM `_tovar_move`
+				WHERE `tovar_avai_id`=".$r['id']."
+				  AND `type_id`=1";
+		$count = query_value($sql);
+
+		//расход: движение товара
+		$sql = "SELECT IFNULL(SUM(`count`),0)
+				FROM `_tovar_move`
+				WHERE `tovar_avai_id`=".$r['id']."
+				  AND `type_id`!=1";
+		$count -= query_value($sql);
+
+		//применение в расходах по заявкам
+		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
+				FROM `_zayav_expense`
+				WHERE `tovar_avai_id`=".$r['id'];
+		$count -= query_value($sql);
+
+		//продажа товара - платежи
+		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
+				FROM `_money_income`
+				WHERE !`deleted`
+				  AND `tovar_avai_id`=".$r['id'];
+		$count -= query_value($sql);
+
+		if($r['count'] == $count)
+			continue;
+
+		$sql = "UPDATE `_tovar_avai`
+				SET `count`="._ms($count)."
+				WHERE `id`=".$r['id'];
+		query($sql);
+	}
+	
+	//обновление наличия товара в bind
+	$sql = "SELECT SUM(`count`)
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	$countAll = query_value($sql);
+
+	$sql = "UPDATE `_tovar_bind`
+			SET `avai`=".$countAll."
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	query($sql);
+}
+function _tovarZakazUpdate($tovar_id) {//обновление количества заказа товара в bind
+	$sql = "SELECT SUM(`count`)
+			FROM `_tovar_zakaz`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	$count = _ms(query_value($sql));
+
+	$sql = "UPDATE `_tovar_bind`
+			SET `zakaz`=".$count."
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	query($sql);
+}
+
 function _tovar_info() {//информация о товаре
 	if(!$tovar_id = _num($_GET['id']))
-		return _err('Страницы не существует');
+		return _err('Некорректный ID товара');
 
-	$old = _bool(@$_GET['old']);//todo ссылка на товар из комментария (старая версия)
-
-	if(!$r = _tovarQuery($tovar_id, $old))
+	if(!$r = _tovarQuery($tovar_id))
 		return _err('Товара не существует');
 
 	if($r['deleted'])
 		return _err('Товар был удалён');
 
-	$tovar_id = $r['id'];//todo
-
-	define('MEASURE', _tovarMeasure($r['measure_id']));
-
 	return
 	'<script>'.
 		'var TI={'.
 			'id:'.$tovar_id.','.
+			'bind_id:'.$r['bind_id'].','.
 			'category_id:'.$r['category_id'].','.
-			'name_id:'.$r['name_id'].','.
+			'sub_id:'.$r['sub_id'].','.
 			'vendor_id:'.$r['vendor_id'].','.
 			'name:"'.$r['name'].'",'.
-			'set_position_id:'.$r['set_position_id'].','.
-			'tovar_id_set:'.$r['tovar_id_set'].','.
+			'about:"'._br($r['about']).'",'.
+			'articul:"'.$r['articul'].'",'.
+
+			'sum_buy:'.$r['sum_buy'].','.
+			'sum_sell:'.$r['sum_sell'].','.
+	
 			'measure_id:'.$r['measure_id'].','.
 			'measure_name:"'._tovarMeasure($r['measure_id']).'",'.
 			'measure_length:'._ms($r['measure_length']).','.
-			'measure_width:'._ms($r['measure_width']).','.
-			'sum_buy:'.$r['sum_buy'].','.
-			'sum_procent:'.$r['sum_procent'].','.
-			'sum_sell:'.$r['sum_sell'].','.
-			'about:"'._br($r['about']).'",'.
-			'feature:'._tovar_info_feature_js($tovar_id).
+			'measure_width:'._ms($r['measure_width']).
 		'};'.
 	'</script>'.
 	'<div id="tovar-info">'.
 		'<table id="tab">'.
 			'<tr><td id="ti-left">'.
 					'<div id="ti-foto">'._image200(array('tovar_id'=>$tovar_id)).'</div>'.
-					'<div id="ti-link">'.
-						'<a id="ti-edit" onclick="_tovarEdit()">Редактировать</a>'.
-						'<a class="tovar-avai-add">Внести наличие</a>'.
-						'<a>Добавить в заказ</a>'.
-						'<a id="tovar-sell">Продажа</a>'.
-						'<a onclick="_tovarWriteOff()">Списание</a>'.
-(!_tovarDelAccess($r) ? '<a class="red" onclick="_tovarDel()">Удалить товар</a>' : '').
+					'<div id="ti-link" class="mt15">'.
+						'<a class="db" onclick="_tovarAvaiAdd()">'.
+							'<div class="icon icon-avai mr5"></div>'.
+							'Внести наличие'.
+						'</a>'.
+
+						'<a class="db" onclick="_tovarZakaz()">'.
+							'<div class="icon icon-order mr5"></div>'.
+							'Добавить в заказ'.
+						'</a>'.
+
+						'<a class="db" onclick="_tovarSale()">'.
+							'<div class="icon icon-rub mr5"></div>'.
+							'Продажа'.
+						'</a>'.
+/*
+						'<a class="db">'.
+							'<div class="icon icon-move mr5"></div>'.
+							'Перемещение'.
+						'</a>'.
+*/
+						'<a class="db" onclick="_tovarWriteOff()">'.
+							'<div class="icon icon-off mr5"></div>'.
+							'Списание'.
+						'</a>'.
 					'</div>'.
 				'<td id="ti-right">'.
 					_tovar_info_avai_cost($r).
-					'<div id="category">'._tovarCategory($r['category_id']).'</div>'.
-					'<div id="head">'.
-						_tovarName($r['name_id']).
-						_tovarVendor($r['vendor_id']).
-						$r['name'].
-					'</div>'.
-					_tovar_info_set($r).
+					'<div class="grey mt10">'._tovarCategory($r['sub_id'] ? $r['sub_id'] : $r['category_id'], 'path').'</div>'.
+					_tovar_menu_edit($tovar_id).
+					'<div class="fs18 w500">'.$r['name'].'</div>'.
 					_tovar_info_about($r['about']).
 					_tovar_info_feature($r).
 
-					'<div class="tovar-info-zakaz mt20">'._tovar_info_zakaz($tovar_id).'</div>'.
-					_tovar_info_set_spisok($r).
-					_tovar_info_compat($r).
-					_tovar_info_zayav($tovar_id).
+					_tovar_info_use_for($tovar_id).
+					_tovar_info_use_spisok($tovar_id).
+					_tovar_info_zakaz($r).
+//					_tovar_info_zayav($tovar_id).
 		'</table>'.
-		'<div id="ti-move">'._tovar_info_move($tovar_id).'</div>'.
-	'</div>';
-}
-function _tovar_info_set($tovar) {//товар, для которого эта запчасть, деталь или комплектующее
-	if(!$tovar['tovar_id_set'])
-		return '';
-
-	$r = _tovarQuery($tovar['tovar_id_set']);
-	return
-	'<div id="set">'.
-		_tovarPosition($tovar['set_position_id']).' для '.
-		'<a href="'.URL.'&p=46&id='.$tovar['tovar_id_set'].'">'.
-			_tovarName($r['name_id']).
-			_tovarVendor($r['vendor_id']).
-			$r['name'].
-		'</a>'.
+		'<div id="ti-move">'._tovar_info_move($r).'</div>'.
 	'</div>';
 }
 function _tovar_info_avai_cost($tovar) {//наличие и цены товара
-	$sql = "SELECT SUM(`count`)
-			FROM `_tovar_avai`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar['id'];
-	$avai = _ms(query_value($sql));
-
 	return
 		'<table id="avai-cost">'.
-			'<tr><td class="ac avai'.($avai ? '' : ' no').'">'.
-					'<span>Наличие</span>'.
-					($avai ?
-						'<tt><b>'.$avai.'</b> '.MEASURE.'</tt>' :
+			'<tr><td class="ac avai curP'.($tovar['avai'] ? '' : ' no').'" onclick="_tovarAvaiAdd()">'.
+					'<div class="color-555 mb5">Наличие</div>'.
+					($tovar['avai'] ?
+						'<tt><b>'.$tovar['avai'].'</b> '.$tovar['measure'].'</tt>' :
 						'<tt><b>-</b></tt>'
 					).
-					'<a class="tovar-avai-add">внести наличие</a>'.
 
-					'<div id="avai-show">'._tovarAvaiArticul($tovar['id']).'</div>'.
+					'<div id="avai-show">'._tovarAvaiSpisok($tovar['id']).'</div>'.
 
 		(APP_ID != 4357416 ?
-				'<td class="ac buy">'.
-					'<span>Закупка</span>'.
+				'<td class="ac buy curP" onclick="_tovarCost()">'.
+					'<div class="color-555 mb5">Закупка</div>'.
 					(_cena($tovar['sum_buy']) ?
-						'<tt><b>'._sumSpace($tovar['sum_buy']).'</b> руб.</tt>' :
-						'<tt><b>-</b></tt>'
-					).
-					'<a onclick="_tovarCostSet(\'buy\')">изменить</a>'
+						'<div class="grey fs14 pt1">'.
+							'<span class="fs17">'._sumSpace($tovar['sum_buy']).'</span>'.
+							' руб.'.
+						'</div>'
+						:
+						'<tt>-</tt>'
+					)
 		: '').
 
-				'<td class="ac sell">'.
-					'<span>Продажа</span>'.
+				'<td class="ac sell curP" onclick="_tovarCost()">'.
+					'<div class="color-555 mb5">Продажа</div>'.
 					($tovar['sum_sell'] ?
-						'<tt><b>'._sumSpace($tovar['sum_sell']).'</b> руб.</tt>' :
+						'<tt><b>'._sumSpace($tovar['sum_sell']).'</b> руб.</tt>'
+						:
 						'<tt><b>-</b></tt>'
 					).
-					'<a onclick="_tovarCostSet(\'sell\')">изменить</a>'.
 		'</table>';
 }
+function _tovar_menu_edit($tovar_id) {//меню редактирования товара
+	return
+	'<div class="fr prel">'.
+		'<div class="tovar-menu-dot">'.
+			'<div class="icon icon-dot fr"></div>'.
+		'</div>'.
+
+		'<div class="tovar-menu pabs w200 curP dn">'.
+			'<h1 class="fs14 color-555">'.
+				'Действия:'.
+				'<div class="icon icon-dot fr"></div>'.
+			'</h1>'.
+			'<dl>'.
+				'<dd onclick="_tovarEdit()"><div class="icon icon-edit fl"></div>Редактировать данные'.
+				'<dd onclick="_tovarCost()"><div class="icon icon-empty fl"></div>Изменить цены<br />закупки и продажи'.
+				'<dd onclick="_tovarJoin()"><div class="icon icon-join fl"></div>Объединить с товаром..'.
+				'<dd onclick="_tovarUse()"><div class="icon icon-link fl"></div>Добавить применение'.
+			(!_tovarDelAccess($tovar_id) ?
+				'<dd onclick="_tovarDel()" style="color:#C5616F"><div class="icon icon-del-red fl"></div>Удалить'
+			: '').
+			'</dl>'.
+		'</div>'.
+
+	'</div>';
+}
 function _tovar_info_about($about) {//вывод описания товара, если есть
-	$about = trim($about);
-	if(empty($about))
+	if(!$about = trim($about))
 		return '';
-	return '<div class="_info">'._br($about).'</div>';
+
+	return
+	'<div class="dib fs12 color-555 pad5 mt5 bg-gr1 bor-f0">'.
+		_br($about).
+	'</div>';
 }
 function _tovar_info_feature($tovar) {//характеристики товара
-	$send = '<table id="ti-feature">'.
-				'<tr><td class="label">Единица измерения:'.
-					'<td><b>'.MEASURE.'</b>';
+	$send = '<table class="bs5 mt5">'.
+				'<tr><td class="label r">Артикул:<td class="b">'.$tovar['articul'].
+				'<tr><td class="label r">Ед. измерения:<td class="b">'.$tovar['measure'];
 
 	if(_tovarMeasure($tovar['measure_id'], 'area'))
 		$send .=
-			'<tr><td class="label">Площадь:'.
+			'<tr><td class="label r">Площадь:'.
 				'<td><span class="curD'._tooltip('Длина', -26)._ms($tovar['measure_length']).'</span>'.
 					' x '.
 					'<span class="curD'._tooltip('Ширина', -30)._ms($tovar['measure_width']).'</span>'.
@@ -1398,7 +1211,7 @@ function _tovar_info_feature($tovar) {//характеристики товара
 	if($arr = query_arr($sql))
 		foreach($arr as $r) {
 			$send .=
-				'<tr><td class="label">'._tovarFeature($r['name_id']).':'.
+				'<tr><td class="label r">'._tovarFeature($r['name_id']).':'.
 					'<td>'.$r['v'];
 		}
 
@@ -1406,80 +1219,116 @@ function _tovar_info_feature($tovar) {//характеристики товара
 
 	return $send;
 }
-function _tovar_info_feature_js($tovar_id) {
-	$sql = "SELECT `name_id`,`v`
-			FROM `_tovar_feature`
-			WHERE `tovar_id`=".$tovar_id."
-			ORDER BY `id`";
-	return query_selJson($sql);
-}
-function _tovar_info_set_spisok($tovar) {//запчасти для этого товара
-	if($tovar['tovar_id_set'])
-		return '';
-
-	$sql = "SELECT *
-			FROM `_tovar`
-			WHERE `tovar_id_set`=".$tovar['id']."
+function _tovar_info_use_for($tovar_id) {//товары, к которым применяются этот товар
+	$sql = "SELECT
+				`t`.*,
+				0 `category_id`
+			FROM
+				`_tovar` `t`,
+				`_tovar_use` `tu`
+			WHERE `t`.`id`=`tovar_id`
+			  AND `use_id`=".$tovar_id."
 			  AND !`deleted`";
-	if(!$spisok = query_arr($sql))
+	if(!$tovar = query_arr($sql))
 		return '';
 
-	$send = '<h1>Запчасти:</h1>';
-	$n = 1;
-	foreach($spisok as $r) {
-		$send .=
-			'<div>'.
-				$n.'. '.
-				'<a href="'.URL.'&p=46&id='.$r['id'].'">'._tovarName($r['name_id']).'</a>'.
-			'</div>';
+	$c = count($tovar);
+	$tovar = _imageValToList($tovar, 'tovar');
 
-		$n++;
-	}
-	return '<div id="ti-zp">'.$send.'</div>';
-}
-function _tovar_info_compat($tovar) {//совместимости товара
-	if(!$tovar['tovar_id_compat'])
-		return '';
-
-	$sql = "SELECT *
-			FROM `_tovar`
-			WHERE `tovar_id_compat`=".$tovar['tovar_id_compat']."
-			  AND `id`!=".$tovar['id'];
-	$spisok = query_arr($sql);
-	$spisok = _tovarValToList($spisok, 'id');
-
-	$send = '<h1>Совместимости:</h1>';
-	$n = 1;
-	foreach($spisok as $r) {
-		$send .=
-			'<div>'.
-				$n.'. '.
-				'<a href="'.URL.'&p=46&id='.$r['id'].'">'.
-					$r['tovar_name'].
-				'</a>'.
-			'</div>';
-
-		$n++;
-	}
-	return '<div id="ti-compat">'.$send.'</div>';
-}
-function _tovar_info_zayav($tovar_id) {//заявки по этому товару
-	$sql = "SELECT COUNT(DISTINCT `zayav_id`)
-			FROM `_zayav_tovar`
+	//разделение по категориям
+	$sql = "SELECT
+				`category_id`,
+				`tovar_id` `id`
+			FROM `_tovar_bind`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id;
-	if(!$count = query_value($sql))
-		return '';
+			  AND `tovar_id` IN (".implode(',', array_keys($tovar)).")";
+	$child = array();
+	foreach(query_arr($sql) as $r)
+		$child[$r['category_id']][] = $tovar[$r['id']];
+
+	$send = '';
+	foreach($child as $id => $r) {
+		$send .=
+			'<div class="fs14 color-555">'._tovarCategory($id).'</div>'.
+			_tovar_unit_use($r);
+	}
+
 	return
-		'<div id="ti-zayav">'.
-			'<a href="'.URL.'&p=2&from_tovar_id='.$tovar_id.'">Использование в заявках: '.$count.'</a>'.
-		'</div>';
+	'<div class="mt10 pl10 pr10 pt1 bg-ffd bor-f0">'.
+		'<div class="hd2 curP" onclick="$(this).next().slideToggle()">'.
+			'Подходит для <b>'.$c.'</b>-'._end($c, 'го', 'х', 'и').' товар'._end($c, 'а', 'ов').':'.
+		'</div>'.
+		'<div'.($c > 1 ? ' class="dn"' : '').'>'.$send.'</div>'.
+	'</div>';
 }
-function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
+function _tovar_info_use_spisok($tovar_id) {//товары, которые применяются для этого товара
+	$sql = "SELECT
+				`t`.*,
+				0 `category_id`
+			FROM
+				`_tovar` `t`,
+				`_tovar_use` `tu`
+			WHERE `t`.`id`=`use_id`
+			  AND `tovar_id`=".$tovar_id."
+			  AND !`deleted`";
+	if(!$tovar = query_arr($sql))
+		return '';
+
+	$c = count($tovar);
+	$tovar = _imageValToList($tovar, 'tovar');
+
+	//разделение по категориям
+	$sql = "SELECT
+				`category_id`,
+				`tovar_id` `id`
+			FROM `_tovar_bind`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id` IN (".implode(',', array_keys($tovar)).")";
+	$child = array();
+	foreach(query_arr($sql) as $r)
+		$child[$r['category_id']][] = $tovar[$r['id']];
+
+	$send = '';
+	foreach($child as $id => $r) {
+		$send .=
+			'<div class="fs14 color-555">'._tovarCategory($id).'</div>'.
+			_tovar_unit_use($r);
+	}
+
+	return
+	'<div class="mt10 pl10 pr10 pt1 bg-ffd bor-f0">'.
+		'<div class="hd2 curP" onclick="$(this).next().slideToggle()">'.
+			'К этому товару применя'._end($c, 'е', 'ю').'тся <b>'.$c.'</b> товар'._end($c, '', 'а', 'ов').':'.
+		'</div>'.
+		'<div class="dn">'.$send.'</div>'.
+	'</div>';
+}
+function _tovar_unit_use($spisok) {
+	$send = '<table class="collaps w100p bg-fff '.(!empty($filter) ? 'mt5 mb30' : 'mt1 mb10').'">';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr class="tovar-unit over1 curP" val="'.$r['id'].'">'.
+				'<td class="bor1">'.
+					'<table class="bs5 w100p">'.
+						'<tr>'.
+							'<td class="top w35 h25">'.$r['image_min'].
+							'<td class="top">'.
+
+			                    '<div class="icon icon-del fr'._tooltip('Отменить применение', -125, 'r').'</div>'.
+
+								'<b>'.$r['name'].'</b>'.
+				 ($r['about'] ? '<div class="fs12 grey mt1 w400">'._br($r['about']).'</div>' : '').
+					'</table>';
+	}
+	$send .= '</table>';
+
+	return $send;
+}
+function _tovar_info_zakaz($tovar) {//заказы по этому товару
 	$sql = "SELECT *
 			FROM `_tovar_zakaz`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id."
+			  AND `tovar_id`=".$tovar['id']."
 			ORDER BY `id` DESC";
 	if(!$zakaz = query_arr($sql))
 		return '';
@@ -1487,18 +1336,20 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 	$zakaz = _clientValToList($zakaz);
 	$zakaz = _zayavValToList($zakaz);
 
-	$send = '<div class="headBlue">Добавлено в заказ</div>'.
+	$send = '<div class="mt20"></div>'.
+			'<div class="headBlue">Добавлено в заказ</div>'.
 			'<table class="_spisokTab">';
 
 	$count = 0;
 	foreach($zakaz as $r) {
 		$send .=
-		'<tr>'.
+		'<tr class="over2">'.
 			'<td class="grey w70 r wsnw">'._dtimeAdd($r).
 			'<td>'.
-				($r['zayav_id'] ? 'Заявка '.$r['zayav_nomer_name'] : '').
-				($r['client_id'] ? 'Клиент '.$r['client_link'] : '').
-			'<td class="w50 r">'.$r['count'].' '.MEASURE.
+				($r['zayav_id'] ? '<p>Заявка '.$r['zayav_nomer_name'] : '').
+				($r['client_id'] && !$r['zayav_id'] ? '<p>Клиент '.$r['client_link'] : '').
+				'<p class="i">'.$r['about'].'</p>'.
+			'<td class="w50 r wsnw">'._ms($r['count']).' '.$tovar['measure'].
 			'<td class="w15">'.
 				'<div onclick="_tovarZakazDel('.$r['id'].')" class="icon icon-del'._tooltip('Удалить из заказа', -99, 'r').'</div>';
 		$count += _ms($r['count']);
@@ -1507,14 +1358,14 @@ function _tovar_info_zakaz($tovar_id) {//заказы по этому товару
 	$send .=
 		(count($zakaz) > 1 ?
 			'<tr><td colspan="2" class="r">Всего:'.
-				'<td class="r"><b>'.$count.'</b> '.MEASURE.
+				'<td class="r wsnw"><b>'._ms($count).'</b> '.$tovar['measure'].
 				'<td>'
 		: '').
 		'</table>';
 
 	return $send;
 }
-function _tovar_info_move($tovar_id) {
+function _tovar_info_move($tovar) {
 	$sql = "SELECT
 				'move' `class`,
 				`id`,
@@ -1531,7 +1382,7 @@ function _tovar_info_move($tovar_id) {
 				`dtime_add`
 			FROM `_tovar_move`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id;
+			  AND `tovar_id`=".$tovar['id'];
 	$move = query_arr($sql);
 	$move = _clientValToList($move);
 	$move = _zayavValToList($move);
@@ -1553,7 +1404,7 @@ function _tovar_info_move($tovar_id) {
 				`dtime_add`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id."
+			  AND `tovar_id`=".$tovar['id']."
 			  AND `tovar_avai_id`";
 	$ze = query_arr($sql);
 	$ze = _zayavValToList($ze);
@@ -1575,7 +1426,7 @@ function _tovar_info_move($tovar_id) {
 				`dtime_add`
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id."
+			  AND `tovar_id`=".$tovar['id']."
 			  AND `tovar_avai_id`
 			  AND !`deleted`";
 	$mi = query_arr($sql);
@@ -1606,6 +1457,7 @@ function _tovar_info_move($tovar_id) {
 		$y = strftime('%Y', $key);
 		if(!isset($year[$y]))
 			$year[$y] = array();
+		$r['measure'] = $tovar['measure'];
 		$year[$y][] = $r;
 	}
 
@@ -1644,7 +1496,7 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		if($summa)
 			$summa = '<div class="sm">'.
 						($count > 1 ?
-							'<a class="'._tooltip(_cena($r['cena']).' руб./'.MEASURE, 0, 'l').'<b>'._sumSpace($summa).'</b> руб.</a>'
+							'<a class="'._tooltip(_cena($r['cena']).' руб./'.$r['measure'], 0, 'l').'<b>'._sumSpace($summa).'</b> руб.</a>'
 							:
 							'<b>'._sumSpace($summa).'</b> руб.'
 						).
@@ -1668,7 +1520,7 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		
 		$send .= '<tr class="'.$class.'">'.
 				'<td class="w70">'.$type[$r['type_id']].
-				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.MEASURE : '').
+				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.$r['measure'] : '').
 				'<td class="w100 r">'.$summa.
 				'<td>'.
 					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').
@@ -1694,67 +1546,37 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		'</div>';
 }
 
-
-
-
-function _tovarEquip($id=0, $i='') {//кеширование комплектации товаров
-	$key = CACHE_PREFIX.'tovar_equip';
-	if(!$arr = xcache_get($key)) {
-		$sql = "SELECT * FROM `_tovar_equip_name` ORDER BY `name`";
-		$arr = query_arr($sql);
-		xcache_set($key, $arr, 86400);
-	}
-	
-	if(!$id)
-		return $arr;
-	
-	//список комплектации для select, которые были ещё не выбраны
-	if($id == 'js') {
-		$sel = array();//уже были выбраны для конкретного товара
-		if(_num($i))
-			if($t = _tovarQuery($i))
-				$sel = _idsAss($t['equip_ids']);
-		$ass = array();
-		foreach($arr as $id => $r) {
-			if(!empty($sel[$id]))
-				continue;
-			$ass[$id] = $r['name'];
-		}
-		return _sel($ass);
-	}
-
-	if($id == 'spisok') {
-		if(empty($i))
-			return '';
-		$sel = _idsAss($i);
-		$send = array();
-		foreach($arr as $id => $r)
-			if(isset($sel[$id]))
-				$send[] = $r['name'];
-		return implode(', ', $send);
-
-	}
-
-	if(!isset($arr[$id]))
-		return _cacheErr('неизвестный id комплектации', $id);
-
-	return $arr[$id]['name'];
-}
-function _tovarEquipCheck($tovar_id, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
-	// $ids - список id комплектаций через запятую, которым были поставлены галочки
-
-	if(!$t = _tovarQuery($tovar_id))
+function _tovar_info_zayav($tovar_id) {//заявки по этому товару
+	$sql = "SELECT COUNT(DISTINCT `zayav_id`)
+			FROM `_zayav_tovar`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar_id;
+	if(!$count = query_value($sql))
 		return '';
-
-	$send = '';
-	$sel = _idsAss($ids);
-
-	foreach(_ids($t['equip_ids'], 1) as $equip_id)
-		$send .= _check('eq'.$equip_id, _tovarEquip($equip_id), _bool(@$sel[$equip_id]), 1).'<br />';
-
-	$send .= '<a id="equip-add">добавить...</a>'.
-			 '<input type="hidden" id="equip_id" />'.
-			 '<button class="vk small dn">добавить</button>';
-
-	return $send;
+	return
+		'<div id="ti-zayav">'.
+			'<a href="'.URL.'&p=2&from_tovar_id='.$tovar_id.'">Использование в заявках: '.$count.'</a>'.
+		'</div>';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

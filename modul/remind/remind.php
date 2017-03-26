@@ -419,8 +419,8 @@ function _remind_zayav_spisok($zayav_id) {//список напоминаний в заявке
 	return
 		$send.
 		'<div class="headBlue but">'.
-			'<a href="'.URL.'&p=61"><b>Напоминания</b></a>&nbsp;'.
-			'<button class="vk small _remind-add">Новое напоминание</button>'.
+			'<a href="'.URL.'&p=61" class="fs14 u">Напоминания</a>&nbsp;'.
+			'<button class="vk small green _remind-add">Новое напоминание</button>'.
 			($data['hidden'] ? '<a id="_remind-show-all">Показать все: '.$data['hidden'].'</a>' : '').
 		'</div>'.
 		'<div id="_remind-spisok">'.$data['spisok'].'</div>';

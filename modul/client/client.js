@@ -226,13 +226,7 @@ var
 				client_id:client_id
 			};
 
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-				loaded();
-			} else
-				dialog.loadError();
-		}, 'json');
+		dialog.load(send, loaded);
 
 		function loaded() {
 			dialog.content.find('#dopLinks .link').click(function() {
@@ -485,8 +479,8 @@ $.fn.clientSel = function(o) {
 	if(o.add)
 		o.add = function() {
 			_clientEdit(0, function(client_id) {
-					o.client_id = client_id;
-					clientsGet();
+				o.client_id = client_id;
+				clientsGet();
 			});
 		};
 
@@ -494,7 +488,7 @@ $.fn.clientSel = function(o) {
 		width:o.width,
 		title0:'Начните вводить данные клиента...',
 		spisok:[],
-		write:1,
+		write_save:1,
 		nofind:'Клиентов не найдено',
 		func:o.func,
 		funcAdd:o.add,

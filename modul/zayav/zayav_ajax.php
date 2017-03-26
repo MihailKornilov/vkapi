@@ -37,7 +37,7 @@ switch(@$_POST['op']) {
 					`sum_manual`,
 					`sum_cost`,
 					`pay_type`,
-					`equip`,
+					`tovar_equip_ids`,
 
 					`status_id`,
 					`status_dtime`,
@@ -71,7 +71,7 @@ switch(@$_POST['op']) {
 					".$v['sum_manual'].",
 					".$v['sum_cost'].",
 					".$v['pay_type'].",
-					'".$v['equip']."',
+					'".$v['tovar_equip_ids']."',
 
 					"._zayavStatus('default').",
 					current_timestamp,
@@ -177,7 +177,7 @@ switch(@$_POST['op']) {
 			(isset($zpu[9])  ? _historyChange($zpu[9]['name'], _color($z['color_id'], $z['color_dop']), _color($v['color_id'], $v['color_dop'])) : '').
 			(isset($zpu[15]) ? _historyChange($zpu[15]['name'], _cena($z['sum_cost']), $v['sum_cost']) : '').
 			(isset($zpu[16]) ? _historyChange($zpu[16]['name'], _payType($z['pay_type']), _payType($v['pay_type'])) : '').
-			(isset($zpu[4]['v1']) ? _historyChange('Комплект', _tovarEquip('spisok', $z['equip']), _tovarEquip('spisok', $v['equip'])) : '').
+			(isset($zpu[4]['v1']) ? _historyChange('Комплект', _tovarEquip('spisok', $z['tovar_equip_ids']), _tovarEquip('spisok', $v['tovar_equip_ids'])) : '').
 			(isset($zpu[40]) ? _historyChange($zpu[40]['name'], _rubric($z['rubric_id'], $z['rubric_id_sub']), _rubric($v['rubric_id'], $v['rubric_id_sub'])) : '')
 		)	_history(array(
 				'type_id' => 72,
@@ -435,43 +435,7 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'zayav_tovar_zakaz':// заказ товара из заявки
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
-
-		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
-
-		if(!$t = _tovarQuery($tovar_id))
-			jsonError();
-
-		$sql = "INSERT INTO `_tovar_zakaz` (
-					`app_id`,
-					`zayav_id`,
-					`tovar_id`,
-					`viewer_id_add`
-				) VALUES (
-					".APP_ID.",
-					".$zayav_id.",
-					".$tovar_id.",
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		$send['id'] = query_insert_id('_tovar_zakaz');
-
-		_history(array(
-			'type_id' => 112,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'tovar_id' => $tovar_id
-		));
-
-		jsonSuccess($send);
-		break;
-	case 'zayav_tovar_set_load':
+	case 'zayav_tovar_avai_load':
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError();
 
@@ -479,13 +443,12 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$send['html'] = utf8(
-			'<div class="fs18"><b class="fs18">'._tovarName($r['name_id']).'</b> '.$r['name'].'</div>'.
-			'<div class="grey mb10">для '.$r['tovar_set_name'].'</div>'.
-			_tovarAvaiArticul($tovar_id, 1).
-//			'<div class="_info">'.
-//				'<u>Товар</u> будет добавлен в расходы заявки с указанием закупочной стоимости. '.
-//			'</div>'.
-			'<button class="vk mt10 zta-but">Применить к заявке</button>'
+			'<div class="fs18 mb5">'.$r['name'].'</div>'.
+			_tovarAvaiSpisok($tovar_id, 'radio').
+			'<button class="vk mt10 zta-but">Применить к заявке</button>'.
+			'<div class="_info">'.
+				'<u>Товар</u> будет добавлен в расход по заявке в количестве <b>1</b> шт. с указанием закупочной стоимости.'.
+			'</div>'
 		);
 
 		jsonSuccess($send);
@@ -998,7 +961,7 @@ switch(@$_POST['op']) {
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError('Некорректный id заявки');
 		if(!$cat_id = _num($_POST['cat_id']))
-			jsonError('Неизвестная категория');
+			jsonError('Не выбрана категория');
 
 		if(!$z = _zayavQuery($zayav_id))
 			jsonError('Заявки id:'.$zayav_id.' не существует');
@@ -1262,7 +1225,7 @@ switch(@$_POST['op']) {
 
 					'".addslashes($z['imei'])."',
 					'".addslashes($z['serial'])."',
-					'".addslashes($z['equip'])."',
+					'".addslashes($z['tovar_equip_ids'])."',
 
 					'".addslashes(_clientVal($z['client_id'], 'name'))."',
 					'".addslashes(_clientVal($z['client_id'], 'phone'))."',
@@ -1614,9 +1577,9 @@ function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности по
 		$upd[] = "`pay_type`=".$v['pay_type'];
 	}
 
-	$v['equip'] = _ids(@$_POST['equip']);
+	$v['tovar_equip_ids'] = _ids(@$_POST['tovar_equip_ids']);
 	if(@$zpu[4] && $zpu[4]['v1'])
-		$upd[] = "`equip`='".$v['equip']."'";
+		$upd[] = "`tovar_equip_ids`='".$v['tovar_equip_ids']."'";
 
 	$v['size_x'] = _cena(@$_POST['size_x']);
 	$v['size_y'] = _cena(@$_POST['size_y']);
@@ -1694,7 +1657,7 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 				$ex = explode(':', $ex[0]);
 				$tovar_id = $ex[0];
 
-				$sql = "SELECT `find`
+				$sql = "SELECT `name`
 						FROM `_tovar`
 						WHERE `id`=".$tovar_id;
 				$name = query_value($sql);

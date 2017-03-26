@@ -812,7 +812,6 @@ function _zayavFilter($v) {
 		'nofile' => 0,
 		'noattach' => 0,
 		'noattach1' => 0,
-		'tovar_name_id' => 0,
 		'tovar_id' => 0,
 		'gn_year' => strftime('%Y'),  //год номеров газеты 51
 		'gn_nomer_id' => _gn('first'),//номер газеты 51
@@ -841,7 +840,6 @@ function _zayavFilter($v) {
 		'nofile' => _bool(@$v['nofile']),
 		'noattach' => _bool(@$v['noattach']),
 		'noattach1' => _bool(@$v['noattach1']),
-		'tovar_name_id' => _num(@$v['tovar_name_id']),
 		'tovar_id' => _num(@$v['tovar_id']),
 		'gn_year' => _num(@$v['gn_year']) ? $v['gn_year'] : $default['gn_year'],
 		'gn_nomer_id' => _num(@$v['gn_nomer_id']) ? $v['gn_nomer_id'] : $default['gn_nomer_id'],
@@ -875,7 +873,7 @@ function _zayav_list($v=array()) {
 		'<table class="tabLR">'.
 			'<tr><td id="spisok">'.$data['spisok'].
 				'<td class="right">'.
-					'<button class="vk fw" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
+					'<button class="vk fw green" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
 					_zayavPoleFilter($v).
 	(VIEWER_ADMIN ? _check('deleted', '+ удалённые заявки', $v['deleted'], 1).
 					'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
@@ -1017,17 +1015,6 @@ function _zayav_spisok($v) {
 				$cond .= " AND !`attach_id` AND !`attach_cancel`";
 			if($filter['noattach1'])
 				$cond .= " AND !`attach1_id` AND !`attach1_cancel`";
-
-			if($filter['tovar_name_id']) {
-				$sql = "SELECT DISTINCT `zayav_id`
-						FROM `_zayav_tovar` `zt`,
-							`_tovar` `t`
-						WHERE `zt`.`app_id`=".APP_ID."
-						  AND `t`.`id`=`zt`.`tovar_id`
-						  AND `t`.`name_id`=".$filter['tovar_name_id'];
-				$zayav_ids = query_ids($sql);
-				$cond .= " AND `id` IN (".$zayav_ids.")";
-			}
 
 			if($filter['tovar_id']) {
 				$sql = "SELECT DISTINCT `zayav_id`
@@ -1203,9 +1190,9 @@ function _zayav_spisok($v) {
 		$send['spisok'] .= _zayavPoleUnit($zpu, $r, $filter);
 
 	$send['spisok'] .= _next($filter + array(
-			'type' => 2,
-			'all' => $all
-		));
+		'type' => 2,
+		'all' => $all
+	));
 	return $send;
 }
 function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заявок
@@ -1455,13 +1442,7 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 				 '<td><input type="text" class="money" id="ze-count" value="'.@$z['count'].'" /> шт.',
 		
 		4 => '<tr><td class="label topi">{label}'.
-				 '<td><input type="hidden" id="ze-tovar-one" value="'.$tovar.'" />'.
-			(@$zpu[4]['v1'] ?
-			 '<tr class="tr-equip'.($tovar ? '' : ' dn').'">'.
-				  '<td class="label top">Комплектация'.
-				  '<td><input type="hidden" id="ze-equip" value="'.@$z['equip'].'" />'.
-						'<div id="ze-equip-spisok"></div>'
-			: ''),
+				 '<td><input type="hidden" id="ze-tovar-one" value="'.$tovar.'" />',
 
 		5 => '<tr><td class="label">{label}'.
 				 '<td><input type="hidden" id="ze-client_id" value="'.@$z['client_id'].'" />'.
@@ -1573,12 +1554,7 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 		35 => _check('noattach', '{label}', $v['noattach'], 1),
 		36 => _check('noattach1', '{label}', $v['noattach1'], 1),
 
-		32 => '<script>var ZAYAV_TOVAR_NAME_SPISOK='._zayavTovarName().';</script>'.
-			  '<div class="findHead">{label}</div>'.
-			  '<input type="hidden" id="tovar_name_id" value="'.$v['tovar_name_id'].'" />',
-
-		33 => '<script>var ZAYAV_TOVAR_IDS="'._zayavTovarIds($v['service_id']).'";</script>'.
-			  '<div class="findHead">{label}</div>'.
+		33 => '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />',
 
 		51 => '<script>'.
@@ -1766,33 +1742,6 @@ function _zayavUnit50($z, $zpu, $filter) {//единица списка заявки: полоса (газет
 				'</div>'.
 				'<b>'.$z['gn_polosa_cena'].'</b> руб.';
 }
-function _zayavTovarName() {
-	$sql = "SELECT DISTINCT `tovar_id`
-			FROM `_zayav_tovar`
-			WHERE `app_id`=".APP_ID;
-	if(!$tovar_ids = query_ids($sql))
-		return '[]';
-
-	$sql = "SELECT DISTINCT `name_id`
-			FROM `_tovar`
-			WHERE `id` IN (".$tovar_ids.")";
-	$name_ids = query_ids($sql);
-
-	$sql = "SELECT `id`,`name`
-			FROM `_tovar_name`
-			WHERE `id` IN (".$name_ids.")";
-	return query_selJson($sql);
-}
-function _zayavTovarIds($service_id) {
-	$sql = "SELECT DISTINCT `zt`.`tovar_id`
-			FROM `_zayav` `z`,
-				 `_zayav_tovar` `zt`
-			WHERE `z`.`app_id`=".APP_ID."
-			  AND `z`.`id`=`zt`.`zayav_id`
-			  AND !`z`.`deleted`
-			  AND `z`.`service_id`=".$service_id;
-	return query_ids($sql);
-}
 function _zayavObOnpay($v) {
 	$sql = "SELECT COUNT(*)
 			FROM `_zayav`
@@ -1873,7 +1822,7 @@ function _zayavInfo() {
 				'tovar_id:'._zayavTovarOneId($z).','.
 				'tovar:"'._zayavTovarValue($zayav_id).'",'.
 				'place_id:'.$z['tovar_place_id'].','.
-				'equip:"'.$z['equip'].'",'.
+				'equip_ids:"'.$z['tovar_equip_ids'].'",'.
 				'imei:"'.addslashes($z['imei']).'",'.
 				'serial:"'.addslashes($z['serial']).'",'.
 				'color_id:'.$z['color_id'].','.
@@ -1904,10 +1853,10 @@ function _zayavInfo() {
 
 		($z['deleted'] ? '<div id="zayav-deleted">Заявка удалена.</div>' : '').
 
-		'<table class="page">'.
-			'<tr><td id="left">'.
+		'<table class="page bs10 w100p">'.
+			'<tr><td class="top">'.
 
-					'<div class="headName">'.
+					'<div class="hd2 b">'.
 						_zayavInfoCategory($z).
 						$z['name'].
 						'<input type="hidden" id="zayav-action" />'.
@@ -1993,13 +1942,15 @@ function _zayavInfo() {
 					_zayavInfoMoney($zayav_id).
 					_note().
 
-				'<td id="right">'.
+			(isset($zpu[52]) || isset($z['zpu'][4]) ?
+				'<td class="top w200">'
+			: '').
  (isset($zpu[52]) ? _zayavImg($zayav_id) : '').
 					_zayavInfoTovar($z).
 		'</table>'.
 
-		'<div class="page dn">'.
-			'<div class="headName">'._zayavInfoCategory($z).$z['name'].' - история действий</div>'.
+		'<div class="page mar10 dn">'.
+			'<div class="hd2 b">'._zayavInfoCategory($z).$z['name'].'<span class="fs15"> - история действий</span></div>'.
 			$history['spisok'].
 		'</div>'.
 
@@ -2710,68 +2661,80 @@ function _zayavInfoTovar($z) {//информация о товаре
 
 		'<div id="content">'.
 			'<div id="tovar-name">'.
-				_tovarName($tovar['name_id']).
-				'<br />'.
-				'<a href="'.URL.'&p=46&id='.$tovar['id'].'">'._tovarVendor($tovar['vendor_id']).$tovar['name'].'</a>'.
+				'<a href="'.URL.'&p=46&id='.$tovar['id'].'">'.$tovar['name'].'</a>'.
 			'</div>'.
 			'<table id="info">'.
 	($z['imei'] ? '<tr><th>imei:	<td>'.$z['imei'] : '').
   ($z['serial'] ? '<tr><th>serial:	<td>'.$z['serial'] : '').
-   ($z['equip'] ? '<tr><th valign="top">Комплект:<td>'._tovarEquip('spisok', $z['equip']) : '').
+   ($z['tovar_equip_ids'] ? '<tr><th valign="top">Комплект:<td>'._tovarEquip('spisok', $z['tovar_equip_ids']) : '').
 ($z['color_id'] ? '<tr><th>Цвет:	<td>'._color($z['color_id'], $z['color_dop']) : '').
 (isset($z['zpu'][12]) ? '<tr><th>Нахождение:<td><a id="zayav-tovar-place-change">'._zayavTovarPlace($z['tovar_place_id']).'</a>' : '').
 			'</table>'.
 		'</div>'.
-		_zayavInfoTovarSet($z['id'], $tovar_id).
+		_zayavInfoTovarUse($z['id'], $tovar_id).
 	'</div>';
 }
-function _zayavInfoTovarSet($zayav_id, $tovar_id) {//список запчастей для товара заявки
+function _zayavInfoTovarUse($zayav_id, $tovar_id) {//список запчастей для товара заявки
 	$sql = "SELECT
 				*,
 				0 `zakaz`
-			FROM `_tovar`
-			WHERE `tovar_id_set`=".$tovar_id."
-			  AND !`deleted`";
+			FROM `_tovar_use`
+			WHERE `tovar_id`=".$tovar_id;
 	if(!$arr = query_arr($sql))
 		return '';
 
-	$arr = _tovarValToList($arr, 'id');
+	$arr = _tovarValToList($arr, 'use_id');
 
 	$sql = "SELECT *
 			FROM `_tovar_zakaz`
 			WHERE `zayav_id`=".$zayav_id;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$arr[$r['tovar_id']]['zakaz'] = $r['id'];
+		foreach($arr as $id => $t)
+			if($t['use_id'] == $r['tovar_id']) {
+				$arr[$id]['zakaz'] = $r['id'];
+				break;
+			}
 
+	$cat = array();
+	foreach($arr as $r)
+		$cat[$r['tovar_category_name']][] = $r;
+
+	ksort($cat);
 
 	$spisok = '';
-	foreach($arr as $r)
+	foreach($cat as $name => $arr) {
+		$spisok .= '<div class="bg-gr2 line-b fs14 '.($spisok ? 'mt5' : '').' pad5 color-555">'.$name.'</div>';
+		foreach($arr as $k => $r)
 		$spisok .=
-			'<div class="unit pad5 over2" val="'.$r['id'].'">'.
-//				'<div class="image"><div>'.$r['image_small'].'</div></div>'.
-				$r['tovar_zayav'].
-//				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
-//				($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
+			'<div class="unit pad5 over2" val="'.$r['use_id'].'">'.
+				'<table>'.
+					'<tr><td class="w35 top pr5">'.
+							$r['tovar_image_min'].
+						'<td class="top">'.
+							$r['tovar_link'].
+							'<div class="grey fs12">'.$r['tovar_about'].'</div>'.
+					'</table>'.
 				'<div class="mt5">'.
 					'<div class="dib pad2-7 color-ref bg-del fs12'.(!$r['zakaz'] ? ' dn' : '').'" val="'.$r['zakaz'].'">'.
 						'<div onclick="_zayavTovarZakazRemove($(this))" class="img_minidel fr'._tooltip('Удалить из заказа', -57).'</div>'.
 						'Добавлено в заказ'.
 					'</div>'.
-					'<a class="zakaz-add color-ref fs12'.($r['zakaz'] ? ' dn' : '').'" onclick="_zayavTovarZakazAdd($(this),'.$r['id'].')">Добавить в заказ</a>'.
+					'<a class="zakaz-add color-ref fs12'.($r['zakaz'] ? ' dn' : '').'" onclick="_zayavTovarZakazAdd($(this),'.$r['use_id'].')">Добавить в заказ</a>'.
 					'&nbsp;'.
-					($r['tovar_avai_count'] ? '<a class="zayav-tovar-avai fr color-pay fs12">Нал: <b class="fs12">'.$r['tovar_avai_count'].'</b></a>' : '').
+					($r['tovar_avai'] ?
+						'<div class="zayav-tovar-avai fr fs12 bg-dfd curD">'.
+							'<b class="fs12">'.$r['tovar_avai'].'</b> '.
+							$r['tovar_measure_name'].
+						'</div>'
+					: '').
 				'</div>'.
 			'</div>'.
-			'<div class="line-b mar0-5"></div>';
-
-
+			($k < count($arr) - 1 ? '<div class="line-b mar0-5"></div>' : '');
+	}
 
 	return
-	'<div class="headBlue">'.
-		'Список запчастей'.
-//		'<a class="add">добавить</a>'.
-	'</div>'.
+	'<div class="headBlue">Список запчастей</div>'.
 	'<div id="zayav-tovar-spisok">'.$spisok.'</div>';
 }
 function _zayavImg($zayav_id, $tovar_id=0) {
@@ -2798,7 +2761,7 @@ function _zayavImg($zayav_id, $tovar_id=0) {
 
 	$size = _imageResize($r['big_x'], $r['big_y'], 200, 320);
 	return
-	'<div>'.
+	'<div class="center">'.
 		'<img class="_iview" '.
 			'val="'.$r['id'].'" '.
 			'width="'.$size['x'].'" '.
@@ -2962,7 +2925,7 @@ function _zayav_tovar_several($z) {//список нескольких товаров для информации о 
 	foreach($arr as $r)
 		$send .=
 			'<tr><td class="n r">'.($n++).
-				'<td>'.$r['tovar_set'].
+				'<td>'.$r['tovar_link'].
 				'<td class="r">'.$r['count'].' '.$r['tovar_measure_name'];
 
 	$send .= '</table>';
@@ -3386,7 +3349,7 @@ function _zayavExpenseDopVal($r) {//значение дополнительного поля
 		$arr = _tovarValToList(array($r['id']=>$r));
 		$r = $arr[$r['id']];
 		$count = _ms($r['tovar_count']);
-		return $r['tovar_set'].($r['tovar_avai_id'] ? '<td><b>'.$count.'</b>' : ': '.$count).' '.$r['tovar_measure_name'];
+		return $r['tovar_link'].($r['tovar_avai_id'] ? '<td><b>'.$count.'</b>' : ': '.$count).' '.$r['tovar_measure_name'];
 	}
 
 	if($r['attach_id']) {
@@ -3429,7 +3392,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 	$send =
 		'<div class="headBlue but">'.
 			'Расходы по заявке'.
-			'<button class="vk small" onclick="_zayavExpenseEdit()">Добавить расход</button>'.
+			'<button class="vk small green" onclick="_zayavExpenseEdit()">Добавить расход</button>'.
 		'</div>'.
 		'<h1>'.($accrual_sum ? 'Общая сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Начислений нет.').'</h1>';
 
@@ -3448,7 +3411,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 					'</a>';
 
 		if($r['tovar_id'])
-			$dop = $r['tovar_set'].($r['tovar_avai_id'] ? '' : ': '._ms($r['tovar_count']).' '.$r['tovar_measure_name']);
+			$dop = $r['tovar_link'].($r['tovar_avai_id'] ? '' : ': '._ms($r['tovar_count']).' '.$r['tovar_measure_name']);
 
 		if($r['attach_id'])
 			$dop = $r['attach_link'];

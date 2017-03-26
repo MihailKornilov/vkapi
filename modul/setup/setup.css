@@ -102,11 +102,6 @@
 
 
 /* Категории товаров */
-#setup_tovar_category #but{width:100%}
-#setup_tovar_category #spisok{margin-top:20px}
-#setup_tovar_category td.name{cursor:move}
-#setup_tovar_category .ed{width:35px}
-
 #setup_tovar_category_join .tovar{width:50px;text-align:right}
 
 

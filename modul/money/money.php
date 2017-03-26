@@ -368,7 +368,7 @@ function income_path($data) {//путь с датой
 		(MON ? ' » '._monthDef(MON, 1) : '').
 //		(DAY ? '<a href="'.URL.'&p=??&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
 		(DAY ? ' » <b>'.intval(DAY).$to.'</b>' : '').
-		'<button class="vk fr" onclick="_incomeAdd()">Внести платёж</button>';
+		'<button class="vk fr green" onclick="_incomeAdd()">Внести платёж</button>';
 }
 function income_invoice_sum($data) {//таблица с суммами платежей по каждому счёту
 	$sql = "SELECT
@@ -533,7 +533,7 @@ function _income_unit($r, $filter=array()) {
 function incomeAbout($r, $filter=array()) {
 	$about = '';
 	if($r['zayav_id'] && !@$filter['zayav_id'])
-		$about .= 'Заявка '.@$r['zayav_link'].'. ';
+		$about .= 'Заявка '.@$r['zayav_link'];
 
 	$about .= $r['tovar_sale'];
 
@@ -557,7 +557,7 @@ function incomeAbout($r, $filter=array()) {
 
 	$about .= $refund.
 		($r['about'] && $about ? ', ' : '').$r['about'].
-		($r['client_id'] && !@$filter['client_id'] && !@$filter['zayav_id'] ? '<div class="income-client">Клиент: '.$r['client_link'].'</div>' : '').
+		($r['client_id'] && !@$filter['client_id'] && !@$filter['zayav_id'] ? '<div class="grey fs12 mt3">Клиент: '.$r['client_link'].'</div>' : '').
 		($r['refund_id'] ? ' <span class="red">Платёж возвращён.</span>' : '');
 
 	return '<span class="type">'._invoice($r['invoice_id']).($about ? ':' : '').'</span> '.$about;
@@ -786,7 +786,10 @@ function expense() {
 //		'<script src="http://code.highcharts.com/highcharts.js"></script>'.
 		'<table class="tabLR" id="money-expense">'.
 			'<tr><td class="left">'.
-					'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.
+					'<div class="hd2 mar10">'.
+						'Список расходов организации'.
+						'<button class="vk green fr small" onclick="_expenseAdd()">Внести новый расход</a>'.
+					'</div>'.
 					'<div id="container"></div>'.
 					'<div id="spisok">'.$data['spisok'].'</div>'.
 				'<td class="right">'.expense_right().
@@ -1409,7 +1412,7 @@ function invoice() {//страница со списком счетов и переводами между счетами
 
 		'<div class="invoice_menu-1">'.
 		(RULE_SETUP_INVOICE ?
-			'<button class="vk" onclick="_invoiceEdit()">Создать новый счёт</button>'
+			'<button class="vk green" onclick="_invoiceEdit()">Создать новый счёт</button>'
 		: '').
 			'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
 		'</div>'.

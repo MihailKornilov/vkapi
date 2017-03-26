@@ -66,7 +66,7 @@ table{border:0;border-spacing:0}
 /* Иконки */
 .icon{
 	display:inline-block;
-	background:url(../../img/icon_vk.png?22) no-repeat;
+	background:url(../../img/icon_vk.png?37) no-repeat;
 	width:18px;
 	height:18px;
 	padding:0 1px;
@@ -76,6 +76,7 @@ table{border:0;border-spacing:0}
 .icon-client{background-position:0 0}
 .icon-del{background-position:0 -20px}
 .icon-del-red{background-position:0 -120px}
+.icon-del-white{background-position:0 -320px}
 .icon-zp{background-position:0 -40px}
 .icon-vk{background-position:0 -60px}
 .icon-edit{background-position:0 -80px}
@@ -88,6 +89,15 @@ table{border:0;border-spacing:0}
 .icon-sort{background-position:0 -240px}
 .icon-add{background-position:0 -260px}
 .icon-ok{background-position:0 -280px}
+.icon-sub{background-position:0 -300px}
+.icon-dot{background-position:0 -340px}
+.icon-link{background-position:0 -360px}
+.icon-join{background-position:0 -380px}
+/*.icon-off{background-position:0 -400px} мусорный контейнер*/
+.icon-order{background-position:0 -420px}
+.icon-move{background-position:0 -440px}
+.icon-avai{background-position:0 -460px}
+.icon-off{background-position:0 -480px}
 .icon-hint{
 	background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAAAXNSR0IArs4c6QAAAitJREFUOBGdVDFoU1EUvfe9/5UPKRXBQRelglCczOAmDloqTSPo4NzZmq9JC652kkJIYmi1Y+cOijZFRQeLm2DAwerUUReVSgO1Sf+73vPTX76/RdA35L77zjn3P+47N0yZVa4tBeznrpLQRWIeEnJHmMwGiawT06r0Os/qlRtbaRmnk+mHrcsustN61hbpvTSH+eMmHf85QF8H3bacZfZHFcsbG1WrN8dfJ9q9IpX5lQmO+Hpk3d3G5PinhJCNd+ZbwzYys2LlcW2ysAjc4Ac3QAG305n4WwFwgYMHPnQ4434PBp44E5XTBcrN1gWF72lfzjPJF3FUr98uLECEhRsZZ+vS27xm4iZqD/4ogOayWdYiw0JSFaEtNvwofLB8qV+ifyPdt6E3eAVm9yIBEXt+cFJE3pO4SqNUmHHM93FuiM8hJgvNh97DM5IfrSUA4lyp+FlD/NVSc+mYFQk17xqWV8CThdeTLg8Z+ADPmADpeGv26QmPcu+E6LSL3GgtLH5I49BB78FI8IGC39IE7L3AXmGmU454rFEuvsni0Al5G9oTWYeRsoQ4j7afk5OZ7vfO24PwWKd67RWt7jpxH8/YYES7GR4aDM7sA/Ug1qneYBY0z+Pds0QR1xXhX8ZSlMV2+XnoY9vDebJjQjhRh+tHVpDN1aBHjZdbZM81MUOx7bHBLAA46EbpIrFTlQd+MoR7Awji1NzKiIiZ0m07NqDv1v5pipOv/c//yW90GxY+MmYg4gAAAABJRU5ErkJggg==") no-repeat 0 0;
 	margin-bottom:-5px;
@@ -179,6 +189,26 @@ table{border:0;border-spacing:0}
 ._menuDop3 .link .icon{float:left;margin:-1px 3px 0 0}
 
 
+/* type 3 */
+._menuDop4{
+	padding:15px;
+	background:#f7f7f7;
+	border-bottom:#dae1e8 solid 1px;
+	text-align:center;
+}
+._menuDop4 .link{
+	display:inline-block;
+	color:#45688e;
+	margin:0 4px;
+	font-weight:bold;
+	padding:5px 12px;
+	border-radius:2px;
+}
+._menuDop4 .sel{background-color:#597da3;color:#fff}
+._menuDop4 .link:hover{text-decoration:none}
+._menuDop4 .link:not(.sel):hover{background-color:#e9edf1}
+
+
 
 
 
@@ -202,12 +232,13 @@ table{border:0;border-spacing:0}
 /* Заголовок 2 - подчёркнутая линия */
 .hd2{
 	color:#31618C;
-	font-size:14px;
+	font-size:16px;
 	border-bottom:#DEE3EF solid 1px;
 	padding:2px 0;
 	margin:5px 0;
 }
 .hd2 .vk.small.fr{margin-top:-4px}
+.hd2 b{font-size:16px}
 
 
 
@@ -284,8 +315,8 @@ button.vk.grey{background-color: #888}
 button.vk.grey:hover{background-color:#999}
 button.vk.pink{background-color: #c6c}
 button.vk.pink:hover{background-color:#d7d}
-button.vk.green{background-color: #5b5}
-button.vk.green:hover{background-color:#6c6}
+button.vk.green{background-color: #00AB50}
+button.vk.green:hover{background-color:#00BB57}
 
 
 
@@ -368,6 +399,7 @@ button.vk.green:hover{background-color:#6c6}
 .w15{width:15px}
 .w35{width:35px}
 .w50{width:50px}
+.h20{height:20px}
 .h25{height:25px}
 .h50{height:50px}
 .mh150{min-height:150px}
@@ -391,8 +423,16 @@ button.vk.green:hover{background-color:#6c6}
 .pad10{padding:10px}
 .pad15{padding:15px}
 .pad30{padding:30px}
+.pt1{padding-top:1px}
+.pt5{padding-top:5px}
 .pt10{padding-top:10px}
+.pt15{padding-top:15px}
+.pb5{padding-bottom:5px}
+.pr5{padding-right:5px}
+.pr10{padding-right:10px}
 .pb10{padding-bottom:10px}
+.pl5{padding-left:5px}
+.pl10{padding-left:10px}
 .pl20{padding-left:20px}
 
 .mar8{margin:8px}
@@ -403,12 +443,15 @@ button.vk.green:hover{background-color:#6c6}
 .mr5{margin-right:5px}
 .mr10{margin-right:10px}
 .mr20{margin-right:20px}
+.ml5{margin-left:5px}
 .ml8{margin-left:8px}
 .ml10{margin-left:10px}
 .ml20{margin-left:20px}
 .ml30{margin-left:30px}
 .ml40{margin-left:40px}
 .mt1{margin-top:1px}
+.mtm1{margin-top:-1px}
+.mt3{margin-top:3px}
 .mt5{margin-top:5px}
 .mt10{margin-top:10px}
 .mt15{margin-top:15px}
@@ -425,16 +468,22 @@ button.vk.green:hover{background-color:#6c6}
 .bs5{border-spacing:5px}
 .bs10{border-spacing:10px}
 .bs15{border-spacing:15px}
+.bor1{border:#E2E7EC solid 1px}
 .bor-e8{border:#e8e8e8 solid 1px}
+.bor-f0{border:#f0f0f0 solid 1px}
 
 .b{font-weight:bold}
+.i{font-style:italic}
 .u{text-decoration:underline}
 
 /* Цвета */
+.white{color:#fff}
 .red{color:#E22}
-.grey{color:#888}
 .black{color:#000}
 .color-555{color:#555}/* тёмно-серый */
+.grey{color:#888}/* серый */
+.pale{color:#aaa}/* бледный */
+.color-ccc{color:#ccc}/* совсем бледный */
 .color-vin{color:#c88}/* бордовый */
 .color-acc{color:#07a}/* голубой - начисление */
 .color-pay{color:#090}/* зелёны - платёж */
@@ -445,13 +494,19 @@ button.vk.green:hover{background-color:#6c6}
 .bg-fff{background-color:#fff}
 .bg-eee{background-color:#eee}
 .bg-gr1{background-color:#F9F9F9}/* светло-серый */
+.bg-gr2{background-color:#F2F6F9}/* бледно-серо-синий */
 .bg-add{background-color:#e0ffe0}
 .bg-fee,.bg-del{background-color:#fee}
 .bg-ffe{background-color:#ffe}
 .bg-ffd{background-color:#ffd}
-.bg-ffc,.bg-ch{background-color:#ffc}   /* жёлтый - данные изменены */
+.edtd,/* отредактировано. При наведении класс удаляется */
+.bg-ffc,
+.bg-ch{background-color:#ffc}   /* жёлтый - данные изменены */
+.bg-err,
+.bg-fcc{background-color:#fcc}  /* красный - ошибка */
 .bg-dfd{background-color:#dfd}  /* зелёный */
 .bg-ddf{background-color:#ddf}  /* синий */
+
 
 .db{display:block}
 .dib{display:inline-block}
@@ -464,11 +519,14 @@ button.vk.green:hover{background-color:#6c6}
 .center{text-align:center}
 .r{text-align:right}
 .fr{float:right}
+.fl{float:left}
 
 .fs11{font-size:11px}
 .fs12{font-size:12px}
 .fs14{font-size:14px}
 .fs15{font-size:15px}
+.fs16{font-size:16px}
+.fs17{font-size:17px}
 .fs18{font-size:18px}
 
 /* Курсоры */
@@ -477,6 +535,7 @@ button.vk.green:hover{background-color:#6c6}
 .curP{cursor:pointer}
 
 /* Изменение цвета при наведении */
+.over0:hover{background-color:#fff}/* белый */
 .over1:hover{background-color:#F2F6F9}/* бледно-серо-синий */
 .over2:hover{background-color:#FFFFF0}/* бледно-жёлтый */
 .over3:hover,.over3:hover textarea{background-color:#ffc} /* жёлтый */
@@ -486,3 +545,8 @@ button.vk.green:hover{background-color:#6c6}
 .line-b{border-bottom:#DEE3EF solid 1px}
 .line-b1{border-bottom:#EFF2F5 solid 1px}/* светлая нижняя линия */
 .line-r{border-right:#DEE3EF solid 1px}
+
+/* Подсветка найденной подстроки */
+.fndd{background:#ffc;border-bottom:1px solid #FE2}
+
+

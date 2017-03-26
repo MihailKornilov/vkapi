@@ -86,6 +86,9 @@ $.fn._menuDop = function(o) {//дополнительное меню
 };
 
 $(document)
+	.on('mouseenter', '.edtd', function() {//отредактировано: удаление класса при наведении
+		$(this).removeClass('edtd');
+	})
 	.on('mouseover', '.icon-hint', function() {//подсказка по icon-hint
 		var t = $(this),
 			v = _num(t.attr('val'));

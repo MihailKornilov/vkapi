@@ -81,7 +81,7 @@
 td.label{color:#777}
 td.label em{font-size:10px;color:#aaa;display:block}
 td.top,td.topi{vertical-align:top}
-td.topi{padding-top:3px}
+td.topi{padding-top:7px}
 
 
 ._sort dd{background:#fff}
@@ -103,13 +103,11 @@ a.add:hover{text-decoration:underline;color:#357}
 	background:#E1E7ED;
 	border-top:#D3DAE0 solid 1px;
 	border-bottom:#D8DFE5 solid 1px;
-	font-weight:bold;
 	color:#45688E;
+	font-size:14px;
 	padding:3px 8px;
 	margin-top:5px;
 }
-.headBlue a.add{float:right;color:#88C}
-.headBlue a.add:hover{color:#2B587A}
 .headBlue.but{padding:4px 5px 4px 10px;line-height:20px}
 .headBlue.but .vk{float:right;margin-left:5px}
 
@@ -243,20 +241,32 @@ a.add:hover{text-decoration:underline;color:#357}
 
 
 ._select{background:#fff;display:inline-block;position:relative}
-._select .title0bg{position:absolute;color:#888;top:4px;left:6px}
-._select .seltab{border:#c0cad5 solid 1px;height:22px;width:100%}
+._select .title0bg{
+	position:absolute;
+	top:7px;
+	left:8px;
+	white-space:nowrap;
+	overflow:hidden;
+	color:#888;
+}
+._select .seltab{
+	border:#d3d9de solid 1px;
+	border-radius:1px;
+	height:29px;
+	width:100%;
+}
 ._select.disabled .seltab{border-color:#ccc;background-color:#f0f0f0}
 ._select .selsel{vertical-align:top;padding-bottom:2px}
 ._select .selinp{
 	position:relative;
 	border:none;
-	padding:1px 0 1px 3px;
+	padding:4px 0 4px 5px;
 	margin:2px 2px 0;
 	background-color:transparent;
 }
 ._select .selinp._busy{background-position:right center}
 ._select.disabled .selinp{color:#777}
-._select .clear{float:right;margin:4px 3px 0 0}
+._select .clear{float:right;margin:7px 3px 0 0}
 ._select .selug{
 	width:16px;
 	border-left:#fff solid 1px;
@@ -580,6 +590,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	position:relative;
 }
 ._search input{border:0;margin-left:22px;padding:7px 0 6px 0}
+._search ._busy{width:30px;height:27px}
 ._search .img_del{float:right;margin:7px 5px 0 0}
 ._search .hold{position:absolute;left:24px;top:6px;color:#777}
 
@@ -639,22 +650,9 @@ a.add:hover{text-decoration:underline;color:#357}
 	left:-1000px;
 	box-shadow:0 0 20px rgba(0,0,0,.5);
 }
-._dialog .head{
-	color:#FFF;
-	background-color:#678EB4;
-	padding:13px 0 13px 17px;
-	font-size:14px;
-	font-family:sans-serif;
-	border-radius:2px 2px 0 0;
-}
-._dialog .head a{
-	float:right;
-	margin:-13px 0 0;
-	padding:14px;
-	background-position:14px 15px;
-	opacity:.4;
-}
-._dialog .head a:hover{opacity:1}
+._dialog .head{background-color:#678EB4;border-radius:2px 2px 0 0}
+._dialog .head div{padding:13px 10px 13px 17px}
+._dialog .head div:not(:hover) .icon{opacity:.7}
 ._dialog .dFrame{
 	border:0;
 	width:100%;
@@ -662,11 +660,8 @@ a.add:hover{text-decoration:underline;color:#357}
 	position:absolute;
 	z-index:-1;
 }
-._dialog .content {
-	background:#FFF;
-	border-bottom:#EBEDF0 solid 1px;
-}
-._dialog .ms{text-align:center;padding:80px 0;color:red}
+._dialog .content{border-bottom:#EBEDF0 solid 1px}
+._dialog .ms{padding:80px 0}
 ._dialog .load._busy .ms{visibility:hidden}
 ._dialog .bottom {
 	background:#F8F9FA;
@@ -674,8 +669,8 @@ a.add:hover{text-decoration:underline;color:#357}
 	text-align:center;
 	border-radius:0 0 2px 2px;
 }
-._dialog .vk{margin-right:8px}
-._dialog ._err{margin:5px}
+
+
 
 /* Таблица в диалоге */
 ._dialog-tab{border-spacing:10px}
@@ -775,7 +770,7 @@ a.add:hover{text-decoration:underline;color:#357}
 	background-color:#E1E7ED;
 	border-top:#D3DAE0 solid 1px;
 	border-bottom:#D8DFE5 solid 1px;
-	font-weight:bold;
+	font-size:14px;
 	color:#45688E;
 	padding:3px 8px;
 }

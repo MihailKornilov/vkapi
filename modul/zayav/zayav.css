@@ -216,10 +216,6 @@
 .zayav-edit_dialog #ze-skidka_sum{margin-left:5px;color:#999;font-size:10px}
 
 
-#ze-equip-spisok._busy{background-position:left}
-#ze-equip-spisok ._check{display:inline-block;margin-bottom:5px}
-#ze-equip-spisok .vk{margin-left:5px;margin-top:1px}
-
 
 
 
@@ -294,15 +290,8 @@
 	color:#999;
 	margin-bottom:3px;
 }
-#_zayav-info table.page{padding-left:10px;width:100%}
-#_zayav-info #left{
-	vertical-align:top;
-	padding:0 10px 10px 0;
-	min-width:385px;
-}
-#_zayav-info .headName{margin:10px 0 0}
-#_zayav-info table .headName{max-width:480px}
-#_zayav-info .headName ._dropdown{float:right}
+#_zayav-info table .hd2{max-width:550px;margin-top:0;}
+#_zayav-info .hd2 ._dropdown{float:right}
 /* Блок с суммами начислений и платежей */
 #_zayav-info #pay-tab{
 	border-collapse:collapse;
@@ -338,9 +327,7 @@
 #_zayav-info .img_word{margin:0 15px -4px -2px}
 #_zayav-info .img_cancel{margin:0 0 -1px 5px}
 #_zayav-info .attach-canceled{margin-left:5px;color:#999;cursor:default}
-#_zayav-info #right{vertical-align:top;padding:10px 0}
 #_zayav-info #foto{width:200px;text-align:center}
-#_zayav-info div.page{margin:0 10px}
 #_zayav-info #zayav-deleted{
 	background-color:#fdd;
 	border-bottom:#ecc solid 1px;
@@ -380,9 +367,15 @@
 #zayav-tovar #info th{width:70px;color:#777;text-align:left;font-size:10px}
 /* Список запчастей*/
 #zayav-tovar-spisok{border-left:#e9edf1 solid 1px}
+#zayav-tovar-spisok .tovar-info-go{font-size:12px}
 #zayav-tovar-spisok .unit:not(:hover) .zakaz-add:not(._busy){display:none}
 #zayav-tovar-spisok .img_minidel{margin:2px 0 0 3px}
-
+/* наличие товара */
+.zayav-tovar-avai{
+	color:#070;
+	border:#C1EDC1 solid 1px;
+	padding:1px 5px;
+}
 
 
 

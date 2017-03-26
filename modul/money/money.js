@@ -497,13 +497,6 @@ var _accrualAdd = function(o) {
 		}
 	},
 	_expenseLoad = function() {
-		$('.add').click(function() {
-			var dialog = _dialog({
-				width:480,
-				head:'Внесение расхода'
-			});
-			_expenseTab(dialog);
-		});
 		$('#invoice_id')._select({
 			width:140,
 			title0:'Все счета',
@@ -534,6 +527,13 @@ var _accrualAdd = function(o) {
 			func:_expenseSpisok
 		});
 		_expenseGraf();
+	},
+	_expenseAdd = function() {
+		var dialog = _dialog({
+			width:480,
+			head:'Внесение расхода'
+		});
+		_expenseTab(dialog);
 	},
 	_expenseGraf = function() {
 //		if(!VIEWER_ADMIN)

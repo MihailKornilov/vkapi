@@ -39,6 +39,8 @@ require_once GLOBAL_DIR.'/modul/devstory/devstory.php';
 
 require_once GLOBAL_DIR.'/modul/kupezz/kupezz.php';
 
+require_once GLOBAL_DIR.'/modul/test/test.php';//todo
+
 _dbConnect('GLOBAL_');  //подключение к базе данных
 
 
@@ -112,6 +114,7 @@ function _header() {
 
 		'<head>'.
 			'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
+//			'<meta http-equiv="content-type" content="text/html; charset=utf-8" />'.
 			'<title>'.APP_NAME.'</title>'.
 			_api_scripts().
 		'</head>'.
@@ -184,7 +187,9 @@ function _api_scripts() {//скрипты и стили, которые вставляются в html
 		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/css/image'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/js/image'.MIN.'.js?'.VERSION.'"></script>'.
 
-		_devstory_script() //История разработки
+		_devstory_script(). // История разработки
+
+		_test_script()      // Тесты
 );
 }
 function _global_script() {//скрипты и стили
@@ -1216,13 +1221,6 @@ function _hashRead() {
 						$_GET['id'] = intval($r[2]);
 				}
 			break;
-		case 'zp':
-			if(isset($r[1]))
-				if(preg_match(REGEXP_NUMERIC, $r[1])) {
-					$_GET['d'] = 'info';
-					$_GET['id'] = intval($r[1]);
-				}
-			break;
 		default:
 			if(isset($r[1])) {
 				$_GET['d'] = $r[1];
@@ -1233,7 +1231,7 @@ function _hashRead() {
 	_hashCookieSet();
 }
 function _hashCookieSet() {
-	if(@$_GET['p'] == 'print')
+	if(@$_GET['p'] == 75)
 		return;
 	setcookie('p', $_GET['p'], time() + 2592000, '/');
 	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
@@ -1355,6 +1353,15 @@ function _br($v) {//вставка br в текст при нахождении enter
 function _daNet($v) {//$v: 1 -> да, 0 -> нет
 	return $v ? 'да' : 'нет';
 }
+
+function _iconAdd($v=array()) {//иконка добавления записи
+	$v = array(
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+	);
+
+	return '<div'.$v['id'].' class="img_add'.$v['class']._tooltip('Добавить', -51, 'r').'</div>';
+}
 function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	$v = array(
 		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',       //id записи
@@ -1363,14 +1370,6 @@ function _iconEdit($v=array()) {//иконка редактирования записи в таблице
 	);
 
 	return '<div'.$v['id'].$v['onclick'].' class="img_edit'.$v['class']._tooltip('Изменить', -52, 'r').'</div>';
-}
-function _iconAdd($v=array()) {//иконка добавления записи
-	$v = array(
-		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
-		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
-	);
-
-	return '<div'.$v['id'].' class="img_add'.$v['class']._tooltip('Добавить', -51, 'r').'</div>';
 }
 function _iconDel($v=array()) {//иконка удаления записи в таблице
 	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
@@ -1384,6 +1383,43 @@ function _iconDel($v=array()) {//иконка удаления записи в таблице
 	);
 
 	return '<div '.$v['id'].$v['onclick'].' class="img_del'.$v['class']._tooltip('Удалить', -46, 'r').'</div>';
+}
+
+function _iconAddNew($v=array()) {//иконка добавления записи
+	$v = array(
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : ''//дополнительный класс
+	);
+
+	return '<div'.$v['id'].' class="icon icon-add'.$v['class']._tooltip('Добавить', -51, 'r').'</div>';
+}
+function _iconEditNew($v=array()) {//иконка редактирования записи в таблице
+	$v = array(
+		'id' => _num(@$v['id']) ? ' val="'.$v['id'].'"' : '',       //id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : '',      //дополнительный класс
+		'onclick' => !empty($v['onclick']) ? ' onclick="'.$v['onclick'].'"' : '', //скрипт по нажатию
+		'tt_name' => !empty($v['tt_name']) ? $v['tt_name'] : 'Изменить',
+		'tt_left' => !empty($v['tt_left']) ? $v['tt_left'] : -48,
+		'tt_side' => !empty($v['tt_side']) ? $v['tt_side'] : 'r'
+	);
+
+	return '<div'.$v['id'].$v['onclick'].' class="icon icon-edit'.$v['class']._tooltip($v['tt_name'], $v['tt_left'], $v['tt_side']).'</div>';
+}
+function _iconDelNew($v=array()) {//иконка удаления записи в таблице
+	if(!empty($v['nodel']))
+		return '';
+
+	//если указывается дата внесения записи и она не является сегодняшним днём, то удаление невозможно
+	if(empty($v['del']) && !empty($v['dtime_add']) && TODAY != substr($v['dtime_add'], 0, 10))
+		return '';
+
+	$v = array(
+		'id' => _num(@$v['id']) ? 'val="'.$v['id'].'" ' : '',//id записи
+		'class' => !empty($v['class']) ? ' '.$v['class'] : '',//дополнительный класс
+		'onclick' => !empty($v['onclick']) ? ' onclick="'.$v['onclick'].'"' : '' //скрипт по нажатию
+	);
+
+	return '<div '.$v['id'].$v['onclick'].' class="icon icon-del'.$v['class']._tooltip('Удалить', -42, 'r').'</div>';
 }
 
 function _dn($v) {//показ/скрытие блока на основании условия
@@ -1679,7 +1715,7 @@ function _filterJs($name, $filter) {//формирование условий поиска в формате js
 
 	$spisok = array();
 	foreach($arr as $key => $val) {
-		if(!is_numeric($val))
+		if(!empty($val) && $val[0] == 0 ||  !is_numeric($val))
 			$val = '"'.addslashes(_br($val)).'"';
 		$spisok[] = $key.':'.$val;
 	}
@@ -1871,10 +1907,9 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `_setup_cartridge`").','.
 		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `_setup_cartridge`").','.
 
-		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategoryJs().','.
+		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategory('main_js').','.
 		"\n".'TOVAR_VENDOR_SPISOK='._tovarVendorJs().','.
-		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().','.
-		"\n".'TOVAR_POSITION_SPISOK='._selJson(_tovarPosition()).';';
+		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().';';
 
 
 	$fp = fopen(API_PATH.'/js/values/app_'.APP_ID.'.js', 'w+');
@@ -1910,12 +1945,13 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	xcache_unset($prefix.'client_from');    //источники, откуда пришёл клиент
 	xcache_unset($prefix.'zayav_expense');  //категории расходов заявки
 	xcache_unset($prefix.'zayav_status');   //статусы заявки
-	xcache_unset($prefix.'tovar_name');     //наименования товаров
-	xcache_unset($prefix.'tovar_vendor');
+
 	xcache_unset($prefix.'tovar_category');
+	xcache_unset($prefix.'tovar_vendor');
 	xcache_unset($prefix.'tovar_feature_name');
 	xcache_unset($prefix.'tovar_equip');
 	xcache_unset($prefix.'tovar_measure');
+
 	xcache_unset($prefix.'cartridge');
 	xcache_unset($prefix.'rubric');
 	xcache_unset($prefix.'rubric_sub');

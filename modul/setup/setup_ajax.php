@@ -2412,74 +2412,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'setup_tovar_category_add':
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "INSERT INTO `_tovar_category` (
-					`app_id`,
-					`name`
-				) VALUES (
-					".APP_ID.",
-					'".addslashes($name)."'
-				)";
-		query($sql);
-		$insert_id = query_insert_id('_tovar_category');
-
-		setup_tovar_category_use_insert($insert_id);
-
-		xcache_unset(CACHE_PREFIX.'tovar_category');
-		_appJsValues();
-
-		$send['html'] = utf8(setup_tovar_category_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_tovar_category_edit':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-		if(!$name = _txt($_POST['name']))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `_tovar_category`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `_tovar_category`
-		        SET `name`='".addslashes($name)."'
-		        WHERE `id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'tovar_category');
-		_appJsValues();
-
-		$send['html'] = utf8(setup_tovar_category_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_tovar_category_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `_tovar_category`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "DELETE FROM `_tovar_category` WHERE `id`=".$id;
-		query($sql);
-
-		$sql = "DELETE FROM `_tovar_category_use` WHERE `category_id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'tovar_category');
-		_appJsValues();
-
-		jsonSuccess();
-		break;
 	case 'setup_tovar_category_join_load'://получение списка категорий готовых каталогов
 		$sql = "SELECT
 					*,
@@ -2556,7 +2488,7 @@ switch(@$_POST['op']) {
 			foreach(_ids($ids, 1) as $id) {
 				if(isset($use[$id]))
 					continue;
-				setup_tovar_category_use_insert($id);
+//				_tovar_setup_category_use_insert($id);
 			}
 		}
 
@@ -2565,7 +2497,7 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();
 
-		$send['html'] = utf8(setup_tovar_category_spisok());
+		$send['html'] = utf8(_tovar_setup_category_spisok());
 		jsonSuccess($send);
 		break;
 
@@ -2697,18 +2629,6 @@ function setup_status_next_insert($status_id, $post) {
 				`status_id`,
 				`next_id`
 			) VALUES ".implode(',', $values);
-	query($sql);
-}
-function setup_tovar_category_use_insert($id) {//внесение категории товаров, доступной для приложения
-	$sql = "INSERT INTO `_tovar_category_use` (
-				`app_id`,
-				`category_id`,
-				`sort`
-			) VALUES (
-				".APP_ID.",
-				".$id.",
-				"._maxSql('_tovar_category_use')."
-			)";
 	query($sql);
 }
 

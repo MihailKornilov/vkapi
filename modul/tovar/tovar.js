@@ -1,238 +1,145 @@
-var _tovarEditExtend = function(o) {
-		return $.extend({
+var _tovarEdit = function(o) {
+		o = $.extend({
 			id:0,
 			category_id:0,
-			name_id:0,
-			vendor_id:0,
+			sub_id:0,
 			name:'',
-			set_position_id:0,
-			tovar_id_set:0,
+			vendor_id:0,
+			about:'',
+
+			articul:'',
+
 			measure_id:1,
 			measure_length:0,
 			measure_width:0,
-			about:'',
-			feature:[],
+
 			callback:function(res) {
 				location.href = URL + '&p=46&id=' + res.id;
 			}
-		}, o);
-	},
-	_tovarAdd = function(o) {
-		o = _tovarEditExtend(o);
-		var html =
-			'<div class="_info" id="info-main">' +
-				'Внимательно заполните поля!<br />' +
-				'После внесения товара будет создана карточка товара.<br />' +
-				'Поля, помеченные звёздочкой *, обязательны для заполнения.' +
-//				'Для более подробного ознакомления с правилами внесения нового товара читайте в Мануале.' +
-			'</div>' +
-			_tovarEditLabelCat(o) +
-			'<div id="ta-name"' + (o.category_id ? '' : ' class="dn"') + '>' +
-/*				'<div class="_info dn">' +
-					'<p>В поле <b>Название</b> выберите название товара.' +
-						'<br />' +
-						'Это слово или словосочетание, которое коротко описывает товар, то есть отвечает на вопрос: <u>что это?</u>' +
-						'<br />' +
-						'Примеры: <u>Пицца</u>, <u>Мобильный телефон</u>, <u>Парник</u>, <u>Пластиковое окно</u> и тп.' +
-						'<br />' +
-						'Если в выпадающем списке нет нужного названия, укажите своё.' +
-					'<p><b>Производителя</b> товара указывать не обязательно.' +
-					'<p>В поле <b>Подробно</b> пишется уточнение, модель, версия или короткое описание товара.' +
-				'</div>' +
-*/
-				_tovarEditLabelName(o) +
-				_tovarEditLabelDop(o) +
-			'</div>',
+		}, window.TI || o);
 
-			dialog = _dialog({
-				top:20,
-				width:600,
-				head:'Внесение нового товара',
-				class:'tovar-add',
-				content:html,
-				butSubmit:'Внести товар в каталог',
-				submit:submit
-			});
-
-	/*
-		dialog.content.find('#ta-set .headName').after(
-			'<div class="_info">' +
-				'Укажите, применяется ли этот товар к другому товару. ' +
-				'То есть является неотъемлемой частью.' +
-				'<p><b>Например:</b>' +
-				'<br />' +
-				' - это <u>запчасть</u> (матрица от ноутбука);<br />' +
-				' - это <u>комплектующее</u> (петля от двери);<br />' +
-				' - это <u>аксессуар</u> (чехол для телефона);<br />' +
-				' - это <u>ингредиент</u> (сыр для пиццы). И тп.' +
-			'</div>'
-		);
-*/
-		_tovarEditFunc(o, dialog);
-
-		function submit() {
-			var send = _tovarEditValues(dialog);
-			if(!send)
-				return;
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					o.callback(res);
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
-	_tovarEdit = function() {
-		TI.set = TI.tovar_id_set ? 1 : 0;
-		var o = _tovarEditExtend(TI),
+		var form_id = o.vendor_id || o.about ? 1 : 0,
 			html =
-			_tovarEditLabelCat(o) +
-			_tovarEditLabelName(o) +
-			_tovarEditLabelDop(o),
+				'<input type="hidden" id="form_id" value="' + form_id + '" />' +
+				'<div class="pad15" style="background:#FFF9E9">' +
+					'<div class="hd2">Основные данные товара:</div>' +
+					'<table class="bs10">' +
+						'<tr><td class="label w125 r topi">Категория:*' +
+							'<td id="cat">' +
+						'<tr><td class="label r b">Название:*' +
+							'<td><input type="text" id="name-add" class="w400 b" value="' + o.name + '" />' +
+					'</table>' +
 
+					'<div class="extended dn">' +
+						'<table class="bs10">' +
+							'<tr><td class="label r">Артикул:' +
+								'<td><input type="text" id="articul" class="w150" placeholder="автоматически" value="' + o.articul + '" />' +
+							'<tr><td class="label r w125">Производитель:' +
+								'<td><input type="hidden" id="vendor_id-add" value="' + o.vendor_id + '" />' +
+							'<tr><td class="label r topi">Описание товара:' +
+								'<td><textarea id="about" class="w400">' + _br(o.about) + '</textarea>' +
+						'</table>' +
+					'</div>' +
+				'</div>' +
+
+				'<div class="pad15" style="background:#FFEDBC">' +
+					'<div class="hd2">Характеристики товара:</div>' +
+					'<table class="bs10">' +
+						'<tr><td class="label r w125">Ед. измерения:*<td><input type="hidden" id="measure_id" value="' + o.measure_id + '" />' +
+						'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+							'<td class="label r">Длина:*<td><input type="text" class="w50" id="measure_length" value="' + o.measure_length + '" /> м.' +
+						'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+							'<td class="label r">Ширина:*<td><input type="text" class="w50" id="measure_width" value="' + o.measure_width + '" /> м.' +
+						'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
+							'<td class="label r">Площадь:<td><b id="measure_area"></b> <span id="measure_area_title">кв/м.</span>' +
+					'</table>' +
+
+/*					'<div class="extended dn">' +
+						'<input type="hidden" id="feature" />' +
+					'</div>' +
+*/
+				'</div>',
 			dialog = _dialog({
 				top:20,
-				width:600,
-				head:'Редактирование товара',
-				class:'tovar-add',
+				width:610,
+				padding:0,
+				head:o.id ? 'Редактирование данных товара' : 'Внесение нового товара',
 				content:html,
-				butSubmit:'Сохранить',
+				butSubmit:o.id ? 'Сохранить' : 'Внести товар в каталог',
 				submit:submit
 			});
 
-		_tovarEditFunc(o, dialog);
-
-		function submit() {
-			var send = _tovarEditValues(dialog);
-			if(!send)
-				return;
-			send.op = 'tovar_edit';
-			send.id = TI.id;
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	},
-
-	_tovarEditLabelCat = function(o) {//отображение поля Категория
-		var cat = '';
-		if(!o.category_id)
-			for(var n = 0; n < TOVAR_CATEGORY_SPISOK.length; n++) {
-				var sp = TOVAR_CATEGORY_SPISOK[n];
-				cat += '<div class="cat-un" val="' + sp.uid + '">' + sp.title + '</div>';
-			}
-
-		return '<div class="headName">Основные данные товара:</div>' +
-			'<table class="bs10">' +
-				'<tr><td class="label w125 r topi">Категория:*' +
-					'<td><input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
-						cat +
-			'</table>';
-	},
-	_tovarEditLabelName = function(o) {
-		return  '<table id="tab-name">' +
-					'<tr><td class="label w125 r"><b>Название:</b>*' +
-						'<td><input type="hidden" id="name_id-add" value="' + o.name_id + '" />' +
-				
-					'<tr><td class="label r"><b>Производитель</b>:' +
-						'<td><input type="hidden" id="vendor_id-add" value="' + o.vendor_id + '" />' +
-			(!o.vendor_id ? '<span class="prim">(не указывайте производителя, если его нет)</span>' : '') +
-					'<tr><td class="label r"><b>Подробно:</b>' +
-						'<td><input type="text" id="name" value="' + o.name + '" placeholder="модель / версия / уточнение" />' +
-
-					'<tr><td><td>' +
-					'<tr><td class="label r w125 tdset2">Применение:' +
-						'<td><input type="hidden" id="set_position_id" value="' + o.set_position_id + '" />' +
-					'<tr class="tr-set' + (o.set_position_id ? '' : ' dn') + '">' +
-						'<td class="label topi r tdset3">Для товара:*' +
-						'<td><input type="hidden" id="te-tovar_id_set" value="' + o.tovar_id_set + '" />' +
-
-					'<tr><td><td>' +
-					'<tr><td class="label topi r">Доп. описание:<td><textarea id="about">' + _br(o.about) + '</textarea>' +
-				'</table>';
-	},
-	_tovarEditLabelDop = function(o) {
-		return '<div class="headName">Характеристики:</div>' +
-			'<table class="bs10" id="tab-dop">' +
-				'<tr><td class="label r w125">Единица изменения:*<td><input type="hidden" id="measure_id" value="' + o.measure_id + '" />' +
-				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
-					'<td class="label r">Длина:*<td><input type="text" class="w50" id="measure_length" value="' + o.measure_length + '" /> м.' +
-				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
-					'<td class="label r">Ширина:*<td><input type="text" class="w50" id="measure_width" value="' + o.measure_width + '" /> м.' +
-				'<tr class="tr-area' + (TOVAR_MEASURE_AREA[o.measure_id] ? '' : ' dn') + '">' +
-					'<td class="label r">Площадь:<td><b id="measure_area"></b> кв/м.' +
-			'</table>' +
-			'<input type="hidden" id="feature" />';
-	},
-
-	_tovarEditCategorySelect = function(o) {//выпадающий список для категорий
-		if(!o.category_id)
-			return;
-
-		$('#category_id-add')._select({
-			width:300,
-			title0:'категория не указана',
-			spisok:TOVAR_CATEGORY_SPISOK,
-			func:_tovarEditCategoryFunc
+		$('#form_id')._menuDop({
+			type:4,
+			spisok:[
+				{uid:0,title:'Простая форма товара'},
+				{uid:1,title:'Расширенная форма'}
+			],
+			func:extendedSlide
 		});
+		$('#cat').tovarCategorySelect({
+			category_id:o.category_id,
+			sub_id:o.sub_id
+		});
+		$('#vendor_id-add')._select({
+			width:200,
+			title0:'не выбран',
+			spisok:[],
+			write_save:1
+		});
+		_tovarEditVendorLoad();
+		$('#about').autosize();
+		$('#measure_id')._select({
+			width:200,
+			spisok:TOVAR_MEASURE_SPISOK,
+			func:function(v, id, item) {
+				$('.tr-area')[(TOVAR_MEASURE_AREA[v] ? 'remove' : 'add') + 'Class']('dn');
+				if(v)
+					$('#measure_area_title').html(item.title);
+			}
+		});
+		_tovarEditMeasureArea();
+		$('#measure_length,#measure_width').keyup(_tovarEditMeasureArea);
+//		$('#feature').tovarFeature({spisok:o.feature});
 
-		_tovarEditNameLoad(o.category_id, o.name_id);
-		_tovarEditVendorLoad(o.name_id, o.vendor_id);
-	},
-	_tovarEditNameLoad = function(v, name_id) {//загрузка названий после выбора категории
-		$('#name_id-add')._select(0);
-		if(!v) {
-			$('#name_id-add')._select([]);
-			return;
+		extendedSlide(form_id);
+
+		function extendedSlide(v) {
+			$('.extended')['slide' + (v ? 'Down' : 'Up')]();
 		}
-		var send = {
-			op:'tovar_name_load',
-			category_id:v
-		};
-		$('#name_id-add')._select('process');
-		$.post(AJAX_MAIN, send, function(res) {
-			$('#name_id-add')
-				._select(res.success ? res.spisok : [])
-				._select(name_id);
-		}, 'json');
-	},
-	_tovarEditVendorLoad = function(name_id, vendor_id) {//загрузка производителей после выбора названия
-		var ven = $('#vendor_id-add');
-		ven._select(0);
-		if(!name_id) {
-			ven._select([]);
-			return;
+		function submit() {
+			var send = {
+				op:'tovar_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				category_id:$('#category_id-add').val(),
+				category_name:$('#category_id-add')._select('inp'),
+				sub_id:$('#category_id-sub').val(),
+				sub_name:$('#category_id-sub')._select('inp'),
+				name:$('#name-add').val(),
+				about:$('#about').val(),
+
+				articul:$('#articul').val(),
+
+				vendor_id:_num($('#vendor_id-add').val()),
+				vendor_name:$.trim($('#vendor_id-add')._select('inp')),
+
+				measure_id:_num($('#measure_id').val()),
+				measure_length:_ms($('#measure_length').val()),
+				measure_width:_ms($('#measure_width').val())
+			};
+			dialog.post(send, o.callback);
 		}
-		var send = {
-			op:'tovar_vendor_load',
-			category_id:_num($('#category_id-add').val()),
-			name_id:name_id
-		};
+	},
+	_tovarEditVendorLoad = function() {//загрузка производителей
+		var ven = $('#vendor_id-add'),
+			send = {
+				op:'tovar_vendor_load'
+			};
 		ven._select('process');
 		$.post(AJAX_MAIN, send, function(res) {
 			ven._select(res.success ? res.spisok : []);
-			ven._select(vendor_id);
+//			ven._select(vendor_id);
 		}, 'json');
-	},
-	_tovarEditCategoryFunc = function(v) {
-		if(_num($('#name_id-add').val()) || $.trim($('#name_id-add')._select('inp')))
-			return;
-		_tovarEditNameLoad(v, 0);
-		if(window.TI)
-			return;
-		if(!v)
-			return;
-		$('#info-main').slideUp();
-		$('#ta-name').slideDown();
 	},
 	_tovarEditMeasureArea = function(v) {//подсчёт площади при изменении длины и ширины
 		var x = _ms($('#measure_length').val()),
@@ -240,125 +147,316 @@ var _tovarEditExtend = function(o) {
 			area = Math.round(x * y * 100) / 100;
 		$('#measure_area').html(area);
 	},
-	_tovarEditFunc = function(o, dialog) {
-		$('#name_id-add')._select({
-			width:180,
-			title0:'не указано',
-			spisok:[],
-			write:1,
-			write_save:1,
-			func:function(v) {
-				_tovarEditVendorLoad(v);
-				$('#name').focus();
-			}
-		});
-		$('#vendor_id-add')._select({
-			width:180,
-			title0:'не выбран',
-			spisok:[],
-			write:1,
-			write_save:1,
-			func:function() {
-				$('#name').focus();
-			}
-		});
 
-		_tovarEditCategorySelect(o, dialog);
-		$('.cat-un').click(function() {
-			var t = $(this),
-				id = t.attr('val');
-			$('#category_id-add').val(id);
-			o.category_id = id;
-			$('.cat-un').slideUp(200, function() {
-				_tovarEditCategorySelect(o, dialog);
-				_tovarEditCategoryFunc(id);
+	_tovarSetup = function() {//окно выбора настроек товаров
+		var html =
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" val="1">' +
+				'<b>Категории</b>' +
+				'<div class="grey pad2-7">Настройка категорий товаров.</div>' +
+			'</div>',
+			dialog = _dialog({
+				top:30,
+				width:300,
+				head:'Настройки товаров',
+				content:html,
+				butSubmit:'',
+				butCancel:'Закрыть'
 			});
-		});
 
-		$('#set_position_id')._dropdown({
-			title0:'нет',
-			spisok:TOVAR_POSITION_SPISOK,
-			func:function(v) {
-				$('.tr-set')[(v ? 'remove' : 'add') + 'Class']('dn');
+		$('.tsa-unit').click(function() {
+			var t = $(this),
+				v = _num(t.attr('val'));
+
+			dialog.close();
+
+			switch(v) {
+				case 1: _tovarSetupCategory(); break;
 			}
 		});
-		$('#te-tovar_id_set').tovar({
-			set:0,
-			image:0,
-			tovar_id_not:o.id
-		});
-
-		$('#about').autosize();
-
-		$('#measure_id')._select({
-			width:200,
-			spisok:TOVAR_MEASURE_SPISOK,
-			func:function(v) {
-				$('.tr-area')[(TOVAR_MEASURE_AREA[v] ? 'remove' : 'add') + 'Class']('dn');
-			}
-		});
-		_tovarEditMeasureArea();
-		$('#measure_length,#measure_width').keyup(_tovarEditMeasureArea);
-
-		$('#feature').tovarFeature({spisok:o.feature});
 	},
-	_tovarEditValues = function(dialog) {
-		var send = {
-			op:'tovar_add',
-			category_id:_num($('#category_id-add').val()),
-			name_id:_num($('#name_id-add').val()),
-			name_name:$.trim($('#name_id-add')._select('inp')),
-			vendor_id:_num($('#vendor_id-add').val()),
-			vendor_name:$.trim($('#vendor_id-add')._select('inp')),
-			name:$('#name').val(),
-
-			set_position_id:_num($('#set_position_id').val()),
-			tovar_id_set:_num($('#te-tovar_id_set').val().split(':')[0]),
-
-			measure_id:_num($('#measure_id').val()),
-			measure_length:_ms($('#measure_length').val()),
-			measure_width:_ms($('#measure_width').val()),
-			about:$('#about').val(),
-			feature:$('#feature').tovarFeature('get')
-		};
-		if(!send.category_id) {
-			dialog.err('Не выбрана категория');
-			return false;
-		}
-		if(!send.name_id && !send.name_name) {
-			dialog.err('Не указано наименование товара');
-			$('#name_id-add')._select('focus');
-			return false;
-		}
-
-		if(send.set_position_id && !send.tovar_id_set) {
-			dialog.err('Не выбран товар');
-			$('.tdset3').addClass('tderr');
-			return false;
-		}
-
-		if(TOVAR_MEASURE_AREA[send.measure_id]) {
-			if(!send.measure_length) {
-				dialog.err('Некорректно указана длина');
-				$('#measure_length').focus();
-				return false;
+	_tovarSetupCategory = function() {//настройка категорий товаров
+		var dialog = _dialog({
+			top:20,
+			width:650,
+			id:'tsc20650',
+			head:'Управление категориями товаров',
+			load:1,
+			butSubmit:'',
+			butCancel:'Закрыть',
+			cancel:function() {
+				location.reload();
 			}
-			if(!send.measure_width) {
-				dialog.err('Некорректно указана ширина');
-				$('#measure_width').focus();
-				return false;
-			}
-		}
+		});
 
-		return send;
+		$.post(AJAX_MAIN, {op:'tovar_setup_category_load'}, function(res) {
+			if(res.success) {
+				dialog.content
+					.html(res.html)
+					.find('.icon-edit').click(function() {
+						var t = _parent($(this)),
+							fName = t.find('.name');
+						_tovarSetupCategoryEdit({
+							id:t.attr('val'),
+							name:fName.html(),
+							callback:function(name) {
+								fName.html(name);
+								t.addClass('edtd');
+							}
+						});
+					})
+					.end()
+					.find('.icon-del').click(function() {
+						var p = _parent($(this));
+						_dialogDel({
+							id:p.attr('val'),
+							head:'категории товаров',
+							op:'tovar_setup_category_del',
+							func:function() {
+								p.remove();
+							}
+						});
+					});
+				sortable();
+				$('.category-sub-open').click(function() {
+					var p = _parent($(this), 'DD');
+					p.find('.category-sub').slideToggle();
+				});
+			} else
+				dialog.loadError(res.text);
+		}, 'json');
+	},
+	_tovarSetupCategoryEdit = function(o) {//создание/редактирование категории
+		o = $.extend({
+			id:0,
+			name:'',
+			callback:function() {
+				_tovarSetupCategory();
+			}
+		}, o);
+
+		var html = '<table class="bs10">' +
+					'<tr><td class="label r">Название:' +
+						'<td><input id="name" class="w230" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Создание новой' ) + ' категории товаров',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'tovar_setup_category_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					o.callback(send.name);
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
 	},
 
-	_tovarCostSet = function(v) {//Изменение закупочной стоимости и продажи
+	_tovarSelectedIds = function() {//получение id выбранных товаров
+		var check = $('.tovar-unit-check'),
+			arr = [],
+			n,
+			inp;
+		if(!check.length)
+			return arr;
+		for(n = 0; n < check.length; n++) {
+			inp = check.eq(n).find('input');
+			if(_bool(inp.val()))
+				arr.push(_num(inp.attr('id').split('t')[1]));
+		}
+		return arr;
+	},
+	_tovarSelectedAction = function() {//окно с действиями с выбранными товарами
+		var html =
+			'<table class="mt5 mb10">' +
+				'<tr><td class="label pr10">Выбрано товаров:' +
+					'<td class="b">' + _tovarSelectedIds().length +
+			'</table>' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" val="1">' +
+				'<b>Перенести товары в другую категорию</b>' +
+				'<div class="grey pad2-7">Будет предложено выбрать категорию, либо создать новую.</div>' +
+			'</div>',
+			dialog = _dialog({
+				top:30,
+				width:440,
+				head:'Выбор действия над товарами',
+				content:html,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			});
+
+		$('.tsa-unit').click(function() {
+			var t = $(this),
+				v = _num(t.attr('val'));
+
+			dialog.close();
+
+			switch(v) {
+				case 1: _tovarSelectedCategory(); break;
+			}
+		});
+	},
+	_tovarSelectedCategory = function() {//перенос товаров в выбранную группу
+		var category_id = _num($('#rightLinkMenu .sel').attr('val')),
+			html =
+			'<div class="_info">' +
+				'Товары будут перенесены в новую <b>категорию</b>.' +
+				'<br />' +
+				'Выберите категорию и подкатегорию, либо введите вручную новую и она будет автоматически добавлена в базу.' +
+//				'<br />' +
+//				'Все категории, которые останутся без товаров, будут удалены.' +
+			'</div>' +
+			'<table class="bs10">' +
+				'<tr><td class="label r w175">Выбрано товаров:<td class="b">' + _tovarSelectedIds().length +
+				'<tr><td class="label r topi">Переместить в категорию:*' +
+					'<td id="cat">' +
+			'</table>',
+			dialog = _dialog({
+				width:550,
+				head:'Перенос товаров в другую группу',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#cat').tovarCategorySelect({
+			category_id:category_id
+		});
+
+		function submit() {
+			var send = {
+				op:'tovar_to_new_category',
+				category_id:$('#category_id-add').val(),
+				category_name:$('#category_id-add')._select('inp'),
+				sub_id:$('#category_id-sub').val(),
+				sub_name:$('#category_id-sub')._select('inp'),
+				tovar_ids:_tovarSelectedIds().join()
+			};
+			dialog.process();
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg();
+					location.reload();
+				} else
+					dialog.abort(res.text);
+			}, 'json');
+		}
+	},
+
+	_tovarJoin = function() {
+		var html =
+			'<div class="_info">' +
+				'Eсли в каталоге существуют два одинаковых товара, используется объединение.' +
+				'<br />' +
+				'Текущий товар будет <b>получателем</b>, выбранный товар <u>будет удалён</u>.' +
+				'<div class="mt5">Все <u>движения</u> выбранного товара перейдут к получателю:</div>' +
+				'<div class="mt3 ml20 i">' +
+					'- наличие;<br />' +
+					'- продажи;<br />' +
+					'- списания;<br />' +
+					'- использование в заявках и расходах по заявкам.' +
+				'</div>' +
+			'</div>' +
+			'<table class="bs10">' +
+				'<tr><td class="label w125 top r">Товар-получатель:' +
+					'<td class="fs14 b">' + TI.name +
+				'<tr><td class="label topi r">Объединенить с:' +
+					'<td><input type="hidden" id="join_id" />' +
+			'</table>',
+			dialog = _dialog({
+				top:30,
+				width:550,
+				head:'Объединеие товаров',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#join_id').tovar({
+			small:1,
+			tovar_id_no:TI.id
+		});
+
+		function submit() {
+			var send = {
+				op:'tovar_join',
+				tovar_id:TI.id,
+				join_id:$('#join_id').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+ 
+	_tovarUse = function() {//применение товара
+		var html =
+			'<div class="_info">' +
+				'Выберите товар, который будет применяться к' +
+				'<br />' +
+				'<b class="fs14">' + TI.name + '</b>:' +
+			'</div>' +
+			'<div class="mt20 mb10">' +
+				'<input type="hidden" id="use_id" />' +
+			'</div>',
+			dialog = _dialog({
+				head:'Добавление применения товара',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#use_id').tovar({tovar_id_no:TI.id});
+
+		function submit() {
+			var send = {
+				op:'tovar_use',
+				tovar_id:TI.id,
+				use_id:$('#use_id').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+	_tovarUseCancel = function(use_id) {//применение товара
+		var html =
+			'<div class="pad30 center red">' +
+				'Подтвердите отмену применения товара..' +
+			'</div>',
+			dialog = _dialog({
+				head:'Отмена применения товара',
+				content:html,
+				butSubmit:'Выполнить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'tovar_use_cancel',
+				tovar_id:TI.id,
+				use_id:use_id
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+
+	_tovarCost = function(v) {//Изменение закупочной стоимости и продажи
 		var html =  '<table class="bs10">' +
 						'<tr><td class="label r w150">Закупочная стоимость:' +
 							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
 						'<tr><td class="label r">Процент от закупки:' +
-							'<td><input type="text" id="sum_procent" class="w50" maxlength="7" value="' + TI.sum_procent + '"> %' +
+							'<td><input type="text" id="sum_procent" class="w50" maxlength="7"> %' +
 								'<span id="sum_diff" class="grey ml10 fs12"></span>' +
 						'<tr><td class="label r">Продажа:' +
 							'<td><input type="text" id="sum_sell" class="money" value="' + TI.sum_sell + '"> руб.' +
@@ -398,33 +496,90 @@ var _tovarEditExtend = function(o) {
 			diff = _cena(sell - buy);
 			$('#sum_diff').html('+<b class="fs12">' + diff + '</b> руб.');
 		});
-		$('#sum_buy').trigger('keyup');
+		$('#sum_sell').trigger('keyup');
 
 		function submit() {
 			var send = {
-				op:'tovar_cost_set',
+				op:'tovar_cost',
 				tovar_id:TI.id,
 				sum_buy:$('#sum_buy').val(),
-				sum_procent:$('#sum_procent').val(),
 				sum_sell:$('#sum_sell').val()
 			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, 'reload');
 		}
 	},
-	_tovarWriteOff = function() {//списание товара из информации о заявке
+	_tovarSale = function() {//продажа товара из информации о товаре
+		var dialog = _dialog({
+				top:20,
+				width:510,
+				head:'Продажа товара',
+				load:1,
+				butSubmit:'',
+				submit:submit
+			}),
+			send = {
+				op:'tovar_sale_load',
+				tovar_id:TI.id
+			},
+			avai_id = 0,
+			arr;
+
+		dialog.load(send, loaded);
+
+		function loaded(res) {
+			arr = res.arr;
+			$('#invoice_id')._select({
+				width:218,
+				title0:'Не выбран',
+				spisok:_invoiceIncomeInsert()
+			});
+			$('#client_id').clientSel({width:300,add:1});
+			$('#tovar-avai-id')._radio(articulSel);
+			$('#sale-length,#sale-width').keyup(areaCalc);
+			if(res.arr_count == 1)
+				$('#tovar-avai-id')
+					._radio(res.arr_first)
+					._radio('click');
+		}
+		function articulSel() {
+			avai_id = _num($('#tovar-avai-id').val());
+			$('#max').html(arr[avai_id].count);
+			$('#count,#cena').keyup(sumCount);
+			$('#sale-tab').removeClass('dn');
+			sumCount();
+			$('#count').val(1).select();
+			dialog.butSubmit('Применить');
+		}
+		function areaCalc() {
+			var x = _ms($('#sale-length').val()),
+				y = _ms($('#sale-width').val()),
+				area = Math.round(x * y * 100) / 100;
+			$('#count').val(area);
+			sumCount();
+		}
+		function sumCount() {
+			var count = _ms($('#count').val()),
+				cena = _cena($('#cena').val()),
+				sum = Math.round(count * cena);
+			$('#summa').html(sum ? sum : '-');
+		}
+		function submit() {
+			var send = {
+				op:'tovar_sale',
+				avai_id:avai_id,
+				count:$('#count').val(),
+				cena:$('#cena').val(),
+				invoice_id:$('#invoice_id').val(),
+				client_id:$('#client_id').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+	_tovarWriteOff = function() {//списание
 		var dialog = _dialog({
 				top:20,
 				width:490,
 				head:'Списание товара',
-				class:'tovar-sell',
 				load:1,
 				butSubmit:'',
 				submit:submit
@@ -434,67 +589,59 @@ var _tovarEditExtend = function(o) {
 				tovar_id:TI.id
 			},
 			avai_id = 0,
-			max = 0,
 			arr;
 
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-				if(!res.count)
-					return;
-				arr = res.arr;
-				$('#ta-articul')._radio(articulSel);
-				if(res.count == 1) {
-					for(var key in arr);
-					$('#ta-articul')._radio(key);
-					articulSel();
-				}
-			} else
-				dialog.loadError();
-		}, 'json');
-
+		dialog.load(send, function(res) {
+			arr = res.arr;
+			$('#tovar-avai-id')._radio(articulSel);
+			if(res.arr_count == 1)
+				$('#tovar-avai-id')
+					._radio(res.arr_first)
+					._radio('click');
+		});
 		function articulSel() {
-			avai_id = _num($('#ta-articul').val());
-			max = arr[avai_id].count;
-			$('#count').val(1).focus();
-			$('#max b').html(max);
-			$('#ts-tab').removeClass('dn');
-			dialog.butSubmit('Применить');
+			avai_id = _num($('#tovar-avai-id').val());
+			$('#max').html(arr[avai_id].count);
+			$('#write-tab').removeClass('dn');
 			$('#count').val(1).select();
+			dialog.butSubmit('Применить');
 		}
 
 		function submit() {
 			var send = {
 				op:'tovar_writeoff',
 				avai_id:avai_id,
-				count:_ms($('#count').val()),
-				about:$.trim($('#about').val())
+				count:$('#count').val(),
+				about:$('#about').val()
 			};
+			dialog.post(send, 'reload');
+		}
+	},
+	_tovarAvaiAdd = function() {
+		var html =  '<table class="bs10">' +
+						'<tr><td class="label r">Количество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
+						'<tr><td class="label r">Закуп. цена за 1 <b>' + TI.measure_name + '</b>:' +
+							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
+						'<tr><td class="label r">Примечание:<td><input type="text" id="about" class="w230" />' +
+					'</table>',
+			dialog = _dialog({
+				width:450,
+				head:'Внесение наличия товара',
+				content:html,
+				submit:submit
+			});
 
-			if(!send.count) {
-				dialog.err('Некорректно указано количество');
-				$('#count').focus();
-				return;
-			}
-			if(send.count > max) {
-				dialog.err('Указано количество больше допустимого');
-				$('#count').focus();
-				return;
-			}
-			if(!send.about) {
-				dialog.err('Не указана причина');
-				$('#about').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort();
-			}, 'json');
+		$('#count').focus();
+
+		function submit() {
+			var send = {
+				op:'tovar_avai_add',
+				tovar_id:TI.id,
+				count:$('#count').val(),
+				sum_buy:$('#sum_buy').val(),
+				about:$('#about').val()
+			};
+			dialog.post(send, 'reload');
 		}
 	},
 	_tovarDel = function() {
@@ -508,62 +655,101 @@ var _tovarEditExtend = function(o) {
 		});
 	},
 
+	_tovarZakaz = function() {//заказ товара
+		var html =
+			'<div class="_info">' +
+				'Товар будет добавлен к заказу.' +
+				'<br />' +
+				'Клиента и комментарий указывать не обязательно.' +
+				'<br />' +
+				'После поступления товара он будет удалён из заказа.' +
+			'</div>' +
+			'<div class="fs18 mt15">' + TI.name + '</div>' +
+			'<table class="bs10">' +
+				'<tr><td class="label r w100">Количество:*' +
+					'<td><input type="text" id="count" class="w50 b" value="1" /> ' + TI.measure_name +
+				'<tr><td class="label r">Клиент:' +
+					'<td><input type="hidden" id="client_id" />' +
+				'<tr><td class="label r">Комментарий:' +
+					'<td><input type="text" id="about" class="w300" placeholder="не обязательно" />' +
+			'</table>',
+			dialog = _dialog({
+				width:500,
+				head:'Добавление товара в заказ',
+				content:html,
+				butSubmit:'Добавить в заказ',
+				submit:submit
+			});
+
+		$('#count').select();
+		$('#client_id').clientSel();
+
+		function submit() {
+			var send = {
+				op:'tovar_zakaz',
+				tovar_id:TI.id,
+				count:$('#count').val(),
+				client_id:$('#client_id').val(),
+				about:$('#about').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	},
 	_tovarZakazDel = function(tovar_id) {//удаление товара из заказа
 		_dialogDel({
 			id:tovar_id,
 			head:'товара из заказа',
 			op:'tovar_zakaz_del',
 			func:function(res) {
-				$('.tovar-info-zakaz').html(res.html);
+				location.reload();
 			}
 		});
 	},
 
-	_tovarIcon = function(v) {//установка вида отображения товаров
-		var icon = $('#_tovar #icon'),
-			img = icon.find('.img');
-		icon.find('.sel').removeClass('sel');
-		for(var n = 0; n < img.length; n++) {
-			var sp = img.eq(n),
-				val = sp.attr('val');
-			if(val == v) {
-				sp.addClass('sel');
-				TOVAR['icon_id'] = v;
-				if(v == 2) {
-					TOVAR['category_id'] = 0;
-					$('#category_id')._select(0);
-					TOVAR['name_id'] = 0;
-					$('#name_id')._select(0);
-					TOVAR['vendor_id'] = 0;
-					$('#vendor_id')._select(0);
-				}
-				return;
-			}
-		}
-	},
 	_tovarSpisok = function(v, id) {
-		if(id == 'category_id') {
-			TOVAR.icon_id = v ? 4 : 2;
-			_tovarIcon(v ? 4 : 2);
-			TOVAR.name_id = 0;
-			$('#name_id')._select(0);
-			TOVAR.vendor_id = 0;
-			$('#vendor_id')._select(0);
+		if(id == 'find' || id == 'zakaz')
+			if(v) {
+				if(TOVAR.category_id) {
+					TOVAR.category_id_save = TOVAR.category_id;
+					TOVAR.category_id = 0;
+				}
+				$('#rightLinkMenu .sel')
+					.removeClass('sel')
+					.addClass('save');
+			} else {
+				TOVAR.category_id = TOVAR.category_id_save;
+				if($('#rightLinkMenu .sel').length)
+					$('#rightLinkMenu .save').removeClass('save');
+				else
+					$('#rightLinkMenu .save')
+						.addClass('sel')
+						.removeClass('save');
+				}
+
+		if(id == 'avai') {
+			$('#zakaz')._check(0);
+			TOVAR.zakaz = 0;
+		}
+
+		if(id == 'zakaz') {
+			$('#avai')._check(0);
+			TOVAR.avai = 0;
 		}
 
 		_filterSpisok(TOVAR, v, id);
 
-		$('.div-but')[(TOVAR.icon_id == 5 ? 'add' : 'remove') + 'Class']('dn');
-		$('.div-cat')[(TOVAR.icon_id == 2 || TOVAR.icon_id == 5 ? 'add' : 'remove') + 'Class']('dn');
-
 		$.post(AJAX_MAIN, TOVAR, function(res) {
 			if(res.success) {
-				$('.result').html(res.result);
-				$('#spisok').html(res.spisok);
-				$('#name_id')._select(res.name_spisok);
-				$('#name_id')._select(res.name_id);
-				$('#vendor_id')._select(res.vendor_spisok);
-				$('#vendor_id')._select(TOVAR.vendor_id);
+				$('#tovar-result').html(res.result);
+				$('#tovar-spisok').html(res.spisok);
+
+				//подстановка количества товаров в меню корневых категорий
+				var aa = $('#rightLinkMenu a');
+				for(var n = 0; n < aa.length; n ++) {
+					var sp = aa.eq(n),
+						v = _num(sp.attr('val'));
+					sp.find('em').html(res.cc[v] ? res.cc[v] : '&nbsp;');
+				}
 			}
 		}, 'json');
 	};
@@ -571,306 +757,347 @@ var _tovarEditExtend = function(o) {
 $.fn.tovar = function(o) {
 /*
 	Использование:
-		1. редактирование товара (применение к другому товару)
+		1. применение к другому товару - в информации о товаре
 		2. внесение заявки: один товар
 		3. внесение заявки: несколько товаров
-		4. фильтр заявок
-		5. расход в заявке
-		6. расход в заявке: наличие
-		7. счёт на оплату
+		4. расход в заявке
+		5. расход в заявке: наличие
+		6. фильр списка заявок
+		7. объединение товаров
 */
-
-
 	var t = $(this),
 		attr_id = t.attr('id'),
 		win = attr_id + '_tovarSelect';
 
 	if(!attr_id)
-		return;
+		return '';
 
-	switch(typeof o) {
-		case 'string':
-			var s = window[win];
-			switch(o) {
-				case 'cancel': s.cancel(); break;
-			}
-			return t;
+	if(o === 0) {
+		window[win].cancel();
+		return t;
 	}
 
+	if(o == 'equip_ids_sel')
+		return window[win].equipIdsSel();
+
 	o = $.extend({
-		title:'выбрать товар',//текст в кнопке
-		tooltip:'',     //подсказка для кнопки
-		open:0,         //автоматически открывать окно выбора товара
-		ids:'none',     //выводить товары только из этого списка
-		set:1,          //выводить товары, которые являются запчастью для других товаров
-		image:1,        //показывать в результате изображение
-		tovar_id_set:0, //по умолчанию показать список запчастей, которые устанавливаются на этот товар
-		tovar_id_not:0, //исключать этот id товара при поиске
-		several:0,      //возможность выбирать несколько товаров
-		count_show:1,   //возможность указывать количество товаров
-		avai:0,         /* варианты выбора товара:
-							0 - любые товары (наличие не важно)
-							1 - только из наличия (наличие списывается)
-							2 - при выборе первого товара будет задан вопрос: выбор из наличия или нет
-						*/
-		avai_open:0,    //возможность выбирать наличие товара в окне поиска товаров
-		del:1,          //возможность отменить выбранный товар
-		func:function() {},
-		funcSel:null    //функция, применяемая при выборе товара
+		title:'выбрать товар',  //текст в кнопке
+		small:0,                //маленькая кнопка
+		open:0,                 //автоматически открывать окно выбора товара
+		add:0,                  //показ кнопки добавления нового товара
+		several:0,              //возможность выбирать несколько товаров
+		avai:0,                 //выбор товара только из наличия - для расходов по заявке. Наличие списывается.
+		tovar_id_use:0,         //по умолчанию показать список товаров, которые применяются на этот tovar_id_use
+		tovar_id_no:0,          //исключать в поиске tovar_id_no
+		zayav_use:0,            //выводить только товары, которые использовались в заявках
+		equip:false,            //Выбранные ids комплектации. Показывать комплектацию - если один товар и !== false
+		func:function() {}
 	}, o);
 
-	//Tovar Select Global
-	if(!window['tsg'])
-		window['tsg'] = {
-			find:'', //последнее слово поиска
-			avai:o.avai
-		};
+	t.before(
+		(o.several ? '<table class="_spisokTab"></table>' : '') +
+		'<button class="vk' + (o.small ? ' small mt5' : '') + '">' + o.title + '</button>'
+	);
 
-	var TOVAR_SEL = 0,  //id товара, который был выбран в окне поиска (для его подсветки)
+	var BUT = t.prev(),
 		VAL = $.trim(t.val()),
-		TSG = window['tsg'];
-
-	//запоминание варианта выбора, если выбор требовался
-	o.avai = TSG.avai;
+		TS_TAB = o.several ? BUT.prev() : false, //таблица с товарами, если несколько
+		TS_DIALOG,          //диалог окна выбора товара
+		TS_VAL = '',        //введённое значение при поиске
+		TS_ARR,             //массив загруженных товаров
+		TS_EQUIP_SPISOK = []; //список комплектации для _select
 
 	if(VAL == '0')
 		VAL = 0;
 
-	//если несколько товаров, то картинка не показывается
-	if(o.several)
-		o.image = 0;
+	tsSelectedLoad();
 
-	//если один товар, то количество не указывается
-	if(!o.several)
-		o.count_show = 0;
-
-	t.after('<div class="tovar-select">' +
-				'<table class="_spisok">' +
-					'<tr class="tr-but">' +
-						'<td class="td-but" colspan="3">' +
-							'<button class="vk small' + (o.tooltip ? _tooltip(o.tooltip, -3, 'l') : '">') + o.title + '</button>' +
-				'</table>' +
-				'<div class="ts-avai dn">&nbsp;</div>' +
-			'</div>');
-
-	var ts = t.next(),
-		trBut = ts.find('.tr-but'),
-		but = ts.find('.vk'),
-		tsDialog,   //диалог окна выбора товара
-		tsArr;      //массив данных для выбора конкретного товара
-
-	but.click(tsOpen);
-
-	tsGet();
-
+	BUT.click(tsOpen);
 	if(o.open)
-		but.trigger('click');
+		BUT.trigger('click');
 
-	function tsGet() {//вставка товаров, которые были выбраны (при редактировании)
-		if(!VAL)
-			return;
-		
-		var send = {
-			op:'tovar_select_get',
-			v:VAL
-		};
-		but.addClass('_busy');
-		$.post(AJAX_MAIN, send, function(res) {
-			but.removeClass('_busy');
-			if(res.success) {
-				tsArr = res.arr;
-				if(o.funcSel)
-					o.funcSel(res.arr[VAL], attr_id);
-				for(var i in tsArr)
-					tsSel(i);
-			}
-		}, 'json');
-	}
 	function tsOpen() {//окно выбора товара
-		if(but.hasClass('_busy'))
+		if(BUT.hasClass('_busy'))
 			return;
 
 		var html =
-			'<table class="w100p">' +
-				'<tr><td><div id="tovar-find"></div>' +
-		 (!o.avai ? '<td class="r"><button class="vk" id="ts-tovar-add">Добавить новый товар</button>' : '') +
-			'</table>' +
+			'<div class="pad10">' +
+				'<table class="w100p">' +
+					'<tr><td><div id="tovar-find"></div>' +
+			   (o.add ? '<td class="r"><button class="vk" id="tovar-add">Добавить новый товар</button>' : '') +
+				'</table>' +
+			'</div>' +
 			'<div id="tres"></div>';
-		tsDialog = _dialog({
-			top:40,
+		TS_DIALOG = _dialog({
+			top:20,
 			width:500,
+			padding:0,
 			head:'Выбор товара',
 			content:html,
 			butSubmit:'',
 			butCancel:'Закрыть'
 		});
 
-		if(TSG.avai == 2) {
-			tsAvaiOption();
-			return;
-		}
-
 		$('#tovar-find')._search({
 			width:300,
 			focus:1,
 			txt:'начните ввод для поиска товара...',
-			v:TSG.find,
+			v:TS_VAL,
 			func:tsFind
 		});
-		$('#ts-tovar-add').click(function() {
-			_tovarAdd({
+		$('#tovar-add').click(function() {
+			_tovarEdit({
 				callback:function(res) {
-					tsArr = res.arr;
-					tsSel(res.id);
-					tsDialog.close();
+					TS_ARR = res.arr;
+					TS_DIALOG.close();
+					tsSelected(res.id);
 				}
 			});
 		});
-		tsFind(TSG.find);
-	}
-	function tsAvaiOption() {//варианты выбора товара: из наличия или нет
-		var html =
-			'<div class="_info">' +
-				'При выборе <u>первого</u> товара необходимо указать <u>вид создаваемого счёта</u>:' +
-				'<br />' +
-				'<br />' +
 
-				'1. <b>Предварительный счёт:</b>' +
-				'<div class="grey">' +
-					'Могут выбираться любые товары, независимо от того, есть они в наличии или нет.' +
-					'<br />' +
-					'Используется как информация для клиента, либо для заказа товара по счёту.' +
-					'<br />' +
-					'Данный вид счёта также может быть сформирован для оплаты.' +
-				'</div>' +
-				'<br />' +
-
-				'2. <b>Счёт на оплату:</b>' +
-				'<div class="grey">' +
-					'Можно выбрать товары только <u>из наличия</u>.' +
-					'<br />' +
-					'После того, как счёт будет сформирован, выбранные товары будут списаны<br />из наличия.' +
-				'</div>' +
-			'</div>' +
-			'<br />' +
-			'<div class="headName">Выберите вид счёта:</div>' +
-			'<input type="hidden" id="avai-option" value="-1" />';
-
-		$('#tres').html(html);
-
-		$('#avai-option')._radio({
-			light:1,
-			spisok:[
-				{uid:0,title:'предварительный'},
-				{uid:1,title:'на оплату'}
-			],
-			func:function(v) {
-				tsDialog.close();
-				o.avai = v;
-				TSG.avai = v;
-				tsOpen();
-			}
-		});
+		tsFind(TS_VAL);
 	}
 	function tsFind(v) {//процесс поиска товара
 		var send = {
 			op:'tovar_select_find',
-			v:v,
-			tovar_id:TOVAR_SEL,
-			tovar_id_set:o.tovar_id_set,
-			tovar_id_not:o.tovar_id_not,
-			set:o.set,
-			ids:o.ids,
+			find:v,
+			tovar_id_use:o.tovar_id_use,
+			tovar_id_no:o.tovar_id_no,
+			zayav_use:o.zayav_use,
 			avai:o.avai
 		};
+		$('#tovar-find')._search('process');
 		$.post(AJAX_MAIN, send, function(res) {
+			$('#tovar-find')._search('cancel');
 			if(res.success) {
+				TS_VAL = v;
+				TS_ARR = res.arr;
 				$('#tres')
 					.html(res.html)
-					.find('.ts-unit').click(function() {
-						var v = $(this).attr('val'),
-							sp = tsArr[v];
-
-						if(o.avai && o.avai_open) {
-							$('#tres').html(sp.articul_full);
-							$('#tres .vk.cancel').click(function() {
-								TOVAR_SEL = v;
-								tsFind(TSG.find);
-							});
-							$('#tres #ta-articul')._radio(function(art) {
-								$('#tres .tsa-bottom').removeClass('dn');
-								$('#tres #tsa-count').val(1).select();
-								$('#tres .max').html(sp.articul_arr[art].count);
-							});
-							$('#tres .vk.submit').click(function() {
-								if(o.funcSel) {
-									sp.avai_id = _num($('#tres #ta-articul').val());
-									sp.count = _num($('#tres #tsa-count').val());
-									o.funcSel(sp, attr_id);
-								}
-								tsDialog.close();
-							});
-							return;							
-						}
-						tsSel(v);
-						tsDialog.close();
-						if(o.funcSel)
-							o.funcSel(sp, attr_id);
+					.find('.tsu').click(function(e) {
+						e.stopPropagation();
+						var id = $(this).attr('val');
+						tsSelected(id);
+						TS_DIALOG.close();
 					});
-				tsArr = res.arr;
-				TSG.find = v;
+
 			}
 		}, 'json');
 	}
-	function tsSel(v) {
-		var sp = tsArr[v],
-			html = '<tr>' +
-			 (o.image ? '<td class="ts-image">' + sp.image_small : '') +
-						'<td class="ts-name">' + sp.name_b +
-						'<td class="td-cnt' + (o.count_show ? '' : ' dn') + '">' +
-							'<input type="text" val="' + v + '" value="' + (sp.count || 1) + '" />' +
-			   (o.del ? '<td class="ed"><div class="img_del' + _tooltip('Отменить выбор', -93, 'r') + '</div>' : '');
-		trBut.before(html);
-		trBut.prev().find('.img_del').click(tsCancel);
-		trBut.prev().find('input').select().keyup(valueUpdate);
+	function tsSelectedLoad() {//вставка товаров, которые были выбраны (при редактировании)
+		if(!VAL)
+			return;
 
-		if(!o.several)
-			trBut.hide();
+		var send = {
+			op:'tovar_selected_load',
+			v:VAL
+		};
+		BUT.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			BUT.removeClass('_busy');
+			if(res.success) {
+				TS_ARR = res.arr;
+				for(var i in TS_ARR)
+					tsSelected(i);
+			}
+		}, 'json');
+	}
+	function tsSelected(id) {//вставка одного товара
+		if(o.several)
+			return tsSelectedSeveral(id);
 
-		valueUpdate();
-		o.func(v, attr_id, sp);
+		var sp = TS_ARR[id],
+			html =
+			'<table class="w100p bs5 bg-gr1 bor-e8">' +
+				'<tr>' +
+			        '<td class="top w35 h25">' + sp.img +
+					'<td class="top b fs14">' +
+						sp.name +
+						'<div class="fs12 grey mt1">' + sp.about + '</div>' +
+					'<td class="w15 top">' +
+						'<div class="icon icon-del fr' + _tooltip('Отменить выбор', -91, 'r') + '</div>' +
+			'</table>' +
+
+  (o.avai ? '<div id="ts-avai" class="mtm1">' +
+				'<div class="bor-e8 bg-ffd color-555 pad10 center">' +
+                    'Получение наличия товара...' +
+	                '<div class="_busy mt5">&nbsp;</div>' +
+                '</div>' +
+            '</div>'
+  : '') +
+
+ (o.equip !== false ?
+            '<div id="ts-equip" class="bg-gr1 bor-e8 mtm1 pad5 dn">' +
+				'<div class="center grey">Загрузка комплектации товара...</div>' +
+                '<div class="_busy mt5">&nbsp;</div>' +
+			'</div>'
+ : '');
+
+		BUT.after(html);
+		BUT.hide();
+		t.val(id);
+
+		BUT.next().find('.icon-del').click(function() {
+			tsOneCancel();
+			o.func(0, attr_id, {});
+		});
+
+		//подгрузка наличия товара после выбора
+		if(o.avai) {
+			sp.avai_id = 0;     //id наличия товара
+			sp.avai_count = 0;  //количество в наличии
+			sp.avai_buy = 0;    //закупочная цена
+			var send = {
+				op:'tovar_selected_avai',
+				tovar_id:id
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#ts-avai').html(res.html);
+					$('#tovar-avai-id')._radio(function(avai_id) {
+						sp.avai_id = avai_id;
+						sp.avai_count = res.arr[avai_id]['count'];
+						sp.avai_buy = res.arr[avai_id]['sum_buy'];
+						o.func(id, attr_id, sp);
+					});
+					if(res.arr_count == 1)
+						$('#tovar-avai-id')
+							._radio(res.arr_first)
+							._radio('click');
+				} else
+					$('#ts-avai').html('<div class="pad10 center red">' + res.text + '</div>');
+			}, 'json');
+		} else
+			o.func(id, attr_id, sp);
+
+		if(o.equip !== false) {
+			$('#ts-equip').slideDown();
+			var send = {
+				op:'tovar_equip_load',
+				tovar_id:id,
+				ids:o.equip
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success) {
+					$('#ts-equip').html(res.html);
+					$('#equip-add').click(equipAddShow);
+					TS_EQUIP_SPISOK = res.equip_js
+				} else
+					$('#ts-equip').html('<div class="center red">' + res.text + '</div>');
+			}, 'json');
+		}
 	}
-	function tsCancel() {
-		_parent($(this)).remove();
-		trBut.show();
-		valueUpdate();
-		o.func(0, attr_id, {});
+	function tsOneCancel() {//отмена выбора - если один товар
+		if(t.val() == 0)
+			return;
+		BUT.next().remove();
+		$('#ts-avai').remove();
+		$('#ts-equip').remove();
+		BUT.show();
+		t.val(0);
 	}
-	function valueUpdate() {//обновление выбранных значений товаров
-		var inp = ts.find('input'),
+	function tsSelectedSeveral(id) {//вставка нескольких товаров
+		var sp = TS_ARR[id],
+			html =
+				'<tr class="over1">' +
+					'<td class="fs14">' + sp.name +
+					'<td class="w35 bg-ffd">' +
+						'<input type="text" class="w35 b r" id="ts' + id + '" value="' + (sp.count || 1) + '" />' +
+					'<td class="w15">' +
+						'<div class="icon icon-del fr' + _tooltip('Отменить выбор', -50) + '</div>';
+		TS_TAB.append(html);
+		TS_TAB.find('.icon-del:last').click(function() {
+			_parent($(this)).remove();
+			tsSelectedSeveralVal();
+		});
+		TS_TAB.find('input:last').select().keyup(tsSelectedSeveralVal);
+		tsSelectedSeveralVal();
+
+		return true;
+	}
+	function tsSelectedSeveralVal() {//составление переменной, если несколько товаров
+		var inp = TS_TAB.find('input'),
+			len = inp.length,
 			v = [];
-		for(var n = 0; n < inp.length; n++) {
+		BUT[(len ? 'add' : 'remove') + 'Class']('mt5');
+		for(var n = 0; n < len; n++) {
 			var sp = inp.eq(n),
-				id = _num(sp.attr('val')),
+				id = _num(sp.attr('id').split('ts')[1]),
 				val = _num(sp.val());
-			sp.parent()[(val ? 'remove' : 'add') + 'Class']('err');
+			sp.parent()
+				[(val ? 'remove' : 'add') + 'Class']('bg-err')
+				[(!val ? 'remove' : 'add') + 'Class']('bg-ffd');
 			if(!val)
 				continue;
 			v.push(id + ':' + val);
 		}
-		t.val(o.several ? v.join() : _num(v.length ? v[0].split(':')[0] : 0));
+		t.val(v.join());
 	}
 
-	t.o = o;
-	t.cancel = function() {
-		t.val(0);
-		trBut.show();
-		trBut.prev().remove();
-		o.func(0, attr_id, {});
-	};
-	
-	window[win] = t;
+	function equipAddShow() {//выбор позиции комплектации для добавления
+		var t = $(this);
+		t.next().next().removeClass('dn').click(equipAdd);
+		t.remove();
+		$('#equip_id')
+			._select({
+				width:177,
+				title0:'выберите или введите новое',
+				write_save:1,
+				spisok:TS_EQUIP_SPISOK
+			})
+			._select('focus');
+	}
+	function equipAdd() {
+		var but = $(this),
+			send = {
+				op:'tovar_equip_add',
+				tovar_id:t.val(),
+				equip_id:$('#equip_id').val(),
+				equip_name:$('#equip_id')._select('inp')
+			};
 
+		if(but.hasClass('_busy'))
+			return;
+
+		but.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			but.removeClass('_busy');
+			if(res.success) {
+				but.parent().before(res.html);
+				$('#equip_id')._select(0);
+			} else
+				but.vkHint({
+					msg:'<span class="red">' + res.text + '</span>',
+					show:1,
+					remove:1,
+					indent:60,
+					top:-90,
+					left:154
+				});
+		}, 'json');
+	}
+
+	t.cancel = tsOneCancel;
+	t.equipIdsSel = function() {//получение id комплектаций. sel - только тех, у которых стоят галочки
+		if(o.equip === false)
+			return '';
+
+		var check = $('#ts-equip ._check'),
+			send = [];
+
+		for(var n = 0; n < check.length; n++) {
+			var eq = check.eq(n),
+				inp = eq.find('input'),
+				id = _num(inp.attr('id').split('eq')[1]),
+				v = _num(inp.val());
+			if(!v)
+				continue;
+			send.push(id);
+		}
+
+		return send.join();
+	};
+	window[win] = t;
 	return t;
 };
 $.fn.tovarFeature = function(o) {//управление характеристиками при внесении нового товара и редактировании
@@ -905,8 +1132,8 @@ $.fn.tovarFeature = function(o) {//управление характеристиками при внесении ново
 	var num = 0,
 		len = o.spisok.length;
 
-	t.after('<table class="bs10" id="feature-tab"></table>' +
-			'<div id="feature-add">Добавить характеристику</div>');
+	t.after('<table class="bs5" id="feature-tab"></table>' +
+			'<div id="feature-add" class="pad10 center curP over0 grey">Добавить характеристику</div>');
 
 	$('#feature-add').click(function() {
 		o.spisok_save.push({
@@ -930,10 +1157,10 @@ $.fn.tovarFeature = function(o) {//управление характеристиками при внесении ново
 	function itemAdd(uid, title) {
 		var tr =
 			'<tr><td><input type="hidden" id="feature_' + num + '" value="' + uid + '" />' +
-				'<td><input type="text" class="feature_val" id="feature_val_' + num + '" value="' + title + '" />' +
-					'<div val="' + num + '" class="img_del' + _tooltip('Отменить', -32) + '</div>';
+				'<td><input type="text" class="w300" id="feature_val_' + num + '" value="' + title + '" />' +
+				'<td><div val="' + num + '" class="icon icon-del mt1' + _tooltip('Отменить', -30) + '</div>';
 		$('#feature-tab').append(tr);
-		$('#feature-tab tr:last').find('.img_del').click(function() {
+		$('#feature-tab tr:last').find('.icon-del').click(function() {
 			_parent($(this)).remove();
 			for(var n = 0; n < o.spisok_save.length; n++)
 				if(o.spisok_save[n].num == num) {
@@ -943,7 +1170,7 @@ $.fn.tovarFeature = function(o) {//управление характеристиками при внесении ново
 		});
 		$('#feature_' + num)._select({
 			title0:'Название характеристики',
-			width:180,
+			width:200,
 			write:1,
 			write_save:1,
 			spisok:TOVAR_FEATURE_SPISOK,
@@ -958,6 +1185,58 @@ $.fn.tovarFeature = function(o) {//управление характеристиками при внесении ново
 	window[win] = t;
 	return t;
 };
+$.fn.tovarCategorySelect = function(o) {//вывод _select категории и подкатегории товаров
+	var t = $(this);
+
+	o = $.extend({
+		category_id:0,
+		sub_id:0
+	}, o);
+
+	var html = '<input type="hidden" id="category_id-add" value="' + o.category_id + '" />' +
+				'<div class="mt5' + (o.sub_id ? '' : ' dn') + '" id="div-sub">' +
+					'<div class="icon icon-sub curD h20 mb1"></div>' +
+					'<input type="hidden" id="category_id-sub" value="' + o.sub_id + '" />' +
+				'</div>';
+	t.append(html);
+
+	$('#category_id-add')._select({
+		width:300,
+		title0:'не указана',
+		spisok:TOVAR_CATEGORY_SPISOK,
+		write_save:1,
+		func:_subLoad
+	});
+	$('#category_id-sub')._select({
+		width:280,
+		title0:'подкатегория не указана',
+		write_save:1
+	});
+
+	_subLoad(o.category_id);
+	o.sub_id = 0;
+
+	function _subLoad(cid) {
+		if(!o.sub_id)
+			$('#category_id-sub')
+				._select([])
+				._select('clear');
+		var cinp = $('#category_id-add')._select('inp');
+		$('#div-sub')['slide' + (cid || cinp ? 'Down' : 'Up')]();
+		if(!cid)
+			return;
+		$('#category_id-sub')._select('process');
+		var send = {
+			op:'tovar_category_sub_for_select',
+			category_id:cid
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			$('#category_id-sub')._select(res.success ? res.spisok : 'cancel');
+		}, 'json');
+	}
+
+
+};
 
 $(document)
 	.on('mouseover', '.tderr', function() {//отмена подсветки ошибки
@@ -969,210 +1248,58 @@ $(document)
 		location.href = URL + '&p=46&id=' + $(this).attr('val');
 	})
 
-	.on('click', '#tovar-add', function() {
-		_tovarAdd({
-			category_id:_num($('#category_id').val()),
-			name_id:_num($('#name_id').val())
-		});
+	.on('click', '.tovar-unit', function(e) {
+		e.stopPropagation();
+		location.href = URL + '&p=46&id=' + $(this).attr('val');
+	})
+	.on('click', '.tovar-unit-check', function(e) {
+		e.stopPropagation();
+
+		var t = $(this),
+			p = _parent(t, '.tovar-unit'),
+			inp = t.find('input'),
+			v = _bool(inp.val());
+
+		//изменение калочки, если было клик был по краю
+		if($(e.target).hasClass('tovar-unit-check'))
+			$('#' + inp.attr('id'))._check(v ? 0 : 1);
+
+		var arr = _tovarSelectedIds(),
+			count = arr.length;
+		v = _bool(inp.val());
+		t[(v ? 'add' : 'remove') + 'Class']('selected');
+		p[(v ? 'add' : 'remove') + 'Class']('bg-ffd');
+		p[(!v ? 'add' : 'remove') + 'Class']('over1');
+
+		$('#but-tovar-selected')
+			[(count ? 'remove' : 'add') + 'Class']('dn')
+			.html('Выбран' + _end(count, ['', 'о']) + ' ' + count + ' товар' + _end(count, ['', 'а', 'ов']));
+	})
+	.on('click', '.tovar-unit .icon-del', function(e) {//отмена применения товара
+		e.stopPropagation();
+		var p = _parent($(this), '.tovar-unit'),
+			v = p.attr('val');
+		_tovarUseCancel(v);
 	})
 
 	.on('click', '#_tovar .vk.red', function() {
 		$('#find')._search('clear');    TOVAR.find = '';
-		_tovarIcon(2);                  TOVAR.icon_id = 2;
-		$('#group')._radio(0);          TOVAR.group = 0;
-		$('#category_id')._select(0);   TOVAR.category_id = 0;
-		$('#name_id')._select(0);       TOVAR.name_id = 0;
-		$('#vendor_id')._select(0);     TOVAR.vendor_id = 0;
+
+		$('#rightLinkMenu .save').removeClass('save');
+		$('#rightLinkMenu .sel').removeClass('sel');
+		var link = $('#rightLinkMenu a');
+		for(var n = 0; n < link.length; n++) {
+			var sp = link.eq(n);
+			if(sp.attr('val') == CATEGORY_ID_DEF) {
+				sp.addClass('sel');
+				break;
+			}
+		}
+		TOVAR.category_id = CATEGORY_ID_DEF;
+
+		$('#avai')._check(0);           TOVAR.avai = 0;
+		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
 		_tovarSpisok();
-	})
-	.on('click', '#_tovar #icon .img', function() {//переключение вида списка товаров
-		var v = $(this).attr('val');
-		_tovarIcon(v);
-		_tovarSpisok(v, 'icon_id');
-	})
-	.on('click', '.tovar-category-unit .hd', function() {//действие при нажатии на категорию товара
-		var v = $(this).parent().attr('val');
-		$('#category_id')._select(v);
-		_tovarSpisok(v, 'category_id');
-		_tovarIcon(4);
-	})
-	.on('click', '.tovar-category-unit .sub-unit', function() {//действие при нажатии на название товара в категории товаров
-		var t = $(this),
-			cat_id = t.parent().attr('val'),
-			name_id = t.attr('val');
-
-		$('#category_id')._select(cat_id);
-		TOVAR['category_id'] = cat_id;
-		_tovarIcon(4);
-		_tovarSpisok(name_id, 'name_id');
-	})
-	.on('click', '.tovar-category-unit .ven-plus', function(e) {//открытие списка с производителями
-		e.stopPropagation();
-		$(this).parent().next().slideToggle(300);
-	})
-	.on('click', '.tovar-category-unit .sub-vendor', function() {//действие при нажатии на название производителя в категории товаров
-		var v = $(this).attr('val').split(':'),
-			cat_id = v[0],
-			name_id = v[1],
-			vendor_id = v[2];
-
-		$('#category_id')._select(cat_id);
-		TOVAR['category_id'] = cat_id;
-		TOVAR['name_id'] = name_id;
-		_tovarIcon(4);
-		_tovarSpisok(vendor_id, 'vendor_id');
-	})
-
-	.on('click', '.tovar-info-go', function() {
-		var t = $(this),
-			old = t.hasClass('old') ? 1 : 0;
-		location.href = URL + '&p=46&id=' + t.attr('val') + '&old=' + old;
-	})
-
-	.on('click', '.tovar-avai-add', function() {
-		var html =  '<table class="bs10">' +
-						'<tr><td class="label r">Количество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
-						'<tr><td class="label r">Закупочная цена за 1 <b>' + TI.measure_name + '</b>:' +
-							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
-						'<tr><td class="label r">Примечание:<td><input type="text" id="about" class="w230" />' +
-					'</table>',
-			dialog = _dialog({
-				width:450,
-				head:'Внесение наличия товара',
-				content:html,
-				submit:submit
-			});
-
-		$('#count').focus();
-
-		function submit() {
-			var send = {
-				op:'tovar_avai_add',
-				tovar_id:TI.id,
-				count:_ms($('#count').val()),
-				sum_buy:_cena($('#sum_buy').val()),
-				about:$('#about').val()
-			};
-			if(!send.count) {
-				dialog.err('Некорректно указано количество');
-				$('#count').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	})
-	.on('click', '#tovar-sell', function() {//продажа товара из информации о товаре
-		var dialog = _dialog({
-				top:20,
-				width:510,
-				head:'Продажа товара',
-				class:'tovar-sell',
-				load:1,
-				butSubmit:'',
-				submit:submit
-			}),
-			send = {
-				op:'tovar_sell_load',
-				tovar_id:TI.id
-			},
-			avai_id = 0,
-			max = 0,
-			arr;
-
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.content.html(res.html);
-					if(!res.count)
-						return;
-					arr = res.arr;
-					$('#invoice_id')._select({
-						width:218,
-						title0:'Не выбран',
-						spisok:_invoiceIncomeInsert()
-					});
-					$('#client_id').clientSel({width:300,add:1});
-					$('#ta-articul')._radio(articulSel);
-					$('#sale-length,#sale-width').keyup(areaCalc);
-					if(res.count == 1) {
-						for(var key in arr);
-						$('#ta-articul')._radio(key);
-						articulSel();
-					}
-				} else
-					dialog.loadError();
-			},'json');
-
-		function articulSel() {
-			avai_id = _num($('#ta-articul').val());
-			max = arr[avai_id].count;
-			$('#max b').html(max);
-			$('#count,#cena').keyup(sumCount);
-			$('#ts-tab').removeClass('dn');
-			dialog.butSubmit('Применить');
-			$('#count').val(1).select();
-			sumCount();
-		}
-		function areaCalc() {
-			var x = _ms($('#sale-length').val()),
-				y = _ms($('#sale-width').val()),
-				area = Math.round(x * y * 100) / 100;
-			$('#count').val(area);
-			sumCount();
-		}
-		function sumCount() {
-			var count = _ms($('#count').val()),
-				cena = _cena($('#cena').val()),
-				sum = Math.round(count * cena);
-			$('#summa').html(sum ? sum : '-');
-		}
-		function submit() {
-			var send = {
-				op:'tovar_sell',
-				avai_id:avai_id,
-				count:_ms($('#count').val()),
-				cena:_cena($('#cena').val()),
-				invoice_id:_num($('#invoice_id').val()),
-				client_id:_num($('#client_id').val())
-			};
-
-			if(!send.count) {
-				dialog.err('Некорректно указано количество');
-				$('#count').focus();
-				return;
-			}
-			if(send.count > max) {
-				dialog.err('Указано количество больше допустимого');
-				$('#count').focus();
-				return;
-			}
-			if(!send.cena) {
-				dialog.err('Некорректно указана цена');
-				$('#cena').focus();
-				return;
-			}
-			if(!send.invoice_id) {
-				dialog.err('Не выбран расчётный счёт');
-				return;
-			}
-
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort();
-			},'json');
-		}
 	})
 
 	.on('click', '#tovar-info .move', function() {//удаление движения товара
@@ -1210,6 +1337,17 @@ $(document)
 		});
 	})
 
+	.on('click', '.tovar-menu-dot', function() {//открытие меню редактирования товара
+		var t = $(this),
+			next = t.next();
+		next.removeClass('dn');
+
+		$(document).on('click.tmd', function() {
+			next.addClass('dn');
+			$(document).off('click.tmd');
+		});
+	})
+
 	.on('click', '.year-tab', function() {//показ списка движения товара за выбранный год
 		$(this).next().slideToggle(300);
 	})
@@ -1217,31 +1355,23 @@ $(document)
 	.ready(function() {
 		if($('#_tovar').length) {
 			$('#find')._search({
-				width:138,
+				width:220,
 				focus:1,
-				txt:'Быстрый поиск...',
+				txt:'быстрый поиск товара',
 				enter:1,
-				func:_tovarSpisok
-			}).inp(TOVAR.find);
-			$('#group')._radio(_tovarSpisok);
-			$('#category_id')._select({
-				width:140,
-				title0:'не указана',
-				spisok:TOVAR_CATEGORY_SPISOK,
+				v:TOVAR.find,
 				func:_tovarSpisok
 			});
-			$('#name_id')._select({
-				width:140,
-				title0:'не выбрано',
-				spisok:TOVAR.category_id ? NAME_SPISOK : [],
-				func:_tovarSpisok
+			$('#rightLinkMenu a').click(function() {
+				var t = $(this),
+					p = t.parent(),
+					v = t.attr('val');
+				p.find('.sel').removeClass('sel');
+				t.addClass('sel');
+				_tovarSpisok(v, 'category_id');
 			});
-			$('#vendor_id')._select({
-				width:140,
-				title0:'не выбран',
-				spisok:TOVAR.category_id ? VENDOR_SPISOK : [],
-				func:_tovarSpisok
-			});
+			$('#avai')._check(_tovarSpisok);
+			$('#zakaz')._check(_tovarSpisok);
 		}
 	});
 

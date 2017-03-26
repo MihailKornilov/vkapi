@@ -1648,25 +1648,7 @@ function setup_razdel_spisok() {
 
 
 function setup_tovar() {// 20 Товары
-	if(!_viewerMenuAccess(20))
-		return _err('Недостаточно прав: товары.');
-
 	return setup_tovar_category();
-	switch(@$_GET['d1']) {
-		case 'category': return setup_tovar_category();
-		case 'name': return setup_tovar_name();
-		case 'vendor': return setup_tovar_vendor();
-	}
-
-	return
-	'<div id="setup_tovar">'.
-		'<div class="headName">Настройки товаров</div>'.
-		'<a href="'.URL.'&p=setup&d=tovar&d1=category">Настроить категории товаров</a>'.
-		'<br />'.
-		'<a href="'.URL.'&p=setup&d=tovar&d1=name">Названия товаров</a>'.
-		'<br />'.
-		'<a href="'.URL.'&p=setup&d=tovar&d1=vendor">Производители</a>'.
-	'</div>';
 }
 
 function setup_tovar_category() {
@@ -1675,56 +1657,14 @@ function setup_tovar_category() {
 	return
 	'<div id="setup_tovar_category">'.
 		setupPath(array(
-			'name' => 'Категории товаров'
+			'name' => 'Настройка товаров'
 		)).
 		'<div class="mar10">'.
 			'<div class="_info">'.
-				'<u>Категории</u> предназначены для разделения товаров по похожим свойствам или характеристикам. '.
-				'<br />'.
-				'Возможно создавать собственные категории товаров, либо подключать готовые категории из каталога.'.
+				'Товары настраиваются в разделе товаров.'.
 			'</div>'.
-			'<table id="but">'.
-				'<tr><td><button class="vk" onclick="setupTovarCategoryEdit()">Создать новую категорию</button>'.
-					'<td><button class="vk" id="join">Подключить категории из каталога</button>'.
-			'</table>'.
-			'<div id="spisok">'.setup_tovar_category_spisok().'</div>'.
 		'</div>'.
 	'</div>';
-}
-function setup_tovar_category_spisok() {//категории товаров
-	$sql = "SELECT *
-			FROM `_tovar_category_use`
-			WHERE `app_id`=".APP_ID."
-			ORDER BY `sort`";
-	if(!$spisok = query_arr($sql))
-		return 'Список пуст.';
-
-	$sql = "SELECT *
-			FROM `_tovar_category`
-			WHERE `id` IN ("._idsGet($spisok, 'category_id').")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		foreach($spisok as $sp)
-			if($r['id'] == $sp['category_id']) {
-				$spisok[$sp['id']]['name'] = $r['name'];
-				continue;
-			}
-
-	$send = '<table class="_spisok">'.
-				'<tr><th class="name">Наименование'.
-					'<th class="ed">'.
-			'</table>'.
-			'<dl class="_sort" val="_tovar_category_use">';
-	foreach($spisok as $r)
-		$send .= '<dd val="'.$r['id'].'">'.
-			'<table class="_spisok">'.
-				'<tr val="'.$r['category_id'].'">'.
-					'<td class="name">'.$r['name'].
-					'<td class="ed">'._iconEdit($r)._iconDel($r).
-			'</table>';
-	$send .= '</dl>';
-
-	return $send;
 }
 
 function setup_tovar_name() {

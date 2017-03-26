@@ -27,19 +27,6 @@ var _zayavSpisok = function(v, id) {
 		$('#obWordPrint .ttmsg').html('Номер ' + gn.week + '(' + gn.gen + ')');
 
 	},
-	_zayavSpisokTovarNameFilter = function(dis) {//фильтр виды товаров (связан с фильтром конктерный товар)
-		if(!$('#tovar_name_id').length)
-			return;
-
-		$('#tovar_name_id')._select({
-			width:155,
-			title0:'не выбрано',
-			disabled:dis,
-			spisok:ZAYAV_TOVAR_NAME_SPISOK,
-			write:1,
-			func:_zayavSpisok
-		});
-	},
 	_zayavAddMenu = function() {
 		if(!SERVICE_ACTIVE_COUNT)
 			return _zayavEdit(0);
@@ -73,8 +60,6 @@ var _zayavSpisok = function(v, id) {
 			service_id = zayav_id ? ZI.service_id : sid || 0,
 			zayav_param = ZAYAV_POLE_PARAM[service_id] || {},//подолнительные параметры полей заявки
 			client_adres = '', //адрес клиента для подстановки в строку Адрес
-			equip_js = [],     //список комплектации для select, которые были не выбраны для конкретного товара
-			equip_tovar_id = 0,//id товара, по которому будет формироваться комплектация
 			dialog = _dialog({
 				width:700,
 				top:20,
@@ -91,13 +76,7 @@ var _zayavSpisok = function(v, id) {
 				zayav_id:zayav_id
 			};
 
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				dialog.content.html(res.html);
-				zLoaded();
-			} else
-				dialog.loadError();
-		}, 'json');
+		dialog.load(send, zLoaded);
 
 		function zLoaded() {
 			$('#ze-about')
@@ -107,7 +86,7 @@ var _zayavSpisok = function(v, id) {
 			// 5 - Клиент
 			if(!$('#ze-client-name').length)
 				$('#ze-client_id').clientSel({
-					width:258,
+					width:300,
 					add:1,
 					func:function(uid, id, item) {
 						client_adres = uid ? item.adres : '';
@@ -121,12 +100,13 @@ var _zayavSpisok = function(v, id) {
 				});
 
 			// 4 - один товар
+			var zp4 = zayav_param[4];
 			$('#ze-tovar-one').tovar({
-				set:0,
-				func:equip
+				add:1,
+				equip:zp4 && zp4[0] ? zayav_id ? ZI.equip_ids : 0 : false
 			});
 			// 11 - несколько товаров
-			$('#ze-tovar-several').tovar({set:0,several:1});
+			$('#ze-tovar-several').tovar({several:1});
 
 			// 6 - Адрес
 			$('#client-adres')._check({
@@ -251,84 +231,6 @@ var _zayavSpisok = function(v, id) {
 			// 40 - Рубрика и подрубрика
 			$('#ze-rubric_id')._rubric();
 		}
-
-		function equip(v) {//вставка комплектации при выборе товара
-			if(!$('.tr-equip').length)
-				return;
-			$('.tr-equip')[(v ? 'remove' : 'add') + 'Class']('dn');
-			$('#ze-equip-spisok').html('&nbsp;');
-
-			if(!v)
-				return;
-
-			var send = {
-				op:'tovar_equip_load',
-				tovar_id:v,
-				ids_sel:zayav_id ? ZI.equip : ''
-			};
-			$('#ze-equip-spisok').addClass('_busy');
-			$.post(AJAX_MAIN, send, function(res) {
-				$('#ze-equip-spisok').removeClass('_busy');
-				if(res.success) {
-					$('#ze-equip-spisok').html(res.check);
-					$('#equip-add').click(equipSel);
-					equip_js = res.equip_js;
-					equip_tovar_id = v;
-				}
-			}, 'json');
-		}
-		function equipSel() {//выбор новой комплектации для добавления
-			$(this).remove();
-			$('#ze-equip-spisok .vk')
-				.removeClass('dn')
-				.click(equipAdd);
-			$('#equip_id')._select({
-				width:177,
-				title0:'выберите или введите новое',
-				write:1,
-				write_save:1,
-				spisok:equip_js
-			})._select('focus');
-		}
-		function equipAdd() {
-			var t = $(this),
-				send = {
-					op:'tovar_equip_add',
-					tovar_id:equip_tovar_id,
-					equip_id:_num($('#equip_id').val()),
-					equip_name:$('#equip_id')._select('inp'),
-					ids_sel:equipGet(1)
-				};
-
-			if(!send.equip_id && !send.equip_name)
-				return;
-
-			if(t.hasClass('_busy'))
-				return;
-			t.addClass('_busy');
-			$.post(AJAX_MAIN, send, function(res) {
-				t.removeClass('_busy');
-				if(res.success) {
-					$('#ze-equip-spisok').html(res.check);
-					$('#equip-add').click(equipSel);
-					equip_js = res.equip_js;
-				}
-			}, 'json');
-		}
-		function equipGet(sel) {//получение id комплектаций. sel - только тех, у которых стоят галочки
-			var check = $('#ze-equip-spisok ._check'),
-				send = [];
-			for(var n = 0; n < check.length; n++) {
-				var eq = check.eq(n),
-					inp = eq.find('input'),
-					id = _num(inp.attr('id').split('eq')[1]),
-					v = _num(inp.val());
-				if(sel && !v)
-					continue;
-				send.push(id);
-			}
-			return send.join();
-		}
 		function submit() {
 			var send = {
 				op:zayav_id ? 'zayav_edit' : 'zayav_add',
@@ -347,7 +249,7 @@ var _zayavSpisok = function(v, id) {
 				color_id:$('#color_id').val(),          // 9
 				color_dop:$('#color_dop').val(),        // 9
 				executer_id:$('#ze-executer_id').val(), // 10
-				rubric_id:$('#ze-rubric_id').val(),        // 40
+				rubric_id:$('#ze-rubric_id').val(),     // 40
 				rubric_id_sub:$('#ze-rubric_id_sub').val(),// 40
 				size_x:$('#ze-size_x').val(),           // 31
 				size_y:$('#ze-size_y').val(),           // 31
@@ -359,20 +261,13 @@ var _zayavSpisok = function(v, id) {
 				sum_manual:_bool($('#ze-sum_cost_manual').val()),// 15:v1
 				sum_cost:$('#ze-sum_cost').val(),       // 15
 				pay_type:$('#ze-pay_type').val(),       // 16
-				equip:equipGet(1),                      // 4:v1
+				tovar_equip_ids:$('#ze-tovar-one').tovar('equip_ids_sel'),// 4:v1
 				gn:$('#ze-gn').val()                    // 38
 			};
-
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					_scroll('set', 'u' + res.id);
-					location.href = URL + '&p=45&id=' + res.id;
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, function(res) {
+				_scroll('set', 'u' + res.id);
+				location.href = URL + '&p=45&id=' + res.id;
+			});
 		}
 	},
 	_zayavObCalc = function() {// Вычисление стоимости объявления
@@ -1037,7 +932,6 @@ var _zayavSpisok = function(v, id) {
 					break;
 				case 5: //товар
 					$('#ze-count-max').hide();
-					window.tsg = false;
 					$('#ze-dop').tovar({
 						open:1,
 						func:function(v, attr_id, sp) {
@@ -1055,39 +949,28 @@ var _zayavSpisok = function(v, id) {
 					});
 					break;
 				case 3: //товар наличие
-					window.tsg = false;
 					$('#ze-dop').tovar({
 						open:1,
-						tovar_id_set:ZI.tovar_id,
+						avai:1,
+						tovar_id_use:ZI.tovar_id,
 						func:function(v, attr_id, sp) {
-							$('#td-input').append(sp.articul);
-							var avai_id = _num($('#td-input #ta-articul').val()),
-								buy = avai_id ? sp.articul_arr[avai_id].sum_buy : 0;
-							$('.tovar-avai-articul').css('margin-top', '-1px');
-							$('#ze-measure').html(sp.measure);
-							$('.tr-count').removeClass('dn');
-							$('#td-input #ta-articul')._radio(function(aid) {
-								$('#ze-dop').val(aid);
-								$('#ze-count-max b').html(sp.articul_arr[aid].count);
-								$('#ze-count').val(1);
-								buy = sp.articul_arr[aid].sum_buy;
-								$('#ze-sum').val(buy);
-							});
-							$('#ze-dop').val(avai_id);//id наличия
+							$('#ze-dop').val(sp.avai_id);               //установка id наличия
+							$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');//показ input-количества
+							$('#ze-sum').val('');
 
+							if(!sp.avai_id)
+								return;
+
+							$('#ze-count-max b').html(sp.avai_count);   //установка максимального количества в наличии
+							$('#ze-measure').html(sp.measure);          //установка ед.измерения
 							$('#ze-count')
 								.val(1)
 								.select()
-								.off('keyup')
 								.keyup(function() {
-									$('#ze-sum').val(Math.round(_ms($(this).val()) * buy));
+									$('#ze-sum').val(Math.round(_ms($(this).val()) * sp.avai_buy));
 								});
-
-							$('#ze-count-max b').html(avai_id ? sp.articul_arr[avai_id].count : 1);
-							$('#ze-sum').val(_cena(sp.sum_buy));
-						},
-						avai:1,
-						del:0
+							$('#ze-count').trigger('keyup');
+						}
 					});
 					break;
 				case 4: //файл
@@ -1111,52 +994,10 @@ var _zayavSpisok = function(v, id) {
 				count:_ms($('#ze-count').val()),
 				sum:_cena($('#ze-sum').val())
 			};
-			if(!send.cat_id) {
-				dialog.err('Не указана категория');
-				return;
-			}
-
-			switch(ZE_DOP_ASS[send.cat_id]) {
-				case 1: break;
-				case 2:
-					send.dop = _num(send.dop);
-					break;
-				case 5:
-					send.dop = _num(send.dop.split(':')[0]);
-					if(!send.dop) {
-						dialog.err('Не выбран товар');
-						return;
-					}
-					if(!send.count) {
-						dialog.err('Некорректно указано количество');
-						$('#ze-count').focus();
-						return;
-					}
-					break;
-				case 3:
-					send.dop = _num(send.dop);
-					if(!send.dop) {
-						dialog.err('Не выбран товар');
-						return;
-					}
-					if(!send.count) {
-						dialog.err('Некорректно указано количество');
-						$('#ze-count').focus();
-						return;
-					}
-					break;
-				case 4: break;
-			}
-
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					$('#_zayav-expense').html(res.html);
-					_zayavExpenseEdit();
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, function(res) {
+				$('#_zayav-expense').html(res.html);
+				_zayavExpenseEdit();
+			});
 		}
 	},
 
@@ -1435,9 +1276,10 @@ var _zayavSpisok = function(v, id) {
 		t.addClass('_busy');
 
 		var send = {
-			op:'zayav_tovar_zakaz',
-			zayav_id:ZI.id,
-			tovar_id:tovar_id
+			op:'tovar_zakaz',
+			tovar_id:tovar_id,
+			count:1,
+			zayav_id:ZI.id
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('_busy');
@@ -2105,8 +1947,7 @@ $(document)
 		$('#noattach')._check(0);		ZAYAV.noattach = 0;
 		$('#noattach1')._check(0);		ZAYAV.noattach1 = 0;
 		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
-		$('#tovar_name_id')._select(0);	ZAYAV.tovar_name_id = 0;
-		$('#tovar_id').tovar('cancel');	ZAYAV.tovar_id = 0;
+		$('#tovar_id').tovar(0);	    ZAYAV.tovar_id = 0;
 		$('#tovar_place_id')._select(0);ZAYAV.tovar_place_id = 0;
 
 		$('#gn_year')._yearLeaf('cur');     ZAYAV.gn_year = (new Date()).getFullYear();
@@ -2220,7 +2061,7 @@ $(document)
 
 		var tovar_id = _parent($(this), '.unit').attr('val'),
 			send = {
-				op:'zayav_tovar_set_load',
+				op:'zayav_tovar_avai_load',
 				tovar_id:tovar_id
 			};
 			$.post(AJAX_MAIN, send, function(res) {
@@ -2237,7 +2078,7 @@ $(document)
 				send = {
 					op:'zayav_tovar_set',
 					zayav_id:ZI.id,
-					avai_id:_num($('#ta-articul').val())
+					avai_id:_num($('#tovar-avai-id').val())
 				};
 
 			if(but.hasClass('_busy'))
@@ -2440,19 +2281,11 @@ $(document)
 				}
 			});
 
-			_zayavSpisokTovarNameFilter();
-
 			if($('#tovar_id').length)
 				$('#tovar_id').tovar({
-					set:0,
-					image:0,
-					ids:ZAYAV_TOVAR_IDS,
-					func:function(v, id) {
-						$('#tovar_name_id')._select(0);
-						ZAYAV.tovar_name_id = 0;
-						_zayavSpisokTovarNameFilter(v);
-						_zayavSpisok(v, id);
-					}
+					title:'выбрать',
+					zayav_use:1,
+					func:_zayavSpisok
 				});
 
 			$('#tovar_place_id')._select({
@@ -2508,7 +2341,7 @@ $(document)
 				action.push(_zayavCartridgeAdd);
 			}
 			if(ZI.pole[20]) {
-				name.push('<b>Распечатать квитанцию</b>');
+				name.push('Распечатать квитанцию');
 				action.push(function() {
 					if(APP_ID == 3798718) {
 						if(ZI.pole[23])
@@ -2541,7 +2374,7 @@ $(document)
 				action.push(_zayavStatus);
 			}
 			name.push('Начислить');                     action.push(_accrualAdd);
-			name.push('<b>Принять платёж</b>');         action.push(_incomeAdd);
+			name.push('Принять платёж'); action.push(_incomeAdd);
 			name.push('Возврат');                       action.push(_refundAdd);
 			name.push('Добавить расход по заявке');     action.push(_zayavExpenseEdit);
 			name.push('Новое напоминание');             action.push(_remindAdd);

@@ -35,7 +35,7 @@ function kvit_content($k, $z) {
 				($k['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($k['color_id'], $k['color_dop']) : '').
 				($k['imei'] ? '<tr><td class="label">IMEI:<td>'.$k['imei'] : '').
 				($k['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$k['serial'] : '').
-				($k['equip'] ? '<tr><td class="label">Комплектация:<td>'._tovarEquip('spisok', $k['equip']) : '').
+				($k['tovar_equip_ids'] ? '<tr><td class="label">Комплектация:<td>'._tovarEquip('spisok', $k['tovar_equip_ids']) : '').
 			'</table>'.
 			'<div class="line"></div>'.
 			'<table class="content">'.

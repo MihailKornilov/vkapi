@@ -2,184 +2,87 @@
 switch(@$_POST['op']) {
 	case 'tovar_spisok':
 		$_POST['find'] = win1251(@$_POST['find']);
-		$data = _tovar_spisok_icon($_POST);
+		$data = _tovar_spisok($_POST);
 
 		$filter = $data['filter'];
 		if($filter['page'] == 1) {
 			$send['result'] = utf8($data['result']);
-			$send['name_spisok'] =  _tovar_category_name($filter['category_id']);
-			$send['name_id'] = $filter['name_id'];
-			$send['vendor_spisok'] = _tovar_category_vendor($filter);
+			$send['cc'] = _tovarCategoryCount($_POST);
 		}
 
 		$send['spisok'] = utf8($data['spisok']);
+
 		jsonSuccess($send);
 		break;
-	case 'tovar_name_load':
+	case 'tovar_category_sub_for_select'://получение подкатегорий для _select
 		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
-
-		$send['spisok'] = _tovar_category_name($category_id);
+			jsonError('Некорректный id категории');
+		$send['spisok'] = _selArray(_tovarCategory($category_id, 'child_ass'));
 		jsonSuccess($send);
 		break;
 	case 'tovar_vendor_load':
-		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
-		if(!$name_id = _num($_POST['name_id']))
-			jsonError();
-
-		$send['spisok'] = _tovar_category_vendor(array(
-			'category_id' => $category_id,
-			'name_id' => $name_id
-		));
+		$send['spisok'] = _tovar_category_vendor();
 		jsonSuccess($send);
 		break;
 	case 'tovar_add':
-		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
-
-		if(!$name_id = _num($_POST['name_id']))
-			if(!$name_id = _tovar_name_insert())
-				jsonError();
-
-		$vendor_id = _tovar_vendor_get();
-		$name = _txt($_POST['name']);
-
-		//применение к другому товару
-		$set_position_id = _num($_POST['set_position_id']);
-		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if($set_position_id && !$tovar_id_set)
-			jsonError();
-		
-		if(!$measure_id = _num($_POST['measure_id']))
-			jsonError();
-
-		$measure_length = 0;
-		$measure_width = 0;
-		$measure_area = 0;
-		if(_tovarMeasure($measure_id, 'area')) {
-			if(!$measure_length = _ms($_POST['measure_length']))
-				jsonError('Некорректно указана длина');
-			if(!$measure_width = _ms($_POST['measure_width']))
-				jsonError('Некорректно указана ширина');
-			$measure_area = _ms($measure_length * $measure_width);
-		}
-
-		$about = _txt($_POST['about']);
+		$val = _tovarValuesCheck();
 
 		$sql = "INSERT INTO `_tovar` (
 					`app_id`,
-					`category_id`,
-					`name_id`,
-					`vendor_id`,
-					`name`,
-					`about`,
-
-					`set_position_id`,
-					`tovar_id_set`,
-
-					`measure_id`,
-					`measure_length`,
-					`measure_width`,
-					`measure_area`,
-
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".$category_id.",
-					".$name_id.",
-					".$vendor_id.",
-					'".addslashes($name)."',
-					'".addslashes($about)."',
-
-					".$set_position_id.",
-					".$tovar_id_set.",
-
-					".$measure_id.",
-					".$measure_length.",
-					".$measure_width.",
-					".$measure_area.",
-
 					".VIEWER_ID."
 				)";
 		query($sql);
 
-		$send['id'] = query_insert_id('_tovar');
+		$tovar_id = query_insert_id('_tovar');
 
-		_tovar_find_update($send['id']);
-		_tovar_feature_update($send['id']);
+		$sql = "INSERT INTO `_tovar_bind` (
+				`app_id`,
+				`category_id`,
+				`tovar_id`,
+				`articul`
+			) VALUES (
+				".APP_ID.",
+				".$val['v']['category_id'].",
+				".$tovar_id.",
+				'".addslashes($val['v']['articul'])."'
+			)";
+		query($sql);
 
-		$tovar[$send['id']] = $send;
-		$tovar = _tovarValToList($tovar, 'id');
+		$sql = "UPDATE `_tovar` SET ".$val['upd']." WHERE `id`=".$tovar_id;
+		query($sql);
 
-		$send['arr'][$send['id']] = _tovar_formimg_send($tovar[$send['id']]);
+		$send['id'] = $tovar_id;
 
-		_history(array(
-			'type_id' => 105,
-			'tovar_id' => $send['id']
-		));
-
+		$r = _tovarQuery($tovar_id);
+		$send['arr'][$tovar_id] = array(
+				'img' => '<img class="w35" src="'.API_HTML.'/img/nofoto-s.gif">',
+				'name' => utf8($r['name']),
+				'about' => utf8(_br($r['about']))
+			);
 		jsonSuccess($send);
 		break;
 	case 'tovar_edit':
 		if(!$tovar_id = _num($_POST['id']))
 			jsonError();
-		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
 
-		if(!$name_id = _num($_POST['name_id']))
-			if(!$name_id = _tovar_name_insert())
-				jsonError();
+		$val = _tovarValuesCheck($tovar_id);
 
-		$name = _txt($_POST['name']);
-
-		//применение к другому товару
-		$set_position_id = _num($_POST['set_position_id']);
-		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if($set_position_id && !$tovar_id_set)
-			jsonError();
-
-		if(!$measure_id = _num($_POST['measure_id']))
-			jsonError();
-
-		$measure_length = 0;
-		$measure_width = 0;
-		$measure_area = 0;
-		if(_tovarMeasure($measure_id, 'area')) {
-			if(!$measure_length = _ms($_POST['measure_length']))
-				jsonError('Некорректно указана длина');
-			if(!$measure_width = _ms($_POST['measure_width']))
-				jsonError('Некорректно указана ширина');
-			$measure_area = _ms($measure_length * $measure_width);
-		}
-
-		$about = _txt($_POST['about']);
-
-		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
-
-		$vendor_id = _tovar_vendor_get();
-
-		$sql = "UPDATE `_tovar`
-				SET `category_id`=".$category_id.",
-					`name_id`=".$name_id.",
-					`vendor_id`=".$vendor_id.",
-					`name`='".addslashes($name)."',
-					`about`='".addslashes($about)."',
-
-					`set_position_id`=".$set_position_id.",
-					`tovar_id_set`=".$tovar_id_set.",
-
-					`measure_id`=".$measure_id.",
-					`measure_length`=".$measure_length.",
-					`measure_width`=".$measure_width.",
-					`measure_area`=".$measure_area."
-				WHERE `id`=".$tovar_id;
+		$sql = "UPDATE `_tovar` SET ".$val['upd']." WHERE `id`=".$tovar_id;
 		query($sql);
 
-		_tovar_find_update($tovar_id);
-		_tovar_feature_update($tovar_id);
+		$sql = "UPDATE `_tovar_bind`
+				SET `category_id`=".$val['v']['category_id'].",
+					`articul`='".addslashes($val['v']['articul'])."'
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id;
+		query($sql);
 
+//		_tovar_feature_update($tovar_id);
+
+/*
 		if($changes =
 			_historyChange('Категория', _tovarCategory($r['category_id']), _tovarCategory($category_id)).
 			_historyChange('Наименование', _tovarName($r['name_id']), _tovarName($name_id)).
@@ -193,8 +96,9 @@ switch(@$_POST['op']) {
 				'tovar_id' => $tovar_id,
 				'v1' => '<table>'.$changes.'</table>'
 			));
-
-		jsonSuccess();
+*/
+		$send['id'] = $tovar_id;
+		jsonSuccess($send);
 		break;
 	case 'tovar_del'://удаление товара
 		if(!$tovar_id = _num($_POST['id']))
@@ -203,7 +107,7 @@ switch(@$_POST['op']) {
 		if(!$r = _tovarQuery($tovar_id))
 			jsonError();
 
-		if($reason = _tovarDelAccess($r))
+		if($reason = _tovarDelAccess($tovar_id))
 			jsonError($reason);
 
 		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
@@ -216,88 +120,297 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'tovar_to_new_category'://перенос товаров в другую категорию
+		if(!$category_id = _tovar_category_insert())
+			jsonError('Не указана категория');
+
+		if($sub_id = _tovar_category_sub_insert($category_id))
+			$category_id = $sub_id;
+
+		if(!$tovar_ids = _ids($_POST['tovar_ids']))
+			jsonError('Не выбраны товары');
+
+		//проверка наличия товаров в базе
+		$sql = "SELECT COUNT(`id`)
+				FROM `_tovar`
+				WHERE !`deleted`
+				  AND `id` IN (".$tovar_ids.")";
+		if(!query_value($sql))
+			jsonError('Выбранных товаров не существует');
+
+		//удаление старых связок
+		$sql = "DELETE FROM `_tovar_bind`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id` IN (".$tovar_ids.")";
+		query($sql);
+
+		//внесение связки для выбранных товаров
+		foreach(_ids($tovar_ids, 1) as $tovar_id) {
+			$sql = "INSERT INTO `_tovar_bind` (
+						`app_id`,
+						`category_id`,
+						`tovar_id`
+					) VALUES (
+						".APP_ID.",
+						".$category_id.",
+						".$tovar_id."
+					)";
+			query($sql);
+		}
+
+		//удаление неиспользуемых подкатегорий
+		$sql = "DELETE FROM `_tovar_category`
+				WHERE `id` IN (
+					SELECT `id` FROM (
+						SELECT
+							`tc`.`id`,
+							COUNT(`tcb`.`id`) `count`
+						FROM `_tovar_category` `tc`
+				
+							LEFT JOIN `_tovar_bind` `tcb`
+							ON `tc`.`id`=`tcb`.`category_id`
+				
+						WHERE `tc`.`app_id`=".APP_ID."
+						  AND `parent_id`
+						GROUP BY `tc`.`id`
+					) `tab`
+					WHERE !`count`
+				)";
+		query($sql);
+
+
+		//удаление связок удалённых товаров
+		$sql = "DELETE FROM `_tovar_bind`
+				WHERE `tovar_id` IN (
+					SELECT `id` FROM (
+						SELECT
+							`t`.`id`,
+							COUNT(`tcb`.`id`) `count`
+						FROM `_tovar` `t`,
+							 `_tovar_bind` `tcb`
+						WHERE `tcb`.`app_id`=".APP_ID."
+						  AND `t`.`id`=`tcb`.`tovar_id`
+						  AND `deleted`
+						GROUP BY `t`.`id`
+					) `tab`
+					WHERE `count`
+				)";
+		query($sql);
+
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
+	case 'tovar_setup_category_load'://получение списка категорий товаров
+		$send['html'] = utf8(_tovar_setup_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'tovar_setup_category_add'://внесение новой категории товаров
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
+		$sql = "INSERT INTO `_tovar_category` (
+					`app_id`,
+					`name`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."',
+					"._maxSql('_tovar_category')."
+				)";
+		query($sql);
+		$insert_id = query_insert_id('_tovar_category');
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'tovar_setup_category_edit'://редактирование категории товаров
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id категории');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Категории не существует');
+
+		$sql = "UPDATE `_tovar_category`
+		        SET `name`='".addslashes($name)."'
+		        WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'tovar_setup_category_del'://удаление категории товаров
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id категории');
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Категории не существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_category`
+				WHERE `parent_id`=".$id;
+		if(query_value($sql))
+			jsonError('В данной категории есть подкатегории');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_bind`
+				WHERE `category_id`=".$id;
+		if(query_value($sql))
+			jsonError('В данной категории есть товары');
+
+		$sql = "DELETE FROM `_tovar_category` WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
 	case 'tovar_select_find'://получение списка товаров для выбора
-		$tovar_id = _num($_POST['tovar_id']);
-		$v = _txt($_POST['v']);
+		$find = win1251(@$_POST['find']);
 
-		$cond = "`category_id` IN ("._tovarCategory('use').")";
+		$cond = "`bind`.`app_id`=".APP_ID."
+			 AND `t`.`id`=`bind`.`tovar_id`
+			 AND !`t`.`deleted`";
 
-		if($v) {
-			$find = array();
-			$find[] = "`find` LIKE '%".$v."%'";
+		$msgResult = 'Недавно добавленные товары:';
 
-			$engRus = _engRusChar($v);
-			if($engRus)
-				$find[] = "`find` LIKE '%".$engRus."%'";
-
-			$cond .= " AND (".implode(' OR ', $find).")";
-		}
-
-		if($_POST['ids'] != 'none')
-			$cond .= " AND `t`.`id` IN (".$_POST['ids'].")";
-
-		if(!_bool($_POST['set']))
-			$cond .= " AND !`tovar_id_set`";
-
-		if($tovar_id_not = _num($_POST['tovar_id_not']))
-			$cond .= " AND `t`.`id`!=".$tovar_id_not;
-
-		//наличие товара
-		$RJ_AVAI = _num($_POST['avai']) ?
-					"RIGHT JOIN `_tovar_avai` `ta`
-				     ON `ta`.`tovar_id`=`t`.`id` AND `ta`.`count`"
-				: '';
-
-		$tovar_id_set = _num($_POST['tovar_id_set']);
-		if(!$v && $tovar_id_set) {
-			$cond_set = " AND `tovar_id_set`=".$tovar_id_set;
-			$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond.$cond_set;
-			if(query_value($sql)) //если нет наличия по товару для установки, то вывод всех по-умолчанию.
-				$cond .= $cond_set;
-			else $tovar_id_set = 0;
-		}
-
-
-		$sql = "SELECT COUNT(*) FROM `_tovar` `t` ".$RJ_AVAI." WHERE ".$cond;
-		$spisok = '';
-		$send['arr'] = array();
-		if($count = query_value($sql)) {
-			$order = $v || $tovar_id_set ? "`name_id` ASC,`vendor_id` ASC,`name` ASC" : "`id` DESC";
-			$sql = "SELECT
-						`t`.*
-					FROM `_tovar` `t`
-						".$RJ_AVAI."
-					WHERE ".$cond."
-					ORDER BY ".$order."
-					LIMIT 20";
-			$arr = query_arr($sql);
-			$arr = _tovarValToList($arr, 'id');
-
-			foreach($arr as $id => $r) {
-				//составление массива для выбора товара
-				$send['arr'][$id] =
-					_tovar_formimg_send($r) +
-					array(
-						'articul' => utf8($r['tovar_articul']),
-						'articul_full' => utf8($r['tovar_articul_full']),
-						'articul_arr' => $r['tovar_articul_arr'],
-					);
-
-				$spisok .=
-					'<div class="ts-unit'.($tovar_id == $r['id'] ? ' sel' : '').'" val="'.$r['id'].'">'.
-						$r['tovar_select'].
-			($RJ_AVAI ? $r['tovar_avai_b'] : '').
-					'</div>';
+		if($find)
+			$cond .= " AND (`name` LIKE '%".$find."%'
+						 OR `about` LIKE '%".$find."%'
+						)";
+		elseif($tovar_id_use = _num($_POST['tovar_id_use'])) {
+			$sql = "SELECT `use_id`
+					FROM `_tovar_use`
+					WHERE `tovar_id`=".$tovar_id_use;
+			if($ids = query_ids($sql)) {
+				$cond .= " AND `t`.`id` IN (".$ids.")";
+				$msgResult = 'Совместимые товары:';
 			}
 		}
 
-		$result = $count ? 'Найден'._end($count, ' ', 'о ').$count.' товар'._end($count, '', 'а', 'ов').($RJ_AVAI ? ' <b>в наличии</b>' : '').':' : 'Товаров не найдено.';
+		if($avai = _bool($_POST['avai']))
+			$cond .= " AND `avai`";
 
-		$send['html'] =	utf8('<div class="ts-count'.($count ? '' : ' no').'">'.$result.'</div>'.$spisok);
+		if($tovar_id_no = _num($_POST['tovar_id_no']))
+			$cond .= " AND `t`.`id`!=".$tovar_id_no;
 
+		$JOIN = '';
+		//только товары, которые использовались в заявках
+		if($zayav_use = _bool($_POST['zayav_use']))
+			$JOIN = "RIGHT JOIN `_zayav_tovar` `z`
+					 ON `z`.`app_id`=".APP_ID."
+					AND `z`.`tovar_id`=`bind`.`tovar_id`";
+
+		$send['html'] =	utf8('<div class="_empty mar10">Товаров не найдено.</div>');
+
+		$sql = "SELECT COUNT(*) AS `all`
+				FROM
+					`_tovar` `t`,
+					`_tovar_bind` `bind`
+				".$JOIN."
+				WHERE ".$cond;
+		if(!$all = query_value($sql))
+			jsonSuccess($send);
+
+		$html =
+			'<div class="color-pay fs14 pl10 pb5 line-b">'.
+				($find ?
+					'Найден'._end($all, '', 'о').' <b class="fs14">'.$all.'</b> товар'._end($all, '', 'а', 'ов').':'
+					:
+					$msgResult
+				).
+			'</div>'.
+			'<div class="bg-ffe pl10 pr10 pb10">';
+
+		$sql = "SELECT
+					`t`.*,
+					`category_id`,
+					`avai`,
+					'' `zayav`
+				FROM
+					`_tovar` `t`,
+					`_tovar_bind` `bind`
+				".$JOIN."
+				WHERE ".$cond."
+				ORDER BY `id` DESC
+				LIMIT 30";
+		$spisok = query_arr($sql);
+		$spisok = _imageValToList($spisok, 'tovar');
+
+		if($zayav_use) {
+			$sql = "SELECT
+						`tovar_id`,
+						COUNT(*) `c`
+					FROM `_zayav_tovar`
+					WHERE `tovar_id` IN (".implode(',', array_keys($spisok)).")
+					GROUP BY `tovar_id`";
+			$q = query($sql);
+			while($r = mysql_fetch_assoc($q))
+				$spisok[$r['tovar_id']]['zayav'] =
+					'<a class="fr">'.
+						'<b>'.$r['c'].'</b> заяв'._end($r['c'], 'ка', 'ки', 'ок').
+					'</a>';
+		}
+
+		$child = array();
+		$arr = array();//массив для выбора товара
+		foreach($spisok as $id => $r) {
+			$r['avai'] = _ms($r['avai']) ? '<b>'._ms($r['avai']).'</b> '._tovarMeasure($r['measure_id']) : '';
+			$child[$r['category_id']][] = $r;
+			if(strlen($r['about']) > 60)
+				$r['about'] = substr($r['about'], 0, 60)."...";
+			$arr[$id] = array(
+				'img' => $r['image_min'],
+				'name' => utf8($r['name']),
+				'about' => utf8(_br($r['about'])),
+				'measure' => utf8(_tovarMeasure($r['measure_id']))
+			);
+		}
+
+		foreach($child as $id => $r) {
+			$html .=
+				'<div class="fs15 color-555 pt10">'.
+					_tovarCategory($id).
+					'<span class="pale ml10">'.($find ? count($r) : _tovarCategory($id, 'count')).'</span>'.
+				'</div>'.
+				_tovar_unit_select($r, $find, $avai);
+		}
+		$html .= '</div>';
+
+		$send['html'] =	utf8($html);
+		$send['arr'] =	$arr;
 		jsonSuccess($send);
 		break;
-	case 'tovar_select_get'://список товаров, которые были выбраны
+	case 'tovar_selected_avai'://получение наличия товара после выбора
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный ID товара');
+
+		$send['html'] = utf8(_tovarAvaiSpisok($tovar_id, 'radio'));
+		$send['arr'] = _tovarAvaiSpisok($tovar_id, 'arr');
+		$send['arr_count'] = count($send['arr']);
+		$send['arr_first'] = count($send['arr']) ? key($send['arr']) : 0;
+		jsonSuccess($send);
+		break;
+	case 'tovar_selected_load'://список товаров, которые были выбраны (при редактировании)
 		$v = _txt($_POST['v']);
 		if(!$v)
 			jsonError();
@@ -326,52 +439,302 @@ switch(@$_POST['op']) {
 				WHERE `id` IN (".implode(',', array_keys($tovar)).")";
 		if(!$spisok = query_arr($sql))
 			jsonError();
-
-		$spisok = _tovarValToList($spisok, 'id');
+		$spisok = _imageValToList($spisok, 'tovar');
 
 		$send['arr'] = array();
-
-		foreach($spisok as $id => $r) {
-			$r['count'] = $tovar[$id];
-			$send['arr'][$id] = _tovar_formimg_send($r);
-		}
+		foreach($spisok as $id => $r)
+			$send['arr'][$id] = array(
+				'img' => $r['image_min'],
+				'count' => $tovar[$id],
+				'name' => utf8($r['name']),
+				'about' => utf8(_br($r['about']))
+			);
 
 		jsonSuccess($send);
 		break;
 
-	case 'tovar_cost_set'://Изменение закупочной стоимости и продажи
+	case 'tovar_equip_load'://получение списка комплектаций по товару
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный ID товара');
+			
+		$ids = $_POST['ids'];//галочки поставлены
+
+		if(!$t = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+
+		$html =
+			'<div class="color-555 fs14">Комплектация:</div>'.
+			_tovarEquip('check', $tovar_id, $ids).
+			'<div class="dib mt5 ml10">'.
+				'<a id="equip-add">добавить позицию...</a>'.
+				'<input type="hidden" id="equip_id" />'.
+				'<button class="vk ml5 dn">добавить</button>'.
+			'</div>';
+
+		$send['html'] = utf8($html);
+		$send['equip_js'] = _tovarEquip('js', $tovar_id);
+		jsonSuccess($send);
+		break;
+	case 'tovar_equip_add'://добавление новой комплектации к товару
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный ID товара');
+
+		$equip_id = _num($_POST['equip_id']);
+		$equip_name = _txt($_POST['equip_name']);
+
+		if(!$equip_id && !$equip_name)
+			jsonError('Выберите позицию или введите новую');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+
+		//внесение нового названия комплектации
+		if(!$equip_id && $equip_name) {
+			$sql = "SELECT `id`
+					FROM `_tovar_equip`
+					WHERE `name`='".addslashes($equip_name)."'";
+			if(!$equip_id = query_value($sql)) {
+				$sql = "INSERT INTO `_tovar_equip` (`name`) VALUES ('".addslashes($equip_name)."')";
+				query($sql);
+				$equip_id = query_insert_id('_tovar_equip');
+				xcache_unset(CACHE_PREFIX.'tovar_equip');
+			}
+		}
+
+		//проверка, была ли внесена комплектация для товара
+		$equip_exist = _idsAss($r['equip_ids']);
+		if(isset($equip_exist[$equip_id]))
+			jsonError('Данная позиция уже присутствует');
+
+		$sql = "INSERT INTO `_tovar_equip_bind` (
+					`app_id`,
+					`category_id`,
+					`equip_id`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".($r['sub_id'] ? $r['sub_id'] : $r['category_id']).",
+					".$equip_id.",
+					"._maxSql('_tovar_equip_bind')."
+				)";
+		query($sql);
+
+		$send['html'] = utf8(
+			'<div class="mt3 ml10">'.
+				_check('eq'.$equip_id, _tovarEquip($equip_id), 1, 1).
+			'</div>'
+		);
+		jsonSuccess($send);
+		break;
+
+	case 'tovar_join'://объединение товаров - будет влиять на все приложения сразу
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный id товара');
+		if(!$join_id = _num($_POST['join_id']))
+			jsonError('Не выбран товар для объединения');
+
+		if($tovar_id == $join_id)
+			jsonError('Товар не может быть объединён сам с собой');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара-получателя не существует');
+		if(!$join = _tovarQuery($join_id))
+			jsonError('Объединяемого товара не существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$tovar_id."
+				  AND `use_id`=".$join_id;
+		if(query_value($sql))
+			jsonError('Объединяемый товар применяется к товару-получателю');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$join_id."
+				  AND `use_id`=".$tovar_id;
+		if(query_value($sql))
+			jsonError('Товар-получатель применяется к объединяемому товару');
+
+
+		//к объединяемому товару применялись другие товары
+		$sql = "UPDATE `_tovar_use`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//объединяемый товар применялся к другому товару
+		$sql = "UPDATE `_tovar_use`
+				SET `use_id`=".$tovar_id."
+				WHERE `use_id`=".$join_id;
+		query($sql);
+
+		//характеристики
+		$sql = "UPDATE `_tovar_feature`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//история действий
+		$sql = "UPDATE `_history`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//платежи - продажа
+		$sql = "UPDATE `_money_income`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//наличие
+		$sql = "UPDATE `_tovar_avai`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+		_tovarAvaiUpdate($tovar_id);
+
+		//заказ
+		$sql = "UPDATE `_tovar_zakaz`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//движение
+		$sql = "UPDATE `_tovar_move`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//расходы в заявках
+		$sql = "UPDATE `_zayav_expense`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//использование в заявках
+		$sql = "UPDATE `_zayav_tovar`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//квитанции в заявках
+		$sql = "UPDATE `_zayav_kvit`
+				SET `tovar_id`=".$tovar_id."
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		//связка с приложением
+		$sql = "DELETE FROM `_tovar_bind`
+				WHERE `tovar_id`=".$join_id;
+		query($sql);
+
+		jsonSuccess();
+		break;
+
+	case 'tovar_use'://применение товара
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный id товара');
+		if(!$use_id = _num($_POST['use_id']))
+			jsonError('Не выбран применяемый товар');
+
+		if($tovar_id == $use_id)
+			jsonError('Товар не может быть применён к самому себе');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+		if(!$use = _tovarQuery($use_id))
+			jsonError('Применяемого товара не существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$tovar_id."
+				  AND `use_id`=".$use_id;
+		if(query_value($sql))
+			jsonError('Такое применение уже существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$use_id."
+				  AND `use_id`=".$tovar_id;
+		if(query_value($sql))
+			jsonError('Нельзя создать обратное применение');
+
+		$sql = "INSERT INTO `_tovar_use` (
+					`tovar_id`,
+					`use_id`
+				) VALUES (
+					".$tovar_id.",
+					".$use_id."
+				)";
+		query($sql);
+
+		jsonSuccess();
+		break;
+	case 'tovar_use_cancel'://отмена применения товара
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный id товара');
+		if(!$use_id = _num($_POST['use_id']))
+			jsonError('Не выбран применяемый товар');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+		if(!$use = _tovarQuery($use_id))
+			jsonError('Применяемого товара не существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$tovar_id."
+				  AND `use_id`=".$use_id;
+		$countIn = query_value($sql);
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_use`
+				WHERE `tovar_id`=".$use_id."
+				  AND `use_id`=".$tovar_id;
+		$countOut = query_value($sql);
+
+		if(!$countIn && !$countOut)
+			jsonError('Применения не существует');
+
+		//удаление прямого применения
+		if($countIn) {
+			$sql = "DELETE FROM `_tovar_use`
+					WHERE `tovar_id`=".$tovar_id."
+					  AND `use_id`=".$use_id;
+			query($sql);
+		}
+
+		//удаление обратного применения
+		if($countOut) {
+			$sql = "DELETE FROM `_tovar_use`
+					WHERE `tovar_id`=".$use_id."
+					  AND `use_id`=".$tovar_id;
+			query($sql);
+		}
+
+		jsonSuccess();
+		break;
+
+	case 'tovar_cost'://Изменение закупочной стоимости и продажи
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError('Некорректный id товара');
 
 		$sum_buy = _cena($_POST['sum_buy']);
-		$sum_procent = _cena($_POST['sum_procent']);
 		$sum_sell = _cena($_POST['sum_sell']);
 
 		if(!$r = _tovarQuery($tovar_id))
 			jsonError('Товара не существует');
 
-		$sql = "DELETE FROM `_tovar_cost` WHERE `tovar_id`=".$tovar_id;
-		query($sql);
-
-		$sql = "INSERT INTO `_tovar_cost` (
-					`app_id`,
-					`tovar_id`,
-					`sum_buy`,
-					`sum_procent`,
-					`sum_sell`
-				) VALUES (
-					".APP_ID.",
-					".$tovar_id.",
-					".$sum_buy.",
-					".$sum_procent.",
-					".$sum_sell."
-				)";
+		$sql = "UPDATE `_tovar_bind`
+		        SET `sum_buy`=".$sum_buy.",
+					`sum_sell`=".$sum_sell."
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id;
 		query($sql);
 
 		if($changes =
-			_historyChange('Закупка', _cena($r['sum_buy']), $sum_buy).
-			_historyChange('Процент', _cena($r['sum_procent']), $sum_procent).
-			_historyChange('Продажа', _cena($r['sum_sell']), $sum_sell)
+			_historyChange('Закупка', $r['sum_buy'], $sum_buy).
+			_historyChange('Продажа', $r['sum_sell'], $sum_sell)
 		)   _history(array(
 				'type_id' => 106,
 				'tovar_id' => $tovar_id,
@@ -383,15 +746,15 @@ switch(@$_POST['op']) {
 
 	case 'tovar_avai_add':
 		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
+			jsonError('Некорректный id товара');
 		if(!$count = _ms($_POST['count']))
-			jsonError();
+			jsonError('Некорректно указано количество');
 
 		$sum_buy = _cena($_POST['sum_buy']);
 		$about = _txt($_POST['about']);
 
 		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
+			jsonError('Товара не существует');
 
 		$sql = "SELECT `id`
 				FROM `_tovar_avai`
@@ -405,7 +768,6 @@ switch(@$_POST['op']) {
 					`id`,
 					`app_id`,
 					`tovar_id`,
-					`articul`,
 					`count`,
 					`sum_buy`,
 					`about`
@@ -413,7 +775,6 @@ switch(@$_POST['op']) {
 					".$avai_id.",
 					".APP_ID.",
 					".$tovar_id.",
-					'"._tovarArticulCreate()."',
 					".$count.",
 					".$sum_buy.",
 					'".addslashes($about)."'
@@ -431,6 +792,8 @@ switch(@$_POST['op']) {
 			'cena' => $sum_buy
 		));
 
+		_tovarAvaiUpdate($tovar_id);
+
 		_history(array(
 			'type_id' => 107,
 			'tovar_id' => $tovar_id,
@@ -443,69 +806,138 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'tovar_sell_load'://загрузка данных для продажи товара
+	case 'tovar_zakaz'://добавление товара в заказ
+		if(!$count = _ms($_POST['count']))
+			jsonError('Некорректно указано количество');
 		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
+			jsonError('Некорректный id товара');
 
-		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
+		if(!$t = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
 
-		$send['html'] = utf8('<div id="nosell">Товара в наличии нет.</div>');
-
-		$sql = "SELECT
-					`id`,
-					`articul`,
-					`count`
-				FROM `_tovar_avai`
-				WHERE `app_id`=".APP_ID."
-				  AND `tovar_id`=".$tovar_id."
-				  AND `count`";
-		if($send['arr'] = query_arr($sql)) {
-			$send['html'] = utf8(
-				'<div class="_info">'.
-					'После применения продажи будет произведён платёж на указанный расчётный счёт.'.
-				'</div>'.
-				'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
-				($r['tovar_id_set'] ? '<h2>для '.$r['tovar_set_name'].'</h2>' : '').
-				'<div class="headName">Выбор по наличию</div>'.
-				_tovarAvaiArticul($tovar_id, 1).
-				'<table id="ts-tab" class="bs10 dn">'.
-
-					'<tr'.(_tovarMeasure($r['measure_id'], 'area') ? '' : ' class="dn"').'>'.
-						'<td class="label r">Площадь:'.
-						'<td><input type="text" id="sale-length" class="w50" placeholder="длина м." />'.
-							' x '.
-							'<input type="text" id="sale-width" class="w50" placeholder="ширина м." />'.
-
-					'<tr><td class="label r">Количество:*'.
-						'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
-							'<span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Цена продажи (за 1 '._tovarMeasure($r['measure_id']).'):*'.
-						'<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
-					'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
-					'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
-					'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
-				'</table>'
-			);
-
-			foreach($send['arr'] as $r)
-				$send['arr'][$r['id']]['count'] = _ms($r['count']);
+		$client_id = _num(@$_POST['client_id']);
+		if($zayav_id = _num(@$_POST['zayav_id'])) {
+			if(!$z = _zayavQuery($zayav_id))
+				jsonError('Заявки не существует');
+			$client_id = $z['client_id'];
 		}
 
+		$about = _txt(@$_POST['about']);
 
-		$send['count'] = count($send['arr']);
+		$sql = "INSERT INTO `_tovar_zakaz` (
+					`app_id`,
+					`tovar_id`,
+					`client_id`,
+					`zayav_id`,
+					`count`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".$tovar_id.",
+					".$client_id.",
+					".$zayav_id.",
+					".$count.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		$send['id'] = query_insert_id('_tovar_zakaz');
+		_tovarZakazUpdate($tovar_id);
+
+		_history(array(
+			'type_id' => 112,
+			'client_id' => $client_id,
+			'tovar_id' => $tovar_id,
+			'v1' => $about
+		));
 
 		jsonSuccess($send);
 		break;
-	case 'tovar_sell':// продажа товара
+	case 'tovar_zakaz_del'://удаление товара из заказа
+		if(!$id = _num($_POST['id']))
+			jsonError('Некорректный id заказа');
+
+		//id заявки для определения, из заявки удаляется или нет
+		$zayav_id = _num(@$_POST['zayav_id']);
+
+		$sql = "SELECT *
+				FROM `_tovar_zakaz`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('Этой позиции в заказе не существует');
+
+		if(!$tovar = _tovarQuery($r['tovar_id']))
+			jsonError('Товара не существует');
+
+		$sql = "DELETE FROM `_tovar_zakaz` WHERE `id`=".$id;
+		query($sql);
+
+		_tovarZakazUpdate($r['tovar_id']);
+
+		_history(array(
+			'type_id' => 167,
+			'tovar_id' => $tovar['id'],
+			'v1' => _ms($r['count']),
+			'v2' => _tovarMeasure($tovar['measure_id'])
+		));
+
+		$send['html'] = $zayav_id ? '' : utf8(_tovar_info_zakaz($tovar));
+
+		jsonSuccess($send);
+		break;
+
+	case 'tovar_sale_load'://загрузка данных для продажи товара
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный ID товара');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+		
+		if(!$r['avai'])
+			jsonError('Товара в наличии нет');
+
+		$send['html'] = utf8(
+			'<div class="_info">'.
+				'После применения продажи будет произведён платёж на указанный расчётный счёт.'.
+			'</div>'.
+			'<div class="fs18 mt15">'.$r['name'].'</div>'.
+			'<div class="hd2 mt10">Выбор по наличию</div>'.
+			_tovarAvaiSpisok($tovar_id, 'radio').
+			'<table id="sale-tab" class="bs10 dn">'.
+				'<tr'.(_tovarMeasure($r['measure_id'], 'area') ? '' : ' class="dn"').'>'.
+					'<td class="label r">Площадь:'.
+					'<td><input type="text" id="sale-length" class="w50" placeholder="длина м." />'.
+						' x '.
+						'<input type="text" id="sale-width" class="w50" placeholder="ширина м." />'.
+
+				'<tr><td class="label r w125">Количество:*'.
+					'<td><input type="text" id="count" class="w35" value="1" /> '._tovarMeasure($r['measure_id']).
+						' <span class="grey">(max: <b id="max"></b>)</span>'.
+				'<tr><td class="label r">Цена (за 1 '._tovarMeasure($r['measure_id']).'):*'.
+					'<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
+				'<tr><td class="label r">Сумма:<td><b id="summa"></b> руб.'.
+				'<tr><td class="label r">Счёт:*<td><input type="hidden" id="invoice_id" />'.
+				'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id" />'.
+			'</table>'
+		);
+
+		$send['arr'] = _tovarAvaiSpisok($tovar_id, 'arr');
+		$send['arr_count'] = count($send['arr']);
+		$send['arr_first'] = count($send['arr']) ? key($send['arr']) : 0;
+		jsonSuccess($send);
+		break;
+	case 'tovar_sale':// продажа товара
 		if(!$avai_id = _num($_POST['avai_id']))
-			jsonError();
+			jsonError('Некорректный ID наличия');
 		if(!$count = _ms($_POST['count']))
-			jsonError();
+			jsonError('Некорректно введено количество');
 		if(!$cena = _cena($_POST['cena']))
-			jsonError();
+			jsonError('Неверно указана цена');
 		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
+			jsonError('Не указан расчётный счёт');
 
 		$client_id = _num($_POST['client_id']);
 
@@ -513,16 +945,19 @@ switch(@$_POST['op']) {
 				FROM `_tovar_avai`
 				WHERE id=".$avai_id;
 		if(!$avai = query_assoc($sql))
-			jsonError();
+			jsonError('Наличия id'.$avai_id.' не существует');
 
-		if(!$avai['count'])
-			jsonError();
+		if(!_ms($avai['count']))
+			jsonError('Товара нет в наличии');
 
 		if($count > $avai['count'])
-			jsonError();
+			jsonError('Указанное количество превышает наличие');
 
 		if(!$r = _tovarQuery($avai['tovar_id']))
-			jsonError();
+			jsonError('Товара не существует');
+
+		if(!_tovarMeasure($r['measure_id'], 'fraction') && $count != round($count))
+			jsonError('Для этого товара невозможно использовать дробь в количестве');
 
 		$sum = round($count * $cena);
 
@@ -574,73 +1009,62 @@ switch(@$_POST['op']) {
 
 	case 'tovar_writeoff_load'://загрузка данных для списания товара
 		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
+			jsonError('Некорректный ID товара');
 
 		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
+			jsonError('Товара не существует');
 
-		$send['html'] = utf8('<div id="nosell">Товара в наличии нет.</div>');
+		if(!$r['avai'])
+			jsonError('Товара в наличии нет');
 
-		$sql = "SELECT
-					`id`,
-					`articul`,
-					`count`
-				FROM `_tovar_avai`
-				WHERE `app_id`=".APP_ID."
-				  AND `tovar_id`=".$tovar_id."
-				  AND `count`";
-		if($send['arr'] = query_arr($sql)) {
-			$send['html'] = utf8(
-				'<div class="_info">'.
-					'Списание товара производится из наличия.'.
-					'<br />'.
-					'Необходимо обязательно указать причину списания.'.
-				'</div>'.
-				'<h1><b>'._tovarName($r['name_id']).'</b> '.$r['name'].'</h1>'.
-				($r['tovar_id_set'] ? '<h2>для '.$r['tovar_set_name'].'</h2>' : '').
-				'<div class="headName">Выбор по наличию</div>'.
-				_tovarAvaiArticul($tovar_id, 1).
-				'<table id="ts-tab" class="bs10 dn">'.
-					'<tr><td class="label r">Количество:*'.
-							'<td><input type="text" id="count" /> '._tovarMeasure($r['measure_id']).
-								'<span id="max">(max: <b></b>)</span>'.
-					'<tr><td class="label r">Причина:*<td><input type="text" id="about" class="w250" />'.
-				'</table>'
-			);
+		$send['html'] = utf8(
+			'<div class="_info">'.
+				'Списание товара производится из наличия.'.
+				'<br />'.
+				'Необходимо обязательно указать причину списания.'.
+			'</div>'.
+			'<div class="fs18 mt15">'.$r['name'].'</div>'.
+			'<div class="hd2 mt10">Выбор по наличию</div>'.
+			_tovarAvaiSpisok($tovar_id, 'radio').
+			'<table id="write-tab" class="bs10 dn">'.
+				'<tr><td class="label r w100">Количество:*'.
+					'<td><input type="text" id="count" class="w35" value="1" /> '._tovarMeasure($r['measure_id']).
+						' <span class="grey">(max: <b id="max"></b>)</span>'.
+				'<tr><td class="label r">Причина:*<td><input type="text" id="about" class="w300" />'.
+			'</table>'
+		);
 
-			foreach($send['arr'] as $r)
-				$send['arr'][$r['id']]['count'] = _ms($r['count']);
-		}
-
-		$send['count'] = count($send['arr']);
-
+		$send['arr'] = _tovarAvaiSpisok($tovar_id, 'arr');
+		$send['arr_count'] = count($send['arr']);
+		$send['arr_first'] = count($send['arr']) ? key($send['arr']) : 0;
 		jsonSuccess($send);
 		break;
 	case 'tovar_writeoff':// продажа товара
 		if(!$avai_id = _num($_POST['avai_id']))
-			jsonError();
+			jsonError('Некорректный ID наличия');
 		if(!$count = _ms($_POST['count']))
-			jsonError();
+			jsonError('Некорректно введено количество');
 
-		$about = _txt($_POST['about']);
-
-		if(!$about)
-			jsonError();
+		if(!$about = _txt($_POST['about']))
+			jsonError('Не указана причина');
 
 		$sql = "SELECT *
 				FROM `_tovar_avai`
 				WHERE id=".$avai_id;
 		if(!$avai = query_assoc($sql))
-			jsonError();
+			jsonError('Наличия id'.$avai_id.' не существует');
 
-		if(!$avai['count'])
-			jsonError();
+		if(!_ms($avai['count']))
+			jsonError('Товара нет в наличии');
 
 		if($count > $avai['count'])
-			jsonError();
+			jsonError('Указанное количество превышает наличие');
 
 		if(!$r = _tovarQuery($avai['tovar_id']))
-			jsonError();
+			jsonError('Товара не существует');
+
+		if(!_tovarMeasure($r['measure_id'], 'fraction') && $count != round($count))
+			jsonError('Для этого товара невозможно использовать дробь в количестве');
 
 		_tovarMoveInsert(array(
 			'type_id' => 6,
@@ -701,135 +1125,147 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-
-	case 'tovar_equip_load'://получение списка комплектаций по товару
-		$tovar_id = _num($_POST['tovar_id']);
-		$ids_sel = $_POST['ids_sel'];//галочки поставлены
-
-		$send['check'] = utf8(_tovarEquipCheck($tovar_id, $ids_sel));
-		$send['equip_js'] = _tovarEquip('js', $tovar_id);
-		jsonSuccess($send);
-		break;
-	case 'tovar_equip_add'://добавление новой комплектации к товару
-		if(!$tovar_id = _num($_POST['tovar_id']))
-			jsonError();
-
-		$equip_id = _num($_POST['equip_id']);
-		$equip_name = _txt($_POST['equip_name']);
-		$ids_sel = $_POST['ids_sel'];//галочки поставлены
-
-		if(!$equip_id && !$equip_name)
-			jsonError();
-
-		if(!$r = _tovarQuery($tovar_id))
-			jsonError();
-
-		//внесение нового названия комплектации
-		if(!$equip_id && $equip_name) {
-			$sql = "SELECT `id`
-					FROM `_tovar_equip_name`
-					WHERE `name`='".addslashes($equip_name)."'";
-			if(!$equip_id = query_value($sql)) {
-				$sql = "INSERT INTO `_tovar_equip_name` (
-							`name`,
-							`viewer_id_add`
-						) VALUES (
-							'".addslashes($equip_name)."',
-							".VIEWER_ID."
-						)";
-				query($sql);
-				$equip_id = query_insert_id('_tovar_equip_name');
-				xcache_unset(CACHE_PREFIX.'tovar_equip');
-			}
-		}
-
-		//проверка, была ли внесена комплектация для товара
-		$equip_exist = _idsAss($r['equip_ids']);
-		if(isset($equip_exist[$equip_id]))
-			jsonError();
-
-		$sql = "INSERT INTO `_tovar_equip` (
-					`category_id`,
-					`name_id`,
-					`equip_id`,
-					`sort`
-				) VALUES (
-					".$r['category_id'].",
-					".$r['name_id'].",
-					".$equip_id.",
-					"._maxSql('_tovar_equip')."
-				)";
-		query($sql);
-
-		$send['check'] = utf8(_tovarEquipCheck($tovar_id, $ids_sel));
-		$send['equip_js'] = _tovarEquip('js', $tovar_id);
-		jsonSuccess($send);
-		break;
-
-	case 'tovar_zakaz_del'://удаление товара из заказа
-		if(!$id = _num($_POST['id']))
-			jsonError('Некорректный id заказа');
-
-		//id заявки для определения, из заявки удаляется или нет
-		$zayav_id = _num(@$_POST['zayav_id']);
-
-		$sql = "SELECT *
-				FROM `_tovar_zakaz`
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError('Этой позиции в заказе не существует');
-
-		if(!$tovar = _tovarQuery($r['tovar_id']))
-			jsonError('Товара не существует');
-
-		$sql = "DELETE FROM `_tovar_zakaz` WHERE `id`=".$id;
-		query($sql);
-
-		_history(array(
-			'type_id' => 167,
-			'tovar_id' => $tovar['id'],
-			'v1' => _ms($r['count']),
-			'v2' => _tovarMeasure($tovar['measure_id'])
-		));
-
-		$send['html'] = $zayav_id ? '' : utf8(_tovar_info_zakaz($r['tovar_id']));
-		
-		jsonSuccess($send);
-		break;
-
 }
 
-function _tovar_name_insert() {//обновление наименования товара и получение его id
-	if(!$name_name = _txt($_POST['name_name']))
+function _tovarValuesCheck($tovar_id=0) {//проверка данных перед внесением или редактированием товара
+	$v = array();
+	if(!$v['name'] = _txt($_POST['name']))
+		jsonError('Не указано название');
+
+	if(!$v['measure_id'] = _num($_POST['measure_id']))
+		jsonError('Не выбрана единица измерения');
+
+	$v['measure_length'] = 0;
+	$v['measure_width'] = 0;
+	$v['measure_area'] = 0;
+	if(_tovarMeasure($v['measure_id'], 'area')) {
+		if(!$v['measure_length'] = _ms($_POST['measure_length']))
+			jsonError('Некорректно указана длина');
+		if(!$v['measure_width'] = _ms($_POST['measure_width']))
+			jsonError('Некорректно указана ширина');
+		$v['measure_area'] = _ms($v['measure_length'] * $v['measure_width']);
+	}
+
+	if(!$v['category_id'] = _tovar_category_insert())
+		jsonError('Не указана категория');
+	if($sub_id = _tovar_category_sub_insert($v['category_id']))
+		$v['category_id'] = $sub_id;
+
+	$v['vendor_id'] = _tovar_vendor_get();
+	$v['about'] = _txt($_POST['about']);
+
+	if(!$v['articul'] = _txt($_POST['articul'])) {
+		$v['articul'] = '000001';
+		$sql = "SELECT MAX(`articul`)
+				FROM `_tovar_bind`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `id` DESC
+				LIMIT 1";
+		if($articul = _num(query_value($sql)))
+			$v['articul'] = '0'.(++$articul);
+/*
+		$articul = $max;
+		for($i = 0; $i < 6 - strlen($max); $i++)
+			$articul = '0'.$articul;
+*/
+	} elseif($tovar_id) {
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_bind`
+				WHERE `app_id`=".APP_ID."
+				  AND `articul`='".addslashes($v['articul'])."'
+				  AND `tovar_id`!=".$tovar_id;
+		if(query_value($sql))
+			jsonError('Артикул используется в другом товаре');
+	}
+
+	$upd = array();
+	foreach($v as $k => $r) {
+		if($k == 'category_id')
+			continue;
+		if($k == 'articul')
+			continue;
+		$upd[] = '`'.$k.'`="'.addslashes($r).'"';
+	}
+
+	return array(
+		'v' => $v,
+		'upd' => implode(',', $upd),
+	);
+}
+function _tovar_category_insert() {//обновление категории товара и получение его id
+	if($category_id = _num($_POST['category_id']))
+		return $category_id;
+	if(!$category_name = _txt($_POST['category_name']))
 		return 0;
 
 	$sql = "SELECT `id`
-			FROM `_tovar_name`
-			WHERE `name`='".addslashes($name_name)."'
+			FROM `_tovar_category`
+			WHERE `app_id`=".APP_ID."
+			  AND `name`='".addslashes($category_name)."'
 			LIMIT 1";
-	if(!$name_id = query_value($sql)) {
-		$sql = "INSERT INTO `_tovar_name` (
+	if(!$category_id = query_value($sql)) {
+		$sql = "INSERT INTO `_tovar_category` (
+					`app_id`,
 					`name`,
-					`viewer_id_add`
+					`sort`
 				) VALUES (
-					'".addslashes($name_name)."',
-					".VIEWER_ID."
+					".APP_ID.",
+					'".addslashes($category_name)."',
+					"._maxSql('_tovar_category')."
 				)";
 		query($sql);
-		$name_id = query_insert_id('_tovar_name');
-		xcache_unset(CACHE_PREFIX.'tovar_name');
+
+		$category_id = query_insert_id('_tovar_category');
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
 	}
 
-	return $name_id;
+	return $category_id;
+}
+function _tovar_category_sub_insert($category_id) {//обновление подкатегории товара и получение его id
+	if($sub_id = _num($_POST['sub_id']))
+		return $sub_id;
+	if(!$sub_name = _txt($_POST['sub_name']))
+		return 0;
+
+	$sql = "SELECT `id`
+			FROM `_tovar_category`
+			WHERE `app_id`=".APP_ID."
+			  AND `parent_id`=".$category_id."
+			  AND `name`='".addslashes($sub_name)."'
+			LIMIT 1";
+	if(!$sub_id = query_value($sql)) {
+		$sql = "INSERT INTO `_tovar_category` (
+					`app_id`,
+					`parent_id`,
+					`name`,
+					`sort`
+				) VALUES (
+					".APP_ID.",
+					".$category_id.",
+					'".addslashes($sub_name)."',
+					"._maxSql('_tovar_category')."
+				)";
+		query($sql);
+
+		$sub_id = query_insert_id('_tovar_category');
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+	}
+
+	return $sub_id;
 }
 function _tovar_vendor_get() {//получение id производителя. Внесение нового на основании имени, если есть.
-	if($vendor_id = _num(@$_POST['vendor_id']))
-		return $vendor_id;
+	if($vendor_id = _num(@$_POST['vendor_id'])) {
+		$sql = "SELECT `id`
+				FROM `_tovar_vendor`
+				WHERE `id`=".$vendor_id."
+				LIMIT 1";
+		if(query_value($sql))
+			return $vendor_id;
+	}
 
-	$vendor_name = _txt(@$_POST['vendor_name']);
-
-	if(!$vendor_name)
+	if(!$vendor_name = _txt(@$_POST['vendor_name']))
 		return 0;
 
 	$sql = "SELECT `id`
@@ -852,26 +1288,6 @@ function _tovar_vendor_get() {//получение id производителя. Внесение нового на о
 	xcache_unset(CACHE_PREFIX.'tovar_vendor');
 
 	return $vendor_id;
-}
-function _tovar_find_update($tovar_id) {
-	$r = _tovarQuery($tovar_id);
-
-	$find =
-		_tovarName($r['name_id']).
-		_tovarVendor($r['vendor_id']).
-		$r['name'];
-
-	if($r['tovar_id_set'])
-		if($r = _tovarQuery($r['tovar_id_set']))
-			$find .= ' '.
-				_tovarName($r['name_id']).
-				_tovarVendor($r['vendor_id']).
-				$r['name'];
-
-	$sql = "UPDATE `_tovar`
-			SET `find`='".addslashes($find)."'
-			WHERE `id`=".$tovar_id;
-	query($sql);
 }
 function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 	$sql = "DELETE FROM `_tovar_feature` WHERE `tovar_id`=".$tovar_id;
@@ -907,24 +1323,56 @@ function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 			) VALUES ".implode(',', $insert);
 	query($sql);
 }
-function _tovar_formimg_send($r) {//форсирование данных товара для отправки (при выборе товара)
-	$id = $r['id'];
-	if(!$count = _ms(@$r['count']))
-		$count = 1;
-	return array(
-		'id' => $id,
-		'tovar_id' => $id,
-		'avai_id' => 0,
-		'count' => $count,
-		'name' => utf8($r['tovar_name']),
-		'name_b' => utf8($r['tovar_name_b']),
-		'sum_buy' => _cena($r['tovar_buy']),
-		'sum_sell' => _cena($r['tovar_sell']),
-		'measure' => utf8($r['tovar_measure_name']),
-		'image_small' => $r['tovar_image_small']
-	);
+
+function _tovar_unit_select($spisok, $find, $avai) {
+	$send = '<table class="collaps w100p bg-fff mt1 mb10">';
+	foreach($spisok as $r) {
+		if($find) {
+			$reg = '/('.$find.')/iu';
+			$reg = utf8($reg);
+			$r['name'] = utf8($r['name']);
+			$r['name'] = preg_replace($reg, '<span class="fndd b">\\1</span>', $r['name'], 1);
+			$r['name'] = win1251($r['name']);
+			$r['about'] = utf8($r['about']);
+			$r['about'] = preg_replace($reg, '<span class="fndd fs12">\\1</span>', $r['about'], 1);
+			$r['about'] = win1251($r['about']);
+		}
+		$send .=
+			'<tr class="tsu bor-e8 over1 curP" val="'.$r['id'].'">'.
+				'<td>'.
+					'<table class="bs5 w100p prel">'.
+						'<tr>'.
+							'<td class="top w35 h25">'.$r['image_min'].
+							'<td class="top b">'.
+								$r['name'].
+				 ($r['about'] ? '<div class="fs12 grey mt1 w400">'._br($r['about']).'</div>' : '').
+		 ($avai && $r['avai'] ? '<div class="tovar-unit-avai">'.$r['avai'].'</div>' : '').
+								$r['zayav'].
+					'</table>';
+	}
+	$send .= '</table>';
+
+	return $send;
 }
 
+function _tovar_category_vendor() {//список производителей
+	$sql = "SELECT DISTINCT(`vendor_id`)
+			FROM
+				`_tovar` `t`,
+				`_tovar_bind` `bind`
+			WHERE `t`.`id`=`bind`.`tovar_id`
+			  AND `bind`.`app_id`=".APP_ID."
+			  AND `vendor_id`";
+	$ids = query_ids($sql);
+
+	$vendorIds = array();
+	foreach(_ids($ids, 1) as $r)
+		$vendorIds[$r] = _tovarVendor($r);
+
+	asort($vendorIds);
+
+	return _sel($vendorIds);
+}
 
 
 

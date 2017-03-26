@@ -179,9 +179,9 @@ function _devstoryMenu() {//разделы основного меню
 function _devstory_part() {
 	return
 	'<div id="devstory-part">'.
-		'<div class="headName m1">'.
+		'<div class="hd2 mar10">'.
 			'Основные разделы'.
-			(SA ? '<a class="add" onclick="devStoryPartEdit()">Новый раздел</a>' : '').
+			(SA ? '<button class="vk small fr" onclick="devStoryPartEdit()">Новый раздел</button>' : '').
 		'</div>'.
 		'<div id="part-spisok">'._devstory_part_spisok().'</div>'.
 	'</div>';
