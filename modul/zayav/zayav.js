@@ -742,9 +742,9 @@ var _zayavSpisok = function(v, id) {
 		if(!o.id)
 			$('#avans_check')._check({
 				func:function() {
-					$('#invoice_id-add')._check(_invoiceIncomeInsert(1));
 					$('#avans_check_check').remove();
 					$('#avans_div').removeClass('dn');
+					$('#invoice_id-add')._check(_invoiceIncomeInsert(1));
 				}
 			});
 
@@ -921,6 +921,7 @@ var _zayavSpisok = function(v, id) {
 					$('#ze-dop').tovar({
 						open:1,
 						func:function(v, attr_id, sp) {
+							console.log(sp);
 							$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');
 							$(v ? '#ze-count' : '#ze-sum').focus();
 							$('#ze-count')

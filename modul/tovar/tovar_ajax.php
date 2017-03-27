@@ -345,6 +345,7 @@ switch(@$_POST['op']) {
 					`t`.*,
 					`category_id`,
 					`avai`,
+					`sum_buy`,
 					'' `zayav`
 				FROM
 					`_tovar` `t`,
@@ -382,7 +383,8 @@ switch(@$_POST['op']) {
 				'img' => $r['image_min'],
 				'name' => utf8($r['name']),
 				'about' => utf8(_br($r['about'])),
-				'measure' => utf8(_tovarMeasure($r['measure_id']))
+				'measure' => utf8(_tovarMeasure($r['measure_id'])),
+				'sum_buy' => _cena($r['sum_buy'])
 			);
 		}
 
