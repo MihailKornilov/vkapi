@@ -1344,9 +1344,9 @@ function _tovar_unit_select($spisok, $find, $avai) {
 						'<tr>'.
 							'<td class="top w35 h25">'.$r['image_min'].
 							'<td class="top b">'.
+		 ($avai && $r['avai'] ? '<div class="tovar-unit-avai fr">'.$r['avai'].'</div>' : '').
 								$r['name'].
 				 ($r['about'] ? '<div class="fs12 grey mt1 w400">'._br($r['about']).'</div>' : '').
-		 ($avai && $r['avai'] ? '<div class="tovar-unit-avai">'.$r['avai'].'</div>' : '').
 								$r['zayav'].
 					'</table>';
 	}
