@@ -418,8 +418,8 @@ switch(@$_POST['op']) {
 				'<tr><td class="label r w100 top">Клиент:<td>'.($r['client_id'] ? _clientVal($r['client_id'], 'link') : '<i class="grey">не привязан</i>').
 				'<tr><td class="label r">Заявка:<td>'.($r['zayav_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
 				'<tr><td class="label r">Товар:<td>'.($r['tovar_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
-				'<tr><td class="label r">Договор:<td>'.($r['dogovor_id'] ? 'привязан' : '<i class="grey">не привязан</i>').
-				'<tr><td class="label r">Счёт на оплату:<td>'.($r['schet_id'] ? _check('schet_pay_unbind', 'отвязать') : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Договор:<td>'.($r['dogovor_id'] ? _check('pay_unbind_dogovor', 'отвязать') : '<i class="grey">не привязан</i>').
+				'<tr><td class="label r">Счёт на оплату:<td>'.($r['schet_id'] ? _check('pay_unbind_schet', 'отвязать') : '<i class="grey">не привязан</i>').
 			'</table>'
 		);
 
@@ -439,8 +439,35 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError('Платежа не существует');
 
+		//отвязка от договора
+		if(_bool($_POST['dogovor'])) {
+			if(!$r['dogovor_id'])
+				jsonError('Платёж не привязан к договору');
+
+			$sql = "SELECT *
+					FROM `_zayav_dogovor`
+					WHERE `app_id`=".APP_ID."
+					  AND `id`=".$r['dogovor_id'];
+			if(!query_assoc($sql))
+				jsonError('Договора не существует');
+
+			$sql = "UPDATE `_money_income`
+					SET `dogovor_id`=0
+					WHERE `id`=".$income_id;
+			query($sql);
+
+			_history(array(
+				'type_id' => 168,
+				'client_id' => $r['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'dogovor_id' => $r['dogovor_id'],
+				'v1' => _cena($r['sum']),
+				'v2' => FullDataTime($r['dtime_add'])
+			));
+		}
+
 		//отвязка от счёта на оплату
-		if(_num($_POST['schet_pay'])) {
+		if(_bool($_POST['schet'])) {
 			if(!$r['schet_id'])
 				jsonError('Платёж не привязан к счёту на оплату');
 

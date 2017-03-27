@@ -269,31 +269,18 @@ var _accrualAdd = function(o) {
 				op:'income_unbind_load',
 				income_id:income_id
 			};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success)
-				loaded(res);
-			else
-				dialog.loadError(res.text);
-		}, 'json');
+		dialog.load(send);
 
-		function loaded(res) {
-			dialog.content.html(res.html);
-		}
 		function submit() {
 			var send = {
 				op:'income_unbind',
 				income_id:income_id,
-				schet_pay:_num($('#schet_pay_unbind').val())
+				dogovor:_bool($('#pay_unbind_dogovor').val()),
+				schet:_bool($('#pay_unbind_schet').val())
 			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					incomeUnbind(income_id);
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, function() {
+				incomeUnbind(income_id);
+			});
 		}
 	},
 	incomeConfirmCheck = function(dis) {//показ _select расчётного счёта и галочки подтверждения
