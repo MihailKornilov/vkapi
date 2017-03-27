@@ -901,9 +901,8 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		query("UPDATE `_zayav_dogovor` SET `deleted`=1 WHERE `id`=".$dogovor_id);
-		query("UPDATE `_money_accrual` SET `deleted`=1 WHERE `dogovor_id`=".$dogovor_id);
-		query("UPDATE `_zayav` SET `dogovor_id`=0 WHERE `id`=".$dog['zayav_id']);
 
+		query("UPDATE `_money_accrual` SET `deleted`=1 WHERE `dogovor_id`=".$dogovor_id);
 		//внесение баланса для клиента
 		_balans(array(
 			'action_id' => 26,
@@ -913,9 +912,37 @@ switch(@$_POST['op']) {
 			'sum' => $dog['sum']
 		));
 
+		//удаление авансового платежа, если есть
+		$sql = "SELECT *
+				FROM `_money_income`
+				WHERE !`deleted`
+				  AND `dogovor_id`=".$dogovor_id."
+				LIMIT 1";
+		if($inc = query_assoc($sql)) {
+			query("UPDATE `_money_income` SET `deleted`=1 WHERE `id`=".$inc['id']);
+			//баланс для расчётного счёта
+			_balans(array(
+				'action_id' => 2,
+				'invoice_id' => $inc['invoice_id'],
+				'sum' => $inc['sum'],
+				'income_id' => $inc['id']
+			));
+			//баланс для клиента
+			if($inc['client_id'])
+				_balans(array(
+					'action_id' => 28,
+					'client_id' => $inc['client_id'],
+					'zayav_id' => $z['id'],
+					'dogovor_id' => $dogovor_id,
+					'sum' => $inc['sum']
+				));
+		}
+
+		query("UPDATE `_zayav` SET `dogovor_id`=0 WHERE `id`=".$dog['zayav_id']);
+
 		_clientBalansUpdate($z['client_id']);
 		_zayavBalansUpdate($z['id']);
-		_salaryZayavBonus($z['id']);
+//		_salaryZayavBonus($z['id']);
 
 		_history(array(
 			'type_id' => 96,
@@ -1683,55 +1710,56 @@ function _zayavNameUpdate($zayav_id, $v) {//обновление названия заявки и строки 
 	return $name;
 }
 function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключении/изменении договора
-	if($v['avans']) {
-		$sql = "INSERT INTO `_money_income` (
-				`app_id`,
-				`invoice_id`,
-				`confirm`,
-				`sum`,
-				`client_id`,
-				`zayav_id`,
-				`dogovor_id`,
-				`viewer_id_add`
-			) VALUES (
-				".APP_ID.",
-				".$v['invoice_id'].",
-				".$v['confirm'].",
-				".$v['avans'].",
-				".$v['client_id'].",
-				".$v['zayav_id'].",
-				".$v['id'].",
-				".VIEWER_ID."
-			)";
-		query($sql);
+	if(!$v['avans'])
+		return;
 
-		$income_id = query_insert_id('_money_income');
+	$sql = "INSERT INTO `_money_income` (
+			`app_id`,
+			`invoice_id`,
+			`confirm`,
+			`sum`,
+			`client_id`,
+			`zayav_id`,
+			`dogovor_id`,
+			`viewer_id_add`
+		) VALUES (
+			".APP_ID.",
+			".$v['invoice_id'].",
+			".$v['confirm'].",
+			".$v['avans'].",
+			".$v['client_id'].",
+			".$v['zayav_id'].",
+			".$v['id'].",
+			".VIEWER_ID."
+		)";
+	query($sql);
 
-		//баланс для расчётного счёта
-		_balans(array(
-			'action_id' => 1,
-			'invoice_id' => $v['invoice_id'],
-			'sum' => $v['avans'],
-			'income_id' => $income_id
-		));
+	$income_id = query_insert_id('_money_income');
 
-		//баланс для клиента
-		_balans(array(
-			'action_id' => 27,
-			'client_id' => $v['client_id'],
-			'zayav_id' => $v['zayav_id'],
-			'dogovor_id' => $v['id'],
-			'sum' => $v['avans'],
-			'about' => 'Авансовый платёж.'
-		));
+	//баланс для расчётного счёта
+	_balans(array(
+		'action_id' => 1,
+		'invoice_id' => $v['invoice_id'],
+		'sum' => $v['avans'],
+		'income_id' => $income_id
+	));
 
-		_history(array(
-			'type_id' => 20,
-			'client_id' => $v['client_id'],
-			'zayav_id' => $v['zayav_id'],
-			'dogovor_id' => $v['id']
-		));
-	}
+	//баланс для клиента
+	_balans(array(
+		'action_id' => 27,
+		'client_id' => $v['client_id'],
+		'zayav_id' => $v['zayav_id'],
+		'dogovor_id' => $v['id'],
+		'sum' => $v['avans'],
+		'about' => 'Авансовый платёж.'
+	));
+
+	_history(array(
+		'type_id' => 20,
+		'client_id' => $v['client_id'],
+		'zayav_id' => $v['zayav_id'],
+		'dogovor_id' => $v['id']
+	));
 }
 function _zayavStatusRemindAdd($zayav_id) {//внесение напоминания при изменении статуса заявки
 	if(!_bool($_POST['remind']))

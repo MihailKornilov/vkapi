@@ -740,6 +740,7 @@ function _salaryZayavCheck($zayav_id) {//проверка, если заявка оплачена полность
 	}
 }
 function _salaryZayavBonus($zayav_id) {//начисление бонуса сотруднику
+	return;
 	if(!$z = _zayavQuery($zayav_id))
 		return;
 
