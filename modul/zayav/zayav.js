@@ -698,35 +698,39 @@ var _zayavSpisok = function(v, id) {
 			data_create:'',
 			sum:'',
 			avans_hide:0,//скрывать авансовый платёж, если наступил следующий день после заключения договора
-			avans_invoice_id:0,
+			avans_invoice_id:_invoiceIncomeInsert(1),
 			avans_sum:''
 		}, DOG);
 
-		var html = '<table id="_zayav-dog-tab">' +
-				'<tr><td class="label">Ф.И.О. клиента:<td><input type="text" id="fio" value="' + o.fio + '" />' +
-				'<tr><td class="label">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" />' +
-				'<tr><td class="label">Паспорт:' +
-					'<td>Серия:<input type="text" id="pasp_seria" maxlength="8" value="' + o.pasp_seria + '" />' +
-						'Номер:<input type="text" id="pasp_nomer" maxlength="10" value="' + o.pasp_nomer + '" />' +
-				'<tr><td><td><span class="l">Прописка:</span><input type="text" id="pasp_adres" value="' + o.pasp_adres + '" />' +
-				'<tr><td><td><span class="l">Кем выдан:</span><input type="text" id="pasp_ovd" value="' + o.pasp_ovd + '" />' +
-				'<tr><td><td><span class="l">Когда выдан:</span><input type="text" id="pasp_data" value="' + o.pasp_data + '" />' +
-				'<tr><td class="label">Номер договора:<td><input type="text" id="nomer" maxlength="6" value="' + o.nomer + '" placeholder="' + o.nomer_next + '" />' +
-				'<tr><td class="label">Дата заключения:<td><input type="hidden" id="data_create" value="' + o.data_create + '" />' +
-				'<tr><td class="label">Сумма по договору:<td><input type="text" id="sum" class="money" maxlength="11" value="' + (o.sum ? o.sum : '') + '" /> руб.' +
+		var html = '<table id="_zayav-dog-tab" class="bs10 w100p">' +
+				'<tr><td class="label r w150">Ф.И.О. клиента:<td><input type="text" id="fio" class="w300" value="' + o.fio + '" />' +
+				'<tr><td class="label r">Адрес:<td><input type="text" id="adres" value="' + o.adres + '" class="w300" />' +
+				'<tr><td class="label r topi">Паспорт:' +
+					'<td class="color-555">&nbsp;Серия: <input type="text" id="pasp_seria" class="w50 mr20" maxlength="8" value="' + o.pasp_seria + '" />' +
+						'Номер: <input type="text" id="pasp_nomer" class="w100" maxlength="10" value="' + o.pasp_nomer + '" />' +
+						'<table class="bs5">' +
+							'<tr><td>Прописка:<td><input type="text" id="pasp_adres" class="w200" value="' + o.pasp_adres + '" />' +
+							'<tr><td>Кем выдан:<td><input type="text" id="pasp_ovd" class="w200" value="' + o.pasp_ovd + '" />' +
+							'<tr><td>Когда выдан:<td><input type="text" id="pasp_data" class="w200" value="' + o.pasp_data + '" />' +
+						'</table>' +
+				'<tr><td class="label r">Номер договора:' +
+					'<td><input type="text" id="nomer" class="w50" value="' + o.nomer + '" placeholder="' + o.nomer_next + '" />' +
+				'<tr><td class="label r">Дата заключения:' +
+					'<td><input type="hidden" id="data_create" value="' + o.data_create + '" />' +
+				'<tr><td class="label r">Сумма по договору:<td><input type="text" id="sum" class="money" maxlength="11" value="' + (o.sum ? o.sum : '') + '" /> руб.' +
 				'<tr' + (o.avans_hide && !o.avans_invoice_id ? ' class="dn"' : '') + '>' +
-					'<td class="label top">Авансовый платёж:' +
+					'<td class="label r topi">Авансовый платёж:' +
 					'<td><input type="hidden" id="avans_check" />' +
 						'<div id="avans_div"' + (!o.id ? ' class="dn"' : '') + '>' +
-							'<input type="hidden" id="avans_invoice_id" value="' + o.avans_invoice_id + '" />' +
-							'<input type="text" id="avans_sum" class="money" maxlength="11" value="' + o.avans_sum + '"' + (o.avans_hide ? ' disabled' : '') + ' /> руб. ' +
+							'<input type="hidden" id="invoice_id-add" value="' + o.avans_invoice_id + '" />' +
+							'<div class="tr_confirm mt5 dn"><input type="hidden" id="confirm" /></div>' +
+							'<input type="text" id="avans_sum" class="money mt10" value="' + o.avans_sum + '"' + (o.avans_hide ? ' disabled' : '') + ' /> руб. ' +
 						'</div>' +
-				'<tr><td colspan="2">' +
-					'<a id="preview">Предварительный просмотр договора</a>' +
-					'<form action="' + AJAX_MAIN + '" method="post" id="preview-form" target="_blank"></form>' +
-				'</table>',
+				'</table>' +
+				'<div id="preview" class="center pad10 mt10 over1 curP color-555">Предварительный просмотр договора</div>' +
+				'<form action="' + AJAX_MAIN + '" method="post" id="preview-form" target="_blank"></form>',
 			dialog = _dialog({
-				width:480,
+				width:550,
 				top:10,
 				head:(o.id ? 'Изменение данных' : 'Заключение') + ' договора',
 				content:html,
@@ -743,17 +747,7 @@ var _zayavSpisok = function(v, id) {
 				}
 			});
 
-		$('#avans_invoice_id')._select({
-			width:190,
-			block:1,
-			disabled:o.avans_hide,
-			title0:'Счёт не выбран',
-			bottom:7,
-			spisok:_invoiceIncomeInsert(),
-			func:function() {
-				$('#avans_sum').focus();
-			}
-		});
+		incomeConfirmCheck(o.avans_hide);
 		$('#data_create')._calendar({lost:1});
 		$('#preview').click(function() {
 			if(!(send = valuesTest()))
@@ -781,7 +775,8 @@ var _zayavSpisok = function(v, id) {
 				nomer:_num($('#nomer').val()),
 				data_create:$('#data_create').val(),
 				sum:_cena($('#sum').val()),
-				invoice_id:_num($('#avans_invoice_id').val()),
+				invoice_id:_num($('#invoice_id-add').val()),
+				confirm:_bool($('#confirm').val()),
 				avans:_cena($('#avans_sum').val())
 			};
 			if(!send.fio) {
@@ -813,17 +808,7 @@ var _zayavSpisok = function(v, id) {
 		function submit() {
 			if(!(send = valuesTest()))
 				return;
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Договор заключен');
-					document.location.reload();
-				} else {
-					dialog.abort();
-					dialog.err(res.text);
-				}
-			}, 'json');
+			dialog.post(send, 'reload');
 		}
 	},
 	_zayavDogovorTerminate = function() {

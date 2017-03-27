@@ -540,7 +540,7 @@ function incomeAbout($r, $filter=array()) {
 	if($r['schet_id'])
 		$about .= '<div class="schet">'.$r['schet_pay_income'].' День оплаты: '.FullData($r['schet_paid_day'], 1).'</div>';
 	if($r['dogovor_id'])
-		$about .= 'Авансовый платёж по договору <u>'.$r['dogovor_nomer'].'</u> от '.$r['dogovor_data'];
+		$about .= ' Авансовый платёж по договору <u>'.$r['dogovor_nomer'].'</u> от '.$r['dogovor_data'];
 	if($r['confirm'] == 1)
 		$about .=
 			'<button val="'.$r['id'].'#'.$r['invoice_id'].'#'._sumSpace($r['sum']).'#'.FullDataTime($r['dtime_add']).'" class="vk small'._tooltip('Подтвердить поступление на счёт', -67).
@@ -556,7 +556,7 @@ function incomeAbout($r, $filter=array()) {
 			: '';
 
 	$about .= $refund.
-		($r['about'] && $about ? ', ' : '').$r['about'].
+		' <span class="i color-555">'.$r['about'].'</span>'.
 		($r['client_id'] && !@$filter['client_id'] && !@$filter['zayav_id'] ? '<div class="grey fs12 mt3">Клиент: '.$r['client_link'].'</div>' : '').
 		($r['refund_id'] ? ' <span class="red">Платёж возвращён.</span>' : '');
 

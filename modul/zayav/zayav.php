@@ -2294,6 +2294,7 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 		'adres' => trim($v['adres']),
 		'sum' => _cena($v['sum']),
 		'invoice_id' => _num($v['invoice_id']),
+		'confirm' => _num($v['confirm']),
 		'avans' => _cena($v['avans']),
 		'data_create' => $v['data_create'],
 		'link' => time().'_dogovor_'.intval($v['nomer']).'_'.$v['data_create'],

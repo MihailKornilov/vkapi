@@ -419,23 +419,7 @@
 
 
 /* диалог заключения договора */
-#_zayav-dog-tab{border-spacing:10px}
-#_zayav-dog-tab .label{width:120px;text-align:right}
-#_zayav-dog-tab #fio,
-#_zayav-dog-tab #adres,
-#_zayav-dog-tab #reason
-{width:280px}
-#_zayav-dog-tab #pasp_seria{width:60px;margin:0 15px 0 3px}
-#_zayav-dog-tab #pasp_nomer{width:121px;margin-left:3px}
-#_zayav-dog-tab .l{display:inline-block;width:74px}
-#_zayav-dog-tab #pasp_adres,
-#_zayav-dog-tab #pasp_ovd,
-#_zayav-dog-tab #pasp_data{width:206px}
-#_zayav-dog-tab #nomer{width:40px}
-#_zayav-dog-tab .prim{font-size:10px;color:#999}
 #_zayav-dog-tab h1{display:block;font-weight:bold;text-align:center;margin-bottom:3px;color:#444}
-#_zayav-dog-tab #preview{display:block;text-align:center;margin-top:10px}
-#_zayav-dog-tab #avans_invoice_id_select{margin-top:-3px}
 
 
 .dogovor_line{cursor:default}

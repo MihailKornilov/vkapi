@@ -1687,6 +1687,7 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 		$sql = "INSERT INTO `_money_income` (
 				`app_id`,
 				`invoice_id`,
+				`confirm`,
 				`sum`,
 				`client_id`,
 				`zayav_id`,
@@ -1695,6 +1696,7 @@ function _zayavDogovorAvansInsert($v) {//Внесение авансового платежа при заключе
 			) VALUES (
 				".APP_ID.",
 				".$v['invoice_id'].",
+				".$v['confirm'].",
 				".$v['avans'].",
 				".$v['client_id'].",
 				".$v['zayav_id'].",

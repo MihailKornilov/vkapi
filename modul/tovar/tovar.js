@@ -528,11 +528,8 @@ var _tovarEdit = function(o) {
 
 		function loaded(res) {
 			arr = res.arr;
-			$('#invoice_id')._select({
-				width:218,
-				title0:'Не выбран',
-				spisok:_invoiceIncomeInsert()
-			});
+			incomeConfirmCheck();
+			$('#invoice_id-add')._select(_invoiceIncomeInsert(1));
 			$('#client_id').clientSel({width:300,add:1});
 			$('#tovar-avai-id')._radio(articulSel);
 			$('#sale-length,#sale-width').keyup(areaCalc);
@@ -569,7 +566,8 @@ var _tovarEdit = function(o) {
 				avai_id:avai_id,
 				count:$('#count').val(),
 				cena:$('#cena').val(),
-				invoice_id:$('#invoice_id').val(),
+				invoice_id:$('#invoice_id-add').val(),
+				confirm:$('#confirm').val(),
 				client_id:$('#client_id').val()
 			};
 			dialog.post(send, 'reload');

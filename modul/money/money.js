@@ -61,8 +61,9 @@ var _accrualAdd = function(o) {
 				'<tr' + (APP_ID == 3495523 ? '' : ' class="dn"') + '><td class="label r">День внесения:<td><input type="hidden" id="dtime_add" />' + //todo временно
  (client_name ? '<tr><td class="label r">Клиент:<td>' + client_name : '') +
 	   (zayav ? '<tr><td class="label r">Заявка:<td><b>' + ZI.name + '</b>' : '') +
-				'<tr><td class="label r w175">Счёт:<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
-				'<tr class="tr_confirm dn"><td class="label">Подтверждение:<td><input type="hidden" id="confirm" />' +
+				'<tr><td class="label r w175 topi">Счёт:' +
+					'<td><input type="hidden" id="invoice_id-add" value="' + _invoiceIncomeInsert(1) + '" />' +
+						'<div class="tr_confirm mt5 dn"><input type="hidden" id="confirm" /></div>' +
 				'<tr><td class="label r">Сумма:<td><input type="text" id="sum" class="money" /> руб.' +
 	   (zayav ? '<tr><td class="label r">Предоплата:<td>' : '') +
 					'<input type="hidden" id="prepay" />' +
@@ -100,27 +101,6 @@ var _accrualAdd = function(o) {
 		$('#dtime_add')._calendar({
 			lost:1
 		});
-		$('#invoice_id-add')._select({
-			width:268,
-			title0:'Не выбран',
-			spisok:_invoiceIncomeInsert(),
-			func:function(id) {
-				$('#sum').focus();
-				$('.tr_confirm')[(INVOICE_INCOME_CONFIRM[id] ? 'remove' : 'add') + 'Class']('dn');
-				$('#confirm')._check(0);
-			}
-		});
-		$('#confirm')._check({
-			func:function() {
-				$('#sum').focus();
-			}
-		});
-		$('#confirm_check').vkHint({
-			width:210,
-			msg:'Установите галочку, если платёж нужно внести, но требуется подтверждение о его поступлении на счёт.',
-			top:-96,
-			left:-100
-		});
 		if(zayav) {
 			$('#prepay')._radio({
 				light:1,
@@ -157,6 +137,7 @@ var _accrualAdd = function(o) {
 				});
 			}
 		}
+		incomeConfirmCheck();
 		$('#sum').focus();
 		$('#sum,#about').keyEnter(submit);
 
@@ -315,7 +296,32 @@ var _accrualAdd = function(o) {
 			}, 'json');
 		}
 	},
-
+	incomeConfirmCheck = function(dis) {//показ _select расчётного счёта и галочки подтверждения
+		$('#invoice_id-add')._select({
+			width:268,
+			title0:'Не выбран',
+			disabled:dis,
+			spisok:_invoiceIncomeInsert(),
+			func:function(id) {
+				$('.tr_confirm')['slide' + (INVOICE_INCOME_CONFIRM[id] ? 'Down' : 'Up')]();
+				$('#confirm')._check(0);
+			}
+		});
+		$('#confirm')._check({
+			name:'подтверждение',
+			light:1,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
+		$('#confirm_check').vkHint({
+			width:210,
+			msg:'Установите галочку, если платёж нужно внести, но требуется подтверждение о его поступлении на счёт.',
+			top:-106,
+			left:-100
+		});
+	},
+	
 	_refundAdd = function() {//внесение возврата
 		var zayav = window.ZI,
 			zayav_id = zayav ? ZI.id : 0,

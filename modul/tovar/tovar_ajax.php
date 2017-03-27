@@ -919,7 +919,9 @@ switch(@$_POST['op']) {
 				'<tr><td class="label r">÷ена (за 1 '._tovarMeasure($r['measure_id']).'):*'.
 					'<td><input type="text" id="cena" class="money" value="'._cena($r['sum_sell']).'" /> руб.'.
 				'<tr><td class="label r">—умма:<td><b id="summa"></b> руб.'.
-				'<tr><td class="label r">—чЄт:*<td><input type="hidden" id="invoice_id" />'.
+				'<tr><td class="label r topi">—чЄт:*'.
+					'<td><input type="hidden" id="invoice_id-add" />'.
+						'<div class="tr_confirm mt5 dn"><input type="hidden" id="confirm" /></div>'.
 				'<tr><td class="label r"> лиент:<td><input type="hidden" id="client_id" />'.
 			'</table>'
 		);
@@ -939,6 +941,7 @@ switch(@$_POST['op']) {
 		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError('Ќе указан расчЄтный счЄт');
 
+		$confirm = _bool($_POST['confirm']);
 		$client_id = _num($_POST['client_id']);
 
 		$sql = "SELECT *
@@ -965,6 +968,7 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `_money_income` (
 					`app_id`,
 					`invoice_id`,
+					`confirm`,
 					`client_id`,
 					`tovar_id`,
 					`tovar_avai_id`,
@@ -974,6 +978,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".APP_ID.",
 					".$invoice_id.",
+					".$confirm.",
 					".$client_id.",
 					".$avai['tovar_id'].",
 					".$avai_id.",
