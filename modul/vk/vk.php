@@ -203,10 +203,7 @@ function _global_script() {//скрипты и стили
 		'<script src="'.API_HTML.'/modul/vk/vk'.MIN.'.js?'.VERSION.'"></script>';
 }
 function _global_index() {//пути переходов по ссылкам глобальных разделов
-	if(!$menu_id = _num(@$_GET['p'])) {
-		$menu_id = _menuCache('app_def');
-		$_GET['p'] = $menu_id;
-	}
+	$menu_id = _num($_GET['p']);
 
 	$sql = "SELECT *
 			FROM `_menu`
@@ -626,10 +623,16 @@ function _appAuth() {//ѕроверка авторизации в приложении
 	if(!_app('enter'))
 		_appError('¬ход в приложение закрыт.');
 
-	if(!VIEWER_WORKER)
+	//установка страницы по умолчанию
+	if(!$menu_id = _num(@$_GET['p'])) {
+		$menu_id = _menuCache('app_def');
+		$_GET['p'] = $menu_id;
+	}
+
+	if(!VIEWER_WORKER && !_menuCache('norule', $menu_id))
 		_appError('Ќевозможно выполнить вход в приложение.');
 
-	if(!RULE_APP_ENTER)
+	if(!RULE_APP_ENTER && !_menuCache('norule', $menu_id))
 		_appError('¬ход в приложение недоступен.');
 
 	if(LOCAL) {
