@@ -1606,9 +1606,6 @@ switch(@$_POST['op']) {
 			$t = $tovar[$r['tovar_id_set']];
 
 			$find =
-				_tovarName($r['name_id']).
-				' '.
-				_tovarName($t['name_id']).
 				_tovarVendor($t['vendor_id']).
 				$t['name'];
 

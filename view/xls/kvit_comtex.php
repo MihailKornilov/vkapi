@@ -130,21 +130,19 @@ function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
 	$colItem = pageNum($col + 7);
 
 	$sheet->setCellValue($colLabel.$row[0], 'Изделие');
-	$sheet->setCellValue($colItem.$row[0], utf8($tovar_id ? _tovarName($tovar['name_id']) : ''));
-	$sheet->setCellValue($colLabel.$row[1], 'Модель');
-	$sheet->setCellValue($colItem.$row[1], utf8($tovar_id ? _tovarVendor($tovar['vendor_id']).$tovar['name'] : ''));
-	$sheet->setCellValue($colLabel.$row[2], 'Серийный номер');
-	$sheet->setCellValue($colItem.$row[2], utf8($z['imei'] ? $z['imei'] : $z['serial']));
-	$sheet->setCellValue($colLabel.$row[3], 'Дата приёма в ремонт');
-	$sheet->setCellValue($colItem.$row[3], utf8(FullData($z['dtime_add'])));
-	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
-	$sheet->setCellValue($colItem.$row[4], utf8(trim($tovar_id ? _tovarName($tovar['name_id']) : '').($z['tovar_equip_ids'] ? ', '._tovarEquip('spisok', $z['tovar_equip_ids']) : '')));
-	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
-	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
-	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');
-	$sheet->setCellValue($colItem.$row[6], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'phone'))));
-	$sheet->setCellValue($colLabel.$row[7], 'Внешний вид');
-	$sheet->setCellValue($colItem.$row[7], 'б/у');
+	$sheet->setCellValue($colItem.$row[0], utf8($tovar_id ? $tovar['name'] : ''));
+	$sheet->setCellValue($colLabel.$row[1], 'Серийный номер');
+	$sheet->setCellValue($colItem.$row[1], utf8($z['imei'] ? $z['imei'] : $z['serial']));
+	$sheet->setCellValue($colLabel.$row[2], 'Дата приёма в ремонт');
+	$sheet->setCellValue($colItem.$row[2], utf8(FullData($z['dtime_add'])));
+	$sheet->setCellValue($colLabel.$row[3], 'Комплектность');
+	$sheet->setCellValue($colItem.$row[3], utf8($z['tovar_equip_ids'] ? _tovarEquip('spisok', $z['tovar_equip_ids']) : ''));
+	$sheet->setCellValue($colLabel.$row[4], 'Владелец');
+	$sheet->setCellValue($colItem.$row[4], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
+	$sheet->setCellValue($colLabel.$row[5], 'Телефоны');
+	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'phone'))));
+	$sheet->setCellValue($colLabel.$row[6], 'Внешний вид');
+	$sheet->setCellValue($colItem.$row[6], 'б/у');
 
 	xls_comtex_item_border($sheet, $col, $row[0]);
 	xls_comtex_item_border($sheet, $col, $row[1]);
@@ -153,11 +151,10 @@ function xls_comtex_content($sheet, $z, $col, $row) {//левая сторона
 	xls_comtex_item_border($sheet, $col, $row[4]);
 	xls_comtex_item_border($sheet, $col, $row[5]);
 	xls_comtex_item_border($sheet, $col, $row[6]);
-	xls_comtex_item_border($sheet, $col, $row[7]);
 
-	$sheet->setCellValue($colLabel.$row[8], 'Неисправность со слов владельца:');
-	$sheet->setCellValue($colLabel.$row[9], utf8($z['defect']));
-	$sheet->getStyle($colLabel.$row[9])->getFont()->setSize(7);
+	$sheet->setCellValue($colLabel.$row[7], 'Неисправность со слов владельца:');
+	$sheet->setCellValue($colLabel.$row[8], utf8($z['defect']));
+	$sheet->getStyle($colLabel.$row[8])->getFont()->setSize(7);
 
 	$sheet->getStyle('B29:T29')->applyFromArray(
 		array(
@@ -280,8 +277,8 @@ pageSetup('Квитанция', $book);
 xls_comtex_head($sheet, 2);
 xls_comtex_head($sheet, 23);
 xls_comtex_center($sheet);
-xls_comtex_content($sheet, $z, 2,  array(10,12,14,16,18,20,22,24,26,27));
-xls_comtex_content($sheet, $z, 23, array(10,11,12,13,14,15,16,17,18,19));
+xls_comtex_content($sheet, $z, 2,  array(10,12,14,16,18,20,22,24,26));
+xls_comtex_content($sheet, $z, 23, array(10,11,12,13,14,15,16,17,18));
 xls_comtex_right($sheet);
 xls_comtex_rules($sheet);
 xls_comtex_rules($sheet, 23, 31);
