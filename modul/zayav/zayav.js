@@ -698,7 +698,7 @@ var _zayavSpisok = function(v, id) {
 			data_create:'',
 			sum:'',
 			avans_hide:0,//скрывать авансовый платёж, если наступил следующий день после заключения договора
-			avans_invoice_id:_invoiceIncomeInsert(1),
+			avans_invoice_id:0,
 			avans_sum:''
 		}, DOG);
 
@@ -742,6 +742,7 @@ var _zayavSpisok = function(v, id) {
 		if(!o.id)
 			$('#avans_check')._check({
 				func:function() {
+					$('#invoice_id-add')._check(_invoiceIncomeInsert(1));
 					$('#avans_check_check').remove();
 					$('#avans_div').removeClass('dn');
 				}
