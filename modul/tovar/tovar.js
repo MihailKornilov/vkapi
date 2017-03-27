@@ -742,12 +742,8 @@ var _tovarEdit = function(o) {
 				$('#tovar-spisok').html(res.spisok);
 
 				//подстановка количества товаров в меню корневых категорий
-				var aa = $('#rightLinkMenu a');
-				for(var n = 0; n < aa.length; n ++) {
-					var sp = aa.eq(n),
-						v = _num(sp.attr('val'));
-					sp.find('em').html(res.cc[v] ? res.cc[v] : '&nbsp;');
-				}
+				for(id in res.cc)
+					$('#cat' + id).html(res.cc[id] || '');
 			}
 		}, 'json');
 	};
@@ -1360,13 +1356,32 @@ $(document)
 				v:TOVAR.find,
 				func:_tovarSpisok
 			});
-			$('#rightLinkMenu a').click(function() {
+			$('#rightLinkMenu .main').click(function() {//нажатие на главное меню
 				var t = $(this),
 					p = t.parent(),
 					v = t.attr('val');
 				p.find('.sel').removeClass('sel');
 				t.addClass('sel');
+				TOVAR.sub_id = 0;
 				_tovarSpisok(v, 'category_id');
+			});
+			$('#rightLinkMenu .main').mouseenter(function(e) {
+			    var tsh = $('#tovar-spisok').height(),
+				    y = e.pageY,
+				    h = $(this).find('.sub').height();
+				if(y + h - 100 > tsh)
+			        $('#tovar-spisok').css('min-height', (y + h - 100) + 'px');
+			});
+			$('#rightLinkMenu .sub div').click(function(e) {//нажатие на подменю
+				e.stopPropagation();
+				var t = $(this),
+					main = _parent(t, '.main'),
+					pMain = main.parent(),
+					p = t.parent(),
+					v = t.attr('val');
+				pMain.find('.sel').removeClass('sel');
+				main.addClass('sel');
+				_tovarSpisok(v, 'sub_id');
 			});
 			$('#avai')._check(_tovarSpisok);
 			$('#zakaz')._check(_tovarSpisok);

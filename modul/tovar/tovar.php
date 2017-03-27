@@ -51,6 +51,14 @@ function _tovarCategory($id=false, $i='name') {
 		return $send;
 	}
 
+	//ассоциативный список всех категорий и подкатегорий
+	if($id == 'all_ass') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = $r['name'];
+		return $send;
+	}
+
 	//JS список корневых категорий
 	if($id == 'main_js') {
 		$send = array();
@@ -523,10 +531,22 @@ function _tovarDelAccess($tovar_id) {//разрешение на удаление товара
 function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
 	$spisok = '';
 	foreach(_tovarCategory('main_ass') as $id => $r) {
+
+		$child = '';
+		foreach(_tovarCategory($id, 'child_arr') as $sub)
+			$child .=
+				'<div val="'.$sub['id'].'">'.
+					$sub['name'].
+					'<em id="cat'.$sub['id'].'">'.($cc[$sub['id']] ? $cc[$sub['id']] : '').'</em>'.
+				'</div>';
+
 		$spisok .=
-			'<a'.($cat_id == $id ? ' class="sel"' : '').' val="'.$id.'">'.
-				'<em class="w35 r pale">'.($cc[$id] ? $cc[$id] : '').'</em>'.
+			'<a class="main'.($cat_id == $id ? ' sel' : '').'" val="'.$id.'">'.
+				'<em id="cat'.$id.'">'.($cc[$id] ? $cc[$id] : '').'</em>'.
 				$r.
+
+	  ($child ? '<div class="sub">'.$child.'</div>' : '').
+
 			'</a>';
 	}
 	return
@@ -570,6 +590,7 @@ function _tovarFilter($v) {
 		'limit' => 500,
 		'find' => '',
 		'category_id' => _tovarCategory('first'),
+		'sub_id' => 0,
 		'avai' => 0,
 		'zakaz' => 0
 	);
@@ -579,6 +600,7 @@ function _tovarFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
 		'category_id' => isset($v['category_id']) ? _num($v['category_id']) : $default['category_id'],
+		'sub_id' => isset($v['sub_id']) ? _num($v['sub_id']) : $default['sub_id'],
 		'avai' => _num(@$v['avai']) ? $v['avai'] : $default['avai'],
 		'zakaz' => _num(@$v['zakaz']) ? $v['zakaz'] : $default['zakaz'],
 
@@ -591,13 +613,12 @@ function _tovarFilter($v) {
 			break;
 		}
 
-	_pre($filter);
 	return $filter;
 }
 function _tovarCategoryCount($filter) {//получение количества товаров для корневых категорий с учётом фильтра
-	$main = _tovarCategory('main_ass');
-	foreach($main as $id => $r)
-		$main[$id] = 0;
+	$send = _tovarCategory('all_ass');
+	foreach($send as $id => $r)
+		$send[$id] = 0;
 
 	$cond = "`cat`.`app_id`=".APP_ID."
 		 AND `t`.`id`=`bind`.`tovar_id`
@@ -617,7 +638,6 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 
 	$sql = "SELECT
 				`cat`.`id`,
-				`cat`.`parent_id`,
 				COUNT(`bind`.`id`) `count`
 			FROM
 				`_tovar` `t`,
@@ -626,14 +646,16 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 			WHERE ".$cond."			  
 			GROUP BY `cat`.`id`";
 	if(!$spisok = query_arr($sql))
-		return $main;
+		return $send;
 
 	foreach($spisok as $r) {
 		$main_id = _tovarCategory($r['id'], 'main_id');
-		$main[$main_id] += $r['count'];
+		$send[$main_id] += $r['count'];
+		$send[$r['id']] = $r['count'];
+
 	}
-	
-	return $main;
+
+	return $send;
 }
 function _tovar_spisok($v=array()) {
 	$filter = _tovarFilter($v);
@@ -656,7 +678,9 @@ function _tovar_spisok($v=array()) {
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
 
-	if($filter['category_id'])
+	if($filter['sub_id'])
+		$cond .= " AND `bind`.`category_id`=".$filter['sub_id'];
+	elseif($filter['category_id'])
 		$cond .= " AND `bind`.`category_id` IN (".$filter['category_id'].","._tovarCategory($filter['category_id'], 'child_ids').")";
 
 
