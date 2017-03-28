@@ -566,7 +566,8 @@ function _tovar() {//8 - главная страница товаров
 				'<td class="w100">'._check('zakaz', 'Заказано', $v['zakaz'], 1).
 //				'<td class="w70">'._check('f3', 'В пути', $v['path'], 1).
 				'<td class="r"><button class="vk green" onclick="_tovarEdit()">Внести новый товар</button>'.
-					'<a onclick="_tovarSetup()" class="icon icon-setup-big mt5 ml10'._tooltip('Быстрая настройка товаров', -160, 'r').'</a>'.
+					'<a href="'.URL.'&p=79" class="icon icon-stat mt5 ml10'._tooltip('Остатки товаров', -90, 'r').'</a>'.
+					'<a onclick="_tovarSetup()" class="icon icon-setup-big mt5 ml5'._tooltip('Быстрая настройка товаров', -160, 'r').'</a>'.
 		'</table>'.
 
 		'<div class="line-b">'.
@@ -582,7 +583,9 @@ function _tovar() {//8 - главная страница товаров
 		'</table>'.
 	'</div>'.
 	'<script>'.
-		'var CATEGORY_ID_DEF='._tovarCategory('first').';'.
+		'var CATEGORY_ID_DEF='._tovarCategory('first').','.
+			'CATEGORY_ID='._num(@$_GET['category_id']).','.
+			'SUB_ID='._num(@$_GET['sub_id']).';'.
 	'</script>';
 }
 
@@ -611,7 +614,7 @@ function _tovarFilter($v) {
 
 	foreach($default as $k => $r)
 		if($r != $filter[$k]) {
-			$filter['clear'] = '<button class="vk small red fr">Очистить фильтр</button>';
+			$filter['clear'] = '<button class="vk small red fr" onclick="_tovarFilterClear()">Очистить фильтр</button>';
 			break;
 		}
 
@@ -1582,6 +1585,90 @@ function _tovar_info_zayav($tovar_id) {//заявки по этому товару
 
 
 
+
+
+
+
+// ---=== СТАТИСТИКА ТОВАРА ===---
+function _tovar_stat() {//остатки
+	return
+	'<div class="mar10">'.
+		'<div class="hd2">Остатки товаров по наличию</div>'.
+		'<div class="mar20">'._tovar_stat_spisok().'</div>'.
+	'</div>';
+}
+function _tovar_stat_spisok() {
+	$sql = "SELECT
+				`category_id` `id`,
+				SUM(`avai`) `count`,
+				SUM(`avai`*`sum_buy`) `sum`
+			FROM `_tovar_bind`
+			WHERE `app_id`=".APP_ID."
+			  AND `avai`
+			GROUP BY `category_id`";
+	if(!$spisok = query_arr($sql))
+		return '<div class="_empty">Остатков нет</div>';
+
+
+	$mainCount = array();//корневые категории - количество
+	$main = array();//корневые категории - сумма руб.
+	$subCount = array(); //подкатегории - количество
+	$sub = array(); //подкатегории
+	foreach($spisok as $id => $r) {
+		if($parent_id = _tovarCategory($id, 'parent_id')) {
+			if(empty($main[$parent_id]))
+				$main[$parent_id] = 0;
+			if(empty($mainCount[$parent_id]))
+				$mainCount[$parent_id] = 0;
+
+			if(empty($subCount[$parent_id]))
+				$subCount[$parent_id] = array();
+			if(empty($sub[$parent_id]))
+				$sub[$parent_id] = array();
+
+			$mainCount[$parent_id] += $r['count'];
+			$main[$parent_id] += $r['sum'];
+
+			$subCount[$parent_id][$id] = $r['count'];
+			$sub[$parent_id][$id] = round($r['sum'], 2);
+			continue;
+		}
+
+		if(empty($mainCount[$id]))
+			$mainCount[$id] = 0;
+		if(empty($main[$id]))
+			$main[$id] = 0;
+		$mainCount[$id] += $r['count'];
+		$main[$id] += $r['sum'];
+	}
+
+	$send =
+		'<div class="_info">Показаны актуальные остатки по закупочной цене.</div>'.
+		'<table class="_spisokTab">'.
+			'<tr><th>Категория'.
+				'<th class="w100">Количество'.
+				'<th class="w100">Сумма'.
+		'</table>';
+	foreach($main as $main_id => $mSum) {
+		$send .=
+			'<table class="_spisokTab mt1 over1" onclick="$(this).next().slideToggle()">'.
+				'<tr><td class="fs15 b curP">'._tovarCategory($main_id).
+					'<td class="w100 fs14 center color-555">'._ms($mainCount[$main_id]).
+					'<td class="w100 fs14 b r '.($mSum ? 'color-pay' : 'pale').'">'._sumSpace($mSum, 1).
+			'</table>';
+
+		$send .= '<div class="ml20 mb20 dn"><table class="_spisokTab mt1">';
+		foreach($sub[$main_id] as $id => $sum)
+			$send .=
+				'<tr class="over1">'.
+					'<td><a href="'.URL.'&p=8&category_id='.$main_id.'&sub_id='.$id.'">'._tovarCategory($id).'</a>'.
+					'<td class="w100 center color-555">'._ms($subCount[$main_id][$id]).
+					'<td class="w100 r '.($sum ? 'color-pay' : 'pale').'">'._sumSpace($sum, 1);
+		$send .= '</table></div>';
+	}
+
+	return $send;
+}
 
 
 

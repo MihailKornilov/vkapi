@@ -793,6 +793,10 @@ switch(@$_POST['op']) {
 					SET `service_id`=".$insert_id."
 					WHERE `app_id`=".APP_ID;
 			query($sql);
+			$sql = "UPDATE `_zayav_pole_use`
+					SET `service_id`=".$insert_id."
+					WHERE `app_id`=".APP_ID;
+			query($sql);
 		}
 
 		xcache_unset(CACHE_PREFIX.'service');

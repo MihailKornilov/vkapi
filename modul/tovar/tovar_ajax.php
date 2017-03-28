@@ -138,25 +138,13 @@ switch(@$_POST['op']) {
 		if(!query_value($sql))
 			jsonError('Выбранных товаров не существует');
 
-		//удаление старых связок
-		$sql = "DELETE FROM `_tovar_bind`
+		//обновление категории
+		$sql = "UPDATE `_tovar_bind`
+				SET `category_id`=".$category_id."
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id` IN (".$tovar_ids.")";
 		query($sql);
 
-		//внесение связки для выбранных товаров
-		foreach(_ids($tovar_ids, 1) as $tovar_id) {
-			$sql = "INSERT INTO `_tovar_bind` (
-						`app_id`,
-						`category_id`,
-						`tovar_id`
-					) VALUES (
-						".APP_ID.",
-						".$category_id.",
-						".$tovar_id."
-					)";
-			query($sql);
-		}
 
 		//удаление неиспользуемых подкатегорий
 		$sql = "DELETE FROM `_tovar_category`
@@ -196,7 +184,6 @@ switch(@$_POST['op']) {
 					WHERE `count`
 				)";
 		query($sql);
-
 
 		xcache_unset(CACHE_PREFIX.'tovar_category');
 		_appJsValues();

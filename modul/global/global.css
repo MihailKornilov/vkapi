@@ -66,7 +66,7 @@ table{border:0;border-spacing:0}
 /* »конки */
 .icon{
 	display:inline-block;
-	background:url(../../img/icon_vk.png?37) no-repeat;
+	background:url(../../img/icon_vk.png?38) no-repeat;
 	width:18px;
 	height:18px;
 	padding:0 1px;
@@ -98,6 +98,7 @@ table{border:0;border-spacing:0}
 .icon-move{background-position:0 -440px}
 .icon-avai{background-position:0 -460px}
 .icon-off{background-position:0 -480px}
+.icon-stat{background-position:0 -500px}
 .icon-hint{
 	background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAAAXNSR0IArs4c6QAAAitJREFUOBGdVDFoU1EUvfe9/5UPKRXBQRelglCczOAmDloqTSPo4NzZmq9JC652kkJIYmi1Y+cOijZFRQeLm2DAwerUUReVSgO1Sf+73vPTX76/RdA35L77zjn3P+47N0yZVa4tBeznrpLQRWIeEnJHmMwGiawT06r0Os/qlRtbaRmnk+mHrcsustN61hbpvTSH+eMmHf85QF8H3bacZfZHFcsbG1WrN8dfJ9q9IpX5lQmO+Hpk3d3G5PinhJCNd+ZbwzYys2LlcW2ysAjc4Ac3QAG305n4WwFwgYMHPnQ4434PBp44E5XTBcrN1gWF72lfzjPJF3FUr98uLECEhRsZZ+vS27xm4iZqD/4ogOayWdYiw0JSFaEtNvwofLB8qV+ifyPdt6E3eAVm9yIBEXt+cFJE3pO4SqNUmHHM93FuiM8hJgvNh97DM5IfrSUA4lyp+FlD/NVSc+mYFQk17xqWV8CThdeTLg8Z+ADPmADpeGv26QmPcu+E6LSL3GgtLH5I49BB78FI8IGC39IE7L3AXmGmU454rFEuvsni0Al5G9oTWYeRsoQ4j7afk5OZ7vfO24PwWKd67RWt7jpxH8/YYES7GR4aDM7sA/Ug1qneYBY0z+Pds0QR1xXhX8ZSlMV2+XnoY9vDebJjQjhRh+tHVpDN1aBHjZdbZM81MUOx7bHBLAA46EbpIrFTlQd+MoR7Awji1NzKiIiZ0m07NqDv1v5pipOv/c//yW90GxY+MmYg4gAAAABJRU5ErkJggg==") no-repeat 0 0;
 	margin-bottom:-5px;

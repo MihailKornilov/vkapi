@@ -746,6 +746,28 @@ var _tovarEdit = function(o) {
 					$('#cat' + id).html(res.cc[id] || '');
 			}
 		}, 'json');
+	},
+	_tovarFilterClear = function() {
+		$('#find')._search('clear');    TOVAR.find = '';
+
+		$('#rightLinkMenu .save').removeClass('save');
+		$('#rightLinkMenu .sel').removeClass('sel');
+		var link = $('#rightLinkMenu a');
+		for(var n = 0; n < link.length; n++) {
+			var sp = link.eq(n);
+			if(sp.attr('val') == (CATEGORY_ID || CATEGORY_ID_DEF)) {
+				sp.addClass('sel');
+				break;
+			}
+		}
+		TOVAR.category_id = CATEGORY_ID || CATEGORY_ID_DEF;
+		TOVAR.sub_id = SUB_ID;//подкатегория, полученная со статистики
+		CATEGORY_ID = 0;
+		SUB_ID = 0;
+
+		$('#avai')._check(0);           TOVAR.avai = 0;
+		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
+		_tovarSpisok();
 	};
 
 $.fn.tovar = function(o) {
@@ -1276,27 +1298,6 @@ $(document)
 		_tovarUseCancel(v);
 	})
 
-	.on('click', '#_tovar .vk.red', function() {
-		$('#find')._search('clear');    TOVAR.find = '';
-
-		$('#rightLinkMenu .save').removeClass('save');
-		$('#rightLinkMenu .sel').removeClass('sel');
-		var link = $('#rightLinkMenu a');
-		for(var n = 0; n < link.length; n++) {
-			var sp = link.eq(n);
-			if(sp.attr('val') == CATEGORY_ID_DEF) {
-				sp.addClass('sel');
-				break;
-			}
-		}
-		TOVAR.category_id = CATEGORY_ID_DEF;
-		TOVAR.sub_id = 0;
-
-		$('#avai')._check(0);           TOVAR.avai = 0;
-		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
-		_tovarSpisok();
-	})
-
 	.on('click', '#tovar-info .move', function() {//удаление движения товара
 		var t = $(this),
 			p = _parent(t);
@@ -1386,6 +1387,9 @@ $(document)
 			});
 			$('#avai')._check(_tovarSpisok);
 			$('#zakaz')._check(_tovarSpisok);
+
+			if(SUB_ID)
+				_tovarFilterClear();
 		}
 	});
 

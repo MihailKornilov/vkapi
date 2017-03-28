@@ -520,22 +520,7 @@ var saMenuEdit = function(o) {
 				id:o.id,
 				name:$('#name').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано название');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					document.location.reload();
-				} else {
-					dialog.abort();
-					dialog.err(res.text);
-				}
-			}, 'json');
+			dialog.post(send, 'reload');
 		}
 	},
 	saZayavPoleEdit = function(o) {
