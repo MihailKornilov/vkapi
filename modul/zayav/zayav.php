@@ -2677,10 +2677,13 @@ function _zayavInfoTovar($z) {//информация о товаре
 }
 function _zayavInfoTovarUse($zayav_id, $tovar_id) {//список запчастей для товара заявки
 	$sql = "SELECT
-				*,
+				`use`.*,
 				0 `zakaz`
-			FROM `_tovar_use`
-			WHERE `tovar_id`=".$tovar_id;
+			FROM `_tovar_use` `use`,
+				 `_tovar_bind` `bind`
+			WHERE `app_id`=".APP_ID."
+			  AND `bind`.`tovar_id`=`use`.`use_id`
+			  AND `use`.`tovar_id`=".$tovar_id;
 	if(!$arr = query_arr($sql))
 		return '';
 

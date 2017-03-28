@@ -459,6 +459,8 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 	foreach($arr as $id => $r) {
 		if(!$r[$key])
 			continue;
+//		if(!isset($tovar[$r[$key]]))
+//			continue;
 
 		$t = $tovar[$r[$key]];
 		$tovar_id = $t['id'];
@@ -1246,13 +1248,16 @@ function _tovar_info_feature($tovar) {//характеристики товара
 function _tovar_info_use_for($tovar_id) {//товары, к которым применяются этот товар
 	$sql = "SELECT
 				`t`.*,
-				0 `category_id`
+				`bind`.`category_id`
 			FROM
 				`_tovar` `t`,
-				`_tovar_use` `tu`
-			WHERE `t`.`id`=`tovar_id`
-			  AND `use_id`=".$tovar_id."
-			  AND !`deleted`";
+				`_tovar_use` `use`,
+				`_tovar_bind` `bind`
+			WHERE `bind`.`app_id`=".APP_ID."
+			  AND `bind`.`tovar_id`=`use`.`tovar_id`
+			  AND `t`.`id`=`use`.`tovar_id`
+			  AND `use`.`use_id`=".$tovar_id."
+			  AND !`t`.`deleted`";
 	if(!$tovar = query_arr($sql))
 		return '';
 
@@ -1260,14 +1265,8 @@ function _tovar_info_use_for($tovar_id) {//товары, к которым применяются этот то
 	$tovar = _imageValToList($tovar, 'tovar');
 
 	//разделение по категориям
-	$sql = "SELECT
-				`category_id`,
-				`tovar_id` `id`
-			FROM `_tovar_bind`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".implode(',', array_keys($tovar)).")";
 	$child = array();
-	foreach(query_arr($sql) as $r)
+	foreach($tovar as $r)
 		$child[$r['category_id']][] = $tovar[$r['id']];
 
 	$send = '';
@@ -1288,12 +1287,15 @@ function _tovar_info_use_for($tovar_id) {//товары, к которым применяются этот то
 function _tovar_info_use_spisok($tovar_id) {//товары, которые применяются для этого товара
 	$sql = "SELECT
 				`t`.*,
-				0 `category_id`
+				`bind`.`category_id`
 			FROM
 				`_tovar` `t`,
-				`_tovar_use` `tu`
-			WHERE `t`.`id`=`use_id`
-			  AND `tovar_id`=".$tovar_id."
+				`_tovar_use` `use`,
+				`_tovar_bind` `bind`
+			WHERE `bind`.`app_id`=".APP_ID."
+			  AND `bind`.`tovar_id`=`use_id`
+			  AND `t`.`id`=`use_id`
+			  AND `use`.`tovar_id`=".$tovar_id."
 			  AND !`deleted`";
 	if(!$tovar = query_arr($sql))
 		return '';
@@ -1302,22 +1304,15 @@ function _tovar_info_use_spisok($tovar_id) {//товары, которые применяются для эт
 	$tovar = _imageValToList($tovar, 'tovar');
 
 	//разделение по категориям
-	$sql = "SELECT
-				`category_id`,
-				`tovar_id` `id`
-			FROM `_tovar_bind`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id` IN (".implode(',', array_keys($tovar)).")";
 	$child = array();
-	foreach(query_arr($sql) as $r)
+	foreach($tovar as $r)
 		$child[$r['category_id']][] = $tovar[$r['id']];
 
 	$send = '';
-	foreach($child as $id => $r) {
+	foreach($child as $id => $r)
 		$send .=
 			'<div class="fs14 color-555">'._tovarCategory($id).'</div>'.
 			_tovar_unit_use($r);
-	}
 
 	return
 	'<div class="mt10 pl10 pr10 pt1 bg-ffd bor-f0">'.
@@ -1327,7 +1322,7 @@ function _tovar_info_use_spisok($tovar_id) {//товары, которые применяются для эт
 		'<div class="dn">'.$send.'</div>'.
 	'</div>';
 }
-function _tovar_unit_use($spisok) {
+function _tovar_unit_use($spisok) {//единица товара в применении
 	$send = '<table class="collaps w100p bg-fff '.(!empty($filter) ? 'mt5 mb30' : 'mt1 mb10').'">';
 	foreach($spisok as $r) {
 		$send .=

@@ -1290,6 +1290,7 @@ $(document)
 			}
 		}
 		TOVAR.category_id = CATEGORY_ID_DEF;
+		TOVAR.sub_id = 0;
 
 		$('#avai')._check(0);           TOVAR.avai = 0;
 		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
