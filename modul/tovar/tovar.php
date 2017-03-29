@@ -32,6 +32,13 @@ function _tovarCategory($id=false, $i='name') {
 			if($r['parent_id'])
 				$arr[$r['parent_id']]['count'] += $r['count'];
 
+		//Без категории
+		$arr[-1] = array(
+			'id' => -1,
+			'name' => 'Без категории',
+			'parent_id' => 0
+		);
+
 		xcache_set($key, $arr, 86400);
 	}
 
@@ -585,7 +592,7 @@ function _tovar() {//8 - главная страница товаров
 	'<script>'.
 		'var CATEGORY_ID_DEF='._tovarCategory('first').','.
 			'CATEGORY_ID='._num(@$_GET['category_id']).','.
-			'SUB_ID='._num(@$_GET['sub_id']).';'.
+			'SUB_ID='.intval(@$_GET['sub_id']).';'.
 	'</script>';
 }
 
@@ -605,7 +612,7 @@ function _tovarFilter($v) {
 		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
 		'category_id' => isset($v['category_id']) ? _num($v['category_id']) : $default['category_id'],
-		'sub_id' => isset($v['sub_id']) ? _num($v['sub_id']) : $default['sub_id'],
+		'sub_id' => isset($v['sub_id']) ? intval($v['sub_id']) : $default['sub_id'],
 		'avai' => _num(@$v['avai']) ? $v['avai'] : $default['avai'],
 		'zakaz' => _num(@$v['zakaz']) ? $v['zakaz'] : $default['zakaz'],
 
@@ -683,9 +690,12 @@ function _tovar_spisok($v=array()) {
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
 
-	if($filter['sub_id'])
-		$cond .= " AND `bind`.`category_id`=".$filter['sub_id'];
-	elseif($filter['category_id'])
+	if($filter['sub_id']) {
+		if($filter['sub_id'] == -1)
+			$cond .= " AND `bind`.`category_id`=".$filter['category_id']." AND `bind`.`category_id` NOT IN ("._tovarCategory($filter['category_id'], 'child_ids').")";
+		else
+			$cond .= " AND `bind`.`category_id`=".$filter['sub_id'];
+	} elseif($filter['category_id'])
 		$cond .= " AND `bind`.`category_id` IN (".$filter['category_id'].","._tovarCategory($filter['category_id'], 'child_ids').")";
 
 
@@ -1638,8 +1648,13 @@ function _tovar_stat_spisok() {
 			$mainCount[$id] = 0;
 		if(empty($main[$id]))
 			$main[$id] = 0;
+
 		$mainCount[$id] += $r['count'];
 		$main[$id] += $r['sum'];
+
+		$subCount[$id][-1] = $r['count'];
+		$sub[$id][-1] = round($r['sum'], 2);
+
 	}
 
 	$send =

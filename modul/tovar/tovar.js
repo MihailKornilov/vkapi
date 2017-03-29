@@ -762,12 +762,14 @@ var _tovarEdit = function(o) {
 		}
 		TOVAR.category_id = CATEGORY_ID || CATEGORY_ID_DEF;
 		TOVAR.sub_id = SUB_ID;//подкатегория, полученная со статистики
+
+		$('#avai')._check(SUB_ID ? 1 : 0);  TOVAR.avai = SUB_ID;
+		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
+
+		_tovarSpisok();
+
 		CATEGORY_ID = 0;
 		SUB_ID = 0;
-
-		$('#avai')._check(0);           TOVAR.avai = 0;
-		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
-		_tovarSpisok();
 	};
 
 $.fn.tovar = function(o) {
