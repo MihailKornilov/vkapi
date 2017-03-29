@@ -53,7 +53,7 @@ function _tovarCategory($id=false, $i='name') {
 	if($id == 'main_ass') {
 		$send = array();
 		foreach($arr as $r)
-			if(!$r['parent_id'])
+			if(!$r['parent_id'] && $r['id'] > 0)
 				$send[$r['id']] = $r['name'];
 		return $send;
 	}
