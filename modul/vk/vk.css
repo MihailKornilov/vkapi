@@ -311,10 +311,11 @@ a.add:hover{text-decoration:underline;color:#357}
 	color:#FFF;
 }
 ._select .selun.title0.ov{color:#ddd}
-._select .selun span{display:block;margin-top:1px;font-size:10px;color:#888}
-._select .selun.ov span{color:#bbe}
+._select .selun span{display:block;margin-top:1px;font-size:12px;color:#888}
+._select .selun.ov span,
+._select .selun.ov .grey{color:#bbe}
 ._select .selun em{background-color:#dee}
-._select .selun span em{font-size:10px}
+._select .selun span em{font-size:12px}
 ._select .selun.ov em{background-color:#358}
 ._select .last{border-bottom:#CCC solid 1px}
 ._select .last.ov{padding-bottom:4px;border:#2a5883 solid 1px;}

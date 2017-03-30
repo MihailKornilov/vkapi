@@ -812,6 +812,7 @@ function _zayavFilter($v) {
 		'nofile' => 0,
 		'noattach' => 0,
 		'noattach1' => 0,
+		'tovar_cat_id' => 0,
 		'tovar_id' => 0,
 		'gn_year' => strftime('%Y'),  //год номеров газеты 51
 		'gn_nomer_id' => _gn('first'),//номер газеты 51
@@ -840,6 +841,7 @@ function _zayavFilter($v) {
 		'nofile' => _bool(@$v['nofile']),
 		'noattach' => _bool(@$v['noattach']),
 		'noattach1' => _bool(@$v['noattach1']),
+		'tovar_cat_id' => _num(@$v['tovar_cat_id']),
 		'tovar_id' => _num(@$v['tovar_id']),
 		'gn_year' => _num(@$v['gn_year']) ? $v['gn_year'] : $default['gn_year'],
 		'gn_nomer_id' => _num(@$v['gn_nomer_id']) ? $v['gn_nomer_id'] : $default['gn_nomer_id'],
@@ -1015,6 +1017,19 @@ function _zayav_spisok($v) {
 				$cond .= " AND !`attach_id` AND !`attach_cancel`";
 			if($filter['noattach1'])
 				$cond .= " AND !`attach1_id` AND !`attach1_cancel`";
+
+			if($filter['tovar_cat_id']) {
+				$sql = "SELECT DISTINCT `zt`.`zayav_id`
+						FROM
+							`_tovar_bind` `bind`,
+							`_zayav_tovar` `zt`
+						WHERE `bind`.`app_id`=".APP_ID."
+						  AND `zt`.`app_id`=".APP_ID."
+						  AND `zt`.`tovar_id`=`bind`.`tovar_id`
+						  AND `bind`.`category_id`=".$filter['tovar_cat_id'];
+				$zayav_ids = query_ids($sql);
+				$cond .= " AND `id` IN (".$zayav_ids.")";
+			}
 
 			if($filter['tovar_id']) {
 				$sql = "SELECT DISTINCT `zayav_id`
@@ -1528,12 +1543,38 @@ function _zayavPoleEdit($v=array()) {//Внесение/редактирование заявки
 }
 function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 	$zpu = _zayavPole($v['service_id'], 2);
+
+	if(isset($zpu[32])) {//категории товаров
+		$sql = "SELECT
+					`bind`.`category_id`,
+					COUNT(`zt`.`zayav_id`) `c`
+				FROM
+					`_tovar_bind` `bind`,
+					`_zayav_tovar` `zt`,
+					`_zayav` `z`
+				WHERE `bind`.`app_id`=".APP_ID."
+				  AND `zt`.`app_id`=".APP_ID."
+				  AND `zt`.`tovar_id`=`bind`.`tovar_id`
+				  AND `zt`.`zayav_id`=`z`.`id`
+				  AND !`z`.`deleted`
+				GROUP BY `bind`.`category_id`";
+		$q = query($sql);
+		$arr = array();
+		while($r = mysql_fetch_assoc($q))
+			$arr[$r['category_id']] = array(
+				'title' => _tovarCategory($r['category_id']),
+				'content' => _tovarCategory($r['category_id']).' <div class="dib grey">('.$r['c'].')</div>'
+			);
+	}
+
+
+
 	$pole = array(
 		17 => '<div id="find"></div>',
 
 		18 => '<div class="findHead">{label}</div>'.
-			   _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
-			   _check('desc', 'Обратный порядок', $v['desc']),
+			   _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort'], 1).
+			   _check('desc', 'Обратный порядок', $v['desc'], 1),
 
 		24 => '<div class="findHead">{label}</div>'.
 			  _zayavStatus($v['status'], 'filter'),
@@ -1553,6 +1594,12 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 		30 => _check('nofile', '{label}', $v['nofile'], 1),
 		35 => _check('noattach', '{label}', $v['noattach'], 1),
 		36 => _check('noattach1', '{label}', $v['noattach1'], 1),
+
+		32 => '<script>'.
+				'var ZAYAV_TOVAR_CAT='.(isset($zpu[32]) ? _selJson($arr) : 0).';'.
+			  '</script>'.
+			  '<div class="findHead">{label}</div>'.//_tovarCategory(356).
+			  '<input type="hidden" id="tovar_cat_id" value="'.$v['tovar_cat_id'].'" />',
 
 		33 => '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="tovar_id" value="'.$v['tovar_id'].'" />',

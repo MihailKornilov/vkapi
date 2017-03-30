@@ -535,13 +535,13 @@ var saMenuEdit = function(o) {
 		var html =
 				'<table class="bs10">' +
 					'<tr><td class="label">Тип поля:<td><b>' + SAZP_TYPE_NAME + '</b>' +
-					'<tr><td class="label">Название:<td><input type="text" id="name" value="' + o.name + '" />' +
-					'<tr><td class="label top">Описание:<td><textarea id="about">' + o.about + '</textarea>' +
-					'<tr><td class="label">Параметр 1:<td><input type="text" id="param1" class="w250" placeholder="название параметра" value="' + o.param1 + '" />' +
-					'<tr><td class="label">Параметр 2:<td><input type="text" id="param2" class="w250" placeholder="название параметра" value="' + o.param2 + '" />' +
+					'<tr><td class="label">Название:<td><input type="text" id="name" class="w350" value="' + o.name + '" />' +
+					'<tr><td class="label topi">Описание:<td><textarea id="about" class="w350">' + o.about + '</textarea>' +
+					'<tr><td class="label">Параметр 1:<td><input type="text" id="param1" class="w350" placeholder="название параметра" value="' + o.param1 + '" />' +
+					'<tr><td class="label">Параметр 2:<td><input type="text" id="param2" class="w350" placeholder="название параметра" value="' + o.param2 + '" />' +
 				'</table>',
 			dialog = _dialog({
-				width:400,
+				width:500,
 				head:(o.id ? 'Изменение' : 'Добавление') + ' поля заявки',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',

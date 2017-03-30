@@ -1934,6 +1934,7 @@ $(document)
 		$('#noattach')._check(0);		ZAYAV.noattach = 0;
 		$('#noattach1')._check(0);		ZAYAV.noattach1 = 0;
 		$('#executer_id')._select(0);	ZAYAV.executer_id = 0;
+		$('#tovar_cat_id')._select(0);	ZAYAV.tovar_cat_id = 0;
 		$('#tovar_id').tovar(0);	    ZAYAV.tovar_id = 0;
 		$('#tovar_place_id')._select(0);ZAYAV.tovar_place_id = 0;
 
@@ -2226,13 +2227,13 @@ $(document)
 		if($('#_zayav').length) {
 			$('#find')
 				._search({
-					width:153,
+					width:178,
 					focus:1,
 					txt:'Быстрый поиск...',
 					enter:1,
+					v:ZAYAV.find,
 					func:_zayavSpisok
-				})
-				.inp(ZAYAV.find);
+				});
 			$('#sort')._radio(_zayavSpisok);
 			$('#desc')._check(_zayavSpisok);
 			$('#ob_onpay')._check(_zayavSpisok);
@@ -2259,7 +2260,7 @@ $(document)
 			$('#f57')._check(_zayavSpisok);
 			WORKER_SPISOK.push({uid: -1, title: 'Не назначен', content: '<b>Не назначен</b>'});
 			$('#executer_id')._select({
-				width: 155,
+				width: 180,
 				title0: 'не указан',
 				spisok: WORKER_SPISOK,
 				func:function(v, id) {
@@ -2267,6 +2268,15 @@ $(document)
 					_zayavSpisok(v, id);
 				}
 			});
+
+			if($('#tovar_cat_id').length)
+				$('#tovar_cat_id')._select({
+					width:180,
+					write:1,
+					title0:'Все категории',
+					spisok:ZAYAV_TOVAR_CAT,
+					func:_zayavSpisok
+				});
 
 			if($('#tovar_id').length)
 				$('#tovar_id').tovar({
@@ -2276,7 +2286,7 @@ $(document)
 				});
 
 			$('#tovar_place_id')._select({
-				width:155,
+				width:180,
 				title0:'Любое местонахождение',
 				spisok:ZAYAV_TOVAR_PLACE_SPISOK,
 				func:_zayavSpisok
