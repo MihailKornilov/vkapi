@@ -1300,6 +1300,56 @@ var _zayavSpisok = function(v, id) {
 		}, 'json');
 	},
 	
+	_zayavAttachCancel = function(v) {//отмена прикрепления документа
+		var html =
+				'<div class="_info">' +
+				'Прикрепление документа будет отмечено как необязательное. ' +
+				'При поиске заявок, если установлена галочка <u>Документ не прикреплён</u>, данная заявка выводиться не будет.' +
+				'</div>' +
+				'<div class="mt15 center fs16">Применить необязательное<br />прикрепление документа.</div>' +
+				'<table class="bs10">' +
+					'<tr><td class="label">Причина:*' +
+						'<td><input type="hidden" id="reason" />' +
+				'</table>',
+			dialog = _dialog({
+				width:430,
+				head:'Необязательное прикрепление документа',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#reason')
+			._select({
+				width:320,
+				write_save:1
+			})
+			._select('process');
+		
+		//загрузка введённых причин
+		var send = {
+			op:'zayav_attach_cancel_reason_load',
+			v:'attach' + (v || '')
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			$('#reason')._select('cancel');
+			if(res.success)
+				$('#reason')
+					._select(res.spisok)
+					._select('focus');
+		}, 'json');
+
+		function submit() {
+			var send = {
+				op:'zayav_attach_cancel',
+				zayav_id:ZI.id,
+				v:'attach' + (v || ''),
+				reason:$('#reason')._select('inp')
+			};
+			dialog.post(send);
+		}
+	},
+	
 	mainMenuZayavChart = function() {
 		$('#zayav-chart-container')
 			.height(300)
@@ -2458,48 +2508,15 @@ $(document)
 				table_row:ZI.id,
 				col_name:'attach1_id'
 			});
-			$('#attach_cancel,#attach1_cancel').click(function() {//отмена прикрепления документа
-				var t = $(this),
-					html =
-						'<div class="_info">' +
-							'Прикрепление документа будет отмечено как необязательное. ' +
-							'При поиске заявок, если установлена галочка <u>Документ не прикреплён</u>, данная заявка выводиться не будет.' +
-						'</div>' +
-						'<center class="mar8"><b>Применить необязательное<br />прикрепление документа.</br></center>',
-					dialog = _dialog({
-						width:370,
-						head:'Необязательное прикрепление документа',
-						content:html,
-						butSubmit:'Применить',
-						submit:submit
-					});
-
-				function submit() {
-					var send = {
-						op:'zayav_attach_cancel',
-						zayav_id:ZI.id,
-						v:t.attr('id').split('_cancel')[0]
-					};
-
-					dialog.process();
-					$.post(AJAX_MAIN, send, function(res) {
-						if(res.success) {
-							dialog.close();
-							_msg();
-							document.location.reload();
-						} else
-							dialog.abort();
-					}, 'json');
-				}
-			});
 			$('.attach-canceled').mouseover(function() {
 				var t = $(this),
 					v = t.attr('val');
 				t.vkHint({
 					show:1,
 					msg:v,
-					top:-82,
-					left:-24
+					indent:60,
+					top:-88,
+					left:-14
 				})
 			});
 		}

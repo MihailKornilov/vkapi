@@ -954,19 +954,23 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'zayav_attach_cancel':
+	case 'zayav_attach_cancel'://отметка отмены прикрепления докупента
 		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
+			jsonError('Некорректный ID заявки');
 
 		$v = _txt($_POST['v']);
 		if($v != 'attach' && $v != 'attach1')
-			jsonError();
+			jsonError('Неверное значение файла');
+
+		if(!$reason = _txt($_POST['reason']))
+			jsonError('Не указана причина');
 
 		if(!$z = _zayavQuery($zayav_id))
-			jsonError();
+			jsonError('Заявки не существует');
 
 		$sql = "UPDATE `_zayav`
 				SET `".$v."_cancel`=1,
+					`".$v."_cancel_reason`='".addslashes($reason)."',
 					`".$v."_cancel_viewer_id`=".VIEWER_ID.",
 					`".$v."_cancel_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
@@ -978,11 +982,31 @@ switch(@$_POST['op']) {
 			'type_id' => 103,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => str_replace("\n", ' ', $zpu[$v == 'attach' ? 22 : 34]['name'])
+			'v1' => str_replace("\n", ' ', $zpu[$v == 'attach' ? 22 : 34]['name']),
+			'v2' => $reason
 		));
 
 		jsonSuccess();
 		break;
+	case 'zayav_attach_cancel_reason_load':
+		$v = _txt($_POST['v']);
+		if($v != 'attach' && $v != 'attach1')
+			jsonError('Неверное значение файла');
+
+		$sql = "SELECT
+					`id`,
+					`".$v."_cancel_reason`
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND LENGTH(`".$v."_cancel_reason`)
+				GROUP BY `".$v."_cancel_reason`
+				ORDER BY `".$v."_cancel_reason`";
+		$send['spisok'] = query_selArray($sql);
+
+		jsonSuccess($send);
+		break;
+
 
 	case 'zayav_expense_add'://внесение расхода по заявке
 		if(!$zayav_id = _num($_POST['zayav_id']))

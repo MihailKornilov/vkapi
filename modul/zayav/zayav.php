@@ -2854,18 +2854,20 @@ function _zayavAttachCancel($z, $i) {//вывод сообщения о необязательном прикрепл
 		return '';
 
 	if($z['attach'.$v.'_cancel']) {
+		$reason = $z['attach'.$v.'_cancel_reason'];
 		$viewer_id = $z['attach'.$v.'_cancel_viewer_id'];
 		$val = 'Отметил'.(_viewer($viewer_id, 'viewer_sex') == 1 ? 'а' : '').' '.
-				_viewer($viewer_id, 'viewer_name').
+				_viewer($viewer_id, 'viewer_name').' '.
+				FullDataTime($z['attach'.$v.'_cancel_dtime']).
 				'<br />'.
-				FullDataTime($z['attach'.$v.'_cancel_dtime']);
+			($reason ? '<span class=grey>Причина:</span> <i>'.$reason.'</i>' : '<span class=grey>Причина не указана.</span>');
 		return
-			'<span class="attach-canceled" val="'.$val.'">'.
+			'<span class="attach-canceled" val="'.addslashes($val).'">'.
 				'не требуется'.
 			'</span>';
 	}
 
-	return '<div id="attach'.$v.'_cancel" class="img_cancel'._tooltip('Прикрепление не требуется', -12, 'l').'</div>';
+	return '<div id="attach'.$v.'_cancel" onclick="_zayavAttachCancel('.$v.')" class="img_cancel'._tooltip('Прикрепление не требуется', -12, 'l').'</div>';
 }
 
 
