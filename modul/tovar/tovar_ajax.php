@@ -287,9 +287,9 @@ switch(@$_POST['op']) {
 			if(!preg_match($reg, $find))
 				$f[] = "`name` LIKE '%".$find."%' OR `about` LIKE '%".$find."%'";
 
-//			$engRus = _engRusChar($find);
-//			if($engRus)
-//				$f[] = "`find` LIKE '%".$engRus."%' OR `about` LIKE '%".$engRus."%'";
+			$engRus = _engRusChar($find);
+			if($engRus)
+				$f[] = "`name` LIKE '%".$engRus."%' OR `about` LIKE '%".$engRus."%'";
 
 			$cond .= " AND ".(
 				empty($f) ? " !`id` "
@@ -1337,6 +1337,7 @@ function _tovar_unit_select($spisok, $find, $avai) {
 		if($find) {
 			$reg = '/('.$find.')/iu';
 			$reg = utf8($reg);
+//			$r['name'] = _findRegular($find, $r['name']);
 			$r['name'] = utf8($r['name']);
 			$r['name'] = preg_replace($reg, '<span class="fndd b">\\1</span>', $r['name'], 1);
 			$r['name'] = win1251($r['name']);
