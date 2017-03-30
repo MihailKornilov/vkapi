@@ -2281,6 +2281,7 @@ $(document)
 			if($('#tovar_id').length)
 				$('#tovar_id').tovar({
 					title:'выбрать',
+					small:1,
 					zayav_use:1,
 					func:_zayavSpisok
 				});

@@ -525,7 +525,7 @@ var VK_SCROLL = 0,
 				if(h > max)
 					max = h;
 			}
-			var dh = max + VK_SCROLL + 80 + o.mb;
+			var dh = max + VK_SCROLL + 180 + o.mb;
 			if(DIALOG_MAXHEIGHT != dh) {
 				DIALOG_MAXHEIGHT = dh;
 				_fbhs();
@@ -2423,6 +2423,12 @@ $.fn._select = function(o) {
 
 			if(res.height() > 250)
 				res.addClass('h250');
+
+			//увеличение области видимости, если список уходит вниз экрана
+			var st = select.offset().top;//положение селекта сверху страницы
+			if((st + 250) > FB.height())
+				FB.height(st + 350);
+
 
 			unitSelShow();
 			$(document)
