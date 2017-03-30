@@ -280,10 +280,23 @@ switch(@$_POST['op']) {
 
 		$msgResult = 'Ќедавно добавленные товары:';
 
-		if($find)
-			$cond .= " AND (`name` LIKE '%".$find."%'
-						 OR `about` LIKE '%".$find."%'
-						)";
+		if($find) {
+			$f = array();
+
+			$reg = '/(\')/'; // одинарна€ кавычка '
+			if(!preg_match($reg, $find))
+				$f[] = "`name` LIKE '%".$find."%' OR `about` LIKE '%".$find."%'";
+
+//			$engRus = _engRusChar($find);
+//			if($engRus)
+//				$f[] = "`find` LIKE '%".$engRus."%' OR `about` LIKE '%".$engRus."%'";
+
+			$cond .= " AND ".(
+				empty($f) ? " !`id` "
+				:
+				"(".implode(' OR ', $f).")"
+			);
+		}
 		elseif($tovar_id_use = _num($_POST['tovar_id_use'])) {
 			$sql = "SELECT `use_id`
 					FROM `_tovar_use`
