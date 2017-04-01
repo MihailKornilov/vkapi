@@ -528,6 +528,7 @@ var saMenuEdit = function(o) {
 			id:0,
 			name:'',
 			about:'',
+			task_use:1,
 			param1:'',
 			param2:''
 		}, o);
@@ -537,6 +538,7 @@ var saMenuEdit = function(o) {
 					'<tr><td class="label">Тип поля:<td><b>' + SAZP_TYPE_NAME + '</b>' +
 					'<tr><td class="label">Название:<td><input type="text" id="name" class="w350" value="' + o.name + '" />' +
 					'<tr><td class="label topi">Описание:<td><textarea id="about" class="w350">' + o.about + '</textarea>' +
+					'<tr><td><td><input type="hidden" id="task_use" value="' + o.task_use + '" />' +
 					'<tr><td class="label">Параметр 1:<td><input type="text" id="param1" class="w350" placeholder="название параметра" value="' + o.param1 + '" />' +
 					'<tr><td class="label">Параметр 2:<td><input type="text" id="param2" class="w350" placeholder="название параметра" value="' + o.param2 + '" />' +
 				'</table>',
@@ -550,6 +552,10 @@ var saMenuEdit = function(o) {
 
 		$('#name').focus();
 		$('#about').autosize();
+		$('#task_use')._check({
+			name:'использовать в задачах',
+			light:1
+		});
 
 		function submit() {
 			var send = {
@@ -558,18 +564,13 @@ var saMenuEdit = function(o) {
 				type_id:SAZP_TYPE_ID,
 				name:$('#name').val(),
 				about:$('#about').val(),
+				task_use:$('#task_use').val(),
 				param1:$('#param1').val(),
 				param2:$('#param2').val()
 			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					$('#spisok').html(res.html);
-				} else
-					dialog.abort();
-			}, 'json');
+			dialog.post(send, function(res) {
+				$('#spisok').html(res.html);
+			});
 		}
 	},
 	saZayavServicePoleAdd = function(service_id, type_id) {
@@ -588,12 +589,12 @@ var saMenuEdit = function(o) {
 		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				dialog.content.html(res.html);
-				$('.sel').click(function() {
+				$('.over3').click(function() {
 					dialog.close();
 					var t = $(this);
 					saZayavServicePoleEdit({
 						service_id:service_id,
-						pole_id:t.find('.id').html(),
+						pole_id:t.attr('val'),
 						type_id:type_id,
 						name:t.find('.name').html(),
 						about:t.find('.about').html(),
@@ -661,15 +662,9 @@ var saMenuEdit = function(o) {
 				param_v1:$('#param_v1').val(),
 				param_v2:$('#param_v2').val()
 			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					$('#spisok' + res.type_id).html(res.html);
-				} else
-					dialog.abort();
-			}, 'json');
+			dialog.post(send, function(res) {
+				$('#spisok' + res.type_id).html(res.html);
+			});
 		}
 	},
 
@@ -1318,18 +1313,19 @@ $(document)
 		});
 	})
 
-	.on('click', '#sa-zayav-pole .img_edit', function() {
+	.on('click', '#sa-zayav-pole .icon-edit', function() {
 		var t = $(this),
 			p = _parent(t);
 		saZayavPoleEdit({
 			id:t.attr('val'),
 			name:p.find('.name').html(),
 			about:p.find('.about').html(),
+			task_use:p.find('.task_use').val(),
 			param1:p.find('.param1').html(),
 			param2:p.find('.param2').html()
 		});
 	})
-	.on('click', '#sa-zayav-pole .img_del', function() {
+	.on('click', '#sa-zayav-pole .icon-del', function() {
 		var t = $(this),
 			p = _parent(t);
 		_dialogDel({

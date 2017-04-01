@@ -78,17 +78,6 @@
 #sa-zayav .headName{margin:0 0 10px}
 #sa-zayav a{display:block}
 
-#sa-zayav-pole .headName{margin:10px}
-#sa-zayav-pole #spisok{margin:10px 10px 30px}
-#sa-zayav-pole .sel{cursor:pointer}
-#sa-zayav-pole .sel:hover{background:#ffa}
-#sa-zayav-pole td{vertical-align:top}
-#sa-zayav-pole .id{text-align:right;color:#777}
-#sa-zayav-pole .name{width:180px;font-weight:bold}
-#sa-zayav-pole .about{font-size:10px;color:#888;white-space:pre-line}
-#sa-zayav-pole .param{font-size:10px;color:red;margin-top:5px;font-weight:bold}
-#sa-zayav-pole .use{text-align:center;width:40px}
-#sa-zayav-pole .ed{padding-top:4px}
 
 #sa-zayav-service{margin:10px 10px 50px}
 #sa-zayav-service .headName{margin:0 0 10px}

@@ -754,11 +754,11 @@ function sa_zayav_pole($type_id) {
 			'link_d' => 35
 		)).
 		'<div id="sa-zayav-pole">'.
-			'<div class="headName">'.
+			'<div class="hd2 mar10">'.
 				'Настройки полей: '.sa_zayav_pole_type($type_id).
-				'<a class="add" onclick="saZayavPoleEdit()">Новое поле</a>'.
+				'<button class="vk small green fr" onclick="saZayavPoleEdit()">Новое поле</button>'.
 			'</div>'.
-			'<div id="spisok">'.sa_zayav_pole_spisok($type_id).'</div>'.
+			'<div id="spisok" class="mar10">'.sa_zayav_pole_spisok($type_id).'</div>'.
 		'</div>';
 }
 function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех полей заявки
@@ -784,23 +784,25 @@ function sa_zayav_pole_spisok($type_id, $sel=false) {//отображение списка всех п
 	}
 
 	$send =
-		'<table class="_spisok">'.
+		'<table class="_spisokTab">'.
 			'<tr><th>'.
-				'<th>Наименование'.
+				'<th class="w200">Наименование'.
 				'<th>Описание'.
-	   ($sel === false ? '<th>use' : '').
-	   ($sel === false ? '<th>' : '');
+	($sel === false ? '<th class="w70">task use' : '').
+	($sel === false ? '<th class="w35">use' : '').
+	($sel === false ? '<th class="">' : '');
 	foreach($spisok as $r)
 		$send .=
-			'<tr'.($sel !== false ? ' class="sel" val="'.$r['id'].'"' : '').'>'.
-				'<td class="id">'.$r['id'].
-				'<td class="name">'.$r['name'].
-				'<td>'.
-					'<div class="about">'.$r['about'].'</div>'.
-   ($r['param1'] ? '<div class="param param1">'.$r['param1'].'</div>' : '').
-   ($r['param2'] ? '<div class="param param2">'.$r['param2'].'</div>' : '').
-	   ($sel === false ? '<td class="use">'.(@$r['use'] ? $r['use'] : '') : '').
-	   ($sel === false ? '<td class="ed">'._iconEdit($r)._iconDel($r + array('nodel'=>_num(@$r['use']))) : '');
+			'<tr class="'.($sel !== false ? 'over3 curP' : 'over1').'" val="'.$r['id'].'">'.
+				'<td class="top r grey">'.$r['id'].
+				'<td class="top name b">'.$r['name'].
+				'<td><div class="top about grey fs11 wspl">'.$r['about'].'</div>'.
+   ($r['param1'] ? '<div class="param1 fs11 red mt5">'.$r['param1'].'</div>' : '').
+   ($r['param2'] ? '<div class="param2 fs11 red mt5">'.$r['param2'].'</div>' : '').
+	   ($sel === false ? '<td'.($r['task_use'] ? ' class="bg-dfd"' : '').'>' : '').
+	   ($sel === false ? '<td class="center">'.(@$r['use'] ? $r['use'] : '') : '').
+	   ($sel === false ? '<td class="wsnw">'._iconEditNew($r)._iconDelNew($r + array('nodel'=>_num(@$r['use']))) : '').
+					'<input type="hidden" class="task_use" value="'.$r['task_use'].'">';
 	$send .= '</table>';
 
 	return $send;

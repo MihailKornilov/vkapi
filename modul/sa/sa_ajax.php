@@ -826,25 +826,27 @@ switch(@$_POST['op']) {
 
 	case 'sa_zayav_pole_add':
 		if(!$type_id = _num($_POST['type_id']))
-			jsonError();
-		$name = _txt($_POST['name']);
+			jsonError('Некорректный тип поля');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
+
 		$about = _txt($_POST['about']);
+		$task_use = _bool($_POST['task_use']);
 		$param1 = _txt($_POST['param1']);
 		$param2 = _txt($_POST['param2']);
-
-		if(!$name)
-			jsonError();
 
 		$sql = "INSERT INTO `_zayav_pole` (
 					`type_id`,
 					`name`,
 					`about`,
+					`task_use`,
 					`param1`,
 					`param2`
 				) VALUES (
 					".$type_id.",
 					'".addslashes($name)."',
 					'".addslashes($about)."',
+					".$task_use.",
 					'".addslashes($param1)."',
 					'".addslashes($param2)."'
 				)";
@@ -859,14 +861,13 @@ switch(@$_POST['op']) {
 	case 'sa_zayav_pole_edit'://редактирование поля заявок
 		if(!$id = _num($_POST['id']))
 			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано название');
 
-		$name = _txt($_POST['name']);
 		$about = _txt($_POST['about']);
+		$task_use = _bool($_POST['task_use']);
 		$param1 = _txt($_POST['param1']);
 		$param2 = _txt($_POST['param2']);
-
-		if(!$name)
-			jsonError();
 
 		$sql = "SELECT * FROM `_zayav_pole` WHERE `id`=".$id;
 		if(!$r = query_assoc($sql))
@@ -875,6 +876,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_pole`
 				SET `name`='".addslashes($name)."',
 					`about`='".addslashes($about)."',
+					`task_use`=".$task_use.",
 					`param1`='".addslashes($param1)."',
 					`param2`='".addslashes($param2)."'
 				WHERE `id`=".$id;
@@ -922,7 +924,7 @@ switch(@$_POST['op']) {
 				  AND `service_id`=".$service_id;
 		$ids = query_ids($sql);
 		
-		$send['html'] = utf8('<div id="sa-zayav-pole">'.sa_zayav_pole_spisok($type_id, $ids).'</div>');
+		$send['html'] = utf8(sa_zayav_pole_spisok($type_id, $ids));
 		jsonSuccess($send);
 		break;
 	case 'sa_zayav_service_pole_add'://добавление выбранного поля заявки
