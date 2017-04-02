@@ -4,8 +4,6 @@ function test_page() {//страница отображения
 }
 
 function _test_script() {//скрипты для test
-	if(@$_GET['p'] != 78)
-		return '';
 	return
 //		'<link rel="stylesheet" type="text/css" href="'.API_HTML.'/modul/tovar/tovar'.MIN.'.css?'.VERSION.'" />'.
 		'<script src="'.API_HTML.'/modul/test/test'.MIN.'.js?'.VERSION.'"></script>';
@@ -246,4 +244,61 @@ function test_word_trans($str) {//транслитерация для отправки переводчику
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---=== ЗАДАЧИ ===--- */
+function _task() {
+	return
+	'<div class="mar10">'.
+		'<div class="hd2">'.
+			'Текущие задачи'.
+(VIEWER_ADMIN ? '<button class="vk small green fr" onclick="_taskAdd()">Новая задача</button>' : '').
+		'</div>'.
+		'<div class="_info mt10">Показаны задачи, которые считаются незавершёнными на текущий момент времени.</div>'.
+		'<div class="fs15 mt15">Заявки</div>'.
+		_task_spisok().
+	'</div>';
+}
+function _task_spisok() {//список задач
+	$sql = "SELECT *
+			FROM `_task`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return '<div class="mar10 grey">Задач нет.</div>';
+
+	$n = 1;
+	$send = '<table class="_spisokTab mt5">';
+	foreach($spisok as $id => $r) {
+		$sql = "SELECT `k`,`v`
+				FROM `_task_filter`
+				WHERE `app_id`=".APP_ID."
+				  AND `task_id`=".$id;
+		$filter = query_ass($sql);
+		$data = _zayav_spisok($filter);
+
+		$r['onclick'] = '_taskDel('.$id.')';
+		$send .= '<tr class="over1">'.
+			'<td class="w15 grey r">'.($n++).
+			'<td>'.$r['name'].
+			'<td class="w70 center"><a href="'.URL.'&p=2&task_id='.$id.'" class="b">'.$data['all'].'</a>'.
+		(VIEWER_ADMIN ?
+			'<td class="w15">'._iconDelNew($r)
+		: '');
+	}
+	$send .= '</table>';
+
+	return $send;
+}
 

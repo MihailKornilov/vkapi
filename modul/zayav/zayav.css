@@ -1,10 +1,4 @@
 #_zayav #z-count{color:#777;margin-left:10px}
-#_zayav #spisok{
-	padding-bottom:10px;
-	background-color:#f7f7f7;
-	vertical-align:top;
-}
-#_zayav #find{margin-top:15px}
 #_zayav .right{
 	width:180px;
 	border:0;
@@ -13,12 +7,16 @@
 	height:1350px;
 }
 #_zayav .rightLink b{float:right}
-#_zayav ._check{margin-top:10px}
 
 /* —рок выполнени€ за€вки */
 #_zayav .zayav-srok{float:right}
 
 #_zayav #ob_onpay_check{margin-top:20px;color:red}
+
+#_zayav ._empty{margin:10px}
+#_zayav ._next{margin:6px 8px 0}
+
+
 
 /* —сылка на объ€влени€ в формате Word */
 #obWordPrint{display:inline-block;margin-top:20px}
@@ -34,11 +32,6 @@
 #gn_nomer_id_radio div{font-size:10px}
 #gn_nomer_id_radio .lost{text-decoration:line-through;color:#999}
 #gn_polosa_color_radio{margin-top:8px}
-
-#_zayav #deleted_check{margin-top:20px}
-#_zayav #deleted-only-div{margin-top:5px}
-#_zayav ._empty{margin:10px}
-#_zayav ._next{margin:6px 8px 0}
 
 
 /* элемент списка за€вок */

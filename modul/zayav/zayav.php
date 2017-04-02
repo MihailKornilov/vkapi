@@ -793,7 +793,7 @@ function _zayavSkidka() {//массив скидок
 	);
 }
 
-function _zayavFilter($v) {
+function _zayavFilter($v=array()) {
 	$default = array(
 		'page' => 1,
 		'limit' => 20,
@@ -865,6 +865,22 @@ function _zayavFilter($v) {
 	return $filter;
 }
 function _zayav_list($v=array()) {
+	//изменение фильтра, если переход с задачи
+	if($task_id = _num(@$_GET['task_id'])) {
+		$sql = "SELECT *
+				FROM `_task`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$task_id;
+		if(query_assoc($sql)) {
+			$sql = "SELECT `k`,`v`
+					FROM `_task_filter`
+					WHERE `task_id`=".$task_id;
+			$v = query_ass($sql);
+			foreach($v as $k => $r)
+				setcookie(COOKIE_PREFIX.'zayav'.$v['service_id'].'_'.$k, $r, time() + 3600, '/');
+		}
+	}
+
 	$data = _zayav_spisok($v);
 	$v = $data['filter'];
 
@@ -873,17 +889,18 @@ function _zayav_list($v=array()) {
 		_service('menu').
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
-			'<tr><td id="spisok">'.$data['spisok'].
+			'<tr><td id="spisok" class="pb10 bg-gr3 top">'.$data['spisok'].
 				'<td class="right">'.
 					'<button class="vk fw green" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
 					_zayavPoleFilter($v).
-	(VIEWER_ADMIN ? _check('deleted', '+ удалённые заявки', $v['deleted'], 1).
-					'<div id="deleted-only-div"'.($v['deleted'] ? '' : ' class="dn"').'>'.
+	(VIEWER_ADMIN ? '<div class="mt20">'._check('deleted', '+ удалённые заявки', $v['deleted'], 1).'</div>'.
+					'<div id="deleted-only-div" class="mt5'.($v['deleted'] ? '' : ' dn').'">'.
 						_check('deleted_only', 'только удалённые', $v['deleted_only'], 1).
 					'</div>'
 	: '').
 		'</table>'.
-	'</div>';
+	'</div>'.
+	'<script>_zayavReady();</script>';
 }
 //	if(ZAYAV_INFO_DEVICE)
 //		$zayav = _imageValToZayav($zayav);
@@ -936,14 +953,14 @@ function _zayav_spisok($v) {
 	if(RULE_ZAYAV_EXECUTER)
 		$cond .= " AND `executer_id`=".VIEWER_ID;
 
-	define('SROK', $filter['finish'] != '0000-00-00');
-	define('FIND', !empty($filter['find']));
+	$SROK = $filter['finish'] != '0000-00-00';
+	$FIND = !empty($filter['find']);
 
 	$nomer = 0;
 	$zpu = _zayavPole($filter['service_id']);
 
 
-	if(FIND) {
+	if($FIND) {
 		$engRus = _engRusChar($filter['find']);
 
 		$cond .= " AND (`find` LIKE '%".$filter['find']."%'
@@ -986,7 +1003,7 @@ function _zayav_spisok($v) {
 				$cond .= " AND `client_id`=".$filter['client_id'];
 			if($filter['status'])
 				$cond .= " AND `status_id`=".$filter['status'];
-			if(SROK)
+			if($SROK)
 				$cond .= " AND `srok`='".$filter['finish']."' AND `status_id` IN ("._zayavStatus('srok_ids').")";
 			if($filter['paytype'])
 				$cond .= " AND `pay_type`=".$filter['paytype'];
@@ -1068,7 +1085,7 @@ function _zayav_spisok($v) {
 				$cond .= " AND `id` IN (".$zayav_ids.")";
 			}
 
-			if(!SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
+			if(!$SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
 				$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 
 			if($filter['f56'])
@@ -1177,7 +1194,7 @@ function _zayav_spisok($v) {
 			continue;
 		$r['sum_accrual'] = round($r['sum_accrual']);
 		$r['sum_pay'] = round($r['sum_pay']);
-		if(FIND) {
+		if($FIND) {
 			$r['name'] = _findRegular($filter['find'], $r['name']);
 			$r['about'] = _findRegular($filter['find'], $r['about']);
 
@@ -1374,10 +1391,10 @@ function _zayavObWord() {//Печать объявлений в формате Word
 
 /* Поля заявки */
 function _zayavPole($service_id, $type_id=0, $i='') {
-	$sql = "SELECT `id`,`name`
+	$sql = "SELECT *
 			FROM `_zayav_pole`
 			".($type_id ? " WHERE `type_id`=".$type_id : '');
-	$zpn = query_ass($sql);
+	$zpn = query_arr($sql);
 
 	$send = array();
 	$sql = "SELECT *
@@ -1388,13 +1405,14 @@ function _zayavPole($service_id, $type_id=0, $i='') {
 			ORDER BY `sort`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		$name = $r['label'] ? $r['label'] : $zpn[$r['pole_id']];
+		$name = $r['label'] ? $r['label'] : $zpn[$r['pole_id']]['name'];
 		$label = $name.':';
 		$label .= $r['require'] ? '*' : '';
 		$send[$r['pole_id']] = array(
 			'label' => $label,
 			'name' => $name,
 			'require' => $r['require'],
+			'task_use' => $zpn[$r['pole_id']]['task_use'],
 			'v1' => $r['param_v1'],
 			'v2' => $r['param_v2']
 		);
@@ -1570,11 +1588,11 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 
 
 	$pole = array(
-		17 => '<div id="find"></div>',
+		17 => '<div id="find" class="mt15"></div>',
 
 		18 => '<div class="findHead">{label}</div>'.
 			   _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort'], 1).
-			   _check('desc', 'Обратный порядок', $v['desc'], 1),
+			   '<div class="mt10">'._check('desc', 'Обратный порядок', $v['desc'], 1).'</div>',
 
 		24 => '<div class="findHead">{label}</div>'.
 			  _zayavStatus($v['status'], 'filter'),
@@ -1590,10 +1608,10 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 		28 => '<div class="findHead">{label}</div>'.
 			  '<input type="hidden" id="tovar_place_id" value="'.$v['tovar_place_id'].'" />',
 
-		29 => _check('noschet', 'Счёт не выписан', $v['noschet']),
-		30 => _check('nofile', '{label}', $v['nofile'], 1),
-		35 => _check('noattach', '{label}', $v['noattach'], 1),
-		36 => _check('noattach1', '{label}', $v['noattach1'], 1),
+		29 => '<div class="mt10">'._check('noschet', 'Счёт не выписан', $v['noschet'], 1).'</div>',
+		30 => '<div class="mt10">'._check('nofile', '{label}', $v['nofile'], 1).'</div>',
+		35 => '<div class="mt10">'._check('noattach', '{label}', $v['noattach'], 1).'</div>',
+		36 => '<div class="mt10">'._check('noattach1', '{label}', $v['noattach1'], 1).'</div>',
 
 		32 => '<script>'.
 				'var ZAYAV_TOVAR_CAT='.(isset($zpu[32]) ? _selJson($arr) : 0).';'.
@@ -1640,6 +1658,8 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 	foreach(_zayavPole($v['service_id'], 2) as $pole_id => $r) {
 		if(empty($pole[$pole_id]))
 			continue;
+		if(!empty($v['task']) && !$r['task_use'])
+			continue;
 
 		//если показываются заявки только если сотрудник является исполнителем, то фильтр с исполнителями не выводится
 		if(RULE_ZAYAV_EXECUTER && $pole_id == 27)
@@ -1664,6 +1684,7 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 
 */
 function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
+	$FIND = !empty($filter['find']);
 	$deleted = $z['deleted'] ? ' deleted' : '';
 	$statusColor = isset($zpu[41]) && !$deleted ? _zayavStatus($z['status_id'], 'bg') : '';
 	$statusName =
@@ -1685,7 +1706,7 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 			'</div>';
 	}
 
-	if(FIND && !$filter['client_id'] && $z['client_id'])
+	if($FIND && !$filter['client_id'] && $z['client_id'])
 		$z['client_go'] = _findRegular($filter['find'], $z['client_go']);
 
 	return
@@ -1713,7 +1734,7 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 			_zayavUnit46($z, $zpu). //размер
 			_zayavUnit49($z, $zpu). //количество
 			_zayavUnit50($z, $zpu, $filter). //полоса
-	 (FIND && $z['phone'] ? '<tr><td class="label">Телефон:<td>'.$z['phone'] : '').
+	 ($FIND && $z['phone'] ? '<tr><td class="label">Телефон:<td>'.$z['phone'] : '').
 			 ($z['adres'] ? '<tr><td class="label top">Адрес:<td>'.$z['adres'] : '').
 	         ($z['schet'] ? '<tr><td class="label topi">Счета:<td>'.$z['schet'] : '').
 				'</table>'.
@@ -3680,6 +3701,9 @@ function _service($i='all', $id=0) {
 
 	if($i == 'current')
 		return _serviceCurrentId($arr, $id);
+
+	if($i == 'first')//получение первого по списку вида, не важно, активен или нет
+		return key($arr);
 
 	if($i == 'js')
 		return _serviceJs($arr);
