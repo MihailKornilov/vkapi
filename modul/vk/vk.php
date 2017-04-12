@@ -70,6 +70,7 @@ function _const() {
 	$SA[982006] = 1;    // Корнилов Михаил
 //	$SA[1382858] = 1;   // Серёга Ш.
 //	$SA[166424274] = 1; // тестовая запись
+//	$SA[162549339] = 1; // Рома Губинский
 	define('SA', isset($SA[VIEWER_ID]));
 
 	define('VALUES', TIME.
@@ -1432,14 +1433,11 @@ function _dn($v) {//показ/скрытие блока на основании условия
 }
 
 function _ids($ids, $return_arr=0) {//проверка корректности списка id, составленные через запятую
-	$ids = trim($ids);
 	$arr = array();
-	if(!empty($ids)) {
-		$arr = explode(',', $ids);
-		if(!empty($arr))
-			foreach($arr as $i => $id)
-				if(!$arr[$i] = _num(trim($id)))
-					return false;
+	foreach(explode(',', $ids) as $i => $id) {
+		if(!preg_match(REGEXP_NUMERIC, $id))
+			return false;
+		$arr[$i] = _num($id);
 	}
 	return $return_arr ? $arr : implode(',', $arr);
 }

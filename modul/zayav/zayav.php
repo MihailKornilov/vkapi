@@ -403,6 +403,26 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 
 	//фильтр дл€ списка за€вок
 	if($i == 'filter') {
+		//определение, какие статусы выбраны
+		$label = 'Ћюбой статус';
+		$bg = '';
+		$ex = explode(',', $id);
+		if(count($ex) == 1) {
+			if($ex[0] == 0) {
+				$label = '—татусы не выбраны';
+			} else {
+				$label = $arr[$ex[0]]['name'];
+				$bg = ' style="background:#'.$arr[$ex[0]]['color'].'"';
+			}
+		} elseif(count($ex) != count($arr)) {
+			$label = 'Ќекоторые статусы';
+		}
+
+		//ассоциативный массив выбранных статусов
+		$show = array();
+		foreach($ex as $r)
+			$show[$r] = 1;
+
 		$sql = "SELECT
 					`status_id`,
 					COUNT(*) `count`
@@ -422,18 +442,22 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 			if(!$r['count'])
 				continue;
 			$filter .=
-				'<tr style="background-color:#'.$r['color'].'">'.
-					'<td val="'.$r['id'].'">'.
-						$r['name'].
-						'<em>'.$r['count'].'</em>';
+				'<tr val="'.$r['id'].'" class="over1">'.
+					'<td class="td-check pad8" style="background-color:#'.$r['color'].'">'.
+						_check('st'.$r['id'], '', isset($show[$r['id']])).
+					'<td class="td-name pad8 wsnw fs12">'.$r['name'].
+					'<td class="td-name pad8 w15 grey r fs12">'.$r['count'];
 		}
 		return
-			'<div id="zayav-status-filter"'.($id ? ' class="us"' : '').'">'.
-				'<div id="any">Ћюбой статус</div>'.
-				'<div id="sel"'.($id ? ' style="background:#'.$arr[$id]['color'].'"' : '').'>'.($id ? $arr[$id]['name'] : '').'</div>'.
+			'<div id="zayav-status-filter">'.
+				'<div id="sel"'.$bg.'>'.$label.'</div>'.
 				'<div id="status-tab">'.
-					'<table>'.
-						'<tr><td val="0"><b>Ћюбой статус</b>'.
+					'<table class="bg-fff curP">'.
+						'<tr val="0" class="over1">'.
+							'<td class="td-check pad8'._tooltip('¬ыбрать все', -34).
+								_check('st0', '').
+							'<td class="pad8">'.
+							'<td class="r"><div class="icon icon-del mr5'._tooltip('—крыть статусы', -90, 'r').'</div>'.
 						$filter.
 					'</table>'.
 				'</div>'.
@@ -562,6 +586,17 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 		return 0;
 	}
 
+	//id статусов, которые не скрываютс€ из общего списка
+	if($id == 'show_ids') {
+		$ids = array();
+		foreach($arr as $r)
+			if(!$r['hide'])
+				$ids[] = $r['id'];
+		if(empty($ids))
+			return 0;
+		return '0,'.implode(',', $ids);
+	}
+
 	//id статусов, которые скрываютс€ из общего списка
 	if($id == 'hide_ids') {
 		$ids = array();
@@ -570,7 +605,7 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов за€вки
 				$ids[] = $r['id'];
 		if(empty($ids))
 			return 0;
-		return implode(',', $ids);
+		return '0,'.implode(',', $ids);
 	}
 
 	//id статусов, у которых нужно учитывать срок выполнени€
@@ -802,7 +837,7 @@ function _zayavFilter($v=array()) {
 		'sort' => 1,
 		'desc' => 0,
 		'ob_onpay' => 0,
-		'status' => 0,
+		'status_ids' => _zayavStatus('show_ids'),
 		'finish' => '0000-00-00',
 		'executer_id' => 0,
 		'zpzakaz' => 0,
@@ -831,7 +866,8 @@ function _zayavFilter($v=array()) {
 		'sort' => _num(@$v['sort']) ? _num(@$v['sort']) : 1,
 		'desc' => _bool(@$v['desc']),
 		'ob_onpay' => _bool(@$v['ob_onpay']),
-		'status' => _num(@$v['status']),
+		'status_def' => _zayavStatus('show_ids'),
+		'status_ids' => isset($v['status_ids']) ? _ids($v['status_ids']) : $default['status_ids'],
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
 		'executer_id' => intval(@$v['executer_id']),
 		'zpzakaz' => _num(@$v['zpzakaz']),
@@ -959,7 +995,6 @@ function _zayav_spisok($v) {
 	$nomer = 0;
 	$zpu = _zayavPole($filter['service_id']);
 
-
 	if($FIND) {
 		$engRus = _engRusChar($filter['find']);
 
@@ -1001,8 +1036,8 @@ function _zayav_spisok($v) {
 		else {
 			if($filter['client_id'])
 				$cond .= " AND `client_id`=".$filter['client_id'];
-			if($filter['status'])
-				$cond .= " AND `status_id`=".$filter['status'];
+			if(isset($zpu[24]))
+				$cond .= " AND `status_id` IN (".$filter['status_ids'].")";
 			if($SROK)
 				$cond .= " AND `srok`='".$filter['finish']."' AND `status_id` IN ("._zayavStatus('srok_ids').")";
 			if($filter['paytype'])
@@ -1085,8 +1120,8 @@ function _zayav_spisok($v) {
 				$cond .= " AND `id` IN (".$zayav_ids.")";
 			}
 
-			if(!$SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status'])
-				$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
+//			if(!$SROK && _zayavStatus('hide_ids') && !$filter['client_id'] && !$filter['status_ids'])
+//				$cond .= " AND `status_id` NOT IN ("._zayavStatus('hide_ids').")";
 
 			if($filter['f56'])
 				$cond .= " AND `sum_accrual` AND `sum_accrual`>`sum_pay`";
@@ -1595,7 +1630,7 @@ function _zayavPoleFilter($v=array()) {//пол€ фильтра списка за€вок
 			   '<div class="mt10">'._check('desc', 'ќбратный пор€док', $v['desc'], 1).'</div>',
 
 		24 => '<div class="findHead">{label}</div>'.
-			  _zayavStatus($v['status'], 'filter'),
+			  _zayavStatus($v['status_ids'], 'filter'),
 
 		25 => '<div class="findHead">{label}<input type="hidden" id="finish" value="'.$v['finish'].'" /></div>',
 

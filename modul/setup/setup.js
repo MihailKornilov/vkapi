@@ -441,7 +441,6 @@ var setupOrgEdit = function(org_id) {
 			arr[sp.attr('id')] = _num(sp.val());
 		}
 
-		console.log(arr);
 		var send = {
 			op:'setup_worker_rule_save',
 			viewer_id:RULE_VIEWER_ID,

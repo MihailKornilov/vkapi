@@ -77,8 +77,8 @@ var testBookUpdate = function(t) {
 				$('#cond').html(res.html);
 				ZAYAV = res.filter;
 				_zayavSpisok = _taskZayavCount;
-				_zayavReady();
-				_taskZayavCount();
+//				_zayavReady();
+//				_taskZayavCount();
 			} else
 				$('#cond')
 					.addClass('red')

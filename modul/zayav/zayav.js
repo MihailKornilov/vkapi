@@ -11,7 +11,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 		$('#sort')._radio(_zayavSpisok);
 		$('#desc')._check(_zayavSpisok);
 		$('#ob_onpay')._check(_zayavSpisok);
-		$('#status').rightLink(_zayavSpisok);
+//		$('#status_').rightLink(_zayavSpisok);
 
 		$('#finish').zayavSrok({
 			service_id:ZAYAV.service_id,
@@ -1014,8 +1014,8 @@ var _zayavReady = function() {//страница со списком заявок загружена
 					$('#ze-count-max').hide();
 					$('#ze-dop').tovar({
 						open:1,
+						add:1,
 						func:function(v, attr_id, sp) {
-							console.log(sp);
 							$('.tr-count')[(v ? 'remove' : 'add') + 'Class']('dn');
 							$(v ? '#ze-count' : '#ze-sum').focus();
 							$('#ze-count')
@@ -2064,12 +2064,16 @@ $.fn.gnGet = function(o, o1) {//номера газет
 };
 
 $(document)
-	.on('click', '#_zayav .vk.red', function() {
+	.on('click', '#_zayav .vk.red', function() {//очистка фильтра заявок
 		$('#find')._search('clear');    ZAYAV.find = '';
 		$('#sort')._radio(1);           ZAYAV.sort = 1;
 		$('#desc')._check(0);           ZAYAV.desc = 0;
 		$('#ob_onpay')._check(0);       ZAYAV.ob_onpay = 0;
-		$('#zayav-status-filter').removeClass('us');ZAYAV.status = 0;
+
+		$('#sel')
+			.html('Некоторые статусы')
+			.css('background', '#fff');
+		ZAYAV.status_ids = ZAYAV.status_def;
 
 		$('#finish').zayavSrok('0000-00-00');ZAYAV.finish = '0000-00-00';
 		$('#finish').zayavSrok('executer_id', 0);
@@ -2098,18 +2102,82 @@ $(document)
 		_zayavSpisok();
 	})
 
-	.on('click', '#zayav-status-filter #sel,#zayav-status-filter #any', function() {
-		var t = $(this).parent(),
+	.on('click', '#zayav-status-filter', function(e) {//действие при нажатии на фильтр-статус
+		var t = $(this),
+			et = $(e.target),
 			tab = t.find('#status-tab');
 
-		tab.show();
+		//раскрытие списка
+		if(et.attr('id') == 'sel') {
+			tab.show();
+			$(document).on('click.status_tab', function() {
+				tab.hide();
+				$(document).off('click.status_tab');
+			});
+			return;
+		}
 
-		$(document).on('click.status_tab', function() {
-			tab.hide();
-			$(document).off('click.status_tab');
-		});
+		//нажатие на таб с галочкой
+		if(et.hasClass('td-check')) {
+			e.stopPropagation();
+			var inp = et.find('input'),
+				attr_id = inp.attr('id'),
+				v = _bool(inp.val()),
+				sel = false;
+			$('#' + attr_id)._check(v ? 0 : 1);
+			if(attr_id == 'st0')
+				sel = v ? 'no' : 'all';
+			zsfCheck(sel);
+			return;
+		}
+
+		//нажатие на чекбокс
+		if(et.hasClass('_check')) {
+			e.stopPropagation();
+			var inp = et.find('input'),
+				attr_id = inp.attr('id'),
+				v = _bool(inp.val()),
+				sel = false;
+			$('#' + attr_id)._check(v ? 1 : 0);
+			if(attr_id == 'st0')
+				sel = v ? 'all' : 'no';
+			zsfCheck(sel);
+			return;
+		}
+
+		//нажатие на название или количество
+		if(et.hasClass('td-name')) {
+			var inp = _parent(et).find('input'),
+				id = inp.attr('id').split('st')[1];
+			$('#sel')
+				.html(ZAYAV_STATUS_NAME_ASS[id])
+				.css('background', '#' + ZAYAV_STATUS_COLOR_ASS[id]);
+			zsfCheck(id);
+			return;
+		}
+
+		//составление списка id выбранных чекбоксов
+		function zsfCheck(sel_id) {
+			var check = tab.find('._check'),
+				arr = 0;
+			for(var n = 0; n < check.length; n++) {
+				var sp = check.eq(n),
+					inp = sp.find('input'),
+					id = _num(inp.attr('id').split('st')[1]);
+				if(sel_id)
+					$('#st' + id)._check(sel_id == id || sel_id == 'all' ? 1 : 0);
+				if(!_num(inp.val()))
+					continue;
+				if(!id)
+					continue;
+				arr = arr + ',' + id;
+			}
+			ZAYAV.status_ids = arr;
+			_zayavSpisok();
+		}
 	})
-	.on('click', '#zayav-status-filter td', function() {
+/*
+	.on('click', '#zayav-status-filter tr', function() {
 		var id = _num($(this).attr('val'));
 		ZAYAV.status = id;
 		_zayavSpisok();
@@ -2119,6 +2187,7 @@ $(document)
 			.html(ZAYAV_STATUS_NAME_ASS[id])
 			.css('background', '#' + ZAYAV_STATUS_COLOR_ASS[id]);
 	})
+*/
 	.on('click', '._zayav-unit', function() {
 		var id = $(this).attr('val');
 		_scroll('set', 'u' + id);
