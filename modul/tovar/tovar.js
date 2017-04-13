@@ -150,11 +150,11 @@ var _tovarEdit = function(o) {
 
 	_tovarSetup = function() {//окно выбора настроек товаров
 		var html =
-			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" onclick="_tovarSetupCategory()">' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" val="1">' +
 				'<b>Категории</b>' +
 				'<div class="grey pad2-7">Настройка категорий товаров.</div>' +
 			'</div>' +
-			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP mt10" onclick="_tovarSetupStock()">' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP mt10" val="2">' +
 				'<b>Склады</b>' +
 				'<div class="grey pad2-7">Управление складами товаров.</div>' +
 			'</div>',
@@ -168,7 +168,14 @@ var _tovarEdit = function(o) {
 			});
 
 		$('.tsa-unit').click(function() {
+			var v = _num($(this).attr('val'));
+
 			dialog.close();
+
+			switch(v) {
+				case 1: _tovarSetupCategory(); break;
+				case 2: _tovarSetupStock(); break;
+			}
 		});
 	},
 	_tovarSetupCategory = function() {//настройка категорий товаров
