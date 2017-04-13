@@ -271,6 +271,77 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'tovar_setup_stock_load'://получение списка складов дл€ товаров
+		$send['html'] = utf8(_tovar_setup_stock_spisok());
+		jsonSuccess($send);
+		break;
+	case 'tovar_setup_stock_add'://создание нового склада дл€ товаров
+		if(!$name = _txt($_POST['name']))
+			jsonError('Ќе указано название');
+
+		$sql = "INSERT INTO `_tovar_stock` (
+					`app_id`,
+					`name`
+				) VALUES (
+					".APP_ID.",
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'tovar_stock');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'tovar_setup_stock_edit'://редактирование склада дл€ товаров
+		if(!$id = _num($_POST['id']))
+			jsonError('Ќекорректный id склада');
+		if(!$name = _txt($_POST['name']))
+			jsonError('Ќе указано название');
+
+		$sql = "SELECT *
+				FROM `_tovar_stock`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('—клада не существует');
+
+		$sql = "UPDATE `_tovar_stock`
+		        SET `name`='".addslashes($name)."'
+		        WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'tovar_stock');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+	case 'tovar_setup_stock_del'://удаление склада дл€ товаров
+		if(!$id = _num($_POST['id']))
+			jsonError('Ќекорректный id склада');
+
+		$sql = "SELECT *
+				FROM `_tovar_stock`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError('—клада не существует');
+
+		$sql = "SELECT COUNT(*)
+				FROM `_tovar_avai`
+				WHERE `stock_id`=".$id;
+		if(query_value($sql))
+			jsonError('Ќа данном складе есть товары в наличии');
+
+		$sql = "DELETE FROM `_tovar_stock` WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'tovar_stock');
+		_appJsValues();
+
+		jsonSuccess();
+		break;
+
 	case 'tovar_select_find'://получение списка товаров дл€ выбора
 		$find = win1251(@$_POST['find']);
 

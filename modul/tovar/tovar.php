@@ -36,7 +36,8 @@ function _tovarCategory($id=false, $i='name') {
 		$arr[-1] = array(
 			'id' => -1,
 			'name' => 'Без категории',
-			'parent_id' => 0
+			'parent_id' => 0,
+			'count' => 0
 		);
 
 		xcache_set($key, $arr, 86400);
@@ -79,6 +80,9 @@ function _tovarCategory($id=false, $i='name') {
 	if($id == 'tree') {
 		$send = array();
 		foreach($arr as $id => $r) {
+			if($id == -1)
+				continue;
+
 			if(!$r['parent_id']) {
 				$send[$id] = array(
 					'name' => $r['name'],
@@ -87,6 +91,7 @@ function _tovarCategory($id=false, $i='name') {
 				);
 				continue;
 			}
+
 			$send[$r['parent_id']]['child'][$id] = array(
 				'name' => $r['name'],
 				'count' => $r['count'],
@@ -415,6 +420,48 @@ function _tovarVendorJs() {//производители товаров JS
 			ORDER BY `name`";
 	return query_selJson($sql);
 }
+function _tovarStock($id='all', $i='name') {//кеширование складов товаров
+	$key = CACHE_PREFIX.'tovar_stock';
+	if(!$arr = xcache_get($key)) {
+		$sql = "SELECT
+					*,
+					0 `avai`
+				FROM `_tovar_stock`
+				WHERE `app_id`=".APP_ID."
+				ORDER BY `name`";
+		if(!$arr = query_arr($sql)) {//если склады отсутствуют, создаётся Основной склад и всё наличие товара помещается в него
+			$sql = "INSERT INTO `_tovar_stock` (
+						`app_id`,
+						`name`
+					) VALUES (
+						".APP_ID.",
+						'Основной склад'
+					)";
+			query($sql);
+
+			$stock_id = query_insert_id('_tovar_stock');
+
+			$sql = "UPDATE `_tovar_avai`
+					SET `stock_id`=".$stock_id."
+					WHERE `app_id`=".APP_ID;
+			query($sql);
+
+			return _tovarStock($id, $i);
+		}
+		xcache_set($key, $arr, 86400);
+	}
+
+	if($id == 'all')
+		return $arr;
+
+	if(!isset($arr[$id]))
+		return _cacheErr('неизвестный id склада', $id);
+
+	if(!isset($arr[$id][$i]))
+		return _cacheErr('неизвестный ключ склада', $i);
+
+	return $arr[$id][$i];
+}
 
 function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в массив по tovar_id
 	if(empty($arr))
@@ -564,6 +611,7 @@ function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
 function _tovar() {//8 - главная страница товаров
 	$data = _tovar_spisok(_hashFilter('tovar'));
 	$v = $data['filter'];
+	_pre(_tovarStock());
 	return
 	'<div id="_tovar">'.
 		'<table class="bs10 w100p bg-gr1 line-b">'.
@@ -846,6 +894,43 @@ function _tovar_setup_category_spisok() {//категории товаров для настройки
 	'</div>'.
 	'<button class="vk" onclick="_tovarSetupCategoryEdit()">Создать новую категорию</button>'.
 //	'<button class="vk" id="join">Подключить категории из каталога</button>'.
+	'<div class="mt10">'.$send.'</div>';
+}
+function _tovar_setup_stock_spisok() {//склады товаров для настройки
+	$stock = _tovarStock();
+
+	//вставка наличия товаров для каждого склада
+	$sql = "SELECT
+				`stock_id`,
+				COUNT(`id`) `count`
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			GROUP BY `stock_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$stock[$r['stock_id']]['avai'] = $r['count'];
+
+	$send = '<table class="_spisokTab">'.
+				'<tr><th>Название склада'.
+					'<th class="w150">Количество позиций<br />товаров в наличии'.
+					'<th class="w50">';
+
+	foreach($stock as $id => $r) {
+		$send .=
+				'<tr val="'.$id.'">'.
+					'<td class="name">'.$r['name'].
+					'<td class="center b grey">'.($r['avai'] ? $r['avai'] : '').
+					'<td>'.
+						_iconEditNew($r).
+		 (!$r['avai'] ? _iconDelNew($r) : '');
+
+	}
+	$send .= '</table>';
+
+	return
+//	'<div class="_info">'.
+//	'</div>'.
+	'<button class="vk" onclick="_tovarSetupStockEdit()">Создать новый склад</button>'.
 	'<div class="mt10">'.$send.'</div>';
 }
 

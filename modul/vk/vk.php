@@ -1952,6 +1952,7 @@ function _globalCacheClear($app_id=0) {//очистка глобальных значений кеша
 	xcache_unset($prefix.'tovar_feature_name');
 	xcache_unset($prefix.'tovar_equip');
 	xcache_unset($prefix.'tovar_measure');
+	xcache_unset($prefix.'tovar_stock');
 
 	xcache_unset($prefix.'cartridge');
 	xcache_unset($prefix.'rubric');

@@ -150,13 +150,17 @@ var _tovarEdit = function(o) {
 
 	_tovarSetup = function() {//окно выбора настроек товаров
 		var html =
-			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" val="1">' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP" onclick="_tovarSetupCategory()">' +
 				'<b>Категории</b>' +
 				'<div class="grey pad2-7">Настройка категорий товаров.</div>' +
+			'</div>' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP mt10" onclick="_tovarSetupStock()">' +
+				'<b>Склады</b>' +
+				'<div class="grey pad2-7">Управление складами товаров.</div>' +
 			'</div>',
 			dialog = _dialog({
 				top:30,
-				width:300,
+				width:400,
 				head:'Настройки товаров',
 				content:html,
 				butSubmit:'',
@@ -164,14 +168,7 @@ var _tovarEdit = function(o) {
 			});
 
 		$('.tsa-unit').click(function() {
-			var t = $(this),
-				v = _num(t.attr('val'));
-
 			dialog.close();
-
-			switch(v) {
-				case 1: _tovarSetupCategory(); break;
-			}
 		});
 	},
 	_tovarSetupCategory = function() {//настройка категорий товаров
@@ -188,42 +185,38 @@ var _tovarEdit = function(o) {
 			}
 		});
 
-		$.post(AJAX_MAIN, {op:'tovar_setup_category_load'}, function(res) {
-			if(res.success) {
-				dialog.content
-					.html(res.html)
-					.find('.icon-edit').click(function() {
-						var t = _parent($(this)),
-							fName = t.find('.name');
-						_tovarSetupCategoryEdit({
-							id:t.attr('val'),
-							name:fName.html(),
-							callback:function(name) {
-								fName.html(name);
-								t.addClass('edtd');
-							}
-						});
-					})
-					.end()
-					.find('.icon-del').click(function() {
-						var p = _parent($(this));
-						_dialogDel({
-							id:p.attr('val'),
-							head:'категории товаров',
-							op:'tovar_setup_category_del',
-							func:function() {
-								p.remove();
-							}
-						});
+		dialog.load({op:'tovar_setup_category_load'}, function(res) {
+			dialog.content
+				.find('.icon-edit').click(function() {
+					var t = _parent($(this)),
+						fName = t.find('.name');
+					_tovarSetupCategoryEdit({
+						id:t.attr('val'),
+						name:fName.html(),
+						callback:function(name) {
+							fName.html(name);
+							t.addClass('edtd');
+						}
 					});
-				sortable();
-				$('.category-sub-open').click(function() {
-					var p = _parent($(this), 'DD');
-					p.find('.category-sub').slideToggle();
+				})
+				.end()
+				.find('.icon-del').click(function() {
+					var p = _parent($(this));
+					_dialogDel({
+						id:p.attr('val'),
+						head:'категории товаров',
+						op:'tovar_setup_category_del',
+						func:function() {
+							p.remove();
+						}
+					});
 				});
-			} else
-				dialog.loadError(res.text);
-		}, 'json');
+			sortable();
+			$('.category-sub-open').click(function() {
+				var p = _parent($(this), 'DD');
+				p.find('.category-sub').slideToggle();
+			});
+		});
 	},
 	_tovarSetupCategoryEdit = function(o) {//создание/редактирование категории
 		o = $.extend({
@@ -262,6 +255,72 @@ var _tovarEdit = function(o) {
 				} else
 					dialog.abort(res.text);
 			}, 'json');
+		}
+	},
+
+	_tovarSetupStock = function() {
+		var dialog = _dialog({
+			top:20,
+			width:650,
+			id:'tss20650',
+			head:'Управление складами товаров',
+			load:1,
+			butSubmit:'',
+			butCancel:'Закрыть'
+		});
+
+		dialog.load({op:'tovar_setup_stock_load'}, function(res) {
+			dialog.content
+				.find('.icon-edit').click(function() {
+					var t = _parent($(this)),
+						fName = t.find('.name');
+					_tovarSetupStockEdit({
+						id:t.attr('val'),
+						name:fName.html()
+					});
+				})
+				.end()
+				.find('.icon-del').click(function() {
+					var p = _parent($(this));
+					_dialogDel({
+						id:p.attr('val'),
+						head:'склада для товаров',
+						op:'tovar_setup_stock_del',
+						func:function() {
+							p.remove();
+						}
+					});
+				});
+		});
+	},
+	_tovarSetupStockEdit = function(o) {//создание/редактирование склада
+		o = $.extend({
+			id:0,
+			name:''
+		}, o);
+
+		var html = '<table class="bs10">' +
+					'<tr><td class="label r">Название:' +
+						'<td><input id="name" class="w230" type="text" value="' + o.name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:(o.id ? 'Редактирование' : 'Создание нового' ) + ' склада для товаров',
+				content:html,
+				butSubmit:o.id ? 'Сохранить' : 'Внести',
+				submit:submit
+			});
+
+		$('#name').focus();
+
+		function submit() {
+			var send = {
+				op:'tovar_setup_stock_' + (o.id ? 'edit' : 'add'),
+				id:o.id,
+				name:$('#name').val()
+			};
+			dialog.post(send, function() {
+				_tovarSetupStock();
+			});
 		}
 	},
 
