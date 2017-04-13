@@ -1036,7 +1036,7 @@ function _zayav_spisok($v) {
 		else {
 			if($filter['client_id'])
 				$cond .= " AND `client_id`=".$filter['client_id'];
-			if(isset($zpu[24]))
+			if(isset($zpu[24]) && !$filter['client_id'])
 				$cond .= " AND `status_id` IN (".$filter['status_ids'].")";
 			if($SROK)
 				$cond .= " AND `srok`='".$filter['finish']."' AND `status_id` IN ("._zayavStatus('srok_ids').")";
