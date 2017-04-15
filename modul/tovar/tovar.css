@@ -83,7 +83,6 @@
 	padding:7px;
 }
 #tovar-info #ti-move{margin:8px}
-#tovar-info #ti-move ._spisok{margin-top:-1px}
 #tovar-info #ti-move .minus{background:#fff2f2}
 #tovar-info #ti-move .plus{background:#efe}
 #tovar-info #ti-move .off{background:#eee}
@@ -128,7 +127,6 @@
 	width:126px;
 	height:44px;
 	padding:4px;
-	text-align:center;
 	vertical-align:top;
 }
 

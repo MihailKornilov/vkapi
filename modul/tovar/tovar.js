@@ -331,6 +331,55 @@ var _tovarEdit = function(o) {
 		}
 	},
 
+	_tovarStockMove = function() {
+		var dialog = _dialog({
+				top:20,
+				width:550,
+				head:'ѕеремещение товара с одного склада на другой',
+				load:1,
+				butSubmit:'',
+				submit:submit
+			}),
+			send = {
+				op:'tovar_stock_move_load',
+				tovar_id:TI.id
+			},
+			avai_id = 0,
+			arr;
+
+		dialog.load(send, function(res) {
+			arr = res.arr;
+			$('#tovar-avai-id')._radio(articulSel);
+			if(res.arr_count == 1)
+				$('#tovar-avai-id')
+					._radio(res.arr_first)
+					._radio('click');
+			$('#stock_id')._select({
+				width:200,
+				title0:'склад не выбран',
+				spisok:TOVAR_STOCK_SPISOK
+			});
+		});
+		function articulSel() {
+			avai_id = _num($('#tovar-avai-id').val());
+			$('#max').html(arr[avai_id].count);
+			$('#stock-move-tab').removeClass('dn');
+			$('#count').val(1).select();
+			dialog.butSubmit('ѕрименить');
+		}
+
+		function submit() {
+			var send = {
+				op:'tovar_stock_move',
+				avai_id:avai_id,
+				count:$('#count').val(),
+				stock_id:$('#stock_id').val(),
+				about:$('#about').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+
 	_tovarSelectedIds = function() {//получение id выбранных товаров
 		var check = $('.tovar-unit-check'),
 			arr = [],
@@ -682,7 +731,10 @@ var _tovarEdit = function(o) {
 		}
 	},
 	_tovarAvaiAdd = function() {
-		var html =  '<table class="bs10">' +
+		var stock_id = TOVAR_STOCK_SPISOK.length == 1 ? TOVAR_STOCK_SPISOK[0].uid : 0,
+			html =  '<table class="bs10">' +
+						'<tr' + (stock_id ? ' class="dn"' : '') + '>' +
+							'<td class="label r">—клад:<td><input type="hidden" id="stock_id" value="' + stock_id + '" /> ' +
 						'<tr><td class="label r"> оличество:<td><input type="text" id="count" class="w50" value="1" /> ' + TI.measure_name +
 						'<tr><td class="label r">«акуп. цена за 1 <b>' + TI.measure_name + '</b>:' +
 							'<td><input type="text" id="sum_buy" class="money" value="' + TI.sum_buy + '"> руб.' +
@@ -695,12 +747,18 @@ var _tovarEdit = function(o) {
 				submit:submit
 			});
 
+		$('#stock_id')._select({
+			width:250,
+			title0:'не выбран',
+			spisok:TOVAR_STOCK_SPISOK
+		});
 		$('#count').focus();
 
 		function submit() {
 			var send = {
 				op:'tovar_avai_add',
 				tovar_id:TI.id,
+				stock_id:$('#stock_id').val(),
 				count:$('#count').val(),
 				sum_buy:$('#sum_buy').val(),
 				about:$('#about').val()
@@ -828,6 +886,9 @@ var _tovarEdit = function(o) {
 		}
 		TOVAR.category_id = CATEGORY_ID || CATEGORY_ID_DEF;
 		TOVAR.sub_id = SUB_ID;//подкатегори€, полученна€ со статистики
+
+		$('#fstock_id')._select(0);  TOVAR.fstock_id = 0;
+		$('.filter-stock').slideUp();
 
 		$('#avai')._check(SUB_ID ? 1 : 0);  TOVAR.avai = SUB_ID;
 		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
@@ -1453,8 +1514,19 @@ $(document)
 				main.addClass('sel');
 				_tovarSpisok(v, 'sub_id');
 			});
-			$('#avai')._check(_tovarSpisok);
+			$('#avai')._check(function(v) {
+				$('#fstock_id')._select(0);
+				TOVAR.fstock_id = 0;
+				_tovarSpisok(v, 'avai');
+				$('.filter-stock')['slide' + (v && TOVAR_STOCK_SPISOK.length > 1 ? 'Down' : 'Up')]();
+			});
 			$('#zakaz')._check(_tovarSpisok);
+			$('#fstock_id')._select({
+				width:200,
+				title0:'любой склад',
+				spisok:TOVAR_STOCK_SPISOK,
+				func:_tovarSpisok
+			});
 
 			if(SUB_ID)
 				_tovarFilterClear();

@@ -1910,6 +1910,7 @@ function _appJsValues() {//для конкретного приложения
 
 		"\n".'TOVAR_CATEGORY_SPISOK='._tovarCategory('main_js').','.
 		"\n".'TOVAR_VENDOR_SPISOK='._tovarVendorJs().','.
+		"\n".'TOVAR_STOCK_SPISOK='._tovarStock('js_name').','.
 		"\n".'TOVAR_FEATURE_SPISOK='._tovarFeatureJs().';';
 
 

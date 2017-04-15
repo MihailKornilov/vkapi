@@ -454,6 +454,24 @@ function _tovarStock($id='all', $i='name') {//кеширование складов товаров
 	if($id == 'all')
 		return $arr;
 
+	//один склад или более
+	if($id == 'one')
+		return count($arr) == 1;
+
+	//склад по умолчанию
+	if($id == 'def') {
+		ksort($arr);
+		return key($arr);
+	}
+
+	//список JS для _select
+	if($id == 'js_name') {
+		$send = array();
+		foreach($arr as $id => $r)
+			$send[$id] = $r['name'];
+		return _selJson($send);
+	}
+
 	if(!isset($arr[$id]))
 		return _cacheErr('неизвестный id склада', $id);
 
@@ -606,12 +624,11 @@ function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
 			'</a>';
 	}
 	return
-	'<div id="rightLinkMenu" class="rightLink mar8">'.$spisok.'</div>';
+	'<div id="rightLinkMenu" class="rightLink">'.$spisok.'</div>';
 }
 function _tovar() {//8 - главная страница товаров
 	$data = _tovar_spisok(_hashFilter('tovar'));
 	$v = $data['filter'];
-	_pre(_tovarStock());
 	return
 	'<div id="_tovar">'.
 		'<table class="bs10 w100p bg-gr1 line-b">'.
@@ -630,9 +647,15 @@ function _tovar() {//8 - главная страница товаров
 		'</div>'.
 
 		'<table class="w100p bg-gr1">'.
-			'<tr><td class="w200 top">'.
-					'<div class="f-label ml10 mt10">Категория</div>'.
+			'<tr><td class="w200 top pad10">'.
+					'<div class="f-label">Категория</div>'.
 					_tovarCatMenu($v['category_id'], _tovarCategoryCount($v)).
+
+					'<div class="filter-stock'.(_tovarStock('one') || !$v['avai'] ? ' dn' : '').'">'.
+						'<div class="f-label mt20">Склад</div>'.
+						'<input type="hidden" id="fstock_id" value="'.$v['fstock_id'].'" />'.
+					'</div>'.
+
 				'<td class="top">'.
 					'<div id="tovar-spisok" class="mt10 mr10 mb10">'.$data['spisok'].'</div>'.
 		'</table>'.
@@ -651,6 +674,7 @@ function _tovarFilter($v) {
 		'find' => '',
 		'category_id' => _tovarCategory('first'),
 		'sub_id' => 0,
+		'fstock_id' => 0,
 		'avai' => 0,
 		'zakaz' => 0
 	);
@@ -661,6 +685,7 @@ function _tovarFilter($v) {
 		'find' => trim(@$v['find']),
 		'category_id' => isset($v['category_id']) ? _num($v['category_id']) : $default['category_id'],
 		'sub_id' => isset($v['sub_id']) ? intval($v['sub_id']) : $default['sub_id'],
+		'fstock_id' => _num(@$v['fstock_id']) ? $v['fstock_id'] : $default['fstock_id'],
 		'avai' => _num(@$v['avai']) ? $v['avai'] : $default['avai'],
 		'zakaz' => _num(@$v['zakaz']) ? $v['zakaz'] : $default['zakaz'],
 
@@ -690,8 +715,34 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 					 OR `articul`='".$filter['find']."'
 					   )";
 
-	if($filter['avai'])
+	$JOIN = '';
+
+	if($filter['avai']) {
 		$cond .= " AND `bind`.`avai`";
+		if($filter['fstock_id']) {
+			$sql = "UPDATE `_tovar_bind`
+					SET `stock`=0
+					WHERE `app_id`=".APP_ID;
+			query($sql);
+
+			$sql = "UPDATE
+						`_tovar_bind` `bind`,
+						`_tovar_avai` `avai`
+					SET `stock`=(
+						SELECT SUM(`count`)
+						FROM `_tovar_avai`
+						WHERE `app_id`=".APP_ID."
+						  AND `tovar_id`=`avai`.`tovar_id`
+						  AND `stock_id`=".$filter['fstock_id']."
+					)
+					WHERE `bind`.`app_id`=".APP_ID."
+					  AND `bind`.`tovar_id`=`avai`.`tovar_id`
+					  AND `stock_id`=".$filter['fstock_id'];
+			query($sql);
+
+			$cond .= " AND `bind`.`stock`";
+		}
+	}
 
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
@@ -712,7 +763,6 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 		$main_id = _tovarCategory($r['id'], 'main_id');
 		$send[$main_id] += $r['count'];
 		$send[$r['id']] = $r['count'];
-
 	}
 
 	return $send;
@@ -733,7 +783,7 @@ function _tovar_spisok($v=array()) {
 	}
 
 	if($filter['avai'])
-		$cond .= " AND `bind`.`avai`";
+		$cond .= " AND `bind`.`".($filter['fstock_id'] ? 'stock' : 'avai')."`";
 
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
@@ -764,6 +814,7 @@ function _tovar_spisok($v=array()) {
 				`bind`.`category_id`,
 				`bind`.`articul`,
 				`bind`.`avai`,
+				`bind`.`stock`,
 				`bind`.`zakaz`,
 				`bind`.`sum_sell`
 			FROM `_tovar` `t`,
@@ -776,7 +827,7 @@ function _tovar_spisok($v=array()) {
 
 	$child = array();
 	foreach($spisok as $r) {
-		$r['avai'] = _ms($r['avai']) ? '<b>'._ms($r['avai']).'</b> '._tovarMeasure($r['measure_id']) : '';
+		$r['avai'] = _ms($r['avai']) ? '<b>'._ms($r[$filter['fstock_id'] ? 'stock' : 'avai']).'</b> '._tovarMeasure($r['measure_id']) : '';
 		$r['zakaz'] = _ms($r['zakaz']) ? 'Заказано <b>'._ms($r['zakaz']).'</b> '._tovarMeasure($r['measure_id']) : '';
 		$r['sum_sell'] = _cena($r['sum_sell']);
 		$child[$r['category_id']][] = $r;
@@ -986,6 +1037,9 @@ function _tovarMoveInsert($v) {//внесение движения товара
 		'type_id' => _num(@$v['type_id']) ? _num($v['type_id']) : 1,
 		'tovar_id' => _num(@$v['tovar_id']),
 		'tovar_avai_id' => _num(@$v['tovar_avai_id']),
+		'tovar_avai_id_to' => _num(@$v['tovar_avai_id_to']),
+		'stock_id' => _num(@$v['stock_id']) ? _num($v['stock_id']) : _tovarStock('def'),
+		'stock_id_to' => _num(@$v['stock_id_to']),
 		'count' => _ms(@$v['count']) ? _ms($v['count']) : 1,
 		'cena' => _cena(@$v['cena']),
 		'client_id' => _num(@$v['client_id']),
@@ -1012,6 +1066,9 @@ function _tovarMoveInsert($v) {//внесение движения товара
 				`type_id`,
 				`tovar_id`,
 				`tovar_avai_id`,
+				`tovar_avai_id_to`,
+				`stock_id`,
+				`stock_id_to`,
 				`count`,
 				`cena`,
 				`summa`,
@@ -1024,6 +1081,9 @@ function _tovarMoveInsert($v) {//внесение движения товара
 				".$v['type_id'].",
 				".$v['tovar_id'].",
 				".$v['tovar_avai_id'].",
+				".$v['tovar_avai_id_to'].",
+				".$v['stock_id'].",
+				".$v['stock_id_to'].",
 				".$v['count'].",
 				".$v['cena'].",
 				".($v['count'] * $v['cena']).",
@@ -1051,7 +1111,7 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			  AND `count`
-			ORDER BY `count` DESC";
+			ORDER BY `stock_id`,`count` DESC";
 	if(!$spisok = query_arr($sql))
 		return $v == 'arr' ? array() : '';
 
@@ -1076,8 +1136,9 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 ($v == 'radio' ? '<input type="hidden" id="tovar-avai-id" value="'.$avai_id.'" />' : '').
 			'<tr>'.
 ($v == 'radio' ? '<th>' : '').
+(!_tovarStock('one') ? '<th class="w100">Склад' : '').
 				'<th class="w50">Кол-во'.
-				'<th class="w100">Закуп. цена'.
+				'<th class="w50">Закуп.<br />цена'.
 				'<th>Примечание';
 	foreach($spisok as $r) {
 		$send .=
@@ -1085,8 +1146,9 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 ($v == 'radio' ? '<td class="w35 center">'.
 		            '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s></div>'
 : '').
+(!_tovarStock('one') ? '<td>'._tovarStock($r['stock_id']) : '').
 				'<td class="count center color-pay b">'.(_ms($r['count']) ? _ms($r['count']) : '').
-				'<td class="cena r">'._sumSpace($r['sum_buy']).
+				'<td class="cena r wsnw">'._sumSpace($r['sum_buy']).
 				'<td>'.$r['about'];
 	}
 	$send .= '</table>';
@@ -1105,32 +1167,38 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 	if(!$spisok = query_arr($sql))
 		return;
 
-	foreach($spisok as $r) {
+	foreach($spisok as $avai_id => $r) {
 		//поступлениe
 		$sql = "SELECT IFNULL(SUM(`count`),0)
 				FROM `_tovar_move`
-				WHERE `tovar_avai_id`=".$r['id']."
+				WHERE `tovar_avai_id`=".$avai_id."
 				  AND `type_id`=1";
 		$count = query_value($sql);
 
-		//расход: движение товара
+		//движение товара: расход
 		$sql = "SELECT IFNULL(SUM(`count`),0)
 				FROM `_tovar_move`
-				WHERE `tovar_avai_id`=".$r['id']."
+				WHERE `tovar_avai_id`=".$avai_id."
 				  AND `type_id`!=1";
 		$count -= query_value($sql);
+
+		//движение товара: поступление в перемещении
+		$sql = "SELECT IFNULL(SUM(`count`),0)
+				FROM `_tovar_move`
+				WHERE `tovar_avai_id_to`=".$avai_id;
+		$count += query_value($sql);
 
 		//применение в расходах по заявкам
 		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_zayav_expense`
-				WHERE `tovar_avai_id`=".$r['id'];
+				WHERE `tovar_avai_id`=".$avai_id;
 		$count -= query_value($sql);
 
 		//продажа товара - платежи
 		$sql = "SELECT IFNULL(SUM(`tovar_count`),0)
 				FROM `_money_income`
 				WHERE !`deleted`
-				  AND `tovar_avai_id`=".$r['id'];
+				  AND `tovar_avai_id`=".$avai_id;
 		$count -= query_value($sql);
 
 		if($r['count'] == $count)
@@ -1138,7 +1206,7 @@ function _tovarAvaiUpdate($tovar_id) {//обновление количества наличия товара пос
 
 		$sql = "UPDATE `_tovar_avai`
 				SET `count`="._ms($count)."
-				WHERE `id`=".$r['id'];
+				WHERE `id`=".$avai_id;
 		query($sql);
 	}
 	
@@ -1219,12 +1287,12 @@ function _tovar_info() {//информация о товаре
 							'<div class="icon icon-rub mr5"></div>'.
 							'Продажа'.
 						'</a>'.
-/*
-						'<a class="db">'.
+
+						'<a class="db'.(_tovarStock('one') ? ' dn' : '').'" onclick="_tovarStockMove()">'.
 							'<div class="icon icon-move mr5"></div>'.
 							'Перемещение'.
 						'</a>'.
-*/
+
 						'<a class="db" onclick="_tovarWriteOff()">'.
 							'<div class="icon icon-off mr5"></div>'.
 							'Списание'.
@@ -1250,16 +1318,18 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 	return
 		'<table id="avai-cost">'.
 			'<tr><td class="ac avai curP'.($tovar['avai'] ? '' : ' no').'" onclick="_tovarAvaiAdd()">'.
-					'<div class="color-555 mb5">Наличие</div>'.
-					($tovar['avai'] ?
-						'<tt><b>'.$tovar['avai'].'</b> '.$tovar['measure'].'</tt>' :
-						'<tt><b>-</b></tt>'
-					).
+					'<div class="color-555 mb5 center">Наличие</div>'.
+					'<div class="center">'.
+						($tovar['avai'] ?
+							'<tt><b>'.$tovar['avai'].'</b> '.$tovar['measure'].'</tt>' :
+							'<tt><b>-</b></tt>'
+						).
+					'</div>'.
 
 					'<div id="avai-show">'._tovarAvaiSpisok($tovar['id']).'</div>'.
 
 		(APP_ID != 4357416 ?
-				'<td class="ac buy curP" onclick="_tovarCost()">'.
+				'<td class="ac buy curP center" onclick="_tovarCost()">'.
 					'<div class="color-555 mb5">Закупка</div>'.
 					(_cena($tovar['sum_buy']) ?
 						'<div class="grey fs14 pt1">'.
@@ -1271,7 +1341,7 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 					)
 		: '').
 
-				'<td class="ac sell curP" onclick="_tovarCost()">'.
+				'<td class="ac sell curP center" onclick="_tovarCost()">'.
 					'<div class="color-555 mb5">Продажа</div>'.
 					($tovar['sum_sell'] ?
 						'<tt><b>'._sumSpace($tovar['sum_sell']).'</b> руб.</tt>'
@@ -1489,6 +1559,9 @@ function _tovar_info_move($tovar) {
 				`type_id`,
 				`tovar_id`,
 				`tovar_avai_id`,
+				`tovar_avai_id_to`,
+				`stock_id`,
+				`stock_id_to`,
 				`client_id`,
 				`zayav_id`,
 				`count`,
@@ -1556,7 +1629,6 @@ function _tovar_info_move($tovar) {
 
 	if(empty($spisok))
 		return '';
-//		return 'Движения товара нет.';
 
 	//получение первого года
 	$yearBegin = strftime('%Y', key($spisok));
@@ -1598,27 +1670,25 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		5 => 'Возврат',     //return
 		6 => 'Списание',    //writeoff
 		7 => 'Расход в заявке',
-		8 => 'Счёт на оплату'
+		8 => 'Счёт на оплату',
+		9 => 'Перемещение'
 	);
 
 
 	$prihod = 0;
 	$rashod = 0;
 
-	$send = '<table class="_spisok">';
+	$send =
+		'<table class="_spisokTab">'.
+			'<tr><th class="w100">Действие'.
+				'<th class="w50">Кол-во'.
+				'<th class="w50">Цена'.
+				'<th class="w50">Сумма'.
+				'<th>Описание'.
+				'<th class="w50">'.
+				'<th class="w15">';
 	foreach($spisok as $r) {
 		$count = abs($r['count']);
-
-		$summa = _cena($r['summa']);
-		if($summa)
-			$summa = '<div class="sm">'.
-						($count > 1 ?
-							'<a class="'._tooltip(_cena($r['cena']).' руб./'.$r['measure'], 0, 'l').'<b>'._sumSpace($summa).'</b> руб.</a>'
-							:
-							'<b>'._sumSpace($summa).'</b> руб.'
-						).
-					 '</div>';
-		else $summa = '';
 
 		$class = 'plus';
 		if($r['type_id'] != 1) {
@@ -1630,21 +1700,26 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		if($r['type_id'] == 6)
 			$class = 'off';
 
+		if($r['type_id'] == 9)
+			$class = 'bg-ffd';
+
 		//показ иконки для удаления последнего внесённого наличия
 		$toDel = array();
 		if(isset($r['first']) && $r['type_id'] == 1)
 			$toDel = array('del'=>1);
 		
 		$send .= '<tr class="'.$class.'">'.
-				'<td class="w70">'.$type[$r['type_id']].
-				'<td class="w50 r wsnw">'. ($count ? '<b>'.$count.'</b> '.$r['measure'] : '').
-				'<td class="w100 r">'.$summa.
+				'<td>'.$type[$r['type_id']].
+				'<td class="r wsnw">'.($count ? '<b>'.$count.'</b> '.$r['measure'] : '').
+				'<td class="r wsnw grey">'.(_cena($r['cena']) ? _cena($r['cena']).' руб.' : '').
+				'<td class="r wsnw">'.(_cena($r['summa']) ? '<b>'._sumSpace($r['summa']).'</b> руб.' : '').
 				'<td>'.
 					($r['client_id'] && !$r['zayav_id'] ? 'клиент '.$r['client_link'].'. ' : '').
 					($r['zayav_id'] ? 'заявка '.$r['zayav_link'].'. ' : '').
-					$r['about'].
-				'<td class="dtime">'._dtimeAdd($r).
-				'<td class="ed">'._iconDel($r + $toDel).
+					($r['type_id'] == 9 ? _tovarStock($r['stock_id']).' -> '._tovarStock($r['stock_id_to']) : '').
+					($r['about'] ? '<div class="i grey">'.$r['about'].'</div>' : '').
+				'<td class="r grey wsnw">'._dtimeAdd($r).
+				'<td>'._iconDelNew($r + $toDel).
 		'</div>';
 	}
 

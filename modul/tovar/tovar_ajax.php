@@ -2,13 +2,15 @@
 switch(@$_POST['op']) {
 	case 'tovar_spisok':
 		$_POST['find'] = win1251(@$_POST['find']);
+
+		if($_POST['page'] == 1)
+			$send['cc'] = _tovarCategoryCount($_POST);
+
 		$data = _tovar_spisok($_POST);
 
 		$filter = $data['filter'];
-		if($filter['page'] == 1) {
+		if($filter['page'] == 1)
 			$send['result'] = utf8($data['result']);
-			$send['cc'] = _tovarCategoryCount($_POST);
-		}
 
 		$send['spisok'] = utf8($data['spisok']);
 
@@ -820,6 +822,8 @@ switch(@$_POST['op']) {
 	case 'tovar_avai_add':
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError('Некорректный id товара');
+		if(!$stock_id = _num($_POST['stock_id']))
+			jsonError('Не выбран склад');
 		if(!$count = _ms($_POST['count']))
 			jsonError('Некорректно указано количество');
 
@@ -833,6 +837,7 @@ switch(@$_POST['op']) {
 				FROM `_tovar_avai`
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id."
+				  AND `stock_id`=".$stock_id."
 				  AND `sum_buy`=".$sum_buy."
 				  AND `about`='".$about."'";
 		$avai_id = query_value($sql);
@@ -841,6 +846,7 @@ switch(@$_POST['op']) {
 					`id`,
 					`app_id`,
 					`tovar_id`,
+					`stock_id`,
 					`count`,
 					`sum_buy`,
 					`about`
@@ -848,11 +854,12 @@ switch(@$_POST['op']) {
 					".$avai_id.",
 					".APP_ID.",
 					".$tovar_id.",
+					".$stock_id.",
 					".$count.",
 					".$sum_buy.",
 					'".addslashes($about)."'
 				) ON DUPLICATE KEY UPDATE
-					`count`=`count`+".$count;
+					`count`=`count`+VALUES(`count`)";
 		query($sql);
 
 		if(!$avai_id)
@@ -864,8 +871,6 @@ switch(@$_POST['op']) {
 			'count' => $count,
 			'cena' => $sum_buy
 		));
-
-		_tovarAvaiUpdate($tovar_id);
 
 		_history(array(
 			'type_id' => 107,
@@ -1082,6 +1087,129 @@ switch(@$_POST['op']) {
 			'v3' => $sum
 		));
 
+		jsonSuccess();
+		break;
+
+	case 'tovar_stock_move_load'://загрузка данных для перемещения товара
+		if(!$tovar_id = _num($_POST['tovar_id']))
+			jsonError('Некорректный ID товара');
+
+		if(!$r = _tovarQuery($tovar_id))
+			jsonError('Товара не существует');
+
+		if(!$r['avai'])
+			jsonError('Товара в наличии нет');
+
+		if(_tovarStock('one'))
+			jsonError('В организации всего один склад');
+
+		$send['html'] = utf8(
+			'<div class="_info">'.
+				'Перемещение наличия товара.'.
+//				'<br />'.
+			'</div>'.
+			'<div class="fs18 mt15">'.$r['name'].'</div>'.
+			'<div class="hd2 mt10">Выбор по наличию</div>'.
+			_tovarAvaiSpisok($tovar_id, 'radio').
+			'<table id="stock-move-tab" class="bs10 dn">'.
+				'<tr><td class="label r w150">Количество:*'.
+					'<td><input type="text" id="count" class="w35" value="1" /> '._tovarMeasure($r['measure_id']).
+						' <span class="grey">(max: <b id="max"></b>)</span>'.
+				'<tr><td class="label r">Переместить на склад:*<td><input type="hidden" id="stock_id" />'.
+				'<tr><td class="label r">Комментарий:<td><input type="text" id="about" class="w300" placeholder="не обязательно" />'.
+			'</table>'
+		);
+
+		$send['arr'] = _tovarAvaiSpisok($tovar_id, 'arr');
+		$send['arr_count'] = count($send['arr']);
+		$send['arr_first'] = count($send['arr']) ? key($send['arr']) : 0;
+		jsonSuccess($send);
+		break;
+	case 'tovar_stock_move'://перемещение товара
+		if(!$avai_id = _num($_POST['avai_id']))
+			jsonError('Некорректный ID наличия');
+		if(!$count = _ms($_POST['count']))
+			jsonError('Некорректно введено количество');
+		if(!$stock_id = _num($_POST['stock_id']))
+			jsonError('Не указан склад');
+
+		$about = _txt($_POST['about']);
+
+		$sql = "SELECT *
+				FROM `_tovar_avai`
+				WHERE id=".$avai_id;
+		if(!$avai = query_assoc($sql))
+			jsonError('Наличия id'.$avai_id.' не существует');
+
+		if(!_ms($avai['count']))
+			jsonError('Товара нет в наличии');
+
+		if($count > $avai['count'])
+			jsonError('Указанное количество превышает наличие');
+
+		if(!$r = _tovarQuery($avai['tovar_id']))
+			jsonError('Товара не существует');
+
+		if(!_tovarMeasure($r['measure_id'], 'fraction') && $count != round($count))
+			jsonError('Для этого товара невозможно использовать дробь в количестве');
+
+		if($avai['stock_id'] == $stock_id)
+			jsonError('Выберите другой склад');
+
+		$sql = "SELECT `id`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$avai['tovar_id']."
+				  AND `stock_id`=".$stock_id."
+				  AND `sum_buy`=".$avai['sum_buy']."
+				  AND `about`='".$avai['about']."'";
+		$avai_id_to = query_value($sql);
+
+		$sql = "INSERT INTO `_tovar_avai` (
+					`id`,
+					`app_id`,
+					`tovar_id`,
+					`stock_id`,
+					`count`,
+					`sum_buy`,
+					`about`
+				) VALUES (
+					".$avai_id_to.",
+					".APP_ID.",
+					".$avai['tovar_id'].",
+					".$stock_id.",
+					".$count.",
+					".$avai['sum_buy'].",
+					'".addslashes($about)."'
+				) ON DUPLICATE KEY UPDATE
+					`count`=`count`+VALUES(`count`)";
+		query($sql);
+
+		if(!$avai_id_to)
+			$avai_id_to = query_insert_id('_tovar_avai');
+		
+		_tovarMoveInsert(array(
+			'type_id' => 9,
+			'tovar_id' => $r['id'],
+
+			'tovar_avai_id' => $avai_id,
+			'tovar_avai_id_to' => $avai_id_to,
+
+			'stock_id' => $avai['stock_id'],
+			'stock_id_to' => $stock_id,
+
+			'count' => $count,
+			'about' => $about
+		));
+/*
+		_history(array(
+			'type_id' => 109,
+			'tovar_id' => $r['id'],
+			'v1' => $count,
+			'v2' => _tovarMeasure($r['measure_id']),
+			'v3' => $about
+		));
+*/
 		jsonSuccess();
 		break;
 
