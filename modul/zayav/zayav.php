@@ -1685,8 +1685,8 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 			  '</a>',
 
 		55 => _zayavObOnpay($v),
-		56 => _check('f56', '{label}', $v['f56'], 1),
-		57 => _check('f57', '{label}', $v['f57'], 1)
+		56 => '<div class="mt5">'._check('f56', '{label}', $v['f56'], 1).'</div>',
+		57 => '<div class="mt5">'._check('f57', '{label}', $v['f57'], 1).'</div>'
 	);
 
 	$send = '';
