@@ -87,9 +87,25 @@ switch(@$_POST['op']) {
 		break;
 	
 	case 'task_cond_load'://загрузка условий фильтра (пока) заявок
-		$v = _zayavFilter();
-		$v['service_id'] = _service('first');
 		$v['task'] = 1;
+		$send['name'] = '';
+
+		if($task_id = _num($_POST['task_id'])) {
+			$sql = "SELECT `name`
+					FROM `_task`
+					WHERE `id`=".$task_id;
+			$send['name'] = utf8(query_value($sql));
+
+			$sql = "SELECT `k`,`v`
+					FROM `_task_filter`
+					WHERE `task_id`=".$task_id;
+			$v = query_ass($sql) + $v;
+		}
+
+		if(empty($v))
+			$v['service_id'] = _service('first');
+
+		$v = _zayavFilter($v) + $v;
 
 		$html =
 			'<div class="pad10 bg-gr3 bor-e8 w200">'.
@@ -127,42 +143,29 @@ switch(@$_POST['op']) {
 		query($sql);
 		$task_id = query_insert_id('_task');
 
-		$values = array();
-		foreach($_POST as $k => $v) {
-			if($k == 'task')
-				continue;
-			if($k == 'task_name')
-				continue;
-			if($k == 'op')
-				continue;
-			if($k == 'page')
-				continue;
-			if($k == 'limit')
-				continue;
-			if($k == 'sort')
-				continue;
-			if($k == 'desc')
-				continue;
-			if($k == 'find')
-				continue;
-			if($k == 'clear')
-				continue;
-			$values[] = "(
-				".APP_ID.",
-				".$task_id.",
-				'".$k."',
-				'".addslashes($v)."'
-			)";
-		}
-		if(!empty($values)) {
-			$sql = "INSERT INTO `_task_filter` (
-						`app_id`,
-						`task_id`,
-						`k`,
-						`v`
-					) VALUES ".implode(',', $values);
-			query($sql);
-		}
+		_task_filter_insert($task_id);
+
+		jsonSuccess();
+		break;
+	case 'task_edit'://редактирование задачи
+		if(!$task_id = _num($_POST['task_id']))
+			jsonError('Некорректный ID задачи');
+		if(!$name = _txt($_POST['task_name']))
+			jsonError('Не указано название задачи');
+
+		$sql = "SELECT *
+				FROM `_task`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$task_id;
+		if(!$r = query_assoc($sql))
+			jsonError('Задачи не существует');
+
+		$sql = "UPDATE `_task`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$task_id;
+		query($sql);
+
+		_task_filter_insert($task_id);
 
 		jsonSuccess();
 		break;
@@ -188,7 +191,49 @@ switch(@$_POST['op']) {
 }
 
 
+function _task_filter_insert($task_id) {
+	$sql = "DELETE FROM `_task_filter` WHERE `task_id`=".$task_id;
+	query($sql);
 
+	$values = array();
+	foreach($_POST as $k => $v) {
+		if($k == 'task')
+			continue;
+		if($k == 'task_id')
+			continue;
+		if($k == 'task_name')
+			continue;
+		if($k == 'op')
+			continue;
+		if($k == 'page')
+			continue;
+		if($k == 'limit')
+			continue;
+		if($k == 'sort')
+			continue;
+		if($k == 'desc')
+			continue;
+		if($k == 'find')
+			continue;
+		if($k == 'clear')
+			continue;
+		$values[] = "(
+			".APP_ID.",
+			".$task_id.",
+			'".$k."',
+			'".addslashes($v)."'
+		)";
+	}
+	if(!empty($values)) {
+		$sql = "INSERT INTO `_task_filter` (
+					`app_id`,
+					`task_id`,
+					`k`,
+					`v`
+				) VALUES ".implode(',', $values);
+		query($sql);
+	}
+}
 
 
 

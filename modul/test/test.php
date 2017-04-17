@@ -263,7 +263,7 @@ function _task() {
 	'<div class="mar10">'.
 		'<div class="hd2">'.
 			'Текущие задачи'.
-(VIEWER_ADMIN ? '<button class="vk small green fr" onclick="_taskAdd()">Новая задача</button>' : '').
+(VIEWER_ADMIN ? '<button class="vk small green fr" onclick="_taskEdit()">Новая задача</button>' : '').
 		'</div>'.
 		'<div class="_info mt10">Показаны задачи, которые считаются незавершёнными на текущий момент времени.</div>'.
 		'<div class="fs15 mt15">Заявки</div>'.
@@ -288,13 +288,19 @@ function _task_spisok() {//список задач
 		$filter = query_ass($sql);
 		$data = _zayav_spisok($filter);
 
-		$r['onclick'] = '_taskDel('.$id.')';
+		$edit = array('onclick' => '_taskEdit('.$id.')');
+		$del = array(
+			'del' => 1,
+			'onclick' => '_taskDel('.$id.')'
+		);
 		$send .= '<tr class="over1">'.
 			'<td class="w15 grey r">'.($n++).
 			'<td>'.$r['name'].
 			'<td class="w70 center"><a href="'.URL.'&p=2&task_id='.$id.'" class="b">'.$data['all'].'</a>'.
 		(VIEWER_ADMIN ?
-			'<td class="w15">'._iconDelNew($r)
+			'<td class="w15 wsnw">'.
+				_iconEditNew($r + $edit).
+				_iconDelNew($r + $del)
 		: '');
 	}
 	$send .= '</table>';

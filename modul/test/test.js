@@ -49,7 +49,8 @@ var testBookUpdate = function(t) {
 
 
 
-	_taskAdd = function() {
+	_taskEdit = function(task_id) {//формирование|редактирование задачи
+		task_id = _num(task_id);
 		var html = '<table class="bs10">' +
 					'<tr><td class="label w100 r">Название:' +
 						'<td><input type="text" id="task-name" class="w250" />' +
@@ -63,22 +64,25 @@ var testBookUpdate = function(t) {
 			dialog = _dialog({
 				top:20,
 				width:450,
-				head:'Новая задача',
+				head:task_id ? 'Редактирование задачи' : 'Новая задача',
 				content:html,
-				submit:submit
+				submit:submit,
+				butSubmit:task_id ? 'Сохранить' : 'Внести'
 			});
 
 		var send = {
-			op:'task_cond_load'
+			op:'task_cond_load',
+			task_id:task_id
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			$('#cond').removeClass('_busy');
 			if(res.success) {
+				$('#task-name').val(res.name);
 				$('#cond').html(res.html);
 				ZAYAV = res.filter;
 				_zayavSpisok = _taskZayavCount;
-//				_zayavReady();
-//				_taskZayavCount();
+				_zayavReady();
+				_taskZayavCount();
 			} else
 				$('#cond')
 					.addClass('red')
@@ -87,7 +91,8 @@ var testBookUpdate = function(t) {
 
 		function submit() {
 			var send = ZAYAV;
-			send.op = 'task_add';
+			send.op = 'task_' + (task_id ? 'edit' : 'add');
+			send.task_id = task_id;
 			send.task_name = $('#task-name').val();
 			dialog.post(send, 'reload');
 		}
