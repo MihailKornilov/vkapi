@@ -883,6 +883,31 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'tovar_avai_edit'://изменение данных наличия товара
+		if(!$avai_id = _num($_POST['avai_id']))
+			jsonError('Некорректный id наличия');
+
+		$about = _txt($_POST['about']);
+
+		$sql = "SELECT *
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$avai_id;
+		if(!$avai = query_assoc($sql))
+			jsonError('Наличия не существует');
+
+		if(!$t = _tovarQuery($avai['tovar_id']))
+			jsonError('Товара не существует');
+
+		$sql = "UPDATE `_tovar_avai`
+				SET `about`='".addslashes($about)."'
+				WHERE `id`=".$avai_id;
+		query($sql);
+
+		_tovarAvaiUpdate($avai['tovar_id']);
+
+		jsonSuccess();
+		break;
 
 	case 'tovar_zakaz'://добавление товара в заказ
 		if(!$count = _ms($_POST['count']))

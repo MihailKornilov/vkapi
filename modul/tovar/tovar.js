@@ -1427,6 +1427,31 @@ $(document)
 		_tovarUseCancel(v);
 	})
 
+	.on('click', '#tovar-info .avai-edit', function() {//редактирование наличия товара
+		var t = $(this),
+			avai_id = t.attr('val'),
+			about = _parent(t).find('.about').html(),
+			html =  '<table class="bs10">' +
+						'<tr><td class="label r">Примечание:' +
+							'<td><input type="text" id="about" class="w250" value="' + about + '">' +
+					'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Изменение данных наличия',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'tovar_avai_edit',
+				avai_id:avai_id,
+				about:$('#about').val()
+			};
+			dialog.post(send, 'reload');
+		}
+	})
 	.on('click', '#tovar-info .move', function() {//удаление движения товара
 		var t = $(this),
 			p = _parent(t);

@@ -1126,6 +1126,8 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 		return $send;
 	}
 
+	$radio = $v == 'radio';
+
 	$spisok = _tovarValToList($spisok);
 
 	$count = count($spisok);
@@ -1133,23 +1135,25 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 
 	$send =
 		'<table class="_spisokTab _radio" id="tovar-avai-id_radio">'.
-($v == 'radio' ? '<input type="hidden" id="tovar-avai-id" value="'.$avai_id.'" />' : '').
+  ($radio ? '<input type="hidden" id="tovar-avai-id" value="'.$avai_id.'" />' : '').
 			'<tr>'.
-($v == 'radio' ? '<th>' : '').
+	  ($radio ? '<th>' : '').
 (!_tovarStock('one') ? '<th class="w100">Склад' : '').
 				'<th class="w50">Кол-во'.
 				'<th class="w50">Закуп.<br />цена'.
-				'<th>Примечание';
+				'<th>Примечание'.
+	 (!$radio ? '<th class="w15">' : '');
 	foreach($spisok as $r) {
 		$send .=
 			'<tr>'.
-($v == 'radio' ? '<td class="w35 center">'.
+	  ($radio ? '<td class="w35 center">'.
 		            '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s></div>'
-: '').
+	  : '').
 (!_tovarStock('one') ? '<td>'._tovarStock($r['stock_id']) : '').
 				'<td class="count center color-pay b">'.(_ms($r['count']) ? _ms($r['count']) : '').
 				'<td class="cena r wsnw">'._sumSpace($r['sum_buy']).
-				'<td>'.$r['about'];
+				'<td class="about">'.$r['about'].
+	 (!$radio ? '<td>'._iconEditNew($r + array('class'=>'avai-edit')) : '');
 	}
 	$send .= '</table>';
 
@@ -1317,7 +1321,7 @@ function _tovar_info() {//информация о товаре
 function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 	return
 		'<table id="avai-cost">'.
-			'<tr><td class="ac avai curP'.($tovar['avai'] ? '' : ' no').'" onclick="_tovarAvaiAdd()">'.
+			'<tr><td class="ac avai'.($tovar['avai'] ? '' : ' no').'">'.
 					'<div class="color-555 mb5 center">Наличие</div>'.
 					'<div class="center">'.
 						($tovar['avai'] ?
