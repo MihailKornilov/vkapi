@@ -107,7 +107,7 @@ function _tovarCategory($id=false, $i='name') {
 
 
 	if(!isset($arr[$id]))
-		return _cacheErr('неизвестный id категории', $id);
+		return 0;//_cacheErr('неизвестный id категории', $id);
 
 	//ID корневой категории
 	if($i == 'main_id') {
