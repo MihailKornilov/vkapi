@@ -107,7 +107,7 @@ function _tovarCategory($id=false, $i='name') {
 
 
 	if(!isset($arr[$id]))
-		return 0;//_cacheErr('неизвестный id категории', $id);
+		return 0;//_cacheErr('неизвестный id категории', $id);//todo продумать для каждой подфункции отдельно
 
 	//ID корневой категории
 	if($i == 'main_id') {
@@ -1326,6 +1326,8 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 						).
 					'</div>'.
 
+					_tovar_info_avai_stock($tovar).
+
 					'<div id="avai-show">'._tovarAvaiSpisok($tovar['id']).'</div>'.
 
 		(APP_ID != 4357416 ?
@@ -1349,6 +1351,31 @@ function _tovar_info_avai_cost($tovar) {//наличие и цены товара
 						'<tt><b>-</b></tt>'
 					).
 		'</table>';
+}
+function _tovar_info_avai_stock($tovar) {//краткое наличие по складам
+	if(!$tovar['avai'])
+		return '';
+	if(_tovarStock('one'))
+		return '';
+
+	$sql = "SELECT
+				DISTINCT `stock_id`,
+				SUM(`count`) `count`
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `tovar_id`=".$tovar['id']."
+			GROUP BY `stock_id`";
+	$q = query($sql);
+	$tr = '';
+	while($r = mysql_fetch_assoc($q)) {
+		if(!$count = _ms($r['count']))
+			continue;
+		$tr .=
+			'<tr><td class="fs12 color-555 wsnw">'._tovarStock($r['stock_id']).':'.
+				'<td class="fs12 color-555 r b">'.$count;
+	}
+
+	return '<table class="bs5">'.$tr.'</table>';
 }
 function _tovar_menu_edit($tovar_id) {//меню редактирования товара
 	return
