@@ -115,6 +115,12 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
 		query($sql);
 
+/*
+		$sql = "DELETE FROM `_tovar_bind`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id;
+		query($sql);
+*/
 		_history(array(
 			'type_id' => 113,
 			'tovar_id' => $tovar_id

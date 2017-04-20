@@ -21,8 +21,12 @@ function _tovarCategory($id=false, $i='name') {
 		$sql = "SELECT
 					`category_id` `id`,
 					COUNT(*) `count`
-				FROM `_tovar_bind`
-				WHERE `app_id`=".APP_ID."
+				FROM
+					`_tovar` `t`,
+					`_tovar_bind` `bind`
+				WHERE `t`.`id`=`bind`.`tovar_id`
+				  AND `bind`.`app_id`=".APP_ID."
+				  AND !`t`.`deleted`
 				GROUP BY `category_id`";
 		foreach(query_arr($sql) as $r)
 			$arr[$r['id']]['count'] = $r['count'];
@@ -591,9 +595,9 @@ function _tovarDelAccess($tovar_id) {//разрешение на удаление товара
 	if(query_value($sql))
 		return 'Товар используется в расходах по заявкам';
 
-	$sql = "SELECT COUNT(*) FROM `_zayav_tovar` WHERE `tovar_id`=".$tovar_id;
-	if(query_value($sql))
-		return 'Товар используется в заявках';
+//	$sql = "SELECT COUNT(*) FROM `_zayav_tovar` WHERE `tovar_id`=".$tovar_id;
+//	if(query_value($sql))
+//		return 'Товар используется в заявках';
 
 	//причины на запрет удаления нет
 	return 0;
@@ -651,7 +655,7 @@ function _tovar() {//8 - главная страница товаров
 					'<div class="f-label">Категория</div>'.
 					_tovarCatMenu($v['category_id'], _tovarCategoryCount($v)).
 
-					'<div class="filter-stock'.(_tovarStock('one') || !$v['avai'] ? ' dn' : '').'">'.
+					'<div class="filter-stock mb100'.(_tovarStock('one') || !$v['avai'] ? ' dn' : '').'">'.
 						'<div class="f-label mt20">Склад</div>'.
 						'<input type="hidden" id="fstock_id" value="'.$v['fstock_id'].'" />'.
 					'</div>'.
@@ -707,7 +711,8 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 
 	$cond = "`cat`.`app_id`=".APP_ID."
 		 AND `t`.`id`=`bind`.`tovar_id`
-		 AND `cat`.`id`=`bind`.`category_id`";
+		 AND `cat`.`id`=`bind`.`category_id`
+		 AND !`t`.`deleted`";
 
 	if($filter['find'])
 		$cond .= " AND (`t`.`name` LIKE '%".$filter['find']."%'
@@ -858,7 +863,7 @@ function _tovar_unit($spisok, $filter=array()) {
 			$reg = '/('.$filter['find'].')/iu';
 			$reg = utf8($reg);
 			$r['name'] = utf8($r['name']);
-			$r['name'] = preg_replace($reg, '<span class="fndd b">\\1</span>', $r['name'], 1);
+			$r['name'] = preg_replace($reg, '<span class="fndd b fs14">\\1</span>', $r['name'], 1);
 			$r['name'] = win1251($r['name']);
 
 			$r['about'] = utf8($r['about']);
@@ -1313,7 +1318,7 @@ function _tovar_info() {//информация о товаре
 					_tovar_info_use_for($tovar_id).
 					_tovar_info_use_spisok($tovar_id).
 					_tovar_info_zakaz($r).
-//					_tovar_info_zayav($tovar_id).
+					_tovar_info_zayav($tovar_id).
 		'</table>'.
 		'<div id="ti-move">'._tovar_info_move($r).'</div>'.
 	'</div>';
@@ -1583,6 +1588,22 @@ function _tovar_info_zakaz($tovar) {//заказы по этому товару
 
 	return $send;
 }
+function _tovar_info_zayav($tovar_id) {//заявки по этому товару
+	$sql = "SELECT COUNT(DISTINCT `zayav_id`)
+			FROM
+				`_zayav` `z`,
+				`_zayav_tovar` `zt`
+			WHERE `zt`.`app_id`=".APP_ID."
+			  AND `z`.`id`=`zt`.`zayav_id`
+			  AND !`z`.`deleted`
+			  AND `tovar_id`=".$tovar_id;
+	if(!$count = query_value($sql))
+		return '';
+	return
+		'<div id="ti-zayav">'.
+			'<a href="'.URL.'&p=2&from_tovar_id='.$tovar_id.'">Товар использовался в <b>'.$count.'</b> заявк'._end($count, 'е', 'ах').'.</a>'.
+		'</div>';
+}
 function _tovar_info_move($tovar) {
 	$sql = "SELECT
 				'move' `class`,
@@ -1769,18 +1790,6 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 		'</div>';
 }
 
-function _tovar_info_zayav($tovar_id) {//заявки по этому товару
-	$sql = "SELECT COUNT(DISTINCT `zayav_id`)
-			FROM `_zayav_tovar`
-			WHERE `app_id`=".APP_ID."
-			  AND `tovar_id`=".$tovar_id;
-	if(!$count = query_value($sql))
-		return '';
-	return
-		'<div id="ti-zayav">'.
-			'<a href="'.URL.'&p=2&from_tovar_id='.$tovar_id.'">Использование в заявках: '.$count.'</a>'.
-		'</div>';
-}
 
 
 

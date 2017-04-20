@@ -4,8 +4,9 @@ function _zayav() {
 	if($tovar_id = _num(@$_GET['from_tovar_id'])) {
 		foreach($_COOKIE as $key => $val)
 			if(strpos($key, APP_ID.'_'.VIEWER_ID.'_zayav') !== false)
-			unset($_COOKIE[$key]);
+				unset($_COOKIE[$key]);
 		$_COOKIE[APP_ID.'_'.VIEWER_ID.'_zayav'._service('current').'_tovar_id'] = $tovar_id;
+		$_COOKIE[APP_ID.'_'.VIEWER_ID.'_zayav'._service('current').'_status_ids'] = _zayavStatus('all_ids');
 	}
 	
 	return _zayav_list(_hashFilter('zayav'._service('current')));
@@ -466,6 +467,13 @@ function _zayavStatus($id=false, $i='name') {//кеширование статусов заявки
 
 	if($id == 'all')
 		return $arr;
+
+	//ID всех статусов
+	if($id == 'all_ids') {
+		if(empty($arr))
+			return 0;
+		return implode(',', array_keys($arr));
+	}
 
 	//список названий JS для select
 	if($id == 'js_name') {
