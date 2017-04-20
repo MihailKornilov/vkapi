@@ -2773,7 +2773,7 @@ function _zayavInfoTovar($z) {//информация о товаре
 
 		'<div id="content">'.
 			'<div id="tovar-name">'.
-				'<a href="'.URL.'&p=46&id='.$tovar['id'].'">'.$tovar['name'].'</a>'.
+				'<a href="'.URL.'&p=46&id='.$tovar['id'].'"'.(!$tovar['bind_id'] || $tovar['deleted'] ? ' class="color-del"' : '').'>'.$tovar['name'].'</a>'.
 			'</div>'.
 			'<table id="info">'.
 	($z['imei'] ? '<tr><th>imei:	<td>'.$z['imei'] : '').

@@ -1000,40 +1000,54 @@ function _tovarQuery($tovar_id) {//запрос данных об одном товаре
 	if(!$tovar = query_assoc($sql))
 		return array();
 
+	$tovar += array(
+		'equip_ids' => 0,
+
+		'bind_id' => 0,
+		'articul' => '',
+		'avai' => 0,
+
+		'category_id' => 0,
+		'sub_id' => 0,
+
+		'sum_buy' => 0,
+		'sum_sell' => 0
+	);
+
+	$tovar['measure'] = _tovarMeasure($tovar['measure_id']);
+
 	//привязка товара к приложению и ID категории
 	$sql = "SELECT *
 			FROM `_tovar_bind`
 			WHERE `app_id`=".APP_ID."
 			  AND `tovar_id`=".$tovar_id."
 			LIMIT 1";
-	if(!$bind = query_assoc($sql))
-		return array();
+	if($bind = query_assoc($sql)) {
+		//ids комплектаций
+		$sql = "SELECT `equip_id`
+				FROM `_tovar_equip_bind`
+				WHERE `app_id`=".APP_ID."
+				  AND `category_id`=".$bind['category_id']."
+				ORDER BY `sort`";
+		$tovar['equip_ids'] = query_ids($sql);
 
-	//ids комплектаций
-	$sql = "SELECT `equip_id`
-			FROM `_tovar_equip_bind`
-			WHERE `app_id`=".APP_ID."
-			  AND `category_id`=".$bind['category_id']."
-			ORDER BY `sort`";
-	$tovar['equip_ids'] = query_ids($sql);
+		$tovar['bind_id'] = $bind['id'];
+		$tovar['articul'] = $bind['articul'];
+		$tovar['avai'] = _ms($bind['avai']);
 
-	//категория и подкатегория
-	$tovar['category_id'] = $bind['category_id'];
-	$tovar['sub_id'] = 0;
-	$main_id = _tovarCategory($bind['category_id'], 'main_id');
-	if($bind['category_id'] != $main_id) {
-		$tovar['category_id'] = $main_id;
-		$tovar['sub_id'] = $bind['category_id'];
+		//категория и подкатегория
+		$tovar['category_id'] = $bind['category_id'];
+		$tovar['sub_id'] = 0;
+		$main_id = _tovarCategory($bind['category_id'], 'main_id');
+		if($bind['category_id'] != $main_id) {
+			$tovar['category_id'] = $main_id;
+			$tovar['sub_id'] = $bind['category_id'];
+		}
+
+		//закупка и продажа
+		$tovar['sum_buy'] = _cena($bind['sum_buy']);
+		$tovar['sum_sell'] = _cena($bind['sum_sell']);
 	}
-
-	$tovar['bind_id'] = $bind['id'];
-	$tovar['articul'] = $bind['articul'];
-	$tovar['avai'] = _ms($bind['avai']);
-	$tovar['measure'] = _tovarMeasure($tovar['measure_id']);
-
-	//закупка и продажа
-	$tovar['sum_buy'] = _cena($bind['sum_buy']);
-	$tovar['sum_sell'] = _cena($bind['sum_sell']);
 
 	return $tovar;
 }
@@ -1256,6 +1270,9 @@ function _tovar_info() {//информация о товаре
 
 	if($r['deleted'])
 		return _err('Товар был удалён');
+
+	if(!$r['bind_id'])
+		return _err('Товар был отвязан от приложения');
 
 	return
 	'<script>'.
