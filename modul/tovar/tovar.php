@@ -517,11 +517,12 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 
 	$sql = "SELECT
 				`t`.*,
+				IFNULL(`bind`.`id`,0) `bind_id`,
 				`bind`.`category_id`,
 				`bind`.`avai`
 			FROM `_tovar` `t`
 
-				RIGHT JOIN `_tovar_bind` `bind`
+				LEFT JOIN `_tovar_bind` `bind`
 				ON `bind`.`app_id`=".APP_ID."
 			   AND `bind`.`tovar_id`=`t`.`id`
 				 
@@ -540,7 +541,7 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 
 		$t = $tovar[$r[$key]];
 		$tovar_id = $t['id'];
-		$go = ' class="tovar-info-go'.($t['deleted'] ? ' deleted' : '').'" val="'.$tovar_id.'"';
+		$go = ' class="tovar-info-go'.($t['deleted'] || !$t['bind_id'] ? ' color-del' : '').'" val="'.$tovar_id.'"';
 
 		$arr[$id] = array(
 			'tovar_name' => trim($t['name']),
@@ -576,8 +577,8 @@ function _tovarDelAccess($tovar_id) {//разрешение на удаление товара
 	if($t['deleted'])
 		return '“овар уже был удалЄн';
 
-	if($t['app_id'] != APP_ID)
-		return '“овар был создан не в этом приложении';
+//	if($t['app_id'] != APP_ID)
+//		return '“овар был создан не в этом приложении';
 
 	$sql = "SELECT COUNT(*) FROM `_money_income` WHERE !`deleted` AND `tovar_id`=".$tovar_id;
 	if(query_value($sql))

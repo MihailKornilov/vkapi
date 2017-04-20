@@ -102,7 +102,7 @@ switch(@$_POST['op']) {
 		$send['id'] = $tovar_id;
 		jsonSuccess($send);
 		break;
-	case 'tovar_del'://удаление товара
+	case 'tovar_del'://удаление товара - отвязка от приложения
 		if(!$tovar_id = _num($_POST['id']))
 			jsonError();
 
@@ -112,15 +112,16 @@ switch(@$_POST['op']) {
 		if($reason = _tovarDelAccess($tovar_id))
 			jsonError($reason);
 
-		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
-		query($sql);
+//		$sql = "UPDATE `_tovar` SET `deleted`=1 WHERE `id`=".$tovar_id;
+//		query($sql);
 
-/*
 		$sql = "DELETE FROM `_tovar_bind`
 				WHERE `app_id`=".APP_ID."
 				  AND `tovar_id`=".$tovar_id;
 		query($sql);
-*/
+
+		xcache_unset(CACHE_PREFIX.'tovar_category');
+
 		_history(array(
 			'type_id' => 113,
 			'tovar_id' => $tovar_id
