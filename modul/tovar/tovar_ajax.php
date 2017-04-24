@@ -826,7 +826,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'tovar_avai_add':
+	case 'tovar_avai_add'://внесение наличия товара
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError('Некорректный id товара');
 		if(!$stock_id = _num($_POST['stock_id']))
@@ -878,6 +878,20 @@ switch(@$_POST['op']) {
 			'count' => $count,
 			'cena' => $sum_buy
 		));
+
+		//обновление закупочной стоимости
+		if($sum_buy && !$r['sum_buy']) {
+			$sql = "UPDATE `_tovar_bind`
+					SET `sum_buy`=".$sum_buy."
+					WHERE `id`=".$r['bind_id'];
+			query($sql);
+		}
+
+		//удаление товара из заказа
+		$sql = "DELETE FROM `_tovar_zakaz`
+				WHERE `app_id`=".APP_ID."
+				  AND `tovar_id`=".$tovar_id;
+		query($sql);
 
 		_history(array(
 			'type_id' => 107,
