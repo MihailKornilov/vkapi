@@ -535,6 +535,94 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'tovar_inventory_start'://запуск инвентаризации
+		if(!VIEWER_ADMIN)
+			jsonError('Инвентаризация может начать только администратор');
+			
+		$sql = "SELECT COUNT(`id`)
+				FROM `_tovar_inventory`
+				WHERE `app_id`=".APP_ID."
+				  AND `dtime_end`='0000-00-00 00:00:00'";
+		if(query_value($sql))
+			jsonError('Инвентаризация уже начата');
+
+		$sql = "INSERT INTO `_tovar_inventory` (
+					`app_id`
+				) VALUES (
+					".APP_ID."
+				)";
+		query($sql);
+
+		//отметка всех товаров в наличии, которые должны будут пройти инвентаризацию
+		$sql = "UPDATE `_tovar_avai`
+				SET `inventory`=1
+				WHERE `app_id`=".APP_ID."
+				  AND `count`";
+		query($sql);
+
+		_history(array(
+			'type_id' => 169
+		));
+
+		jsonSuccess();
+		break;
+	case 'tovar_inventory_cancel'://отмена инвентаризации
+		if(!VIEWER_ADMIN)
+			jsonError('Инвентаризация может отменить только администратор');
+			
+		$sql = "SELECT COUNT(`id`)
+				FROM `_tovar_inventory`
+				WHERE `app_id`=".APP_ID."
+				  AND `dtime_end`='0000-00-00 00:00:00'";
+		if(!query_value($sql))
+			jsonError('Инвентаризация не была запущена');
+
+		$sql = "DELETE FROM `_tovar_inventory`
+				WHERE `app_id`=".APP_ID."
+				  AND `dtime_end`='0000-00-00 00:00:00'";
+		query($sql);
+
+		//отметка всех товаров в наличии, которые должны будут пройти инвентаризацию
+		$sql = "UPDATE `_tovar_avai`
+				SET `inventory`=0
+				WHERE `app_id`=".APP_ID;
+		query($sql);
+
+		_history(array(
+			'type_id' => 170
+		));
+
+		jsonSuccess();
+		break;
+	case 'tovar_inventory_avai_confirm'://инвентаризация: подтверждение наличия товара
+		if(!$avai_id = _num($_POST['avai_id']))
+			jsonError('Некорректный id наличия');
+
+		$sql = "SELECT *
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".$avai_id;
+		if(!$avai = query_assoc($sql))
+			jsonError('Наличия не существует');
+
+		if(!$avai['inventory'])
+			jsonError('Инвентаризация была пройдена');
+
+		$sql = "UPDATE `_tovar_avai`
+				SET `inventory`=0
+				WHERE `id`=".$avai_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 171,
+			'tovar_id' => $avai['tovar_id'],
+			'v1' => _ms($avai['count'])
+		));
+
+		jsonSuccess();
+		break;
+
+
 	case 'tovar_equip_load'://получение списка комплектаций по товару
 		if(!$tovar_id = _num($_POST['tovar_id']))
 			jsonError('Некорректный ID товара');
@@ -1124,6 +1212,13 @@ switch(@$_POST['op']) {
 
 		_tovarAvaiUpdate($avai['tovar_id']);
 
+		//корректировка инвентаризации после списания
+		$sql = "UPDATE `_tovar_avai`
+				SET `inventory`=0
+				WHERE `app_id`=".APP_ID."
+				  AND !`count`";
+		query($sql);
+
 		_history(array(
 			'type_id' => 108,
 			'tovar_id' => $avai['tovar_id'],
@@ -1291,7 +1386,7 @@ switch(@$_POST['op']) {
 		$send['arr_first'] = count($send['arr']) ? key($send['arr']) : 0;
 		jsonSuccess($send);
 		break;
-	case 'tovar_writeoff':// продажа товара
+	case 'tovar_writeoff'://списание товара
 		if(!$avai_id = _num($_POST['avai_id']))
 			jsonError('Некорректный ID наличия');
 		if(!$count = _ms($_POST['count']))
@@ -1325,6 +1420,13 @@ switch(@$_POST['op']) {
 			'count' => $count,
 			'about' => $about
 		));
+
+		//корректировка инвентаризации после списания
+		$sql = "UPDATE `_tovar_avai`
+				SET `inventory`=0
+				WHERE `app_id`=".APP_ID."
+				  AND !`count`";
+		query($sql);
 
 		_history(array(
 			'type_id' => 109,

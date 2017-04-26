@@ -632,10 +632,26 @@ function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
 	'<div id="rightLinkMenu" class="rightLink">'.$spisok.'</div>';
 }
 function _tovar() {//8 - главная страница товаров
+	$sql = "SELECT *
+			FROM `_tovar_inventory`
+			WHERE `app_id`=".APP_ID."
+			  AND `dtime_end`='0000-00-00 00:00:00'
+			LIMIT 1";
+	$inventory = '';
+	if($r = query_assoc($sql))
+		$inventory =
+			'<div class="pad15 bg-fcc fs14 center">'.
+				'Запущена инвентаризация товаров. '.
+				'Начало: '.FullDataTime($r['dtime_start']).'. '.
+(VIEWER_ADMIN ? '<button onclick="_tovarInventoryCancel()" class="vk small'._tooltip('Отменить инвентаризацию', -55).'отменить</button>' : '').
+			'</div>';
+
+
 	$data = _tovar_spisok(_hashFilter('tovar'));
 	$v = $data['filter'];
 	return
 	'<div id="_tovar">'.
+		$inventory.
 		'<table class="bs10 w100p bg-gr1 line-b">'.
 			'<tr>'.
 				'<td class="w230"><div id="find"></div>'.
@@ -653,6 +669,13 @@ function _tovar() {//8 - главная страница товаров
 
 		'<table class="w100p bg-gr1">'.
 			'<tr><td class="w200 top pad10">'.
+				($inventory ?
+					'<div class="mb20">'.
+						'<div class="f-label">Инвентаризация</div>'.
+						_check('inventory', 'Инвентаризация не пройдена', $v['inventory'], 1).
+					'</div>'
+				: '').
+
 					'<div class="f-label">Категория</div>'.
 					_tovarCatMenu($v['category_id'], _tovarCategoryCount($v)).
 
@@ -677,6 +700,7 @@ function _tovarFilter($v) {
 		'page' => 1,
 		'limit' => 500,
 		'find' => '',
+		'inventory' => 0,
 		'category_id' => _tovarCategory('first'),
 		'sub_id' => 0,
 		'fstock_id' => 0,
@@ -688,6 +712,7 @@ function _tovarFilter($v) {
 		'page' => _num(@$v['page']) ? $v['page'] : $default['page'],
 		'limit' => _num(@$v['limit']) ? $v['limit'] : $default['limit'],
 		'find' => trim(@$v['find']),
+		'inventory' => _bool(@$v['inventory']) ? $v['inventory'] : $default['inventory'],
 		'category_id' => isset($v['category_id']) ? _num($v['category_id']) : $default['category_id'],
 		'sub_id' => isset($v['sub_id']) ? intval($v['sub_id']) : $default['sub_id'],
 		'fstock_id' => _num(@$v['fstock_id']) ? $v['fstock_id'] : $default['fstock_id'],
@@ -721,8 +746,6 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 					 OR `articul`='".$filter['find']."'
 					   )";
 
-	$JOIN = '';
-
 	if($filter['avai']) {
 		$cond .= " AND `bind`.`avai`";
 		if($filter['fstock_id']) {
@@ -752,6 +775,15 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
+
+	if($filter['inventory']) {
+		$sql = "SELECT DISTINCT `tovar_id`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `inventory`";
+		$ids = query_ids($sql);
+		$cond .= " AND `bind`.`tovar_id` IN (".$ids.")";
+	}
 
 	$sql = "SELECT
 				`cat`.`id`,
@@ -793,6 +825,15 @@ function _tovar_spisok($v=array()) {
 
 	if($filter['zakaz'])
 		$cond .= " AND `bind`.`zakaz`";
+
+	if($filter['inventory']) {
+		$sql = "SELECT DISTINCT `tovar_id`
+				FROM `_tovar_avai`
+				WHERE `app_id`=".APP_ID."
+				  AND `inventory`";
+		$ids = query_ids($sql);
+		$cond .= " AND `bind`.`tovar_id` IN (".$ids.")";
+	}
 
 	if($filter['sub_id']) {
 		if($filter['sub_id'] == -1)
@@ -1148,6 +1189,13 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 
 	$radio = $v == 'radio';
 
+	//инвентаризация - включена или нет
+	$sql = "SELECT COUNT(`id`)
+			FROM `_tovar_inventory`
+			WHERE `app_id`=".APP_ID."
+			  AND `dtime_end`='0000-00-00 00:00:00'";
+	$inventory = !$radio && query_value($sql);
+
 	$spisok = _tovarValToList($spisok);
 
 	$count = count($spisok);
@@ -1170,7 +1218,11 @@ function _tovarAvaiSpisok($tovar_id, $v='') {//список наличия товара
 		            '<div class="'.($avai_id == $r['id'] ? 'on' : 'off').'" val="'.$r['id'].'"><s></s></div>'
 	  : '').
 (!_tovarStock('one') ? '<td>'._tovarStock($r['stock_id']) : '').
-				'<td class="count center color-pay b">'.(_ms($r['count']) ? _ms($r['count']) : '').
+				'<td class="count center color-pay b">'.
+					_ms($r['count']).
+        ($inventory && $r['inventory'] ?
+				'<div onclick="_tovarInventoryAvai($(this), '.$r['id'].')" class="icon icon-ok fr'._tooltip('Инвертаризация<br />Подтвердить наличие', -67, '', 1).'</div>'
+		: '').
 				'<td class="cena r wsnw">'._sumSpace($r['sum_buy']).
 				'<td class="about">'.$r['about'].
 	 (!$radio ? '<td>'._iconEditNew($r + array('class'=>'avai-edit')) : '');

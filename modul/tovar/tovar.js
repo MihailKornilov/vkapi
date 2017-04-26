@@ -157,6 +157,10 @@ var _tovarEdit = function(o) {
 			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP mt10" val="2">' +
 				'<b>Склады</b>' +
 				'<div class="grey pad2-7">Управление складами товаров.</div>' +
+			'</div>' +
+			'<div class="tsa-unit bg-gr1 bor-e8 over1 pad10 curP mt10" val="3">' +
+				'<b>Инвентаризация</b>' +
+				'<div class="grey pad2-7">Проведение ревизии по товарам.</div>' +
 			'</div>',
 			dialog = _dialog({
 				top:30,
@@ -175,6 +179,7 @@ var _tovarEdit = function(o) {
 			switch(v) {
 				case 1: _tovarSetupCategory(); break;
 				case 2: _tovarSetupStock(); break;
+				case 3: _tovarInventory(); break;
 			}
 		});
 	},
@@ -331,6 +336,68 @@ var _tovarEdit = function(o) {
 		}
 	},
 
+	_tovarInventory = function() {
+		var html =
+				'<div class="_info">' +
+					'<p>После запуска инвентаризации все товары, находящиеся в наличии, становятся под вопросом (под сомнением).' +
+					'<p>Для полного завершения инвентаризации необходимо проверить и подтвердить наличие и закупочную стоимость всех товаров на складах.' +
+					'<p>Товары, которые вносятся заново, будут считаться прошедшими инвентаризацию.' +
+					'<p>В фильтр списка товаров будет добавлено условие (галочка), при котором можно выводить только те товары, которые ещё не прошли инвентаризацию.' +
+				'</div>',
+			dialog = _dialog({
+				width:500,
+				head:'Проведение инвентаризации',
+				content:html,
+				butSubmit:'Запустить инвентаризацию',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'tovar_inventory_start'
+			};
+			dialog.post(send, 'reload');
+		}
+	},
+	_tovarInventoryCancel = function() {
+		var html =
+				'<div class="pad30 center">' +
+					'Подтвердите отмену инвентаризации.' +
+				'</div>',
+			dialog = _dialog({
+				width:500,
+				head:'Отмена инвентаризации',
+				content:html,
+				butSubmit:'Отменить инвентаризацию',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'tovar_inventory_cancel'
+			};
+			dialog.post(send, function() {
+				_tovarFilterClear();
+				location.reload();
+			});
+		}
+	},
+	_tovarInventoryAvai = function(t, avai_id) {
+		t.hide();
+		t.parent().addClass('_busy');
+		var send = {
+			op:'tovar_inventory_avai_confirm',
+			avai_id:avai_id
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			t.parent().removeClass('_busy');
+			if(res.success) {
+				t.remove();
+			} else
+				t.show();
+		}, 'json');
+	},
+	
 	_tovarStockMove = function() {
 		var dialog = _dialog({
 				top:20,
@@ -460,15 +527,7 @@ var _tovarEdit = function(o) {
 				sub_name:$('#category_id-sub')._select('inp'),
 				tovar_ids:_tovarSelectedIds().join()
 			};
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					location.reload();
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, 'reload');
 		}
 	},
 
@@ -892,6 +951,7 @@ var _tovarEdit = function(o) {
 
 		$('#avai')._check(SUB_ID ? 1 : 0);  TOVAR.avai = SUB_ID;
 		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
+		$('#inventory')._check(0);      TOVAR.inventory = 0;
 
 		_tovarSpisok();
 
@@ -1546,6 +1606,7 @@ $(document)
 				$('.filter-stock')['slide' + (v && TOVAR_STOCK_SPISOK.length > 1 ? 'Down' : 'Up')]();
 			});
 			$('#zakaz')._check(_tovarSpisok);
+			$('#inventory')._check(_tovarSpisok);
 			$('#fstock_id')._select({
 				width:200,
 				title0:'любой склад',
