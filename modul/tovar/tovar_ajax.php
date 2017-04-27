@@ -727,8 +727,7 @@ switch(@$_POST['op']) {
 
 
 		//к объединяемому товару применялись другие товары
-		$sql = "UPDATE `_tovar_use`
-				SET `tovar_id`=".$tovar_id."
+		$sql = "DELETE FROM `_tovar_use`
 				WHERE `tovar_id`=".$join_id;
 		query($sql);
 
@@ -737,7 +736,6 @@ switch(@$_POST['op']) {
 				SET `use_id`=".$tovar_id."
 				WHERE `use_id`=".$join_id;
 		query($sql);
-
 		//характеристики
 		$sql = "UPDATE `_tovar_feature`
 				SET `tovar_id`=".$tovar_id."

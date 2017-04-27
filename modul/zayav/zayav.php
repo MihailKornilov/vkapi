@@ -2789,12 +2789,14 @@ function _zayavInfoTovar($z) {//информация о товаре
 function _zayavInfoTovarUse($zayav_id, $tovar_id) {//список запчастей для товара заявки
 	$sql = "SELECT
 				`use`.*,
+				`bind`.`articul`,
 				0 `zakaz`
 			FROM `_tovar_use` `use`,
 				 `_tovar_bind` `bind`
 			WHERE `app_id`=".APP_ID."
 			  AND `bind`.`tovar_id`=`use`.`use_id`
 			  AND `use`.`tovar_id`=".$tovar_id;
+//			GROUP BY `use`.`use_id`";
 	if(!$arr = query_arr($sql))
 		return '';
 
@@ -2826,6 +2828,7 @@ function _zayavInfoTovarUse($zayav_id, $tovar_id) {//список запчастей для товара
 				'<table>'.
 					'<tr><td class="w35 top pr5">'.
 							$r['tovar_image_min'].
+							'<div class="fs10 mt1 color-555 center">'.$r['articul'].'</div>'.
 						'<td class="top">'.
 							$r['tovar_link'].
 							'<div class="grey fs12">'.$r['tovar_about'].'</div>'.
