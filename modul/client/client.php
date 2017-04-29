@@ -1341,17 +1341,11 @@ function _client_from() {//показ страницы Откуда пришёл клиент
 	'<div id="client-from" class="mar10">'.
 		'<div class="hd2 mt15">Источники, из которых приходят клиенты</div>'.
 
-		'<input type="hidden" id="from_menu" value="2" />'.
+		_client_from_setup().
+		'<button class="vk green fr mt10" onclick="clientFromEdit()">Добавить новый источник</button>'.
+		'<div id="spisok">'._client_from_spisok().'</div>'.
 
-		'<div class="from_menu-1 dn">'.
-			_client_from_setup().
-			'<button class="vk green fr mt10" onclick="clientFromEdit()">Добавить новый источник</button>'.
-			'<div id="spisok">'._client_from_spisok().'</div>'.
-		'</div>'.
-
-		'<div class="from_menu-2">'.
-			'<div id="from-stat" class="bg-del"></div>'.
-		'</div>'.
+		'<div class="mt30" id="from-stat"></div>'.
 
 	'</div>'.
 	'<script src="/.vkapp/.js/highcharts.js"></script>'.

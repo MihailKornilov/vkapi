@@ -743,12 +743,6 @@ $(document)
 			});
 		}
 		if($('#client-from').length) {
-			$('#from_menu')._menuDop({
-				spisok:[
-					{uid:1,title:'Настройка'},
-					{uid:2,title:'Статистика'}
-				]
-			});
 			$('#client_from_use')._check(function(v) {
 				$('.tr-require')[(v ? 'remove' : 'add') + 'Class']('dn');
 				$('.tr-submit').removeClass('dn');
