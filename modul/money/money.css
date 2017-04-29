@@ -91,14 +91,6 @@
 	vertical-align:top;
 	padding-top:6px;
 }
-#invoice-spisok .ed{
-	width:14px;
-	text-align:right;
-	vertical-align:top;
-	padding-top:8px;
-}
-#invoice-spisok ._check{margin:0 3px -2px 2px}
-#invoice-spisok .img_note{margin-bottom:-2px}
 
 #transfer-spisok .confirm{font-size:10px;color:#090}
 #transfer-spisok .confirm.no{color:red}

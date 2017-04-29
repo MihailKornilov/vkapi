@@ -1338,14 +1338,41 @@ function _clientFrom($id) {
 }
 function _client_from() {//показ страницы Откуда пришёл клиент
 	return
-	'<div id="client-from">'.
-		'<div class="hd2">'.
-			'Источники, из которых приходят клиенты'.
-			'<button class="vk small fr add">Добавить новый источник</button>'.
+	'<div id="client-from" class="mar10">'.
+		'<div class="hd2 mt15">Источники, из которых приходят клиенты</div>'.
+
+		'<input type="hidden" id="from_menu" value="2" />'.
+
+		'<div class="from_menu-1 dn">'.
+			_client_from_setup().
+			'<button class="vk green fr mt10" onclick="clientFromEdit()">Добавить новый источник</button>'.
+			'<div id="spisok">'._client_from_spisok().'</div>'.
 		'</div>'.
-		_client_from_setup().
-		'<div id="spisok">'._client_from_spisok().'</div>'.
-	'</div>';
+
+		'<div class="from_menu-2">'.
+			'<div id="from-stat" class="bg-del"></div>'.
+		'</div>'.
+
+	'</div>'.
+	'<script src="/.vkapp/.js/highcharts.js"></script>'.
+	'<script>'.
+		'var CATEGORIES=['._client_from_stat_catgories().'],'.
+			'SERIES=['._client_from_stat_series().'];'.
+		'clientFromStat()'.
+	'</script>';
+}
+function _client_from_setup() {//настройки использования источников клиентов
+	if(!VIEWER_ADMIN)
+		return '';
+
+	return
+	'<table class="bs10 mt15">'.
+		'<tr><td class="label r w200">Включить использование:<td>'._check('client_from_use', '', _app('client_from_use')).
+		'<tr class="tr-require'.(_app('client_from_use') ? '' : ' dn').'">'.
+			'<td class="label r">Требовать обязательно указывать источник при внесении нового клиента:'.
+			'<td>'._check('client_from_require', '', _app('client_from_require')).
+		'<tr class="tr-submit dn"><td><td><button class="vk setup-submit">Применить настройки</button>'.
+	'</table>';
 }
 function _client_from_spisok() {//список источников
 	$sql = "SELECT
@@ -1355,7 +1382,7 @@ function _client_from_spisok() {//список источников
 			WHERE `app_id`=".APP_ID."
 			ORDER BY `name`";
 	if(!$spisok = query_arr($sql))
-		return 'Источники не определены.';
+		return '<div class="fs17 mt20">Источники не определены.</div>';
 
 	$sql = "SELECT
 				`from_id`,
@@ -1368,32 +1395,77 @@ function _client_from_spisok() {//список источников
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['from_id']]['count'] = $r['count'];
 
-	$send = '<table class="_spisok">'.
+	$send = '<table class="_spisokTab w450 mt10">'.
 				'<tr><th>Название источника'.
 					'<th>Кол-во клиентов<br />за всё время'.
 					'<th>';
 	foreach($spisok as $id => $r)
 		$send .= '<tr val="'.$id.'">'.
 					'<td class="name">'.$r['name'].
-					'<td class="count center">'.($r['count'] ? $r['count'] : '').
-					'<td class="ed">'.
-						_iconEdit($r).
-						_iconDel($r + array('nodel'=>$r['count']));
+					'<td class="w125 center">'.($r['count'] ? $r['count'] : '').
+					'<td class="w15 wsnw">'.
+						_iconEditNew($r).
+						_iconDelNew($r + array('nodel'=>$r['count']));
 	$send .= '</table>';
 
 	return $send;
 }
-function _client_from_setup() {//настройки использования источников клиентов
-	if(!VIEWER_ADMIN)
+function _client_from_stat_catgories($send_ass=0) {
+	$mon = strftime('%m');
+	$year = strftime('%Y') - 1;
+
+	$send = [];
+	$ass = [];
+	for($n = 0; $n < 12; $n++) {
+		if(++$mon > 12) {
+			$mon = 1;
+			$year++;
+		}
+		$send[] = '"'.$year.' '._monthCut($mon).'"';
+		$ass[] = $year.'-'.(($mon < 10) ? 0 : '')._num($mon);
+	}
+
+	//возврат ассоциативного массива месяцев
+	if($send_ass)
+		return $ass;
+
+	return implode(',', $send);
+}
+function _client_from_stat_series() {
+	$sql = "SELECT DISTINCT `from_id`
+			FROM `_client`
+			WHERE `app_id`=".APP_ID."
+			  AND `from_id`
+			  AND `dtime_add`>DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+	if(!$from_ids = query_ids($sql))
 		return '';
 
-	return
-	'<table id="cf-setup" class="bs10">'.
-		'<tr><td class="label r w150">Включить использование:<td>'._check('client_from_use', '', _app('client_from_use')).
-		'<tr class="tr-require'.(_app('client_from_use') ? '' : ' dn').'">'.
-			'<td class="label r">Требовать обязательно указывать источник при внесении нового клиента:'.
-			'<td>'._check('client_from_require', '', _app('client_from_require')).
-		'<tr class="tr-submit dn"><td><td><button class="vk setup-submit">Применить настройки</button>'.
-	'</table>';
-}
+	$series = [];
+	foreach(_ids($from_ids, 1) as $from_id) {
+		$sql = "SELECT
+					DATE_FORMAT(`dtime_add`, '%Y-%m'),
+					COUNT(`id`)
+				FROM `_client`
+				WHERE `app_id`=".APP_ID."
+				  AND `from_id`=".$from_id."
+				  AND `dtime_add`>DATE_SUB(NOW(), INTERVAL 1 YEAR)
+				GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
+				ORDER BY `dtime_add`";
+		$spisok = query_ass($sql);
 
+		$data = [];
+		foreach(_client_from_stat_catgories(1) as $mon) {
+			if(!isset($spisok[$mon])) {
+				$data[] = 0;
+				continue;
+			}
+			$data[] = $spisok[$mon];
+		}
+		$series[] = '{
+	        name: "'._clientFrom($from_id).'",
+	        data: ['.implode(',', $data).']
+	    }';
+	}
+
+	return implode(',', $series);
+}

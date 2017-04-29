@@ -84,8 +84,11 @@ switch(@$_POST['op']) {
 
 		$from =
 			'<table class="bs10 mb10'.(_app('client_from_use') ? '' : ' dn').'">'.
-				'<tr><td class="label r"><span id="td-from">Откуда клиент нашёл нас:</span>'.
-					'<td><input type="hidden" id="from_id" value="0" />'.
+				'<tr><td class="label r"><span id="td-from">Откуда клиент узнал о нас:</span>'.
+					'<td><input type="hidden" id="from_id" value="'._num(@$c['from_id']).'" />'.
+		(_viewerMenuAccess(44) ?
+				'<td><a href="'.URL.'&p=44" class="icon icon-setup-big mt1 pl'._tooltip('Настройка источников клиентов', -96).'</a>'
+		: '').
 			'</table>';
 
 		$send['html'] = utf8(
@@ -713,3 +716,6 @@ function _clientFromGet() {//получение id источника откуда пришёл клиент
 	}
 	return $from_id;
 }
+
+
+

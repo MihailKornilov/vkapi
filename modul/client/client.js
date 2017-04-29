@@ -307,19 +307,13 @@ var
 	//				client2:_num($('#client2').val())
 				};
 
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg();
-					if(callback) {
-						callback(res.id);
-						return;
-					}
-					location.href = URL + '&p=42&id=' + res.id;
-				} else
-					dialog.abort(res.text);
-			}, 'json');
+			dialog.post(send, function(res) {
+				if(callback) {
+					callback(res.id);
+					return;
+				}
+				location.href = URL + '&p=42&id=' + res.id;
+			});
 		}
 	},
 
@@ -433,7 +427,7 @@ var
 						'<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
 				'</table>',
 			dialog = _dialog({
-				width:370,
+				width:380,
 				head:(o.id ? 'Редактирование' : 'Добавление нового' ) + ' источника',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -463,6 +457,37 @@ var
 					dialog.abort();
 			}, 'json');
 		}
+	},
+	clientFromStat = function() {
+		Highcharts.chart('from-stat', {
+		    chart: {
+		        type: 'line'
+		    },
+		    title: {
+		        text: 'Новые клиенты по каждому месяцу в течение года'
+		    },
+		    xAxis: {
+		        categories: CATEGORIES
+		    },
+		    yAxis: {
+		        title: {
+		            text: 'Количество клиентов'
+		        }
+		    },
+			tooltip:{
+				crosshairs:true,
+				shared:true
+			},
+			plotOptions: {
+		        line: {
+		            dataLabels: {
+		                enabled: true
+		            },
+		            enableMouseTracking: true
+		        }
+		    },
+		    series:SERIES
+		});
 	};
 
 $.fn.clientSel = function(o) {
@@ -632,15 +657,14 @@ $(document)
 		});
 	})
 
-	.on('click', '#client-from .add', clientFromEdit)
-	.on('click', '#client-from .img_edit', function() {
+	.on('click', '#client-from .icon-edit', function() {
 		var t = _parent($(this));
 		clientFromEdit({
 			id:t.attr('val'),
 			name:t.find('.name').html()
 		});
 	})
-	.on('click', '#client-from .img_del', function() {
+	.on('click', '#client-from .icon-del', function() {
 		var p = _parent($(this));
 		_dialogDel({
 			id:p.attr('val'),
@@ -719,6 +743,12 @@ $(document)
 			});
 		}
 		if($('#client-from').length) {
+			$('#from_menu')._menuDop({
+				spisok:[
+					{uid:1,title:'Настройка'},
+					{uid:2,title:'Статистика'}
+				]
+			});
 			$('#client_from_use')._check(function(v) {
 				$('.tr-require')[(v ? 'remove' : 'add') + 'Class']('dn');
 				$('.tr-submit').removeClass('dn');

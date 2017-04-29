@@ -1460,11 +1460,11 @@ function invoice_spisok() {
 					($r['expense_insert'] ? '<h4>Могут вносить расходы:</h4><h5>'.$r['expense_insert_worker'].'<h5>' : '')
 : '').
 				'<td class="balans"><b>'.($r['start'] != -1 ? _sumSpace(_invoiceBalans($r['id'])).'</b> руб.' : '').
-				'<td class="ed">'.
-					'<span class="'._tooltip('Использовать по умолчанию', -162, 'r')._check('def'.$r['id'], '', $def == $r['id'] ? 1 : 0).'</span>'.
-					'<div val="'.$r['id'].'" class="img_setup'._tooltip('Выполнить операцию над счётом', -195, 'r').'</div>'.
+				'<td class="w70 top">'.
+					'<div class="dib mr5 mtm1'._tooltip('Использовать по умолчанию', -165, 'r')._check('def'.$r['id'], '', $def == $r['id'] ? 1 : 0).'</div>'.
+					'<div val="'.$r['id'].'" class="icon icon-setup mt3'._tooltip('Выполнить операцию над счётом', -192, 'r').'</div>'.
 (RULE_INVOICE_HISTORY ?
-					'<div onclick="_balansShow(1,'.$r['id'].')" class="img_note'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'
+					'<div onclick="_balansShow(1,'.$r['id'].')" class="icon icon-stat'._tooltip('Посмотреть историю операций', -176, 'r').'</div>'
 : '').
 
 (RULE_SETUP_INVOICE ?

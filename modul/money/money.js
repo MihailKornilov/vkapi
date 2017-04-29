@@ -2237,7 +2237,7 @@ $(document)
 		});
 	})
 
-	.on('click', '#money-invoice .img_setup', function() {
+	.on('click', '#money-invoice .icon-setup', function() {
 		var t = $(this),
 			p = _parent(t),
 			id = _num(t.attr('val')),
