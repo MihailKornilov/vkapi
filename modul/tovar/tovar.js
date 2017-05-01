@@ -403,7 +403,7 @@ var _tovarEdit = function(o) {
 		        type: 'line'
 		    },
 		    title: {
-		        text: 'Товары, прошедшие инвентаризацию по каждому дню'
+		        text: 'Процесс инвентаризации по каждому дню'
 		    },
 		    xAxis: {
 		        categories:CATEGORIES

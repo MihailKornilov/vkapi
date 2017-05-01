@@ -654,7 +654,7 @@ function _tovar() {//8 - главная страница товаров
 
 		'<table class="w100p bg-gr1">'.
 			'<tr><td class="w200 top pad10">'.
-				(_tovarInventory() ?
+				(_tovarInventory(1) ?
 					'<div class="mb20">'.
 						'<div class="f-label">Инвентаризация</div>'.
 						_check('inventory', 'Инвентаризация не пройдена', $v['inventory'], 1).
@@ -679,7 +679,7 @@ function _tovar() {//8 - главная страница товаров
 			'SUB_ID='.intval(@$_GET['sub_id']).';'.
 	'</script>';
 }
-function _tovarInventory() {//инвентаризация товаров
+function _tovarInventory($forFilterCheck=0) {//инвентаризация товаров
 	$sql = "SELECT *
 			FROM `_tovar_inventory`
 			WHERE `app_id`=".APP_ID."
@@ -688,7 +688,11 @@ function _tovarInventory() {//инвентаризация товаров
 	if(!$r = query_assoc($sql))
 		return '';
 
-	//подтверждено наличие
+	//для отображения чекбокса инвентаризации в фильтре
+	if($forFilterCheck)
+		return true;
+
+	//наличие подтверждено
 	$sql = "SELECT
 				DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`,
 				COUNT(DISTINCT `tovar_id`) `count`
@@ -713,9 +717,9 @@ function _tovarInventory() {//инвентаризация товаров
 	$offSpisok = query_ass($sql);
 
 	//заполнение пустых дней
-	$start = strtotime(key($confirmSpisok));
+	$start = strtotime($r['dtime_start']);
 	$end = strtotime(TODAY);
-	while($end > $start) {
+	while($start < $end) {
 		$start += 3600 * 24;
 		$day = strftime('%Y-%m-%d', $start);
 		if(!isset($confirmSpisok[$day]))
@@ -738,15 +742,45 @@ function _tovarInventory() {//инвентаризация товаров
 	foreach($offSpisok as $day => $count)
 		$offData[] = $count;
 
+	//Не прошли инвентаризацию
+	$sql = "SELECT COUNT(DISTINCT `tovar_id`)
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `inventory`";
+	$noInventory = query_value($sql);
+
+	//Всего прошли инвентаризацию
+	$sql = "SELECT COUNT(DISTINCT `tovar_id`)
+			FROM `_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=171
+			  AND `dtime_add`>='".$r['dtime_start']."'";
+	$yesInventory = query_value($sql);
+
+	//Всего прошли инвентаризацию
+	$sql = "SELECT COUNT(DISTINCT `tovar_id`)
+			FROM `_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=109
+			  AND `dtime_add`>='".$r['dtime_start']."'";
+	$offInventory = query_value($sql);
+
 	return
 		'<script src="/.vkapp/.js/highcharts.js"></script>'.
 		'<div class="pad15 bg-fcc fs14 center">'.
 			'Запущена инвентаризация товаров. '.
-			'Начало: '.FullDataTime($r['dtime_start']).'. '.
+			'Начало: '.FullData($r['dtime_start'], 1).'. '.
 (VIEWER_ADMIN ? '<button onclick="_tovarInventoryCancel()" class="vk small'._tooltip('Отменить инвентаризацию', -55).'отменить</button>' : '').
 			'<div onclick="$(this).parent().next().slideToggle()" class="icon icon-stat fr'._tooltip('Процесс инвентаризации', -142, 'r').'</div>'.
 		'</div>'.
-		'<div class="pad20" id="inventory-stat"></div>'.
+		'<div class="bg-fee dn">'.
+			'<table class="pt10 pl10 bs5">'.
+				'<tr><td class="label">Не прошли инвентаризацию:<td><b class="color-555">'.$noInventory.'</b>'.
+				'<tr><td class="label">Всего прошли инвентаризацию:<td><b class="color-555">'.$yesInventory.'</b>'.
+				'<tr><td class="label">Списаны:<td><b class="color-555">'.$offInventory.'</b>'.
+			'</table>'.
+			'<div id="inventory-stat" class="pad15"></div>'.
+		'</div>'.
 		'<script>'.
 			'var SERIES=['.
 					'{name:"Прошедшие инвентаризацию",data:['.implode(',', $data).']},'.

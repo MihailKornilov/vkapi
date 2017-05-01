@@ -3,8 +3,7 @@
 
 /* статистика по инвентаризации */
 #inventory-stat{
-	display:none;
-	background-color:#fee;
+	height:400px;
 	border-bottom:4px solid #fcc;
 }
 
