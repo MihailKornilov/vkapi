@@ -1986,39 +1986,70 @@ function _tovar_stat_spisok() {
 	if(!$spisok = query_arr($sql))
 		return '<div class="_empty">ќстатков нет</div>';
 
+	$sql = "SELECT
+				`category_id` `id`,
+				COUNT(`id`) `count`
+			FROM `_tovar_bind`
+			WHERE `app_id`=".APP_ID."
+			  AND `avai`
+			GROUP BY `category_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['pos'] = $r['count'];
 
-	$mainCount = array();//корневые категории - количество
+	$allPos = 0;    //все категории - количество позиций
+	$allCount = 0;  //все категории - количество единиц
+	$allSum = 0;    //все категории - сумма руб.
+
+	$mainPos = array();//корневые категории - количество позиций
+	$mainCount = array();//корневые категории - количество единиц
 	$main = array();//корневые категории - сумма руб.
-	$subCount = array(); //подкатегории - количество
-	$sub = array(); //подкатегории
+
+	$subPos = array(); //подкатегории - количество позиций
+	$subCount = array(); //подкатегории - количество единиц
+	$sub = array(); //подкатегории - сумма руб.
+
 	foreach($spisok as $id => $r) {
+		$allPos += $r['pos'];
+		$allCount += $r['count'];
+		$allSum += round($r['sum'], 2);
 		if($parent_id = _tovarCategory($id, 'parent_id')) {
+			if(empty($mainPos[$parent_id]))
+				$mainPos[$parent_id] = 0;
 			if(empty($main[$parent_id]))
 				$main[$parent_id] = 0;
 			if(empty($mainCount[$parent_id]))
 				$mainCount[$parent_id] = 0;
 
+			if(empty($subPos[$parent_id]))
+				$subPos[$parent_id] = array();
 			if(empty($subCount[$parent_id]))
 				$subCount[$parent_id] = array();
 			if(empty($sub[$parent_id]))
 				$sub[$parent_id] = array();
 
+			$mainPos[$parent_id] += $r['pos'];
 			$mainCount[$parent_id] += $r['count'];
 			$main[$parent_id] += $r['sum'];
 
+			$subPos[$parent_id][$id] = $r['pos'];
 			$subCount[$parent_id][$id] = $r['count'];
 			$sub[$parent_id][$id] = round($r['sum'], 2);
 			continue;
 		}
 
+		if(empty($mainPos[$id]))
+			$mainPos[$id] = 0;
 		if(empty($mainCount[$id]))
 			$mainCount[$id] = 0;
 		if(empty($main[$id]))
 			$main[$id] = 0;
 
+		$mainPos[$id] += $r['pos'];
 		$mainCount[$id] += $r['count'];
 		$main[$id] += $r['sum'];
 
+		$subPos[$id][-1] = $r['pos'];
 		$subCount[$id][-1] = $r['count'];
 		$sub[$id][-1] = round($r['sum'], 2);
 
@@ -2028,13 +2059,17 @@ function _tovar_stat_spisok() {
 		'<div class="_info">ѕоказаны актуальные остатки по закупочной цене.</div>'.
 		'<table class="_spisokTab">'.
 			'<tr><th> атегори€'.
-				'<th class="w100"> оличество'.
+				'<th class="w100"> ол-во<br />позиций'.
+				'<th class="w100"> ол-во<br />единиц'.
 				'<th class="w100">—умма'.
 		'</table>';
+
 	foreach($main as $main_id => $mSum) {
 		$send .=
 			'<table class="_spisokTab mt1 over1" onclick="$(this).next().slideToggle()">'.
-				'<tr><td class="fs15 b curP">'._tovarCategory($main_id).
+				'<tr class="curP">'.
+					'<td class="fs15">'._tovarCategory($main_id).
+					'<td class="w100 fs14 center color-555">'._num($mainPos[$main_id]).
 					'<td class="w100 fs14 center color-555">'._ms($mainCount[$main_id]).
 					'<td class="w100 fs14 b r '.($mSum ? 'color-pay' : 'pale').'">'._sumSpace($mSum, 1).
 			'</table>';
@@ -2044,10 +2079,20 @@ function _tovar_stat_spisok() {
 			$send .=
 				'<tr class="over1">'.
 					'<td><a href="'.URL.'&p=8&category_id='.$main_id.'&sub_id='.$id.'">'._tovarCategory($id).'</a>'.
+					'<td class="w100 center color-555">'._num($subPos[$main_id][$id]).
 					'<td class="w100 center color-555">'._ms($subCount[$main_id][$id]).
 					'<td class="w100 r '.($sum ? 'color-pay' : 'pale').'">'._sumSpace($sum, 1);
 		$send .= '</table></div>';
 	}
+
+	$send .=
+		'<table class="_spisokTab mt1">'.
+			'<tr><td class="fs15 b r">ќбщий итог:'.
+				'<td class="w100 fs15 center color-555 b">'._sumSpace($allPos).
+				'<td class="w100 fs15 center color-555 b">'._sumSpace($allCount).
+				'<td class="w100 fs15 b r color-pay bg-dfd">'._sumSpace($allSum, 1).
+		'</table>';
+
 
 	return $send;
 }
