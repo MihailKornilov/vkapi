@@ -775,9 +775,9 @@ function _tovarInventory($forFilterCheck=0) {//инвентаризация товаров
 		'</div>'.
 		'<div class="bg-fee dn">'.
 			'<table class="pt10 pl10 bs5">'.
-				'<tr><td class="label">Не прошли инвентаризацию:<td><b class="color-555">'.$noInventory.'</b>'.
-				'<tr><td class="label">Всего прошли инвентаризацию:<td><b class="color-555">'.$yesInventory.'</b>'.
-				'<tr><td class="label">Списаны:<td><b class="color-555">'.$offInventory.'</b>'.
+				'<tr><td class="label">Не прошли инвентаризацию:<td><b class="color-555">'._sumSpace($noInventory).'</b>'.
+				'<tr><td class="label">Всего прошли инвентаризацию:<td><b class="color-555">'._sumSpace($yesInventory).'</b>'.
+				'<tr><td class="label">Списаны:<td><b class="color-555">'._sumSpace($offInventory).'</b>'.
 			'</table>'.
 			'<div id="inventory-stat" class="pad15"></div>'.
 		'</div>'.
