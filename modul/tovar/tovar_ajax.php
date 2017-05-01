@@ -619,6 +619,8 @@ switch(@$_POST['op']) {
 			'v1' => _ms($avai['count'])
 		));
 
+		_tovarInventoryFinish();
+
 		jsonSuccess();
 		break;
 
@@ -1434,6 +1436,8 @@ switch(@$_POST['op']) {
 			'v3' => $about
 		));
 
+		_tovarInventoryFinish();
+
 		jsonSuccess();
 		break;
 
@@ -1727,7 +1731,31 @@ function _tovar_category_vendor() {//список производителей
 	return _sel($vendorIds);
 }
 
+function _tovarInventoryFinish() {//проверка окончания инвентаризации
+	$sql = "SELECT `id`
+			FROM `_tovar_inventory`
+			WHERE `app_id`=".APP_ID."
+			  AND `dtime_end`='0000-00-00 00:00:00'
+			LIMIT 1";
+	if(!$inventory_id = query_value($sql))
+		return;
 
+	$sql = "SELECT COUNT(*)
+			FROM `_tovar_avai`
+			WHERE `app_id`=".APP_ID."
+			  AND `inventory`";
+	if(query_value($sql))
+		return;
+
+	$sql = "UPDATE `_tovar_inventory`
+			SET `dtime_end`=CURRENT_TIMESTAMP
+			WHERE `id`=".$inventory_id;
+	query($sql);
+
+	_history(array(
+		'type_id' => 172
+	));
+}
 
 
 

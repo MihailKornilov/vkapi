@@ -164,6 +164,7 @@ function _history_spisok($v=array()) {
 	end($history);
 	$keyEnd = key($history);
 	reset($history);
+	krsort($history);
 	foreach($history as $r) {
 		if(!$txt) {
 			$time = strtotime($r['dtime_add']);
