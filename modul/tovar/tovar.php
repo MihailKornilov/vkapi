@@ -632,26 +632,11 @@ function _tovarCatMenu($cat_id, $cc) {//фильтр - список категорий
 	'<div id="rightLinkMenu" class="rightLink">'.$spisok.'</div>';
 }
 function _tovar() {//8 - главная страница товаров
-	$sql = "SELECT *
-			FROM `_tovar_inventory`
-			WHERE `app_id`=".APP_ID."
-			  AND `dtime_end`='0000-00-00 00:00:00'
-			LIMIT 1";
-	$inventory = '';
-	if($r = query_assoc($sql))
-		$inventory =
-			'<div class="pad15 bg-fcc fs14 center">'.
-				'Запущена инвентаризация товаров. '.
-				'Начало: '.FullDataTime($r['dtime_start']).'. '.
-(VIEWER_ADMIN ? '<button onclick="_tovarInventoryCancel()" class="vk small'._tooltip('Отменить инвентаризацию', -55).'отменить</button>' : '').
-			'</div>';
-
-
 	$data = _tovar_spisok(_hashFilter('tovar'));
 	$v = $data['filter'];
 	return
 	'<div id="_tovar">'.
-		$inventory.
+		_tovarInventory().
 		'<table class="bs10 w100p bg-gr1 line-b">'.
 			'<tr>'.
 				'<td class="w230"><div id="find"></div>'.
@@ -669,7 +654,7 @@ function _tovar() {//8 - главная страница товаров
 
 		'<table class="w100p bg-gr1">'.
 			'<tr><td class="w200 top pad10">'.
-				($inventory ?
+				(_tovarInventory() ?
 					'<div class="mb20">'.
 						'<div class="f-label">Инвентаризация</div>'.
 						_check('inventory', 'Инвентаризация не пройдена', $v['inventory'], 1).
@@ -694,6 +679,84 @@ function _tovar() {//8 - главная страница товаров
 			'SUB_ID='.intval(@$_GET['sub_id']).';'.
 	'</script>';
 }
+function _tovarInventory() {//инвентаризация товаров
+	$sql = "SELECT *
+			FROM `_tovar_inventory`
+			WHERE `app_id`=".APP_ID."
+			  AND `dtime_end`='0000-00-00 00:00:00'
+			LIMIT 1";
+	if(!$r = query_assoc($sql))
+		return '';
+
+	//подтверждено наличие
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`,
+				COUNT(DISTINCT `tovar_id`) `count`
+			FROM `_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=171
+			  AND `dtime_add`>='".$r['dtime_start']."'
+			GROUP BY `day`
+			ORDER BY `day`";
+	$confirmSpisok = query_ass($sql);
+
+	//списания
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`,
+				COUNT(DISTINCT `tovar_id`) `count`
+			FROM `_history`
+			WHERE `app_id`=".APP_ID."
+			  AND `type_id`=109
+			  AND `dtime_add`>='".$r['dtime_start']."'
+			GROUP BY `day`
+			ORDER BY `day`";
+	$offSpisok = query_ass($sql);
+
+	//заполнение пустых дней
+	$start = strtotime(key($confirmSpisok));
+	$end = strtotime(TODAY);
+	while($end > $start) {
+		$start += 3600 * 24;
+		$day = strftime('%Y-%m-%d', $start);
+		if(!isset($confirmSpisok[$day]))
+			$confirmSpisok[$day] = 0;
+		if(!isset($offSpisok[$day]))
+			$offSpisok[$day] = 0;
+	}
+
+	ksort($confirmSpisok);
+	ksort($offSpisok);
+
+	$categories = array();
+	$data = array();
+	foreach($confirmSpisok as $day => $count) {
+		$categories[] = '"'.FullData($day, 1, 1).'"';
+		$data[] = $count;
+	}
+
+	$offData = array();
+	foreach($offSpisok as $day => $count)
+		$offData[] = $count;
+
+	return
+		'<script src="/.vkapp/.js/highcharts.js"></script>'.
+		'<div class="pad15 bg-fcc fs14 center">'.
+			'Запущена инвентаризация товаров. '.
+			'Начало: '.FullDataTime($r['dtime_start']).'. '.
+(VIEWER_ADMIN ? '<button onclick="_tovarInventoryCancel()" class="vk small'._tooltip('Отменить инвентаризацию', -55).'отменить</button>' : '').
+			'<div onclick="$(this).parent().next().slideToggle()" class="icon icon-stat fr'._tooltip('Процесс инвентаризации', -142, 'r').'</div>'.
+		'</div>'.
+		'<div class="pad20" id="inventory-stat"></div>'.
+		'<script>'.
+			'var SERIES=['.
+					'{name:"Прошедшие инвентаризацию",data:['.implode(',', $data).']},'.
+					'{name:"Списаны",data:['.implode(',', $offData).']},'.
+				'],'.
+				'CATEGORIES=['.implode(',', $categories).'];'.
+			'_tovarInventoryStat();'.
+		'</script>';
+}
+
 
 function _tovarFilter($v) {
 	$default = array(

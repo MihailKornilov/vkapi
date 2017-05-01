@@ -397,7 +397,38 @@ var _tovarEdit = function(o) {
 				t.show();
 		}, 'json');
 	},
-	
+	_tovarInventoryStat = function() {
+		Highcharts.chart('inventory-stat', {
+		    chart: {
+		        type: 'line'
+		    },
+		    title: {
+		        text: 'Товары, прошедшие инвентаризацию по каждому дню'
+		    },
+		    xAxis: {
+		        categories:CATEGORIES
+		    },
+		    yAxis: {
+		        title: {
+		            text: 'Количество товаров'
+		        }
+		    },
+			tooltip:{
+				crosshairs:true,
+				shared:true
+			},
+			plotOptions: {
+		        line: {
+		            dataLabels: {
+		                enabled: true
+		            },
+		            enableMouseTracking: true
+		        }
+		    },
+		    series:SERIES
+		});
+	},
+
 	_tovarStockMove = function() {
 		var dialog = _dialog({
 				top:20,

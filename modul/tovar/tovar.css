@@ -1,6 +1,14 @@
 /* кнопка дл€ манипул€ций с товарами */
 #but-tovar-selected{margin-top:-4px}
 
+/* статистика по инвентаризации */
+#inventory-stat{
+	display:none;
+	background-color:#fee;
+	border-bottom:4px solid #fcc;
+}
+
+
 
 /* ≈диница в списке товаров */
 .tovar-unit-check{
