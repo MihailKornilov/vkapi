@@ -1337,21 +1337,22 @@ function _clientFrom($id) {
 	return $arr[$id];
 }
 function _client_from() {//показ страницы Откуда пришёл клиент
+	$series = _client_from_stat_series();
 	return
-	'<div id="client-from" class="mar10">'.
+	'<div id="client-from" class="mar10 mb30">'.
 		'<div class="hd2 mt15">Источники, из которых приходят клиенты</div>'.
 
 		_client_from_setup().
 		'<button class="vk green fr mt10" onclick="clientFromEdit()">Добавить новый источник</button>'.
 		'<div id="spisok">'._client_from_spisok().'</div>'.
 
-		'<div class="mt30" id="from-stat"></div>'.
+		'<div class="mt30'.($series ? '' : ' dn').'" id="from-stat"></div>'.
 
 	'</div>'.
 	'<script src="/.vkapp/.js/highcharts.js"></script>'.
 	'<script>'.
 		'var CATEGORIES=['._client_from_stat_catgories().'],'.
-			'SERIES=['._client_from_stat_series().'];'.
+			'SERIES=['.$series.'];'.
 		'clientFromStat()'.
 	'</script>';
 }
@@ -1408,8 +1409,8 @@ function _client_from_stat_catgories($send_ass=0) {
 	$mon = strftime('%m');
 	$year = strftime('%Y') - 1;
 
-	$send = [];
-	$ass = [];
+	$send = array();
+	$ass = array();
 	for($n = 0; $n < 12; $n++) {
 		if(++$mon > 12) {
 			$mon = 1;
@@ -1434,7 +1435,7 @@ function _client_from_stat_series() {
 	if(!$from_ids = query_ids($sql))
 		return '';
 
-	$series = [];
+	$series = array();
 	foreach(_ids($from_ids, 1) as $from_id) {
 		$sql = "SELECT
 					DATE_FORMAT(`dtime_add`, '%Y-%m'),
@@ -1447,7 +1448,7 @@ function _client_from_stat_series() {
 				ORDER BY `dtime_add`";
 		$spisok = query_ass($sql);
 
-		$data = [];
+		$data = array();
 		foreach(_client_from_stat_catgories(1) as $mon) {
 			if(!isset($spisok[$mon])) {
 				$data[] = 0;
