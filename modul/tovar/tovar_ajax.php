@@ -738,6 +738,22 @@ switch(@$_POST['op']) {
 				SET `use_id`=".$tovar_id."
 				WHERE `use_id`=".$join_id;
 		query($sql);
+
+		//удаление дублирующихся применений
+		$sql = "DELETE FROM _tovar_use WHERE `id` IN (
+					SELECT id
+					FROM (
+						SELECT
+							id,
+							tovar_id,
+							COUNT(use_id) `cu`
+						FROM _tovar_use
+						GROUP BY tovar_id,use_id
+					) t
+					WHERE cu>1
+				)";
+		query($sql);
+
 		//характеристики
 		$sql = "UPDATE `_tovar_feature`
 				SET `tovar_id`=".$tovar_id."
