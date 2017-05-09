@@ -532,28 +532,14 @@ var setupOrgEdit = function(org_id) {
 	setupExpenseSubEdit = function(o) {
 		o = $.extend({
 			id:0,
+			cat_id:0,
 			name:''
 		}, o);
 
 		var t = $(this),
 			html = '<table class="bs10">' +
-					'<tr><td class="label r">Категория:<td><b>' + CAT_NAME + '</b>' +
-					'<tr><td class="label r">Подкатегория:<td><input type="text" id="name" class="w250" value="' + o.name + '" />' +
-					'<tr' + (o.id ? '' : ' class="dn"') + '>' +
-						'<td class="label r">Объединить:' +
-						'<td><input type="hidden" id="join" />' +
-					'<tr class="tr-join dn">' +
-						'<td><td>' +
-							'<div class="_info">' +
-								'При объединении категорий расходов выбранная категория станет общей с той, которая редактируется в данный момент. ' +
-								'Все записи перейдут в новую категорию, старая будет удалена.' +
-								'<br /><br />' +
-								'<b>Выберите категорию для объединения:</b>' +
-							'</div>' +
-					'<tr class="tr-join dn">' +
-						'<td class="label topi">С категорией:' +
-						'<td><input type="hidden" id="category_id-join" />' +
-							'<input type="hidden" id="category_sub_id-join" />' +
+					'<tr><td class="label r">Категория:<td><b>' + o.name + '</b>' +
+					'<tr><td class="label r">Подкатегория:<td><input type="text" id="name" class="w250" />' +
 				'</table>',
 			dialog = _dialog({
 				width:430,
@@ -564,45 +550,16 @@ var setupOrgEdit = function(org_id) {
 			});
 
 		$('#name').focus();
-		$('#join')._check({
-			func:function(v) {
-				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
-				if(v)
-					$('#category_id-join')._select({
-						width:218,
-						bottom:5,
-						title0:' категория не выбрана',
-						spisok:_copySel(EXPENSE_SPISOK, 1),
-						func:function(v) {
-							_expenseSub(v, 0, '-join', 218);
-						}
-					});
-			}
-		});
 
 		function submit() {
 			var send = {
 				op:'expense_category_sub_' + (o.id ? 'edit' : 'add'),
-				id:o.id,
-				category_id:CAT_ID,
-				name:$('#name').val(),
-				category_id_join:_num($('#category_id-join').val()),
-				category_sub_id_join:_num($('#category_sub_id-join').val())
+				category_id:o.cat_id,
+				name:$('#name').val()
 			};
-			if(!send.name) {
-				dialog.err('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success) {
-					$('#spisok').html(res.html);
-					dialog.close();
-					_msg();
-				} else
-					dialog.abort();
-			}, 'json');
+			dialog.post(send, function(res) {
+				$('#spisok').html(res.html);
+			});
 		}
 	},
 
@@ -1242,8 +1199,7 @@ var setupOrgEdit = function(org_id) {
 				_msg();
 		}, 'json');
 	},
-	
-	
+
 
 	setupSchetPay = function() {//настройка счетов на оплату
 		$('#schet-pay-use')._check(function(v) {
@@ -1479,6 +1435,14 @@ $(document)
 			id:t.attr('val'),
 			name:t.find('.name').html().replace(/\"/g, '&quot;'),
 			about:t.find('.about').html().replace(/\"/g, '&quot;')
+		});
+
+	})
+	.on('click', '#setup_expense .icon-add', function() {//добавление подкатегории расхода
+		var t = _parent($(this), 'DD');
+		setupExpenseSubEdit({
+			cat_id:t.attr('val'),
+			name:t.find('.name').html().replace(/\"/g, '&quot;')
 		});
 
 	})

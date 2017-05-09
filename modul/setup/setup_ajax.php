@@ -1376,19 +1376,17 @@ switch(@$_POST['op']) {
 
 	case 'expense_category_sub_add':
 		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
+			jsonError('Некорректный ID категории');
 
-		$name = _txt($_POST['name']);
-
-		if(empty($name))
-			jsonError();
+		if(!$name = _txt($_POST['name']))
+			jsonError('Не указано наименование');
 
 		$sql = "SELECT *
 				FROM `_money_expense_category`
 				WHERE `app_id`=".APP_ID."
 				  AND `id`=".$category_id;
 		if(!$r = query_assoc($sql))
-			jsonError();
+			jsonError('Категории не существует');
 
 		$sql = "INSERT INTO `_money_expense_category_sub` (
 					`app_id`,
@@ -1410,7 +1408,7 @@ switch(@$_POST['op']) {
 			'v2' => $name
 		));
 
-		$send['html'] = utf8(setup_expense_sub_spisok($category_id));
+		$send['html'] = utf8(setup_expense_spisok());
 		jsonSuccess($send);
 		break;
 	case 'expense_category_sub_edit':
