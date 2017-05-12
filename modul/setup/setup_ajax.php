@@ -1741,7 +1741,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gazeta_polosa');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['html'] = utf8(setup_polosa_spisok());
 		jsonSuccess($send);
@@ -1773,7 +1773,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		xcache_unset(CACHE_PREFIX.'gazeta_polosa');
-//		GvaluesCreate();
+		_appJsValues();
 
 		$send['html'] = utf8(setup_polosa_spisok());
 		jsonSuccess($send);
