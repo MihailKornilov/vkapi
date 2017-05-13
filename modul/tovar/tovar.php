@@ -635,6 +635,7 @@ function _tovar() {//8 - главная страница товаров
 	$data = _tovar_spisok(_hashFilter('tovar'));
 	$v = $data['filter'];
 	return
+	'<script src="/.vkapp/.js/highcharts.js"></script>'.
 	'<div id="_tovar">'.
 		_tovarInventory().
 		'<table class="bs10 w100p bg-gr1 line-b">'.
@@ -668,6 +669,12 @@ function _tovar() {//8 - главная страница товаров
 						'<div class="f-label mt20">Склад</div>'.
 						'<input type="hidden" id="fstock_id" value="'.$v['fstock_id'].'" />'.
 					'</div>'.
+
+					'<div class="mt30">'.
+						'<div onclick="_tovarImageAttachStat()" class="icon icon-stat mtm1 fr center'._tooltip('Статистика<br />загруженных изображений', -80, '', 1).'</div>'.
+						_check('noimage', 'Нет изображения', $v['noimage'], 1).
+					'</div>'.
+
 
 				'<td class="top">'.
 					'<div id="tovar-spisok" class="mt10 mr10 mb10">'.$data['spisok'].'</div>'.
@@ -766,7 +773,6 @@ function _tovarInventory($forFilterCheck=0) {//инвентаризация товаров
 	$offInventory = query_value($sql);
 
 	return
-		'<script src="/.vkapp/.js/highcharts.js"></script>'.
 		'<div class="pad15 bg-fcc fs14 center">'.
 			'Запущена инвентаризация товаров. '.
 			'Начало: '.FullData($r['dtime_start'], 1).'. '.
@@ -802,7 +808,8 @@ function _tovarFilter($v) {
 		'sub_id' => 0,
 		'fstock_id' => 0,
 		'avai' => 0,
-		'zakaz' => 0
+		'zakaz' => 0,
+		'noimage' => 0
 	);
 
 	$filter = array(
@@ -815,6 +822,7 @@ function _tovarFilter($v) {
 		'fstock_id' => _num(@$v['fstock_id']) ? $v['fstock_id'] : $default['fstock_id'],
 		'avai' => _num(@$v['avai']) ? $v['avai'] : $default['avai'],
 		'zakaz' => _num(@$v['zakaz']) ? $v['zakaz'] : $default['zakaz'],
+		'noimage' => _num(@$v['noimage']) ? $v['noimage'] : $default['noimage'],
 
 		'clear' => ''
 	);
@@ -882,6 +890,15 @@ function _tovarCategoryCount($filter) {//получение количества товаров для корнев
 		$cond .= " AND `bind`.`tovar_id` IN (".$ids.")";
 	}
 
+	if($filter['noimage']) {
+		$sql = "SELECT DISTINCT `unit_id`
+				FROM `_image`
+				WHERE `unit_name`='tovar'
+				  AND !`deleted`";
+		$ids = query_ids($sql);
+		$cond .= " AND `bind`.`tovar_id` NOT IN (".$ids.")";
+	}
+
 	$sql = "SELECT
 				`cat`.`id`,
 				COUNT(`bind`.`id`) `count`
@@ -940,6 +957,14 @@ function _tovar_spisok($v=array()) {
 	} elseif($filter['category_id'])
 		$cond .= " AND `bind`.`category_id` IN (".$filter['category_id'].","._tovarCategory($filter['category_id'], 'child_ids').")";
 
+	if($filter['noimage']) {
+		$sql = "SELECT DISTINCT `unit_id`
+				FROM `_image`
+				WHERE `unit_name`='tovar'
+				  AND !`deleted`";
+		$ids = query_ids($sql);
+		$cond .= " AND `bind`.`tovar_id` NOT IN (".$ids.")";
+	}
 
 	$sql = "SELECT COUNT(*) AS `all`
 			FROM `_tovar` `t`,

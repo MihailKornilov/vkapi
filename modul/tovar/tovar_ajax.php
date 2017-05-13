@@ -1497,6 +1497,49 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'tovar_image_attach_stat'://статистика загруженных картинок по товарам
+		$start = time() - 3600 * 24 * 30;//начало статистики месяц назад
+
+		$sql = "SELECT
+					DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`,
+					COUNT(DISTINCT `unit_id`) `count`
+				FROM `_image`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `unit_name`='tovar'
+				  AND `dtime_add`>'".strftime('%Y-%m-%d', $start)."'
+				GROUP BY `day`
+				ORDER BY `day`";
+		$spisok = query_ass($sql);
+
+		//заполнение пустых дней
+		$end = strtotime(TODAY);
+		while($start < $end) {
+			$start += 3600 * 24;
+			$day = strftime('%Y-%m-%d', $start);
+			if(!isset($spisok[$day]))
+				$spisok[$day] = 0;
+		}
+
+		ksort($spisok);
+
+		$categories = array();
+		$data = array();
+		foreach($spisok as $day => $count) {
+			$categories[] = utf8(FullData($day, 1, 1));
+			$data[] = $count;
+		}
+
+		$send['html'] = '<div id="tovar-image-attach-stat"></div>';
+		$send['series'][] = array(
+			'name' => utf8('Прикреплено картинок'),
+			'data' => $data
+		);
+		$send['categories'] = $categories;
+
+		jsonSuccess($send);
+		break;
 }
 
 function _tovarValuesCheck($tovar_id=0) {//проверка данных перед внесением или редактированием товара

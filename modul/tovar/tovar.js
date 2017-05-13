@@ -977,17 +977,65 @@ var _tovarEdit = function(o) {
 		TOVAR.category_id = CATEGORY_ID || CATEGORY_ID_DEF;
 		TOVAR.sub_id = SUB_ID;//подкатегория, полученная со статистики
 
-		$('#fstock_id')._select(0);  TOVAR.fstock_id = 0;
+		$('#fstock_id')._select(0); TOVAR.fstock_id = 0;
 		$('.filter-stock').slideUp();
 
 		$('#avai')._check(SUB_ID ? 1 : 0);  TOVAR.avai = SUB_ID;
-		$('#zakaz')._check(0);          TOVAR.zakaz = 0;
-		$('#inventory')._check(0);      TOVAR.inventory = 0;
+		$('#zakaz')._check(0);      TOVAR.zakaz = 0;
+		$('#inventory')._check(0);  TOVAR.inventory = 0;
+		$('#noimage')._check(0);    TOVAR.noimage = 0;
 
 		_tovarSpisok();
 
 		CATEGORY_ID = 0;
 		SUB_ID = 0;
+	},
+
+	_tovarImageAttachStat = function() {
+		var dialog = _dialog({
+				top:20,
+				width:700,
+				head:'Статистика прикреплённых изображений по товарам',
+				load:1,
+				butSubmit:''
+			}),
+			send = {
+				op:'tovar_image_attach_stat'
+			};
+
+		dialog.load(send, loaded);
+
+		function loaded(res) {
+			Highcharts.chart('tovar-image-attach-stat', {
+			    chart: {
+			        type: 'line'
+			    },
+			    title: {
+			        text: 'Статистика прикреплённых изображений по каждому дню'
+			    },
+			    xAxis: {
+			        categories:res.categories
+			    },
+			    yAxis: {
+			        title: {
+			            text: 'Количество картинок'
+			        }
+			    },
+				tooltip:{
+					crosshairs:true,
+					shared:true
+				},
+				plotOptions: {
+			        line: {
+			            dataLabels: {
+			                enabled: true
+			            },
+			            enableMouseTracking: true
+			        }
+			    },
+			    series:res.series
+			});
+		}
 	};
 
 $.fn.tovar = function(o) {
@@ -1638,6 +1686,7 @@ $(document)
 			});
 			$('#zakaz')._check(_tovarSpisok);
 			$('#inventory')._check(_tovarSpisok);
+			$('#noimage')._check(_tovarSpisok);
 			$('#fstock_id')._select({
 				width:200,
 				title0:'любой склад',
