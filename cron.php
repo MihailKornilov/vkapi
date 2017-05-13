@@ -14,6 +14,7 @@ require_once 'modul/vk/vk.php';
 //define('BR', '<br />');
 define('BR', "\n");
 define('VIEWER_ID', 0);
+define('VIEWER_ID_ADMIN', 0);
 define('CRON_MAIL', 'mihan_k@mail.ru');
 
 
@@ -83,7 +84,57 @@ function zp_accrual() {//начисление ставки сотрудникам
 	}
 	return $send;
 }
+function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (пока только ƒаше)
+	if(APP_ID != 2031819)
+		return '';
 
+	$year = strftime('%Y');
+	$mon = strftime('%m');
+
+	//вчерашний день
+	$yesterday = strftime('%Y-%m-%d', time() - 3600 *24);
+
+	$worker_id = 418627813;//ƒаша нова€
+
+	$sql = "SELECT COUNT(DISTINCT `unit_id`)
+			FROM `_image`
+			WHERE `app_id`=".APP_ID."
+			  AND `viewer_id_add`=".$worker_id."
+			  AND !`deleted`
+			  AND `unit_name`='tovar'
+			  AND `dtime_add` LIKE '".$yesterday." %'";
+	if(!$count = query_value($sql))
+		return '';
+
+	$about = 'ѕрикреплены изображени€ к '.$count.' товар'._end($count, 'у', 'ам');
+	$sum = $count * 1; //1 рубль за один товар
+
+	$sql = "INSERT INTO `_salary_accrual` (
+				`app_id`,
+				`worker_id`,
+				`sum`,
+				`about`,
+				`year`,
+				`mon`
+			) VALUES (
+				".APP_ID.",
+				139400639,
+				".$sum.",
+				'".$about."',
+				".$year.",
+				".$mon."
+			)";
+	query($sql);
+
+	_balans(array(
+		'action_id' => 19,
+		'worker_id' => 139400639,
+		'sum' => $sum,
+		'about' => $about
+	));
+
+	return BR.$about.BR;
+}
 
 
 
@@ -128,7 +179,7 @@ function _cronAppParse() {//прохождение по всем приложени€м
 			$send .= $r['id'].' - '.$r['title'].BR.$content;
 	}
 
-	_dbDump();
+//	_dbDump();
 
 	echo  $send;
 	exit;
@@ -147,5 +198,7 @@ function _cronSubmit() {//выполнение задач
 
 	define('CACHE_PREFIX', 'CACHE_'.APP_ID.'_');
 
-	echo  zp_accrual();
+	echo
+		zp_accrual().
+		zp_image_attach();
 }
