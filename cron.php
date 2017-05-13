@@ -179,7 +179,7 @@ function _cronAppParse() {//прохождение по всем приложениям
 			$send .= $r['id'].' - '.$r['title'].BR.$content;
 	}
 
-//	_dbDump();
+	_dbDump();
 
 	echo  $send;
 	exit;
