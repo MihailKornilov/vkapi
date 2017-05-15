@@ -1520,6 +1520,18 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8(_zayav_report_spisok($_POST));
 		jsonSuccess($send);
 		break;
+
+	case 'zayav_nomer_report':
+		if($nomer = _num(@$_POST['nomer']))
+			$year = _gn($nomer, 'year');
+		elseif($year = _num(@$_POST['gnyear']))
+			$nomer = _gn('first_year', $year);
+
+		$send['nomer_spisok'] = _zayav_nomer_report_gn($year, 'arr');
+		$send['nomer'] = $nomer;
+		$send['spisok'] = utf8(_zayav_nomer_report($nomer));
+		jsonSuccess($send);
+		break;
 }
 
 function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности полей при внесении/редактировании заявки

@@ -123,6 +123,7 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 			$arr[$r['id']] = array(
 				'general_nomer' => $r['general_nomer'],
 				'week' => $r['week_nomer'],
+				'year' => $pubex[0],
 				'day_print' => $r['day_print'],
 				'day_public' => $r['day_public'],
 				'day_public_1' => $pubex[2].'.'.$pubex[1].'.'.$pubex[0],
@@ -216,6 +217,18 @@ function _gn($nomer='all', $i='') {//Получение информации о всех номерах газеты 
 				'<em>'.$r['pub_count'].'</em>';
 		}
 		return $nomer == 'js_year_spisok' ? _selJson($gn) : _selArray($gn);
+	}
+
+	//первый номер в году
+	if($nomer == 'first_year') {
+		if(empty($arr))
+			return 0;
+
+		foreach($arr as $n => $r)
+			if($r['year'] == $i)
+				return $n;
+
+		return 0;
 	}
 
 	//первый активный номер
@@ -4104,9 +4117,153 @@ function _zayav_report_spisok($v=array()) {
 
 
 
+//отчёт о заявках по номеру газеты
+function _zayav_nomer_report($nomer=0) {
+	if(!$nomer)
+		$nomer = _gn('first');
+
+	$sql = "SELECT
+ 				COUNT(`id`) `count`,
+ 				SUM(`cena`) `sum`
+ 			FROM `_zayav_gazeta_nomer`
+ 			WHERE `gazeta_nomer_id`=".$nomer;
+	$all = query_assoc($sql);
 
 
+	$sql = "SELECT *
+			FROM `_zayav_service`
+			WHERE `app_id`=".APP_ID."
+			ORDER BY `id`";
+	if(!$service = query_arr($sql))
+		return _err('Виды деятельности отсутствуют.');
 
+
+	//поля, используемые в заявках - конкретно Номера газет (38)
+	$sql = "SELECT `service_id`,1
+			FROM `_zayav_pole_use`
+			WHERE `app_id`=".APP_ID."
+			  AND `pole_id`=38";
+	$ass38 = query_ass($sql);
+
+	$tr = '';
+	foreach($service as $r) {
+		if(!isset($ass38[$r['id']]))
+			continue;
+
+		$sql = "SELECT
+	                COUNT(`pub`.`id`) `count`,
+	                SUM(`pub`.`cena`) `sum`
+	            FROM `_zayav_gazeta_nomer` `pub`,
+	                 `_zayav` `z`
+	            WHERE `z`.`id`=`pub`.`zayav_id`
+	              AND `z`.`service_id`=".$r['id']."
+	              AND `pub`.`gazeta_nomer_id`=".$nomer;
+		$ass = query_assoc($sql);
+
+		$tr .=
+			'<tr class="over1">'.
+				'<td>'.$r['name'].':'.
+				'<td class="center">'.($ass['count'] ? $ass['count'] : '').
+				'<td class="r">'.($ass['count'] ? _sumSpace($ass['sum'], 1) : '');
+	}
+
+	$polosaRek = '';
+	$pc = _gn($nomer, 'pc');
+	for($n = 1; $n <= $pc; $n++) {
+		$sql = "SELECT
+ 				COUNT(`pub`.`id`) `count`,
+ 				SUM(`pub`.`cena`) `sum`,
+ 				SUM(`z`.`size_x`*`z`.`size_y`) `size`
+ 			FROM `_zayav_gazeta_nomer` `pub`,
+ 				 `_zayav` `z`
+ 			WHERE `z`.`id`=`pub`.`zayav_id`
+ 			  AND `z`.`service_id`=9
+ 			  AND ".($n == 1 ? "`dop`=1" :
+						($n == $pc ? "`dop`=2" : "`polosa`=".$n)
+					)."
+ 			  AND `pub`.`gazeta_nomer_id`=".$nomer;
+		$r = query_assoc($sql);
+
+		$polosaRek .= '<tr class="over1">'.
+			'<td class="center b fs15">'.$n.
+			'<td class="center">'.($r['count'] ? $r['count'] :'').
+			'<td class="r">'.($r['count'] ? round($r['sum'], 2).' руб.' :'').
+			'<td class="r">'.($r['count'] ? round($r['size']).' см&sup2' :'');
+	}
+
+	//полоса не указана
+	$sql = "SELECT
+ 				COUNT(`pub`.`id`) `count`,
+ 				SUM(`pub`.`cena`) `sum`,
+ 				SUM(`z`.`size_x`*`z`.`size_y`) `size`
+ 			FROM `_zayav_gazeta_nomer` `pub`,
+ 				 `_zayav` `z`
+ 			WHERE `z`.`id`=`pub`.`zayav_id`
+ 			  AND `z`.`service_id`=9
+ 			  AND `pub`.`dop`!=1
+ 			  AND `pub`.`dop`!=2
+ 			  AND !`pub`.`polosa`
+ 			  AND `pub`.`gazeta_nomer_id`=".$nomer;
+	$r = query_assoc($sql);
+	$polosaRek .= '<tr>'.
+		'<td>не указана'.
+		'<td><center>'.($r['count'] ? $r['count'] :'').'</center>'.
+		'<td class="r">'.($r['count'] ? _sumSpace($r['sum'], 1).' руб.' :'').
+		'<td class="r">'.($r['count'] ? round($r['size']).' см&sup2' :'');
+
+
+	return
+	'<div class="mar10">'.
+		'<div class="hd2">'.
+			'Отчёт по заявкам за номер <b>'._gn($nomer, 'week').'</b> ('._gn($nomer, 'general_nomer').'), '.
+			'дата выхода газеты '._gn($nomer, 'day_public_1').':'.
+		'</div>'.
+		'<table class="_spisokTab w350">'.
+			'<tr>'.
+				'<th>'.
+				'<th class="w70">Количество'.
+				'<th class="w100">Сумма<br />руб.'.
+			$tr.
+			'<tr class="bg-ffd">'.
+				'<td><b>Всего</b>:<td><center><b>'.$all['count'].'</b></center><td class="r"><b>'._sumSpace($all['sum'], 1).'<b>'.
+		'</table>'.
+
+		'<div class="hd2 mt30">Реклама по полосам:</div>'.
+		'<table class="_spisokTab w450">'.
+			'<tr><th class="w70">Полоса'.
+				'<th class="w100">Количество'.
+				'<th>Стоимость'.
+				'<th>Площадь'.
+			$polosaRek.
+		'</table>'.
+	'</div>';
+}
+function _zayav_nomer_report_right() {
+	return
+	'<div class="findHead">Номер газеты</div>'.
+	'<input type="hidden" id="gnyear" />'.
+	'<input type="hidden" id="nomer" value="'._gn('first').'" />'.
+	'<script>'.
+		'var GN_SEL='._zayav_nomer_report_gn($year=strftime('%Y')).';'.
+		'_zayavReportKupez();'.
+	'</script>';
+}
+function _zayav_nomer_report_gn($year, $i='js') {
+	$spisok = array();
+	$sql = "SELECT `id`
+			FROM `_setup_gazeta_nomer`
+			WHERE `app_id`=".APP_ID."
+			  AND `day_public` LIKE '".$year."-%'";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] =
+			_gn($r['id'], 'week').' ('._gn($r['id'], 'general_nomer').'), '._gn($r['id'], 'day_public_1');
+
+	if($i == 'arr')
+		return _sel($spisok);
+
+	return _selJson($spisok);
+}
 
 
 

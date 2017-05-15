@@ -1350,6 +1350,29 @@ var _zayavReady = function() {//страница со списком заявок загружена
 		}, 'json');
 	},
 
+	_zayavReportKupez = function() {//временный отчёт по заявкам для Купца
+		$('#gnyear')._yearLeaf({func:_zayavReportKupezSpisok});
+		$('#nomer')._select({
+			width:180,
+			spisok:GN_SEL,
+			func:_zayavReportKupezSpisok
+		});
+	},
+	_zayavReportKupezSpisok = function(v, id) {
+		var send = {
+			op:'zayav_nomer_report'
+		};
+		send[id] = v;
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success) {
+				$('.left').html(res.spisok);
+				$('#nomer')
+					._select(res.nomer_spisok)
+					._select(res.nomer);
+			}
+		}, 'json');
+	},
+
 	_zayavTovarZakazAdd = function(t, tovar_id) {//добавление товара в заказ в заявке
 		if(t.hasClass('_busy'))
 			return;
