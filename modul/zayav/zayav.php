@@ -4187,7 +4187,7 @@ function _zayav_nomer_report($nomer=0) {
 		$polosaRek .= '<tr class="over1">'.
 			'<td class="center b fs15">'.$n.
 			'<td class="center">'.($r['count'] ? $r['count'] :'').
-			'<td class="r">'.($r['count'] ? round($r['sum'], 2).' руб.' :'').
+			'<td class="r">'.($r['count'] ? _sumSpace($r['sum'], 1) :'').
 			'<td class="r">'.($r['count'] ? round($r['size']).' см&sup2' :'');
 	}
 
@@ -4205,10 +4205,10 @@ function _zayav_nomer_report($nomer=0) {
  			  AND !`pub`.`polosa`
  			  AND `pub`.`gazeta_nomer_id`=".$nomer;
 	$r = query_assoc($sql);
-	$polosaRek .= '<tr>'.
-		'<td>не указана'.
-		'<td><center>'.($r['count'] ? $r['count'] :'').'</center>'.
-		'<td class="r">'.($r['count'] ? _sumSpace($r['sum'], 1).' руб.' :'').
+	$polosaRek .= '<tr class="over1">'.
+		'<td class="center">полоса<br />не указана'.
+		'<td class="center">'.($r['count'] ? $r['count'] :'').
+		'<td class="r">'.($r['count'] ? _sumSpace($r['sum'], 1) :'').
 		'<td class="r">'.($r['count'] ? round($r['size']).' см&sup2' :'');
 
 
@@ -4232,7 +4232,7 @@ function _zayav_nomer_report($nomer=0) {
 		'<table class="_spisokTab w450">'.
 			'<tr><th class="w70">Полоса'.
 				'<th class="w100">Количество'.
-				'<th>Стоимость'.
+				'<th>Сумма<br />руб.'.
 				'<th>Площадь'.
 			$polosaRek.
 		'</table>'.
