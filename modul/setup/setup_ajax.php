@@ -2612,6 +2612,8 @@ switch(@$_POST['op']) {
 }
 
 function setup_status_next_insert($status_id, $post) {
+	if(empty($post['next_ids']))
+		return;
 	if(!$ids = _ids($post['next_ids'], 1))
 		return;
 

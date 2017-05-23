@@ -1044,17 +1044,17 @@ var setupOrgEdit = function(org_id) {
 			}
 		});
 		$('#default_check').vkHint({
-			top:-70,
-			left:-100,
-			width:210,
+			top:-75,
+			left:-119,
+			width:250,
 			msg:'Автоматически присваивать данный<br />' +
 				'статус при внесении новой заявки.'
 		});
 		$('#nouse')._check();
 		$('#nouse_check').vkHint({
-			top:-83,
-			left:-86,
-			width:180,
+			top:-90,
+			left:-104,
+			width:220,
 			msg:'После выбора другого статуса<br />' +
 				'данный статус нельзя будет<br />' +
 				'выбрать снова.'
