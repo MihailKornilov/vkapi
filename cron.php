@@ -91,8 +91,11 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 	$year = strftime('%Y');
 	$mon = strftime('%m');
 
-	//вчерашний день
-	$yesterday = strftime('%Y-%m-%d', time() - 3600 *24);
+	//позавчера
+	$beforeYesterday = strftime('%Y-%m-%d', time() - 3600 * 48);
+
+	//вчера
+	$yesterday = strftime('%Y-%m-%d', time() - 3600 * 24);
 
 	$worker_id = 418627813;//Даша новая
 
@@ -106,8 +109,17 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 	if(!$count = query_value($sql))
 		return '';
 
+	$sql = "SELECT COUNT(DISTINCT `unit_id`)
+			FROM `_image`
+			WHERE `app_id`=".APP_ID."
+			  AND `viewer_id_add`=".$worker_id."
+			  AND !`deleted`
+			  AND `unit_name`='tovar'
+			  AND `dtime_add` LIKE '".$beforeYesterday." %'";
+	$countBYD = query_value($sql);//количество изображений за позавчера
+
 	$about = 'Прикреплены изображения к '.$count.' товар'._end($count, 'у', 'ам');
-	$sum = $count * 1; //1 рубль за один товар
+	$sum = round($count * ($countBYD >= 100 ? 1.5 : 1)); //1-1.5 рубль за один товар
 
 	$sql = "INSERT INTO `_salary_accrual` (
 				`app_id`,
