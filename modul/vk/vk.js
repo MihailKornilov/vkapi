@@ -1540,7 +1540,8 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			rtf:'текстовый Word',
 			pdf:'Adobe Acrobat Reader',
 			jpg:'изображение в формате JPG',
-			png:'изображение в формате PNG'
+			png:'изображение в формате PNG',
+			'-sto':'ѕроeкт PRO100'
 		},
 		mime = {
 			xls:'application/vnd.ms-excel',
@@ -1550,7 +1551,8 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			rtf:'application/rtf',
 			pdf:'application/pdf',
 			jpg:'image/jpeg',
-			png:'image/png'
+			png:'image/png',
+			'-sto':'application/octet-stream'
 		};
 
 	if(!attr_id)

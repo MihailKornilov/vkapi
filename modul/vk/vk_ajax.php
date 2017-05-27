@@ -86,6 +86,7 @@ switch(@$_POST['op']) {
 			case 'application/pdf':             //pdf
 			case 'image/jpeg':
 			case 'image/png':
+			case 'application/octet-stream':    //pro100    .-sto
 				break;
 			default: setcookie('_attached', 2, time() + 3600, '/'); exit;
 		}
