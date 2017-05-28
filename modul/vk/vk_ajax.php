@@ -110,6 +110,14 @@ switch(@$_POST['op']) {
 			query($sql);
 
 			$id = query_insert_id('_attach');
+/*
+			$res = _vkapi('docs.getUploadServer', array(
+//				'group_id' => 28447634,
+				'access_token' => 'bf37a3f3786da53ba73bdb0929afc2cb7973b16626e1023716d7bea2ba056abb276a5fa803a1afe014b84'
+			));
+			print_r($res);
+*/
+
 
 			setcookie('_attached', 1, time() + 3600, '/');
 			setcookie('_attached_id', $id, time() + 3600, '/');

@@ -1629,7 +1629,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 					'</form>' +
 					'<button class="vk">Выбрать файл</button>' +
 				'</h1>' +
-				'<iframe name="attach-frame"></iframe>' +
+				'<iframe name="attach-frame"' + (APP_ID == 5744775 ? ' style="display:block"' : '') + '></iframe>' +
 				'<table id="tab">' +
 					'<tr><td class="label r">Название файла:<td><input type="text" id="attach-name" class="w250" />' +
 					'<tr><td class="label r">Размер:<td><b id="size">0</b> Кб' +
@@ -1649,8 +1649,24 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			file = $('#file'),
 			timer;
 
+//		VK.callMethod('showSettingsBox', 131072);
+/*
 
+		VK.api('account.getAppPermissions', {}, function (data) {//получение прав доступа к странице пользователя
+			console.log(data);
+		});
 
+		VK.api('docs.getUploadServer', {group_id:28447634}, function (data) {
+			console.log(form.attr('action'));
+			form.attr('action', data.response.upload_url);
+			console.log(form.attr('action'));
+
+//			alert('upload_url: ' + data.response.upload_url);
+		});
+*/
+		//https://pu.vk.com/c816225/upload.php?act=add_doc&mid=982006&aid=0&gid=0&type=0&hash=9beef046d3c35c492d0b2c9cf2f3a085&rhash=79b8ca3602d7f591427ac4dbde599ff5&api=1
+		//https://pu.vk.com/c816731/upload.php?act=add_doc&mid=982006&aid=0&gid=28447634&type=0&hash=936495924120a16d34cd396ca2b05a6b&rhash=991cd2bf099935dd88aeab0e8bf6c601&api=1
+		//https://pu.vk.com/c812628/upload.php?act=add_doc&mid=982006&aid=0&gid=28447634&type=0&hash=2be61cee3626e5f3985d962e6252523b&rhash=7c3e46972a7f2d3e8f56469bb6e627e1&api=1
 		file.change(function() {
 			file.css('visibility', 'hidden');
 			but.addClass('_busy');
