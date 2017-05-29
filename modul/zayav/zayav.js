@@ -779,7 +779,7 @@ var _zayavReady = function() {//страница со списком за€вок загружена
 	_zayavDogovorCreate = function() {
 		var o = $.extend({
 			id:0,
-			template_id:0,
+			template_id:255,
 			fio:'',
 			adres:'',
 			pasp_seria:'',
@@ -821,8 +821,12 @@ var _zayavReady = function() {//страница со списком за€вок загружена
 							'<input type="text" id="avans_sum" class="money mt10" value="' + o.avans_sum + '"' + (o.avans_hide ? ' disabled' : '') + ' /> руб. ' +
 						'</div>' +
 				'</table>' +
+
+			(APP_ID != 6044422 ?
 				'<div id="preview" class="center pad10 mt10 over1 curP color-555">ѕредварительный просмотр договора</div>' +
-				'<form action="' + AJAX_MAIN + '" method="post" id="preview-form" target="_blank"></form>',
+				'<form action="' + AJAX_MAIN + '" method="post" id="preview-form" target="_blank"></form>'
+			: ''),
+
 			dialog = _dialog({
 				width:550,
 				top:10,
@@ -859,7 +863,7 @@ var _zayavReady = function() {//страница со списком за€вок загружена
 				op:'dogovor_' + (o.id ? 'edit' : 'create'),
 				id:o.id,
 				zayav_id:ZI.id,
-				template_id:DOG.template_id,
+				template_id:o.template_id,
 				fio:$('#fio').val(),
 				adres:$('#adres').val(),
 				pasp_seria:$('#pasp_seria').val(),
@@ -2504,6 +2508,14 @@ $(document)
 				} else {
 					name.push('»зменить данные договора');
 					action.push(_zayavDogovorCreate);
+					name.push('–асторгнуть договор');
+					action.push(_zayavDogovorTerminate);
+				}
+			}
+			if(ZI.pole[58]) {
+				name.push(DOG.id ? '»зменить данные договора' : '«аключить договор');
+				action.push(_zayavDogovorCreate);
+				if(DOG.id) {
 					name.push('–асторгнуть договор');
 					action.push(_zayavDogovorTerminate);
 				}

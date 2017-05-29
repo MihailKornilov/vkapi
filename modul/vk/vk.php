@@ -2436,6 +2436,7 @@ function _templateVar() {//формирование переменных шаблона
 	$varSpisok = _templateIncome($varSpisok);   //платёж
 	$varSpisok = _templateClient($varSpisok);   //клиент
 	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
+	$varSpisok = _templateDogovor($varSpisok);  //договор
 
 	$var = array();
 	foreach($varSpisok as $r)
@@ -2609,7 +2610,7 @@ function _templateClientIdDefine($client_id) {//Получение id клиента, если не бы
 	if(!defined('TEMPLATE_CLIENT_ID'))
 		define('TEMPLATE_CLIENT_ID', $client_id);
 }
-function _templateClient($arr) {//подмена переменных одного платежа
+function _templateClient($arr) {//подмена переменных клиента
 
 	if(!defined('TEMPLATE_CLIENT_ID'))
 		return $arr;
@@ -2627,6 +2628,32 @@ function _templateClient($arr) {//подмена переменных одного платежа
 			continue;
 
 		$arr[$id]['text'] = htmlspecialchars_decode($client[$r['col_name']]);
+	}
+
+	return $arr;
+}
+function _templateDogovor($arr) {//подмена переменных договора
+	if(!$dogovor_id = _num(@$_GET['dogovor_id']))
+		return $arr;
+		
+	$sql = "SELECT *
+			FROM `_zayav_dogovor`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".$dogovor_id;
+	if(!$dog = query_assoc($sql))
+		return $arr;
+
+	foreach($arr as $id => $r) {
+		if($r['table_name'] != '_zayav_dogovor')
+			continue;
+
+		if($r['v'] == '{DOGOVOR_CREATE}') {
+			$ex = explode('-', $dog[$r['col_name']]);
+			$dog[$r['col_name']] = '«'.$ex[2].'» '._monthFull($ex[1]).' '.$ex[0];
+		}
+
+		$arr[$id]['text'] = htmlspecialchars_decode($dog[$r['col_name']]);
 	}
 
 	return $arr;

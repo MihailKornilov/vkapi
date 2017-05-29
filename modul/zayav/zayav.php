@@ -2345,7 +2345,11 @@ function _zayavDogovor($z) {//отображение номера договора
 	$title = 'от '._dataDog($r['data_create']).' г. на сумму '._cena($r['sum']).' руб.';
 
 	return '<b class="dogn'._tooltip($title, -7, 'l').'№'.$r['nomer'].'</b> '.
-			'<a href="'.LINK_DOGOVOR.'/'.$r['link'].'.doc" class="img_word'._tooltip('Распечатать', -41).'</a>';
+		(APP_ID == 6044422 ?
+			'<a href="'.URL.'&p=75&d=template&template_id=18&dogovor_id='.$r['id'].'" class="img_word'._tooltip('Распечатать', -41).'</a>'
+		:
+			'<a href="'.LINK_DOGOVOR.'/'.$r['link'].'.doc" class="img_word'._tooltip('Распечатать', -41).'</a>'
+		);
 }
 function _zayavDogovorJs($z) {
 	if(!$z['dogovor_id']) {
@@ -2458,7 +2462,8 @@ function _zayavDogovorFilter($v) {//проверка всех введённых данных по договору
 	return $send;
 }
 function _zayavDogovorPrint($v) {
-	require_once(GLOBAL_DIR.'/inc/clsMsDocGenerator.php');
+	if(!is_dir(PATH_DOGOVOR))
+		mkdir(PATH_DOGOVOR, 0777, true);
 
 	$income_id = 0;
 	if(!is_array($v)) {
@@ -2482,6 +2487,19 @@ function _zayavDogovorPrint($v) {
 		}
 	}
 
+	$v['sum'] = _cena($v['sum']);
+	$v['avans'] = _cena($v['avans']);
+	$dopl = $v['sum'] - $v['avans'];
+	$dopl = $dopl < 0 ? 0 : $dopl;
+	$adres = $v['pasp_adres'] ? $v['pasp_adres'] : $v['adres'];
+
+	if(APP_ID == 6044422) {
+		_zayavDogovorPrint_6044422_mebel();
+		return;
+	}
+
+
+
 	define('TEMPLATE_2', $v['template_id'] == 2);
 
 	$ex = explode(' ', $v['fio']);
@@ -2489,6 +2507,7 @@ function _zayavDogovorPrint($v) {
 				 (isset($ex[1]) ? ' '.$ex[1][0].'.' : '').
 				 (isset($ex[2]) ? ' '.$ex[2][0].'.' : '');
 
+	require_once(GLOBAL_DIR.'/inc/clsMsDocGenerator.php');
 	$doc = new clsMsDocGenerator(
 		$pageOrientation = 'PORTRAIT',
 		$pageType = 'A4',
@@ -2498,12 +2517,6 @@ function _zayavDogovorPrint($v) {
 		$bottomMargin = 1,
 		$leftMargin = 1
 	);
-
-	$v['sum'] = _cena($v['sum']);
-	$v['avans'] = _cena($v['avans']);
-	$dopl = $v['sum'] - $v['avans'];
-	$dopl = $dopl < 0 ? 0 : $dopl;
-	$adres = $v['pasp_adres'] ? $v['pasp_adres'] : $v['adres'];
 
 	$doc->addParagraph(
 	'<div class="head-name">'.
@@ -2654,10 +2667,13 @@ function _zayavDogovorPrint($v) {
 		$doc->addParagraph(_incomeReceipt($income_id));
 	}
 
-	if(!is_dir(PATH_DOGOVOR))
-		mkdir(PATH_DOGOVOR, 0777, true);
-
 	$doc->output($v['link'], @$v['save'] ? PATH_DOGOVOR : '');
+}
+function _zayavDogovorPrint_6044422_mebel() {//формирование договора для Мебельной фабрики
+	return;
+	$_GET['template_id'] = 18;
+	$_GET['dogovor_id'] = 1474;
+	_template();
 }
 function _zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 	if(!$zayav_id)

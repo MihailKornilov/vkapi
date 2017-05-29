@@ -859,8 +859,8 @@ switch(@$_POST['op']) {
 		_salaryZayavCheck($v['zayav_id']);
 		_salaryZayavBonus($v['zayav_id']);
 
-
-		unlink(PATH_DOGOVOR.'/'.$dog['link'].'.doc');
+		if(file_exists(PATH_DOGOVOR.'/'.$dog['link'].'.doc'))
+			unlink(PATH_DOGOVOR.'/'.$dog['link'].'.doc');
 
 		$changes =
 			_historyChange('ิศฮ', $dog['fio'], $v['fio']).
