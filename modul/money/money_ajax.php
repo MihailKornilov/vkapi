@@ -170,7 +170,7 @@ switch(@$_POST['op']) {
 		$insert_id = query_insert_id('_money_income');
 
 		//баланс дл€ расчЄтного счЄта
-		if(!$confirm && $dtime_add == TODAY)
+		if(!$confirm)// && $dtime_add == TODAY
 			_balans(array(
 				'action_id' => 1,
 				'invoice_id' => $invoice_id,
@@ -228,7 +228,7 @@ switch(@$_POST['op']) {
 			jsonError('ѕлатежа не существует');
 
 		//если платЄж уже подтверждЄн
-		if($r['confirm'] == 2)
+		if($r['confirm'] == 2 && !DEBUG)
 			jsonError('ѕлатЄж был подтверждЄн');
 
 		if(!DEBUG)
@@ -702,15 +702,17 @@ switch(@$_POST['op']) {
 		
 		
 
+		expense_dtime_old_update_for_kupez($invoice_id, $insert_id, $sum);//todo баланс обновл€етс€, если сегодн€шн€€ дата
+
+
 		//истори€ баланса дл€ расчЄтного счЄта
-		if(!expense_dtime_old_update_for_kupez($invoice_id, $insert_id, $sum))//todo баланс обновл€етс€, если сегодн€шн€€ дата
-			_balans(array(
-				'action_id' => 6,
-				'invoice_id' => $invoice_id,
-				'sum' => $sum,
-				'expense_id' => $insert_id,
-				'about' => $about
-			));
+		_balans(array(
+			'action_id' => 6,
+			'invoice_id' => $invoice_id,
+			'sum' => $sum,
+			'expense_id' => $insert_id,
+			'about' => $about
+		));
 
 		//истори€ баланса дл€ сотрудника
 		if($worker_id)
@@ -863,7 +865,7 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError('–асхода не существует');
 
-		if(TODAY != substr($r['dtime_add'], 0, 10))
+		if(TODAY != substr($r['dtime_add'], 0, 10) && !DEBUG)
 			if(APP_ID != 3495523)   //todo временно дл€  упца
 				jsonError('¬рем€ дл€ удалени€ расхода истекло');
 
@@ -3066,20 +3068,20 @@ function expense_dtime_old_update_for_kupez($invoice_id, $expense_id, $sum) {//t
 	if(!preg_match(REGEXP_DATE, $dtime_add))
 		return false;
 	
-	if($dtime_add == TODAY)
-		return false;
+//	if($dtime_add == TODAY)
+//		return false;
 	
 	$sql = "UPDATE `_money_expense`
 			SET `dtime_add`='".$dtime_add.' '.strftime('%H:%M:%S')."'
 			WHERE `id`=".$expense_id;
 	query($sql);
-
+/*
 	//корректировка баланса счЄта: должен остатьс€ неизменным
 	$sql = "UPDATE `_money_invoice`
 			SET `start`=`start`-".$sum."
 			WHERE `id`=".$invoice_id;
 	query($sql);
-
+*/
 	xcache_unset(CACHE_PREFIX.'invoice');
 
 	return true;
