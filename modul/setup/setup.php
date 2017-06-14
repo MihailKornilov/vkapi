@@ -371,6 +371,14 @@ function setup_worker_razdel_rule_sub($viewer_id, $arr, $rule) {//дочерние разде
 			'</div>';
 		}
 
+		//Деньги - Платежи
+		if($s['id'] == 47) {
+			$sub2 .=
+			'<div class="mt5">'.
+				_check('RULE_INCOME_FILTER_MON', _ruleCache('RULE_INCOME_FILTER_MON'), $rule['RULE_INCOME_FILTER_MON'], 1).
+			'</div>';
+		}
+
 		//Деньги - Расчётные счета
 		if($s['id'] == 51) {
 			$sub2 .=

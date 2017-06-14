@@ -29,10 +29,20 @@ function _calendarFilter($data=array()) {
 	: '').
 		'<table class="data">'.
 			'<tr>'.($data['norewind'] ? '' : '<td class="ch" val="'.$back.'">&laquo;').
-				'<td><a val="'.$data['month'].'"'.($data['month'] == $data['sel'] ? ' class="sel"' : '').'>'._monthDef($SHOW_MON).'</a> '.
+				'<td>'.
+					(RULE_INCOME_FILTER_MON ?
+						'<a val="'.$data['month'].'"'.($data['month'] == $data['sel'] ? ' class="sel"' : '').'>'._monthDef($SHOW_MON).'</a> '
+						:
+						_monthDef($SHOW_MON)
+					).
 					($data['norewind'] ? '' :
-						'<a val="'.$SHOW_YEAR.'"'.($SHOW_YEAR == $data['sel'] ? ' class="sel"' : '').'>'.$SHOW_YEAR.'</a>'.
-					'<td class="ch" val="'.$next.'">&raquo;').
+						(RULE_INCOME_FILTER_MON ?
+							'<a val="'.$SHOW_YEAR.'"'.($SHOW_YEAR == $data['sel'] ? ' class="sel"' : '').'>'.$SHOW_YEAR.'</a>'
+							:
+							'<span class="ml5">'.$SHOW_YEAR.'</span>'
+						).
+						'<td class="ch" val="'.$next.'">&raquo;'
+					).
 		'</table>'.
 		'<table class="month">'.
 			'<tr class="week-name">'.
