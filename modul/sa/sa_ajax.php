@@ -378,7 +378,7 @@ switch(@$_POST['op']) {
 		$v = _num($_POST['v']);
 
 		if($value_name != 'admin' && $value_name != 'worker')
-			jsonError();
+			jsonError('');
 
 		$sql = "SELECT * FROM `_vkuser_rule_default` WHERE `id`=".$id;
 		if(!$r = query_assoc($sql))

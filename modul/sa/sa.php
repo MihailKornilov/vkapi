@@ -401,8 +401,8 @@ function sa_rule_spisok() {
 				'<td class="topi">'.
 					'<div class="name b">'.$r['name'].'</div>'.
 					'<div class="about grey ml10 mt5">'.$r['about'].'</div>'.
-				'<td class="center"><input type="text" id="admin'.$r['id'].'"  class="w35 center b color-pay" value="'.$r['value_admin'].'" maxlength="3" />'.
-				'<td class="center"><input type="text" id="worker'.$r['id'].'" class="w35 center b color-pay" value="'.$r['value_worker'].'" maxlength="3" />'.
+				'<td class="admin center"><input type="text" id="admin'.$r['id'].'"  class="w35 center b color-pay" value="'.$r['value_admin'].'" maxlength="3" />'.
+				'<td class="worker center"><input type="text" id="worker'.$r['id'].'" class="w35 center b color-pay" value="'.$r['value_worker'].'" maxlength="3" />'.
 				'<td class="wsnw">'.
 					'<div class="icon icon-edit"></div>'.
 					'<div class="icon icon-del"></div>';

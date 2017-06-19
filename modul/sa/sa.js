@@ -1199,7 +1199,7 @@ $(document)
 			send = {
 				op:'sa_rule_flag',
 				id:td.parent().attr('val'),
-				value_name: td.attr('class'),
+				value_name:td.attr('class').split(' ')[0],
 				v:_num(t.val())
 			};
 		if(td.hasClass('_busy'))
