@@ -237,7 +237,14 @@ function salary_month_list($v) {
 
 	$mon = array();
 	foreach(_monthDef(0, 1) as $i => $r)
-		$mon[$i] = $r.($acc[$i] || $zp[$i]? '<em>'.$acc[$i].'/'.$zp[$i].'</em>' : '');
+		$mon[$i] =
+			$r.($acc[$i] || $zp[$i] ?
+				'<div class="fr">'.
+					'<span class="color-acc fs11'._tooltip('Начислено', -30)._sumSpace($acc[$i]).'</span>'.
+					'<span class="ml3 mr3">|</span>'.
+					'<span class="color-pay fs11'._tooltip('З/п выдана', -50, 'r')._sumSpace($zp[$i]).'</span>'.
+				'</div>'
+			: '');
 	return _radio('salmon', $mon, $filter['mon'], 1);
 }
 function salaryFilter($v) {
