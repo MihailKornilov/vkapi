@@ -681,16 +681,15 @@
 #zayav-report #spisok{margin:10px 0}
 #zayav-report .unit:hover{background:#ffd}
 #zayav-report .dtime{width:30px}
-#zayav-report .nomer{width:35px}
 #zayav-report .name{width:120px}
 #zayav-report .dog{width:35px}
 #zayav-report .adres{width:120px}
 #zayav-report .executer{width:110px}
 #zayav-report .executer a{font-size:10px}
-#zayav-report .sum-cost{width:50px;font-weight:bold}
-#zayav-report .sum-accrual{width:50px;font-weight:bold;color:#07a}
-#zayav-report .sum-pay{width:50px;font-weight:bold;color:#090}
-#zayav-report .sum-dolg{width:50px;font-weight:bold;color:#090}
+#zayav-report .sum-cost{width:50px}
+#zayav-report .sum-accrual{width:50px;color:#07a}
+#zayav-report .sum-pay{width:50px;color:#090}
+#zayav-report .sum-dolg{width:50px;color:#090}
 #zayav-report .sum-dolg.minus{color:#c33}
 #zayav-report .sum-expense{width:40px}
 #zayav-report .sum-profit{width:40px;color:#090}

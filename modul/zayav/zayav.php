@@ -4032,7 +4032,7 @@ function _zayav_report_cols_set() {
 function _zayav_report_cols($id=false) {//отображаемые поля списка заявок
 	$arr = array(
 		1 => 'Дата',
-		2 => 'Номер заявки',
+		2 => 'Номер<br />заявки',
 		3 => 'Название',
 		4 => '№ дог.',
 		5 => 'Клиент',
@@ -4087,6 +4087,12 @@ function _zayav_report_spisok($v=array()) {
 	foreach($colsAss as $id => $r)
 		$send .= '<th>'._zayav_report_cols($id);
 
+	$summaAccrual = 0;
+	$summaPay = 0;
+	$summaDolg = 0;
+	$summaExpense = 0;
+	$summaProfit = 0;
+
 	foreach($zayav as $id => $r) {
 		$sum_cost = _cena($r['sum_cost']) ? _sumSpace($r['sum_cost']) : '';
 		$sum_accrual = _cena($r['sum_accrual']) ? _sumSpace($r['sum_accrual']) : '';
@@ -4095,10 +4101,10 @@ function _zayav_report_spisok($v=array()) {
 		$sum_expense = _cena($r['sum_expense']) ? _sumSpace($r['sum_expense']) : '';
 		$sum_profit = _cena($r['sum_profit'], 1) ? _sumSpace($r['sum_profit']) : '';
 
-		$send .= '<tr class="unit">'.
+		$send .= '<tr class="unit curP" onclick="_zayavGo('.$id.')">'.
 			'<td'._zayavStatus($r['status_id'], 'bg').' class="dtime'._tooltip(_zayavStatus($r['status_id']), 10, 'l').FullData($r['dtime_add'], 1, 1);
 		if(isset($colsAss[2]))
-			$send .= '<td class="nomer r"><a href="'.URL.'&p=45&id='.$id.'">#'.$r['nomer'].'</a>';
+			$send .= '<td class="w15 r grey">#'.$r['nomer'];
 		if(isset($colsAss[3]))
 			$send .= '<td class="name">'.$r['name'];
 		if(isset($colsAss[4]))
@@ -4120,8 +4126,39 @@ function _zayav_report_spisok($v=array()) {
 		if(isset($colsAss[12]))
 			$send .= '<td class="sum-expense r">'.$sum_expense;
 		if(isset($colsAss[13]))
-			$send .= '<td class="sum-profit r'.($r['sum_profit'] < 0 ? ' minus' : '').'">'.$sum_profit;
+			$send .= '<td class="sum-profit r'.($r['sum_profit'] < 0 ? ' minus' : ' bg-dfd').'">'.$sum_profit;
+
+		$summaAccrual += _cena($r['sum_accrual']);
+		$summaPay += _cena($r['sum_pay']);
+		$summaDolg += _cena($r['sum_dolg'], 1);
+		$summaExpense += _cena($r['sum_expense']);
+		$summaProfit += _cena($r['sum_profit'], 1);
 	}
+
+	//вставка итоговых сумм
+	$send .= '<tr class="r bg-ch">';
+	foreach($colsAss as $id => $r) {
+		switch($id) {
+			case 9://Начислено
+				$send .= '<td class="color-acc b">'._sumSpace($summaAccrual);
+				break;
+			case 10://Оплачено
+				$send .= '<td class="color-pay b">'._sumSpace($summaPay);
+				break;
+			case 11://Долг
+				$send .= '<td class="color-ref b">'._sumSpace($summaDolg);
+				break;
+			case 12://Расходы
+				$send .= '<td class="b">'._sumSpace($summaExpense);
+				break;
+			case 13://Остаток
+				$send .= '<td class="color-pay bg-dfd b">'._sumSpace($summaProfit);
+				break;
+			default: $send .= '<td>';
+		}
+	}
+
+
 	$send .= _next($filter + array(
 		'all' => count($zayav),
 		'tr' => 1
