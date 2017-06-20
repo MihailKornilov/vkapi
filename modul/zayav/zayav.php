@@ -4152,7 +4152,7 @@ function _zayav_report_spisok($v=array()) {
 				$send .= '<td class="b">'._sumSpace($summaExpense);
 				break;
 			case 13://Остаток
-				$send .= '<td class="color-pay bg-dfd b">'._sumSpace($summaProfit);
+				$send .= '<td class="b '.($summaProfit < 0 ? 'color-ref bg-fcc' : 'color-pay bg-dfd').'">'._sumSpace($summaProfit);
 				break;
 			default: $send .= '<td>';
 		}
