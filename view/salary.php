@@ -240,9 +240,9 @@ function salary_month_list($v) {
 		$mon[$i] =
 			$r.($acc[$i] || $zp[$i] ?
 				'<div class="fr">'.
-					'<span class="color-acc fs11'._tooltip('Начислено', -30)._sumSpace($acc[$i]).'</span>'.
+					'<span class="color-acc fs11'._tooltip('Начислено', -63, 'r')._sumSpace($acc[$i]).'</span>'.
 					'<span class="ml3 mr3">|</span>'.
-					'<span class="color-pay fs11'._tooltip('З/п выдана', -50, 'r')._sumSpace($zp[$i]).'</span>'.
+					'<span class="color-pay fs11'._tooltip('З/п выдана', -66, 'r')._sumSpace($zp[$i]).'</span>'.
 				'</div>'
 			: '');
 	return _radio('salmon', $mon, $filter['mon'], 1);
