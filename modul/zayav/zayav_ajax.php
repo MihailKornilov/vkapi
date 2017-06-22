@@ -1532,6 +1532,117 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8(_zayav_nomer_report($nomer));
 		jsonSuccess($send);
 		break;
+
+	case 'zayav_stat_load'://статистика по за€вкам
+		$service_id = _num($_POST['service_id']);
+		if(!$year = _num($_POST['year']))
+			$year = strftime('%Y');
+
+		$zayav_ids = 0;
+		if($tovar_cat_id = _num($_POST['tovar_cat_id'])) {
+			$sql = "SELECT DISTINCT `tovar_id`
+					FROM `_tovar_bind`
+					WHERE `app_id`=".APP_ID."
+					  AND `category_id`=".$tovar_cat_id;
+			if($tovar_ids = query_ids($sql)) {
+				$sql = "SELECT DISTINCT `zayav_id`
+						FROM `_zayav_tovar`
+						WHERE `app_id`=".APP_ID."
+						  AND `tovar_id` IN (".$tovar_ids.")";
+				$zayav_ids = query_ids($sql);
+			}
+		}
+
+		//список годов
+		$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y')
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `service_id`=".$service_id."
+				ORDER BY `dtime_add`
+				LIMIT 1";
+		if(!$yearMin = query_value($sql))
+			$yearMin = strftime('%Y');
+		
+		$filterYears = array();
+		for($n = $yearMin; $n <= strftime('%Y'); $n++)
+			$filterYears[$n] = $n;
+		
+
+		//количество за€вок по каждому мес€цу за выбранный год
+		$sql = "SELECT
+					DATE_FORMAT(`dtime_add`,'%c') AS `mon`,
+					COUNT(*)
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND !`deleted`
+				  AND `service_id`=".$service_id."
+				  AND `dtime_add` LIKE '".$year."-%'
+				  ".($tovar_cat_id ? " AND `id` IN (".$zayav_ids.")" : '')."
+				GROUP BY `mon`
+				ORDER BY `dtime_add`";
+		$spisok = query_ass($sql);
+
+		
+		//категории товаров
+		$sql = "SELECT
+					`bind`.`category_id`,
+					COUNT(`zt`.`zayav_id`) `c`
+				FROM
+					`_tovar_bind` `bind`,
+					`_zayav_tovar` `zt`,
+					`_zayav` `z`
+				WHERE `bind`.`app_id`=".APP_ID."
+				  AND `zt`.`app_id`=".APP_ID."
+				  AND `zt`.`tovar_id`=`bind`.`tovar_id`
+				  AND `zt`.`zayav_id`=`z`.`id`
+				  AND !`z`.`deleted`
+				  AND `z`.`service_id`=".$service_id."
+				  AND `z`.`dtime_add` LIKE '".$year."-%'
+				GROUP BY `bind`.`category_id`";
+		$q = query($sql);
+		$tovarCat = array();
+		while($r = mysql_fetch_assoc($q))
+			$tovarCat[] = array(
+				'uid' => $r['category_id'],
+				'title' => utf8(_tovarCategory($r['category_id'])),
+				'content' => utf8(_tovarCategory($r['category_id']).' <div class="dib grey">('.$r['c'].')</div>')
+			);
+
+
+		$mon = array();
+		$data = array();
+		for($n = 1; $n <= 12; $n++) {
+			$mon[] = utf8(_monthCut($n));
+			$data[] = isset($spisok[$n]) ? $spisok[$n] : '';
+		}
+
+		$send['data'] = array(
+			'name' => utf8(_service('count') == 1 ? '«а€вки' : _service('name', $service_id)),
+			'data' => $data
+		);
+
+		$send['mon'] = $mon;
+		$send['year'] = $year;
+		$send['filterYears'] = _selArray($filterYears);
+		$send['filterService'] = _service('js_arr');
+		$send['filterTovarCat'] = $tovarCat;
+		$send['html'] = utf8(
+			'<table class="bs5 bor1 bg-gr1 w100p">'.
+				'<tr'.(_service('count') == 1 ? ' class="dn"' : '').'>'.
+					'<td class="label pb5 r">¬ид де€тельности:'.
+					'<td><input type="hidden" id="filter-service" value="'.$service_id.'" />'.
+				'<tr><td class="label pb5 r w125">√од:'.
+					'<td><input type="hidden" id="filter-year" value="'.$year.'" />'.
+				'<tr'.(empty($tovarCat) ? ' class="dn"' : '').'>'.
+					'<td class="label r"> атегори€ товаров:'.
+					'<td><input type="hidden" id="filter-tovar-cat" value="'.$tovar_cat_id.'" />'.
+			'</table>'.
+			'<div id="zayav-stat" class="mt20"></div>'
+		);
+
+		jsonSuccess($send);
+		break;
 }
 
 function _zayavValuesCheck($service_id, $zayav_id=0) {//проверка корректности полей при внесении/редактировании за€вки

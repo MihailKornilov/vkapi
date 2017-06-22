@@ -1513,6 +1513,105 @@ var _zayavReady = function() {//страница со списком за€вок загружена
 				},
 				series:ZAYAV_SERIES
 			});
+	},
+
+	_zayavStat = function(service_id) {//переход на за€вку без href
+		var dialog = _dialog({
+				top:20,
+				width:750,
+				head:'—татистика по за€вкам',
+				load:1,
+				butSubmit:'',
+				butCancel:'«акрыть'
+			}),
+			SERVICE_ID = service_id,
+			YEAR = 0,
+			TOVAR_CAT_ID = 0;
+
+		statLoad();
+
+		function statLoad() {
+			var send = {
+				op:'zayav_stat_load',
+				service_id:SERVICE_ID,
+				year:YEAR,
+				tovar_cat_id:TOVAR_CAT_ID
+			};
+			$('#zayav-stat').css('opacity', .4);
+			dialog.load(send, loaded);
+		}
+		function loaded(res) {
+			dialog.content.html(res.html);
+			$('#filter-service')._menuDop({
+				type:2,
+				spisok:res.filterService,
+				func:function(v) {
+					SERVICE_ID = v;
+					YEAR = 0;
+					TOVAR_CAT_ID = 0;
+					statLoad();
+				}
+			});
+			$('#filter-year')._menuDop({
+				type:2,
+				spisok:res.filterYears,
+				func:function(v) {
+					YEAR = v;
+					statLoad();
+				}
+			});
+			$('#filter-tovar-cat')._select({
+				width:200,
+				title0:'не указана',
+				spisok:res.filterTovarCat,
+				func:function(v) {
+					TOVAR_CAT_ID = v;
+					statLoad();
+				}
+			});
+			$('#zayav-stat')
+				.height(250)
+				.highcharts({
+					chart:{
+						type:'column'
+					},
+					title:{
+						text:'Ќовые за€вки по мес€цам за ' + res.year + ' год'
+					},
+					xAxis:{
+						categories:res.mon,
+						labels:{
+							style:{
+								color:'#333'
+							}
+						}
+					},
+					yAxis:{
+						title:{
+							text:' оличество'
+						},
+						stackLabels:{
+							enabled:true,
+							style:{
+								fontWeight:'bold',
+								color:'black'
+							}
+						}
+					},
+					plotOptions:{
+						column:{
+							stacking:'normal',
+							dataLabels:{
+								enabled:false
+							}
+						}
+					},
+					tooltip:{
+						enabled:false
+					},
+					series:[res.data]
+				});
+		}
 	};
 
 $.fn.zayavTovarPlace = function(o) {//местонахождение товара

@@ -942,13 +942,15 @@ function _zayav_list($v=array()) {
 	$v = $data['filter'];
 
 	return
+	'<script src="/.vkapp/.js/highcharts.js"></script>'.
 	'<div id="_zayav">'.
 		_service('menu').
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td id="spisok" class="pb10 bg-gr3 top">'.$data['spisok'].
 				'<td class="right">'.
-					'<button class="vk fw green" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
+					'<div onclick="_zayavStat('.$v['service_id'].')" class="icon icon-stat fr mt5'._tooltip('Статистика по заявкам', -129, 'r').'</div>'.
+					'<button class="vk green w150" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
 					_zayavPoleFilter($v).
 	(VIEWER_ADMIN ? '<div class="mt20">'._check('deleted', '+ удалённые заявки', $v['deleted'], 1).'</div>'.
 					'<div id="deleted-only-div" class="mt5'.($v['deleted'] ? '' : ' dn').'">'.
@@ -3783,6 +3785,13 @@ function _service($i='all', $id=0) {
 	if($i == 'js')
 		return _serviceJs($arr);
 
+	if($i == 'js_arr') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = $r['name'];
+		return _selArray($send);
+	}
+
 	if($i == 'js_client')
 		return _serviceJsClient($arr, $id);
 
@@ -3904,7 +3913,8 @@ function _zayav_report() {
 function _zayav_report_status_count($v) {//статусы с количеством заявок
 	$filter = _zayav_reportFilter($v);
 
-	$cond = "`app_id`=".APP_ID;
+	$cond = "`app_id`=".APP_ID."
+		 AND !`deleted`";
 	$cond .= _period($filter['period'], 'sql');
 
 	$sql = "SELECT
@@ -3912,23 +3922,32 @@ function _zayav_report_status_count($v) {//статусы с количеством заявок
 				COUNT(`id`)
 			FROM `_zayav`
 			WHERE ".$cond."
-			GROUP BY `status_id`
-			ORDER BY `status_id`";
+			GROUP BY `status_id`";
 	if(!$spisok = query_ass($sql))
 		return '';
 
+	//суммы начислений по каждому статусу
+	$sql = "SELECT
+				`status_id`,
+				SUM(`sum_accrual`)
+			FROM `_zayav`
+			WHERE ".$cond."
+			GROUP BY `status_id`";
+	$acc = query_ass($sql);
+
 	$all = 0;
+	$accAll = 0;
 	$send = '';
-//	foreach($spisok as $id => $r) {
 	foreach(_zayavStatus('all') as $id => $r) {
 		if(!isset($spisok[$id]))
 			continue;
-		$send .= '<div'._zayavStatus($id, 'bg').' class="cub'._tooltip(_zayavStatus($id), 2, 'l').$spisok[$id].'</div>';
+		$send .= '<div'._zayavStatus($id, 'bg').' class="cub'._tooltip(_zayavStatus($id).'<br />Начислено '._sumSpace($acc[$id]).' руб.', 2, 'l', 1).$spisok[$id].'</div>';
 		$all += $spisok[$id];
+		$accAll += $acc[$id];
 	}
 
 	return
-	'<div class="cub all">'.
+	'<div class="cub all'._tooltip('Начислено '._sumSpace($accAll).' руб.', 2, 'l').
 		'Всего <b>'.$all.'</b> заяв'._end($all, 'ка', 'ки', 'ок').':'.
 	'</div>'.
 	$send;
@@ -3940,7 +3959,8 @@ function _zayav_report_executer($v) {//исполнители с количеством заявок и суммой
 
 	$filter = _zayav_reportFilter($v);
 
-	$cond = "`app_id`=".APP_ID;
+	$cond = "`app_id`=".APP_ID."
+		 AND !`deleted`";
 	$cond .= _period($filter['period'], 'sql');
 
 	$sql = "SELECT `id`
@@ -4066,7 +4086,8 @@ function _zayav_report_spisok($v=array()) {
 	$filter = _zayav_reportFilter($v);
 	$filter = _filterJs('ZAYAV_REPORT', $filter);
 
-	$cond = "`app_id`=".APP_ID;
+	$cond = "`app_id`=".APP_ID."
+		 AND !`deleted`";
 	$cond .= _period($filter['period'], 'sql');
 
 	$sql = "SELECT *
