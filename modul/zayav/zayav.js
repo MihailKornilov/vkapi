@@ -1526,6 +1526,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			}),
 			SERVICE_ID = service_id,
 			YEAR = 0,
+			YEAR_COMPARE = 0,
 			TOVAR_CAT_ID = 0;
 
 		statLoad();
@@ -1535,6 +1536,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				op:'zayav_stat_load',
 				service_id:SERVICE_ID,
 				year:YEAR,
+				year_compare:YEAR_COMPARE,
 				tovar_cat_id:TOVAR_CAT_ID
 			};
 			$('#zayav-stat').css('opacity', .4);
@@ -1548,6 +1550,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				func:function(v) {
 					SERVICE_ID = v;
 					YEAR = 0;
+					YEAR_COMPARE = 0;
 					TOVAR_CAT_ID = 0;
 					statLoad();
 				}
@@ -1557,6 +1560,15 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				spisok:res.filterYears,
 				func:function(v) {
 					YEAR = v;
+					statLoad();
+				}
+			});
+			$('#filter-year-compare')._menuDop({
+				type:2,
+				cancel:1,
+				spisok:res.filterYears,
+				func:function(v) {
+					YEAR_COMPARE = v;
 					statLoad();
 				}
 			});
@@ -1576,15 +1588,16 @@ var _zayavReady = function() {//страница со списком заявок загружена
 						type:'column'
 					},
 					title:{
-						text:'Новые заявки по месяцам за ' + res.year + ' год'
+						text:'Новые заявки по месяцам за ' + (res.year_compare && res.year_compare != res.year ? '<b>' + res.year_compare + '</b>, ' : '') + '<b>' + res.year + '</b> год'
 					},
 					xAxis:{
-						categories:res.mon,
+						categories:MONTH_CUT,
 						labels:{
 							style:{
 								color:'#333'
 							}
-						}
+						},
+                        crosshair: true
 					},
 					yAxis:{
 						title:{
@@ -1599,17 +1612,23 @@ var _zayavReady = function() {//страница со списком заявок загружена
 						}
 					},
 					plotOptions:{
-						column:{
-							stacking:'normal',
+						series:{
+							animation: {
+				                duration:300
+                            },
 							dataLabels:{
-								enabled:false
+								enabled:true,
+								formatter:function() {
+									return this.y || ''
+								}
 							}
 						}
 					},
 					tooltip:{
-						enabled:false
+						enabled:true,
+						shared:true
 					},
-					series:[res.data]
+					series:res.series
 				});
 		}
 	};

@@ -23,6 +23,7 @@ $.fn._menuDop = function(o) {//дополнительное меню
 	
 	o = $.extend({
 		type:1,
+		cancel:0,//отмена выбора при нажатии на выбранный элемент
 		spisok:[],
 		func:function() {}
 	}, o);
@@ -52,9 +53,13 @@ $.fn._menuDop = function(o) {//дополнительное меню
 	}
 	function _click() {
 		var t = $(this),
-			v = _num(t.attr('val'));
+			v = _num(t.attr('val')),
+			sel = t.hasClass('sel');
 		link.removeClass('sel');
-		t.addClass('sel');
+		if(o.cancel && sel)
+			v = 0;
+		else
+			t.addClass('sel');
 		tMain.val(v);
 		_pageCange(v);
 		o.func(v, attr_id);

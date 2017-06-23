@@ -1538,7 +1538,9 @@ switch(@$_POST['op']) {
 		if(!$year = _num($_POST['year']))
 			$year = strftime('%Y');
 
-		$zayav_ids = 0;
+		$year_compare = _num($_POST['year_compare']);
+
+		$zayav_ids = -1;
 		if($tovar_cat_id = _num($_POST['tovar_cat_id'])) {
 			$sql = "SELECT DISTINCT `tovar_id`
 					FROM `_tovar_bind`
@@ -1569,21 +1571,6 @@ switch(@$_POST['op']) {
 			$filterYears[$n] = $n;
 		
 
-		//количество за€вок по каждому мес€цу за выбранный год
-		$sql = "SELECT
-					DATE_FORMAT(`dtime_add`,'%c') AS `mon`,
-					COUNT(*)
-				FROM `_zayav`
-				WHERE `app_id`=".APP_ID."
-				  AND !`deleted`
-				  AND `service_id`=".$service_id."
-				  AND `dtime_add` LIKE '".$year."-%'
-				  ".($tovar_cat_id ? " AND `id` IN (".$zayav_ids.")" : '')."
-				GROUP BY `mon`
-				ORDER BY `dtime_add`";
-		$spisok = query_ass($sql);
-
-		
 		//категории товаров
 		$sql = "SELECT
 					`bind`.`category_id`,
@@ -1610,20 +1597,22 @@ switch(@$_POST['op']) {
 			);
 
 
-		$mon = array();
-		$data = array();
-		for($n = 1; $n <= 12; $n++) {
-			$mon[] = utf8(_monthCut($n));
-			$data[] = isset($spisok[$n]) ? $spisok[$n] : '';
-		}
+		if($year_compare && $year_compare != $year)
+			$send['series'][] = array(
+				'name' => utf8(_service('count') == 1 ? '«а€вки' : _service('name', $service_id).($year_compare ? ' '.$year_compare : '')),
+				'color' => '#ccc',
+				'data' => _zayavStatYear($service_id, $year_compare, $zayav_ids)
+			);
 
-		$send['data'] = array(
-			'name' => utf8(_service('count') == 1 ? '«а€вки' : _service('name', $service_id)),
-			'data' => $data
+		$send['series'][] = array(
+			'name' => utf8(_service('count') == 1 ? '«а€вки' : _service('name', $service_id).($year_compare ? ' '.$year : '')),
+			'color' => '#86C4FF',
+			'data' => _zayavStatYear($service_id, $year, $zayav_ids)
 		);
 
-		$send['mon'] = $mon;
+
 		$send['year'] = $year;
+		$send['year_compare'] = $year_compare;
 		$send['filterYears'] = _selArray($filterYears);
 		$send['filterService'] = _service('js_arr');
 		$send['filterTovarCat'] = $tovarCat;
@@ -1634,6 +1623,8 @@ switch(@$_POST['op']) {
 					'<td><input type="hidden" id="filter-service" value="'.$service_id.'" />'.
 				'<tr><td class="label pb5 r w125">√од:'.
 					'<td><input type="hidden" id="filter-year" value="'.$year.'" />'.
+				'<tr><td class="label pb5 r w125">—равнить с годом:'.
+					'<td><input type="hidden" id="filter-year-compare" value="'.$year_compare.'" />'.
 				'<tr'.(empty($tovarCat) ? ' class="dn"' : '').'>'.
 					'<td class="label r"> атегори€ товаров:'.
 					'<td><input type="hidden" id="filter-tovar-cat" value="'.$tovar_cat_id.'" />'.
@@ -2019,4 +2010,27 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 
 	_clientBalansUpdate($v['client_id']);
 	_zayavBalansUpdate($zayav_id);
+}
+
+function _zayavStatYear($service_id, $year, $zayav_ids) {//количество за€вок за выбранный год
+	//количество за€вок по каждому мес€цу за выбранный год
+	$sql = "SELECT
+				DATE_FORMAT(`dtime_add`,'%c') AS `mon`,
+				COUNT(*)
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `service_id`=".$service_id."
+			  AND `dtime_add` LIKE '".$year."-%'
+			  ".($zayav_ids != -1 ? " AND `id` IN (".$zayav_ids.")" : '')."
+			GROUP BY `mon`
+			ORDER BY `dtime_add`";
+
+	$spisok = query_ass($sql);
+
+	$data = array();
+	for($n = 1; $n <= 12; $n++)
+		$data[] = isset($spisok[$n]) ? _num($spisok[$n]) : 0;
+
+	return $data;
 }
