@@ -84,7 +84,7 @@ function zp_accrual() {//начисление ставки сотрудникам
 	}
 	return $send;
 }
-function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (пока только Даше)
+function zp_image_attach($worker_id) {//начисление зп сотруднику за загруженные картинки (пока только Даше)
 	if(APP_ID != 2031819)
 		return '';
 
@@ -96,8 +96,6 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 
 	//вчера
 	$yesterday = strftime('%Y-%m-%d', time() - 3600 * 24);
-
-	$worker_id = 418627813;//Даша новая
 
 	$sql = "SELECT COUNT(DISTINCT `unit_id`)
 			FROM `_image`
@@ -121,6 +119,8 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 	$about = 'Прикреплены изображения к '.$count.' товар'._end($count, 'у', 'ам');
 	$sum = round($count * ($countBYD >= 100 ? 1.5 : 1)); //1-1.5 рубль за один товар
 
+	$worker_id = $worker_id == 418627813 ? 139400639 : $worker_id;//старая страница Даши
+
 	$sql = "INSERT INTO `_salary_accrual` (
 				`app_id`,
 				`worker_id`,
@@ -130,7 +130,7 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 				`mon`
 			) VALUES (
 				".APP_ID.",
-				139400639,
+				".$worker_id.",
 				".$sum.",
 				'".$about."',
 				".$year.",
@@ -140,7 +140,7 @@ function zp_image_attach() {//начисление зп сотруднику за загруженные картинки (
 
 	_balans(array(
 		'action_id' => 19,
-		'worker_id' => 139400639,
+		'worker_id' => $worker_id,
 		'sum' => $sum,
 		'about' => $about
 	));
@@ -212,5 +212,6 @@ function _cronSubmit() {//выполнение задач
 
 	echo
 		zp_accrual().
-		zp_image_attach();
+		zp_image_attach(418627813).//Даша новая
+		zp_image_attach(163178453);//Олеся
 }
