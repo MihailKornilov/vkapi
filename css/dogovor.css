@@ -1,14 +1,40 @@
-.head-name{text-align:center;font:bold 10pt arial;margin-top:68pt;margin-bottom:13pt}
+.head-name{text-align:center;font:bold 10pt arial;margin-top:5pt;margin-bottom:13pt}
 .city_data{width:100%;font:bold 10pt arial;margin-bottom:10pt}
 .city_data th{text-align:right}
 .p-head{font:bold 10pt arial;margin-bottom:5pt;margin-left:30pt}
 .paragraph{text-align:justify;font:10pt arial;margin-bottom:12pt}
 .paragraph p{text-indent:30pt;margin:0}
 .rekvisit,.podpis{width:100%;font:10pt arial}
-.rekvisit td{width:50%;vertical-align:top}
-.podpis-head,.mp{font:10pt arial;margin-top:35pt;margin-bottom:15pt}
-.podpis td{width:50%;font:10pt arial}
+.rekvisit table{border:0;border-spacing:0;border-collapse:collapse}
+.rekvisit td{
+	width:50%;
+	padding:5pt;
+	vertical-align:top;
+	border:1pt solid #000;
+}
+.podpis{margin-left:25pt;font:7pt arial}
 
+
+
+/* АКТ сдачи-приёмки */
+.act-ekz{text-align:right;font-size:10pt}
+.act-content{font-size:11pt}
+.act-content p{text-indent:30pt;margin:0}
+.act-podpis{width:100%;font-size:11pt}
+.act-podpis td{width:50%;vertical-align:top}
+.act-podpis div{font:7pt arial;margin-left:20pt}
+.act-line{border-top:#000 solid 1pt}
+
+
+
+
+
+
+
+
+
+
+/*
 .ekz{font:12pt arial;text-align:right;margin-top:15pt}
 .act-head{
 	font:bold 16pt arial;
@@ -29,7 +55,7 @@
 	text-indent:370pt;
 }
 .time-dost{font:bold 12pt arial;text-align:right;margin-top:10px}
-
+*/
 
 .org-name{font:12pt times new roman}
 .org-name b{font-size:14pt}
