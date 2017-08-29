@@ -1949,7 +1949,7 @@ function _tovar_info_move_year($year, $spisok) {//отображение движения товара за
 
 		//показ иконки для удаления последнего внесённого наличия
 		$toDel = array();
-		if(isset($r['first']) && $r['type_id'] == 1)
+		if(isset($r['first']) && $r['type_id'] == 1 || DEBUG)
 			$toDel = array('del'=>1);
 		
 		$send .= '<tr class="'.$class.'">'.
