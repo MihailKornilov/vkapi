@@ -213,5 +213,6 @@ function _cronSubmit() {//выполнение задач
 	echo
 		zp_accrual().
 		zp_image_attach(418627813).//Даша новая
+		zp_image_attach(228890122).//Татьяна
 		zp_image_attach(163178453);//Олеся
 }
