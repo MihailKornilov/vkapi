@@ -3951,6 +3951,17 @@ function _zayavExpense($id='all', $i='name') {//категории расходов заявки из кеш
 		return _assJson($spisok);
 	}
 
+	//ассоциативный список дублирования расхода организации: значения категорий по умолчанию
+	if($id == 'ze_dub_ass') {
+		$spisok = array();
+		foreach($arr as $r) {
+			if(!$r['expense_dub'])
+				continue;
+			$spisok[$r['id']] = $r['expense_id'].'_'.$r['expense_id_sub'];
+		}
+		return _assJson($spisok);
+	}
+
 	//проверка: используется ли ведение прикреплённых счетов в расходе по заявке
 	if($id == 'attach_schet') {
 		foreach($arr as $r) {
@@ -4075,8 +4086,8 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		if($r['tovar_id'])
 			$dop = $r['tovar_link'].($r['tovar_avai_id'] ? '' : ': '._ms($r['tovar_count']).' '.$r['tovar_measure_name']);
 
-		if($r['attach_id'])
-			$dop = $r['attach_link'];
+		if($r['expense_id'])
+			$dop .= '<div class="fs11 color-pay mt3">Продублировано в расходах организации</div>';
 
 		$inserted = $insert_id == $r['id'] ? ' inserted' : ''; //подсветка только что внесённой записи
 		$list = $r['salary_list_id'] ? ' list' : '';  //затемнение зп, которые привязаны к листу выдачи

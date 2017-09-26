@@ -1027,9 +1027,21 @@ switch(@$_POST['op']) {
 		$mon = 0;
 		$year = 0;
 		$sum = _cena($_POST['sum']);
+		
+		$expense_dub = _num($_POST['expense_dub']);
+		$expense_cat_id = _num($_POST['expense_cat_id']);
+		$expense_cat_id_sub = _num($_POST['expense_cat_id_sub']);
+		$invoice_id = _num($_POST['invoice_id']);
+		$expense_id = 0;
 
 		switch(_zayavExpense($cat_id, 'dop')) {
-			case 1: $txt = _txt($_POST['dop']); break;
+			case 1:
+				$txt = _txt($_POST['dop']);
+				if($expense_dub && !$invoice_id)
+					jsonError('Не выбран расчётный счёт');
+				if($expense_dub && !$sum)
+					jsonError('Сумма не может быть нулевой, если производится дублирование расхода');
+				break;
 			case 2:
 				if($worker_id = _num($_POST['dop'])) {
 					if($workerOnPay = !(_viewerRule($worker_id, 'RULE_SALARY_ZAYAV_ON_PAY') && $z['sum_dolg'] < 0)) {
@@ -1064,6 +1076,38 @@ switch(@$_POST['op']) {
 			case 4: $attach_id = _num($_POST['dop']); break;
 		}
 		
+		//внесение дублирования расхода организации
+		if($expense_dub) {
+			$sql = "INSERT INTO `_money_expense` (
+						`app_id`,
+						`sum`,
+						`about`,
+						`invoice_id`,
+						`category_id`,
+						`category_sub_id`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".$sum.",
+						'".addslashes($txt)."',
+						".$invoice_id.",
+						".$expense_cat_id.",
+						".$expense_cat_id_sub.",
+						".VIEWER_ID."
+					)";
+			query($sql);
+			$expense_id = query_insert_id('_money_expense');
+
+			//история баланса для расчётного счёта
+			_balans(array(
+				'action_id' => 6,
+				'invoice_id' => $invoice_id,
+				'sum' => $sum,
+				'expense_id' => $expense_id,
+				'about' => $txt
+			));
+		}
+
 		$sql = "INSERT INTO `_zayav_expense` (
 					`app_id`,
 					`zayav_id`,
@@ -1074,6 +1118,7 @@ switch(@$_POST['op']) {
 					`tovar_avai_id`,
 					`tovar_count`,
 					`attach_id`,
+					`expense_id`,
 					`sum`,
 					`mon`,
 					`year`,
@@ -1088,6 +1133,7 @@ switch(@$_POST['op']) {
 					".$tovar_avai_id.",
 					".$tovar_count.",
 					".$attach_id.",
+					".$expense_id.",
 					".$sum.",
 					".$mon.",
 					".$year.",
@@ -1125,7 +1171,6 @@ switch(@$_POST['op']) {
 						'<td>'._sumSpace($sum).' р.'.
 				'</table>'
 		));
-
 
 		$send['html'] = utf8(_zayav_expense_spisok($zayav_id, $insert_id));
 		jsonSuccess($send);
@@ -1175,6 +1220,31 @@ switch(@$_POST['op']) {
 						'<td>'._sumSpace($r['sum']).' р.'.
 				'</table>'
 		));
+		
+		//удаление продублированного расхода организации
+		if($r['expense_id']) {
+			$sql = "SELECT *
+					FROM `_money_expense`
+					WHERE `app_id`=".APP_ID."
+					  AND !`deleted`
+					  AND `id`=".$r['expense_id'];
+			if($me = query_assoc($sql)) {
+				$sql = "UPDATE `_money_expense`
+						SET `deleted`=1,
+							`viewer_id_del`=".VIEWER_ID.",
+							`dtime_del`=CURRENT_TIMESTAMP
+						WHERE `id`=".$r['expense_id'];
+				query($sql);
+
+				_balans(array(
+					'action_id' => 7,
+					'invoice_id' => $me['invoice_id'],
+					'sum' => $me['sum'],
+					'expense_id' => $me['id'],
+					'about' => $me['about']
+				));
+			}
+		}
 
 		$send['html'] = utf8(_zayav_expense_spisok($r['zayav_id']));
 		jsonSuccess($send);

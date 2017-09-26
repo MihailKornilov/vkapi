@@ -925,18 +925,26 @@ function expense_spisok($v=array()) {
 
 	$all = $send['all'];
 
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 `zayav_id`
 			FROM `_money_expense`
 			WHERE ".$cond."
 			ORDER BY `dtime_add` DESC
 			LIMIT "._start($filter).",".$filter['limit'];
-	$q = query($sql);
-	$expense = array();
-	while($r = mysql_fetch_assoc($q))
-		$expense[$r['id']] = $r;
-
+	$expense = query_arr($sql);
 	$expense = _viewer($expense);
 	$expense = _attachValToList($expense);
+
+	$sql = "SELECT `expense_id`,`zayav_id`
+			FROM `_zayav_expense`
+			WHERE `app_id`=".APP_ID."
+			  AND `expense_id` IN ("._idsGet($expense).")";
+	if($ass = query_ass($sql)) {
+		foreach($ass as $expense_id => $zayav_id)
+			$expense[$expense_id]['zayav_id'] = $zayav_id;
+		$expense = _zayavValToList($expense);
+	}
 
 	$send['spisok'] = !PAGE1 ? '' :
 		$filter['js'].
@@ -957,7 +965,7 @@ function expense_spisok($v=array()) {
 				'<td>'.expenseAbout($r).
 				'<td class="dtime">'._dtimeAdd($r).
 				'<td class="ed">'.
-					($r['category_id'] != 1 ?
+					($r['category_id'] != 1 && !$r['zayav_id'] ?
 						_iconEdit($r).
 						_iconDel($r + array('del' => APP_ID == 3495523 ? 1 : 0)) //todo удаление расхода для Купца временно
 					: '');
@@ -983,7 +991,8 @@ function expenseAbout($r) {//описание для расходов
 				($r['about'] ? ', ' : '')
 		: '').
 		$r['about'].
-		($r['attach_id'] ? '<div>Файл: '.$r['attach_link'].'</div>' : '');
+		($r['attach_id'] ? '<div>Файл: '.$r['attach_link'].'</div>' : '').
+		(@$r['zayav_id'] ? '<div>Заявка: '.$r['zayav_link'].'</div>' : '');
 }
 
 /*

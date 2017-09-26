@@ -2225,6 +2225,9 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$dop = _num($_POST['dop']);
 		$param = _num($_POST['param']);
+		$expense_dub = _num($_POST['expense_dub']);
+		$expense_id = _num($_POST['expense_id']);
+		$expense_id_sub = _num($_POST['expense_id_sub']);
 
 		if(empty($name))
 			jsonError();
@@ -2237,12 +2240,18 @@ switch(@$_POST['op']) {
 					`name`,
 					`dop`,
 					`param`,
+					`expense_dub`,
+					`expense_id`,
+					`expense_id_sub`,
 					`sort`
 				) VALUES (
 					".APP_ID.",
 					'".addslashes($name)."',
 					".$dop.",
 					".$param.",
+					".$expense_dub.",
+					".$expense_id.",
+					".$expense_id_sub.",
 					"._maxSql('_zayav_expense_category')."
 				)";
 		query($sql);
@@ -2265,6 +2274,9 @@ switch(@$_POST['op']) {
 		$name = _txt($_POST['name']);
 		$dop = _num($_POST['dop']);
 		$param = _num($_POST['param']);
+		$expense_dub = _num($_POST['expense_dub']);
+		$expense_id = _num($_POST['expense_id']);
+		$expense_id_sub = _num($_POST['expense_id_sub']);
 
 		if(empty($name))
 			jsonError();
@@ -2280,7 +2292,10 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `_zayav_expense_category`
 				SET `name`='".addslashes($name)."',
 					`dop`=".$dop.",
-					`param`=".$param."
+					`param`=".$param.",
+					`expense_dub`=".$expense_dub.",
+					`expense_id`=".$expense_id.",
+					`expense_id_sub`=".$expense_id_sub."
 				WHERE `id`=".$id;
 		query($sql);
 

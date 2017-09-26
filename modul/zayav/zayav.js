@@ -960,6 +960,18 @@ var _zayavReady = function() {//страница со списком заявок загружена
 						'<span id="ze-count-max">(max: <b></b>)</span>' +
 
 				'<tr><td class="label r">Сумма:<td><input type="text" id="ze-sum" class="money" /> руб.' +
+
+				'<tr><td><td>' +
+				'<tr id="tr-expense-dub" class="dn">' +
+					'<td class="label">' +
+					'<td><input type="hidden" id="ze-expense-dub" />' +
+				'<tr id="tr-expense-cat" class="dn">' +
+					'<td class="label r topi">Категория расхода организации:' +
+					'<td><input type="hidden" id="category_id-add" />' +
+						'<input type="hidden" id="category_sub_id-add" />' +
+				'<tr id="tr-invoice" class="dn">' +
+					'<td class="label r topi">Расчётный счёт:' +
+					'<td><input type="hidden" id="invoice_id" />' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
@@ -981,6 +993,38 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				spisok:ZAYAV_EXPENSE_SPISOK,
 				func:catSelect
 			});
+		$('#ze-expense-dub')._check({
+			name:'продублировать в расходах организации',
+			light:1,
+			func:function(v) {
+				$('#tr-expense-cat')[(v ? 'remove' : 'add') + 'Class']('dn');
+				$('#tr-invoice')[(v ? 'remove' : 'add') + 'Class']('dn');
+				if(!v)
+					return;
+				
+				var cat_id = _num($('#ze-cat').val()),
+					sp = ZE_DUB_ASS[cat_id].split('_'),
+					id = _num(sp[0]),
+					id_sub = _num(sp[1]);
+				
+				$('#category_id-add').val(id)._select({
+					width:258,
+					bottom:5,
+					title0:'Не указана',
+					spisok:_copySel(EXPENSE_SPISOK, 1),
+					func:function(v, id) {
+						_expenseSub(v, 0, '-add');
+					}
+				});
+				_expenseSub(id, id_sub, '-add');
+
+				$('#invoice_id')._select({
+					width:270,
+					title0:'Не выбран',
+					spisok:_invoiceExpenseInsert()
+				});
+			}
+		});
 
 		sumFocus();
 
@@ -992,6 +1036,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			$('#ze-count-max').show();
 			sumFocus();
 			$('.tr-dop')[(id ? 'remove' : 'add') + 'Class']('dn');
+			$('#tr-expense-dub')[(ZE_DUB_ASS[id] ? 'remove' : 'add') + 'Class']('dn');
 			if(!id)
 				return;
 			var dop_id = ZE_DOP_ASS[id];
@@ -1077,7 +1122,11 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				cat_id:_num($('#ze-cat').val()),
 				dop:$('#ze-dop').length ? $('#ze-dop').val() : '',
 				count:_ms($('#ze-count').val()),
-				sum:_cena($('#ze-sum').val())
+				sum:_cena($('#ze-sum').val()),
+				expense_dub:$('#ze-expense-dub').val(),
+				expense_cat_id:$('#category_id-add').val(),
+				expense_cat_id_sub:$('#category_sub_id-add').val(),
+				invoice_id:$('#invoice_id').val()
 			};
 			dialog.post(send, function(res) {
 				$('#_zayav-expense').html(res.html);

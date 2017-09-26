@@ -1871,6 +1871,7 @@ function _appJsValues() {//для конкретного приложения
 		"\n".'ZAYAV_EXPENSE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'ZAYAV_EXPENSE_SPISOK='._zayavExpense('js').','.
 		"\n".'ZE_DOP_ASS='._zayavExpense('dop_ass').','.
+		"\n".'ZE_DUB_ASS='._zayavExpense('ze_dub_ass').','.
 		"\n".'ZAYAV_STATUS_NAME_SPISOK='._zayavStatus('js_name').','.
 		"\n".'ZAYAV_STATUS_NAME_ASS=_toAss(ZAYAV_STATUS_NAME_SPISOK),'.
 		"\n".'ZAYAV_STATUS_COLOR_ASS='._zayavStatus('js_color_ass').','.

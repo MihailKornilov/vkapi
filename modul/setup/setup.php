@@ -1278,6 +1278,8 @@ function setup_zayav_expense_spisok() {
 		$param = '';
 		if($r['dop'] == 4 && $r['param'])
 			$param = 'Ведение прикреплённых счетов';
+		if($r['dop'] == 1 && $r['expense_dub'])
+			$param = 'Дублирование записи в расходах организации';
 		$send .=
 		'<dd val="'.$id.'">'.
 			'<table class="_spisokTab mt1">'.
@@ -1287,6 +1289,9 @@ function setup_zayav_expense_spisok() {
 						'<div class="param-info">'.$param.'</div>'.
 						'<input type="hidden" class="hdop" value="'.$r['dop'].'" />'.
 						'<input type="hidden" class="param" value="'.$r['param'].'" />'.
+						'<input type="hidden" class="expense_dub" value="'.$r['expense_dub'].'" />'.
+						'<input type="hidden" class="expense_id" value="'.$r['expense_id'].'" />'.
+						'<input type="hidden" class="expense_id_sub" value="'.$r['expense_id_sub'].'" />'.
 					'<td class="w70 center use">'.($r['use'] ? $r['use'] : '').
 					'<td class="w35">'.
 						_iconEdit().
@@ -2172,6 +2177,9 @@ function setup_document_template_var($spisok) {
 
 	return $send;
 }
+
+
+
 
 
 

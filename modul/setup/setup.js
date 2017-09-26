@@ -926,21 +926,31 @@ var setupOrgEdit = function(org_id) {
 			id:0,
 			name:'',
 			dop:0,
-			param:0
+			param:0,
+			expense_dub:0,
+			expense_id:0,
+			expense_id_sub:0
 		}, o);
 
 		var html =
 				'<table class="bs10">' +
-					'<tr><td class="label r">Наименование:' +
+					'<tr><td class="label r w150">Наименование:' +
 						'<td><input type="text" id="name" value="' + o.name + '" />' +
 					'<tr><td class="label r topi">Дополнительное поле:' +
-						'<td><input type="hidden" id="dop" value="' + o.dop + '" />' +
+						'<td class="pt5"><input type="hidden" id="dop" value="' + o.dop + '" />' +
 					'<tr class="tr-param' + (o.dop == 4 ? '' : ' dn') + '">' +
 						'<td>' +
 						'<td><input id="param" type="hidden" value="' + o.param + '" />' +
+					'<tr class="tr-expense-dub' + (o.dop == 1 ? '' : ' dn') + '">' +
+						'<td>' +
+						'<td><input id="expense_dub" type="hidden" value="' + o.expense_dub + '" />' +
+					'<tr class="tr-expense-cat' + (o.expense_dub ? '' : ' dn') + '">' +
+						'<td class="label r topi">Категория расхода<br />по умолчанию:' +
+						'<td><input type="hidden" id="category_id-add" value="' + o.expense_id + '" />' +
+							'<input type="hidden" id="category_sub_id-add" value="' + o.expense_id_sub + '" />' +
 				'</table>',
 			dialog = _dialog({
-				width:400,
+				width:470,
 				head:(o.id ? 'Редактирование' : 'Добавление новой' ) + ' категории расхода заявки',
 				content:html,
 				butSubmit:o.id ? 'Сохранить' : 'Внести',
@@ -954,11 +964,42 @@ var setupOrgEdit = function(org_id) {
 			func:function(v) {
 				$('.tr-param')[(v == 4 ? 'remove' : 'add') + 'Class']('dn');
 				$('#param')._check(0);
+
+				$('.tr-expense-dub')[(v == 1 ? 'remove' : 'add') + 'Class']('dn');
+				$('#expense_dub')._check(0);
 			}
 		});
 		$('#param')._check({
-			name:'ведение прикреплённых счетов'
+			name:'ведение прикреплённых счетов',
+			light:1
 		});
+		$('#expense_dub')._check({
+			name:'дублирование записи<br />в расходах организации',
+			light:1,
+			func:function(v) {
+				$('.tr-expense-cat')[(v ? 'remove' : 'add') + 'Class']('dn');
+				$('#category_id-add')._select(0);
+				_expenseSub(0, 0, '-add');
+			}
+		});
+		$('#expense_dub_check').vkHint({
+			top:-117,
+			left:-73,
+			width:260,
+			msg:'При внесении <u>расхода по заявке</u> дополнительно будет появляться галочка, при установке которой автоматически будет вноситься <u>расход организации</u> на ту же сумму.',
+			delayShow:1000
+		});
+		$('#category_id-add')._select({
+			width:258,
+			bottom:5,
+			title0:'Не указана',
+			spisok:_copySel(EXPENSE_SPISOK, 1),
+			func:function(v, id) {
+				_expenseSub(v, 0, '-add');
+			}
+		});
+		_expenseSub(o.expense_id, o.expense_id_sub, '-add');
+
 
 		function submit() {
 			var send = {
@@ -966,7 +1007,10 @@ var setupOrgEdit = function(org_id) {
 				id:o.id,
 				name:$('#name').val(),
 				dop:$('#dop').val(),
-				param:$('#param').val()
+				param:$('#param').val(),
+				expense_dub:$('#expense_dub').val(),
+				expense_id:$('#category_id-add').val(),
+				expense_id_sub:$('#category_sub_id-add').val()
 			};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
@@ -1610,7 +1654,10 @@ $(document)
 			id:t.attr('val'),
 			name:t.find('.name').html(),
 			dop:_num(t.find('.hdop').val()),
-			param:_num(t.find('.param').val())
+			param:_num(t.find('.param').val()),
+			expense_dub:_num(t.find('.expense_dub').val()),
+			expense_id:_num(t.find('.expense_id').val()),
+			expense_id_sub:_num(t.find('.expense_id_sub').val())
 		});
 	})
 	.on('click', '#setup_zayav_expense .img_del', function() {
