@@ -4086,6 +4086,9 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 		if($r['tovar_id'])
 			$dop = $r['tovar_link'].($r['tovar_avai_id'] ? '' : ': '._ms($r['tovar_count']).' '.$r['tovar_measure_name']);
 
+		if($r['attach_id'])
+			$dop = $r['attach_link'];
+
 		if($r['expense_id'])
 			$dop .= '<div class="fs11 color-pay mt3">Продублировано в расходах организации</div>';
 
