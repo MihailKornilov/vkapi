@@ -30,13 +30,13 @@ function _calendarFilter($data=array()) {
 		'<table class="data">'.
 			'<tr>'.($data['norewind'] ? '' : '<td class="ch" val="'.$back.'">&laquo;').
 				'<td>'.
-					(RULE_INCOME_FILTER_MON ?
+					(!RULE_INCOME_FILTER_MON ?
 						'<a val="'.$data['month'].'"'.($data['month'] == $data['sel'] ? ' class="sel"' : '').'>'._monthDef($SHOW_MON).'</a> '
 						:
 						_monthDef($SHOW_MON)
 					).
 					($data['norewind'] ? '' :
-						(RULE_INCOME_FILTER_MON ?
+						(!RULE_INCOME_FILTER_MON ?
 							'<a val="'.$SHOW_YEAR.'"'.($SHOW_YEAR == $data['sel'] ? ' class="sel"' : '').'>'.$SHOW_YEAR.'</a>'
 							:
 							'<span class="ml5">'.$SHOW_YEAR.'</span>'
@@ -59,8 +59,8 @@ function _calendarFilter($data=array()) {
 	$curUnix = strtotime($curDay); // Текущий день для выделения прошедших дней
 	$weekNum = intval(date('W', $unix));    // Номер недели с начала месяца
 
-	$range = _calendarWeek($data['month'].'-01');
-	$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
+	$range = RULE_INCOME_FILTER_MON == 2 ? '' : _calendarWeek($data['month'].'-01');
+	$send .= '<tr class="curP '.($range == $data['sel'] ? ' sel' : '').'">'.
 		($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.$weekNum);
 	for($n = $week; $n > 1; $n--, $send .= '<td>'); // Вставка пустых полей, если первый день недели не понедельник
 	for($n = 1; $n <= $dayCount; $n++) {
@@ -75,9 +75,9 @@ function _calendarFilter($data=array()) {
 		if($week > 7)
 			$week = 1;
 		if($week == 1 && $n < $dayCount) {
-			$range = _calendarWeek($data['month'].'-'.($n + 1 < 10 ? 0 : '').($n + 1));
+			$range = RULE_INCOME_FILTER_MON == 2 ? '' : _calendarWeek($data['month'].'-'.($n + 1 < 10 ? 0 : '').($n + 1));
 			$send .= '<tr'.($range == $data['sel'] ? ' class="sel"' : '').'>'.
-				($data['noweek'] ? '' : '<td class="week-num" val="'.$range.'">'.(++$weekNum));
+				($data['noweek'] ? '' : '<td class="week-num curP" val="'.$range.'">'.(++$weekNum));
 		}
 	}
 	if($week > 1)

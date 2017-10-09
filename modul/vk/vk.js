@@ -3002,6 +3002,8 @@ $(document)
 			sel = p.hasClass('sel'),
 			cal = p,
 			val = t.attr('val');
+		if(!val)
+			return;
 		while(!cal.hasClass('_calendarFilter'))
 			cal = cal.parent();
 		if(!sel)

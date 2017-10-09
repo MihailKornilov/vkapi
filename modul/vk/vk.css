@@ -871,7 +871,7 @@ a.add:hover{text-decoration:underline;color:#357}
 ._calendarFilter .data a{display:inline-block;padding:3px 3px;text-decoration:none}
 ._calendarFilter .month td{width:22px;padding:4px 0;text-align:center}
 ._calendarFilter .week-name td{color:#777;background-color:#eee;border-bottom:#ddd solid 1px}
-._calendarFilter .week-num{cursor:pointer;color:#58a;background-color:#eee;border-right:#ddd solid 1px}
+._calendarFilter .week-num{color:#58a;background-color:#eee;border-right:#ddd solid 1px}
 ._calendarFilter tr:not(.sel) .week-num:hover,
 ._calendarFilter .data a:not(.sel):hover
 {background-color:#DEE3EF}

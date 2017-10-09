@@ -95,10 +95,13 @@ function setup_my() {//12
 		).
 		'</div>'.
 
+	(!RULE_INCOME_FILTER_MON ?
 		'<div class="hd2">Дополнительно</div>'.
 		'<table class="bs10">'.
 			'<tr><td class="label">Показывать платежи:<td><input type="hidden" id="RULE_MY_PAY_SHOW_PERIOD" value="'._num(@RULE_MY_PAY_SHOW_PERIOD).'" />'.
-		'</table>'.
+		'</table>'
+	: '').
+
 	'</div>';
 }
 
@@ -375,7 +378,8 @@ function setup_worker_razdel_rule_sub($viewer_id, $arr, $rule) {//дочерние разде
 		if($s['id'] == 47) {
 			$sub2 .=
 			'<div class="mt5">'.
-				_check('RULE_INCOME_FILTER_MON', _ruleCache('RULE_INCOME_FILTER_MON'), $rule['RULE_INCOME_FILTER_MON'], 1).
+				_ruleCache('RULE_INCOME_FILTER_MON').': '.
+				'<input type="hidden" id="RULE_INCOME_FILTER_MON" value="'.$rule['RULE_INCOME_FILTER_MON'].'" />'.
 			'</div>';
 		}
 

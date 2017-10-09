@@ -2012,6 +2012,13 @@ $(document)
 			$('#RULE_HISTORY_VIEW')._dropdown({
 				spisok:RULE_HISTORY_SPISOK
 			});
+			$('#RULE_INCOME_FILTER_MON')._dropdown({
+				spisok:[
+					{uid:0,title:"любой период"},
+					{uid:1,title:"неделя или день"},
+					{uid:2,title:"только за день"}
+				]
+			});
 			$('#RULE_WORKER_SALARY_VIEW')._dropdown({
 				spisok:[{uid:1,title:"только свою"},{uid:2,title:"всех сотрудников"}]
 			});
