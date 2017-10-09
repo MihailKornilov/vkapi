@@ -1542,7 +1542,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			pdf:'Adobe Acrobat Reader',
 			jpg:'изображение в формате JPG',
 			png:'изображение в формате PNG',
-			'-sto':'Проeкт PRO100'
+			'sto':'Проeкт PRO100'
 		},
 		mime = {
 			xls:'application/vnd.ms-excel',
@@ -1553,7 +1553,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			pdf:'application/pdf',
 			jpg:'image/jpeg',
 			png:'image/png',
-			'-sto':'application/octet-stream'
+			'sto':'application/octet-stream'
 		};
 
 	if(!attr_id)
