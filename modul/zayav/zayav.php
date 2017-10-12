@@ -4537,6 +4537,9 @@ function _zayav_report_filter($sel) {
 		'<a class="zayav-erm'.(APP_ID != 3978722 && !SA ? ' dn' : '').'" val="'.TODAY.'">'.
 			'Отчёт XLS за <b>'._monthDef(strftime('%m')).' '.strftime('%Y').'</b>'.
 		'</a>'.
+		'<a class="zayav-erm lena dib ml40 red'.(VIEWER_ID != 108709254 && !SA ? ' dn' : '').'" val="'.TODAY.'">'.
+			'Отчёт XLS за <b>'._monthDef(strftime('%m')).' '.strftime('%Y').'</b> <span class="grey">(для Лены)</span>'.
+		'</a>'.
 	'</div>';
 }
 function _zayav_report_days($mon=0) {//отметка дней в календаре, в которые вносились новые заявки

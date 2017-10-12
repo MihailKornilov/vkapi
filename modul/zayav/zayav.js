@@ -2806,6 +2806,11 @@ $(document)
 				_zayavReportSpisok(v, id);
 			};
 			$('.zayav-erm').click(function() {
+				var t = $(this);
+				if(t.hasClass('lena')) {
+					location.href = URL + '&p=75&d=erm_lena&mon=' + $(this).attr('val');
+					return;
+				}
 				location.href = URL + '&p=75&d=erm&mon=' + $(this).attr('val');
 			});
 		}

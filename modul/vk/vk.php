@@ -2354,6 +2354,9 @@ function _print_document() {//вывод на печать документов
 		case 'erm':
 			require_once GLOBAL_DIR.'/view/xls/evrookna_report_month.php';
 			break;
+		case 'erm_lena'://изменённый отчёт для Лены
+			require_once GLOBAL_DIR.'/view/xls/evrookna_report_month_lena.php';
+			break;
 		case 'ob_word': _zayavObWord(); break;
 		case 'template': _template(); break;
 		default: die('Документ не найден.');
