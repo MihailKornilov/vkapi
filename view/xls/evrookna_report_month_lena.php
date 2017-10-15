@@ -186,7 +186,7 @@ function contentShow($sheet, $line) {
 
 	$zayav = _clientValToList($zayav);
 	$zayav = _dogovorValToList($zayav);
-	$zayav = _zayavTovarValToList($zayav);
+//	$zayav = _zayavTovarValToList($zayav);
 
 	//Номер договора и сумма. Берутся из расходов по заявке.
 	$sql = "SELECT *
@@ -209,7 +209,7 @@ function contentShow($sheet, $line) {
 		}
 		if($r['category_id'] == 10) {
 			$zayav[$r['zayav_id']]['zamer_sum'] = $r['sum'];
-			$zayav[$r['zayav_id']]['zamer_worker'] = utf8(_viewer($r['worker_id'], 'viewer_name'));
+//			$zayav[$r['zayav_id']]['zamer_worker'] = utf8(_viewer($r['worker_id'], 'viewer_name'));
 		}
 	}
 
