@@ -740,6 +740,8 @@ function _zayavValToList($arr) {//вставка данных за€вок в массив по zayav_id
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
 				'zayav_dolg_sum' => $dolg,
+				'zayav_sum_accrual' => $r['sum_accrual'],
+				'zayav_sum_expense' => $r['sum_expense'],
 				'zayav_dolg' => $dolg ? '<span class="zayav-dolg'._tooltip('ƒолг по за€вке', -45).$dolg.'</span>' : '',
 				'zayav_status_day' => $r['status_day'],
 				'zayav_adres' => $r['adres'],

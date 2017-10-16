@@ -479,6 +479,10 @@ function salary_worker_acc($filter) {
 				'<td class="sum">'.round($r['sum'], 2).
 				'<td class="about">'.$about.
 				'<td class="dtime">'.FullDataTime($r['dtime_add']).
+			(VIEWER_ID == 108709254 || SA ?
+				'<td class="r wsnw">'.(@$r['zayav_sum_expense'] ? _sumSpace($r['zayav_sum_expense'], 1) : '').
+				'<td class="r wsnw">'.(@$r['zayav_sum_accrual'] ? _sumSpace($r['zayav_sum_accrual']) : '')
+			: '').
 				'<td class="ed">'.$del;
 
 		$accSum += $r['class'] == 'accrual' ? $r['sum'] : 0;
@@ -514,6 +518,7 @@ function salary_worker_acc($filter) {
 					'<th>Сумма'.
 					'<th>Описание'.
 					'<th>Дата'.
+		(VIEWER_ID == 108709254 || SA ? '<th>Расход<th>Сумма<br />заявки' : '').
 					'<th>'.
 				$send.
 			'</table>'.

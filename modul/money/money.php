@@ -959,6 +959,7 @@ function expense_spisok($v=array()) {
 				'<th>';
 
 	foreach($expense as $r) {
+		$del = APP_ID == 3495523 ? 1 : DEBUG;//todo удаление расхода для Купца временно
 		$send['spisok'] .=
 			'<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 				'<td class="sum"><b>'._sumSpace($r['sum']).'</b>'.
@@ -967,7 +968,7 @@ function expense_spisok($v=array()) {
 				'<td class="ed">'.
 					($r['category_id'] != 1 && !$r['zayav_id'] ?
 						_iconEdit($r).
-						_iconDel($r + array('del' => APP_ID == 3495523 ? 1 : 0)) //todo удаление расхода для Купца временно
+						_iconDel($r + array('del' => $del))
 					: '');
 	}
 
