@@ -1594,6 +1594,37 @@ function _arr($arr, $i=false) {//Последовательный массив
 	return $send;
 }
 
+function _pr($arr) {//аналог функции print_r
+	if(empty($arr))
+		return _prMsg('массив пуст');
+
+	if(!is_array($arr))
+		return _prMsg('не является массивом');
+
+	return
+	'<div class="dib pad5 bor-e8">'.
+		_prFor($arr).
+	'</div>';
+}
+function _prMsg($msg) {
+	return '<div class="dib grey i pad5 bor-e8">'.$msg.'</div>';
+}
+function _prFor($arr, $sub=0) {//перебор массива
+	$send = '';
+	foreach($arr as $id => $r) {
+		$send .=
+			'<div class="'.($sub ? 'ml20' : '').(is_array($r) ? '' : ' mtm2').'">'.
+				'<span class="'.($sub ? 'fs11 color-acc' : 'fs12 black').(is_array($r) ? ' b u curP' : '').'"'.(is_array($r) ? ' onclick="$(this).next().slideToggle(300)"' : '').'>'.
+					$id.':'.
+				'</span> '.
+				'<span class="grey fs11">'.
+					(is_array($r) ? _prFor($r, 1) : $r).
+				'</span>'.
+			'</div>';
+	}
+	return $send;
+}
+
 function _sel($arr) {
 	$send = array();
 	foreach($arr as $uid => $title) {

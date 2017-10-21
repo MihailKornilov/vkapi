@@ -1085,6 +1085,7 @@ $.fn.tovar = function(o) {
 
 	var BUT = t.prev(),
 		VAL = $.trim(t.val()),
+		TS_CAT_ID = 0,      //id категории
 		TS_TAB = o.several ? BUT.prev() : false, //таблица с товарами, если несколько
 		TS_DIALOG,          //диалог окна выбора товара
 		TS_VAL = '',        //введённое значение при поиске
@@ -1148,24 +1149,31 @@ $.fn.tovar = function(o) {
 			tovar_id_use:o.tovar_id_use,
 			tovar_id_no:o.tovar_id_no,
 			zayav_use:o.zayav_use,
-			avai:o.avai
+			avai:o.avai,
+			cat_id:TS_CAT_ID
 		};
 		$('#tovar-find')._search('process');
 		$.post(AJAX_MAIN, send, function(res) {
 			$('#tovar-find')._search('cancel');
-			if(res.success) {
-				TS_VAL = v;
-				TS_ARR = res.arr;
-				$('#tres')
-					.html(res.html)
-					.find('.tsu').click(function(e) {
-						e.stopPropagation();
-						var id = $(this).attr('val');
-						tsSelected(id);
-						TS_DIALOG.close();
-					});
 
-			}
+			if(!res.success)
+				return;
+
+			TS_VAL = v;
+			TS_ARR = res.arr;
+			$('#tres')
+				.html(res.html)
+				.find('.tsu').click(function(e) {
+					e.stopPropagation();
+					var id = $(this).attr('val');
+					tsSelected(id);
+					TS_DIALOG.close();
+				})
+				.end()
+				.find('.ts-cat').click(function() {
+					TS_CAT_ID = $(this).attr('val');
+					tsFind(v);
+				});
 		}, 'json');
 	}
 	function tsSelectedLoad() {//вставка товаров, которые были выбраны (при редактировании)

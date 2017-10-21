@@ -358,7 +358,11 @@ switch(@$_POST['op']) {
 			 AND `t`.`id`=`bind`.`tovar_id`
 			 AND !`t`.`deleted`";
 
-		$msgResult = 'Недавно добавленные товары:';
+		if($cat_id = _num($_POST['cat_id']))
+			$cond .= " AND `category_id` IN (".$cat_id.','._tovarCategory($cat_id, 'child_ids').")";
+
+//		$msgResult = 'Недавно добавленные товары:';
+		$msgResult = 'Товары по категориям:';
 
 		if($find) {
 			$f = array();
@@ -376,8 +380,7 @@ switch(@$_POST['op']) {
 				:
 				"(".implode(' OR ', $f).")"
 			);
-		}
-		elseif($tovar_id_use = _num($_POST['tovar_id_use'])) {
+		} elseif($tovar_id_use = _num($_POST['tovar_id_use'])) {
 			$sql = "SELECT `use_id`
 					FROM `_tovar_use`
 					WHERE `tovar_id`=".$tovar_id_use;
@@ -400,7 +403,11 @@ switch(@$_POST['op']) {
 					 ON `z`.`app_id`=".APP_ID."
 					AND `z`.`tovar_id`=`bind`.`tovar_id`";
 
-		$send['html'] =	utf8('<div class="_empty mar10">Товаров не найдено.</div>');
+		$send['html'] =	utf8(
+			_tovar_select_result('Товаров не найдено.').
+			_tovar_select_cat_path($cat_id).
+			'<div class="_empty mar10">Товаров не найдено.</div>'
+		);
 
 		$sql = "SELECT COUNT(*) AS `all`
 				FROM
@@ -411,15 +418,10 @@ switch(@$_POST['op']) {
 		if(!$all = query_value($sql))
 			jsonSuccess($send);
 
-		$html =
-			'<div class="color-pay fs14 pl10 pb5 line-b">'.
-				($find ?
-					'Найден'._end($all, '', 'о').' <b class="fs14">'.$all.'</b> товар'._end($all, '', 'а', 'ов').':'
-					:
-					$msgResult
-				).
-			'</div>'.
-			'<div class="bg-ffe pl10 pr10 pb10">';
+		if($find || $cat_id)
+			$msgResult = 'Найден'._end($all, '', 'о').' <b class="fs14">'.$all.'</b> товар'._end($all, '', 'а', 'ов').':';
+
+		$html = '<div class="bg-ffe pl10 pr10 pb10">';
 
 		$sql = "SELECT
 					`t`.*,
@@ -474,11 +476,16 @@ switch(@$_POST['op']) {
 					_tovarCategory($id).
 					'<span class="pale ml10">'.($find ? count($r) : _tovarCategory($id, 'count')).'</span>'.
 				'</div>'.
-				_tovar_unit_select($r, $find, $avai);
+				_tovar_select_unit($r, $find, $avai);
 		}
 		$html .= '</div>';
 
-		$send['html'] =	utf8($html);
+		$send['html'] =	utf8(
+			_tovar_select_result($msgResult).
+			_tovar_select_cat_path($cat_id).
+			(!$avai && !$find ? _tovar_select_category($cat_id) : '').
+			($avai || $find || $cat_id ? $html : '')
+		);
 		$send['arr'] =	$arr;
 		jsonSuccess($send);
 		break;
@@ -1739,10 +1746,58 @@ function _tovar_feature_update($tovar_id) {//обновление характеристик товара
 	query($sql);
 }
 
-function _tovar_unit_select($spisok, $find, $avai) {
+function _tovar_select_result($msg) {//путь выбранной категории товара
+	return '<div class="color-pay fs14 pl10 pb5 line-b">'.$msg.'</div>';
+}
+function _tovar_select_cat_path($cat_id) {//путь выбранной категории товара
+	if(!$cat_id)
+		return '';
+
+	return
+	'<div class="bg-ffc fs15 pad10 line-b">'.
+		'<div val="0" class="ts-cat icon icon-del fr'._tooltip('Отменить выбор', -52).'</div>'.
+		_tovarCategory($cat_id, 'path').
+	'</div>';
+}
+function _tovar_select_category($cat_id) {//список категорий при выборе товара
+	if($cat_id)
+		return '';
+
+	$html = '';
+
+	foreach(_tovarCategory('tree') as $id => $r) {
+		$carSub = '';
+		if(!empty($r['child'])) {
+			foreach($r['child'] as $child_id => $sb) {
+				$carSub .=
+					'<div class="ml30 mt1">'.
+						'<a class="ts-cat fs12" val="'.$child_id.'">'.
+							$sb['name'].
+						'<span class="fs12 pale ml10">'.$sb['count'].'</span>'.
+						'</a>'.
+					'</div>';
+			}
+			$carSub = '<div class="mb10">'.$carSub.'</div>';
+		}
+		$html .=
+			'<div class="ml10 mt3">'.
+				'<a class="ts-cat fs16" val="'.$id.'">'.
+					$r['name'].
+					'<span class="fs14 pale ml20 b">'.$r['count'].'</span>'.
+				'</a>'.
+				$carSub.
+			'</div>';
+	}
+
+
+
+	return '<div class="bg-ffe pad10">'.$html.'</div>';
+}
+function _tovar_select_unit($spisok, $find, $avai) {
 	$send = '<table class="collaps w100p bg-fff mt1 mb10">';
 	foreach($spisok as $r) {
 		if($find) {
+			$find = str_replace('/', '', $find);
 			$reg = '/('.$find.')/iu';
 			$reg = utf8($reg);
 //			$r['name'] = _findRegular($find, $r['name']);
