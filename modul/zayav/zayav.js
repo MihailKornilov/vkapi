@@ -2384,6 +2384,16 @@ $(document)
 			.css('background', '#' + ZAYAV_STATUS_COLOR_ASS[id]);
 	})
 */
+	.on('click', '.zayav-expense-toggle', function() {//сворачивание/разворачивание списка расходов по заявке
+		var t = $(this),
+			tab = t.next(),
+			v;
+		tab.slideToggle(200, function() {
+			v = tab.css('display') == 'none' ? 1 : 0;
+			t.find('a').html(!v ? 'свернуть' : 'развернуть');
+			_cookie('zet', v);
+		});
+	})
 	.on('click', '._zayav-unit', function() {
 		var id = $(this).attr('val');
 		_scroll('set', 'u' + id);

@@ -4076,15 +4076,25 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			  AND !`deleted`";
 	$accrual_sum = query_value($sql);
 
+	$zet = _num(@$_COOKIE['zet']) ? ' class="dn"' : '';
 	$send =
 		'<div class="headBlue but">'.
 			'Расходы по заявке'.
 			'<button class="vk small green" onclick="_zayavExpenseEdit()">Добавить расход</button>'.
 		'</div>'.
-		'<h1>'.($accrual_sum ? 'Общая сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.' : 'Начислений нет.').'</h1>';
+		'<h1 class="zayav-expense-toggle curP over1">'.
+			'<a class="fr">'.(!$zet ? 'свернуть' : 'развернуть').'</a>'.
+			($accrual_sum ?
+				'Общая сумма начислений: <b>'.round($accrual_sum, 2).'</b> руб.'
+				:
+				'Начислений нет.'
+			).
+			'<span class="grey ml10">'.count($arr).' запис'._end(count($arr), 'ь', 'и', 'ей').'</span>'.
+		'</h1>';
 
 	$expense_sum = 0;
-	$send .= '<table>';
+	$send .= '<div'.$zet.'>'.
+		'<table>';
 	foreach($arr as $r) {
 		$sum = _cena($r['sum']);
 		$expense_sum += $sum;
@@ -4130,7 +4140,7 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 	$ost = $accrual_sum - $expense_sum;
 	$send .= '<tr><td colspan="3" class="r">Итог:<td class="sum"><b>'._sumSpace($expense_sum).'</b> р.'.
 			 '<tr><td colspan="3" class="r">Остаток:<td class="sum '.($ost > 0 ? ' plus' : 'minus').'">'._sumSpace($ost).' р.'.
-			'</table>';
+			'</table></div>';
 
 	return $send;
 }
