@@ -930,7 +930,7 @@ function _tovar_spisok($v=array()) {
 	if($filter['find']) {
 		$cond .= " AND (`name` LIKE '%".$filter['find']."%'
 					 OR `about` LIKE '%".$filter['find']."%'
-					 OR `articul`='".$filter['find']."'
+					 OR `articul` LIKE '%".$filter['find']."%'
 					   )";
 	}
 
@@ -1034,8 +1034,9 @@ function _tovar_unit($spisok, $filter=array()) {
 			$r['about'] = preg_replace($reg, '<span class="fndd fs12">\\1</span>', $r['about'], 1);
 			$r['about'] = win1251($r['about']);
 
-			if($filter['find'] == $r['articul'])
-				$r['articul'] = '<span class="fndd fs12">'.$r['articul'].'</span>';
+			$r['articul'] = utf8($r['articul']);
+			$r['articul'] = preg_replace($reg, '<span class="fndd fs12">\\1</span>', $r['articul'], 1);
+			$r['articul'] = win1251($r['articul']);
 		}
 		$send .=
 			'<tr class="tovar-unit over1 curP" val="'.$r['id'].'">'.
