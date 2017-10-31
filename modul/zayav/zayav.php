@@ -879,7 +879,8 @@ function _zayavFilter($v=array()) {
 		'deleted' => 0,
 		'deleted_only' => 0,
 		'f56' => 0,//не оплачена
-		'f57' => 0//нет начисления
+		'f57' => 0,//нет начисления
+		'f59' => 0//нет начисления сотруднику
 	);
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -910,6 +911,7 @@ function _zayavFilter($v=array()) {
 		'deleted_only' => _bool(@$v['deleted_only']),
 		'f56' => _bool(@$v['f56']),
 		'f57' => _bool(@$v['f57']),
+		'f59' => _bool(@$v['f59']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -1153,6 +1155,15 @@ function _zayav_spisok($v) {
 
 			if($filter['f57'])
 				$cond .= " AND !`sum_accrual`";
+
+			if($filter['f59']) {
+				$sql = "SELECT DISTINCT `zayav_id`
+						FROM `_zayav_expense`
+						WHERE `app_id`=".APP_ID."
+						  AND `worker_id`";
+				$zayav_ids = query_ids($sql);
+				$cond .= " AND `id` NOT IN (".$zayav_ids.")";
+			}
 		}
 	}
 
@@ -1711,7 +1722,8 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 
 		55 => _zayavObOnpay($v),
 		56 => '<div class="mt5">'._check('f56', '{label}', $v['f56'], 1).'</div>',
-		57 => '<div class="mt5">'._check('f57', '{label}', $v['f57'], 1).'</div>'
+		57 => '<div class="mt5">'._check('f57', '{label}', $v['f57'], 1).'</div>',
+		59 => '<div class="mt20">'._check('f59', '{label}', $v['f59'], 1).'</div>'
 	);
 
 	$send = '';

@@ -32,6 +32,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 		$('#noattach1')._check(_zayavSpisok);
 		$('#f56')._check(_zayavSpisok);
 		$('#f57')._check(_zayavSpisok);
+		$('#f59')._check(_zayavSpisok);
 		WORKER_SPISOK.push({uid:-1, title:'Не назначен', content:'<b>Не назначен</b>'});
 		$('#executer_id')._select({
 			width:180,
@@ -2292,6 +2293,7 @@ $(document)
 
 		$('#f56')._check(0);		ZAYAV.f56 = 0;
 		$('#f57')._check(0);		ZAYAV.f57 = 0;
+		$('#f59')._check(0);		ZAYAV.f59 = 0;
 
 		_zayavSpisok();
 	})
