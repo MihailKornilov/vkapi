@@ -1048,6 +1048,7 @@ $.fn.tovar = function(o) {
 		5. расход в заявке: наличие
 		6. фильр списка заявок
 		7. объединение товаров
+		8. фильтр статистики заявок
 */
 	var t = $(this),
 		attr_id = t.attr('id'),
@@ -1136,6 +1137,7 @@ $.fn.tovar = function(o) {
 					TS_ARR = res.arr;
 					TS_DIALOG.close();
 					tsSelected(res.id);
+					o.func(res.id, attr_id, sp);
 				}
 			});
 		});
@@ -1167,6 +1169,7 @@ $.fn.tovar = function(o) {
 					e.stopPropagation();
 					var id = $(this).attr('val');
 					tsSelected(id);
+					o.func(id, attr_id, TS_ARR[id]);
 					TS_DIALOG.close();
 				})
 				.end()
@@ -1200,7 +1203,7 @@ $.fn.tovar = function(o) {
 
 		var sp = TS_ARR[id],
 			html =
-			'<table class="w100p bs5 bg-gr1 bor-e8">' +
+			'<table class="w100p bs5 bg-fff bor-e8">' +
 				'<tr>' +
 			        '<td class="top w35 h25">' + sp.img +
 					'<td class="top b fs14">' +
@@ -1250,7 +1253,7 @@ $.fn.tovar = function(o) {
 						sp.avai_id = avai_id;
 						sp.avai_count = res.arr[avai_id]['count'];
 						sp.avai_buy = res.arr[avai_id]['sum_buy'];
-						o.func(id, attr_id, sp);
+//						o.func(id, attr_id, sp);
 					});
 					if(res.arr_count == 1)
 						$('#tovar-avai-id')
@@ -1259,8 +1262,7 @@ $.fn.tovar = function(o) {
 				} else
 					$('#ts-avai').html('<div class="pad10 center red">' + res.text + '</div>');
 			}, 'json');
-		} else
-			o.func(id, attr_id, sp);
+		}
 
 		if(o.equip !== false) {
 			$('#ts-equip').slideDown();

@@ -1625,6 +1625,15 @@ switch(@$_POST['op']) {
 			}
 		}
 
+		if($tovar_id = _num($_POST['tovar_id'])) {
+			$sql = "SELECT DISTINCT `zayav_id`
+					FROM `_zayav_tovar`
+					WHERE `app_id`=".APP_ID."
+					  AND `tovar_id`=".$tovar_id;
+			$zayav_ids = query_ids($sql);
+		}
+
+		
 		//список годов
 		$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y')
 				FROM `_zayav`
@@ -1698,6 +1707,11 @@ switch(@$_POST['op']) {
 				'<tr'.(empty($tovarCat) ? ' class="dn"' : '').'>'.
 					'<td class="label r">Категория товаров:'.
 					'<td><input type="hidden" id="filter-tovar-cat" value="'.$tovar_cat_id.'" />'.
+				'<tr'.(empty($tovarCat) ? ' class="dn"' : '').'>'.
+					'<td class="label r topi">Конкретный товар:'.
+					'<td><div class="w300">'.
+							'<input type="hidden" id="filter-tovar-id" value="'.$tovar_id.'" />'.
+						'</div>'.
 			'</table>'.
 			'<div id="zayav-stat" class="mt20"></div>'
 		);

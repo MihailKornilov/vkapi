@@ -1565,7 +1565,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			});
 	},
 
-	_zayavStat = function(service_id) {//переход на заявку без href
+	_zayavStat = function(service_id) {//график заявок по конкретному виду деятельности
 		var dialog = _dialog({
 				top:20,
 				width:750,
@@ -1577,7 +1577,8 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			SERVICE_ID = service_id,
 			YEAR = 0,
 			YEAR_COMPARE = 0,
-			TOVAR_CAT_ID = 0;
+			TOVAR_CAT_ID = 0,
+			TOVAR_ID = 0;
 
 		statLoad();
 
@@ -1587,7 +1588,8 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				service_id:SERVICE_ID,
 				year:YEAR,
 				year_compare:YEAR_COMPARE,
-				tovar_cat_id:TOVAR_CAT_ID
+				tovar_cat_id:TOVAR_CAT_ID,
+				tovar_id:TOVAR_ID
 			};
 			$('#zayav-stat').css('opacity', .4);
 			dialog.load(send, loaded);
@@ -1628,6 +1630,14 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				spisok:res.filterTovarCat,
 				func:function(v) {
 					TOVAR_CAT_ID = v;
+					statLoad();
+				}
+			});
+			$('#filter-tovar-id').tovar({
+				small:1,
+				zayav_use:1,
+				func:function(v) {
+					TOVAR_ID = v;
 					statLoad();
 				}
 			});
