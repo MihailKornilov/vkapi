@@ -1253,7 +1253,7 @@ $.fn.tovar = function(o) {
 						sp.avai_id = avai_id;
 						sp.avai_count = res.arr[avai_id]['count'];
 						sp.avai_buy = res.arr[avai_id]['sum_buy'];
-//						o.func(id, attr_id, sp);
+						o.func(id, attr_id, sp);
 					});
 					if(res.arr_count == 1)
 						$('#tovar-avai-id')

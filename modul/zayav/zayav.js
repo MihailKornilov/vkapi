@@ -968,8 +968,8 @@ var _zayavReady = function() {//страница со списком заявок загружена
 					'<td><input type="hidden" id="ze-expense-dub" />' +
 				'<tr id="tr-expense-cat" class="dn">' +
 					'<td class="label r topi">Категория расхода организации:' +
-					'<td><input type="hidden" id="category_id-add" />' +
-						'<input type="hidden" id="category_sub_id-add" />' +
+					'<td><input type="hidden" id="ze-cat-id-add" />' +
+						'<input type="hidden" id="ze-cat-sub-id-add" />' +
 				'<tr id="tr-invoice" class="dn">' +
 					'<td class="label r topi">Расчётный счёт:' +
 					'<td><input type="hidden" id="invoice_id" />' +
@@ -1008,7 +1008,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 					id = _num(sp[0]),
 					id_sub = _num(sp[1]);
 				
-				$('#category_id-add').val(id)._select({
+				$('#ze-cat-id-add').val(id)._select({
 					width:258,
 					bottom:5,
 					title0:'Не указана',
@@ -1125,8 +1125,8 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				count:_ms($('#ze-count').val()),
 				sum:_cena($('#ze-sum').val()),
 				expense_dub:$('#ze-expense-dub').val(),
-				expense_cat_id:$('#category_id-add').val(),
-				expense_cat_id_sub:$('#category_sub_id-add').val(),
+				expense_cat_id:$('#ze-cat-id-add').val(),
+				expense_cat_id_sub:$('#ze-cat-sub-id-add').val(),
 				invoice_id:$('#invoice_id').val()
 			};
 			dialog.post(send, function(res) {
