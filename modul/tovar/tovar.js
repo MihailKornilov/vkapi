@@ -1137,7 +1137,7 @@ $.fn.tovar = function(o) {
 					TS_ARR = res.arr;
 					TS_DIALOG.close();
 					tsSelected(res.id);
-					o.func(res.id, attr_id, sp);
+					o.func(res.id, attr_id, TS_ARR[res.id]);
 				}
 			});
 		});
