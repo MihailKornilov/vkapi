@@ -1831,6 +1831,22 @@ $(document)
 
 	.ready(function() {
 		if($('#setup_my').length) {
+			$('#ava').click(function() {
+				var t = $(this),
+					send = {
+						op:'setup_my_ava'
+					};
+				if(t.hasClass('_busy'))
+					return;
+				t.addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					t.removeClass('_busy');
+					if(res.success) {
+						$('#photo').html(res.photo);
+						_msg('Аватарка обновлена!');
+					}
+				}, 'json');
+			});
 			$('#pinset').click(function() {
 				var html =
 						'<table class="bs10">' +

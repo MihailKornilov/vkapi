@@ -1,5 +1,11 @@
 <?php
 switch(@$_POST['op']) {
+	case 'setup_my_ava':
+		_viewerUpdate();
+		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+		$send['photo'] = _viewer(VIEWER_ID, 'viewer_photo');
+		jsonSuccess($send);
+		break;
 	case 'setup_my_pinset':
 		$pin = _txt(@$_POST['pin']);
 		if(PIN || !$pin || strlen($pin) < 3 || strlen($pin) > 10)

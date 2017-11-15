@@ -75,8 +75,23 @@ function setup_my() {//12
 		'name' => 'Мои настройки'
 	)).
 	'<div id="setup_my" class="mar20">'.
-		'<div class="hd2">Пин-код</div>'.
-		'<div class="_info">'.
+		'<div class="hd2">Аватарка</div>'.
+		'<table class="w500 ml30">'.
+			'<tr><td class="center">'.
+					'<div id="photo">'._viewer(VIEWER_ID, 'viewer_photo').'</div>'.
+					'<button class="vk small mt10" id="ava">Обновить</button>'.
+				'<td>'.
+					'<div class="_info ml10 mt5">'.
+						'Вы можете обновить вашу аватарку в приложении. '.
+						'При нажатии кнопки <u>Обновить</u> будет загружена текущая аватарка с вашей страницы ВКонтакте.'.
+						'<br>'.
+						'<u class="grey">Внимание:</u> <span class="grey">отменить данное действие будет невозможно.</span>'.
+					'</div>'.
+		'</table>'.
+
+
+		'<div class="hd2 mt20">Пин-код</div>'.
+		'<div class="_info mt10 ml20 mr20">'.
 			'<p><b>Пин-код</b> необходим для дополнительного подтверждения вашей личности, '.
 			'если другой пользователь получит доступ к вашей странице ВКонтакте.'.
 			'<br />'.
@@ -86,7 +101,7 @@ function setup_my() {//12
 			'<p>Если вы забыли пин-код, обратитесь к руководителю, чтобы сбросить его.'.
 		'</div>'.
 
-		'<div class="center mb20">'.
+		'<div class="center">'.
 		(PIN ?
 			'<button class="vk" id="pinchange">Изменить пин-код</button> '.
 			'<button class="vk" id="pindel">Удалить пин-код</button>'
@@ -96,7 +111,7 @@ function setup_my() {//12
 		'</div>'.
 
 	(!RULE_INCOME_FILTER_MON ?
-		'<div class="hd2">Дополнительно</div>'.
+		'<div class="hd2 mt20">Дополнительно</div>'.
 		'<table class="bs10">'.
 			'<tr><td class="label">Показывать платежи:<td><input type="hidden" id="RULE_MY_PAY_SHOW_PERIOD" value="'._num(@RULE_MY_PAY_SHOW_PERIOD).'" />'.
 		'</table>'
