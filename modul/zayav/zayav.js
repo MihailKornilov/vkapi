@@ -1937,8 +1937,6 @@ $.fn.gnGet = function(o, o1) {//номера газет
 	}, o);
 
 	var pix = 21, // высота поля номера в пикселях
-		gns_begin = GN_FIRST,
-		gns_end = gns_begin + o.show,
 		html =
 			'<div id="gnGet">' +
 				'<table>' +
@@ -1960,9 +1958,13 @@ $.fn.gnGet = function(o, o1) {//номера газет
 	$(document)
 		.off('click', '#darr')
 		.on('click', '#darr', function() {// Разворачивание списка
-			gns_begin = gns_end;
-			gns_end += o.add;
-			gnsPrint();
+			var t = $(this),
+				begin = _num(t.prev().find('.gns-week').attr('val'));
+
+			if(!begin)
+				return;
+
+			gnsPrint(begin + 1, o.add);
 		})
 		.off('click', '.gns-week')
 		.on('click', '.gns-week', function() {// Действие по нажатию на номер газеты
@@ -1991,15 +1993,21 @@ $.fn.gnGet = function(o, o1) {//номера газет
 		gnCena = 0;   // Цена за один номер
 
 	// Выделение выбранных номеров при редактировании
-	var max = 0;
-	for(var n in o.gns) {
-		if(n > GN_LAST)
-			break;
-		if(!GN_ASS[n])
-			continue;
-		max = n;
-	}
-	gnsPrint(1, max ? max - GN_FIRST + 1 : 0);
+	var gn_sel_end = 0,
+		count = 0;
+	for(var n in o.gns)
+		gn_sel_end = _num(n);
+
+	if(gn_sel_end)
+		for(n in GN_ASS) {
+			n = _num(n);
+			if(n > gn_sel_end)
+				break;
+			if(n < GN_FIRST)
+				continue;
+			count++;
+		}
+	gnsPrint(GN_FIRST, count + o.show);
 	gnsDopAll();
 	gnsValUpdate();
 
@@ -2014,7 +2022,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 		if(sel)
 			t.addClass('sel');
 
-		gnsPrint(1, v);
+		gnsPrint(GN_FIRST, v + o.show);
 
 		$('.gns-week').addClass(function(i) {
 			return i < v ? 'gnsel' : '';
@@ -2027,19 +2035,28 @@ $.fn.gnGet = function(o, o1) {//номера газет
 		cenaSet();
 		gnsValUpdate();
 	});
-	function gnsPrint(first, count) {// Вывод списка номеров
-		if(first) {// Список номеров выводится с самого начала, а не догружается
-			gns_begin = GN_FIRST;
-			gns_end = gns_begin + (count || 0) + o.show;
-		}
+	function gnsPrint(start, count) {// Вывод списка номеров
+		/*
+			start - первый номер, с которого выводить
+			count - количество номеров к показу
+		*/
 
-		gnGet.find('#darr').remove();
+		//если первый номер не указан, значит первым будет указанный в глобальных настройках
+		if(!start)
+			start = GN_FIRST;
+
+		if(!count)
+			count = o.show;
 
 		var polosa = _toAss(GAZETA_POLOSA_SPISOK),
 			html = '';
-		for(var n = gns_begin; n < gns_end; n++) {
-			if(n > GN_LAST)
+
+		gnGet.find('#darr').remove();
+
+		for(var n in GN_ASS) {
+			if(!count)
 				break;
+
 			var sp = GN_ASS[n],
 				prev = ' curP',
 				schet = 0,
@@ -2048,8 +2065,10 @@ $.fn.gnGet = function(o, o1) {//номера газет
 				skidka = o.skidka,
 				cena = '',
 				gnid = 0;
-			if(!sp) // если номер пропущен, тогда не выводится
+
+			if(n < start)
 				continue;
+
 			if(o.gns[n]) {
 				schet = o.gns[n][5];
 				prev = ' gnsel ' + (schet ? 'schet' : 'prev curP');
@@ -2059,6 +2078,8 @@ $.fn.gnGet = function(o, o1) {//номера газет
 				cena = o.gns[n][3];
 				gnid = o.gns[n][4];
 			}
+
+			count--;
 
 			html +=
 				'<table><tr>' +
@@ -2077,8 +2098,8 @@ $.fn.gnGet = function(o, o1) {//номера газет
 						'<input type="hidden" id="pn' + n + '" value="' + pn + '" />' +
 				'</table>';
 		}
-		html += gns_end < GN_LAST ? '<div id="darr">&darr; &darr; &darr;</div>' : '';
-		gns[first ? 'html' : 'append'](html);
+		html += n != GN_LAST ? '<div id="darr">&darr; &darr; &darr;</div>' : '';
+		gns[start == GN_FIRST ? 'html' : 'append'](html);
 		gns.animate({height:(gns.find('.gns-week').length * pix) + 'px'}, 300);
 		gnsAA(function(sp, nn) {
 			gnsDop(nn, 1);
@@ -2235,7 +2256,7 @@ $.fn.gnGet = function(o, o1) {//номера газет
 			.html(count ? countHtml : '')
 			.find('a').click(function() {
 				gnsClear();
-				gnsPrint(1);
+				gnsPrint();
 				dopMenuA.removeClass('sel');
 			});
 	}
