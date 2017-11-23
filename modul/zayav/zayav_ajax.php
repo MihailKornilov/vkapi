@@ -101,7 +101,9 @@ switch(@$_POST['op']) {
 		_zayavNameUpdate($send['id'], $v);
 		_zayavTovarPlaceUpdate($send['id'], $v['place_id'], $v['place_other']); //обновление местонахождения товара
 		_zayavGazetaNomerUpdate($send['id'], $v);
+		_zayavBalansUpdate($send['id']);
 		kupezzZayavObUpdate($send['id']);
+		_clientBalansUpdate($v['client_id']);
 
 		_note(array(
 			'add' => 1,
@@ -135,26 +137,34 @@ switch(@$_POST['op']) {
 		if(isset($zpu[5]) && $z['client_id'] != $v['client_id']) {
 			if($z['client_id'] && !$v['client_id'])
 				jsonError('Нельзя производить отвязку заявки от клиента');
+
 			$sql = "UPDATE `_money_accrual`
 					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql);
+
 			$sql = "UPDATE `_money_income`
 					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql);
+
 			$sql = "UPDATE `_money_refund`
 					SET `client_id`=".$v['client_id']."
 					WHERE `app_id`=".APP_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
 			query($sql);
-			_clientBalansUpdate($z['client_id']);
-			_clientBalansUpdate($v['client_id']);
+
+			$sql = "UPDATE `_zayav_gazeta_nomer`
+					SET `client_id`=".$v['client_id']."
+					WHERE `app_id`=".APP_ID."
+					  AND `zayav_id`=".$zayav_id."
+					  AND `client_id`=".$z['client_id'];
+			query($sql);
 		}
 
 		$sql = "UPDATE `_zayav` SET ".$v['update']." WHERE `id`=".$zayav_id;
@@ -163,7 +173,12 @@ switch(@$_POST['op']) {
 		$v['name'] = _zayavNameUpdate($zayav_id, $v);
 		_zayavTovarUpdate($zayav_id);
 		_zayavGazetaNomerUpdate($zayav_id, $v);
+		_zayavBalansUpdate($zayav_id);
 		kupezzZayavObUpdate($zayav_id);
+
+		_clientBalansUpdate($v['client_id']);
+		if($z['client_id'] != $v['client_id'])
+			_clientBalansUpdate($z['client_id']);
 
 
 		if($changes =
@@ -2054,11 +2069,8 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 			  AND `gazeta_nomer_id`>="._gn('first');
 	query($sql);
 
-	if(empty($v['gn'])) {
-		_clientBalansUpdate($v['client_id']);
-		_zayavBalansUpdate($zayav_id);
+	if(empty($v['gn']))
 		return;
-	}
 
 	$z = _zayavQuery($zayav_id);
 
@@ -2078,7 +2090,6 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 		')';
 	}
 
-
 	$sql = "INSERT INTO `_zayav_gazeta_nomer` (
 				`app_id`,
 				`client_id`,
@@ -2091,9 +2102,6 @@ function _zayavGazetaNomerUpdate($zayav_id, $v) {//обновление номеров газет
 				`skidka_sum`
 			) VALUES ".implode(',', $insert);
 	query($sql);
-
-	_clientBalansUpdate($v['client_id']);
-	_zayavBalansUpdate($zayav_id);
 }
 
 function _zayavStatYear($service_id, $year, $zayav_ids) {//количество заявок за выбранный год

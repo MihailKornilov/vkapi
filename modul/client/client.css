@@ -91,6 +91,7 @@
 	border:#E9EFF5 solid 1px;
 	background:#fafafc;
 	box-shadow:2px 6px 6px rgba(0,0,0,0.3);
+	z-index:3;
 }
 
 #client-info #pasp-tab{border-spacing:2px 0}
