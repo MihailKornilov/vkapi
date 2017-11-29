@@ -1624,4 +1624,43 @@ $(document)
 
 		if($('#sa-balans').length)
 			$('#category-add').click(balansCategory);
+
+		if($('#sa-tovar-cat').length) {
+			$('#app-tovar')._select({
+				width:300,
+				title0:'Нулевая категория товаров',
+				spisok:APP_JSON,
+				func:function(v) {
+					if($('#spisok').hasClass('_busy'))
+						return;
+					$('#spisok').html('&nbsp').addClass('_busy');
+					var send = {
+						op:'sa_tovar_cat_get',
+						app_id:v
+					};
+					$.post(AJAX_MAIN, send, function(res) {
+						$('#spisok').removeClass('_busy');
+						if(res.success)
+							$('#spisok').html(res.html);
+					}, 'json');
+				}
+			});
+			$(document).on('click', '.icon-add', function() {//копирование категории с товарами из одного приложения в другое
+				var t = $(this),
+					id = _num(t.attr('val')),
+					send = {
+						op:'sa_tovar_cat_copy',
+						id:id
+					};
+				t.addClass('dn');
+				t.parent().addClass('_busy');
+				$.post(AJAX_MAIN, send, function(res) {
+					t.parent().removeClass('_busy');
+					if(res.success)
+						_msg();
+					else
+						t.removeClass('dn');
+				}, 'json');
+			});
+		}
 	});

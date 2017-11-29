@@ -1024,6 +1024,113 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'sa_tovar_cat_get':
+		$app_id = _num($_POST['app_id']);
+		$send['html'] = utf8(sa_tovar_cat_spisok($app_id));
+		jsonSuccess($send);
+		break;
+	case 'sa_tovar_cat_copy':
+		if(!$id = _num($_POST['id']))
+			jsonError('Ќекорректный id категории товара');
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `id`=".$id;
+		if(!$cat = query_assoc($sql))
+			jsonError(' атегории не существует');
+
+		if($cat['app_id'] == APP_ID)
+			jsonError(' атегорию можно скопировать только из другого приложени€');
+
+		if(!$cat['parent_id'])
+			jsonError(' опировать можно только дочернюю категорию');
+
+		$sql = "SELECT *
+				FROM `_tovar_category`
+				WHERE `app_id`=".$cat['app_id']."
+				  AND `id`=".$cat['parent_id'];
+		if(!$parent = query_assoc($sql))
+			jsonError('–одительской категории не существует');
+
+		//получение id родительской категории в текущем приложении
+		$sql = "SELECT `id`
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `name`='".addslashes($parent['name'])."'
+				LIMIT 1";
+		if(!$parent_id = query_value($sql)) {
+			$sql = "INSERT INTO `_tovar_category` (
+						`app_id`,
+						`name`
+					) VALUES (
+						".APP_ID.",
+						'".addslashes($parent['name'])."'
+					)";
+			query($sql);
+			$parent_id = query_insert_id('_tovar_category');
+		}
+
+		//получение id дочерней категории в текущем приложении
+		$sql = "SELECT `id`
+				FROM `_tovar_category`
+				WHERE `app_id`=".APP_ID."
+				  AND `parent_id`=".$parent_id."
+				  AND `name`='".addslashes($cat['name'])."'
+				LIMIT 1";
+		if(!$child_id = query_value($sql)) {
+			$sql = "INSERT INTO `_tovar_category` (
+						`app_id`,
+						`parent_id`,
+						`name`
+					) VALUES (
+						".APP_ID.",
+						".$parent_id.",
+						'".addslashes($cat['name'])."'
+					)";
+			query($sql);
+			$child_id = query_insert_id('_tovar_category');
+		}
+
+		//перенос товаров в текущее приложение
+		$sql = "SELECT *
+				FROM `_tovar_bind`
+				WHERE `app_id`=".$cat['app_id']."
+				  AND `category_id`=".$id;
+		if(!$arr = query_arr($sql))
+			jsonError('Ќет товаров дл€ переноса');
+
+		foreach($arr as $r) {
+			//если товар уже был внесЄн, то пропуск
+			$sql = "SELECT COUNT(*)
+					FROM `_tovar_bind`
+					WHERE `app_id`=".APP_ID."
+					  AND `tovar_id`=".$r['tovar_id']."
+					LIMIT 1";
+			if(query_value($sql))
+				continue;
+
+			$sql = "INSERT INTO `_tovar_bind` (
+						`app_id`,
+						`category_id`,
+						`tovar_id`,
+						`articul`,
+						`sum_buy`,
+						`sum_sell`
+					) VALUES (
+						".APP_ID.",
+						".$child_id.",
+						".$r['tovar_id'].",
+						'".$r['articul']."',
+						"._cena($r['sum_buy']).",
+						"._cena($r['sum_sell'])."
+					)";
+			query($sql);
+		}
+
+
+		jsonSuccess();
+		break;
+
 	case 'sa_tovar_measure_add'://внесение единицы измерени€
 		$short = _txt($_POST['short']);
 		$name = _txt($_POST['name']);

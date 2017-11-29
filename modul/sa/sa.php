@@ -32,6 +32,7 @@ function sa_global_index() {//вывод ссылок суперадминистратора для всех приложен
 		'<a href="'.URL.'&p=33">Балансы</a>'.
 		'<a href="'.URL.'&p=34">Клиенты</a>'.
 		'<a href="'.URL.'&p=35">Заявки</a>'.
+		'<a href="'.URL.'&p=83">Товары и категории</a>'.
 		'<a href="'.URL.'&p=36">Товары: единицы измерения</a>'.
 		'<a href="'.URL.'&p=37">Цвета</a>'.
 		'<a href="'.URL.'&p=38">Шаблоны документов</a>'.
@@ -941,6 +942,96 @@ function sa_zayav_service_use($type_id, $show=0) {//использование полей для конк
 }
 
 
+
+function sa_tovar_cat() {
+	$sql = "SELECT DISTINCT(`app_id`)
+			FROM `_tovar_category`
+			WHERE `app_id`";
+	$ids = query_ids($sql);
+
+	$sql = "SELECT `id`,`app_name`
+			FROM `_app`
+			WHERE `id` IN (".$ids.",".APP_ID.")";
+	$app_json = query_selJson($sql);
+
+	return
+		saPath(array('name'=>'Товары и категории')).
+		'<div id="sa-tovar-cat">'.
+			'<div class="headName">Товары и категории</div>'.
+			'<table class="ml20 bs5">'.
+				'<tr><td>Приложения:'.
+					'<td><input type="hidden" id="app-tovar" value="'.APP_ID.'" />'.
+			'</table>'.
+			'<div id="spisok" class="mh150 mar20">'.sa_tovar_cat_spisok().'</div>'.
+		'</div>'.
+		'<script>'.
+			'var APP_JSON='.$app_json.';'.
+		'</script>';
+}
+function sa_tovar_cat_spisok($app_id=APP_ID) {
+	$sql = "SELECT
+				*,
+				0 `count`
+			FROM `_tovar_category`
+			WHERE `app_id`=".$app_id."
+			ORDER BY `parent_id`,`sort`";
+	if(!$arr = query_arr($sql))
+		return 'категорий нет';
+
+	$sql = "SELECT
+				`category_id`,
+				COUNT(*)
+			FROM `_tovar_bind`
+			WHERE `app_id`=".$app_id."
+			GROUP BY `category_id`";
+	$ct = query_ass($sql);
+
+	$spisok = array();
+	foreach($arr as $id => $r) {
+		$count = _num(@$ct[$id]);
+		if(!$r['parent_id']) {
+			$spisok[$id] = array(
+				'name' => $r['name'],
+				'child' => array(),
+				'count' => $count
+			);
+			continue;
+		}
+		if(!isset($spisok[$r['parent_id']]))
+			continue;
+		$spisok[$r['parent_id']]['child'][$id] = array(
+			'name' => $r['name'],
+			'count' => $count
+		);
+		$spisok[$r['parent_id']]['count'] += $count;
+	}
+
+
+	$send =// _pr($spisok).
+		'<table class="_spisok">'.
+			'<tr><th class="">Название'.
+				'<th class="w50">Товары'.
+				'<th class="w100">';
+	foreach($spisok as $r) {
+		$send .=
+			'<tr><td class="b fs15">'.
+					$r['name'].
+				'<td class="center b">'.($r['count'] ? $r['count'] : '').
+				'<td>';
+		foreach($r['child'] as $child_id => $c) {
+			$send .=
+				'<tr><td>'.
+						'<div class="ml30">'.$c['name'].'</div>'.
+					'<td class="center grey">'.($c['count'] ? $c['count'] : '').
+					'<td>'.
+				($app_id != APP_ID ? '<div val="'.$child_id.'" class="icon icon-add'._tooltip('Добавить категорию с товарами<br>в текущее приложение', -99, '', 1).'</div>' : '');
+		}
+	}
+
+	$send .= '</table>';
+
+	return $send;
+}
 
 
 function sa_tovar_measure() {// 36 единицы измерения товаров
