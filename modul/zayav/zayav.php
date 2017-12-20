@@ -1740,7 +1740,7 @@ function _zayavPoleFilter($v=array()) {//поля фильтра списка заявок
 		$unit = str_replace('{label}', $r['name'], $pole[$pole_id]);
 
 		if($pole_id != 17 && $pole_id != 18)
-			$unit = '<div class="nofind'.$v['nofind'].'">'.$unit.'</div>';
+			$unit = '<div class="nofind mt10'.$v['nofind'].'">'.$unit.'</div>';
 
 		$send .= $unit;
 	}
