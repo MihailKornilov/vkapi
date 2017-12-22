@@ -533,27 +533,25 @@ $(document)
 			pad:10,
 			side:'left',
 			show:1,
-			delayShow:2000,
-			func:function() {
-				$('#unit-check-showed').click(function() {
-					var but = $(this),
-						send = {
-							op:'unit_check_all',
-							filter:ZAYAV
-						};
-					if(but.hasClass('_busy'))
-						return;
-					but.addClass('_busy');
-					$.post(AJAX_MAIN, send, function(res) {
-						but.removeClass('_busy');
-						if(res.success) {
-							$('#unit-check-button').html(res.but);
-							$('#spisok').html(res.spisok);
-						}
-					}, 'json');
-				});
-			}
+			delayShow:2000
 		});
+	})
+	.on('click', '#unit-check-showed', function() {//сохранение выбора группы заявок
+		var but = $(this),
+			send = {
+				op:'unit_check_all',
+				filter:ZAYAV
+			};
+		if(but.hasClass('_busy'))
+			return;
+		but.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			but.removeClass('_busy');
+			if(res.success) {
+				$('#unit-check-button').html(res.but);
+				$('#spisok').html(res.spisok);
+			}
+		}, 'json');
 	})
 	.on('mouseleave', '.unit-check', function() {//сохранение выбора единицы списка
 		var t = $(this),
