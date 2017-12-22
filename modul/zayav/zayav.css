@@ -34,6 +34,28 @@
 #gn_polosa_color_radio{margin-top:8px}
 
 
+
+.unit-check{
+	position:absolute;
+	right:3px;
+	top:3px;
+	width:34px;
+	height:34px;
+	background-color:#fff;
+	border:#BFC9D4 solid 2px;
+	border-radius:20px;
+	z-index:10;
+}
+.unit-check.on{border-color:#5F82A4}
+.unit-check ._check{margin:10px 0 0 10px}
+._zayav-unit:not(:hover) .unit-check:not(.on):not(._busy):not(.hint-show){display:none}
+.unit-check._busy *{visibility:hidden}
+
+#unit-check-button button{text-align:left}
+#unit-check-button .icon{position:absolute;right:4px;top:6px}
+
+
+
 /* элемент списка заявок */
 ._zayav-unit{
 	cursor:pointer;

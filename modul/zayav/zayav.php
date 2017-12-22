@@ -945,6 +945,7 @@ function _zayav_list($v=array()) {
 	$data = _zayav_spisok($v);
 	$v = $data['filter'];
 
+
 	return
 	'<script src="/.vkapp/.js/highcharts.js"></script>'.
 	'<div id="_zayav">'.
@@ -955,6 +956,7 @@ function _zayav_list($v=array()) {
 				'<td class="right">'.
 					'<div onclick="_zayavStat('.$v['service_id'].')" class="icon icon-stat fr mt5'._tooltip('Статистика по заявкам', -129, 'r').'</div>'.
 					'<button class="vk green w150" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
+					_zayavUnitCheck($v).
 					_zayavPoleFilter($v).
 	(VIEWER_ADMIN ? '<div class="mt20">'._check('deleted', '+ удалённые заявки', $v['deleted'], 1).'</div>'.
 					'<div id="deleted-only-div" class="mt5'.($v['deleted'] ? '' : ' dn').'">'.
@@ -1007,7 +1009,6 @@ function _zayav_list($v=array()) {
 */
 function _zayav_spisok($v) {
 	$filter = _zayavFilter($v);
-	$filter = _filterJs('ZAYAV', $filter);
 
 	$cond = "`app_id`=".APP_ID."
 		 AND `service_id`=".$filter['service_id'];
@@ -1184,6 +1185,9 @@ function _zayav_spisok($v) {
 	$all = $r['all'];
 	$count = $r['count'];
 
+	$filter['all'] = $all;
+	$filter = _filterJs('ZAYAV', $filter);
+
 	$zayav = array();
 
 	//выделение номера заявки и номера договора при быстром поиске
@@ -1249,10 +1253,17 @@ function _zayav_spisok($v) {
 		'filter' => $filter
 	);
 
+	//получение id всех заявок на основании фильтра, без лимита (для группового выбора)
+	$sql = "SELECT `id`
+			FROM `_zayav`
+			WHERE ".$cond;
+	$send['ids'] = query_ids($sql);
+
 	$sql = "SELECT
 	            *,
 	            '' `note`,
-				'' `schet`
+				'' `schet`,
+				0 `check`
 			FROM `_zayav`
 			WHERE ".$cond."
 			ORDER BY `".($filter['sort'] == 2 ? 'status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
@@ -1289,6 +1300,18 @@ function _zayav_spisok($v) {
 	if(isset($zpu[42]))
 		$zayav = _imageValToZayav($zayav);
 
+	//отметка выбранных единиц списка
+	if(isset($zpu[60])) {
+		$sql = "SELECT *
+				FROM `_unit_check`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id` IN ("._idsGet($zayav).")
+				  AND `viewer_id_add`=".VIEWER_ID;
+		if($arr = query_arr($sql))
+			foreach($arr as $r)
+				$zayav[$r['zayav_id']]['check'] = 1;
+	}
+
 	foreach($zayav as $r)
 		$send['spisok'] .= _zayavPoleUnit($zpu, $r, $filter);
 
@@ -1296,6 +1319,7 @@ function _zayav_spisok($v) {
 		'type' => 2,
 		'all' => $all
 	));
+
 	return $send;
 }
 function _zayavNote($arr) {//прикрепление заметок или комментариев в массив заявок
@@ -1459,6 +1483,32 @@ function _zayavObWord() {//Печать объявлений в формате Word
 	$doc->output('ob-word-nomer-'._gn($gn, 'general_nomer'));
 }
 
+
+function _zayavUnitCheck($v) {//отображение кнопки выбранных единиц заявок
+	$zpu = _zayavPole($v['service_id']);
+	if(empty($zpu[60]))
+		return '';
+
+	return
+	'<div id="unit-check-button" class="mt15 prel">'.
+		_zayavUnitCheckButton().
+	'</div>';
+}
+function _zayavUnitCheckButton() {//отображение кнопки выбранных единиц заявок
+	$sql = "SELECT COUNT(*)
+			FROM `_unit_check`
+			WHERE `app_id`=".APP_ID."
+			  AND `zayav_id`
+			  AND `viewer_id_add`=".VIEWER_ID;
+	if(!$count = _num(query_value($sql)))
+		return '';
+
+	return
+	'<div class="icon icon-del-white'._tooltip('Отменить выбор', -94, 'r').'</div>'.
+	'<button class="vk pink w100p" onclick="_unitCheck('.$count.')">'.
+		'Выбран'._end($count, 'а', 'о').' '.$count.' заяв'._end($count, 'ка', 'ки', 'ок').
+	'</button>';
+}
 
 /* Поля заявки */
 function _zayavPole($service_id, $type_id=0, $i='') {
@@ -1782,17 +1832,24 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 		$z['client_go'] = _findRegular($filter['find'], $z['client_go']);
 
 	return
-	'<div class="_zayav-unit'.$deleted.'"'.
+	'<div class="_zayav-unit prel'.$deleted.'"'.
 		' id="u'.$z['id'].'"'.
 		' val="'.$z['id'].'"'.
 		$statusColor.
 	'>'.
+
+	(isset($zpu[60]) ?
+		'<div class="unit-check'.($z['check'] ? ' on' : '').'" val="'.$z['check'].'">'.
+			_check('uch'.$z['id'], '', $z['check'], 1).
+		'</div>'
+	: '').
+
 		'<table class="zu-main">'.
 			'<tr><td class="zu-td1">'.
 
 				'<div class="zd">'.
 					'#'.$z['nomer'].
-					'<h2>'.FullDataTime($z['dtime_add'], 1, 1).'</h2>'.
+					'<h2>'.FullDataTime($z['dtime_add'], 1).'</h2>'.
 					$pay.
 				'</div>'.
 		

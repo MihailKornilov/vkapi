@@ -303,14 +303,13 @@ button.vk{
 	-o-transition: background-color 100ms ease-in-out;
 	transition: background-color 100ms ease-in-out;
 }
-button.vk:not(._busy):hover{background:#6d8cb0} /* 678EB4 */
+button.vk:not(._busy):hover{background-color:#6d8cb0} /* 678EB4 */
 button.vk.fw{width:100%}
 button.vk:active{padding-top:8px;padding-bottom:7px}
-button.vk._busy{color:transparent}
 button.vk.small{padding:4px 10px 3px;font-size:12px}
 button.vk.small:active{padding-top:5px;padding-bottom:2px}
-button.vk.cancel{background:transparent;color:#33567F}
-button.vk.cancel:hover{background:#E5EBF1}
+button.vk.cancel{background-color:transparent;color:#33567F}
+button.vk.cancel:hover{background-color:#E5EBF1}
 button.vk.red{background-color:#b55}
 button.vk.red:hover{background-color:#c66}
 button.vk.grey{background-color: #888}
@@ -319,6 +318,7 @@ button.vk.pink{background-color: #c6c}
 button.vk.pink:hover{background-color:#d7d}
 button.vk.green{background-color: #00AB50}
 button.vk.green:hover{background-color:#00BB57}
+button.vk._busy{color:transparent}
 
 
 
@@ -386,6 +386,41 @@ button.vk.green:hover{background-color:#00BB57}
 
 
 
+
+
+
+/* ---=== ПОДСКАЗКИ ===--- 2017-12-20 */
+._hint{
+	position:absolute;
+	left:-9999px;
+	top:-9999px;
+	box-sizing:border-box;
+	background-color:#fff;
+	border:#D1DCE8 solid 1px;
+	border-radius:4px;
+	box-shadow:0 0 7px rgba(196,207,218,.5);
+	z-index:999;
+}
+/* параметры для всех уголков */
+._hint .ug{
+	position:absolute;
+	box-sizing:border-box;
+	z-index:1000;
+}
+._hint .ug div{background:transparent no-repeat 0 0 url(data:image/gif;base64,R0lGODlhIgALAKIAABkZGf///8fW5f///////////xkZGRkZGSH5BAEAAAUALAAAAAAiAAsAAANCWKqyHDBG0ZytDz8JW9COECxid3GVeY5FOa3f8pJRy6m0JlXud88kC6rHshiPit0GgmwKcTamcwrdTKkg2tWZDSUAADs=)}
+/* уголок сверху */
+._hint .ugt{width:100%;height:6px;top:-6px;left:0}
+._hint .ugt div{width:11px;height:6px}
+/* уголок снизу */
+._hint .ugb{width:100%;height:6px;bottom:-6px;left:0}
+._hint .ugb div{width:11px;height:6px;background-position:-11px 0}
+/* уголок справа */
+._hint .ugr{width:6px;height:100%;top:0;right:-6px}
+._hint .ugr div{width:6px;height:11px;background-position:-22px 0}
+/* уголок слева */
+._hint .ugl{width:6px;height:100%;top:0;left:-6px}
+._hint .ugl div{width:6px;height:11px;background-position:-28px 0}
+._hint .hi-msg{overflow-x:hidden}
 
 
 

@@ -770,4 +770,73 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
+
+	case 'unit_check_save'://сохранение выбора единицы списка
+		if(!$unit_id = _num($_POST['unit_id']))
+			jsonError('Некорректный ID единицы списка');
+
+		if($v = _num($_POST['v'])) {
+			$sql = "INSERT INTO `_unit_check` (
+						`app_id`,
+						`zayav_id`,
+						`viewer_id_add`
+					) VALUES (
+						".APP_ID.",
+						".$unit_id.",
+						".VIEWER_ID."
+					)";
+			query($sql);
+		} else {
+			$sql = "DELETE FROM `_unit_check`
+					WHERE `app_id`=".APP_ID."
+					  AND `zayav_id`=".$unit_id."
+					  AND `viewer_id_add`=".VIEWER_ID;
+			query($sql);
+		}
+
+		$send['but'] = utf8(_zayavUnitCheckButton());
+
+		jsonSuccess($send);
+		break;
+	case 'unit_check_all'://выбор всех показанных заявок
+		$_POST['filter']['find'] = win1251(@$_POST['filter']['find']);
+		$data = _zayav_spisok($_POST['filter']);
+
+		if(!$data['all'])
+			jsonError('Нет заявок по указанным условиям');
+
+		//удаление уже выбранных таких же заявок
+		$sql = "DELETE FROM `_unit_check`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id` IN (".$data['ids'].")
+				  AND `viewer_id_add`=".VIEWER_ID;
+		query($sql);
+
+		//внесение заявок в выбор
+		$insert = array();
+		foreach(_ids($data['ids'], 1) as $unit_id)
+			$insert[] = "(".APP_ID.",".$unit_id.",".VIEWER_ID.")";
+
+		$sql = "INSERT INTO `_unit_check` (
+					`app_id`,
+					`zayav_id`,
+					`viewer_id_add`
+				) VALUES ".implode(',', $insert);
+		query($sql);
+
+		$data = _zayav_spisok($_POST['filter']);
+		$send['but'] = utf8(_zayavUnitCheckButton());
+		$send['spisok'] = utf8($data['spisok']);
+
+		jsonSuccess($send);
+		break;
+	case 'unit_check_cancel'://отмена выбора всех единиц списка
+		$sql = "DELETE FROM `_unit_check`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id`
+				  AND `viewer_id_add`=".VIEWER_ID;
+		query($sql);
+
+		jsonSuccess();
+		break;
 }
