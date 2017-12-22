@@ -314,9 +314,6 @@
 	text-align:center;
 	color:red;
 }
-#_zayav-info #tsev{border-collapse:collapse}/* tovar-several несколько товаров */
-#_zayav-info #tsev td{border:#ddd solid 1px;padding:3px 8px}
-#_zayav-info #tsev .n{color:#999}
 #_zayav-info .kvit_defect{color:#777}
 #_zayav-info .onpay{
 	margin:10px 120px;

@@ -969,7 +969,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				'<tr id="tr-expense-cat" class="dn">' +
 					'<td class="label r topi">Категория расхода организации:' +
 					'<td><input type="hidden" id="ze-cat-id-add" />' +
-						'<input type="hidden" id="ze-cat-sub-id-add" />' +
+						'<input type="hidden" id="category_sub_id-add" />' +
 				'<tr id="tr-invoice" class="dn">' +
 					'<td class="label r topi">Расчётный счёт:' +
 					'<td><input type="hidden" id="invoice_id" />' +
@@ -1126,7 +1126,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				sum:_cena($('#ze-sum').val()),
 				expense_dub:$('#ze-expense-dub').val(),
 				expense_cat_id:$('#ze-cat-id-add').val(),
-				expense_cat_id_sub:$('#ze-cat-sub-id-add').val(),
+				expense_cat_id_sub:$('#category_sub_id-add').val(),
 				invoice_id:$('#invoice_id').val()
 			};
 			dialog.post(send, function(res) {

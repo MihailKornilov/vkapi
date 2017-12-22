@@ -3596,17 +3596,26 @@ function _zayav_tovar_several($z) {//список нескольких товаров дл€ информации о 
 
 	$arr =  _tovarValToList($arr);
 
-	$send = '<table id="tsev">';
+	$send = '<table class="w400 collaps">';
 	$n = 1;
 	foreach($arr as $r)
 		$send .=
-			'<tr><td class="n r">'.($n++).
-				'<td>'.$r['tovar_link'].
-				'<td class="r">'.$r['count'].' '.$r['tovar_measure_name'];
+			'<tr class="over1">'.
+				'<td class="bor-e8 grey r pad5 fs12">'.($n++).
+				'<td class="bor-e8 pad5">'.
+					'<div class="fl mr5">'.$r['tovar_image_min'].'</div>'.
+					'<div class="fs12 pale">'._tovarCategory($r['tovar_category_id'], 'path').'</div>'.
+					$r['tovar_link'].
+				'<td class="bor-e8 r pad5">'.
+					'<b>'.$r['count'].'</b> '.
+					'<span class="grey">'.$r['tovar_measure_name'].'</span>';
 
 	$send .= '</table>';
 
-	return 	'<tr><td class="label topi">'.$z['zpu'][11]['name'].':<td>'.$send;
+	return
+	'<tr><td class="label topi">'.$z['zpu'][11]['name'].':'.
+		'<td>'.//_pr($arr).
+		$send;
 }
 function _zayavTovarValToList($arr) {//список нескольких товаров дл€ информации о за€вке
 	$sql = "SELECT *
@@ -4054,7 +4063,10 @@ function _zayav_expense($zayav_id) {//вставка расходов по за€вке в информацию о 
 	'</div>';
 }
 function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по за€вке в информацию о за€вке
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 `expense_cat_id`,
+				0 `expense_cat_id_sub`
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `zayav_id`=".$zayav_id."
@@ -4067,6 +4079,15 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 	$arr = _zayav_expense_sort($arr);
 	$arr = _attachValToList($arr);
 	$arr = _tovarValToList($arr);
+
+	//получение категорий из расходов организации
+	$moneyExpense = array();
+	if(_idsGet($arr, 'expense_id')) {
+		$sql = "SELECT *
+				FROM `_money_expense`
+				WHERE `id` IN ("._idsGet($arr, 'expense_id').")";
+		$moneyExpense = query_arr($sql);
+	}
 
 	//сумма начислений по за€вке
 	$sql = "SELECT SUM(`sum`)
@@ -4114,7 +4135,13 @@ function _zayav_expense_spisok($zayav_id, $insert_id=0) {//вставка расходов по з
 			$dop = $r['attach_link'];
 
 		if($r['expense_id'])
-			$dop .= '<div class="fs11 color-pay mt3">ѕродублировано в расходах организации</div>';
+			$dop =
+				'<b class="grey">'.
+					_expense($moneyExpense[$r['expense_id']]['category_id']).': '.
+					($moneyExpense[$r['expense_id']]['category_sub_id'] ? _expenseSub($moneyExpense[$r['expense_id']]['category_sub_id']).': ' : '').
+				'</b> '.
+				$r['txt'].
+				'<div class="fs11 color-pay mt3">ѕродублировано в расходах организации</div>';
 
 		$inserted = $insert_id == $r['id'] ? ' inserted' : ''; //подсветка только что внесЄнной записи
 		$list = $r['salary_list_id'] ? ' list' : '';  //затемнение зп, которые прив€заны к листу выдачи
