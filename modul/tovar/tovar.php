@@ -71,6 +71,14 @@ function _tovarCategory($id=false, $i='name') {
 		return $send;
 	}
 
+	//номера сортировки всех категорий и подкатегорий
+	if($id == 'all_sort') {
+		$send = array();
+		foreach($arr as $r)
+			$send[$r['id']] = $r['id'] == -1 ? 999999999 : $r['sort'];
+		return $send;
+	}
+
 	//JS список корневых категорий
 	if($id == 'main_js') {
 		$send = array();
@@ -504,10 +512,7 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 
 			'tovar_measure_name' => '', //единица измерения
 			'tovar_avai' => 0,          //количество товара в наличии
-
-
-
-
+			'tovar_sum_buy' => 0,       //цена закупки
 
 			'_end' => 0//todo удалить
 		);
@@ -519,7 +524,8 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 				`t`.*,
 				IFNULL(`bind`.`id`,0) `bind_id`,
 				`bind`.`category_id`,
-				`bind`.`avai`
+				`bind`.`avai`,
+				`bind`.`sum_buy`
 			FROM `_tovar` `t`
 
 				LEFT JOIN `_tovar_bind` `bind`
@@ -561,7 +567,8 @@ function _tovarValToList($arr, $key='tovar_id') {//вставка данных с товарами в м
 			'tovar_category_name' => _tovarCategory($t['category_id']),
 
 			'tovar_measure_name' => _tovarMeasure($t['measure_id']),
-			'tovar_avai' => _ms($t['avai'])
+			'tovar_avai' => _ms($t['avai']),
+			'tovar_sum_buy' => _cena($t['sum_buy'])
 		) + $arr[$id];
 
 		$arr[$id]['tovar_link'] = '<a'.$go.'>'.$arr[$id]['tovar_name'].'</a>';

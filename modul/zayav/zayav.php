@@ -3671,8 +3671,7 @@ function _zayav_tovar_several($z) {//список нескольких товаров дл€ информации о 
 
 	return
 	'<tr><td class="label topi">'.$z['zpu'][11]['name'].':'.
-		'<td>'.//_pr($arr).
-		$send;
+		'<td>'.$send;
 }
 function _zayavTovarValToList($arr) {//список нескольких товаров дл€ информации о за€вке
 	$sql = "SELECT *

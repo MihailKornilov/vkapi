@@ -2388,6 +2388,9 @@ function _print_document() {//вывод на печать документов
 		case 'erm_lena'://изменённый отчёт для Лены
 			require_once GLOBAL_DIR.'/view/xls/evrookna_report_month_lena.php';
 			break;
+		case 'mebel_komplekt'://список комплектующих для мебельной фабрики
+			require_once GLOBAL_DIR.'/view/xls/mebel_komplekt.php';
+			break;
 		case 'ob_word': _zayavObWord(); break;
 		case 'template': _template(); break;
 		default: die('Документ не найден.');

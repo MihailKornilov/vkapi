@@ -6,17 +6,22 @@ var	_dn = function(v, cls) {//скрытие/показ элемента
 	_unitCheck = function(count) {//действие с выбранными заявками
 		var html =
 			'<div class="_info">' +
-				'<u>Выбран' + _end(count, ['а','о']) + ' <b>' + count + '</b> заяв' + _end(count, ['ка','ки','ок']) + '.</u> ' +
+				'<u>Выбран' + _end(count, ['а','о']) + ' <b>' + count + '</b> заяв' + _end(count, ['ка','ки','ок']) + '</u>. ' +
 				'Укажите следующее действие:' +
 			'</div>' +
-			'<div class="mt15 pad10 bor-f0 bg-gr1 over1 curP">' +
+			'<div id="mebe-komplekt" class="mt15 pad10 bor-f0 bg-gr1 over1 curP">' +
 				'<div class="fs14 b color-555">Комплектующие</div>' +
-				'<div class="grey ml10 mt5">Получение списка комплектующих выбранных заявок в формате XLS.</div>' +
-			'</div>';
-		_dialog({
-			head:'Действие с выбранными заявками',
-			content:html,
-			butSubmit:''
+				'<div class="grey ml10 mt5">Получение списка комплектующих в формате XLS.</div>' +
+			'</div>',
+			dialog = _dialog({
+				head:'Действие с выбранными заявками',
+				content:html,
+				butSubmit:''
+			});
+
+		$('#mebe-komplekt').click(function() {
+			dialog.close();
+			location.href = URL + '&p=75&d=mebel_komplekt';
 		});
 	};
 
@@ -533,7 +538,7 @@ $(document)
 			pad:10,
 			side:'left',
 			show:1,
-			delayShow:2000
+			delayShow:1500
 		});
 	})
 	.on('click', '#unit-check-showed', function() {//сохранение выбора группы заявок
