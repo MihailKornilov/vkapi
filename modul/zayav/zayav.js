@@ -98,6 +98,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 		ZAYAV.op = 'zayav' + ZAYAV.service_id + '_spisok';
 		_filterSpisok(ZAYAV, v, id);
 		ZAYAV.op = 'zayav_spisok';
+		$('.filter-after-unit-check')._dn(!ZAYAV.f60);
 		$('.nofind')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('dn');
 		$('#deleted-only-div')[(ZAYAV.deleted ? 'remove' : 'add') + 'Class']('dn');
 		$.post(AJAX_MAIN, ZAYAV, function(res) {

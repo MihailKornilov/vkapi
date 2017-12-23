@@ -959,7 +959,7 @@ function _zayav_list($v=array()) {
 					'<div onclick="_zayavStat('.$v['service_id'].')" class="icon icon-stat fr mt5'._tooltip('Статистика по заявкам', -129, 'r').'</div>'.
 					'<button class="vk green w150" onclick="_zayavEdit('.$v['service_id'].')">Новая заявка</button>'.
 					_zayavUnitCheck($v).
-					_zayavPoleFilter($v).
+					'<div class="filter-after-unit-check'._dn(!$v['f60']).'">'._zayavPoleFilter($v).'</div>'.
 	(VIEWER_ADMIN ? '<div class="mt20">'._check('deleted', '+ удалённые заявки', $v['deleted'], 1).'</div>'.
 					'<div id="deleted-only-div" class="mt5'.($v['deleted'] ? '' : ' dn').'">'.
 						_check('deleted_only', 'только удалённые', $v['deleted_only'], 1).
