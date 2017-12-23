@@ -4,22 +4,58 @@ var	_dn = function(v, cls) {//скрытие/показ элемента
 		return v ? '' : ' ' + cls;
 	},
 	_unitCheck = function(count) {//действие с выбранными заявками
-		var html =
-			'<div class="_info">' +
+		var info = '<div class="_info">' +
 				'<u>Выбран' + _end(count, ['а','о']) + ' <b>' + count + '</b> заяв' + _end(count, ['ка','ки','ок']) + '</u>. ' +
 				'Укажите следующее действие:' +
-			'</div>' +
-			'<div id="mebe-komplekt" class="mt15 pad10 bor-f0 bg-gr1 over1 curP">' +
-				'<div class="fs14 b color-555">Комплектующие</div>' +
-				'<div class="grey ml10 mt5">Получение списка комплектующих в формате XLS.</div>' +
 			'</div>',
+			html = info +
+			'<div id="zayav-status-new" class="mt15 pad10 bor-f0 bg-gr1 over1 curP">' +
+				'<div class="fs14 b color-555">Статус</div>' +
+				'<div class="grey ml10 mt5">Применить новый статус выбранным заявкам.</div>' +
+			'</div>' +
+		(APP_ID == 6044422 ?//для фабрики мебели
+			'<div id="mebel-komplekt" class="mt10 pad10 bor-f0 bg-gr1 over1 curP">' +
+				'<div class="fs14 b color-555">Комплектующие</div>' +
+				'<img src="../.api/img/excel_xlsx.png" class="fr">' +
+				'<div class="grey ml10 mt5">Получение списка комплектующих<br>в формате XLS.</div>' +
+			'</div>'
+		: ''),
 			dialog = _dialog({
 				head:'Действие с выбранными заявками',
 				content:html,
 				butSubmit:''
 			});
 
-		$('#mebe-komplekt').click(function() {
+		$('#zayav-status-new').click(function() {//применение нового статуса группе заявок
+			html = info +
+				'<div class="hd2 mt15">Применение статуса группе заявок</div>' +
+				'<div id="zayav-status" class="dn">' + _zayavStatusSpisok() + '</div>';
+			dialog.content.html(html);
+			$('#zayav-status').slideDown().find('.sp').click(function() {
+				var t = $(this),
+					v = _num(t.attr('val'));
+				t.removeClass('sp');
+				t.parent().find('.sp').slideUp();
+				dialog.butSubmit('Применить статус');
+				dialog.submit(function() {
+					var send = {
+						op:'zayav_group_status_change',
+						status_id:v
+					};
+					dialog.process();
+					$.post(AJAX_MAIN, send, function(res) {
+						if(res.success) {
+							dialog.close();
+							_msg();
+							_zayavSpisok();
+						} else
+							dialog.abort(res.text);
+					}, 'json');
+				});
+			});
+		});
+
+		$('#mebel-komplekt').click(function() {
 			dialog.close();
 			location.href = URL + '&p=75&d=mebel_komplekt';
 		});
@@ -538,7 +574,7 @@ $(document)
 			pad:10,
 			side:'left',
 			show:1,
-			delayShow:1500
+			delayShow:1000
 		});
 	})
 	.on('click', '#unit-check-showed', function() {//сохранение выбора группы заявок
@@ -554,6 +590,7 @@ $(document)
 			but.removeClass('_busy');
 			if(res.success) {
 				$('#unit-check-button').html(res.but);
+				$('#f60')._check(_zayavSpisok);
 				$('#spisok').html(res.spisok);
 			}
 		}, 'json');
@@ -575,13 +612,15 @@ $(document)
 		var send = {
 			op:'unit_check_save',
 			unit_id:unit_id,
-			v:v
+			v:v,
+			f60:ZAYAV.f60
 		};
 		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('_busy');
 			if(res.success) {
 				t.attr('val', v);
 				$('#unit-check-button').html(res.but);
+				$('#f60')._check(_zayavSpisok);
 			}
 		}, 'json');
 
@@ -605,6 +644,7 @@ $(document)
 			t.show();
 			if(res.success) {
 				$('#unit-check-button').html('');
+				ZAYAV.f60 = 0;
 				_zayavSpisok();
 			}
 		}, 'json');

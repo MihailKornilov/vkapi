@@ -411,6 +411,42 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'zayav_group_status_change':
+		if(!$status_id = _num($_POST['status_id']))
+			jsonError('Некорректный ID статуса');
+
+		$sql = "SELECT `zayav_id`
+				FROM `_unit_check`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id`
+				  AND `viewer_id_add`=".VIEWER_ID;
+		if(!$zayav_ids = query_ids($sql))
+			jsonError('Заявки не выбраны');
+
+		$sql = "SELECT *
+				FROM `_zayav`
+				WHERE `app_id`=".APP_ID."
+				  AND `id` IN (".$zayav_ids.")
+				  AND `status_id`!=".$status_id;
+		if(!$zayav = query_arr($sql))
+			jsonError('Выбранные заявки уже содержат выбранный статус');
+
+		$sql = "UPDATE `_zayav`
+				SET `status_id`=".$status_id."
+				WHERE `id` IN ("._idsGet($zayav).")";
+		query($sql);
+
+		foreach($zayav as $z)
+			_history(array(
+				'type_id' => 71,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $z['id'],
+				'v1' => $z['status_id'],
+				'v2' => $status_id
+			));
+
+		jsonSuccess();
+		break;
 	case 'zayav_service_change':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

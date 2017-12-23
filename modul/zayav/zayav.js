@@ -33,6 +33,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 		$('#f56')._check(_zayavSpisok);
 		$('#f57')._check(_zayavSpisok);
 		$('#f59')._check(_zayavSpisok);
+		$('#f60')._check(_zayavSpisok);
 		WORKER_SPISOK.push({uid:-1, title:'Не назначен', content:'<b>Не назначен</b>'});
 		$('#executer_id')._select({
 			width:180,
@@ -455,35 +456,38 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			sp.removeClass('zayav-polosa-nomer');
 		}
 	},
-	_zayavStatus = function() {//Изменение статуса заявки
+	_zayavStatusSpisok = function(zi) {//список статусов
 		var spisok = '';
 		for(var i = 0; i < ZAYAV_STATUS_NAME_SPISOK.length; i++) {
 			var sp = ZAYAV_STATUS_NAME_SPISOK[i];
-			if(sp.uid == ZI.status_id)
+			if(zi && sp.uid == zi.status_id)
 				continue;
 			if(ZAYAV_STATUS_NOUSE_ASS[sp.uid])
 				continue;
-			if(ZAYAV_STATUS_NEXT[ZI.status_id] && !ZAYAV_STATUS_NEXT[ZI.status_id][sp.uid])
+			if(zi && ZAYAV_STATUS_NEXT[zi.status_id] && !ZAYAV_STATUS_NEXT[zi.status_id][sp.uid])
 				continue;
-			spisok += '<div class="st sp" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
+			spisok += '<div class="sp curP pad10 bor-e8 fs14 blue mb5" val="' + sp.uid + '" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[sp.uid] + '">' +
 						 sp.title +
-						'<div class="about">' + ZAYAV_STATUS_ABOUT_ASS[sp.uid] + '</div>' +
+						'<div class="about fs11 mt5 grey">' + ZAYAV_STATUS_ABOUT_ASS[sp.uid] + '</div>' +
 					  '</div>'
 		}
+		return spisok;
+	},
+	_zayavStatus = function() {//Изменение статуса заявки
 
 		var html =
 			'<div id="zayav-status">' +
-				'<table class="bs10">' +
+				'<table class="bs10 w100p">' +
 					'<tr><td class="label">Текущий статус:' +
-						'<td><div class="current" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[ZI.status_id] + '">' +
+						'<td><div class="pad10 bor-e8 fs14 blue" style="background-color:#' + ZAYAV_STATUS_COLOR_ASS[ZI.status_id] + '">' +
 								ZAYAV_STATUS_NAME_ASS[ZI.status_id] +
 							'</div>' +
 				'</table>' +
 
 				'<div id="new-tab">' +
 					'<input type="hidden" id="status-new" />' +
-					'<table class="bs10">' +
-						'<tr><td class="label topi">Новый статус:<td>' + spisok +
+					'<table class="bs10 w100p">' +
+						'<tr><td class="label topi">Новый статус:<td>' + _zayavStatusSpisok(ZI) +
 					'</table>' +
 				'</div>' +
 
@@ -548,14 +552,14 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			}
 		});
 		$('#remind-day')._calendar({tomorrow:1});
-		$('.st').click(function() {
+		$('.sp').click(function() {
 			var t = $(this),
 				v = t.attr('val');
 
 			$('#status-new').val(v);
 
-			t.removeClass('sp');
-			t.find('.about').slideUp(300);
+			t.removeClass('sp curP');
+			t.find('div').slideUp(300);
 			t.parent().find('.sp').slideUp(300, function() {
 				$('#zs-tab').slideDown();
 				$('#zs-comm').focus();
@@ -2325,6 +2329,7 @@ $(document)
 		$('#f56')._check(0);		ZAYAV.f56 = 0;
 		$('#f57')._check(0);		ZAYAV.f57 = 0;
 		$('#f59')._check(0);		ZAYAV.f59 = 0;
+		$('#f60')._check(0);		ZAYAV.f60 = 0;
 
 		_zayavSpisok();
 	})

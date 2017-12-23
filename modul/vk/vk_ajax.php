@@ -794,7 +794,8 @@ switch(@$_POST['op']) {
 			query($sql);
 		}
 
-		$send['but'] = utf8(_zayavUnitCheckButton());
+		$filter['f60'] = _num($_POST['f60']);
+		$send['but'] = utf8(_zayavUnitCheckButton($filter));
 
 		jsonSuccess($send);
 		break;
@@ -825,7 +826,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		$data = _zayav_spisok($_POST['filter']);
-		$send['but'] = utf8(_zayavUnitCheckButton());
+		$send['but'] = utf8(_zayavUnitCheckButton($data['filter']));
 		$send['spisok'] = utf8($data['spisok']);
 
 		jsonSuccess($send);

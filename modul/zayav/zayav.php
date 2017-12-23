@@ -880,7 +880,8 @@ function _zayavFilter($v=array()) {
 		'deleted_only' => 0,
 		'f56' => 0,//не оплачена
 		'f57' => 0,//нет начислени€
-		'f59' => 0//нет начислени€ сотруднику
+		'f59' => 0,//нет начислени€ сотруднику
+		'f60' => 0//выбранные за€вки
 	);
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -912,6 +913,7 @@ function _zayavFilter($v=array()) {
 		'f56' => _bool(@$v['f56']),
 		'f57' => _bool(@$v['f57']),
 		'f59' => _bool(@$v['f59']),
+		'f60' => _bool(@$v['f60']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -1023,7 +1025,15 @@ function _zayav_spisok($v) {
 	$nomer = 0;
 	$zpu = _zayavPole($filter['service_id']);
 
-	if($FIND) {
+	if($filter['f60']) {//только выбранные за€вки
+		$sql = "SELECT `zayav_id`
+				FROM `_unit_check`
+				WHERE `app_id`=".APP_ID."
+				  AND `zayav_id`
+				  AND `viewer_id_add`=".VIEWER_ID;
+		$zayav_ids = query_ids($sql);
+		$cond .= " AND `id` IN (".$zayav_ids.")";
+	} elseif($FIND) {
 		$engRus = _engRusChar($filter['find']);
 
 		$cond .= " AND (`find` LIKE '%".$filter['find']."%'
@@ -1491,10 +1501,10 @@ function _zayavUnitCheck($v) {//отображение кнопки выбранных единиц за€вок
 
 	return
 	'<div id="unit-check-button" class="mt15 prel">'.
-		_zayavUnitCheckButton().
+		_zayavUnitCheckButton($v).
 	'</div>';
 }
-function _zayavUnitCheckButton() {//отображение кнопки выбранных единиц за€вок
+function _zayavUnitCheckButton($v) {//отображение кнопки выбранных единиц за€вок
 	$sql = "SELECT COUNT(*)
 			FROM `_unit_check`
 			WHERE `app_id`=".APP_ID."
@@ -1505,9 +1515,10 @@ function _zayavUnitCheckButton() {//отображение кнопки выбранных единиц за€вок
 
 	return
 	'<div class="icon icon-del-white'._tooltip('ќтменить выбор', -94, 'r').'</div>'.
-	'<button class="vk pink w100p" onclick="_unitCheck('.$count.')">'.
+	'<button class="vk pink w100p mb5" onclick="_unitCheck('.$count.')">'.
 		'¬ыбран'._end($count, 'а', 'о').' '.$count.' за€в'._end($count, 'ка', 'ки', 'ок').
-	'</button>';
+	'</button>'.
+	_check('f60', '¬ыбранные за€вки', $v['f60'], 1);
 }
 
 /* ѕол€ за€вки */

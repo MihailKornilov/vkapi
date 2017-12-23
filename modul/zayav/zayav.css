@@ -380,7 +380,6 @@
 
 
 /* Статус заявки */
-#zayav-status{padding-top:10px}
 #zayav-status .label{width:150px;text-align:right}
 #zayav-status #new-tab{
 	display:none;
@@ -393,23 +392,7 @@
 	border-top:#fafac9 solid 1px;
 	padding:10px 0;
 }
-#zayav-status .current{
-	display:inline-block;
-	font-weight:bold;
-	padding:5px 12px;
-	border:#ddd solid 1px;
-	color:#357;
-}
-#zayav-status .st{
-	padding:5px 12px;
-	font-weight:bold;
-	border:#ddd solid 1px;
-	color:#468;
-	margin-bottom:10px;
-}
-#zayav-status .sp{cursor:pointer}
 #zayav-status .sp:hover{border-color:#BBD}
-#zayav-status .about{font-size:10px;color:#777;margin-top:3px}
 #zayav-status #zs-comm{width:280px;height:30px}
 #zayav-status .tr-remind{display:none}
 #zayav-status #remind-txt{width:280px}
