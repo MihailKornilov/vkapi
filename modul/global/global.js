@@ -16,7 +16,7 @@ var	_dn = function(v, cls) {//скрытие/показ элемента
 		(APP_ID == 6044422 ?//для фабрики мебели
 			'<div id="mebel-komplekt" class="mt10 pad10 bor-f0 bg-gr1 over1 curP">' +
 				'<div class="fs14 b color-555">Комплектующие</div>' +
-				'<img src="../.api/img/excel_xlsx.png" class="fr">' +
+				'<img src="../.api_next/img/excel_xlsx.png" class="fr">' +
 				'<div class="grey ml10 mt5">Получение списка комплектующих<br>в формате XLS.</div>' +
 			'</div>'
 		: ''),
