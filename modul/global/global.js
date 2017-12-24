@@ -4,7 +4,15 @@ var	_dn = function(v, cls) {//скрытие/показ элемента
 		return v ? '' : ' ' + cls;
 	},
 	_unitCheck = function(count) {//действие с выбранными заявками
-		var info = '<div class="_info">' +
+		var info =
+		(!_cookie('yvo8pYmtDy8' + VIEWER_ID) ?
+			'<div class="mb20 fs15">' +
+				'Смотрите <a href="https://youtu.be/yvo8pYmtDy8" target="_blank" class="fs15 red' + _tooltip('Откроется в новом окне', -63) + 'ролик</a> на тему. ' +
+				'<button class="yvo8pYmtDy8 vk small grey fr">Спасибо, уже посмотрели</button>' +
+			'</div>'
+		: '') +
+
+			'<div class="_info">' +
 				'<u>Выбран' + _end(count, ['а','о']) + ' <b>' + count + '</b> заяв' + _end(count, ['ка','ки','ок']) + '</u>. ' +
 				'Укажите следующее действие:' +
 			'</div>',
@@ -25,6 +33,11 @@ var	_dn = function(v, cls) {//скрытие/показ элемента
 				content:html,
 				butSubmit:''
 			});
+
+		$('.yvo8pYmtDy8').click(function() {
+			$(this).parent().slideUp();
+			_cookie('yvo8pYmtDy8' + VIEWER_ID, 1);
+		});
 
 		$('#zayav-status-new').click(function() {//применение нового статуса группе заявок
 			html = info +
