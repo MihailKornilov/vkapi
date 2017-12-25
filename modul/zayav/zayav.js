@@ -203,7 +203,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				equip:zp4 && zp4[0] ? zayav_id ? ZI.equip_ids : 0 : false
 			});
 			// 11 - несколько товаров
-			$('#ze-tovar-several').tovar({several:1});
+			$('#ze-tovar-several').tovar({add:1,several:1});
 
 			// 6 - Адрес
 			$('#client-adres')._check({
