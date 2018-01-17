@@ -1850,8 +1850,8 @@ function _zayavPoleUnit($zpu, $z, $filter) {//поля единицы списка заявок
 	'>'.
 
 	(isset($zpu[60]) ?
-		'<div class="unit-check'.($z['check'] ? ' on' : '').'" val="'.$z['check'].'">'.
-			_check('uch'.$z['id'], '', $z['check'], 1).
+		'<div class="unit-check'.(@$z['check'] ? ' on' : '').'" val="'.@$z['check'].'">'.
+			_check('uch'.$z['id'], '', @$z['check'], 1).
 		'</div>'
 	: '').
 

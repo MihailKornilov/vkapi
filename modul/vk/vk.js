@@ -1542,7 +1542,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			pdf:'Adobe Acrobat Reader',
 			jpg:'изображение в формате JPG',
 			png:'изображение в формате PNG',
-			'sto':'Проeкт PRO100'
+			sto:'Проeкт PRO100'
 		},
 		mime = {
 			xls:'application/vnd.ms-excel',
@@ -1553,7 +1553,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 			pdf:'application/pdf',
 			jpg:'image/jpeg',
 			png:'image/png',
-			'sto':'application/octet-stream'
+			sto:'application/octet-stream'
 		};
 
 	if(!attr_id)
@@ -1626,7 +1626,7 @@ $.fn._attach = function(o) {//операции с файлом: загрузка, просмотр, удаление
 					'<form method="post" action="' + AJAX_MAIN + '" enctype="multipart/form-data" target="attach-frame">' +
 						'<input type="hidden" name="op" value="attach_upload" />' +
 						'<input type="hidden" name="noapp" value="' + o.noapp + '" />' +
-						'<input type="file" name="f1" id="file" accept="' + acceptMime() + '" />' +
+						'<input type="file" name="f1" id="file" />' +// accept="' + acceptMime() + '"
 					'</form>' +
 					'<button class="vk">Выбрать файл</button>' +
 				'</h1>' +

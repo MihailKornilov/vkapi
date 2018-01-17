@@ -1045,11 +1045,14 @@ var _zayavReady = function() {//страница со списком заявок загружена
 			$('#tr-expense-dub')[(ZE_DUB_ASS[id] ? 'remove' : 'add') + 'Class']('dn');
 			if(!id)
 				return;
-			var dop_id = ZE_DOP_ASS[id];
+			var dop_id = ZE_DOP_ASS[id],
+				val = 0;
+			if(dop_id == 2 && WORKER_ASS[VIEWER_ID])
+				val = VIEWER_ID;
 			$('#td-label')
 				.html(ZE_DOP_NAME[dop_id] + ':')
 				[(dop_id == 4 ? 'remove' : 'add') + 'Class']('topi');
-			$('#td-input').html('<input type="hidden" id="ze-dop" />');
+			$('#td-input').html('<input type="hidden" id="ze-dop" value="' + val + '" />');
 
 			switch(dop_id) {
 				case 1: //описание
@@ -1059,9 +1062,9 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				case 2: //сотрудник
 					$('#ze-dop')._select({
 						width:200,
-						disabled:0,
-						title0:'Сотрудник',
+						title0:'не выбран',
 						spisok:WORKER_SPISOK,
+						write:1,
 						func:sumFocus
 					});
 					break;
