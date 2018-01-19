@@ -1047,7 +1047,7 @@ var _zayavReady = function() {//страница со списком заявок загружена
 				return;
 			var dop_id = ZE_DOP_ASS[id],
 				val = 0;
-			if(dop_id == 2 && WORKER_ASS[VIEWER_ID])
+			if(APP_ID == 2031819 && dop_id == 2 && WORKER_ASS[VIEWER_ID])
 				val = VIEWER_ID;
 			$('#td-label')
 				.html(ZE_DOP_NAME[dop_id] + ':')
