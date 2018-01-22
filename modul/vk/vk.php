@@ -2450,8 +2450,8 @@ function _template() {//формирование шаблона
 
 	switch($ex[$kLast]) {
 		case 'xls':
-		case 'xlsx': _templateXls($ex[$kLast], $tmp, $attach);
-		case 'docx': _templateWord($tmp, $attach);
+		case 'xlsx': _templateXls($ex[$kLast], $tmp, $attach); break;
+		case 'docx': _templateWord($tmp, $attach); break;
 		default: die('Недопустимый формат файла шаблона. Возможные форматы: xls, xlsx, docx.');
 	}
 }
@@ -2472,9 +2472,8 @@ function _templateVar() {//формирование переменных шаблона
 			$varSpisok[$id]['text'] = htmlspecialchars_decode(_app($r['col_name']));
 
 	$varSpisok = _templateIncome($varSpisok);   //платёж
-	$varSpisok = _templateClient($varSpisok);   //клиент
-	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
 	$varSpisok = _templateDogovor($varSpisok);  //договор
+	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
 
 	$var = array();
 	foreach($varSpisok as $r)
@@ -2510,7 +2509,7 @@ function _templateIncome($arr) {//подмена переменных одного платежа
 			$arr[$id]['text'] = $income[$r['col_name']];
 		}
 
-	_templateClientIdDefine($income['client_id']);
+	$arr = _templateClient($arr, $income['client_id']);
 
 	return $arr;
 }
@@ -2637,27 +2636,19 @@ function _templateSchetPay($arr) {//подмена переменных счёта на оплату
 		$arr[$id]['text'] = $schet[$r['col_name']];
 	}
 
-	_templateClientIdDefine($schet['client_id']);
+	$arr = _templateClient($arr, $schet['client_id']);
 
 	return $arr;
 }
-function _templateClientIdDefine($client_id) {//Получение id клиента, если не был получен
+function _templateClient($arr, $client_id) {//подмена переменных клиента
 	if(!$client_id)
-		return;
-
-	if(!defined('TEMPLATE_CLIENT_ID'))
-		define('TEMPLATE_CLIENT_ID', $client_id);
-}
-function _templateClient($arr) {//подмена переменных клиента
-
-	if(!defined('TEMPLATE_CLIENT_ID'))
 		return $arr;
 
 	$sql = "SELECT *
 			FROM `_client`
 			WHERE `app_id`=".APP_ID."
 			  AND !`deleted`
-			  AND `id`=".TEMPLATE_CLIENT_ID;
+			  AND `id`=".$client_id;
 	if(!$client = query_assoc($sql))
 		return $arr;
 
@@ -2666,6 +2657,51 @@ function _templateClient($arr) {//подмена переменных клиента
 			continue;
 
 		$arr[$id]['text'] = htmlspecialchars_decode($client[$r['col_name']]);
+	}
+
+	return $arr;
+}
+function _templateZayav($arr, $zayav_id) {//подмена переменных заявки
+	if(!$zayav_id)
+		return $arr;
+
+	$sql = "SELECT *
+			FROM `_zayav`
+			WHERE `app_id`=".APP_ID."
+			  AND !`deleted`
+			  AND `id`=".$zayav_id;
+	if(!$zayav = query_assoc($sql))
+		return $arr;
+
+	foreach($arr as $id => $r) {
+		if($r['table_name'] != '_zayav')
+			continue;
+
+		if($r['v'] == '{ZAYAV_TOVAR_SEV}') {
+			$txt = '';
+			$sql = "SELECT *
+					FROM `_zayav_tovar`
+					WHERE `zayav_id`=".$zayav_id."
+					ORDER BY `id`";
+			if($tovar = query_arr($sql)) {
+				$tovar =  _tovarValToList($tovar);
+				foreach($tovar as $t) {
+					$txt .=
+						_tovarCategory($t['tovar_category_id'], 'path').
+						': '.
+						$t['tovar_name'].
+						' - '.
+						$t['count'].' '.$t['tovar_measure_name'].
+						'<w:br/>';
+
+				}
+			}
+
+			$zayav[$r['col_name']] = $txt;
+		}
+
+
+		$arr[$id]['text'] = htmlspecialchars_decode($zayav[$r['col_name']]);
 	}
 
 	return $arr;
@@ -2691,8 +2727,20 @@ function _templateDogovor($arr) {//подмена переменных договора
 			$dog[$r['col_name']] = '«'.$ex[2].'» '._monthFull($ex[1]).' '.$ex[0];
 		}
 
+		if($r['v'] == '{DOGOVOR_SUM}')
+			$dog[$r['col_name']] = _cena($dog['sum']);
+
+		if($r['v'] == '{DOGOVOR_AVANS}')
+			$dog[$r['col_name']] = _cena($dog['avans']);
+
+		if($r['v'] == '{DOGOVOR_DIFF}')
+			$dog[$r['col_name']] = _cena($dog['sum']) - _cena($dog['avans']);
+
 		$arr[$id]['text'] = htmlspecialchars_decode($dog[$r['col_name']]);
 	}
+
+	$arr = _templateClient($arr, $dog['client_id']);
+	$arr = _templateZayav($arr, $dog['zayav_id']);
 
 	return $arr;
 }
