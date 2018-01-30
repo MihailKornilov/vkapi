@@ -1423,7 +1423,7 @@ $.fn._dropdown = function(o) {
 			(o.disabled ?
 				'<span>' + head + '</span>'
 				:
-				'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '</a>'
+				'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '11</a>'
 			) +
 			'<div class="ddlist">' +
 				'<div class="ddsel">' + head + '</div>' +
@@ -1437,16 +1437,18 @@ $.fn._dropdown = function(o) {
 			list = dropdown.find('.ddlist'),
 			ddsel = list.find('.ddsel'),
 			ddu = list.find('.ddu');
-		aHead.mouseover(function(e) {
+		aHead.on('click mouseenter', function(e) {
 			e.stopPropagation();
 			delayClear();
 			list.show();
 		});
+/*
 		ddsel.click(function(e) {
 			e.stopPropagation();
 			delayClear();
 			list.hide();
 		});
+*/
 		ddu.click(function(e) {
 			e.stopPropagation();
 			var th = $(this),
