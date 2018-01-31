@@ -2026,7 +2026,7 @@ function _zayavInfo() {
 				'status_day:"'.($z['status_day'] == '0000-00-00' ? '' : $z['status_day']).'",'.
 				'executer_id:'.$z['executer_id'].','.
 				'srok:"'.$z['srok'].'",'.
-				'adres:"'.addslashes($z['adres']).'",'.
+				'adres:"'.addslashes(_br($z['adres'])).'",'.
 				'tovar_id:'._zayavTovarOneId($z).','.
 				'tovar:"'._zayavTovarValue($zayav_id).'",'.
 				'place_id:'.$z['tovar_place_id'].','.
@@ -2441,7 +2441,7 @@ function _zayavDogovorJs($z) {
 		return
 			'nomer_next:'._maxSql('_zayav_dogovor', 'nomer', 1).','.
 			'fio:"'.addslashes($c['name']).'",'.
-			'adres:"'.addslashes($c['adres']).'",'.
+			'adres:"'.addslashes(_br($c['adres'])).'",'.
 			'pasp_seria:"'.addslashes($c['pasp_seria']).'",'.
 			'pasp_nomer:"'.addslashes($c['pasp_nomer']).'",'.
 			'pasp_adres:"'.addslashes($c['pasp_adres']).'",'.
@@ -2470,7 +2470,7 @@ function _zayavDogovorJs($z) {
 		'template_id:'.$r['template_id'].','.
 		'nomer:'.$r['nomer'].','.
 		'fio:"'.addslashes($r['fio']).'",'.
-		'adres:"'.addslashes($r['adres']).'",'.
+		'adres:"'.addslashes(_br($r['adres'])).'",'.
 		'pasp_seria:"'.addslashes($r['pasp_seria']).'",'.
 		'pasp_nomer:"'.addslashes($r['pasp_nomer']).'",'.
 		'pasp_adres:"'.addslashes($r['pasp_adres']).'",'.

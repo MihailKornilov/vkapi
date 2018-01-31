@@ -1423,7 +1423,7 @@ $.fn._dropdown = function(o) {
 			(o.disabled ?
 				'<span>' + head + '</span>'
 				:
-				'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '11</a>'
+				'<a class="ddhead' + (!val && (o.headgrey || o.title0) ? ' grey' : '') + '">' + head + '</a>'
 			) +
 			'<div class="ddlist">' +
 				'<div class="ddsel">' + head + '</div>' +
