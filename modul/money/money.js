@@ -1916,6 +1916,57 @@ var _accrualAdd = function(o) {
 				}
 			}, 'json');
 		}
+	},
+
+	_smenaStart = function() {//предложение сотруднику начать смену
+		if(!SMENA_START)
+			return;
+
+		var html = '<div class="_info">' +
+						'Начинайте новую смену, если сегодня работать будете вы.' +
+						'<br>' +
+						'Если это не ваш день, нажмите <u>Закрыть окно</u>.' +
+				   '</div>',
+			dialog = _dialog({
+				top:40,
+				width:420,
+				head:'Начало новой смены',
+				content:html,
+				butSubmit:'Начать смену',
+				butCancel:'Закрыть окно',
+				submit:function() {
+					submit(1);
+				},
+				cancel:submit
+			});
+
+		function submit(started) {
+			var send = {
+				op:'smena_start',
+				started:_num(started)
+			};
+			$.post(AJAX_MAIN, send, function(res) {
+				if(res.success && started) {
+					_msg('Смена начата');
+					dialog.close();
+				}
+			}, 'json');
+		}
+	},
+	_smenaBudgetSet = function(t) {
+		var but = $(t),
+			send = {
+				op:'smena_budget_set',
+				sum:_num($('#smena-budget').val())
+			};
+		if(but.hasClass('_busy'))
+			return;
+		but.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			but.removeClass('_busy');
+			if(res.success)
+				_msg();
+		}, 'json');
 	};
 
 $.fn.schetPayContent = function(o) {//составление списка содержания для расчётного счёта
@@ -2604,4 +2655,6 @@ $(document)
 			$('#salmon')._radio({func:_salarySpisok});
 			_salaryNoAccRecalcHint();
 		}
+
+		_smenaStart();
 	});

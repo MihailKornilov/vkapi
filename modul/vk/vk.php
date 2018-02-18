@@ -154,7 +154,8 @@ function _api_scripts() {//скрипты и стили, которые вставл€ютс€ в html
 				'COOKIE_PREFIX="'.APP_ID.'_'.VIEWER_ID.'_",'.
 				'URL="'.URL.'",'.
 				'AJAX_MAIN="'.AJAX_MAIN.'",'.
-				'VALUES="'.VALUES.'";'.
+				'VALUES="'.VALUES.'",'.
+				'SMENA_START='._smenaStartTest().';'.
 		'</script>'.
 
 		_global_script().

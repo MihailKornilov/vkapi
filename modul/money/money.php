@@ -2696,3 +2696,79 @@ function _zayavInfoMoney_spisok($zayav_id) {
 		'<table class="_spisok">'.$spisok.'</table>';
 }
 
+
+
+
+
+/* --- Смены --- */
+function _smena() {
+	return
+	'<table class="w100p mb20">'.
+		'<tr><td class="w350 pr20 top">'.
+				'<div class="hd2 mar10">Смены</div>'.
+				_smenaSpisok().
+			'<td class="pl20 top">'.
+				'<div class="hd2 mar10">Правила и настройки</div>'.
+				'<div class="_info mar10 pl20">'.
+					'<ol class="ml5">'.
+						'<li>Смену может начинать только сотрудник, у которого в настройках установлена галочка <u>Сотрудник может начинать смены</u>.'.
+						'<li class="mt5">В один день может быть начата только одна смена.'.
+						'<li class="mt5">Первого числа каждого месяца производится начисление з/п сотрудникам согласно количеству отработанных смен за предыдущий месяц. '.
+							'Общая сумма начисления берётся из настройки ниже.'.
+					'</ol>'.
+				'</div>'.
+				'<table class="bs5 ml10">'.
+					'<tr>'.
+						'<td class="grey">Бюджет по сменам в месяц:'.
+						'<td><input type="text" id="smena-budget" class="w70" value="'.SMENA_MON_BUDGET.'" />'.
+						'<td><button class="vk" onclick="_smenaBudgetSet(this)">Сохранить</button>'.
+				'</table>'.
+	'</table>';
+}
+function _smenaSpisok() {
+	$sql = "SELECT *
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `started`
+			ORDER BY `id`";
+	if(!$spisok = query_arr($sql))
+		return '<div class="_empty mar10">Смены отсутствуют.</div>';
+
+	$send = '<table class="_spisokTab mar10 w300">';
+	$n = 1;
+	foreach($spisok as $r) {
+		$send .= '<tr>'.
+			'<td class="w15 r grey">'.$n++.
+			'<td>'.FullData($r['dtime_add']).
+			'<td>'._viewer($r['worker_id'], 'viewer_link_zp');
+	}
+	$send .= '</table>';
+
+	return $send;
+}
+function _smenaStartTest() {//проверка, нужно ли сотруднику начинать смену
+	$rule = _viewerRule();
+	if(!$rule['RULE_WORKER_SMENA'])
+		return 0;
+
+	//есть ли начатая смена сегодня
+	$sql = "SELECT COUNT(*)
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `started`
+			  AND `dtime_add` LIKE '".TODAY."%'";
+	if(query_value($sql))
+		return 0;
+
+	//есть ли есть ли отменённая смена для сотрудника
+	$sql = "SELECT COUNT(*)
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `worker_id`=".VIEWER_ID."
+			  AND `dtime_add` LIKE '".TODAY."%'";
+	if(query_value($sql))
+		return 0;
+
+	return 1;
+}
+

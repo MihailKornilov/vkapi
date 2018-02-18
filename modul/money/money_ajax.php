@@ -3056,6 +3056,44 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+
+	case 'smena_start':
+		if(!_smenaStartTest())
+			jsonError('Начинать смену не требуется');
+
+		$started = _num($_POST['started']);
+
+		$sql = "INSERT INTO `_smena` (
+					`app_id`,
+					`worker_id`,
+					`started`,
+					`viewer_id_add`
+				) VALUES (
+					".APP_ID.",
+					".VIEWER_ID.",
+					".$started.",
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		jsonSuccess();
+		break;
+	case 'smena_budget_set':
+		if(!VIEWER_ADMIN)
+			jsonError('Нет прав');
+		if(!$sum = _num($_POST['sum']))
+			jsonError('Не корректная сумма');
+
+		$sql = "UPDATE `_setup_global`
+				SET `value`=".$sum."
+				WHERE `app_id`=".APP_ID."
+				  AND `key`='SMENA_MON_BUDGET'";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'setup_global');
+
+		jsonSuccess();
+		break;
 }
 
 

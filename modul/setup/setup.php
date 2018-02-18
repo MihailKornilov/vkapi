@@ -458,10 +458,11 @@ function setup_worker_info_dop($viewer_id) {//дополнительные настройки
 
 	return
 		'<table class="bs10 mt20">'.
-			'<tr><td class="label w70"><td>'._check('RULE_SALARY_SHOW', _ruleCache('RULE_SALARY_SHOW'), $rule['RULE_SALARY_SHOW']).
-			'<tr><td class="label"><td>'._check('RULE_EXECUTER', _ruleCache('RULE_EXECUTER'), $rule['RULE_EXECUTER']).
-			'<tr><td class="label"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', _ruleCache('RULE_SALARY_ZAYAV_ON_PAY'), $rule['RULE_SALARY_ZAYAV_ON_PAY']).
+			'<tr><td class="label w70"><td>'._check('RULE_SALARY_SHOW', _ruleCache('RULE_SALARY_SHOW'), $rule['RULE_SALARY_SHOW'], 1).
+			'<tr><td class="label"><td>'._check('RULE_EXECUTER', _ruleCache('RULE_EXECUTER'), $rule['RULE_EXECUTER'], 1).
+			'<tr><td class="label"><td>'._check('RULE_SALARY_ZAYAV_ON_PAY', _ruleCache('RULE_SALARY_ZAYAV_ON_PAY'), $rule['RULE_SALARY_ZAYAV_ON_PAY'], 1).
 			'<tr><td class="label"><td>'._check('RULE_CLIENT_DOLG_SHOW', _ruleCache('RULE_CLIENT_DOLG_SHOW'), $rule['RULE_CLIENT_DOLG_SHOW'], 1).
+			'<tr><td class="label"><td>'._check('RULE_WORKER_SMENA', _ruleCache('RULE_WORKER_SMENA'), $rule['RULE_WORKER_SMENA'], 1).
 
 /*
 			'<tr><td class="lab">Начислять бонусы:'.
