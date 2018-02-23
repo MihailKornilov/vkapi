@@ -282,7 +282,7 @@ function _refund_unit($r, $filter=array()) {//строка возврата в таблице
 	'<tr><td class="sum '.$r['type']._tooltip('Возврат', -3)._sumSpace($r['sum']).
 		'<td>'._refundAbout($r, $filter).
 		'<td class="dtime">'._dtimeAdd($r).
-		'<td class="ed">'._iconDel($r + array('class'=>'_refund-del'));
+		'<td class="ed">'._iconDel($r + array('del'=>DEBUG,'class'=>'_refund-del'));
 }
 function _refundAbout($r, $filter=array()) {
 	$about = '';

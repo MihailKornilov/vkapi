@@ -583,7 +583,7 @@ switch(@$_POST['op']) {
 		if(!$r = query_assoc($sql))
 			jsonError();
 
-		if(TODAY != substr($r['dtime_add'], 0, 10))
+		if(!DEBUG && TODAY != substr($r['dtime_add'], 0, 10))
 			jsonError();
 
 		$sql = "UPDATE `_money_refund`
