@@ -534,7 +534,8 @@ function salary_worker_noacc($filter) {//неактивные начисления по заявкам
 			FROM `_zayav_expense`
 			WHERE `app_id`=".APP_ID."
 			  AND `worker_id`=".$filter['id']."
-			  AND (!`year` OR !`mon`)";
+			  AND (!`year` OR !`mon`)
+			ORDER BY `id` DESC";
 	if(!$spisok = query_arr($sql))
 		return '';
 
