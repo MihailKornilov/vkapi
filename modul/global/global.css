@@ -345,15 +345,10 @@ button.vk._busy{color:transparent}
 	padding:8px;
 	font-size:14px;
 }
-._spisokTab td{
-	border:#EFF2F5 solid 1px;
-	padding:6px 8px;
-}
+._spisokTab td{border:#EFF2F5 solid 1px;padding:6px 8px}
+._spisokTab.min td{padding:3px 4px}
 ._spisokTab td.topi{padding-top:13px}
-._spisokTab .icon-del.out{
-	position:absolute;
-	right:-25px;
-}
+._spisokTab .icon-del.out{position:absolute;right:-25px}
 
 
 

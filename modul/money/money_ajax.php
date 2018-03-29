@@ -3094,6 +3094,13 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'smena-mon-load':
+		if(!preg_match(REGEXP_YEARMONTH, $_POST['mon']))
+			jsonError('Некорректный месяц');
+
+		$send['html'] = utf8(_smenaMon($_POST['mon']));
+		jsonSuccess($send);
+		break;
 }
 
 

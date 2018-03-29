@@ -2720,31 +2720,117 @@ function _smena() {
 				'<table class="bs5 ml10">'.
 					'<tr>'.
 						'<td class="grey">Бюджет по сменам в месяц:'.
-						'<td><input type="text" id="smena-budget" class="w70" value="'.SMENA_MON_BUDGET.'" />'.
+						'<td><input type="text" id="smena-budget" class="w70" value="'.@SMENA_MON_BUDGET.'" />'.
 						'<td><button class="vk" onclick="_smenaBudgetSet(this)">Сохранить</button>'.
 				'</table>'.
 	'</table>';
 }
 function _smenaSpisok() {
+	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,1
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `started`
+			GROUP BY DATE_FORMAT(`dtime_add`,'%Y')
+			ORDER BY `id` DESC";
+	if(!$year = query_ass($sql))
+		return '<div class="_empty mar10">Смены отсутствуют.</div>';
+
+	$send = '';
+	foreach($year as $y => $yi) {
+		$send .= '<div class="fs16 b">'.$y.'</div>';
+		$sql = "SELECT DATE_FORMAT(`dtime_add`,'%m') AS `mon`,1
+				FROM `_smena`
+				WHERE `app_id`=".APP_ID."
+				  AND `started`
+				  AND `dtime_add` LIKE '".$y."%'
+				GROUP BY DATE_FORMAT(`dtime_add`,'%m')
+				ORDER BY `id` DESC";
+		$mon = query_ass($sql);
+		foreach($mon as $m => $mi) {
+			$YM = $y.'-'.$m;
+			$cur = $YM == strftime('%Y-%m');
+			$send .= '<div class="smena-mon-load blue fs15 ml10 pl10 curP over1'.($cur ? ' loaded' : '').'" val="'.$YM.'">'._monthDef($m, 1).'</div>'.
+					 '<div class="'._dn($cur).'">';
+			if($cur)
+				$send .= _smenaMon($YM);
+			$send .= '</div>';
+		}
+	}
+
+	return '<div class="ml10">'.$send.'</div>';
+
+}
+
+function _smenaMon($YM) {
 	$sql = "SELECT *
 			FROM `_smena`
 			WHERE `app_id`=".APP_ID."
 			  AND `started`
-			ORDER BY `id`";
+			  AND `dtime_add` LIKE '".$YM."%'";
 	if(!$spisok = query_arr($sql))
 		return '<div class="_empty mar10">Смены отсутствуют.</div>';
 
-	$send = '<table class="_spisokTab mar10 w300">';
-	$n = 1;
+	//расстановка смен по дням
+	$smena = array();
 	foreach($spisok as $r) {
-		$send .= '<tr>'.
-			'<td class="w15 r grey">'.$n++.
-			'<td>'.FullData($r['dtime_add']).
+		$day = _num(substr($r['dtime_add'], 8, 2));
+		$smena[$day] = $r;
+	}
+
+	$send = '<table class="_spisokTab min ml20 mt10 mb20 w300">';
+
+	$unix = strtotime($YM.'-01');
+	$dayCount = date('t', $unix);   //Количество дней в месяце
+	$DAY_CUR = _num(strftime('%d'));
+	$MON_CUR = $YM == strftime('%Y-%m');
+	if($MON_CUR)
+		$dayCount = $DAY_CUR;
+
+	$unix = strtotime($YM.'-'.$dayCount);
+	$week = date('w', $unix);
+
+	$num = count($spisok);
+	$worker = array();//количество смен по каждому сотруднику
+	for($n = $dayCount; $n; $n--) {
+		$cur = $MON_CUR && $DAY_CUR == $n ? ' b' : '';
+		$vyh = $week == 6 || !$week;
+		$week--;
+		if($week < 0)
+			$week = 6;
+		if(empty($smena[$n])) {
+			$vyh = $vyh ? ' color-vin' : '';
+			$send .= '<tr>'.
+				'<td class="w15">'.
+				'<td class="r pale'.$cur.$vyh.'">'.FullData($YM.'-'.$n, 0, 1, 1).
+				'<td>';
+			continue;
+		}
+		$r = $smena[$n];
+		$vyh = $vyh ? ' red' : '';
+		$send .= '<tr class="over1">'.
+			'<td class="w15 r grey">'.$num--.
+			'<td class="r'.$cur.$vyh.'">'.FullData($r['dtime_add'], 0, 1, 1).
 			'<td>'._viewer($r['worker_id'], 'viewer_link_zp');
+		if(empty($worker[$r['worker_id']]))
+			$worker[$r['worker_id']] = 0;
+		$worker[$r['worker_id']]++;
 	}
 	$send .= '</table>';
 
-	return $send;
+	$worker_itog = '';
+	foreach($worker as $id => $c)
+		$worker_itog .=
+			'<tr><td>'._viewer($id, 'viewer_link_zp').
+				'<td class="center">'.$c;
+
+
+	return
+		'<table class="_spisokTab ml20 mt5 w200 bg-gr1">'.
+			'<tr><td class="b grey">Всего смен:'.
+				'<td class="w35 b center">'.count($spisok).
+			$worker_itog.
+		'</table>'.
+		$send;
 }
 function _smenaStartTest() {//проверка, нужно ли сотруднику начинать смену
 	$rule = _viewerRule();

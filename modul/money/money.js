@@ -2573,6 +2573,26 @@ $(document)
 		});
 	})
 	.on('click', '#noacc-recalc', _salaryWorkerNoAccRecalc)
+	.on('click', '.smena-mon-load', function() {
+		var t = $(this),
+			next = t.next(),
+			send = {
+				op:'smena-mon-load',
+				mon:t.attr('val')
+			};
+		if(t.hasClass('loaded')) {
+			next.slideToggle(300);
+			return;
+		}
+		t.addClass('_busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			t.removeClass('_busy');
+			if(res.success) {
+				next.html(res.html).slideDown(300);
+				t.addClass('loaded');
+			}
+		}, 'json');
+	})
 
 	.ready(function() {
 		if($('#schet-pay-menu').length) {
