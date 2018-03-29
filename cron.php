@@ -147,7 +147,93 @@ function zp_image_attach($worker_id) {//начисление зп сотруднику за загруженные 
 
 	return BR.$about.BR;
 }
+function smena_zp_accrual() {//начисление ставки сотрудникам за смены
+	if(APP_ID != 3978722)//пока только для евроокон
+		return '';
 
+	$day = _num(strftime('%d'));
+	if($day != 1)//начисление только 1 числа каждого месяца
+		return '';
+
+	$year = _num(strftime('%Y'));
+	$mon = _num(strftime('%m'));
+	if(!--$mon) {
+		$year--;
+		$mon = 12;
+	}
+
+	$YM = $year.'-'.($mon < 10 ? 0 : '').$mon;
+
+	//текущий бюджет за месяц по сменам
+	$sql = "SELECT `value`
+			FROM `_setup_global`
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='SMENA_MON_BUDGET'
+			LIMIT 1";
+	$budget = _num(query_value($sql));
+
+	$sql = "SELECT COUNT(`id`)
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `started`
+			  AND `dtime_add` LIKE '".$YM."%'";
+	if(!$smena_count = _num(query_value($sql)))
+		return '';
+
+	//сумма за одну смену
+	$smena_cena = $budget / $smena_count;
+
+	//сотрудники и количество смен по каждому
+	$sql = "SELECT 
+				`worker_id`,
+				COUNT(`id`)
+			FROM `_smena`
+			WHERE `app_id`=".APP_ID."
+			  AND `started`
+			  AND `dtime_add` LIKE '".$YM."%'
+			GROUP BY `worker_id`";
+	$ass = query_ass($sql);
+
+	$send = '';
+	foreach($ass as $worker_id => $c) {
+		$sum = round($smena_cena * $c);
+		$about = 'ставка: '.$c.' смен'._end($c, 'а', 'ы', '').' за '._monthDef($mon).' '.$year;
+		$sql = "INSERT INTO `_salary_accrual` (
+					`app_id`,
+					`worker_id`,
+					`sum`,
+					`about`,
+					`year`,
+					`mon`
+				) VALUES (
+					".APP_ID.",
+					".$worker_id.",
+					".$sum.",
+					'".$about."',
+					".$year.",
+					".$mon."
+				)";
+		query($sql);
+
+		_balans(array(
+			'action_id' => 19,
+			'worker_id' => $worker_id,
+			'sum' => $sum,
+			'about' => $about
+		));
+
+		_history(array(
+			'type_id' => 46,
+			'worker_id' => $worker_id,
+			'v1' => $sum,
+			'v2' => $about
+		));
+
+		$send .= 'Начисление ставки за смены сотруднику '._viewer($worker_id, 'viewer_name').' в сумме '.$sum.' руб.'.BR;
+	}
+
+	return $send;
+}
 
 
 
@@ -214,5 +300,6 @@ function _cronSubmit() {//выполнение задач
 		zp_accrual().
 		zp_image_attach(418627813).//Даша новая
 		zp_image_attach(228890122).//Татьяна
-		zp_image_attach(163178453);//Олеся
+		zp_image_attach(163178453).//Олеся
+		smena_zp_accrual();
 }
