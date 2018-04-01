@@ -1458,6 +1458,8 @@ function _idsGet($arr, $i='id') {//возвращение из массива списка id через запяту
 	return empty($ids) ? 0 : implode(',', array_unique($ids));
 }
 function _idsAss($v) {//получение списка id вида: $v[25] = 1; - выбранный список
+	if(empty($v))
+		return array();
 	$send = array();
 	foreach(_ids($v, 1) as $id)
 		$send[$id] = 1;
