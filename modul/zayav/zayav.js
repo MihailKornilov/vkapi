@@ -2710,12 +2710,18 @@ $(document)
 				name.push('Распечатать квитанцию');
 				action.push(function() {
 					if(APP_ID == 3798718) {
-						if(ZI.pole[23])
+						if(ZI.pole[23]) {
 							location.href = URL + '&p=75&d=kvit_cartridge&id=' + ZI.id;
-						else
-							location.href = URL + '&p=75&d=kvit_comtex&id=' + ZI.id;
-					} else
-						_zayavKvit();
+							return;
+						}
+						location.href = URL + '&p=75&d=kvit_comtex&id=' + ZI.id;
+						return;
+					}
+					if(APP_ID == 4659909) {
+						location.href = URL + '&p=75&d=template&template_id=22&id=' + ZI.id;
+						return;
+					}
+					_zayavKvit();
 				});
 			}
 			if(ZI.pole[19]) {

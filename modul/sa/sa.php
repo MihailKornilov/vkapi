@@ -1163,7 +1163,9 @@ function sa_color_spisok() {
 
 function sa_template() {// 38 управление переменными шаблонов документов
 	return
-		saPath(array('name'=>'Шаблоны документов')).
+		saPath(array(
+			'name'=>'Шаблоны документов'
+		)).
 		'<div id="sa-template">'.
 			'<div class="headName">'.
 				'Шаблоны по умолчанию'.

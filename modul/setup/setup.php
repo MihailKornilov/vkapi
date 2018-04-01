@@ -47,7 +47,7 @@ function setupPath($v) {//Верхняя строка: путь настроек
 	$v = array(
 		'name' => $v['name'],           // название настройки
 		'link_name' => @$v['link_name'],// название ссылки на предыдущцю страницу
-		'link_p' => _num(@$v['link_d']), // предыдущая страница
+		'link_p' => _num(@$v['link_d']),// предыдущая страница
 		'add_name' => @$v['add_name'],  // название ссылки добавления
 		'add_func' => @$v['add_func']   // функция, по которой происходит добавление
 	);
@@ -2131,7 +2131,7 @@ function setup_document_template_info() {
 	setupPath(array(
 		'name' => $r['name'],
 		'link_name' => 'Шаблоны документов',
-		'link_d' => 'document_template'
+		'link_d' => 27
 	)).
 	'<div class="mar10">'.
 		'<table class="bs10 mb20">'.

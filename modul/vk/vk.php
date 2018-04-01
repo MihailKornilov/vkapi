@@ -2475,6 +2475,7 @@ function _templateVar() {//формирование переменных шаблона
 	$varSpisok = _templateIncome($varSpisok);   //платёж
 	$varSpisok = _templateDogovor($varSpisok);  //договор
 	$varSpisok = _templateSchetPay($varSpisok); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
+	$varSpisok = _templateZayav($varSpisok, _num(@$_GET['template_id']) == 22 ? _num(@$_GET['id']) : 0); //счёт на оплату: забирает некоторые данные Организации, Банка и Клиента
 
 	$var = array();
 	foreach($varSpisok as $r)
@@ -2704,6 +2705,9 @@ function _templateZayav($arr, $zayav_id) {//подмена переменных заявки
 
 		$arr[$id]['text'] = htmlspecialchars_decode($zayav[$r['col_name']]);
 	}
+
+	if(_num(@$_GET['template_id']) == 22)
+		$arr = _templateClient($arr, $zayav['client_id']);
 
 	return $arr;
 }
