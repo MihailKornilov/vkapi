@@ -122,7 +122,6 @@ function _viewerUpdate($viewer_id=VIEWER_ID) {//Обновление пользователя из Конта
 
 	$res = _vkapi('users.get', array(
 		'user_ids' => $viewer_id,
-		'access_token' => '',
 		'fields' => 'photo,'.
 					'sex,'.
 					'country,'.

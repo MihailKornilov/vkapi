@@ -98,7 +98,7 @@ function xls_comtex_head($sheet, $n) {//заголовок с реквизита
 function xls_comtex_center($sheet) {//разделительная центральная линия
 	$y = pageNum(21);
 
-	$sheet->getStyle($y.'1:'.$y.'46')->applyFromArray(
+	$sheet->getStyle($y.'1:'.$y.'47')->applyFromArray(
 		array(
 			'borders' => array(
 				'right'     => array(
@@ -108,7 +108,7 @@ function xls_comtex_center($sheet) {//разделительная центра�
 		)
 	);
 
-	$sheet->getStyle('A1:'.pageNum(46).'46')->applyFromArray(array(
+	$sheet->getStyle('A1:'.pageNum(46).'47')->applyFromArray(array(
 		'borders' => array(
 			'outline' => array(
 				'style' => PHPExcel_Style_Border::BORDER_THIN,
@@ -228,30 +228,33 @@ function xls_comtex_rules($sheet, $x=2, $y=31) {
 		$sheet->getStyle(pageNum($x + 1).($y + 4))->getFont()->setSize(8);
 
 	$sheet->setCellValue(pageNum($x).($y + 5), '4. ');
-	$sheet->setCellValue(pageNum($x + 1).($y + 5), 'В случае отказа от ремонта стоимость диагностики составляет 300 рублей.');
+//	$sheet->setCellValue(pageNum($x + 1).($y + 5), 'В случае отказа от ремонта стоимость диагностики составляет 300 рублей.');
+	$sheet->setCellValue(pageNum($x + 1).($y + 5), 'В случае отказа от ремонта стоимость диагностики на системные блоки');
 		$sheet->getStyle(pageNum($x + 1).($y + 5))->getFont()->setSize(8);
-
-	$sheet->setCellValue(pageNum($x).($y + 6), '5. ');
-	$sheet->setCellValue(pageNum($x + 1).($y + 6), 'Стороны договорились, что после 3 месяцев хранения');
+	$sheet->setCellValue(pageNum($x + 1).($y + 6), 'и планшеты - 300 рублей, ноутбуки - 500 руб.');
 		$sheet->getStyle(pageNum($x + 1).($y + 6))->getFont()->setSize(8);
-	$sheet->setCellValue(pageNum($x + 1).($y + 7), 'изделие поступает в полное распоряжение сервисного центра.');
-		$sheet->getStyle(pageNum($x + 1).($y + 7))->getFont()->setSize(8);
 
-	$sheet->setCellValue(pageNum($x).($y + 8), '6. ');
-	$sheet->setCellValue(pageNum($x + 1).($y + 8), 'Исполнитель не отвечает за сохранность информации.');
+	$sheet->setCellValue(pageNum($x).($y + 7), '5. ');
+	$sheet->setCellValue(pageNum($x + 1).($y + 7), 'Стороны договорились, что после 3 месяцев хранения');
+		$sheet->getStyle(pageNum($x + 1).($y + 7))->getFont()->setSize(8);
+	$sheet->setCellValue(pageNum($x + 1).($y + 8), 'изделие поступает в полное распоряжение сервисного центра.');
 		$sheet->getStyle(pageNum($x + 1).($y + 8))->getFont()->setSize(8);
 
-	$sheet->setCellValue(pageNum($x).($y + 9), '7. ');
-	$sheet->setCellValue(pageNum($x + 1).($y + 9), 'Своей подписью Заказчик подтверждает, что согласен');
+	$sheet->setCellValue(pageNum($x).($y + 9), '6. ');
+	$sheet->setCellValue(pageNum($x + 1).($y + 9), 'Исполнитель не отвечает за сохранность информации.');
 		$sheet->getStyle(pageNum($x + 1).($y + 9))->getFont()->setSize(8);
-	$sheet->setCellValue(pageNum($x + 1).($y + 10), 'с вышеизложенным.');
+
+	$sheet->setCellValue(pageNum($x).($y + 10), '7. ');
+	$sheet->setCellValue(pageNum($x + 1).($y + 10), 'Своей подписью Заказчик подтверждает, что согласен');
 		$sheet->getStyle(pageNum($x + 1).($y + 10))->getFont()->setSize(8);
+	$sheet->setCellValue(pageNum($x + 1).($y + 11), 'с вышеизложенным.');
+		$sheet->getStyle(pageNum($x + 1).($y + 11))->getFont()->setSize(8);
 
 	$sheet->setCellValue(pageNum($x + 17).($y + 9), 'М.П.');
 		$sheet->getStyle(pageNum($x + 17).($y + 9))->getFont()->setBold(true);
 
-	$sheet->setCellValue(pageNum($x).($y + 12), '_____________(подпись клиента)      ____________(подпись приёмщика)');
-	$sheet->setCellValue(pageNum($x).($y + 14), 'Изделие получил: ______________________(подпись)                      ___/___/______');
+	$sheet->setCellValue(pageNum($x).($y + 13), '_____________(подпись клиента)      ____________(подпись приёмщика)');
+	$sheet->setCellValue(pageNum($x).($y + 15), 'Изделие получил: ______________________(подпись)          ___/___/______');
 
 }//xls_comtex_rules()
 

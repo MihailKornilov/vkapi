@@ -1155,7 +1155,7 @@ function _vkapi($method, $param=array()) {//получение данных из api вконтакте
 	$param += array(
 		'v' => 5.60,
 		'lang' => 'ru',
-		'access_token' => isset($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
+		'access_token' => 'be6861a8be6861a8be6861a82cbe519716bbe68be6861a8e74e64410e898fe15cfbac8e'//isset($param['access_token']) ? $param['access_token'] : @$_GET['access_token']
 	);
 
 	$url = 'https://api.vk.com/method/'.$method.'?'.http_build_query($param);
