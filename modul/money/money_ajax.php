@@ -3104,8 +3104,8 @@ switch(@$_POST['op']) {
 }
 
 
-function expense_dtime_old_update_for_kupez($invoice_id, $expense_id, $sum) {//todo для Купца для удаления
-	if(APP_ID != 3495523)
+function expense_dtime_old_update_for_kupez($invoice_id, $expense_id, $sum) {//todo для Купца  и окон для удаления
+	if(APP_ID != 3495523 && APP_ID != 3978722)
 		return false;
 
 	$dtime_add = @$_POST['dtime_add'];
