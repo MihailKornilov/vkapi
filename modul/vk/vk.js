@@ -343,8 +343,10 @@ var VK_SCROLL = 0,
 				FB.height(h);
 			}
 		}
+
 		if(FB_HEIGHT == h)
 			return;
+
 		FB_HEIGHT = h;
 		VK.callMethod('resizeWindow', 795, h);
 	},
@@ -518,20 +520,18 @@ var VK_SCROLL = 0,
 			'z-index':ZINDEX + 5
 		});
 
-		window['dFrame' + frameNum].onresize = function() {
-			var fr = $('.dFrame'),
-				max = 0;
-			for(var n = 0; n < fr.length; n++) {
-				var h = fr.eq(n).height();
-				if(h > max)
-					max = h;
-			}
-			var dh = max + VK_SCROLL + 180 + o.mb;
-			if(DIALOG_MAXHEIGHT != dh) {
-				DIALOG_MAXHEIGHT = dh;
-				_fbhs();
-			}
-		};
+		var fr = $('.dFrame'),
+			max = 0;
+		for(var n = 0; n < fr.length; n++) {
+			var h = fr.eq(n).height();
+			if(h > max)
+				max = h;
+		}
+		var dh = max + VK_SCROLL + 180 + o.mb;
+		if(DIALOG_MAXHEIGHT != dh) {
+			DIALOG_MAXHEIGHT = dh;
+			_fbhs();
+		}
 
 		function dialogClose() {
 			dialog.remove();
